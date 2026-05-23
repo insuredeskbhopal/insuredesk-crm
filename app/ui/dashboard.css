@@ -1778,6 +1778,7 @@ td:last-child {
 
 .analytics-report-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
   padding: 24px 0;
 }
