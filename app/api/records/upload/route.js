@@ -1,13 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { createRequire } from "node:module";
 import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/record-validation";
 import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploadList } from "@/lib/upload-validation";
+import { extractPolicyFromPdf } from "@/lib/pdf-extractor.cjs";
 
 export const runtime = "nodejs";
-const require = createRequire(import.meta.url);
-const { extractPolicyFromPdf } = require("../../../../lib/pdf-extractor.cjs");
 
 export async function POST(request) {
   try {
