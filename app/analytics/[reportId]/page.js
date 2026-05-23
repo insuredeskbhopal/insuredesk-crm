@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { findReportById, getReportRecords, formatMoney } from "@/lib/analytics";
 import RecordsTable from "@/app/components/RecordsTable";
+import ReportLayout from "@/app/components/layout/ReportLayout";
 import "@/app/ui/dashboard.css";
 
 export default async function AnalyticsReportPage({ params }) {
@@ -27,52 +28,56 @@ export default async function AnalyticsReportPage({ params }) {
 
   if (!report) {
     return (
-      <main className="state-page">
-        <section className="state-card error-state">
-          <div className="state-icon">⚠️</div>
-          <p className="eyebrow">Report not found</p>
-          <h1>Unknown analytics report</h1>
-          <p>The requested report ID does not match any available dashboard report.</p>
-          <Link className="primary-action" href="/">Back to Dashboard</Link>
-        </section>
-      </main>
+      <ReportLayout>
+        <main className="state-page" style={{ minHeight: "calc(100vh - 200px)" }}>
+          <section className="state-card error-state">
+            <div className="state-icon">⚠️</div>
+            <p className="eyebrow">Report not found</p>
+            <h1>Unknown analytics report</h1>
+            <p>The requested report ID does not match any available dashboard report.</p>
+            <Link className="primary-action" href="/">Back to Dashboard</Link>
+          </section>
+        </main>
+      </ReportLayout>
     );
   }
 
   return (
-    <main className="analytics-report-page">
-      <section className="glass-panel report-detail-card">
-        <div className="panel-head">
-          <div>
-            <p className="eyebrow">Analytics Report</p>
-            <h1>{report.report?.title || report.label}</h1>
-            <p>{report.report?.label || report.hint}</p>
+    <ReportLayout>
+      <main className="analytics-report-page">
+        <section className="glass-panel report-detail-card">
+          <div className="panel-head">
+            <div>
+              <p className="eyebrow">Analytics Report</p>
+              <h1>{report.report?.title || report.label}</h1>
+              <p>{report.report?.label || report.hint}</p>
+            </div>
+            <Link className="secondary-action" href="/">
+              Back to Dashboard
+            </Link>
           </div>
-          <Link className="secondary-action" href="/">
-            Back to Dashboard
-          </Link>
-        </div>
 
-        <div className="report-summary-grid">
-          <div className="metric-card">
-            <span>Matching policies</span>
-            <strong>{matchingRecords.length}</strong>
+          <div className="report-summary-grid">
+            <div className="metric-card">
+              <span>Matching policies</span>
+              <strong>{matchingRecords.length}</strong>
+            </div>
+            <div className="metric-card">
+              <span>Premium total</span>
+              <strong>{formatMoney(totalPremium)}</strong>
+            </div>
+            <div className="metric-card">
+              <span>Sum insured</span>
+              <strong>{formatMoney(totalSumInsured)}</strong>
+            </div>
           </div>
-          <div className="metric-card">
-            <span>Premium total</span>
-            <strong>{formatMoney(totalPremium)}</strong>
-          </div>
-          <div className="metric-card">
-            <span>Sum insured</span>
-            <strong>{formatMoney(totalSumInsured)}</strong>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="glass-panel report-detail-table">
-        <h2>Report records</h2>
-        <RecordsTable records={matchingRecords} />
-      </section>
-    </main>
+        <section className="glass-panel report-detail-table">
+          <h2>Report records</h2>
+          <RecordsTable records={matchingRecords} />
+        </section>
+      </main>
+    </ReportLayout>
   );
 }
