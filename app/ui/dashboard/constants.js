@@ -1,0 +1,67 @@
+import {
+  BarChart3,
+  Edit3,
+  FileCog,
+  FileText,
+  Settings,
+  Upload,
+  Users
+} from "lucide-react";
+
+export const NAV_ITEMS = [
+  { id: "bulk-entry", label: "Bulk PDF Upload", icon: Upload },
+  { id: "manual-entry", label: "Manual Policy Entry", icon: Edit3 },
+  { id: "records", label: "Policy Records", icon: FileText },
+  { id: "customers", label: "Customer Management", icon: Users },
+  { id: "analytics", label: "Analytics & Reports", icon: BarChart3 },
+  { id: "field-setup", label: "Field Setup", icon: FileCog },
+  { id: "settings", label: "Settings", icon: Settings }
+];
+
+export const EMPTY_FORM = {
+  srNo: "",
+  sourceFile: "",
+  status: "pending",
+  insuredName: "",
+  policyNumber: "",
+  contactNumber: "",
+  contactPerson: "",
+  groupName: "",
+  policyType: "",
+  premium: "",
+  sumInsured: "",
+  startDate: "",
+  expiryDate: "",
+  duration: "",
+  riskLocation: "",
+  district: "",
+  tehsil: "",
+  insuranceCompany: "",
+  description: "",
+  pptMpwlc: "",
+  occupancy: "",
+  validIn: ""
+};
+
+export const FIELD_SETUP = [
+  ["Sr No", "srNo"],
+  ["Insured Name", "insuredName"],
+  ["Policy Number", "policyNumber"],
+  ["Contact Number", "contactNumber"],
+  ["Contact Person", "contactPerson"],
+  ["Group Name", "groupName"],
+  ["Policy Type", "policyType"],
+  ["Premium", "premium"],
+  ["Sum Insured", "sumInsured"],
+  ["Start Date", "startDate"],
+  ["Expiry Date", "expiryDate"],
+  ["Duration", "duration"],
+  ["Risk Location", "riskLocation"],
+  ["District", "district"],
+  ["Tehsil", "tehsil"],
+  ["Insurance Company", "insuranceCompany"],
+  ["Description", "description"],
+  ["PPT / MPWLC", "pptMpwlc"],
+  ["Occupancy", "occupancy"],
+  ["Valid In", "validIn"]
+];

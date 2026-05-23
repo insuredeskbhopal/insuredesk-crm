@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PolicyRecord {
+  id          String   @id @db.Uuid
+  savedAt     DateTime @default(now()) @map("saved_at") @db.Timestamptz(6)
+  data        Json
+  pdfBytes    Bytes?   @map("pdf_bytes")
+  pdfFileName String?  @map("pdf_file_name")
+  pdfMimeType String?  @map("pdf_mime_type")
+
+  @@map("pdf_records")
+}
