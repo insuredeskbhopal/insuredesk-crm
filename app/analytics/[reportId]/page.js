@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { findReportById, getReportRecords, formatMoney } from "@/lib/analytics";
 import RecordsTable from "@/app/components/RecordsTable";
+import "@/app/ui/dashboard.css";
 
 export default async function AnalyticsReportPage({ params }) {
   const { reportId } = await params;
