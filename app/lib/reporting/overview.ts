@@ -23,7 +23,7 @@ export function buildOverviewReport(records, clients = buildClientSummaries(reco
 }
 
 function makeKpi(id, label, value, hint, report) {
-  return { id, label, value, hint, report: { ...report, title: report.title || label } };
+  return { id, label, value, hint, report: { ...report, id, title: report.title || label } };
 }
 
 function buildClientSummaries(records) {
