@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/banner.png" width="100%" alt="InsureDesk CRM Banner"/>
+</p>
+
 # InsureDesk CRM
 
 <div align="center">
@@ -9,9 +13,15 @@
 ![Vanilla CSS](https://img.shields.io/badge/CSS3-Vanilla-1572B6?style=for-the-badge&logo=css3)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-**An enterprise-grade AI-powered Insurance CRM and workflow automation platform. Streamline PDF policy intake, automate metadata extraction, track client portfolios, and visualizes real-time performance analytics.**
+<p align="center">
+  <img src="https://img.shields.io/github/stars/ABHISHEK9009/insuredesk-crm?style=social" />
+  <img src="https://img.shields.io/github/forks/ABHISHEK9009/insuredesk-crm?style=social" />
+  <img src="https://img.shields.io/github/issues/ABHISHEK9009/insuredesk-crm" />
+</p>
 
-[Key Features](#key-features) • [Tech Stack](#tech-stack) • [System Architecture](#system-architecture) • [Getting Started](#getting-started) • [API Directory](#api-directory) • [Roadmap](#roadmap)
+**InsureDesk CRM** is a production-ready insurance operations platform built to automate policy intake, OCR extraction, customer portfolio management, analytics, and reporting workflows for insurance agencies and enterprise brokerage teams. It visualizes real-time insurance performance analytics.
+
+[Key Features](#key-features) • [Platform Screenshots](#-platform-screenshots) • [Tech Stack](#-tech-stack) • [System Architecture](#-system-architecture) • [Getting Started](#-getting-started) • [API Directory](#-api-directory) • [Roadmap](#-roadmap)
 
 </div>
 
@@ -19,9 +29,17 @@
 
 ## 📋 Project Overview
 
-**InsureDesk CRM** is a production-ready, client-centric software solution designed for modern insurance brokerages, agencies, and financial firms. It replaces labor-intensive manual policy entry with a robust, rule-based OCR PDF extraction engine that pulls key policy variables directly from carrier documents (e.g., ICICI Lombard, MSME Suraksha Kavach policies, and MPWLC hypothecations) and stores them in a relational database for instant search, filtering, and reporting.
+**InsureDesk CRM** is a client-centric, production-ready software solution designed for modern insurance brokerages, agencies, and financial firms. It replaces labor-intensive manual policy entry with a robust, rule-based OCR PDF extraction engine that pulls key policy variables directly from carrier documents (e.g., ICICI Lombard, MSME Suraksha Kavach policies, and MPWLC hypothecations) and stores them in a relational database for instant search, filtering, and reporting.
 
 The platform provides a modern dashboard that enables administrators to manage customers, track policy lifecycles, identify impending expirations, and export structured JSON data, while maintaining access to original PDF documents.
+
+---
+
+## 💡 Why InsureDesk CRM
+
+Traditional insurance workflows rely heavily on manual data entry, fragmented spreadsheets, and repetitive administrative work.
+
+InsureDesk CRM centralizes the entire policy lifecycle into a modern AI-powered workflow system that reduces processing time, improves reporting accuracy, and scales insurance operations efficiently.
 
 ---
 
@@ -46,6 +64,19 @@ The platform provides a modern dashboard that enables administrators to manage c
 - **Custom Metadata Fields**: Configure custom keys and descriptors for policies.
 - **Original PDF Archival**: High-fidelity storage of the raw PDF bytes in PostgreSQL so users can download original policy files anytime.
 - **Clean Search & Filters**: Instant full-text search across all policy descriptions, risk locations, and client names.
+
+---
+
+## 🖼️ Platform Screenshots
+
+### Dashboard
+<img src="docs/dashboard.png" width="100%" />
+
+### Analytics & Reporting
+<img src="docs/analytics.png" width="100%" />
+
+### PDF Upload System
+<img src="docs/upload.png" width="100%" />
 
 ---
 
@@ -236,12 +267,42 @@ insuredesk-crm/
 
 ---
 
+## ✅ Production Status
+
+| System | Status |
+|---|---|
+| OCR Extraction Engine | ✅ Stable |
+| PostgreSQL Database | ✅ Connected |
+| Prisma ORM | ✅ Optimized |
+| Analytics Dashboard | ✅ Operational |
+| PDF Upload Pipeline | ✅ Active |
+| API Layer | ✅ Production Ready |
+| Build System | ✅ Stable |
+| Authentication Layer | 🚧 Planned |
+
+---
+
 ## 🗺️ Roadmap
 
 - [ ] **AI-assisted Parsing**: Integrate LLM API fallbacks for complex and unstructured carrier formats.
 - [ ] **Automated Reminders**: Email/SMS notifications to customers when policy renewals approach.
 - [ ] **Role-Based Access Control (RBAC)**: Support for Broker, Agent, and Auditor profiles with custom read-write scopes.
 - [ ] **Payment Gateways**: Online premium payment collection links generated right from the dashboard.
+
+---
+
+## ☁️ Deployment
+
+The platform can be deployed on:
+
+- Vercel
+- Railway
+- Render
+- AWS
+- DigitalOcean
+
+Recommended:
+- Vercel + Neon PostgreSQL
 
 ---
 
@@ -263,5 +324,10 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ---
 
 <div align="center">
-  <p>© 2026 InsureDesk CRM. Developed for modern insurance management.</p>
+
+### InsureDesk CRM
+AI-Powered Insurance Workflow Infrastructure
+
+Built with Next.js, Prisma & PostgreSQL
+
 </div>
