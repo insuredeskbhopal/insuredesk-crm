@@ -4,16 +4,12 @@ import { useDeferredValue, useEffect, useMemo, useState, useTransition } from "r
 import { useRouter } from "next/navigation";
 import "./dashboard.css";
 import { getRecordSearchText } from "@/lib/search";
-import { buildAnalytics, getReportRecords, formatMoney, parseMoney } from "@/lib/analytics";
-import { exportReportAsJson } from "@/app/lib/reporting/export-report";
-import { calculateReportTotals } from "@/app/lib/reporting/totals";
+import { buildAnalytics, formatMoney, parseMoney } from "@/lib/analytics";
 import AppShell from "@/app/components/layout/AppShell";
-import DrilldownPanel from "@/app/components/analytics/DrilldownPanel";
 import KpiCard from "@/app/components/analytics/KpiCard";
 import PageHeader from "@/app/components/layout/PageHeader";
 import ReportPanel from "@/app/components/analytics/ReportPanel";
 import ReportRow from "@/app/components/analytics/ReportRow";
-import ReportSummaryGrid from "@/app/components/analytics/ReportSummaryGrid";
 import SideNav from "@/app/components/layout/SideNav";
 import TopBar from "@/app/components/layout/TopBar";
 import RecordsTable from "@/app/components/RecordsTable";
@@ -107,7 +103,6 @@ export default function Dashboard({ initialRecords }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [toast, setToast] = useState("");
   const [alert, setAlert] = useState(null);
-  const [selectedReport, setSelectedReport] = useState(null);
   const [isSaving, startSaving] = useTransition();
   const [isUploading, startUploading] = useTransition();
   const deferredQuery = useDeferredValue(query);
@@ -130,14 +125,21 @@ export default function Dashboard({ initialRecords }) {
     : null;
 
   const analytics = useMemo(() => buildAnalytics(filteredRecords), [filteredRecords]);
-  const selectedReportRecords = useMemo(
-    () => getReportRecords(filteredRecords, selectedReport),
-    [filteredRecords, selectedReport]
-  );
 
   const handleSelectReport = (report) => {
     if (!report) return;
-    setSelectedReport(report);
+
+    if (report.id && report.id.startsWith("high-value-")) {
+      const policyId = report.value?.[0];
+      const policy = records.find((r) => r.id === policyId);
+      if (policy) {
+        setSelectedClientName(policy.insuredName || "");
+        setSelectedPolicyId(policy.id);
+        setActivePage("customers");
+        return;
+      }
+    }
+
     router.push(`/analytics/${report.id}`);
   };
   const selectedPolicy = selectedClient
@@ -553,12 +555,8 @@ export default function Dashboard({ initialRecords }) {
           {activePage === "analytics" && (
             <AnalyticsReports
               analytics={analytics}
-              selectedReport={selectedReport}
-              selectedReportRecords={selectedReportRecords}
               onSelectReport={handleSelectReport}
-              onClearReport={() => setSelectedReport(null)}
               onClientSelect={(clientName) => {
-                setSelectedReport(null);
                 setSelectedPolicyId("");
                 setSelectedClientName(clientName);
                 setActivePage("customers");
@@ -763,11 +761,7 @@ function DetailGroup({ title, items, wide }) {
 }
 
 
-function AnalyticsReports({ analytics, selectedReport, selectedReportRecords, onSelectReport, onClearReport, onClientSelect }) {
-  const reportTitle = selectedReport?.title || "Select any report number";
-  const reportLabel = selectedReport?.label || "Click any KPI, chart legend, bar, or report row to see the records behind it.";
-  const drillTotals = calculateReportTotals(selectedReportRecords);
-
+function AnalyticsReports({ analytics, onSelectReport, onClientSelect }) {
   return (
     <div className="analytics-workspace">
       <section className="report-kpi-grid">
@@ -843,24 +837,6 @@ function AnalyticsReports({ analytics, selectedReport, selectedReportRecords, on
           ))}
         </ReportPanel>
       </section>
-
-      <DrilldownPanel
-        title={reportTitle}
-        label={reportLabel}
-        selectedReport={selectedReport}
-        selectedReportRecords={selectedReportRecords}
-        onClearReport={onClearReport}
-        onExportJson={() => download("report-records.json", exportReportAsJson(selectedReportRecords), "application/json")}
-      >
-        <ReportSummaryGrid>
-          <Metric label="Matching policies" value={selectedReportRecords.length} />
-          <Metric label="Premium" value={formatMoney(drillTotals.totalPremium)} />
-          <Metric label="Sum insured" value={formatMoney(drillTotals.totalSumInsured)} />
-          <Metric label="Selected report" value={selectedReport ? selectedReport.label : "-"} />
-        </ReportSummaryGrid>
-
-        <RecordsTable records={selectedReportRecords} />
-      </DrilldownPanel>
     </div>
   );
 }
