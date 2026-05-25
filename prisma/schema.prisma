@@ -8,12 +8,177 @@ datasource db {
 }
 
 model PolicyRecord {
-  id          String   @id @db.Uuid
-  savedAt     DateTime @default(now()) @map("saved_at") @db.Timestamptz(6)
-  data        Json
-  pdfBytes    Bytes?   @map("pdf_bytes")
-  pdfFileName String?  @map("pdf_file_name")
-  pdfMimeType String?  @map("pdf_mime_type")
+  id                      String             @id @db.Uuid
+  savedAt                 DateTime           @default(now()) @map("saved_at") @db.Timestamptz(6)
+  data                    Json
+  pdfBytes                Bytes?             @map("pdf_bytes")
+  pdfFileName             String?            @map("pdf_file_name")
+  pdfMimeType             String?            @map("pdf_mime_type")
+  sourceFile              String?            @map("source_file")
+  rawText                 String?            @map("raw_text")
+  detectedCompany         String?            @map("detected_company")
+  detectedServiceCategory String?            @map("detected_service_category")
+  detectedPolicyType      String?            @map("detected_policy_type")
+  selectedCompany         String?            @map("selected_company")
+  detectedBankSource      String?            @map("detected_bank_source")
+  selectedBankSource      String?            @map("selected_bank_source")
+  selectedServiceCategory String?            @map("selected_service_category")
+  selectedPolicyType      String?            @map("selected_policy_type")
+  confidenceScore         Float?             @map("confidence_score")
+  extractedData           Json?              @map("extracted_data")
+  reviewedData            Json?              @map("reviewed_data")
+  extractionMethod        String?            @map("extraction_method")
+  extractionQuality       Json?              @map("extraction_quality")
+  extractionLog           Json?              @map("extraction_log")
+  schemaVersion           Int?               @map("schema_version")
+  createdAt               DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  uploadedFileId          String?            @map("uploaded_file_id") @db.Uuid
+  uploadedFile            UploadedFile?      @relation(fields: [uploadedFileId], references: [id])
+  policySchemaId          String?            @map("policy_schema_id") @db.Uuid
+  policySchema            PolicySchema?      @relation(fields: [policySchemaId], references: [id])
 
   @@map("pdf_records")
+}
+
+model BankSource {
+  id        String       @id @default(uuid()) @db.Uuid
+  name      String       @unique
+  aliases   Json         @default("[]")
+  active    Boolean      @default(true)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  schemas   PolicySchema[]
+  uploads   UploadedFile[] @relation("DetectedBankSource")
+
+  @@map("bank_sources")
+}
+
+model InsuranceCompany {
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String       @unique
+  aliases     Json         @default("[]")
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  categories  PolicyType[]
+  schemas     PolicySchema[]
+  uploads     UploadedFile[] @relation("DetectedCompany")
+
+  @@map("insurance_companies")
+}
+
+model ServiceCategory {
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String       @unique
+  aliases     Json         @default("[]")
+  keywords    Json         @default("[]")
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  policyTypes PolicyType[]
+  schemas     PolicySchema[]
+  uploads     UploadedFile[] @relation("DetectedCategory")
+
+  @@map("service_categories")
+}
+
+model PolicyType {
+  id                 String             @id @default(uuid()) @db.Uuid
+  name               String
+  aliases            Json               @default("[]")
+  keywords           Json               @default("[]")
+  active             Boolean            @default(true)
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  insuranceCompanyId String?            @map("insurance_company_id") @db.Uuid
+  serviceCategoryId  String             @map("service_category_id") @db.Uuid
+  insuranceCompany   InsuranceCompany?  @relation(fields: [insuranceCompanyId], references: [id])
+  serviceCategory    ServiceCategory    @relation(fields: [serviceCategoryId], references: [id])
+  schemas            PolicySchema[]
+  uploads            UploadedFile[]     @relation("DetectedPolicyType")
+
+  @@unique([name, insuranceCompanyId, serviceCategoryId])
+  @@map("policy_types")
+}
+
+model PolicySchema {
+  id           String            @id @default(uuid()) @db.Uuid
+  policyTypeId String            @map("policy_type_id") @db.Uuid
+  bankSourceId String?           @map("bank_source_id") @db.Uuid
+  insuranceCompanyId String?     @map("insurance_company_id") @db.Uuid
+  serviceCategoryId String?      @map("service_category_id") @db.Uuid
+  version      Int               @default(1)
+  active       Boolean           @default(true)
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  bankSource   BankSource?       @relation(fields: [bankSourceId], references: [id])
+  insuranceCompany InsuranceCompany? @relation(fields: [insuranceCompanyId], references: [id])
+  serviceCategory ServiceCategory? @relation(fields: [serviceCategoryId], references: [id])
+  policyType   PolicyType        @relation(fields: [policyTypeId], references: [id])
+  fields       FieldDefinition[]
+  records      PolicyRecord[]
+
+  @@unique([policyTypeId, version])
+  @@map("policy_schemas")
+}
+
+model FieldDefinition {
+  id             String       @id @default(uuid()) @db.Uuid
+  policySchemaId String       @map("policy_schema_id") @db.Uuid
+  key            String
+  label          String
+  fieldType      String       @map("field_type")
+  required       Boolean      @default(false)
+  options        Json         @default("[]")
+  aliases        Json         @default("[]")
+  regexPattern    String?      @map("regex_pattern")
+  section         String?
+  active          Boolean      @default(true)
+  order          Int          @default(0)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  policySchema   PolicySchema @relation(fields: [policySchemaId], references: [id], onDelete: Cascade)
+
+  @@unique([policySchemaId, key])
+  @@map("field_definitions")
+}
+
+model UploadedFile {
+  id                         String             @id @default(uuid()) @db.Uuid
+  sourceFile                 String             @map("source_file")
+  mimeType                   String?            @map("mime_type")
+  sizeBytes                  Int?               @map("size_bytes")
+  pdfBytes                   Bytes?             @map("pdf_bytes")
+  rawText                    String?            @map("raw_text")
+  extractionMethod           String?            @map("extraction_method")
+  status                     String             @default("uploaded")
+  detectedBankSourceId       String?            @map("detected_bank_source_id") @db.Uuid
+  detectedCompanyId          String?            @map("detected_company_id") @db.Uuid
+  detectedServiceCategoryId  String?            @map("detected_service_category_id") @db.Uuid
+  detectedPolicyTypeId       String?            @map("detected_policy_type_id") @db.Uuid
+  detectedBankSourceName     String?            @map("detected_bank_source_name")
+  detectedCompanyName        String?            @map("detected_company_name")
+  detectedServiceCategoryName String?           @map("detected_service_category_name")
+  detectedPolicyTypeName     String?            @map("detected_policy_type_name")
+  confidenceScore            Float?             @map("confidence_score")
+  extractedData              Json?              @map("extracted_data")
+  extractionQuality           Json?              @map("extraction_quality")
+  extractionLog               Json?              @map("extraction_log")
+  schemaFallbackLevel         String?            @map("schema_fallback_level")
+  schemaVersion              Int?               @map("schema_version")
+  errorMessage               String?            @map("error_message")
+  createdAt                  DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  detectedBankSource         BankSource?        @relation("DetectedBankSource", fields: [detectedBankSourceId], references: [id])
+  detectedCompany            InsuranceCompany?  @relation("DetectedCompany", fields: [detectedCompanyId], references: [id])
+  detectedServiceCategory    ServiceCategory?   @relation("DetectedCategory", fields: [detectedServiceCategoryId], references: [id])
+  detectedPolicyType         PolicyType?        @relation("DetectedPolicyType", fields: [detectedPolicyTypeId], references: [id])
+  policyRecords              PolicyRecord[]
+
+  @@map("uploaded_files")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("users")
 }

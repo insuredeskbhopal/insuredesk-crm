@@ -11,6 +11,12 @@ export async function GET() {
       id: true,
       savedAt: true,
       data: true,
+      reviewedData: true,
+      extractedData: true,
+      extractionMethod: true,
+      extractionQuality: true,
+      extractionLog: true,
+      confidenceScore: true,
       pdfFileName: true,
       pdfMimeType: true
     }

@@ -12,16 +12,22 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "seed:setup": "node scripts/seed-master-data.cjs",
     "start": "next start --hostname 127.0.0.1 --port 3000",
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^1.0.0",
     "@prisma/client": "^6.8.2",
+    "bcryptjs": "^3.0.3",
+    "jose": "^6.2.3",
     "lucide-react": "^0.468.0",
     "next": "^15.3.2",
     "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^5.7.284",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

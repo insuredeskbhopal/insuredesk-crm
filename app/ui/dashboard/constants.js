@@ -40,7 +40,25 @@ export const EMPTY_FORM = {
   description: "",
   pptMpwlc: "",
   occupancy: "",
-  validIn: ""
+  validIn: "",
+  vehicleNumber: "",
+  registrationNumber: "",
+  makeModel: "",
+  variant: "",
+  manufacturingYear: "",
+  registrationDate: "",
+  engineNumber: "",
+  chassisNumber: "",
+  fuelType: "",
+  cubicCapacity: "",
+  seatingCapacity: "",
+  grossVehicleWeight: "",
+  idv: "",
+  ncb: "",
+  policyCoverType: "",
+  rtoLocation: "",
+  nomineeName: "",
+  financerName: ""
 };
 
 export const FIELD_SETUP = [

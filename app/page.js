@@ -1,36 +1,41 @@
-import { prisma } from "@/lib/prisma";
-import { normalizeRecord } from "@/lib/records";
-import Dashboard from "./ui/dashboard";
+"use client";
 
-export default async function HomePage() {
-  try {
-    const records = await prisma.policyRecord.findMany({
-      orderBy: { savedAt: "desc" },
-      select: {
-        id: true,
-        savedAt: true,
-        data: true,
-        pdfFileName: true,
-        pdfMimeType: true
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+const DASHBOARD_VIEW_KEY = "insurcrm.dashboard.view";
+
+export default function RootPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(DASHBOARD_VIEW_KEY) || "{}");
+      const activePage = saved.activePage || "bulk-entry";
+      const ROUTE_MAP = {
+        "dashboard": "/dashboard",
+        "bulk-entry": "/bulk-upload",
+        "manual-entry": "/manual-policy-entry",
+        "records": "/policy-records",
+        "customers": "/customer-management",
+        "analytics": "/analytics-reports",
+        "field-setup": "/field-setup",
+        "settings": "/settings",
+        "upload-history": "/upload-history"
+      };
+
+      let target = ROUTE_MAP[activePage] || "/dashboard";
+      if (activePage === "customers" && saved.selectedClientName) {
+        target = `/customer-management/${encodeURIComponent(saved.selectedClientName)}`;
+        if (saved.selectedPolicyId) {
+          target += `/policy/${saved.selectedPolicyId}`;
+        }
       }
-    });
+      router.replace(target);
+    } catch {
+      router.replace("/dashboard");
+    }
+  }, [router]);
 
-    return <Dashboard initialRecords={records.map(normalizeRecord)} />;
-  } catch (error) {
-    console.error("Prisma fetch failed:", error);
-
-    return (
-      <main className="state-page">
-        <section className="state-card error-state">
-          <div className="state-icon">!</div>
-          <p className="eyebrow">Database connection failed</p>
-          <h1>Could not load policy records</h1>
-          <p>
-            {error?.message ||
-              "The app could not connect to the database. Please verify your database settings and try again."}
-          </p>
-        </section>
-      </main>
-    );
-  }
+  return null;
 }

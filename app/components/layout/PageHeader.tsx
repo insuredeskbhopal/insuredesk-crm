@@ -1,4 +1,7 @@
+"use client";
+
 import { History, LoaderCircle, Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function PageHeader({
   title,
@@ -8,6 +11,8 @@ export default function PageHeader({
   isUploading,
   onSaveRecord
 }) {
+  const router = useRouter();
+
   return (
     <section className="page-title-row">
       <div>
@@ -16,7 +21,7 @@ export default function PageHeader({
       </div>
       {showRecordSaveActions ? (
         <div className="title-actions">
-          <button type="button"><History size={18} /> View Upload History</button>
+          <button type="button" onClick={() => router.push("/upload-history")}><History size={18} /> View Upload History</button>
           <button className="secondary-action" type="button" onClick={onSaveRecord} disabled={isSaving || isUploading}>
             {isUploading ? <LoaderCircle size={18} className="spin" /> : isSaving ? <LoaderCircle size={18} className="spin" /> : <Upload size={18} />}
             {isUploading ? "Extracting PDFs" : "Save Record"}
