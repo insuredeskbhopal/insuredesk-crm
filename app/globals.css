@@ -7,7 +7,9 @@
 html,
 body {
   margin: 0;
+  width: 100%;
   min-width: 320px;
+  overflow-x: hidden;
   background: #ffffff;
   color: #000000;
   font-family: var(--font-body), Inter, sans-serif;
@@ -28,6 +30,25 @@ a {
   text-decoration: none;
 }
 
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+main,
+section,
+article,
+aside,
+header,
+footer,
+div,
+form,
+label {
+  min-width: 0;
+}
+
 button {
   display: inline-flex;
   align-items: center;
@@ -44,6 +65,14 @@ button {
   box-shadow: none;
   transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
   white-space: nowrap;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  max-width: 100%;
 }
 
 button:hover:not(:disabled) {

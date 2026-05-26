@@ -3939,3 +3939,596 @@ label span em.meta-manual {
   height: 18px;
   flex-shrink: 0;
 }
+
+/* Responsive hardening for every dashboard/auth surface. */
+.app-shell,
+.content-canvas,
+.page-inner,
+.glass-panel,
+.records-table-shell,
+.table-wrap,
+.top-brand,
+.top-actions,
+.panel-head,
+.page-title-row {
+  min-width: 0;
+}
+
+.table-wrap,
+.records-table-wrap,
+.user-table-wrap,
+.schema-table-wrap,
+.compact-table {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrap table,
+.user-table,
+.schema-table,
+.records-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-pagination,
+.page-title-row,
+.panel-head,
+.profile-head,
+.policy-table-head,
+.user-management-header {
+  flex-wrap: wrap;
+}
+
+.table-page-list {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.top-brand strong,
+.top-brand a,
+.side-nav button,
+.tb-notif-text,
+.tb-item-strong,
+.tb-profile-info p,
+.queue-line p,
+.metric-card strong,
+.report-kpi-card strong,
+.policy-number-link,
+.record-primary,
+.record-code,
+td,
+th {
+  overflow-wrap: anywhere;
+}
+
+.top-brand strong,
+.top-brand a,
+.side-nav button,
+.tb-dropdown,
+.tb-modal-card,
+.toast,
+.tb-toast {
+  max-width: 100%;
+}
+
+@media (max-width: 1280px) {
+  .top-bar {
+    padding-left: 252px;
+  }
+
+  .top-brand {
+    gap: 18px;
+  }
+
+  .top-actions {
+    gap: 10px;
+  }
+
+  .global-search input {
+    width: 150px;
+  }
+
+  .page-inner {
+    width: min(100% - 32px, 1400px);
+  }
+
+  .bento-grid {
+    grid-template-columns: minmax(280px, 0.8fr) minmax(420px, 1.2fr);
+  }
+}
+
+@media (max-width: 1040px) {
+  .top-brand nav {
+    display: none;
+  }
+
+  .global-search input {
+    width: 130px;
+  }
+
+  .preview-head,
+  .profile-head,
+  .policy-table-head,
+  .panel-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .preview-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    width: 100%;
+  }
+
+  .top-brand {
+    flex: 1 1 auto;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .top-brand strong {
+    display: block;
+    min-width: 0;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .top-actions {
+    flex: 0 0 auto;
+    gap: 8px;
+  }
+
+  .icon-button,
+  .avatar {
+    flex: 0 0 auto;
+  }
+
+  .side-nav {
+    max-width: min(82vw, 280px);
+  }
+
+  .content-canvas {
+    width: 100%;
+  }
+
+  .page-inner {
+    width: 100% !important;
+  }
+
+  .glass-panel,
+  .records-panel,
+  .report-panel,
+  .report-detail-card,
+  .report-detail-table,
+  .user-management-header,
+  .user-form-panel,
+  .user-table-panel {
+    padding: 16px;
+  }
+
+  .upload-zone {
+    min-height: 240px;
+    border-radius: 16px;
+    padding: 28px 18px;
+  }
+
+  .preview-head,
+  .preview-body,
+  .detection-summary,
+  .override-grid,
+  .setup-form,
+  .setup-metrics {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .schema-groups,
+  .schema-catalog {
+    padding: 16px;
+  }
+
+  .records-table-wrap {
+    max-width: calc(100vw - 24px);
+  }
+
+  .records-panel .actions,
+  .title-actions,
+  .manual-actions,
+  .user-form-actions {
+    justify-content: stretch;
+  }
+
+  .records-panel .actions button,
+  .title-actions button,
+  .manual-actions button,
+  .user-form-actions button {
+    flex: 1 1 160px;
+  }
+
+  .analytics-tabs {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 8px;
+  }
+
+  .analytics-tab-btn {
+    flex: 0 0 auto;
+  }
+
+  .tb-dropdown {
+    position: fixed;
+    top: 56px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
+  }
+
+  .tb-modal-backdrop {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 64px 12px 20px;
+  }
+
+  .tb-modal-card {
+    width: min(100%, 520px);
+    max-height: calc(100vh - 84px);
+    overflow-y: auto;
+  }
+
+  .tb-env-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tb-toast,
+  .toast {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  button {
+    min-height: 40px;
+    white-space: normal;
+  }
+
+  .top-bar {
+    padding: 0 10px !important;
+  }
+
+  .top-brand strong {
+    max-width: 130px;
+    font-size: var(--font-size-md);
+  }
+
+  .top-actions {
+    gap: 6px;
+  }
+
+  .icon-button {
+    width: 34px;
+    min-height: 34px;
+  }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+    font-size: var(--font-size-xs);
+  }
+
+  .page-inner {
+    padding: 14px 10px 22px !important;
+  }
+
+  .page-title-row h2,
+  .user-management-header h1 {
+    font-size: var(--font-size-xl);
+    line-height: 1.25;
+  }
+
+  .page-title-row p {
+    font-size: var(--font-size-md);
+  }
+
+  .glass-panel,
+  .records-panel,
+  .report-panel,
+  .report-detail-card,
+  .report-detail-table,
+  .user-management-header,
+  .user-form-panel,
+  .user-table-panel {
+    padding: 14px;
+  }
+
+  .preview-fieldset {
+    padding: 16px 14px 18px;
+  }
+
+  .manual-selectors,
+  .manual-entry-container .preview-fieldset {
+    padding: 14px;
+  }
+
+  .preview-head,
+  .preview-body,
+  .detection-summary,
+  .override-grid,
+  .setup-form,
+  .setup-metrics,
+  .preview-actions {
+    padding: 14px;
+  }
+
+  .detection-summary,
+  .manual-grid,
+  .preview-form,
+  .setup-form,
+  .override-grid,
+  .manual-entry-container .preview-form,
+  .user-form {
+    grid-template-columns: 1fr !important;
+  }
+
+  .report-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .metric-card,
+  .report-kpi-card {
+    min-height: 0;
+  }
+
+  .customer-row button,
+  .manual-actions button,
+  .user-form-actions button,
+  .user-row-actions button,
+  .preview-actions button,
+  .records-panel .actions button,
+  .title-actions button {
+    width: 100% !important;
+  }
+
+  .table-pagination {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .table-pagination > span {
+    text-align: center;
+  }
+
+  .table-page-list {
+    justify-content: center;
+  }
+
+  .alert-card {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+
+  .alert-dismiss {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+
+  .auth-layout {
+    align-items: stretch;
+    min-height: 100svh;
+    padding: 16px 10px;
+  }
+
+  .auth-canvas {
+    gap: 16px;
+    max-width: none;
+  }
+
+  .auth-brand h1 {
+    font-size: var(--font-size-2xl);
+    letter-spacing: 0;
+  }
+
+  .auth-card {
+    padding: 22px 16px !important;
+    border-radius: 12px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .top-brand strong {
+    max-width: 108px;
+    font-size: var(--font-size-sm);
+  }
+
+  .top-actions {
+    gap: 4px;
+  }
+
+  .icon-button {
+    width: 32px;
+    min-height: 32px;
+  }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .side-nav {
+    width: min(84vw, 260px) !important;
+  }
+
+  .upload-zone {
+    min-height: 210px;
+    padding: 22px 14px;
+  }
+
+  .zone-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .tb-modal-card,
+  .tb-dropdown {
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .tb-counts-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+@media (max-width: 760px) {
+  .user-management-header {
+    align-items: flex-start !important;
+  }
+
+  .user-management-header .title-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: auto !important;
+    margin-top: 0 !important;
+  }
+
+  .user-management-header .title-actions button {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    white-space: nowrap !important;
+  }
+
+  .user-table-wrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .user-table {
+    display: block;
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  .user-table thead {
+    display: none;
+  }
+
+  .user-table tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .user-table tr {
+    display: grid;
+    gap: 10px;
+    border: 1px solid rgba(233, 236, 239, 0.96);
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 12px;
+  }
+
+  .user-table td {
+    display: grid;
+    grid-template-columns: minmax(92px, 0.42fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    border: 0 !important;
+    padding: 0 !important;
+    line-height: 1.35;
+  }
+
+  .user-table td::before {
+    color: var(--on-surface-variant);
+    content: "";
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .user-table td:nth-child(1)::before {
+    content: "User";
+  }
+
+  .user-table td:nth-child(2)::before {
+    content: "Role";
+  }
+
+  .user-table td:nth-child(3)::before {
+    content: "Organization";
+  }
+
+  .user-table td:nth-child(4)::before {
+    content: "Created";
+  }
+
+  .user-table td:nth-child(5)::before {
+    content: "Updated";
+  }
+
+  .user-table td:nth-child(6)::before {
+    content: "Actions";
+  }
+
+  .user-table td[colspan] {
+    display: block;
+    text-align: center;
+    padding: 18px 10px !important;
+  }
+
+  .user-table td[colspan]::before {
+    content: none;
+  }
+
+  .role-pill {
+    justify-self: start;
+    white-space: nowrap;
+  }
+
+  .user-row-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .user-row-actions button {
+    width: 100% !important;
+    min-height: 36px;
+    padding: 0 10px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 420px) {
+  .user-management-header .title-actions {
+    width: 100% !important;
+  }
+
+  .user-management-header .title-actions button {
+    flex: 1 1 calc(50% - 4px) !important;
+  }
+
+  .user-table td {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+}
