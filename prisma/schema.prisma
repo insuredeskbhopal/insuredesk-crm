@@ -7,6 +7,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  AGENT
+  VIEWER
+}
+
+enum UploadStatus {
+  UPLOADED
+  PROCESSING
+  EXTRACTED
+  REVIEW_REQUIRED
+  APPROVED
+  REJECTED
+  FAILED
+  ARCHIVED
+}
+
+enum AuditSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AuditSource {
+  API
+  USER_ACTION
+  AI_PIPELINE
+  SYSTEM
+  AUTH
+}
+
+model Organization {
+  id            String         @id @default(uuid()) @db.Uuid
+  name          String
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  users         User[]
+  policyRecords PolicyRecord[]
+  uploadedFiles UploadedFile[]
+  auditLogs     AuditLog[]
+
+  @@map("organizations")
+}
+
+model AuditLog {
+  id             String        @id @default(uuid()) @db.Uuid
+  action         String
+  entityType     String        @map("entity_type")
+  entityId       String?       @map("entity_id")
+  severity       AuditSeverity @default(INFO)
+  source         AuditSource   @default(USER_ACTION)
+  ipAddress      String?       @map("ip_address")
+  userAgent      String?       @map("user_agent")
+  metadata       Json?
+  userId         String?       @map("user_id") @db.Uuid
+  organizationId String?       @map("organization_id") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  user           User?         @relation(fields: [userId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@index([createdAt])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
 model PolicyRecord {
   id                      String             @id @db.Uuid
   savedAt                 DateTime           @default(now()) @map("saved_at") @db.Timestamptz(6)
@@ -33,11 +101,28 @@ model PolicyRecord {
   schemaVersion           Int?               @map("schema_version")
   createdAt               DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt               DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
   uploadedFileId          String?            @map("uploaded_file_id") @db.Uuid
   uploadedFile            UploadedFile?      @relation(fields: [uploadedFileId], references: [id])
   policySchemaId          String?            @map("policy_schema_id") @db.Uuid
   policySchema            PolicySchema?      @relation(fields: [policySchemaId], references: [id])
+  
+  organizationId          String?            @map("organization_id") @db.Uuid
+  organization            Organization?      @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdById             String?            @map("created_by_id") @db.Uuid
+  createdBy               User?              @relation("PolicyCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById             String?            @map("updated_by_id") @db.Uuid
+  updatedBy               User?              @relation("PolicyUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  deletedById             String?            @map("deleted_by_id") @db.Uuid
+  deletedBy               User?              @relation("PolicyDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedAt               DateTime?          @map("deleted_at") @db.Timestamptz(6)
 
+  @@index([savedAt])
+  @@index([uploadedFileId])
+  @@index([policySchemaId])
+  @@index([organizationId])
+  @@index([deletedAt])
+  @@index([createdById])
   @@map("pdf_records")
 }
 
@@ -146,7 +231,7 @@ model UploadedFile {
   pdfBytes                   Bytes?             @map("pdf_bytes")
   rawText                    String?            @map("raw_text")
   extractionMethod           String?            @map("extraction_method")
-  status                     String             @default("uploaded")
+  status                     UploadStatus       @default(UPLOADED)
   detectedBankSourceId       String?            @map("detected_bank_source_id") @db.Uuid
   detectedCompanyId          String?            @map("detected_company_id") @db.Uuid
   detectedServiceCategoryId  String?            @map("detected_service_category_id") @db.Uuid
@@ -168,17 +253,57 @@ model UploadedFile {
   detectedServiceCategory    ServiceCategory?   @relation("DetectedCategory", fields: [detectedServiceCategoryId], references: [id])
   detectedPolicyType         PolicyType?        @relation("DetectedPolicyType", fields: [detectedPolicyTypeId], references: [id])
   policyRecords              PolicyRecord[]
+  
+  organizationId             String?            @map("organization_id") @db.Uuid
+  organization               Organization?      @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdById                String?            @map("created_by_id") @db.Uuid
+  createdBy                  User?              @relation("UploadCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById                String?            @map("updated_by_id") @db.Uuid
+  updatedBy                  User?              @relation("UploadUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  deletedById                String?            @map("deleted_by_id") @db.Uuid
+  deletedBy                  User?              @relation("UploadDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedAt                  DateTime?          @map("deleted_at") @db.Timestamptz(6)
 
+  storageProvider            String?            @map("storage_provider")
+  storagePath                String?            @map("storage_path")
+  fileHash                   String?            @map("file_hash")
+  checksum                   String?
+  fileSize                   Int?               @map("file_size")
+  storageMetadata            Json?              @map("storage_metadata")
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([organizationId])
+  @@index([deletedAt])
+  @@index([createdById])
   @@map("uploaded_files")
 }
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id             String         @id @default(uuid()) @db.Uuid
+  email          String         @unique
+  password       String
+  name           String?
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  role           UserRole       @default(AGENT)
+  organizationId String?        @map("organization_id") @db.Uuid
+  organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz(6)
+  
+  createdPolicies PolicyRecord[] @relation("PolicyCreatedBy")
+  updatedPolicies PolicyRecord[] @relation("PolicyUpdatedBy")
+  deletedPolicies PolicyRecord[] @relation("PolicyDeletedBy")
+  
+  createdUploads UploadedFile[] @relation("UploadCreatedBy")
+  updatedUploads UploadedFile[] @relation("UploadUpdatedBy")
+  deletedUploads UploadedFile[] @relation("UploadDeletedBy")
 
+  auditLogs      AuditLog[]
+
+  @@index([organizationId])
+  @@index([role])
+  @@index([deletedAt])
   @@map("users")
 }

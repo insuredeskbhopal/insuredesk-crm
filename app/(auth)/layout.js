@@ -1,7 +1,7 @@
 import "@/app/ui/dashboard.css";
 
 export const metadata = {
-  title: "InsurCRM - Authenticate",
+  title: "BIMAHEADQUARTER - Authenticate",
   description: "Secure login and registration portal"
 };
 
@@ -10,8 +10,8 @@ export default function AuthLayout({ children }) {
     <main className="auth-layout">
       <div className="auth-canvas">
         <div className="auth-brand">
-          <h1>InsurCRM</h1>
-          <p>Enterprise Policy Intake & CRM</p>
+          <h1>BIMAHEADQUARTER</h1>
+          <p>Enterprise Policy Operations & CRM</p>
         </div>
         {children}
       </div>

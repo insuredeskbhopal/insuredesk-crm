@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <main className="loading-shell" aria-label="Loading InsurCRM">
+    <main className="loading-shell" aria-label="Loading BIMAHEADQUARTER">
       <aside className="loading-side">
         <div className="skeleton logo-line" />
         {Array.from({ length: 7 }).map((_, index) => (

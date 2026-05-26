@@ -12,8 +12,8 @@ const manrope = Manrope({
 });
 
 export const metadata = {
-  title: "InsurCRM",
-  description: "Bulk PDF upload and policy records workspace"
+  title: "BIMAHEADQUARTER",
+  description: "Unified insurance operations landing, CRM and consumer portal"
 };
 
 export default function RootLayout({ children }) {

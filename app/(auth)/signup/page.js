@@ -65,7 +65,7 @@ export default function SignupPage() {
     <section className="glass-panel auth-card">
       <div className="auth-card-header">
         <h2>Create an account</h2>
-        <p>Get started with InsurCRM enterprise portal</p>
+        <p>Get started with BIMAHEADQUARTER enterprise portal</p>
       </div>
 
       {error && (

@@ -1,11 +1,24 @@
 import { prisma } from "@/lib/prisma";
+import { verifyJWT } from "@/lib/auth";
+import { logAudit, getAuditMetadata } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const startTime = Date.now();
-  
+export async function GET(request) {
   try {
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return Response.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const session = await verifyJWT(token);
+    // Diagnostics are strictly system-wide, so only global SUPER_ADMIN is authorized
+    if (!session || session.role !== "SUPER_ADMIN") {
+      return Response.json({ error: "Access denied: Diagnostics is restricted to system administrators" }, { status: 403 });
+    }
+
+    const startTime = Date.now();
+    
     // Test database connection and calculate latency
     await prisma.$queryRaw`SELECT 1`;
     const latency = Date.now() - startTime;
@@ -19,6 +32,19 @@ export async function GET() {
       prisma.serviceCategory.count(),
       prisma.policySchema.count()
     ]);
+
+    // Record audit event
+    const { ipAddress, userAgent } = getAuditMetadata(request);
+    await logAudit({
+      action: "VIEW_SYSTEM_DIAGNOSTICS",
+      entityType: "System",
+      severity: "CRITICAL",
+      source: "API",
+      ipAddress,
+      userAgent,
+      userId: session.userId,
+      organizationId: session.organizationId
+    });
 
     return Response.json({
       success: true,
@@ -51,3 +77,4 @@ export async function GET() {
     }, { status: 500 });
   }
 }
+

@@ -2,39 +2,94 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/record-validation";
+import { verifyJWT } from "@/lib/auth";
+import { getTenantFilter } from "@/lib/rbac";
+import { logAudit, getAuditMetadata } from "@/lib/audit";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const records = await prisma.policyRecord.findMany({
-    orderBy: { savedAt: "desc" },
-    select: {
-      id: true,
-      savedAt: true,
-      data: true,
-      reviewedData: true,
-      extractedData: true,
-      extractionMethod: true,
-      extractionQuality: true,
-      extractionLog: true,
-      confidenceScore: true,
-      pdfFileName: true,
-      pdfMimeType: true
+export async function GET(request) {
+  try {
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return Response.json({ error: "Not authenticated" }, { status: 401 });
     }
-  });
 
-  return Response.json(records.map(normalizeRecord));
+    const user = await verifyJWT(token);
+    if (!user) {
+      return Response.json({ error: "Invalid or expired session" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const limitParam = searchParams.get("limit");
+    const pageParam = searchParams.get("page");
+
+    // Fetch tenant-scoped and RBAC-authorized filter
+    const tenantFilter = getTenantFilter(user, "read");
+
+    let queryOptions = {
+      where: tenantFilter,
+      orderBy: { savedAt: "desc" },
+      select: {
+        id: true,
+        savedAt: true,
+        data: true,
+        reviewedData: true,
+        extractedData: true,
+        extractionMethod: true,
+        extractionQuality: true,
+        extractionLog: true,
+        confidenceScore: true,
+        pdfFileName: true,
+        pdfMimeType: true,
+        organizationId: true,
+        createdById: true
+      }
+    };
+
+    if (limitParam) {
+      const limit = parseInt(limitParam, 10) || 50;
+      const page = parseInt(pageParam || "1", 10) || 1;
+      queryOptions.take = limit;
+      queryOptions.skip = (page - 1) * limit;
+    }
+
+    const records = await prisma.policyRecord.findMany(queryOptions);
+    return Response.json(records.map(normalizeRecord));
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Failed to retrieve policy records." },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request) {
   try {
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return Response.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const user = await verifyJWT(token);
+    if (!user || user.role === "VIEWER") {
+      return Response.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
     const payload = await request.json();
+    
+    // Find the uploaded file enforcing tenant scope boundary
     const uploadedFile = payload.uploadedFileId
-      ? await prisma.uploadedFile.findUnique({ where: { id: payload.uploadedFileId } })
+      ? await prisma.uploadedFile.findFirst({
+          where: {
+            id: payload.uploadedFileId,
+            ...getTenantFilter(user, "write")
+          }
+        })
       : null;
 
     if (payload.uploadedFileId && !uploadedFile) {
-      return Response.json({ error: "Uploaded file was not found. Re-upload the PDF before saving." }, { status: 404 });
+      return Response.json({ error: "Uploaded file was not found or access denied." }, { status: 404 });
     }
 
     const extractedData = payload.extractedData || {};
@@ -58,7 +113,6 @@ export async function POST(request) {
         data: legacyPayload,
         pdfFileName: uploadedFile?.sourceFile || payload.sourceFile || legacyPayload.sourceFile,
         pdfMimeType: uploadedFile?.mimeType || "application/pdf",
-        pdfBytes: uploadedFile?.pdfBytes || undefined,
         sourceFile: uploadedFile?.sourceFile || payload.sourceFile || legacyPayload.sourceFile,
         rawText: uploadedFile?.rawText || payload.rawText || "",
         detectedBankSource: payload.detectedBankSource || uploadedFile?.detectedBankSourceName || "",
@@ -77,22 +131,56 @@ export async function POST(request) {
         extractionLog: payload.extractionLog || uploadedFile?.extractionLog || {},
         schemaVersion: Number(payload.schemaVersion || uploadedFile?.schemaVersion || 1),
         uploadedFileId: uploadedFile?.id,
-        policySchemaId: payload.policySchemaId || undefined
+        policySchemaId: payload.policySchemaId || undefined,
+        organizationId: user.organizationId,
+        createdById: user.id
       }
     });
 
+    const { ipAddress, userAgent } = getAuditMetadata(request);
+
     if (uploadedFile) {
+      // Transition status to APPROVED enum in database
       await prisma.uploadedFile.update({
         where: { id: uploadedFile.id },
-        data: { status: "saved" }
+        data: { status: "APPROVED" }
+      });
+
+      // Audit log the status transition
+      await logAudit({
+        action: "FILE_STATUS_TRANSITION",
+        entityType: "UploadedFile",
+        entityId: uploadedFile.id,
+        severity: "INFO",
+        source: "API",
+        ipAddress,
+        userAgent,
+        userId: user.id,
+        organizationId: user.organizationId,
+        metadata: { oldStatus: uploadedFile.status, newStatus: "APPROVED" }
       });
     }
+
+    // Audit log policy record creation
+    await logAudit({
+      action: "POLICY_RECORD_CREATE",
+      entityType: "PolicyRecord",
+      entityId: record.id,
+      severity: "INFO",
+      source: "API",
+      ipAddress,
+      userAgent,
+      userId: user.id,
+      organizationId: user.organizationId,
+      metadata: { sourceFile: record.sourceFile }
+    });
 
     return Response.json(normalizeRecord(record), { status: 201 });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Policy record could not be saved." }, { status: 400 });
   }
 }
+
 
 function toLegacyPayload(data) {
   return {

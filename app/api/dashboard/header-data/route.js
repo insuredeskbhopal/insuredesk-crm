@@ -34,7 +34,14 @@ export async function GET() {
   try {
     // 1. Fetch upcoming renewals
     const rawRecords = await prisma.policyRecord.findMany({
-      orderBy: { savedAt: "desc" }
+      orderBy: { savedAt: "desc" },
+      select: {
+        id: true,
+        savedAt: true,
+        data: true,
+        reviewedData: true,
+        pdfFileName: true
+      }
     });
     
     const records = rawRecords.map(normalizeRecord);

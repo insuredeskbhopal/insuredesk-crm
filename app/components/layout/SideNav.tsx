@@ -63,26 +63,12 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
         className="sidebar-close-btn"
         onClick={onCloseSidebar}
         aria-label="Close Navigation"
-        style={{
-          position: "absolute",
-          top: "16px",
-          right: "16px",
-          border: "none",
-          background: "none",
-          cursor: "pointer",
-          display: "none", // will be displayed as block via CSS media queries
-          alignItems: "center",
-          justifyContent: "center",
-          color: "var(--outline)",
-          padding: "4px",
-          boxShadow: "none"
-        }}
       >
         <X size={20} />
       </button>
 
       <div className="portal-title">
-        <h1>InsurCRM</h1>
+        <h1>BIMAHEADQUARTER</h1>
         <p>Enterprise Portal</p>
       </div>
 

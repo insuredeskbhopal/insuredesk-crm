@@ -1,11 +1,11 @@
-# InsurCRM Design Guide
+# BIMAHEADQUARTER Design Guide
 
 This document is the source of truth for UI design changes in this project.
 Use it before editing `app/ui/dashboard.css`, `app/globals.css`, or dashboard JSX.
 
 ## Design Goal
 
-InsurCRM is an admin CRM and policy records workspace. The UI should feel clean,
+BIMAHEADQUARTER is an admin CRM and policy records workspace. The UI should feel clean,
 professional, spacious, and easy to scan. Avoid marketing-style layouts, oversized
 visuals, decorative gradients, or experimental styling.
 

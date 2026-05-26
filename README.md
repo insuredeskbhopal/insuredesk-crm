@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/banner.png" width="100%" alt="InsureDesk CRM Banner"/>
+  <img src="docs/banner.png" width="100%" alt="BIMAHEADQUARTER Banner"/>
 </p>
 
-# InsureDesk CRM
+# BIMAHEADQUARTER
 
 <div align="center">
 
@@ -14,12 +14,12 @@
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 <p align="center">
-  <img src="https://img.shields.io/github/stars/ABHISHEK9009/insuredesk-crm?style=social" />
-  <img src="https://img.shields.io/github/forks/ABHISHEK9009/insuredesk-crm?style=social" />
-  <img src="https://img.shields.io/github/issues/ABHISHEK9009/insuredesk-crm" />
+  <img src="https://img.shields.io/github/stars/ABHISHEK9009/bimaheadquarter?style=social" />
+  <img src="https://img.shields.io/github/forks/ABHISHEK9009/bimaheadquarter?style=social" />
+  <img src="https://img.shields.io/github/issues/ABHISHEK9009/bimaheadquarter" />
 </p>
 
-**InsureDesk CRM** is a production-ready insurance operations platform built to automate policy intake, OCR extraction, customer portfolio management, analytics, and reporting workflows for insurance agencies and enterprise brokerage teams. It visualizes real-time insurance performance analytics.
+**BIMAHEADQUARTER** is a production-ready insurance operations platform built to automate policy intake, OCR extraction, customer portfolio management, analytics, and reporting workflows for insurance agencies and enterprise brokerage teams. It visualizes real-time insurance performance analytics.
 
 [Key Features](#key-features) • [Platform Screenshots](#-platform-screenshots) • [Tech Stack](#-tech-stack) • [System Architecture](#-system-architecture) • [Getting Started](#-getting-started) • [API Directory](#-api-directory) • [Roadmap](#-roadmap)
 
@@ -29,17 +29,17 @@
 
 ## 📋 Project Overview
 
-**InsureDesk CRM** is a client-centric, production-ready software solution designed for modern insurance brokerages, agencies, and financial firms. It replaces labor-intensive manual policy entry with a robust, rule-based OCR PDF extraction engine that pulls key policy variables directly from carrier documents (e.g., ICICI Lombard, MSME Suraksha Kavach policies, and MPWLC hypothecations) and stores them in a relational database for instant search, filtering, and reporting.
+**BIMAHEADQUARTER** is a client-centric, production-ready software solution designed for modern insurance brokerages, agencies, and financial firms. It replaces labor-intensive manual policy entry with a robust, rule-based OCR PDF extraction engine that pulls key policy variables directly from carrier documents (e.g., ICICI Lombard, MSME Suraksha Kavach policies, and MPWLC hypothecations) and stores them in a relational database for instant search, filtering, and reporting.
 
 The platform provides a modern dashboard that enables administrators to manage customers, track policy lifecycles, identify impending expirations, and export structured JSON data, while maintaining access to original PDF documents.
 
 ---
 
-## 💡 Why InsureDesk CRM
+## 💡 Why BIMAHEADQUARTER
 
 Traditional insurance workflows rely heavily on manual data entry, fragmented spreadsheets, and repetitive administrative work.
 
-InsureDesk CRM centralizes the entire policy lifecycle into a modern AI-powered workflow system that reduces processing time, improves reporting accuracy, and scales insurance operations efficiently.
+BIMAHEADQUARTER centralizes the entire policy lifecycle into a modern AI-powered workflow system that reduces processing time, improves reporting accuracy, and scales insurance operations efficiently.
 
 ---
 
@@ -153,7 +153,7 @@ The system utilizes a specialized, deterministic, rule-based regex extraction pa
 ## 📁 Directory Structure
 
 ```text
-insuredesk-crm/
+bimaheadquarter/
 ├── app/
 │   ├── analytics/
 │   │   ├── [reportId]/
@@ -205,8 +205,8 @@ insuredesk-crm/
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/ABHISHEK9009/insuredesk-crm.git
-   cd insuredesk-crm
+   git clone https://github.com/ABHISHEK9009/bimaheadquarter.git
+   cd bimaheadquarter
    ```
 
 2. **Install project dependencies:**
@@ -325,7 +325,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <div align="center">
 
-### InsureDesk CRM
+### BIMAHEADQUARTER
 AI-Powered Insurance Workflow Infrastructure
 
 Built with Next.js, Prisma & PostgreSQL

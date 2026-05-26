@@ -41,3 +41,10 @@ Thumbs.db
 # local project-specific data & PDF files
 /*.pdf
 /api-records.json
+
+# local uploads storage
+/storage/
+
+# backup schemas
+prisma/schema.prisma.bak
+prisma/schema.current.prisma

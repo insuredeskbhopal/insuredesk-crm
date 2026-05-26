@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const DASHBOARD_VIEW_KEY = "insurcrm.dashboard.view";
+const DASHBOARD_VIEW_KEY = "bimaheadquarter.dashboard.view";
 
 export default function RootPage() {
   const router = useRouter();

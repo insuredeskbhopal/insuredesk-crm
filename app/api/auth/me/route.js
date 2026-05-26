@@ -22,15 +22,22 @@ export async function GET(request) {
         id: true,
         email: true,
         name: true,
+        role: true,
+        organizationId: true,
+        deletedAt: true,
         createdAt: true
       }
     });
 
-    if (!user) {
-      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
+    if (!user || user.deletedAt) {
+      return NextResponse.json({ success: false, error: "User not found or deactivated" }, { status: 401 });
     }
 
-    return NextResponse.json({ success: true, user });
+    // Omit sensitive deletedAt from response user object
+    const { deletedAt: _deletedAt, ...sanitizedUser } = user;
+
+    return NextResponse.json({ success: true, user: sanitizedUser });
+
   } catch (error) {
     console.error("Auth Me error:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });

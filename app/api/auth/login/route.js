@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { comparePassword, signJWT } from "@/lib/auth";
+import { logAudit, getAuditMetadata } from "@/lib/audit";
 
 export async function POST(request) {
   try {
@@ -12,7 +13,7 @@ export async function POST(request) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Find the user
+    // Find the user including role and organization
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail }
     });
@@ -21,18 +22,57 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
     }
 
+    // Check soft-delete status
+    if (user.deletedAt) {
+      return NextResponse.json({ success: false, error: "Account has been deactivated" }, { status: 403 });
+    }
+
     // Verify password
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
+      // Log failed login attempt audit
+      const { ipAddress, userAgent } = getAuditMetadata(request);
+      await logAudit({
+        action: "FAILED_LOGIN_ATTEMPT",
+        entityType: "User",
+        entityId: user.id,
+        severity: "WARNING",
+        source: "AUTH",
+        ipAddress,
+        userAgent,
+        userId: user.id,
+        organizationId: user.organizationId,
+        metadata: { email: normalizedEmail }
+      });
+
       return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
     }
 
-    // Sign JWT token
+    // Sign JWT token including SaaS partition claims
     const token = await signJWT({
       userId: user.id,
       email: user.email,
-      name: user.name
+      name: user.name,
+      role: user.role,
+      organizationId: user.organizationId
+    });
+
+    // Extract IP and UA for success audit
+    const { ipAddress, userAgent } = getAuditMetadata(request);
+
+    // Record login audit event
+    await logAudit({
+      action: "USER_LOGIN",
+      entityType: "User",
+      entityId: user.id,
+      severity: "INFO",
+      source: "AUTH",
+      ipAddress,
+      userAgent,
+      userId: user.id,
+      organizationId: user.organizationId,
+      metadata: { email: user.email, role: user.role }
     });
 
     // Set secure HTTP-only cookie
@@ -42,7 +82,9 @@ export async function POST(request) {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        role: user.role,
+        organizationId: user.organizationId
       }
     });
 
@@ -62,3 +104,4 @@ export async function POST(request) {
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }
+

@@ -1,7 +1,8 @@
+/* global TextEncoder */
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const SECRET_KEY = process.env.JWT_SECRET || "insurdesk_crm_jwt_super_secret_fallback_key_32_chars";
+const SECRET_KEY = process.env.JWT_SECRET || "bimaheadquarter_jwt_super_secret_fallback_key_32_chars";
 const encodedSecret = new TextEncoder().encode(SECRET_KEY);
 
 export async function middleware(request) {
@@ -23,7 +24,7 @@ export async function middleware(request) {
     try {
       await jwtVerify(token, encodedSecret);
       isAuthenticated = true;
-    } catch (e) {
+    } catch {
       isAuthenticated = false;
     }
   }

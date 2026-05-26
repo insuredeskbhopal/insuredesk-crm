@@ -53,7 +53,7 @@ export default function LoginPage() {
     <section className="glass-panel auth-card">
       <div className="auth-card-header">
         <h2>Welcome back</h2>
-        <p>Log in to access your InsurCRM account</p>
+        <p>Log in to access your BIMAHEADQUARTER account</p>
       </div>
 
       {error && (
