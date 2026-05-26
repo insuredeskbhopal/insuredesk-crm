@@ -75,6 +75,49 @@ button:focus-visible {
   }
 }
 
+body,
+body * {
+  color: #000000 !important;
+}
+
+svg,
+[class*="icon"],
+[class^="icon"],
+.icon {
+  color: #000000 !important;
+}
+
+button,
+.browse-button,
+.secondary-action {
+  color: #000000 !important;
+  border-color: #000000 !important;
+  background: #ffffff !important;
+}
+
+button:hover:not(:disabled),
+.browse-button:hover,
+.secondary-action:hover {
+  background: rgba(91, 155, 213, 0.1) !important;
+}
+
+button:active,
+button:focus,
+button:focus-visible,
+.browse-button:active,
+.browse-button:focus,
+.browse-button:focus-visible,
+.secondary-action:active,
+.secondary-action:focus,
+.secondary-action:focus-visible {
+  background: #5b9bd5 !important;
+  color: #ffffff !important;
+  border-color: #5b9bd5 !important;
+  box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35) !important;
+  transform: scale(0.98) !important;
+  animation: buttonPulse 0.4s ease-out !important;
+}
+
 .pdf-link {
   display: inline-flex;
   align-items: center;
