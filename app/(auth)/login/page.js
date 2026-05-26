@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ShieldCheck, Mail, Lock, AlertCircle, Loader2, LogIn } from "lucide-react";
+import { ShieldCheck, Mail, Lock, AlertCircle, Loader2, LogIn, Eye, EyeOff } from "lucide-react";
+
+
 
 const GoogleIcon = () => (
   <svg className="google-icon-svg" viewBox="0 0 24 24">
@@ -32,6 +34,7 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -139,21 +142,30 @@ export default function LoginPage() {
             />
           </div>
         </label>
-
         <label className="input-group">
           <span>Password</span>
           <div className="input-with-icon">
             <Lock size={16} className="auth-icon" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading || googleLoading}
             />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={loading || googleLoading}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
         </label>
+
+
 
         <button type="submit" className="primary-action auth-btn" disabled={loading || googleLoading}>
           {loading ? <Loader2 size={16} className="spin" /> : <LogIn size={16} />}
