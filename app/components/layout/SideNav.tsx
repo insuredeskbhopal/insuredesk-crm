@@ -1,5 +1,8 @@
+"use client";
+
 import { CircleHelp, LayoutDashboard, LogOut } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import { useState } from "react";
 
 const ROUTE_MAP = {
   "dashboard": "/dashboard",
@@ -17,6 +20,7 @@ const ROUTE_MAP = {
 export default function SideNav({ activePage: propActivePage, navItems, onPageChange, isSidebarOpen, onCloseSidebar }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const getActivePage = () => {
     if (propActivePage) return propActivePage;
@@ -44,45 +48,80 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
     }
   };
 
-  const handleLogout = async () => {
-    if (onCloseSidebar) onCloseSidebar();
-    if (confirm("Are you sure you want to log out?")) {
-      try {
-        await fetch("/api/auth/logout", { method: "POST" });
-        window.location.href = "/login";
-      } catch (err) {
-        console.error("Failed to log out:", err);
-        window.location.reload();
-      }
-    }
+  const handleLogout = () => {
+    setShowLogoutModal(true);
   };
 
   return (
-    <aside className={`side-nav ${isSidebarOpen ? "open" : ""}`}>
-      <div className="portal-title">
-        <h1>BIMAHEADQUARTER</h1>
-        <p>Enterprise Portal</p>
-      </div>
+    <>
+      <aside className={`side-nav ${isSidebarOpen ? "open" : ""}`}>
+        <div className="portal-title">
+          <h1>BIMAHEADQUARTER</h1>
+          <p>Enterprise Portal</p>
+        </div>
 
-      <nav>
-        <button className={activePage === "dashboard" ? "active" : ""} type="button" onClick={() => handleNavigate("dashboard")}>
-          <LayoutDashboard size={20} /> Dashboard
-        </button>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <button className={activePage === item.id ? "active" : ""} type="button" key={item.id} onClick={() => handleNavigate(item.id)}>
-              <Icon size={20} /> {item.label}
-            </button>
-          );
-        })}
-      </nav>
+        <nav>
+          <button className={activePage === "dashboard" ? "active" : ""} type="button" onClick={() => handleNavigate("dashboard")}>
+            <LayoutDashboard size={20} /> Dashboard
+          </button>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button className={activePage === item.id ? "active" : ""} type="button" key={item.id} onClick={() => handleNavigate(item.id)}>
+                <Icon size={20} /> {item.label}
+              </button>
+            );
+          })}
+        </nav>
 
-      <div className="side-footer">
-        <button type="button"><CircleHelp size={20} /> Help Center</button>
-        <button type="button" onClick={handleLogout}><LogOut size={20} /> Logout</button>
-      </div>
-    </aside>
+        <div className="side-footer">
+          <button type="button"><CircleHelp size={20} /> Help Center</button>
+          <button type="button" onClick={handleLogout}><LogOut size={20} /> Logout</button>
+        </div>
+      </aside>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="tb-modal-backdrop" onClick={() => setShowLogoutModal(false)}>
+          <div className="tb-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="tb-modal-header">
+              <h3 className="tb-status-title tb-modal-title">Confirm Logout</h3>
+            </div>
+            <div className="tb-modal-body">
+              <p className="tb-status-desc">Are you sure you want to log out of your BIMAHEADQUARTER account?</p>
+            </div>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px" }}>
+              <button 
+                type="button" 
+                onClick={() => setShowLogoutModal(false)}
+                className="tb-modal-done-btn"
+                style={{ background: "#f0f0f0", color: "#333" }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={async () => {
+                  setShowLogoutModal(false);
+                  if (onCloseSidebar) onCloseSidebar();
+                  try {
+                    await fetch("/api/auth/logout", { method: "POST" });
+                    window.location.href = "/login";
+                  } catch (err) {
+                    console.error("Failed to log out:", err);
+                    window.location.reload();
+                  }
+                }}
+                className="tb-modal-done-btn"
+                style={{ background: "#dc2626", color: "white" }}
+              >
+                Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

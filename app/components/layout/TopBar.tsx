@@ -22,6 +22,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
   const [diagnosticsData, setDiagnosticsData] = useState(null);
   const [loadingDiagnostics, setLoadingDiagnostics] = useState(false);
   const [toast, setToast] = useState("");
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [user, setUser] = useState({ name: "BIMAHEADQUARTER Admin", email: "admin@bimaheadquarter.com" });
 
   const fetchHeaderData = async () => {
@@ -301,22 +302,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                 </button>
                 <button 
                   type="button" 
-                  onClick={async () => { 
-                    setToast("Logging out...");
-                    try {
-                      await fetch("/api/auth/logout", { method: "POST" });
-                      setToast("Logged out successfully. Redirecting...");
-                      setTimeout(() => {
-                        window.location.href = "/login";
-                      }, 1000);
-                    } catch (err) {
-                      setToast("Failed to log out. Reloading...");
-                      setTimeout(() => {
-                        window.location.reload();
-                      }, 1000);
-                    }
-                    setShowProfile(false); 
-                  }}
+                  onClick={() => setShowLogoutModal(true)}
                   className="tb-profile-btn tb-logout-btn"
                 >
                   <LogOut size={14} className="icon-error" />
@@ -421,6 +407,51 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
             >
               Done
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="tb-modal-backdrop" onClick={() => setShowLogoutModal(false)}>
+          <div className="tb-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="tb-modal-header">
+              <h3 className="tb-status-title tb-modal-title">Confirm Logout</h3>
+            </div>
+            <div className="tb-modal-body">
+              <p className="tb-status-desc">Are you sure you want to log out of your BIMAHEADQUARTER account?</p>
+            </div>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px" }}>
+              <button 
+                type="button" 
+                onClick={() => setShowLogoutModal(false)}
+                className="tb-modal-done-btn"
+                style={{ background: "#f0f0f0", color: "#333" }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={async () => { 
+                  setShowLogoutModal(false);
+                  setShowProfile(false);
+                  setToast("Logging out...");
+                  try {
+                    await fetch("/api/auth/logout", { method: "POST" });
+                    setToast("Logged out successfully. Redirecting...");
+                    setTimeout(() => {
+                      window.location.href = "/login";
+                    }, 1000);
+                  } catch (err) {
+                    setToast("Failed to log out. Please try again.");
+                  }
+                }}
+                className="tb-modal-done-btn"
+                style={{ background: "#dc2626", color: "white" }}
+              >
+                Log Out
+              </button>
+            </div>
           </div>
         </div>
       )}
