@@ -1,4 +1,4 @@
-import "@/app/ui/dashboard.css";
+import "../ui/dashboard.css";
 
 export const metadata = {
   title: "BIMAHEADQUARTER - Authenticate",
