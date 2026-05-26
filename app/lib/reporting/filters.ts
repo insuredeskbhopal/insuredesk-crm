@@ -6,6 +6,7 @@ export function filterRecordsForReport(records, filter) {
   if (filter.type === "district") return records.filter((record) => (record.district || "Unknown district") === filter.value);
   if (filter.type === "insuranceCompany") return records.filter((record) => (record.insuranceCompany || "Unknown insurer") === filter.value);
   if (filter.type === "policyType") return records.filter((record) => (record.policyType || "Unknown policy type") === filter.value);
+  if (filter.type === "customerName") return records.filter((record) => (record.insuredName || "Unnamed insured") === filter.value);
   if (filter.type === "recordIds") return records.filter((record) => filter.value.includes(record.id));
   if (filter.type === "missing") return records.filter((record) => !record[filter.value]);
   if (filter.type === "policyFamily") {
@@ -129,4 +130,3 @@ export function parsePolicyDate(value) {
 export function startOfDay(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
-

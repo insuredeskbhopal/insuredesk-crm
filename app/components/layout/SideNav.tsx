@@ -2,7 +2,7 @@
 
 import { CircleHelp, LayoutDashboard, LogOut } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const ROUTE_MAP = {
   "dashboard": "/dashboard",
@@ -21,6 +21,28 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
   const router = useRouter();
   const pathname = usePathname();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [userRole, setUserRole] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadUser = async () => {
+      try {
+        const response = await fetch("/api/auth/me");
+        const payload = await response.json();
+        if (isMounted && payload?.success) {
+          setUserRole(payload.user?.role || "");
+        }
+      } catch {
+        if (isMounted) setUserRole("");
+      }
+    };
+
+    loadUser();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const getActivePage = () => {
     if (propActivePage) return propActivePage;
@@ -32,6 +54,7 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
     if (pathname === "/analytics-reports") return "analytics";
     if (pathname === "/field-setup") return "field-setup";
     if (pathname === "/settings") return "settings";
+    if (pathname === "/admin/users") return "user-management";
     if (pathname === "/upload-history") return "upload-history";
     return "";
   };
@@ -64,7 +87,11 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
           <button className={activePage === "dashboard" ? "active" : ""} type="button" onClick={() => handleNavigate("dashboard")}>
             <LayoutDashboard size={20} /> Dashboard
           </button>
-          {navItems.map((item) => {
+          {navItems.filter((item) => {
+            if (item.roles) return item.roles.includes(userRole);
+            if (item.role) return item.role === userRole;
+            return true;
+          }).map((item) => {
             const Icon = item.icon;
             return (
               <button className={activePage === item.id ? "active" : ""} type="button" key={item.id} onClick={() => handleNavigate(item.id)}>
@@ -124,5 +151,3 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
     </>
   );
 }
-
-

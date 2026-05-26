@@ -34,44 +34,44 @@ button {
   justify-content: center;
   gap: 8px;
   min-height: 36px;
-  border: 1px solid #000000;
+  border: 0;
   border-radius: 8px;
   background: #ffffff;
   color: #000000;
   cursor: pointer;
   padding: 0 14px;
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
   white-space: nowrap;
 }
 
 button:hover:not(:disabled) {
-  background: rgba(91, 155, 213, 0.1);
+  background: #ffffff;
   color: #000000;
-  border-color: #5b9bd5;
+  border-color: transparent;
 }
 
 button:active,
 button:focus,
 button:focus-visible {
-  background: #5b9bd5;
-  color: #ffffff;
-  border-color: #5b9bd5;
-  box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35);
+  background: #ffffff;
+  color: #000000;
+  border-color: transparent;
+  box-shadow: none;
   transform: scale(0.98);
   animation: buttonPulse 0.4s ease-out;
 }
 
 @keyframes buttonPulse {
   0% {
-    box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35), 0 0 0 0 rgba(91, 155, 213, 0.7);
+    box-shadow: none;
   }
   70% {
-    box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35), 0 0 0 12px rgba(91, 155, 213, 0);
+    box-shadow: none;
   }
   100% {
-    box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35), 0 0 0 0 rgba(91, 155, 213, 0);
+    box-shadow: none;
   }
 }
 
@@ -87,18 +87,19 @@ svg,
   color: #000000 !important;
 }
 
-button,
 .browse-button,
 .secondary-action {
   color: #000000 !important;
-  border-color: #000000 !important;
+  border: 1px solid rgba(25, 28, 29, 0.18) !important;
   background: #ffffff !important;
+  box-shadow: none !important;
 }
 
 button:hover:not(:disabled),
 .browse-button:hover,
 .secondary-action:hover {
-  background: rgba(91, 155, 213, 0.1) !important;
+  background: #ffffff !important;
+  border-color: rgba(25, 28, 29, 0.24) !important;
 }
 
 button:active,
@@ -110,10 +111,10 @@ button:focus-visible,
 .secondary-action:active,
 .secondary-action:focus,
 .secondary-action:focus-visible {
-  background: #5b9bd5 !important;
-  color: #ffffff !important;
-  border-color: #5b9bd5 !important;
-  box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid rgba(25, 28, 29, 0.24) !important;
+  box-shadow: none !important;
   transform: scale(0.98) !important;
   animation: buttonPulse 0.4s ease-out !important;
 }
@@ -191,6 +192,15 @@ select {
   padding: 0 14px;
 }
 
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 18px center;
+  background-repeat: no-repeat;
+  background-size: 14px;
+  padding-right: 42px;
+}
+
 textarea {
   min-height: 96px;
   resize: vertical;
@@ -202,6 +212,32 @@ select:focus,
 textarea:focus {
   border-color: var(--secondary);
   box-shadow: 0 0 0 3px rgba(25, 28, 29, 0.1);
+}
+
+:is(button, a, input, select, textarea, .icon-button, .avatar, .top-brand a, .side-nav button, .pdf-link, .pdf-icon-link, .glass-panel, .record-card, .queue-card, .metric-card, .status-pill, .customer-row, .profile-head, .settings-list div, .control-list label, .panel, .panel-head, .preview-head, .preview-actions) {
+  transition: transform var(--motion-fast), background var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), opacity var(--motion-fast);
+  will-change: transform, opacity;
+}
+
+.icon-button:hover,
+.avatar:hover,
+.top-brand a:hover,
+.pdf-link:hover,
+.pdf-icon-link:hover,
+.glass-panel:hover,
+.record-card:hover,
+.queue-card:hover,
+.metric-card:hover,
+.status-pill:hover,
+.customer-row:hover,
+.profile-head:hover,
+.settings-list div:hover,
+.control-list label:hover {
+  transform: translateY(-1px);
+}
+
+a:hover {
+  color: var(--primary);
 }
 
 .loading-shell {
@@ -406,9 +442,9 @@ textarea:focus {
   min-height: 52px;
   border-radius: 16px;
   border: 1px solid rgba(25, 28, 29, 0.14);
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 18px 38px rgba(25, 28, 29, 0.24);
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 18px 38px rgba(25, 28, 29, 0.08);
   padding: 0 20px;
 }
 

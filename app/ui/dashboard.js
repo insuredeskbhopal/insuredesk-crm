@@ -14,6 +14,8 @@ import {
   CheckCircle,
   Download,
   FileText,
+  X,
+  SlidersHorizontal,
   LoaderCircle,
   Trash2,
   Upload
@@ -64,6 +66,10 @@ export default function Dashboard({
   const [form, setForm] = useState(EMPTY_FORM);
   const [toast, setToast] = useState("");
   const [alert, setAlert] = useState(null);
+  const [isRecordFilterOpen, setIsRecordFilterOpen] = useState(false);
+  const [recordFilterField, setRecordFilterField] = useState("");
+  const [recordFilterValue, setRecordFilterValue] = useState("");
+  const [recordPdfFilter, setRecordPdfFilter] = useState("all");
   const [isSaving, startSaving] = useTransition();
   const [isUploading, startUploading] = useTransition();
   const deferredQuery = useDeferredValue(query);
@@ -133,6 +139,22 @@ export default function Dashboard({
       .filter((item) => item.searchText.includes(normalizedQuery))
       .map((item) => item.record);
   }, [deferredQuery, indexedRecords, records]);
+  const policyRecordResults = useMemo(() => {
+    const normalizedFilterValue = recordFilterValue.trim().toLowerCase();
+
+    return filteredRecords.filter((record) => {
+      const matchesField = recordFilterField && normalizedFilterValue
+        ? String(record[recordFilterField] || "").toLowerCase().includes(normalizedFilterValue)
+        : true;
+      const matchesPdf =
+        recordPdfFilter === "all" ||
+        (recordPdfFilter === "with" && record.hasPdf) ||
+        (recordPdfFilter === "missing" && !record.hasPdf);
+
+      return matchesField && matchesPdf;
+    });
+  }, [filteredRecords, recordFilterField, recordFilterValue, recordPdfFilter]);
+  const activeRecordFilterCount = (recordFilterField && recordFilterValue.trim() ? 1 : 0) + (recordPdfFilter !== "all" ? 1 : 0);
   const clientProfiles = buildClientProfiles(filteredRecords, parseMoney);
   const selectedClient = selectedClientName
     ? buildClientProfiles(records, parseMoney).find((client) => client.name === selectedClientName)
@@ -142,17 +164,7 @@ export default function Dashboard({
 
   const handleSelectReport = (report) => {
     if (!report) return;
-
-    if (report.id && report.id.startsWith("high-value-")) {
-      const policyId = report.value?.[0];
-      const policy = records.find((r) => r.id === policyId);
-      if (policy) {
-        router.push(`/customer-management/${encodeURIComponent(policy.insuredName || "")}/policy/${policy.id}`);
-        return;
-      }
-    }
-
-    router.push(`/analytics-reports/${report.id}`);
+    router.push(`/analytics-reports/${encodeURIComponent(report.id)}`);
   };
   const selectedPolicy = selectedClient
     ? selectedClient.policies.find((record) => record.id === selectedPolicyId)
@@ -529,8 +541,65 @@ export default function Dashboard({
                   </button>
                 </div>
               </div>
-              <SearchBox value={query} placeholder="Search policy, insured, district..." onChange={(event) => setQuery(event.target.value)} />
-              <RecordsTable records={filteredRecords} />
+              <div className="records-search-row">
+                <SearchBox value={query} placeholder="Search policy, insured, district..." onChange={(event) => setQuery(event.target.value)} />
+                <button
+                  className={activeRecordFilterCount ? "record-filter-toggle active" : "record-filter-toggle"}
+                  type="button"
+                  onClick={() => setIsRecordFilterOpen((open) => !open)}
+                >
+                  <SlidersHorizontal size={17} />
+                  Filter{activeRecordFilterCount ? ` (${activeRecordFilterCount})` : ""}
+                </button>
+              </div>
+              {isRecordFilterOpen ? (
+                <div className="record-filter-panel">
+                  <label>
+                    <span>Filter Field</span>
+                    <select value={recordFilterField} onChange={(event) => setRecordFilterField(event.target.value)}>
+                      <option value="">Any field</option>
+                      {FIELD_SETUP.map(([label, key]) => (
+                        <option key={key} value={key}>{label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Custom Data</span>
+                    <input
+                      value={recordFilterValue}
+                      placeholder="Type value to find..."
+                      onChange={(event) => setRecordFilterValue(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>PDF Status</span>
+                    <select value={recordPdfFilter} onChange={(event) => setRecordPdfFilter(event.target.value)}>
+                      <option value="all">All records</option>
+                      <option value="with">With PDF</option>
+                      <option value="missing">Missing PDF</option>
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRecordFilterField("");
+                      setRecordFilterValue("");
+                      setRecordPdfFilter("all");
+                    }}
+                  >
+                    Clear
+                  </button>
+                  <button
+                    aria-label="Close filter panel"
+                    className="record-filter-close"
+                    type="button"
+                    onClick={() => setIsRecordFilterOpen(false)}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ) : null}
+              <RecordsTable records={policyRecordResults} />
             </section>
           )}
 
@@ -642,9 +711,6 @@ export default function Dashboard({
             <AnalyticsReports
               analytics={analytics}
               onSelectReport={handleSelectReport}
-              onClientSelect={(clientName) => {
-                router.push(`/customer-management/${encodeURIComponent(clientName)}`);
-              }}
             />
           )}
 
@@ -679,5 +745,3 @@ export default function Dashboard({
     </>
   );
 }
-
-

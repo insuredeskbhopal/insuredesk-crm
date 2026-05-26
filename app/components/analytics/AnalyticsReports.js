@@ -4,7 +4,7 @@ import ReportPanel from "./ReportPanel";
 import ReportRow from "./ReportRow";
 import { formatMoney } from "@/lib/analytics";
 
-export default function AnalyticsReports({ analytics, onSelectReport, onClientSelect }) {
+export default function AnalyticsReports({ analytics, onSelectReport }) {
   const [activeTab, setActiveTab] = useState("overview");
 
   const motorItem = analytics.policyFamilies.find((f) => f.label === "Motor Policy");
@@ -163,9 +163,9 @@ export default function AnalyticsReports({ analytics, onSelectReport, onClientSe
       )}
 
       <section className="report-grid">
-        <ReportPanel title="Top Customers" subtitle="Click a customer to open their profile.">
+        <ReportPanel title="Top Customers" subtitle="Click a customer to open their report.">
           {analytics.customers.map((item) => (
-            <button className="report-row" type="button" key={item.id} onClick={() => onClientSelect(item.name)}>
+            <button className="report-row" type="button" key={item.id} onClick={() => onSelectReport(item.report)}>
               <span>{item.name}</span>
               <strong>{formatMoney(item.premiumTotal)}</strong>
               <small>{item.policies.length} polic{item.policies.length === 1 ? "y" : "ies"}</small>

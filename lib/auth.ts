@@ -1,8 +1,8 @@
 // lib/auth.ts
 import { jwtVerify, SignJWT } from 'jose';
 
-const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET || 'change-me-secret';
-const JWT_ISSUER = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const JWT_SECRET = process.env.JWT_SECRET || 'bimaheadquarter_jwt_super_secret_fallback_key_32_chars';
+const encodedSecret = new TextEncoder().encode(JWT_SECRET);
 
 /**
  * Verify a JWT and return its payload.
@@ -10,9 +10,7 @@ const JWT_ISSUER = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
  */
 export async function verifyJWT(token: string) {
   try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(JWT_SECRET), {
-      issuer: JWT_ISSUER,
-    });
+    const { payload } = await jwtVerify(token, encodedSecret);
     return payload;
   } catch (err) {
     console.error('JWT verification error:', err);
@@ -25,12 +23,9 @@ export async function verifyJWT(token: string) {
  * Payload should contain at least `{ userId, role }`.
  */
 export async function signJWT(payload: Record<string, any>, expiresIn = '7d') {
-  const iat = Math.floor(Date.now() / 1000);
-  const exp = Math.floor(Date.now() / 1000) + (expiresIn === '7d' ? 7 * 24 * 60 * 60 : 60 * 60);
   return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-    .setIssuedAt(iat)
-    .setExpirationTime(exp)
-    .setIssuer(JWT_ISSUER)
-    .sign(new TextEncoder().encode(JWT_SECRET));
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(expiresIn)
+    .sign(encodedSecret);
 }

@@ -3,9 +3,11 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSuperAdmin } from '@/lib/authMiddleware';
+import { requireUserManager } from '@/lib/authMiddleware';
+import { canManageRole, getAssignableRoles, getVisibleUserWhere } from '@/lib/userManagementPermissions';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 
 const createUserSchema = z.object({
   email: z.string().email(),
@@ -17,20 +19,23 @@ const createUserSchema = z.object({
 
 export async function GET(request: NextRequest) {
   // Authorization
-  const authResult = await requireSuperAdmin(request);
-  if (authResult) return authResult;
+  const authResult = await requireUserManager(request);
+  if ('response' in authResult) return authResult.response;
+  const requester = authResult.user;
 
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get('page') ?? '1', 10);
   const pageSize = parseInt(url.searchParams.get('pageSize') ?? '20', 10);
   const skip = (page - 1) * pageSize;
+  const where = getVisibleUserWhere(requester);
 
   const [total, users] = await Promise.all([
-    prisma.user.count({ where: { deletedAt: null } }),
+    prisma.user.count({ where }),
     prisma.user.findMany({
-      where: { deletedAt: null },
+      where,
       skip,
       take: pageSize,
+      orderBy: { createdAt: 'desc' },
       select: {
         id: true,
         email: true,
@@ -43,12 +48,16 @@ export async function GET(request: NextRequest) {
     }),
   ]);
 
-  return NextResponse.json({ data: users, meta: { total, page, pageSize } });
+  return NextResponse.json({
+    data: users,
+    meta: { total, page, pageSize, assignableRoles: getAssignableRoles(requester.role), currentRole: requester.role }
+  });
 }
 
 export async function POST(request: NextRequest) {
-  const authResult = await requireSuperAdmin(request);
-  if (authResult) return authResult;
+  const authResult = await requireUserManager(request);
+  if ('response' in authResult) return authResult.response;
+  const requester = authResult.user;
 
   const body = await request.json();
   const parseResult = createUserSchema.safeParse(body);
@@ -56,26 +65,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body', details: parseResult.error.format() }, { status: 422 });
   }
   const { email, name, password, role, organizationId } = parseResult.data;
+  const requestedRole = role ?? 'AGENT';
 
-  const hashed = await bcrypt.hash(password, 12);
-  const user = await prisma.user.create({
-    data: {
-      email: email.toLowerCase(),
-      name,
-      password: hashed,
-      role: role ?? 'AGENT',
-      organizationId: organizationId ?? undefined,
-    },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      organizationId: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  if (!canManageRole(requester.role, requestedRole)) {
+    return NextResponse.json({ error: 'You cannot create users with this role' }, { status: 403 });
+  }
 
-  return NextResponse.json(user, { status: 201 });
+  try {
+    const hashed = await bcrypt.hash(password, 12);
+    const user = await prisma.user.create({
+      data: {
+        email: email.toLowerCase(),
+        name,
+        password: hashed,
+        role: requestedRole,
+        organizationId: requester.role === 'SUPER_ADMIN' ? organizationId ?? undefined : requester.organizationId,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        organizationId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return NextResponse.json(user, { status: 201 });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return NextResponse.json({ error: 'A user with this email already exists' }, { status: 409 });
+    }
+    return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+  }
 }

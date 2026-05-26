@@ -11,12 +11,20 @@ async function main() {
     where: { email: adminEmail },
   });
 
+  const hashed = await bcrypt.hash(adminPassword, 12);
+
   if (existing) {
-    console.log('Admin user already exists.');
+    await prisma.user.update({
+      where: { email: adminEmail },
+      data: {
+        password: hashed,
+        role: 'SUPER_ADMIN',
+        deletedAt: null,
+      },
+    });
+    console.log('Admin user already exists. Super admin credentials refreshed.');
     return;
   }
-
-  const hashed = await bcrypt.hash(adminPassword, 12);
 
   await prisma.user.create({
     data: {

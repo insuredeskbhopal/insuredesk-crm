@@ -17,8 +17,7 @@ export const NAV_ITEMS = [
   { id: "analytics", label: "Analytics & Reports", icon: BarChart3 },
   { id: "field-setup", label: "Field Setup", icon: FileCog },
   { id: "settings", label: "Settings", icon: Settings },
-  // New user management entry (visible to SUPER_ADMIN only)
-  { id: "user-management", label: "User Management", icon: Users, role: "SUPER_ADMIN" },
+  { id: "user-management", label: "User Management", icon: Users, roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"] },
 ];
 
 export const EMPTY_FORM = {
