@@ -469,19 +469,31 @@
   align-items: center;
   min-height: 40px;
   border-radius: 8px;
-  border: 1px solid #5b9bd5;
-  background: #5b9bd5;
-  color: #ffffff;
+  border: 1px solid #000000;
+  background: #ffffff;
+  color: #000000;
   cursor: pointer;
   font-weight: 800;
   padding: 0 22px;
-  box-shadow: 0 4px 16px rgba(91, 155, 213, 0.15);
-  transition: transform var(--motion-fast), box-shadow var(--motion-fast);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.browse-button:active,
+.browse-button:focus,
+.browse-button:focus-visible {
+  background: #5b9bd5;
+  color: #ffffff;
+  border-color: #5b9bd5;
+  box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35);
+  transform: scale(0.98);
+  animation: buttonPulse 0.4s ease-out;
 }
 
 .browse-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(91, 155, 213, 0.25);\n}
+  box-shadow: 0 10px 24px rgba(91, 155, 213, 0.25);
+}
 
 .browse-button input {
   position: absolute;

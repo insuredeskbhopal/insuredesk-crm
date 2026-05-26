@@ -34,16 +34,45 @@ button {
   justify-content: center;
   gap: 8px;
   min-height: 36px;
-  border: 1px solid #5b9bd5;
+  border: 1px solid #000000;
   border-radius: 8px;
-  background: #5b9bd5;
-  color: #ffffff;
+  background: #ffffff;
+  color: #000000;
   cursor: pointer;
   padding: 0 14px;
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(91, 155, 213, 0.15);
-  transition: transform var(--motion-fast), box-shadow var(--motion-fast), background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
   white-space: nowrap;
+}
+
+button:hover:not(:disabled) {
+  background: rgba(91, 155, 213, 0.1);
+  color: #000000;
+  border-color: #5b9bd5;
+}
+
+button:active,
+button:focus,
+button:focus-visible {
+  background: #5b9bd5;
+  color: #ffffff;
+  border-color: #5b9bd5;
+  box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35);
+  transform: scale(0.98);
+  animation: buttonPulse 0.4s ease-out;
+}
+
+@keyframes buttonPulse {
+  0% {
+    box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35), 0 0 0 0 rgba(91, 155, 213, 0.7);
+  }
+  70% {
+    box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35), 0 0 0 12px rgba(91, 155, 213, 0);
+  }
+  100% {
+    box-shadow: 0 8px 20px rgba(91, 155, 213, 0.35), 0 0 0 0 rgba(91, 155, 213, 0);
+  }
 }
 
 .pdf-link {
