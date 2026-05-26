@@ -9,7 +9,8 @@ const ROUTE_MAP = {
   "customers": "/customer-management",
   "analytics": "/analytics-reports",
   "field-setup": "/field-setup",
-  "settings": "/settings",
+  "user-management": "/admin/users",
+
   "upload-history": "/upload-history"
 };
 
