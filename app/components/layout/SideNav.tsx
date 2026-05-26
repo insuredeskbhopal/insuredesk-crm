@@ -1,4 +1,4 @@
-import { CircleHelp, LayoutDashboard, LogOut, X } from "lucide-react";
+import { CircleHelp, LayoutDashboard, LogOut } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 
 const ROUTE_MAP = {
@@ -59,15 +59,6 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
 
   return (
     <aside className={`side-nav ${isSidebarOpen ? "open" : ""}`}>
-      {/* Mobile close button */}
-      <button 
-        className="sidebar-close-btn"
-        onClick={onCloseSidebar}
-        aria-label="Close Navigation"
-      >
-        <X size={20} />
-      </button>
-
       <div className="portal-title">
         <h1>BIMAHEADQUARTER</h1>
         <p>Enterprise Portal</p>

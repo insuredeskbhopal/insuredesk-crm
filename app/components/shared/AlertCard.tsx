@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, X } from "lucide-react";
+import { AlertTriangle, CheckCircle } from "lucide-react";
 
 export default function AlertCard({ alert, onDismiss }) {
   const isError = alert.type === "error";
@@ -13,7 +13,7 @@ export default function AlertCard({ alert, onDismiss }) {
         <p>{alert.message}</p>
       </div>
       <button className="alert-dismiss" type="button" onClick={onDismiss} aria-label="Dismiss alert">
-        <X size={15} />
+        Dismiss
       </button>
     </section>
   );

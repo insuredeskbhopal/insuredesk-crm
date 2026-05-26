@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CalendarDays, Loader2, Settings, Activity, LogOut, FileText, FileCheck, FileX, FileWarning, Clock, Menu, X } from "lucide-react";
+import { Bell, CalendarDays, Loader2, Settings, Activity, LogOut, FileText, FileCheck, FileX, FileWarning, Clock, Menu } from "lucide-react";
 import SearchBox from "@/app/components/shared/SearchBox";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -158,7 +158,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
           onClick={onToggleSidebar}
           aria-label="Toggle Navigation"
         >
-          {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          <Menu size={20} />
         </button>
         <strong>BIMAHEADQUARTER</strong>
         <nav>
@@ -334,13 +334,6 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
           <div className="tb-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="tb-modal-header">
               <h3 className="tb-status-title tb-modal-title">🔍 System Diagnostics</h3>
-              <button 
-                type="button" 
-                onClick={() => setShowDiagnosticsModal(false)}
-                className="tb-modal-close"
-              >
-                ✕
-              </button>
             </div>
             
             {loadingDiagnostics ? (
@@ -441,7 +434,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
             onClick={() => setToast("")}
             className="tb-toast-close"
           >
-            ✕
+            Dismiss
           </button>
         </div>
       ) : null}
