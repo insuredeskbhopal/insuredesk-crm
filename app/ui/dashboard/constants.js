@@ -1,3 +1,4 @@
+// app/ui/dashboard/constants.js
 import {
   BarChart3,
   Edit3,
@@ -5,11 +6,10 @@ import {
   FileText,
   Settings,
   Upload,
-  Users
+  Users,
 } from "lucide-react";
 
 export const NAV_ITEMS = [
-  // Existing items
   { id: "bulk-entry", label: "Bulk PDF Upload", icon: Upload },
   { id: "manual-entry", label: "Manual Policy Entry", icon: Edit3 },
   { id: "records", label: "Policy Records", icon: FileText },
@@ -18,15 +18,7 @@ export const NAV_ITEMS = [
   { id: "field-setup", label: "Field Setup", icon: FileCog },
   { id: "settings", label: "Settings", icon: Settings },
   // New user management entry (visible to SUPER_ADMIN only)
-  { id: "user-management", label: "User Management", icon: Users, role: "SUPER_ADMIN" }
-];
-  { id: "bulk-entry", label: "Bulk PDF Upload", icon: Upload },
-  { id: "manual-entry", label: "Manual Policy Entry", icon: Edit3 },
-  { id: "records", label: "Policy Records", icon: FileText },
-  { id: "customers", label: "Customer Management", icon: Users },
-  { id: "analytics", label: "Analytics & Reports", icon: BarChart3 },
-  { id: "field-setup", label: "Field Setup", icon: FileCog },
-  { id: "settings", label: "Settings", icon: Settings }
+  { id: "user-management", label: "User Management", icon: Users, role: "SUPER_ADMIN" },
 ];
 
 export const EMPTY_FORM = {
@@ -69,7 +61,7 @@ export const EMPTY_FORM = {
   policyCoverType: "",
   rtoLocation: "",
   nomineeName: "",
-  financerName: ""
+  financerName: "",
 };
 
 export const FIELD_SETUP = [
@@ -92,5 +84,5 @@ export const FIELD_SETUP = [
   ["Description", "description"],
   ["PPT / MPWLC", "pptMpwlc"],
   ["Occupancy", "occupancy"],
-  ["Valid In", "validIn"]
+  ["Valid In", "validIn"],
 ];
