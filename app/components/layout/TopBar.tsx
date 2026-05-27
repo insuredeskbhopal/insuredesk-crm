@@ -440,7 +440,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                     await fetch("/api/auth/logout", { method: "POST" });
                     setToast("Logged out successfully. Redirecting...");
                     setTimeout(() => {
-                      window.location.href = "/login";
+                      window.location.href = "/crm/admin/login";
                     }, 1000);
                   } catch (err) {
                     setToast("Failed to log out. Please try again.");
@@ -472,5 +472,4 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
     </header>
   );
 }
-
 

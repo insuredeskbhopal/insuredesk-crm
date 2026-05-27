@@ -5,7 +5,12 @@ import { logAudit, getAuditMetadata } from "@/lib/audit";
 
 export async function POST(request) {
   try {
-    const { email, password } = await request.json();
+    const { email, password, accessCode } = await request.json();
+    const requiredAccessCode = process.env.CRM_LOGIN_ACCESS_CODE || "";
+
+    if (requiredAccessCode && accessCode !== requiredAccessCode) {
+      return NextResponse.json({ success: false, error: "Invalid office access code" }, { status: 401 });
+    }
 
     if (!email || !password) {
       return NextResponse.json({ success: false, error: "Email and password are required" }, { status: 400 });
@@ -104,4 +109,3 @@ export async function POST(request) {
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }
-

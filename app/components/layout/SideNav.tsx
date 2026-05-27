@@ -133,7 +133,7 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
                   if (onCloseSidebar) onCloseSidebar();
                   try {
                     await fetch("/api/auth/logout", { method: "POST" });
-                    window.location.href = "/login";
+                    window.location.href = "/crm/admin/login";
                   } catch (err) {
                     console.error("Failed to log out:", err);
                     window.location.reload();

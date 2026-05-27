@@ -7,6 +7,7 @@ if (!SECRET_KEY) {
   throw new Error("JWT_SECRET is required in production.");
 }
 const encodedSecret = new TextEncoder().encode(SECRET_KEY);
+const ADMIN_LOGIN_PATH = "/crm/admin/login";
 
 export async function middleware(request) {
   const token = request.cookies.get("token")?.value;
@@ -33,11 +34,11 @@ export async function middleware(request) {
   }
 
   // 3. Define page categories
-  const isAuthPage = pathname === "/login";
+  const isAuthPage = pathname === ADMIN_LOGIN_PATH;
   const isAuthApi = pathname.startsWith("/api/auth");
 
-  if (pathname === "/signup") {
-    return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : "/login", request.url));
+  if (pathname === "/login" || pathname === "/signup") {
+    return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : ADMIN_LOGIN_PATH, request.url));
   }
 
   // Allow auth API routes to enforce their own login/logout restrictions.
@@ -51,8 +52,8 @@ export async function middleware(request) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
-    // Redirect pages to /login
-    const loginUrl = new URL("/login", request.url);
+    // Redirect CRM pages to the private admin login path.
+    const loginUrl = new URL(ADMIN_LOGIN_PATH, request.url);
     return NextResponse.redirect(loginUrl);
   }
 

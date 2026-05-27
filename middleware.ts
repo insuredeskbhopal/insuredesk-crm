@@ -7,6 +7,7 @@ if (!SECRET_KEY) {
   throw new Error("JWT_SECRET is required in production.");
 }
 const encodedSecret = new TextEncoder().encode(SECRET_KEY);
+const ADMIN_LOGIN_PATH = "/crm/admin/login";
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
@@ -30,11 +31,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const isAuthPage = pathname === "/login";
+  const isAuthPage = pathname === ADMIN_LOGIN_PATH;
   const isAuthApi = pathname.startsWith("/api/auth");
 
-  if (pathname === "/signup") {
-    return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : "/login", request.url));
+  if (pathname === "/login" || pathname === "/signup") {
+    return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : ADMIN_LOGIN_PATH, request.url));
   }
 
   if (isAuthApi) {
@@ -46,7 +47,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL(ADMIN_LOGIN_PATH, request.url);
     return NextResponse.redirect(loginUrl);
   }
 
