@@ -97,18 +97,6 @@ export default function Dashboard({
       fields: fieldsInGroup
     };
   }).filter(group => group.fields.length > 0);
-  const editFieldGroups = useMemo(() => {
-    const fieldMap = new Map(FIELD_SETUP.map(([label, key]) => [key, [label, key]]));
-    const groupedKeys = new Set(FIELD_GROUPS.flatMap((group) => group.fields));
-    const ungroupedFields = FIELD_SETUP.filter(([, key]) => !groupedKeys.has(key));
-    return [
-      { title: "Record Details", fields: ungroupedFields },
-      ...FIELD_GROUPS.map((group) => ({
-        title: group.title,
-        fields: group.fields.map((key) => fieldMap.get(key)).filter(Boolean)
-      }))
-    ].filter((group) => group.fields.length > 0);
-  }, []);
 
   useEffect(() => {
     if (manualGroup?.policies) {
@@ -197,6 +185,17 @@ export default function Dashboard({
 
   const analytics = useMemo(() => buildAnalytics(filteredRecords), [filteredRecords]);
   const canEditPolicyRecords = ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(currentUserRole);
+  const editValidation = useMemo(() => getReviewValidation({
+    sourceFile: editingRecord?.sourceFile || "",
+    extractedData: editForm
+  }), [editingRecord, editForm]);
+  const editFieldGroups = useMemo(() => FIELD_GROUPS.map((group) => {
+    const fieldsInGroup = editValidation.visibleFields.filter(([, key]) => group.fields.includes(key));
+    return {
+      title: group.title,
+      fields: fieldsInGroup
+    };
+  }).filter((group) => group.fields.length > 0), [editValidation.visibleFields]);
 
   const handleSelectReport = (report) => {
     if (!report) return;
@@ -365,11 +364,15 @@ export default function Dashboard({
     startSaving(async () => {
       try {
         setAlert(null);
+        const reviewedData = editValidation.visibleFields.reduce((payload, [, key]) => ({
+          ...payload,
+          [key]: editForm[key] ?? ""
+        }), {});
         const response = await fetch(`/api/policy-records/${editingRecord.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            reviewedData: editForm
+            reviewedData
           })
         });
 
@@ -716,7 +719,7 @@ export default function Dashboard({
               <section className="record-edit-modal" onClick={(event) => event.stopPropagation()} aria-modal="true" role="dialog">
                 <div className="record-edit-head">
                   <div>
-                    <p className="eyebrow">Policy Record</p>
+                    <p className="eyebrow">{editValidation.resolvedSchema ? `${editValidation.resolvedSchema.groupLabel} / ${editValidation.resolvedSchema.policyName}` : "Policy Record"}</p>
                     <h2><Pencil size={18} /> Edit lead data</h2>
                   </div>
                   <button aria-label="Close edit form" className="record-edit-close" type="button" onClick={() => setEditingRecord(null)}>
