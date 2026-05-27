@@ -1287,7 +1287,7 @@ th {
 }
 
 .records-table .col-action {
-  width: 72px;
+  width: 88px;
 }
 
 .records-table th {
@@ -1367,11 +1367,11 @@ th {
 .record-icon-action,
 .pdf-icon-link {
   display: inline-flex;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(25, 28, 29, 0.14);
+  border: 1px solid rgba(25, 28, 29, 0.24);
   border-radius: 8px;
   background: #ffffff;
   color: #000000;
@@ -1385,12 +1385,13 @@ th {
 
 .record-icon-action {
   cursor: pointer;
+  background: #f6f7f8;
 }
 
 .record-icon-action:hover,
 .pdf-icon-link:hover {
-  border-color: rgba(25, 28, 29, 0.3);
-  background: #f8f9fa;
+  border-color: rgba(25, 28, 29, 0.46);
+  background: #eef0f2;
 }
 
 .table-pagination {

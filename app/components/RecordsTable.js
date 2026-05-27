@@ -125,7 +125,7 @@ export default function RecordsTable({ records, canEdit = false, onEdit }) {
                       type="button"
                       onClick={() => onEdit?.(record)}
                     >
-                      <Pencil size={18} strokeWidth={2.4} />
+                      <Pencil size={24} strokeWidth={2.7} />
                     </button>
                   </td>
                 ) : null}
