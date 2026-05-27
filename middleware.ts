@@ -33,6 +33,7 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPage = pathname === ADMIN_LOGIN_PATH;
   const isAuthApi = pathname.startsWith("/api/auth");
+  const isPublicPage = pathname === "/" || isAuthPage;
 
   if (pathname === "/login" || pathname === "/signup") {
     return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : ADMIN_LOGIN_PATH, request.url));
@@ -42,7 +43,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!isAuthenticated && !isAuthPage) {
+  if (!isAuthenticated && !isPublicPage) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }

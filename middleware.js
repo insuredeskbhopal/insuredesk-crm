@@ -36,6 +36,7 @@ export async function middleware(request) {
   // 3. Define page categories
   const isAuthPage = pathname === ADMIN_LOGIN_PATH;
   const isAuthApi = pathname.startsWith("/api/auth");
+  const isPublicPage = pathname === "/" || isAuthPage;
 
   if (pathname === "/login" || pathname === "/signup") {
     return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : ADMIN_LOGIN_PATH, request.url));
@@ -47,7 +48,7 @@ export async function middleware(request) {
   }
 
   // 4. Redirect rules
-  if (!isAuthenticated && !isAuthPage) {
+  if (!isAuthenticated && !isPublicPage) {
     // If trying to access an API route unauthenticated, return JSON 401
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
