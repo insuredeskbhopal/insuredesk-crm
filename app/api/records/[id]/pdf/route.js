@@ -3,6 +3,7 @@ import { securityHeaders } from "@/lib/security";
 import { verifyJWT } from "@/lib/auth";
 import { canAccessResource, getTenantFilter } from "@/lib/rbac";
 import { getLocalPhysicalPath, getSignedUrl } from "@/lib/storage";
+import { downloadGoogleDriveFile } from "@/lib/google-drive-storage";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { NextResponse } from "next/server";
 import fs from "fs/promises";
@@ -93,6 +94,35 @@ export async function GET(_request, { params }) {
       });
     } catch {
       return Response.json({ error: "File not found on disk storage." }, { status: 404 });
+    }
+  } else if (file.storageProvider === "google_drive") {
+    try {
+      const fileBuffer = await downloadGoogleDriveFile(file.storagePath);
+      const fileName = sanitizeFileName(record.pdfFileName || file.sourceFile || "policy.pdf");
+
+      await logAudit({
+        action: "RECORD_PDF_DOWNLOAD",
+        entityType: "PolicyRecord",
+        entityId: record.id,
+        severity: "INFO",
+        source: "API",
+        ipAddress,
+        userAgent,
+        userId: session.userId,
+        organizationId: session.organizationId,
+        metadata: { filename: fileName, storageProvider: file.storageProvider }
+      });
+
+      return new Response(fileBuffer, {
+        headers: {
+          ...securityHeaders,
+          "Content-Type": file.mimeType || "application/pdf",
+          "Content-Disposition": `attachment; filename="${fileName}"`,
+          "Content-Length": String(fileBuffer.length)
+        }
+      });
+    } catch {
+      return Response.json({ error: "File not found in Google Drive storage." }, { status: 404 });
     }
   } else {
     // Cloud storage redirect using signed URLs

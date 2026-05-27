@@ -96,7 +96,8 @@ export async function POST(request) {
             storageProvider: storageResult.storageProvider,
             storagePath: storageResult.storagePath,
             fileHash: storageResult.fileHash,
-            fileSize: storageResult.fileSize
+            fileSize: storageResult.fileSize,
+            storageMetadata: storageResult.storageMetadata || {}
           }
         });
 
@@ -131,7 +132,10 @@ export async function POST(request) {
             ...extractionLog,
             policyUnderstanding: extractedData.policyUnderstanding || null,
             schemaExtraction: extractedData.schemaExtraction || null
-          }
+          },
+          storageProvider: uploadedFile.storageProvider,
+          storagePath: uploadedFile.storagePath,
+          storageMetadata: uploadedFile.storageMetadata || null
         });
       } catch (error) {
         const failedUpload = await persistFailedUploadedFile({
