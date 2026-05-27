@@ -1,3 +1,5 @@
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
+
 export const FIELD_GROUPS = [
   {
     title: "Policy Details",
@@ -175,9 +177,10 @@ export const POLICY_SCHEMA_LIBRARY = [
 
 export function getReviewCounts(files) {
   return files.reduce((counts, file) => {
-    if (file.status === "saved") counts.saved += 1;
-    else if (file.status === "failed") counts.failed += 1;
-    else if (file.status === "extracting" || file.status === "uploaded") counts.processing += 1;
+    const status = normalizeUploadStatus(file.status);
+    if (status === UPLOAD_STATUS.APPROVED) counts.saved += 1;
+    else if (status === UPLOAD_STATUS.FAILED) counts.failed += 1;
+    else if (status === UPLOAD_STATUS.PROCESSING || status === UPLOAD_STATUS.PENDING) counts.processing += 1;
     else counts.pending += 1;
     return counts;
   }, { pending: 0, saved: 0, failed: 0, processing: 0 });
@@ -194,30 +197,57 @@ export function queueSummaryLabel({ isUploading, selectedFiles, reviewCounts }) 
 
 export function getMissingRequiredFields(upload, visibleFields = FIELD_SETUP, requiredKeys) {
   const visibleKeys = new Set(visibleFields.map(([, key]) => key));
-  const requiredFieldPairs = [
-    ["Insured Name", "insuredName"],
-    ["Policy Number", "policyNumber"],
-    ["Insurance Company", "insuranceCompany"],
-    ["Premium", "premium"],
-    ["Start Date", "startDate"],
-    ["Expiry Date", "expiryDate"],
-    ["Vehicle Number", "vehicleNumber"],
-    ["Engine Number", "engineNumber"],
-    ["Chassis Number", "chassisNumber"],
-    ["IDV", "idv"],
-    ["Cover Type", "policyCoverType"]
-  ];
+  const fieldLabels = new Map(FIELD_SETUP.map(([label, key]) => [key, label]));
   const activeRequiredKeys = new Set(requiredKeys?.length ? requiredKeys : ["insuredName", "policyNumber"]);
-  return requiredFieldPairs
-    .filter(([, key]) => activeRequiredKeys.has(key) && visibleKeys.has(key) && !hasValue(upload?.extractedData?.[key]))
-    .map(([label]) => label);
+  return Array.from(activeRequiredKeys)
+    .filter((key) => visibleKeys.has(key) && !hasValue(upload?.extractedData?.[key]))
+    .map((key) => fieldLabels.get(key) || key);
+}
+
+export function getReviewValidation(upload, options = {}) {
+  const resolvedSchema = options.resolvedSchema || inferUploadSchema(upload);
+  const visibleFields = resolvedSchema?.fields?.length
+    ? FIELD_SETUP.filter(([, key]) => resolvedSchema.fields.includes(key))
+    : FIELD_SETUP;
+  const requiredKeys = resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : undefined;
+  const missingRequired = getMissingRequiredFields(upload, visibleFields, requiredKeys);
+
+  return {
+    resolvedSchema,
+    visibleFields,
+    requiredKeys,
+    missingRequired,
+    valid: missingRequired.length === 0
+  };
+}
+
+export function formatReviewValidationError(missingRequired) {
+  return `Fill required field${missingRequired.length === 1 ? "" : "s"} before saving: ${missingRequired.join(", ")}.`;
+}
+
+export function resolvePolicySchema(groupId, policyId) {
+  const group = POLICY_SCHEMA_LIBRARY.find((item) => item.id === groupId);
+  if (!group) return null;
+
+  const policy = group.policies.find((item) => item.id === policyId) || group.policies[0];
+  if (!policy) return null;
+
+  return {
+    groupId: group.id,
+    groupLabel: group.label,
+    policyId: policy.id,
+    policyName: policy.name,
+    fields: policy.fields || [],
+    requiredFields: inferRequiredFields(group.id, policy.id)
+  };
 }
 
 export function reviewStatusLabel(upload, missingRequired) {
   if (!upload) return "Waiting";
-  if (upload.status === "saved") return "Saved";
-  if (upload.status === "failed") return "Failed";
-  if (upload.status === "extracting" || upload.status === "uploaded") return "Extracting";
+  const status = normalizeUploadStatus(upload.status);
+  if (status === UPLOAD_STATUS.APPROVED) return "Saved";
+  if (status === UPLOAD_STATUS.FAILED) return "Failed";
+  if (status === UPLOAD_STATUS.PROCESSING || status === UPLOAD_STATUS.PENDING) return "Extracting";
   if (missingRequired.length) return "Needs manual input";
   return "Ready for Review";
 }
@@ -424,26 +454,25 @@ export function saveDashboardView(DASHBOARD_VIEW_KEY, view) {
 }
 
 export function queueLabel(status) {
+  const normalized = normalizeUploadStatus(status);
   return {
-    uploaded: "Uploaded",
-    extracting: "Extracting",
-    ready_for_review: "Ready for review",
-    needs_manual_classification: "Needs review",
-    saved: "Saved",
-    failed: "Failed"
-  }[status] || "Classified";
+    [UPLOAD_STATUS.PENDING]: "Queued",
+    [UPLOAD_STATUS.PROCESSING]: "Extracting",
+    [UPLOAD_STATUS.REVIEW_REQUIRED]: "Ready for review",
+    [UPLOAD_STATUS.APPROVED]: "Saved",
+    [UPLOAD_STATUS.FAILED]: "Failed"
+  }[normalized];
 }
 
 export function progressWidth(status) {
+  const normalized = normalizeUploadStatus(status);
   return {
-    uploaded: "20%",
-    extracting: "50%",
-    classified: "70%",
-    ready_for_review: "90%",
-    needs_manual_classification: "80%",
-    saved: "100%",
-    failed: "100%"
-  }[status] || "65%";
+    [UPLOAD_STATUS.PENDING]: "20%",
+    [UPLOAD_STATUS.PROCESSING]: "50%",
+    [UPLOAD_STATUS.REVIEW_REQUIRED]: "90%",
+    [UPLOAD_STATUS.APPROVED]: "100%",
+    [UPLOAD_STATUS.FAILED]: "100%"
+  }[normalized];
 }
 
 export function download(filename, content, type) {

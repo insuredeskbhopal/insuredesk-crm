@@ -1,12 +1,10 @@
 export const dynamic = "force-dynamic";
 
-import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
 import Dashboard from "@/app/ui/dashboard";
+import { loadScopedPolicyRecords } from "@/lib/scoped-data";
 
 export default async function FieldSetupPage() {
-  const records = await prisma.policyRecord.findMany({
-    orderBy: { savedAt: "desc" }
-  });
+  const records = await loadScopedPolicyRecords();
   return <Dashboard initialRecords={records.map(normalizeRecord)} activePage="field-setup" />;
 }

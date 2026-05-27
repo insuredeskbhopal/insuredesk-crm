@@ -7,6 +7,8 @@ import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploa
 import { verifyJWT } from "@/lib/auth";
 import { uploadFile } from "@/lib/storage";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
+import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/upload-failure";
 
 export const runtime = "nodejs";
 
@@ -22,6 +24,7 @@ export async function POST(request) {
     if (!user || user.role === "VIEWER") {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
+    const actorId = user.userId || user.id;
 
     const formData = await request.formData();
     const files = formData.getAll("files").filter((file) => file && typeof file.arrayBuffer === "function");
@@ -32,21 +35,30 @@ export async function POST(request) {
     const { ipAddress, userAgent } = getAuditMetadata(request);
 
     for (const file of files) {
+      let buffer = null;
+      let storageResult = null;
+      let rawText = "";
+      let extractionMethod = "failed";
+      let extractionLog = null;
+
       try {
-        const buffer = await validatePdfFile(file);
+        buffer = await validatePdfFile(file);
         
         // 1. Upload to storage layer (Local/S3) and get metadata
-        const storageResult = await uploadFile(
+        storageResult = await uploadFile(
           buffer,
           file.type || "application/pdf",
           file.name || "Untitled.pdf"
         );
 
         // 2. Perform PDF text extraction
-        const { rawText, extractionMethod, ocrAttempted, extractionLog } = await extractTextFromPdf(buffer);
+        const textResult = await extractTextFromPdf(buffer);
+        rawText = textResult.rawText;
+        extractionMethod = textResult.extractionMethod || extractionMethod;
+        extractionLog = textResult.extractionLog || null;
 
         if (!rawText) {
-          throw new Error(ocrAttempted ? "No text could be extracted from this PDF using text extraction or OCR." : "PDF text extraction returned no content.");
+          throw new Error(textResult.ocrAttempted ? "No text could be extracted from this PDF using text extraction or OCR." : "PDF text extraction returned no content.");
         }
 
         const extractedData = sanitizeRecordPayload(extractPolicyFromText(rawText, file.name || ""));
@@ -60,7 +72,7 @@ export async function POST(request) {
             sizeBytes: buffer.byteLength,
             rawText,
             extractionMethod: extractedData.extractionMethod || extractionMethod,
-            status: "REVIEW_REQUIRED", // Enterprise status enum
+            status: UPLOAD_STATUS.REVIEW_REQUIRED,
             detectedBankSourceName: "",
             detectedCompanyName: extractedData.insuranceCompany || "",
             detectedServiceCategoryName: "",
@@ -78,7 +90,7 @@ export async function POST(request) {
             
             // SaaS scoping and tracking
             organizationId: user.organizationId,
-            createdById: user.id,
+            createdById: actorId,
             
             // Storage references
             storageProvider: storageResult.storageProvider,
@@ -89,23 +101,27 @@ export async function POST(request) {
         });
 
         // 4. Audit successful file upload
-        await logAudit({
-          action: "FILE_UPLOAD",
-          entityType: "UploadedFile",
-          entityId: uploadedFile.id,
-          severity: "INFO",
-          source: "API",
-          ipAddress,
-          userAgent,
-          userId: user.id,
-          organizationId: user.organizationId,
-          metadata: { filename: file.name, fileHash: storageResult.fileHash, fileSize: storageResult.fileSize }
-        });
+        try {
+          await logAudit({
+            action: "FILE_UPLOAD",
+            entityType: "UploadedFile",
+            entityId: uploadedFile.id,
+            severity: "INFO",
+            source: "API",
+            ipAddress,
+            userAgent,
+            userId: actorId,
+            organizationId: user.organizationId,
+            metadata: { filename: file.name, fileHash: storageResult.fileHash, fileSize: storageResult.fileSize }
+          });
+        } catch (auditError) {
+          console.warn("Upload audit log failed:", auditError);
+        }
 
         uploaded.push({
           id: uploadedFile.id,
           sourceFile: uploadedFile.sourceFile,
-          status: uploadedFile.status,
+          status: normalizeUploadStatus(uploadedFile.status),
           rawText,
           detection: null,
           selected: {},
@@ -118,24 +134,50 @@ export async function POST(request) {
           }
         });
       } catch (error) {
-        // Audit failed upload attempt
-        await logAudit({
-          action: "FILE_UPLOAD_FAILED",
-          entityType: "UploadedFile",
-          severity: "WARNING",
-          source: "API",
-          ipAddress,
-          userAgent,
-          userId: user.id,
-          organizationId: user.organizationId,
-          metadata: { filename: file.name || "Untitled.pdf", error: error instanceof Error ? error.message : "Extraction failed" }
+        const failedUpload = await persistFailedUploadedFile({
+          file,
+          error,
+          user,
+          actorId,
+          buffer,
+          storageResult,
+          rawText,
+          extractionMethod,
+          extractionLog
         });
+        const errorMessage = failedUpload?.errorMessage || getUploadFailureMessage(error);
+
+        // Audit failed upload attempt
+        try {
+          await logAudit({
+            action: "FILE_UPLOAD_FAILED",
+            entityType: "UploadedFile",
+            entityId: failedUpload?.id,
+            severity: "WARNING",
+            source: "API",
+            ipAddress,
+            userAgent,
+            userId: actorId,
+            organizationId: user.organizationId,
+            metadata: {
+              filename: file.name || "Untitled.pdf",
+              error: errorMessage,
+              uploadedFileId: failedUpload?.id || null,
+              storagePath: failedUpload?.storagePath || storageResult?.storagePath || null,
+              fileHash: failedUpload?.fileHash || storageResult?.fileHash || null
+            }
+          });
+        } catch (auditError) {
+          console.warn("Failed upload audit log failed:", auditError);
+        }
 
         failed.push({
-          id: randomUUID(),
+          id: failedUpload?.id || randomUUID(),
           sourceFile: file.name || "Untitled.pdf",
-          status: "FAILED",
-          error: error instanceof Error ? error.message : "Unknown extraction error."
+          status: UPLOAD_STATUS.FAILED,
+          error: errorMessage,
+          errorMessage,
+          storagePath: failedUpload?.storagePath || null
         });
       }
     }

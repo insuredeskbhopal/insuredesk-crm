@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 
-import { prisma } from "@/lib/prisma";
 import PageHeader from "@/app/components/layout/PageHeader";
+import { loadScopedUploads } from "@/lib/scoped-data";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 
 function formatSize(bytes) {
   if (!bytes) return "-";
@@ -25,28 +26,29 @@ function formatDate(date) {
 }
 
 function getStatusStyle(status) {
+  const normalized = normalizeUploadStatus(status);
   return {
-    failed: { background: "rgba(224, 80, 80, 0.12)", color: "#c62828" },
-    saved: { background: "rgba(46, 125, 50, 0.12)", color: "#2e7d32" },
-    ready_for_review: { background: "rgba(25, 118, 210, 0.12)", color: "#1976d2" },
-    needs_manual_classification: { background: "rgba(239, 108, 0, 0.12)", color: "#ef6c00" }
-  }[status] || { background: "#f3f4f5", color: "var(--primary)" };
+    [UPLOAD_STATUS.FAILED]: { background: "rgba(224, 80, 80, 0.12)", color: "#c62828" },
+    [UPLOAD_STATUS.APPROVED]: { background: "rgba(46, 125, 50, 0.12)", color: "#2e7d32" },
+    [UPLOAD_STATUS.REVIEW_REQUIRED]: { background: "rgba(25, 118, 210, 0.12)", color: "#1976d2" },
+    [UPLOAD_STATUS.PROCESSING]: { background: "rgba(239, 108, 0, 0.12)", color: "#ef6c00" },
+    [UPLOAD_STATUS.PENDING]: { background: "#f3f4f5", color: "var(--primary)" }
+  }[normalized];
 }
 
 function statusLabel(status) {
+  const normalized = normalizeUploadStatus(status);
   return {
-    uploaded: "Uploaded",
-    extracting: "Extracting",
-    ready_for_review: "Ready for Review",
-    needs_manual_classification: "Needs Review",
-    saved: "Saved to DB",
-    failed: "Failed"
-  }[status] || status;
+    [UPLOAD_STATUS.PENDING]: "Pending",
+    [UPLOAD_STATUS.PROCESSING]: "Processing",
+    [UPLOAD_STATUS.REVIEW_REQUIRED]: "Ready for Review",
+    [UPLOAD_STATUS.APPROVED]: "Saved to DB",
+    [UPLOAD_STATUS.FAILED]: "Failed"
+  }[normalized];
 }
 
 export default async function UploadHistoryPage() {
-  const uploads = await prisma.uploadedFile.findMany({
-    orderBy: { createdAt: "desc" },
+  const uploads = await loadScopedUploads({
     select: {
       id: true,
       sourceFile: true,
@@ -96,7 +98,7 @@ export default async function UploadHistoryPage() {
                       </span>
                     </td>
                     <td>
-                      {upload.status === "failed" ? (
+                      {normalizeUploadStatus(upload.status) === UPLOAD_STATUS.FAILED ? (
                         <span className="queue-error" style={{ margin: 0 }}>
                           {upload.errorMessage || "Unknown error"}
                         </span>

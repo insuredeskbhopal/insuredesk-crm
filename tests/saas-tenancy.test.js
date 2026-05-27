@@ -110,6 +110,13 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(filter).toEqual({ organizationId: orgA, deletedAt: null, createdById: user1 });
     });
 
+    it("uses userId from JWT payloads when generating AGENT ownership filters", () => {
+      const session = { userId: user1, role: UserRole.AGENT, organizationId: orgA };
+      const filter = getTenantFilter(session, "read");
+
+      expect(filter).toEqual({ organizationId: orgA, deletedAt: null, createdById: user1 });
+    });
+
     it("returns blocking filter for VIEWER trying to write", () => {
       const session = { id: user1, role: UserRole.VIEWER, organizationId: orgA };
       const filter = getTenantFilter(session, "write");

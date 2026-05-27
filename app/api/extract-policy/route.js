@@ -1,17 +1,40 @@
 import { extractFieldsForSchema } from "@/lib/policy-extractor";
 import { getPolicySchema } from "@/lib/policy-field-setup";
 import { prisma } from "@/lib/prisma";
+import { verifyJWT } from "@/lib/auth";
+import { getTenantFilter } from "@/lib/rbac";
+import { UPLOAD_STATUS } from "@/lib/upload-status";
 
 export const runtime = "nodejs";
 
 export async function POST(request) {
+  const token = request.cookies.get("token")?.value;
+  if (!token) {
+    return Response.json({ error: "Not authenticated." }, { status: 401 });
+  }
+
+  const user = await verifyJWT(token);
+  if (!user || user.role === "VIEWER") {
+    return Response.json({ error: "Unauthorized." }, { status: 403 });
+  }
+
   const payload = await request.json();
   const uploadedFileId = String(payload.uploadedFileId || "");
   const rawText = String(payload.rawText || "");
 
   const uploadedFile = uploadedFileId
-    ? await prisma.uploadedFile.findUnique({ where: { id: uploadedFileId } })
+    ? await prisma.uploadedFile.findFirst({
+        where: {
+          id: uploadedFileId,
+          ...getTenantFilter(user, "write")
+        }
+      })
     : null;
+
+  if (uploadedFileId && !uploadedFile) {
+    return Response.json({ error: "Uploaded file was not found or access denied." }, { status: 404 });
+  }
+
   const text = uploadedFile?.rawText || rawText;
 
   if (!text.trim()) {
@@ -42,7 +65,7 @@ export async function POST(request) {
         extractedData,
         schemaVersion: schema.version,
         schemaFallbackLevel: schema.fallbackLevel,
-        status: "ready_for_review"
+        status: UPLOAD_STATUS.REVIEW_REQUIRED
       }
     });
   }

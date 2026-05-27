@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
+import { loadScopedPolicyRecords } from "@/lib/scoped-data";
 import { findReportById, getReportRecords, formatMoney } from "@/lib/analytics";
 import RecordsTable from "@/app/components/RecordsTable";
 
@@ -10,22 +10,7 @@ export default async function AnalyticsReportPage({ params }) {
   const { reportId } = await params;
   const normalizedReportId = decodeURIComponent(reportId);
 
-  const records = await prisma.policyRecord.findMany({
-    orderBy: { savedAt: "desc" },
-    select: {
-      id: true,
-      savedAt: true,
-      data: true,
-      reviewedData: true,
-      extractedData: true,
-      extractionMethod: true,
-      extractionQuality: true,
-      extractionLog: true,
-      confidenceScore: true,
-      pdfFileName: true,
-      pdfMimeType: true
-    }
-  });
+  const records = await loadScopedPolicyRecords();
 
   const normalizedRecords = records.map(normalizeRecord);
   const report = findReportById(normalizedRecords, normalizedReportId) || findReportById(normalizedRecords, reportId);

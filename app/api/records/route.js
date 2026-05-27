@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 
 export async function GET(request) {
   try {
@@ -74,9 +75,28 @@ export async function POST(request) {
     if (!user || user.role === "VIEWER") {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
+    const actorId = user.userId || user.id;
 
     const payload = await request.json();
     const data = sanitizeRecordPayload(payload);
+    const validation = getReviewValidation({
+      sourceFile: data.sourceFile,
+      extractedData: data
+    });
+
+    if (!validation.valid) {
+      return Response.json({
+        error: formatReviewValidationError(validation.missingRequired),
+        missingRequired: validation.missingRequired,
+        schema: validation.resolvedSchema
+          ? {
+              groupId: validation.resolvedSchema.groupId,
+              policyId: validation.resolvedSchema.policyId,
+              policyName: validation.resolvedSchema.policyName
+            }
+          : null
+      }, { status: 422 });
+    }
     
     const record = await prisma.policyRecord.create({
       data: {
@@ -84,7 +104,7 @@ export async function POST(request) {
         savedAt: new Date(),
         data,
         organizationId: user.organizationId,
-        createdById: user.id
+        createdById: actorId
       }
     });
 
@@ -98,14 +118,17 @@ export async function POST(request) {
       source: "API",
       ipAddress,
       userAgent,
-      userId: user.id,
+      userId: actorId,
       organizationId: user.organizationId,
       metadata: { sourceFile: record.sourceFile }
     });
 
     return Response.json(normalizeRecord(record), { status: 201 });
-  } catch {
-    return Response.json({ error: "Failed to create policy record" }, { status: 500 });
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Failed to create policy record" },
+      { status: 500 }
+    );
   }
 }
 
@@ -126,13 +149,14 @@ export async function DELETE(request) {
     if (guard) return guard;
 
     const tenantFilter = getTenantFilter(user, "write");
+    const actorId = user.userId || user.id;
 
     // Perform enterprise Soft Delete rather than hard deleting
     await prisma.policyRecord.updateMany({
       where: tenantFilter,
       data: {
         deletedAt: new Date(),
-        deletedById: user.id
+        deletedById: actorId
       }
     });
 
@@ -144,7 +168,7 @@ export async function DELETE(request) {
       source: "API",
       ipAddress,
       userAgent,
-      userId: user.id,
+      userId: actorId,
       organizationId: user.organizationId
     });
 
@@ -153,4 +177,3 @@ export async function DELETE(request) {
     return Response.json({ error: "Failed to delete records" }, { status: 500 });
   }
 }
-

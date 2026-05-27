@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { getTenantFilter } from "@/lib/rbac";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export async function GET(request) {
     if (!session || session.role !== "SUPER_ADMIN") {
       return Response.json({ error: "Access denied: Diagnostics is restricted to system administrators" }, { status: 403 });
     }
+    const tenantFilter = getTenantFilter(session, "read");
 
     const startTime = Date.now();
     
@@ -25,8 +27,8 @@ export async function GET(request) {
 
     // Retrieve stats
     const [policyRecordsCount, uploadedFilesCount, companyCount, bankCount, categoryCount, schemaCount] = await Promise.all([
-      prisma.policyRecord.count(),
-      prisma.uploadedFile.count(),
+      prisma.policyRecord.count({ where: tenantFilter }),
+      prisma.uploadedFile.count({ where: tenantFilter }),
       prisma.insuranceCompany.count(),
       prisma.bankSource.count(),
       prisma.serviceCategory.count(),
@@ -77,4 +79,3 @@ export async function GET(request) {
     }, { status: 500 });
   }
 }
-

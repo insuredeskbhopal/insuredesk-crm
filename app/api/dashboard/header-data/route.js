@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { parsePolicyDate, startOfDay } from "@/app/lib/reporting/filters";
+import { verifyJWT } from "@/lib/auth";
+import { getTenantFilter } from "@/lib/rbac";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 
 export const dynamic = "force-dynamic";
 
@@ -30,10 +33,22 @@ function formatDate(date) {
   }
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return Response.json({ error: "Not authenticated", success: false }, { status: 401 });
+    }
+
+    const session = await verifyJWT(token);
+    if (!session) {
+      return Response.json({ error: "Invalid or expired session", success: false }, { status: 401 });
+    }
+
+    const tenantFilter = getTenantFilter(session, "read");
     // 1. Fetch upcoming renewals
     const rawRecords = await prisma.policyRecord.findMany({
+      where: tenantFilter,
       orderBy: { savedAt: "desc" },
       select: {
         id: true,
@@ -87,6 +102,7 @@ export async function GET() {
 
     // 2. Fetch recent uploads
     const uploads = await prisma.uploadedFile.findMany({
+      where: tenantFilter,
       orderBy: { createdAt: "desc" },
       take: 5,
       select: {
@@ -96,6 +112,7 @@ export async function GET() {
         createdAt: true,
         errorMessage: true,
         policyRecords: {
+          where: tenantFilter,
           select: {
             id: true,
             data: true,
@@ -106,6 +123,7 @@ export async function GET() {
     });
 
     const notifications = uploads.map((u) => {
+      const uploadStatus = normalizeUploadStatus(u.status);
       let icon = "📄";
       let text = `File "${u.sourceFile}" uploaded`;
       let type = "info";
@@ -119,23 +137,19 @@ export async function GET() {
         recordId = record.id;
       }
       
-      if (u.status === "saved") {
+      if (uploadStatus === UPLOAD_STATUS.APPROVED) {
         icon = "✅";
         text = `Successfully saved ${u.sourceFile}`;
         type = "success";
-      } else if (u.status === "failed") {
+      } else if (uploadStatus === UPLOAD_STATUS.FAILED) {
         icon = "❌";
-        text = `Failed to process ${u.sourceFile}`;
+        text = `Failed to process ${u.sourceFile}: ${u.errorMessage || "Unknown error"}`;
         type = "error";
-      } else if (u.status === "ready_for_review") {
+      } else if (uploadStatus === UPLOAD_STATUS.REVIEW_REQUIRED) {
         icon = "⚠️";
         text = `${u.sourceFile} is ready for review`;
         type = "warning";
-      } else if (u.status === "needs_manual_classification") {
-        icon = "🔍";
-        text = `Manual classification required: ${u.sourceFile}`;
-        type = "warning";
-      } else if (u.status === "extracting") {
+      } else if (uploadStatus === UPLOAD_STATUS.PROCESSING) {
         icon = "⏳";
         text = `Extracting details: ${u.sourceFile}`;
         type = "progress";
@@ -147,6 +161,7 @@ export async function GET() {
         text,
         time: formatRelativeTime(u.createdAt),
         type,
+        errorMessage: u.errorMessage || "",
         recordId,
         clientName
       };

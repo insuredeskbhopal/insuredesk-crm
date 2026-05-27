@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { securityHeaders } from "@/lib/security";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource } from "@/lib/rbac";
+import { canAccessResource, getTenantFilter } from "@/lib/rbac";
 import { getLocalPhysicalPath, getSignedUrl } from "@/lib/storage";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { NextResponse } from "next/server";
@@ -23,8 +23,11 @@ export async function GET(_request, { params }) {
   const { id } = await params;
 
   // Retrieve policy record including linked upload file metadata
-  const record = await prisma.policyRecord.findUnique({
-    where: { id },
+  const record = await prisma.policyRecord.findFirst({
+    where: {
+      id,
+      ...getTenantFilter(session, "read")
+    },
     include: {
       uploadedFile: true
     }
@@ -119,4 +122,3 @@ function sanitizeFileName(value) {
     .replace(/\s+/g, " ")
     .trim();
 }
-

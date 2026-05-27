@@ -1,23 +1,18 @@
 import { CheckCircle, LoaderCircle, ShieldCheck, Trash2 } from "lucide-react";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 import PreviewField from "../shared/PreviewField";
 import EmptyState from "../shared/EmptyState";
 import {
-  FIELD_SETUP,
   FIELD_GROUPS,
-  inferUploadSchema,
-  getMissingRequiredFields,
+  getReviewValidation,
   reviewStatusLabel,
   hasValue
 } from "@/app/lib/dashboard-helpers";
 
 export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, onClear, onSave }) {
-  const resolvedSchema = inferUploadSchema(upload);
-  const visibleFields = resolvedSchema?.fields?.length
-    ? FIELD_SETUP.filter(([, key]) => resolvedSchema.fields.includes(key))
-    : FIELD_SETUP;
-  const requiredKeys = resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : undefined;
-  const missingRequired = getMissingRequiredFields(upload, visibleFields, requiredKeys);
+  const { resolvedSchema, visibleFields, requiredKeys, missingRequired } = getReviewValidation(upload);
   const filledFieldCount = visibleFields.filter(([, key]) => hasValue(upload?.extractedData?.[key])).length;
+  const uploadStatus = normalizeUploadStatus(upload?.status);
 
   const groupedFields = FIELD_GROUPS.map(group => {
     const fieldsInGroup = visibleFields.filter(([, key]) => group.fields.includes(key));
@@ -50,7 +45,7 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
             <div><span>Schema</span><strong>{resolvedSchema ? `${resolvedSchema.groupLabel} / ${resolvedSchema.policyName}` : "General Review"}</strong></div>
             <div><span>Extraction</span><strong>{upload.extractionMethod || "unknown"}</strong></div>
             <div><span>Fields Filled</span><strong>{`${filledFieldCount}/${visibleFields.length}`}</strong></div>
-            <div><span>Status</span><strong>{upload.status === "saved" ? "Database Ready" : "Ready for Review"}</strong></div>
+            <div><span>Status</span><strong>{uploadStatus === UPLOAD_STATUS.APPROVED ? "Database Ready" : "Ready for Review"}</strong></div>
           </div>
 
           {missingRequired.length ? (
@@ -91,7 +86,7 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
 
           <div className="preview-actions">
             <button type="button" onClick={onClear}><Trash2 size={18} /> Clear</button>
-            <button className="secondary-action" type="button" onClick={onSave} disabled={isSaving || upload.status === "saved" || Boolean(missingRequired.length)}>
+            <button className="secondary-action" type="button" onClick={onSave} disabled={isSaving || uploadStatus === UPLOAD_STATUS.APPROVED || Boolean(missingRequired.length)}>
               {isSaving ? <LoaderCircle size={18} className="spin" /> : <CheckCircle size={18} />}
               Verify & Save
             </button>

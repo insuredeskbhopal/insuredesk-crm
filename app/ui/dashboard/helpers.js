@@ -1,3 +1,5 @@
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
+
 export function pageTitle(page) {
   return {
     dashboard: "Policy Dashboard",
@@ -85,9 +87,12 @@ export function download(filename, content, type) {
 }
 
 export function queueLabel(status) {
+  const normalized = normalizeUploadStatus(status);
   return {
-    extracting: "Extracting",
-    saved: "Saved",
-    failed: "Failed"
-  }[status] || "Queued";
+    [UPLOAD_STATUS.PENDING]: "Queued",
+    [UPLOAD_STATUS.PROCESSING]: "Extracting",
+    [UPLOAD_STATUS.REVIEW_REQUIRED]: "Ready for review",
+    [UPLOAD_STATUS.APPROVED]: "Saved",
+    [UPLOAD_STATUS.FAILED]: "Failed"
+  }[normalized];
 }

@@ -4,6 +4,7 @@ import { useDeferredValue, useEffect, useMemo, useState, useTransition } from "r
 import { useRouter, useSearchParams } from "next/navigation";
 import "./dashboard.css";
 import { getRecordSearchText } from "@/lib/search";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 import { buildAnalytics, formatMoney, parseMoney } from "@/lib/analytics";
 import PageHeader from "@/app/components/layout/PageHeader";
 import RecordsTable from "@/app/components/RecordsTable";
@@ -27,7 +28,9 @@ import {
   FIELD_GROUPS,
   getReviewCounts,
   queueSummaryLabel,
-  getMissingRequiredFields,
+  getReviewValidation,
+  formatReviewValidationError,
+  resolvePolicySchema,
   pageTitle,
   pageSubtitle,
   buildClientProfiles,
@@ -169,7 +172,7 @@ export default function Dashboard({
   const selectedPolicy = selectedClient
     ? selectedClient.policies.find((record) => record.id === selectedPolicyId)
     : null;
-  const selectedUpload = selectedFiles.find((file) => file.id === selectedUploadId) || selectedFiles.find((file) => file.status !== "failed") || null;
+  const selectedUpload = selectedFiles.find((file) => file.id === selectedUploadId) || selectedFiles.find((file) => normalizeUploadStatus(file.status) !== UPLOAD_STATUS.FAILED) || null;
   const reviewCounts = getReviewCounts(selectedFiles);
 
   const showRecordSaveActions = activePage === "bulk-entry" || activePage === "dashboard" || activePage === "manual-entry";
@@ -207,7 +210,7 @@ export default function Dashboard({
       name: file.name,
       sourceFile: file.name,
       fileObject: file,
-      status: "uploaded"
+      status: UPLOAD_STATUS.PENDING
     }));
     setSelectedFiles(queuedFiles);
     setSelectedUploadId(queuedFiles[0]?.id || "");
@@ -216,7 +219,7 @@ export default function Dashboard({
       try {
         const body = new FormData();
         files.forEach((file) => body.append("files", file));
-        setSelectedFiles((current) => current.map((file) => ({ ...file, status: "extracting" })));
+        setSelectedFiles((current) => current.map((file) => ({ ...file, status: UPLOAD_STATUS.PROCESSING })));
 
         const response = await fetch("/api/uploads", {
           method: "POST",
@@ -231,7 +234,7 @@ export default function Dashboard({
           } catch {}
           setSelectedFiles(queuedFiles.map((file) => ({
             ...file,
-            status: "failed"
+            status: UPLOAD_STATUS.FAILED
           })));
           setAlert({ type: "error", title: "Upload failed", message });
           setToast(message);
@@ -246,14 +249,14 @@ export default function Dashboard({
           ...extracted.map((record) => ({
             ...record,
             name: record.sourceFile,
-            status: record.status || "ready_for_review"
+            status: normalizeUploadStatus(record.status || UPLOAD_STATUS.REVIEW_REQUIRED)
           })),
           ...failed.map((item) => ({
             id: item.id,
             name: item.sourceFile,
             sourceFile: item.sourceFile,
             fileObject: queuedFiles.find((file) => file.name === item.sourceFile)?.fileObject,
-            status: "failed",
+            status: UPLOAD_STATUS.FAILED,
             message: item.error
           }))
         ]);
@@ -276,7 +279,7 @@ export default function Dashboard({
         const message = error?.message || "The upload request could not be completed.";
         setSelectedFiles(queuedFiles.map((file) => ({
           ...file,
-          status: "failed",
+          status: UPLOAD_STATUS.FAILED,
           message
         })));
         setAlert({ type: "error", title: "Upload failed", message });
@@ -324,17 +327,30 @@ export default function Dashboard({
           return;
         }
         if (isDynamicPolicySave) {
-          if (selectedUpload.status === "failed") {
+          const uploadStatus = normalizeUploadStatus(selectedUpload.status);
+          if (uploadStatus === UPLOAD_STATUS.FAILED) {
             setAlert({ type: "error", title: "Save failed", message: "This PDF failed extraction. Retry it before saving." });
             return;
           }
-          if (selectedUpload.status === "saved") {
+          if (uploadStatus === UPLOAD_STATUS.APPROVED) {
             setAlert({ type: "info", title: "Already saved", message: `${selectedUpload.sourceFile} is already saved.` });
             return;
           }
-          const missingRequired = getMissingRequiredFields(selectedUpload);
+          const { missingRequired } = getReviewValidation(selectedUpload);
           if (missingRequired.length) {
-            const message = `Fill required field${missingRequired.length === 1 ? "" : "s"} before saving: ${missingRequired.join(", ")}.`;
+            const message = formatReviewValidationError(missingRequired);
+            setAlert({ type: "error", title: "Review incomplete", message });
+            setToast("Fill required fields before saving");
+            return;
+          }
+        } else if (activePage === "manual-entry") {
+          const resolvedSchema = resolvePolicySchema(manualGroup?.id, manualPolicy?.id);
+          const { missingRequired } = getReviewValidation(
+            { sourceFile: form.sourceFile, extractedData: form },
+            { resolvedSchema }
+          );
+          if (missingRequired.length) {
+            const message = formatReviewValidationError(missingRequired);
             setAlert({ type: "error", title: "Review incomplete", message });
             setToast("Fill required fields before saving");
             return;
@@ -379,8 +395,11 @@ export default function Dashboard({
         const saved = await response.json();
         setRecords((current) => [saved, ...current]);
         if (isDynamicPolicySave) {
-          updateSelectedUpload({ status: "saved", savedRecordId: saved.id });
-          const nextUpload = selectedFiles.find((file) => file.id !== selectedUpload.id && file.status !== "failed" && file.status !== "saved");
+          updateSelectedUpload({ status: UPLOAD_STATUS.APPROVED, savedRecordId: saved.id });
+          const nextUpload = selectedFiles.find((file) => {
+            const status = normalizeUploadStatus(file.status);
+            return file.id !== selectedUpload.id && status !== UPLOAD_STATUS.FAILED && status !== UPLOAD_STATUS.APPROVED;
+          });
           if (nextUpload) {
             setSelectedUploadId(nextUpload.id);
           }
@@ -463,7 +482,7 @@ export default function Dashboard({
                     <div className="queue-list">
                       {selectedFiles.length ? selectedFiles.map((file) => (
                         <article
-                          className={`queue-card ${file.status === "failed" ? "failed" : ""} ${selectedUpload?.id === file.id ? "active" : ""}`}
+                          className={`queue-card ${normalizeUploadStatus(file.status) === UPLOAD_STATUS.FAILED ? "failed" : ""} ${selectedUpload?.id === file.id ? "active" : ""}`}
                           key={file.id || file.name}
                           role="button"
                           tabIndex={0}
@@ -485,7 +504,7 @@ export default function Dashboard({
                               </small>
                             ) : null}
                             {file.message ? <small className="queue-error">{file.message}</small> : null}
-                            {file.status === "failed" ? (
+                            {normalizeUploadStatus(file.status) === UPLOAD_STATUS.FAILED ? (
                               <button className="queue-retry" type="button" onClick={(event) => {
                                 event.stopPropagation();
                                 retryUpload(file);

@@ -6,6 +6,8 @@ import { sanitizeRecordPayload } from "@/lib/record-validation";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { UPLOAD_STATUS } from "@/lib/upload-status";
+import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 
 export const runtime = "nodejs";
 
@@ -79,6 +81,7 @@ export async function POST(request) {
     if (!user || user.role === "VIEWER") {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
+    const actorId = user.userId || user.id;
 
     const payload = await request.json();
     
@@ -109,6 +112,24 @@ export async function POST(request) {
       selectedCompany: payload.selectedCompany,
       selectedPolicyType: payload.selectedPolicyType
     }));
+    const validation = getReviewValidation({
+      sourceFile: payload.sourceFile || uploadedFile?.sourceFile || legacyPayload.sourceFile,
+      extractedData: legacyPayload
+    });
+
+    if (!validation.valid) {
+      return Response.json({
+        error: formatReviewValidationError(validation.missingRequired),
+        missingRequired: validation.missingRequired,
+        schema: validation.resolvedSchema
+          ? {
+              groupId: validation.resolvedSchema.groupId,
+              policyId: validation.resolvedSchema.policyId,
+              policyName: validation.resolvedSchema.policyName
+            }
+          : null
+      }, { status: 422 });
+    }
 
     const record = await prisma.policyRecord.create({
       data: {
@@ -137,7 +158,7 @@ export async function POST(request) {
         uploadedFileId: uploadedFile?.id,
         policySchemaId: payload.policySchemaId || undefined,
         organizationId: user.organizationId,
-        createdById: user.id
+        createdById: actorId
       }
     });
 
@@ -145,15 +166,14 @@ export async function POST(request) {
     await saveHumanCorrections({
       uploadedFile,
       reviewedData,
-      userId: user.id,
+      userId: actorId,
       organizationId: user.organizationId
     });
 
     if (uploadedFile) {
-      // Transition status to APPROVED enum in database
       await prisma.uploadedFile.update({
         where: { id: uploadedFile.id },
-        data: { status: "APPROVED" }
+        data: { status: UPLOAD_STATUS.APPROVED }
       });
 
       // Audit log the status transition
@@ -165,9 +185,9 @@ export async function POST(request) {
         source: "API",
         ipAddress,
         userAgent,
-        userId: user.id,
+        userId: actorId,
         organizationId: user.organizationId,
-        metadata: { oldStatus: uploadedFile.status, newStatus: "APPROVED" }
+        metadata: { oldStatus: uploadedFile.status, newStatus: UPLOAD_STATUS.APPROVED }
       });
     }
 
@@ -180,7 +200,7 @@ export async function POST(request) {
       source: "API",
       ipAddress,
       userAgent,
-      userId: user.id,
+      userId: actorId,
       organizationId: user.organizationId,
       metadata: { sourceFile: record.sourceFile }
     });
@@ -264,11 +284,24 @@ function toLegacyPayload(data) {
     cubicCapacity: data.cubicCapacity,
     seatingCapacity: data.seatingCapacity,
     grossVehicleWeight: data.grossVehicleWeight,
-    idv: data.idv || data.sumInsured,
+    idv: data.idv || (hasMotorPayloadSignals(data) ? data.sumInsured : ""),
     ncb: data.ncb,
     policyCoverType: data.policyCoverType,
     rtoLocation: data.rtoLocation,
     nomineeName: data.nomineeName,
     financerName: data.financerName
   };
+}
+
+function hasMotorPayloadSignals(data) {
+  return Boolean(
+    data.vehicleNumber ||
+    data.registrationNumber ||
+    data.engineNumber ||
+    data.chassisNumber ||
+    data.makeModel ||
+    data.cubicCapacity ||
+    data.seatingCapacity ||
+    /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(data.policyType || "")
+  );
 }

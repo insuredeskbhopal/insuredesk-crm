@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource } from "@/lib/rbac";
+import { canAccessResource, getTenantFilter } from "@/lib/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 
 export const runtime = "nodejs";
 
@@ -20,7 +21,12 @@ export async function PUT(request, { params }) {
 
     const { id } = await params;
     const payload = await request.json();
-    const existing = await prisma.policyRecord.findUnique({ where: { id } });
+    const existing = await prisma.policyRecord.findFirst({
+      where: {
+        id,
+        ...getTenantFilter(session, "write")
+      }
+    });
 
     if (!existing || existing.deletedAt) {
       return Response.json({ error: "Policy record not found." }, { status: 404 });
@@ -39,6 +45,26 @@ export async function PUT(request, { params }) {
     }
 
     const reviewedData = payload.reviewedData || payload.extractedData || existing.reviewedData || existing.extractedData || {};
+    const mergedData = { ...(existing.data || {}), ...reviewedData };
+    const validation = getReviewValidation({
+      sourceFile: existing.sourceFile || existing.pdfFileName || mergedData.sourceFile,
+      extractedData: mergedData
+    });
+
+    if (!validation.valid) {
+      return Response.json({
+        error: formatReviewValidationError(validation.missingRequired),
+        missingRequired: validation.missingRequired,
+        schema: validation.resolvedSchema
+          ? {
+              groupId: validation.resolvedSchema.groupId,
+              policyId: validation.resolvedSchema.policyId,
+              policyName: validation.resolvedSchema.policyName
+            }
+          : null
+      }, { status: 422 });
+    }
+
     const record = await prisma.policyRecord.update({
       where: { id },
       data: {
@@ -48,7 +74,7 @@ export async function PUT(request, { params }) {
         selectedCompany: payload.selectedCompany ?? existing.selectedCompany,
         selectedServiceCategory: payload.selectedServiceCategory ?? existing.selectedServiceCategory,
         selectedPolicyType: payload.selectedPolicyType ?? existing.selectedPolicyType,
-        data: { ...(existing.data || {}), ...reviewedData },
+        data: mergedData,
         updatedById: session.userId
       }
     });
@@ -87,7 +113,12 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = await params;
-    const existing = await prisma.policyRecord.findUnique({ where: { id } });
+    const existing = await prisma.policyRecord.findFirst({
+      where: {
+        id,
+        ...getTenantFilter(session, "read")
+      }
+    });
 
     if (!existing || existing.deletedAt) {
       return Response.json({ error: "Policy record not found." }, { status: 404 });
@@ -134,4 +165,3 @@ export async function DELETE(request, { params }) {
     return Response.json({ error: "Policy record could not be deleted." }, { status: 500 });
   }
 }
-

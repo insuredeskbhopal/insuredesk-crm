@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
 import Dashboard from "@/app/ui/dashboard";
+import { loadScopedPolicyRecords } from "@/lib/scoped-data";
 
 export default async function DashboardPage({
   activePage = "dashboard",
@@ -8,22 +8,7 @@ export default async function DashboardPage({
   policyId = ""
 }) {
   try {
-    const records = await prisma.policyRecord.findMany({
-      orderBy: { savedAt: "desc" },
-      select: {
-        id: true,
-        savedAt: true,
-        data: true,
-        reviewedData: true,
-        extractedData: true,
-        extractionMethod: true,
-        extractionQuality: true,
-        extractionLog: true,
-        confidenceScore: true,
-        pdfFileName: true,
-        pdfMimeType: true
-      }
-    });
+    const records = await loadScopedPolicyRecords();
 
     return (
       <Dashboard

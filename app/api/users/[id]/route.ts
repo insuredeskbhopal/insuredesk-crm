@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireUserManager } from '@/lib/authMiddleware';
-import { canManageRole } from '@/lib/userManagementPermissions';
+import { canManageRole, getVisibleUserWhere } from '@/lib/userManagementPermissions';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
@@ -23,8 +23,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if ('response' in authResult) return authResult.response;
   const requester = authResult.user;
 
-  const user = await prisma.user.findUnique({
-    where: { id, deletedAt: null },
+  const user = await prisma.user.findFirst({
+    where: {
+      id,
+      ...getVisibleUserWhere(requester),
+    },
     select: {
       id: true,
       email: true,
@@ -56,7 +59,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Invalid request body', details: parseResult.error.format() }, { status: 422 });
   }
   const data = parseResult.data;
-  const targetUser = await prisma.user.findUnique({ where: { id } });
+  const targetUser = await prisma.user.findFirst({
+    where: {
+      id,
+      ...getVisibleUserWhere(requester),
+    },
+  });
   if (!targetUser || targetUser.deletedAt) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
@@ -111,7 +119,12 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 });
   }
   const superAdminCount = await prisma.user.count({ where: { role: 'SUPER_ADMIN', deletedAt: null } });
-  const targetUser = await prisma.user.findUnique({ where: { id } });
+  const targetUser = await prisma.user.findFirst({
+    where: {
+      id,
+      ...getVisibleUserWhere(requester),
+    },
+  });
   if (!targetUser) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
