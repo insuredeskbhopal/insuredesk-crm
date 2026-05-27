@@ -1,7 +1,10 @@
 // lib/auth.ts
 import { jwtVerify, SignJWT } from 'jose';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'bimaheadquarter_jwt_super_secret_fallback_key_32_chars';
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'dev-only-jwt-secret-change-me');
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is required in production.');
+}
 const encodedSecret = new TextEncoder().encode(JWT_SECRET);
 
 /**

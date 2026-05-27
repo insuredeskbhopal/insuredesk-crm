@@ -2,7 +2,10 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const SECRET_KEY = process.env.JWT_SECRET || "bimaheadquarter_jwt_super_secret_fallback_key_32_chars";
+const SECRET_KEY = process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? "" : "dev-only-jwt-secret-change-me");
+if (!SECRET_KEY) {
+  throw new Error("JWT_SECRET is required in production.");
+}
 const encodedSecret = new TextEncoder().encode(SECRET_KEY);
 
 export async function middleware(request) {
