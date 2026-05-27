@@ -6,9 +6,9 @@ import { logAudit, getAuditMetadata } from "@/lib/audit";
 export async function POST(request) {
   try {
     const { email, password, accessCode } = await request.json();
-    const requiredAccessCode = process.env.CRM_LOGIN_ACCESS_CODE || "BIMA-OFFICE-2026";
+    const requiredAccessCode = process.env.CRM_LOGIN_ACCESS_CODE || "";
 
-    if (accessCode !== requiredAccessCode) {
+    if (requiredAccessCode && accessCode !== requiredAccessCode) {
       return NextResponse.json({ success: false, error: "Invalid office access code" }, { status: 401 });
     }
 
