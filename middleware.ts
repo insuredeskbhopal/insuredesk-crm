@@ -27,8 +27,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const isAuthPage = pathname === "/login" || pathname === "/signup";
+  const isAuthPage = pathname === "/login";
   const isAuthApi = pathname.startsWith("/api/auth");
+
+  if (pathname === "/signup") {
+    return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : "/login", request.url));
+  }
 
   if (isAuthApi) {
     return NextResponse.next();

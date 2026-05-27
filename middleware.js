@@ -30,10 +30,14 @@ export async function middleware(request) {
   }
 
   // 3. Define page categories
-  const isAuthPage = pathname === "/login" || pathname === "/signup";
+  const isAuthPage = pathname === "/login";
   const isAuthApi = pathname.startsWith("/api/auth");
 
-  // Allow auth API routes (login/signup/logout) to proceed without interception
+  if (pathname === "/signup") {
+    return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : "/login", request.url));
+  }
+
+  // Allow auth API routes to enforce their own login/logout restrictions.
   if (isAuthApi) {
     return NextResponse.next();
   }
@@ -50,7 +54,7 @@ export async function middleware(request) {
   }
 
   if (isAuthenticated && isAuthPage) {
-    // Redirect authenticated users away from login/signup to dashboard
+    // Redirect authenticated users away from login to dashboard
     const dashboardUrl = new URL("/dashboard", request.url);
     return NextResponse.redirect(dashboardUrl);
   }

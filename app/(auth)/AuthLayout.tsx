@@ -2,7 +2,7 @@ import "../ui/dashboard.css";
 
 export const metadata = {
   title: "BIMAHEADQUARTER - Authenticate",
-  description: "Secure login and registration portal",
+  description: "Secure admin-managed login portal",
 };
 
 type Props = {
