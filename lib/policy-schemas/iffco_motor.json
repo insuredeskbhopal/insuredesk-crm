@@ -1,0 +1,15 @@
+{
+  "name": "IFFCO-TOKIO Motor",
+  "version": 1,
+  "expectedSections": ["policy_details", "insured_details", "vehicle_details", "premium_details"],
+  "expectedTables": ["vehicle_details_table", "premium_table"],
+  "fields": [
+    { "field": "policyNumber", "aliases": ["Policy No", "Policy Number", "Policy #"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "insuredName", "aliases": ["Name of the Insured", "Insured Name"], "section": "insured_details", "type": "string", "required": true },
+    { "field": "registrationNumber", "aliases": ["Registration No", "Registration Mark"], "section": "vehicle_details", "type": "registration", "required": false },
+    { "field": "engineNumber", "aliases": ["Engine No", "Engine Number"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "chassisNumber", "aliases": ["Chassis No", "Chassis Number"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "premium", "aliases": ["Net Premium", "Total Premium"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "totalIdv", "aliases": ["IDV", "Insured Declared Value"], "section": "premium_details", "type": "amount", "required": false }
+  ]
+}

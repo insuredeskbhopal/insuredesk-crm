@@ -1,0 +1,15 @@
+{
+  "name": "New India Motor",
+  "version": 1,
+  "expectedSections": ["policy_details", "insured_details", "vehicle_details", "premium_details"],
+  "expectedTables": ["vehicle_details_table", "premium_table", "idv_table"],
+  "fields": [
+    { "field": "policyNumber", "aliases": ["Policy No", "Policy Number", "Certificate Number"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "insuredName", "aliases": ["Name of Insured", "Insured Name"], "section": "insured_details", "type": "string", "required": true },
+    { "field": "registrationNumber", "aliases": ["Registration No", "Registration Number"], "section": "vehicle_details", "type": "registration", "required": false },
+    { "field": "engineNumber", "aliases": ["Engine Number", "Engine No"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "chassisNumber", "aliases": ["Chassis no./Engine Number", "Chassis No"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "totalIdv", "aliases": ["Insured Declared Value", "IDV"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "premium", "aliases": ["Total Premium", "Amount Received"], "section": "premium_details", "type": "amount", "required": false }
+  ]
+}

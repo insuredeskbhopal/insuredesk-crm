@@ -1,0 +1,15 @@
+{
+  "name": "ICICI Warehouse",
+  "version": 1,
+  "expectedSections": ["policy_details", "insured_details", "risk_location", "warehouse_details", "premium_details"],
+  "expectedTables": ["sum_insured_table", "premium_table"],
+  "fields": [
+    { "field": "policyNumber", "aliases": ["Policy No", "Policy Number"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "insuredName", "aliases": ["Name of the Insured", "Insured Name"], "section": "insured_details", "type": "string", "required": true },
+    { "field": "policyType", "aliases": ["MSME Suraksha Kavach Package Policy - Advance"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "riskLocation", "aliases": ["Premises to be Insured", "Risk Location"], "section": "risk_location", "type": "string", "required": false },
+    { "field": "description", "aliases": ["Business of the Insured", "Description of Block"], "section": "warehouse_details", "type": "string", "required": false },
+    { "field": "sumInsured", "aliases": ["Sum Insured", "MSME Suraksha Kavach - Contents"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "premium", "aliases": ["Total Premium inclusive Tax", "Premium Including GST"], "section": "premium_details", "type": "amount", "required": false }
+  ]
+}

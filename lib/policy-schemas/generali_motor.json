@@ -1,0 +1,32 @@
+{
+  "name": "Generali Motor",
+  "version": 1,
+  "expectedSections": ["policy_details", "insured_details", "vehicle_details", "premium_details", "nominee_details", "financier_details"],
+  "expectedTables": ["vehicle_details_table", "premium_table", "idv_table", "gst_tax_table"],
+  "fields": [
+    { "field": "policyNumber", "aliases": ["Policy No", "Policy Number", "Your Policy No"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "invoiceNumber", "aliases": ["Invoice Number"], "section": "policy_details", "type": "string", "required": false },
+    { "field": "issuanceDate", "aliases": ["Date of Issue / Invoice Date", "Date of Issue"], "section": "policy_details", "type": "date", "required": false },
+    { "field": "insuredName", "aliases": ["Name of Insured/Proposer", "Dear"], "section": "insured_details", "type": "string", "required": true },
+    { "field": "communicationAddress", "aliases": ["Address"], "section": "insured_details", "type": "string", "required": false },
+    { "field": "customerMobile", "aliases": ["Telephone(Mob,Off)", "Telephone"], "section": "insured_details", "type": "string", "required": false },
+    { "field": "customerEmail", "aliases": ["Email Id"], "section": "insured_details", "type": "email", "required": false },
+    { "field": "panNumber", "aliases": ["PAN Number"], "section": "insured_details", "type": "pan", "required": false },
+    { "field": "registrationNumber", "aliases": ["Registration No"], "section": "vehicle_details", "type": "registration", "required": true },
+    { "field": "chassisNumber", "aliases": ["Chassis No"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "engineNumber", "aliases": ["Engine No"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "manufacturingYear", "aliases": ["Year of Manufacture"], "section": "vehicle_details", "type": "number", "required": false },
+    { "field": "cubicCapacity", "aliases": ["Cubic Capacity"], "section": "vehicle_details", "type": "number", "required": false },
+    { "field": "seatingCapacity", "aliases": ["Seating Capacity"], "section": "vehicle_details", "type": "number", "required": false },
+    { "field": "totalIdv", "aliases": ["Total IDV", "Year 1 IDV"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "basicOwnDamage", "aliases": ["Basic Premium on Vehicle"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "netOwnDamagePremium", "aliases": ["Total Own Damage Premium"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "netLiabilityPremium", "aliases": ["Total Liability Premium"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "gstAmount", "aliases": ["Goods and Service Tax"], "section": "gst_table", "type": "amount", "required": false },
+    { "field": "totalPremium", "aliases": ["Total Premium (rounded off)", "Total Premium"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "previousPolicyNumber", "aliases": ["Previous Policy No"], "section": "previous_policy_details", "type": "string", "required": false },
+    { "field": "ncbPercentage", "aliases": ["No Claim Discount", "NCB"], "section": "previous_policy_details", "type": "percent", "required": false },
+    { "field": "nomineeName", "aliases": ["nominee"], "section": "nominee_details", "type": "string", "required": false },
+    { "field": "financerName", "aliases": ["Hypothecation Agreement with", "Hypothecation"], "section": "financier_details", "type": "string", "required": false }
+  ]
+}

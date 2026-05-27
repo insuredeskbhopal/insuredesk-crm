@@ -1,0 +1,32 @@
+{
+  "name": "HDFC ERGO Motor",
+  "version": 1,
+  "expectedSections": ["policy_details", "insured_details", "vehicle_details", "premium_details", "previous_policy_details"],
+  "expectedTables": ["vehicle_details_table", "premium_table", "idv_table", "gst_tax_table"],
+  "fields": [
+    { "field": "policyNumber", "aliases": ["Policy No", "Policy Number", "Certificate of Insurance cum Policy Schedule"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "proposalNumber", "aliases": ["Proposal No"], "section": "policy_details", "type": "string", "required": false },
+    { "field": "invoiceNumber", "aliases": ["Invoice No"], "section": "policy_details", "type": "string", "required": false },
+    { "field": "issuanceDate", "aliases": ["Issuance Date", "Issue Date"], "section": "policy_details", "type": "date", "required": false },
+    { "field": "insuredName", "aliases": ["Customer Name", "Insured Name", "M/S"], "section": "insured_details", "type": "string", "required": true },
+    { "field": "communicationAddress", "aliases": ["Communication Address"], "section": "insured_details", "type": "string", "required": false },
+    { "field": "customerMobile", "aliases": ["Tel", "Mobile", "Contact No"], "section": "insured_details", "type": "string", "required": false },
+    { "field": "customerEmail", "aliases": ["Email ID", "Email"], "section": "insured_details", "type": "email", "required": false },
+    { "field": "panNumber", "aliases": ["PAN/Form 97 ID", "PAN"], "section": "insured_details", "type": "pan", "required": false },
+    { "field": "registrationNumber", "aliases": ["Registration No", "Registration Number"], "section": "vehicle_details", "type": "registration", "required": true },
+    { "field": "vehicleMake", "aliases": ["Make"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "vehicleModel", "aliases": ["Model"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "rto", "aliases": ["RTO"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "chassisNumber", "aliases": ["Chassis No", "Chassis Number"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "engineNumber", "aliases": ["Engine No", "Engine Number"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "cubicCapacity", "aliases": ["Cubic Capacity / Watts", "Cubic Capacity"], "section": "vehicle_details", "type": "number", "required": false },
+    { "field": "seatingCapacity", "aliases": ["Seats", "Seating Capacity"], "section": "vehicle_details", "type": "number", "required": false },
+    { "field": "manufacturingYear", "aliases": ["Year of Manufacture"], "section": "vehicle_details", "type": "number", "required": false },
+    { "field": "bodyType", "aliases": ["Body Type"], "section": "vehicle_details", "type": "string", "required": false },
+    { "field": "totalIdv", "aliases": ["Total IDV", "IDV"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "totalPremium", "aliases": ["Total Premium"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "ncbPercentage", "aliases": ["NCB", "No Claim Bonus"], "section": "previous_policy_details", "type": "percent", "required": false },
+    { "field": "previousPolicyNumber", "aliases": ["Previous Policy No"], "section": "previous_policy_details", "type": "string", "required": false },
+    { "field": "cscName", "aliases": ["CSC Name"], "section": "policy_details", "type": "string", "required": false }
+  ]
+}

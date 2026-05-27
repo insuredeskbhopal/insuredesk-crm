@@ -59,17 +59,22 @@ export async function POST(request) {
             mimeType: file.type || "application/pdf",
             sizeBytes: buffer.byteLength,
             rawText,
-            extractionMethod,
+            extractionMethod: extractedData.extractionMethod || extractionMethod,
             status: "REVIEW_REQUIRED", // Enterprise status enum
             detectedBankSourceName: "",
             detectedCompanyName: extractedData.insuranceCompany || "",
             detectedServiceCategoryName: "",
             detectedPolicyTypeName: extractedData.policyType || "",
-            confidenceScore: 0,
+            confidenceScore: extractedData.confidenceScore || 0,
             extractedData,
-            extractionLog,
+            extractionQuality: extractedData.extractionQuality || {},
+            extractionLog: {
+              ...extractionLog,
+              policyUnderstanding: extractedData.policyUnderstanding || null,
+              schemaExtraction: extractedData.schemaExtraction || null
+            },
             schemaFallbackLevel: null,
-            schemaVersion: null,
+            schemaVersion: extractedData.schemaExtraction?.schemaVersion || null,
             
             // SaaS scoping and tracking
             organizationId: user.organizationId,
@@ -105,8 +110,12 @@ export async function POST(request) {
           detection: null,
           selected: {},
           extractedData,
-          extractionMethod,
-          extractionLog
+          extractionMethod: extractedData.extractionMethod || extractionMethod,
+          extractionLog: {
+            ...extractionLog,
+            policyUnderstanding: extractedData.policyUnderstanding || null,
+            schemaExtraction: extractedData.schemaExtraction || null
+          }
         });
       } catch (error) {
         // Audit failed upload attempt
@@ -151,4 +160,3 @@ export async function POST(request) {
     return Response.json({ error: error instanceof Error ? error.message : "Unknown upload error." }, { status: 500 });
   }
 }
-

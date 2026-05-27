@@ -1,17 +1,56 @@
-// middleware.ts (simple edge-safe middleware)
-// app/middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { jwtVerify } from "jose";
+
+const SECRET_KEY = process.env.JWT_SECRET || "bimaheadquarter_jwt_super_secret_fallback_key_32_chars";
+const encodedSecret = new TextEncoder().encode(SECRET_KEY);
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
-  if (!token) {
-    const url = new URL('/login', request.url);
-    return NextResponse.redirect(url);
+  const { pathname } = request.nextUrl;
+
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/docs") ||
+    pathname === "/favicon.ico"
+  ) {
+    return NextResponse.next();
   }
+
+  let isAuthenticated = false;
+  if (token) {
+    try {
+      await jwtVerify(token, encodedSecret);
+      isAuthenticated = true;
+    } catch {
+      isAuthenticated = false;
+    }
+  }
+
+  const isAuthPage = pathname === "/login" || pathname === "/signup";
+  const isAuthApi = pathname.startsWith("/api/auth");
+
+  if (isAuthApi) {
+    return NextResponse.next();
+  }
+
+  if (!isAuthenticated && !isAuthPage) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+    }
+
+    const loginUrl = new URL("/login", request.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (isAuthenticated && isAuthPage) {
+    const dashboardUrl = new URL("/dashboard", request.url);
+    return NextResponse.redirect(dashboardUrl);
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/users/:path*'],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"]
 };

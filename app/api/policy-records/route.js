@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { createRequire } from "node:module";
 import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/record-validation";
@@ -7,6 +8,9 @@ import { getTenantFilter } from "@/lib/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 
 export const runtime = "nodejs";
+
+const require = createRequire(import.meta.url);
+const { saveCorrection } = require("../../../lib/policy-intelligence/trainingMemory.js");
 
 export async function GET(request) {
   try {
@@ -138,6 +142,12 @@ export async function POST(request) {
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
+    await saveHumanCorrections({
+      uploadedFile,
+      reviewedData,
+      userId: user.id,
+      organizationId: user.organizationId
+    });
 
     if (uploadedFile) {
       // Transition status to APPROVED enum in database
@@ -179,6 +189,43 @@ export async function POST(request) {
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Policy record could not be saved." }, { status: 400 });
   }
+}
+
+async function saveHumanCorrections({ uploadedFile, reviewedData, userId, organizationId }) {
+  if (!uploadedFile?.extractedData || !reviewedData) return;
+  const originalData = uploadedFile.extractedData || {};
+  const understanding = originalData.policyUnderstanding || {};
+  const fieldConfidence = originalData.fieldConfidence || {};
+  const keys = new Set([...Object.keys(originalData), ...Object.keys(reviewedData)]);
+
+  for (const key of keys) {
+    if (["sourceText", "policyUnderstanding", "schemaExtraction", "fieldConfidence", "extractionQuality"].includes(key)) continue;
+    const originalValue = normalizeCompareValue(originalData[key]);
+    const correctedValue = normalizeCompareValue(reviewedData[key]);
+    if (!correctedValue || originalValue === correctedValue) continue;
+
+    try {
+      await saveCorrection({
+        field: key,
+        originalValue: originalData[key] ?? null,
+        correctedValue: reviewedData[key] ?? null,
+        layoutFingerprint: understanding.layout?.layoutHash || understanding.layoutVersion || "",
+        company: understanding.company || originalData.insuranceCompany || "",
+        policyType: understanding.policyType || originalData.policyType || "",
+        aliases: [],
+        sourceFieldLabel: fieldConfidence[key]?.sourceLabel || "",
+        sourceText: fieldConfidence[key]?.sourceText || "",
+        userId,
+        organizationId
+      });
+    } catch (error) {
+      console.warn("Training memory save failed:", error);
+    }
+  }
+}
+
+function normalizeCompareValue(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
 }
 
 

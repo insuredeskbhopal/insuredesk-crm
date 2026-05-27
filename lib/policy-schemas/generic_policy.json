@@ -1,0 +1,16 @@
+{
+  "name": "Generic Policy",
+  "version": 1,
+  "expectedSections": ["policy_details", "insured_details", "premium_details"],
+  "expectedTables": ["premium_table"],
+  "fields": [
+    { "field": "insuredName", "aliases": ["Name of Insured", "Insured Name", "Name of Insured/Proposer", "Customer Name"], "section": "insured_details", "type": "string", "required": true },
+    { "field": "policyNumber", "aliases": ["Policy No", "Policy Number", "Policy #", "Certificate Number"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "policyType", "aliases": ["Policy Type", "Policy Schedule", "Certificate of Insurance"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "insuranceCompany", "aliases": ["Insurance Company", "Insurer", "Company Name"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "premium", "aliases": ["Total Premium", "Gross Premium", "Net Premium", "Amount Received"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "sumInsured", "aliases": ["Sum Insured", "Total IDV", "Insured Declared Value"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "startDate", "aliases": ["From", "Start Date", "Period of Insurance From"], "section": "policy_details", "type": "date", "required": false },
+    { "field": "expiryDate", "aliases": ["To", "Expiry Date", "Period of Insurance To"], "section": "policy_details", "type": "date", "required": false }
+  ]
+}

@@ -2560,11 +2560,25 @@ td:last-child {
 }
 
 .alert-dismiss {
-  width: 28px;
-  min-height: 28px;
-  padding: 0;
-  border-radius: 999px;
+  justify-self: end;
+  width: auto;
+  min-width: 82px;
+  min-height: 34px;
+  border: 1px solid rgba(25, 28, 29, 0.12) !important;
+  border-radius: 8px;
+  background: #ffffff !important;
+  padding: 0 14px;
+  color: #000000 !important;
+  font-size: var(--font-size-sm);
+  font-weight: 800;
   box-shadow: none;
+  white-space: nowrap;
+}
+
+.alert-dismiss:hover:not(:disabled) {
+  border-color: rgba(25, 28, 29, 0.24) !important;
+  background: #f8f9fa !important;
+  transform: none;
 }
 
 @media (max-width: 1180px) {
