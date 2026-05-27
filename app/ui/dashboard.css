@@ -5,7 +5,7 @@
 .top-bar {
   position: fixed;
   top: 0;
-  z-index: 40;
+  z-index: 1200;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3422,6 +3422,8 @@ label span em.meta-manual {
   top: 46px;
   right: 0px;
   width: 320px;
+  max-width: calc(100vw - 24px);
+  min-width: min(320px, calc(100vw - 24px));
   background-color: #ffffff;
   border: 1px solid rgba(196, 198, 207, 0.5);
   border-radius: 12px;
@@ -3429,6 +3431,8 @@ label span em.meta-manual {
   padding: 16px;
   z-index: 100;
   animation: page-in 200ms ease-out;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .tb-dropdown-title {
@@ -4021,7 +4025,6 @@ th {
 .top-brand strong,
 .top-brand a,
 .side-nav button,
-.tb-dropdown,
 .tb-modal-card,
 .toast,
 .tb-toast {
@@ -4184,6 +4187,8 @@ th {
     left: 12px;
     right: 12px;
     width: auto;
+    min-width: 0;
+    max-width: none;
     max-height: min(70vh, 520px);
     overflow-y: auto;
   }
@@ -4399,6 +4404,11 @@ th {
   .tb-dropdown {
     border-radius: 8px;
     padding: 14px;
+  }
+
+  .tb-dropdown {
+    left: 10px;
+    right: 10px;
   }
 
   .tb-counts-row {
