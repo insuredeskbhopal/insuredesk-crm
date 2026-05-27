@@ -1,6 +1,6 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { Download, Pencil } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const PAGE_SIZE = 10;
@@ -12,7 +12,7 @@ function formatDate(value) {
   return date.toLocaleDateString("en-IN");
 }
 
-export default function RecordsTable({ records }) {
+export default function RecordsTable({ records, canEdit = false, onEdit }) {
   const [currentPage, setCurrentPage] = useState(1);
   const pageCount = Math.max(1, Math.ceil(records.length / PAGE_SIZE));
   const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -60,6 +60,7 @@ export default function RecordsTable({ records }) {
             <col className="col-occupancy" />
             <col className="col-valid" />
             <col className="col-source" />
+            {canEdit ? <col className="col-action" /> : null}
             <col className="col-pdf" />
           </colgroup>
           <thead>
@@ -86,6 +87,7 @@ export default function RecordsTable({ records }) {
               <th>Occupancy</th>
               <th>Valid In</th>
               <th>Source File</th>
+              {canEdit ? <th>Edit</th> : null}
               <th>PDF</th>
             </tr>
           </thead>
@@ -114,6 +116,19 @@ export default function RecordsTable({ records }) {
                 <td>{record.occupancy || ""}</td>
                 <td>{record.validIn || ""}</td>
                 <td>{record.sourceFile || ""}</td>
+                {canEdit ? (
+                  <td>
+                    <button
+                      aria-label={`Edit ${record.policyNumber || record.insuredName || "policy record"}`}
+                      className="record-icon-action"
+                      title="Edit policy record"
+                      type="button"
+                      onClick={() => onEdit?.(record)}
+                    >
+                      <Pencil size={14} />
+                    </button>
+                  </td>
+                ) : null}
                 <td>
                   {record.hasPdf ? (
                     <a className="pdf-icon-link" href={`/api/records/${record.id}/pdf`} title="Download PDF" aria-label="Download PDF">
@@ -124,7 +139,7 @@ export default function RecordsTable({ records }) {
               </tr>
             )) : (
               <tr>
-                <td className="empty" colSpan={23}>No database records yet.</td>
+                <td className="empty" colSpan={canEdit ? 24 : 23}>No database records yet.</td>
               </tr>
             )}
           </tbody>

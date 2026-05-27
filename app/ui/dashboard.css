@@ -1286,6 +1286,10 @@ th {
   width: 64px;
 }
 
+.records-table .col-action {
+  width: 72px;
+}
+
 .records-table th {
   position: sticky;
   top: 0;
@@ -1358,6 +1362,30 @@ th {
   max-width: 100%;
   font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
   overflow-wrap: anywhere;
+}
+
+.record-icon-action,
+.pdf-icon-link {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(25, 28, 29, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #000000;
+  box-shadow: none;
+}
+
+.record-icon-action {
+  cursor: pointer;
+}
+
+.record-icon-action:hover,
+.pdf-icon-link:hover {
+  border-color: rgba(25, 28, 29, 0.3);
+  background: #f8f9fa;
 }
 
 .table-pagination {
@@ -3153,6 +3181,80 @@ label span em.meta-manual {
 
 .manual-actions button {
   min-width: 200px;
+}
+
+.record-edit-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(12, 16, 18, 0.48);
+}
+
+.record-edit-modal {
+  display: flex;
+  width: min(1120px, 100%);
+  max-height: min(860px, calc(100vh - 48px));
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(25, 28, 29, 0.12);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(25, 28, 29, 0.24);
+}
+
+.record-edit-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(233, 236, 239, 0.9);
+  padding: 20px 24px;
+}
+
+.record-edit-head h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 0;
+  color: #000000;
+  font-size: var(--font-size-xl);
+}
+
+.record-edit-close {
+  width: 38px;
+  height: 38px;
+  padding: 0 !important;
+  border: 1px solid rgba(25, 28, 29, 0.14) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  box-shadow: none !important;
+}
+
+.record-edit-body {
+  overflow: auto;
+  padding: 20px 24px;
+}
+
+.record-edit-body .preview-fieldset {
+  border-radius: 8px;
+  padding: 18px 20px 22px;
+}
+
+.record-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid rgba(233, 236, 239, 0.9);
+  padding: 16px 24px;
+  background: #fbfcfc;
+}
+
+.record-edit-actions button {
+  min-height: 40px;
 }
 
 /* User Management */

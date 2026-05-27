@@ -15,6 +15,7 @@ import {
   CheckCircle,
   Download,
   FileText,
+  Pencil,
   X,
   SlidersHorizontal,
   LoaderCircle,
@@ -73,6 +74,9 @@ export default function Dashboard({
   const [recordFilterField, setRecordFilterField] = useState("");
   const [recordFilterValue, setRecordFilterValue] = useState("");
   const [recordPdfFilter, setRecordPdfFilter] = useState("all");
+  const [currentUserRole, setCurrentUserRole] = useState("");
+  const [editingRecord, setEditingRecord] = useState(null);
+  const [editForm, setEditForm] = useState({});
   const [isSaving, startSaving] = useTransition();
   const [isUploading, startUploading] = useTransition();
   const deferredQuery = useDeferredValue(query);
@@ -93,6 +97,18 @@ export default function Dashboard({
       fields: fieldsInGroup
     };
   }).filter(group => group.fields.length > 0);
+  const editFieldGroups = useMemo(() => {
+    const fieldMap = new Map(FIELD_SETUP.map(([label, key]) => [key, [label, key]]));
+    const groupedKeys = new Set(FIELD_GROUPS.flatMap((group) => group.fields));
+    const ungroupedFields = FIELD_SETUP.filter(([, key]) => !groupedKeys.has(key));
+    return [
+      { title: "Record Details", fields: ungroupedFields },
+      ...FIELD_GROUPS.map((group) => ({
+        title: group.title,
+        fields: group.fields.map((key) => fieldMap.get(key)).filter(Boolean)
+      }))
+    ].filter((group) => group.fields.length > 0);
+  }, []);
 
   useEffect(() => {
     if (manualGroup?.policies) {
@@ -131,6 +147,22 @@ export default function Dashboard({
     setQuery(urlQuery);
   }, [urlQuery]);
 
+  useEffect(() => {
+    let ignore = false;
+    async function loadCurrentUser() {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!response.ok) return;
+        const payload = await response.json();
+        if (!ignore) setCurrentUserRole(payload?.user?.role || "");
+      } catch {}
+    }
+    loadCurrentUser();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   const indexedRecords = useMemo(
     () => records.map((record) => ({ record, searchText: getRecordSearchText(record) })),
     [records]
@@ -164,6 +196,7 @@ export default function Dashboard({
     : null;
 
   const analytics = useMemo(() => buildAnalytics(filteredRecords), [filteredRecords]);
+  const canEditPolicyRecords = ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(currentUserRole);
 
   const handleSelectReport = (report) => {
     if (!report) return;
@@ -306,6 +339,62 @@ export default function Dashboard({
         [key]: value
       },
       manualFields: uniqueValues([...(selectedUpload.manualFields || []), key])
+    });
+  }
+
+  function startEditRecord(record) {
+    if (!canEditPolicyRecords) {
+      setAlert({ type: "error", title: "Edit unavailable", message: "Only admin, super admin, and manager roles can edit policy records." });
+      return;
+    }
+    const nextForm = FIELD_SETUP.reduce((payload, [, key]) => ({
+      ...payload,
+      [key]: record?.[key] ?? ""
+    }), {});
+    setEditingRecord(record);
+    setEditForm(nextForm);
+    setAlert(null);
+  }
+
+  function updateEditField(key, value) {
+    setEditForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function saveEditedRecord() {
+    if (!editingRecord) return;
+    startSaving(async () => {
+      try {
+        setAlert(null);
+        const response = await fetch(`/api/policy-records/${editingRecord.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reviewedData: editForm
+          })
+        });
+
+        if (!response.ok) {
+          let message = "Policy record could not be updated.";
+          try {
+            const payload = await response.json();
+            if (payload?.error) message = payload.error;
+          } catch {}
+          setAlert({ type: "error", title: "Update failed", message });
+          setToast(message);
+          return;
+        }
+
+        const updated = await response.json();
+        setRecords((current) => current.map((record) => record.id === updated.id ? updated : record));
+        setEditingRecord(null);
+        setEditForm({});
+        setAlert({ type: "success", title: "Record updated", message: updated.policyNumber || updated.insuredName || "Policy record updated successfully." });
+        setToast("Policy record updated");
+      } catch (error) {
+        const message = error?.message || "Policy record could not be updated.";
+        setAlert({ type: "error", title: "Update failed", message });
+        setToast(message);
+      }
     });
   }
 
@@ -618,9 +707,54 @@ export default function Dashboard({
                   </button>
                 </div>
               ) : null}
-              <RecordsTable records={policyRecordResults} />
+              <RecordsTable records={policyRecordResults} canEdit={canEditPolicyRecords} onEdit={startEditRecord} />
             </section>
           )}
+
+          {editingRecord ? (
+            <div className="record-edit-backdrop" onClick={() => setEditingRecord(null)}>
+              <section className="record-edit-modal" onClick={(event) => event.stopPropagation()} aria-modal="true" role="dialog">
+                <div className="record-edit-head">
+                  <div>
+                    <p className="eyebrow">Policy Record</p>
+                    <h2><Pencil size={18} /> Edit lead data</h2>
+                  </div>
+                  <button aria-label="Close edit form" className="record-edit-close" type="button" onClick={() => setEditingRecord(null)}>
+                    <X size={18} />
+                  </button>
+                </div>
+                <div className="record-edit-body">
+                  <div className="preview-form-grouped">
+                    {editFieldGroups.map((group) => (
+                      <fieldset key={group.title} className="preview-fieldset">
+                        <legend className="preview-legend">{group.title}</legend>
+                        <div className="preview-form">
+                          {group.fields.map(([label, key]) => (
+                            <PreviewField
+                              key={key}
+                              label={label}
+                              value={editForm[key] || ""}
+                              onChange={(value) => updateEditField(key, value)}
+                              wide={["riskLocation", "description", "occupancy"].includes(key)}
+                            />
+                          ))}
+                        </div>
+                      </fieldset>
+                    ))}
+                  </div>
+                </div>
+                <div className="record-edit-actions">
+                  <button type="button" onClick={() => setEditingRecord(null)} disabled={isSaving}>
+                    Cancel
+                  </button>
+                  <button className="secondary-action" type="button" onClick={saveEditedRecord} disabled={isSaving}>
+                    {isSaving ? <LoaderCircle size={18} className="spin" /> : <CheckCircle size={18} />}
+                    Save Changes
+                  </button>
+                </div>
+              </section>
+            </div>
+          ) : null}
 
           {activePage === "field-setup" && (
             <FieldSetupPanel />

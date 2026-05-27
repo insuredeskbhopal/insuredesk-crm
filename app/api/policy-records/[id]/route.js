@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource, getTenantFilter } from "@/lib/rbac";
+import { canAccessResource, getTenantFilter, UserRole } from "@/lib/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 
@@ -15,7 +15,7 @@ export async function PUT(request, { params }) {
     }
 
     const session = await verifyJWT(token);
-    if (!session || session.role === "VIEWER") {
+    if (!session || ![UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER].includes(session.role)) {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
 
