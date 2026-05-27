@@ -1180,6 +1180,41 @@ label span em {
   padding: 0 !important;
 }
 
+.record-view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.record-view-tabs button {
+  min-height: 38px;
+  gap: 8px;
+  border: 1px solid rgba(25, 28, 29, 0.14) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  box-shadow: none !important;
+  padding: 0 13px;
+}
+
+.record-view-tabs button.active {
+  border-color: rgba(25, 28, 29, 0.48) !important;
+  background: #f1f3f4 !important;
+}
+
+.record-view-tabs span {
+  display: inline-flex;
+  min-width: 24px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #000000;
+  color: #ffffff;
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+}
+
 .search-box input {
   border: 0;
   border-radius: 0;
@@ -1288,6 +1323,10 @@ th {
 
 .records-table .col-action {
   width: 88px;
+}
+
+.records-table .col-default {
+  width: 150px;
 }
 
 .records-table th {

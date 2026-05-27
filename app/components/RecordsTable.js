@@ -4,6 +4,30 @@ import { Download, Pencil } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const PAGE_SIZE = 10;
+const DEFAULT_RECORD_COLUMNS = [
+  { key: "srNo", label: "Sr No", className: "col-sr" },
+  { key: "savedAt", label: "Saved At", className: "col-saved", format: "date" },
+  { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
+  { key: "contactNumber", label: "Contact No.", className: "col-contact" },
+  { key: "contactPerson", label: "Contact Person Name", className: "col-contact-person" },
+  { key: "groupName", label: "Group Name", className: "col-group" },
+  { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
+  { key: "policyType", label: "Policy Type", className: "col-type" },
+  { key: "sumInsured", label: "Sum Insured", className: "col-money" },
+  { key: "premium", label: "Premium", className: "col-money" },
+  { key: "startDate", label: "Start Date", className: "col-date" },
+  { key: "expiryDate", label: "Expiry Date", className: "col-date" },
+  { key: "duration", label: "Duration", className: "col-duration" },
+  { key: "riskLocation", label: "Risk Location", className: "col-location" },
+  { key: "district", label: "District", className: "col-district" },
+  { key: "tehsil", label: "Tehsil", className: "col-tehsil" },
+  { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
+  { key: "description", label: "Description / Non Declaration", className: "col-description" },
+  { key: "pptMpwlc", label: "PPT / MPWLC", className: "col-ppt" },
+  { key: "occupancy", label: "Occupancy", className: "col-occupancy" },
+  { key: "validIn", label: "Valid In", className: "col-valid" },
+  { key: "sourceFile", label: "Source File", className: "col-source" }
+];
 
 function formatDate(value) {
   if (!value) return "-";
@@ -12,7 +36,14 @@ function formatDate(value) {
   return date.toLocaleDateString("en-IN");
 }
 
-export default function RecordsTable({ records, canEdit = false, onEdit }) {
+function renderCell(record, column) {
+  const value = column.format === "date" ? formatDate(record[column.key]) : record[column.key] || "";
+  if (column.primary) return <strong className="record-primary">{value}</strong>;
+  if (column.code) return <span className="record-code">{value}</span>;
+  return value;
+}
+
+export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS, canEdit = false, onEdit }) {
   const [currentPage, setCurrentPage] = useState(1);
   const pageCount = Math.max(1, Math.ceil(records.length / PAGE_SIZE));
   const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -24,6 +55,9 @@ export default function RecordsTable({ records, canEdit = false, onEdit }) {
     () => Array.from({ length: pageCount }, (_, index) => index + 1),
     [pageCount]
   );
+  const tableMinWidth = columns.length < DEFAULT_RECORD_COLUMNS.length
+    ? Math.max(980, (columns.length * 132) + (canEdit ? 88 : 0) + 64)
+    : undefined;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -36,57 +70,19 @@ export default function RecordsTable({ records, canEdit = false, onEdit }) {
   return (
     <div className="records-table-shell">
       <div className="table-wrap records-table-wrap">
-        <table className="records-table">
+        <table className="records-table" style={tableMinWidth ? { minWidth: tableMinWidth } : undefined}>
           <colgroup>
-            <col className="col-sr" />
-            <col className="col-saved" />
-            <col className="col-insured" />
-            <col className="col-contact" />
-            <col className="col-contact-person" />
-            <col className="col-group" />
-            <col className="col-policy" />
-            <col className="col-type" />
-            <col className="col-money" />
-            <col className="col-money" />
-            <col className="col-date" />
-            <col className="col-date" />
-            <col className="col-duration" />
-            <col className="col-location" />
-            <col className="col-district" />
-            <col className="col-tehsil" />
-            <col className="col-company" />
-            <col className="col-description" />
-            <col className="col-ppt" />
-            <col className="col-occupancy" />
-            <col className="col-valid" />
-            <col className="col-source" />
+            {columns.map((column) => (
+              <col key={column.key} className={column.className || "col-default"} />
+            ))}
             {canEdit ? <col className="col-action" /> : null}
             <col className="col-pdf" />
           </colgroup>
           <thead>
             <tr>
-              <th>Sr No</th>
-              <th>Saved At</th>
-              <th>Insured Name</th>
-              <th>Contact No.</th>
-              <th>Contact Person Name</th>
-              <th>Group Name</th>
-              <th>Policy No.</th>
-              <th>Policy Type</th>
-              <th>Sum Insured</th>
-              <th>Premium</th>
-              <th>Start Date</th>
-              <th>Expiry Date</th>
-              <th>Duration</th>
-              <th>Risk Location</th>
-              <th>District</th>
-              <th>Tehsil</th>
-              <th>Insurance Company</th>
-              <th>Description / Non Declaration</th>
-              <th>PPT / MPWLC</th>
-              <th>Occupancy</th>
-              <th>Valid In</th>
-              <th>Source File</th>
+              {columns.map((column) => (
+                <th key={column.key}>{column.label}</th>
+              ))}
               {canEdit ? <th>Edit</th> : null}
               <th>PDF</th>
             </tr>
@@ -94,28 +90,9 @@ export default function RecordsTable({ records, canEdit = false, onEdit }) {
           <tbody>
             {records.length ? visibleRecords.map((record) => (
               <tr key={record.id}>
-                <td>{record.srNo || ""}</td>
-                <td>{formatDate(record.savedAt)}</td>
-                <td><strong className="record-primary">{record.insuredName || ""}</strong></td>
-                <td>{record.contactNumber || ""}</td>
-                <td>{record.contactPerson || ""}</td>
-                <td>{record.groupName || ""}</td>
-                <td><span className="record-code">{record.policyNumber || ""}</span></td>
-                <td>{record.policyType || ""}</td>
-                <td>{record.sumInsured || ""}</td>
-                <td>{record.premium || ""}</td>
-                <td>{record.startDate || ""}</td>
-                <td>{record.expiryDate || ""}</td>
-                <td>{record.duration || ""}</td>
-                <td>{record.riskLocation || ""}</td>
-                <td>{record.district || ""}</td>
-                <td>{record.tehsil || ""}</td>
-                <td>{record.insuranceCompany || ""}</td>
-                <td>{record.description || ""}</td>
-                <td>{record.pptMpwlc || ""}</td>
-                <td>{record.occupancy || ""}</td>
-                <td>{record.validIn || ""}</td>
-                <td>{record.sourceFile || ""}</td>
+                {columns.map((column) => (
+                  <td key={column.key}>{renderCell(record, column)}</td>
+                ))}
                 {canEdit ? (
                   <td>
                     <button
@@ -139,7 +116,7 @@ export default function RecordsTable({ records, canEdit = false, onEdit }) {
               </tr>
             )) : (
               <tr>
-                <td className="empty" colSpan={canEdit ? 24 : 23}>No database records yet.</td>
+                <td className="empty" colSpan={columns.length + (canEdit ? 2 : 1)}>No database records yet.</td>
               </tr>
             )}
           </tbody>

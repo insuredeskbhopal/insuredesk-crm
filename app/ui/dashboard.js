@@ -74,6 +74,7 @@ export default function Dashboard({
   const [recordFilterField, setRecordFilterField] = useState("");
   const [recordFilterValue, setRecordFilterValue] = useState("");
   const [recordPdfFilter, setRecordPdfFilter] = useState("all");
+  const [recordViewCategory, setRecordViewCategory] = useState("all");
   const [currentUserRole, setCurrentUserRole] = useState("");
   const [editingRecord, setEditingRecord] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -177,6 +178,77 @@ export default function Dashboard({
       return matchesField && matchesPdf;
     });
   }, [filteredRecords, recordFilterField, recordFilterValue, recordPdfFilter]);
+  const recordsWithSchema = useMemo(() => policyRecordResults.map((record) => ({
+    record,
+    validation: getReviewValidation({
+      sourceFile: record.sourceFile || "",
+      extractedData: record
+    })
+  })), [policyRecordResults]);
+  const recordViewOptions = useMemo(() => {
+    const categories = new Map();
+    recordsWithSchema.forEach(({ validation }) => {
+      const key = validation.resolvedSchema?.groupId || "general";
+      const label = validation.resolvedSchema?.groupLabel || "General";
+      const existing = categories.get(key) || { key, label, count: 0 };
+      categories.set(key, { ...existing, count: existing.count + 1 });
+    });
+    return [{ key: "all", label: "All Records", count: policyRecordResults.length }, ...Array.from(categories.values())];
+  }, [policyRecordResults.length, recordsWithSchema]);
+  const visiblePolicyRecordResults = useMemo(() => {
+    if (recordViewCategory === "all") return policyRecordResults;
+    return recordsWithSchema
+      .filter(({ validation }) => (validation.resolvedSchema?.groupId || "general") === recordViewCategory)
+      .map(({ record }) => record);
+  }, [policyRecordResults, recordViewCategory, recordsWithSchema]);
+  const recordViewColumns = useMemo(() => {
+    if (recordViewCategory === "all") return undefined;
+
+    const fieldLabels = new Map(FIELD_SETUP.map(([label, key]) => [key, label]));
+    const classNames = {
+      srNo: "col-sr",
+      savedAt: "col-saved",
+      insuredName: "col-insured",
+      contactNumber: "col-contact",
+      contactPerson: "col-contact-person",
+      groupName: "col-group",
+      policyNumber: "col-policy",
+      policyType: "col-type",
+      sumInsured: "col-money",
+      premium: "col-money",
+      startDate: "col-date",
+      expiryDate: "col-date",
+      duration: "col-duration",
+      riskLocation: "col-location",
+      district: "col-district",
+      tehsil: "col-tehsil",
+      insuranceCompany: "col-company",
+      description: "col-description",
+      pptMpwlc: "col-ppt",
+      occupancy: "col-occupancy",
+      validIn: "col-valid",
+      sourceFile: "col-source"
+    };
+    const selectedSchemas = recordsWithSchema
+      .filter(({ validation }) => (validation.resolvedSchema?.groupId || "general") === recordViewCategory)
+      .map(({ validation }) => validation);
+    const visibleKeys = new Set(["srNo", "savedAt", "insuredName"]);
+    selectedSchemas.forEach((validation) => {
+      validation.visibleFields.forEach(([, key]) => visibleKeys.add(key));
+    });
+    visibleKeys.add("sourceFile");
+
+    return ["srNo", "savedAt", ...FIELD_SETUP.map(([, key]) => key), "sourceFile"]
+      .filter((key, index, list) => visibleKeys.has(key) && list.indexOf(key) === index)
+      .map((key) => ({
+        key,
+        label: key === "savedAt" ? "Saved At" : fieldLabels.get(key) || key,
+        className: classNames[key] || "col-default",
+        format: key === "savedAt" ? "date" : undefined,
+        primary: key === "insuredName",
+        code: key === "policyNumber"
+      }));
+  }, [recordViewCategory, recordsWithSchema]);
   const activeRecordFilterCount = (recordFilterField && recordFilterValue.trim() ? 1 : 0) + (recordPdfFilter !== "all" ? 1 : 0);
   const clientProfiles = buildClientProfiles(filteredRecords, parseMoney);
   const selectedClient = selectedClientName
@@ -227,6 +299,12 @@ export default function Dashboard({
     if (!hasLoadedView) return;
     saveDashboardView(DASHBOARD_VIEW_KEY, { activePage, selectedClientName, selectedPolicyId });
   }, [activePage, hasLoadedView, selectedClientName, selectedPolicyId]);
+
+  useEffect(() => {
+    if (!recordViewOptions.some((option) => option.key === recordViewCategory)) {
+      setRecordViewCategory("all");
+    }
+  }, [recordViewCategory, recordViewOptions]);
 
   function handleFilePick(fileList) {
     const files = Array.from(fileList || []);
@@ -710,7 +788,25 @@ export default function Dashboard({
                   </button>
                 </div>
               ) : null}
-              <RecordsTable records={policyRecordResults} canEdit={canEditPolicyRecords} onEdit={startEditRecord} />
+              <div className="record-view-tabs" aria-label="Policy record views">
+                {recordViewOptions.map((option) => (
+                  <button
+                    key={option.key}
+                    className={recordViewCategory === option.key ? "active" : ""}
+                    type="button"
+                    onClick={() => setRecordViewCategory(option.key)}
+                  >
+                    {option.label}
+                    <span>{option.count}</span>
+                  </button>
+                ))}
+              </div>
+              <RecordsTable
+                records={visiblePolicyRecordResults}
+                columns={recordViewColumns}
+                canEdit={canEditPolicyRecords}
+                onEdit={startEditRecord}
+              />
             </section>
           )}
 
