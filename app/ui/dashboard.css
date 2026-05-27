@@ -1219,10 +1219,6 @@ label span em {
   padding: 0 8px;
 }
 
-.record-view-tabs button.active span {
-  background: #1b1f22;
-  color: #ffffff;
-}
 
 .search-box input {
   border: 0;
