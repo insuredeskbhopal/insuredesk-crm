@@ -163,6 +163,60 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("extracts New India premium fields from alternate financial labels", () => {
+    const text = `
+      PRIVATE CAR PACKAGE POLICY
+      The New India Assurance Company Limited
+      Policy No 45140031260300009999
+      Name of Insured RAMESH KUMAR
+      SCHEDULE OF PREMIUM
+      Own Damage Premium : 11,433
+      TP + Driver + Owner : 3,691
+      Net Premium : 15,124
+      GST : 2,722
+      Total Premium : 17,846
+      VEHICLE DETAILS
+      Registration NumberMP-04-ED-8912
+    `;
+
+    const result = extractPolicyFromText(text, "new-india-alt-labels.pdf");
+
+    expect(result).toMatchObject({
+      insuranceCompany: "The New India Assurance Company Limited",
+      totalPremium: "17,846.00",
+      premium: "17,846.00",
+      netPremium: "15,124.00",
+      tpDriverOwner: "3,691.00",
+      odPremium: "11,433.00",
+      gstAmount: "2,722.00"
+    });
+  });
+
+  it("derives missing New India premium values from available totals", () => {
+    const text = `
+      Private Car Package Policy
+      The New India Assurance Company Limited
+      Policy No 45140031260300008888
+      Name of Insured RAMESH KUMAR
+      SCHEDULE OF PREMIUM
+      Total TP Premium 3691
+      Net Premium in Rs 15124
+      GST in Rs 2722
+      Total Payable in Rs 17846
+      Registration NumberMP-04-ED-8912
+    `;
+
+    const result = extractPolicyFromText(text, "new-india-derived-premium.pdf");
+
+    expect(result).toMatchObject({
+      totalPremium: "17846.00",
+      netPremium: "15124.00",
+      tpDriverOwner: "3691.00",
+      odPremium: "11,433.00",
+      gstAmount: "2722.00"
+    });
+  });
+
   it("locks the HDFC ERGO motor extraction contract for future policy additions", () => {
     const hdfcSampleText = `
       HDFC ERGO General Insurance Company Limited
