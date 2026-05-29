@@ -371,7 +371,7 @@ export default function RootPage() {
         }
       ` }} />
 
-      <div className="bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
+      <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         {/* TopNavBar */}
         <nav
           className={`bg-surface-container-lowest/0 backdrop-blur-0 sticky top-0 z-50 border-b border-transparent transition-all duration-300 h-20 flex items-center ${

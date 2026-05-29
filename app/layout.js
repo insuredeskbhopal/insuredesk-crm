@@ -1,5 +1,6 @@
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
+import "./landing.css";
 
 const inter = Inter({
   subsets: ["latin"],
