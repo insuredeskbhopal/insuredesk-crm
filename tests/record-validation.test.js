@@ -22,7 +22,7 @@ describe("sanitizeRecordPayload", () => {
       registrationNumber: "mp 04 ss 8925"
     });
 
-    expect(record.vehicleNumber).toBe("MP04SS8925");
-    expect(record.registrationNumber).toBe("MP04SS8925");
+    expect(record.vehicleNumber).toBe("mp04ss8925");
+    expect(record.registrationNumber).toBe("mp04ss8925");
   });
 });

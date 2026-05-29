@@ -202,6 +202,8 @@ describe("generic motor policy extraction", () => {
       GST 18%
       2775
       Total Premium 18191
+      Due Collection 18191
+      Collected Amount 10000
       Previous Policy No. HDFCPREV123Valid 26/05/2025 to 25/05/2026 of HDFC ERGO
       NCB 20%
       Payment Details UPI987654
@@ -232,6 +234,9 @@ describe("generic motor policy extraction", () => {
       idv: "850000.00",
       sumInsured: "850000.00",
       premium: "18191.00",
+      netPremium: "15416.00",
+      odPremium: "12000.00",
+      tpDriverOwner: "3416.00",
       startDate: "26/05/2026 00:00",
       expiryDate: "25/05/2027 23:59",
       duration: "12 months",
@@ -255,6 +260,8 @@ describe("generic motor policy extraction", () => {
       netLiabilityPremium: "3416.00",
       totalPackagePremium: "15416.00",
       gstAmount: "2775.00",
+      dueCollection: "18191.00",
+      collectedAmount: "10000.00",
       totalPremium: "18191.00",
       previousPolicyNumber: "HDFCPREV123",
       ncbPercentage: "20%",
@@ -362,6 +369,10 @@ describe("generic motor policy extraction", () => {
       registrationDate: "14/08/2006",
       seatingCapacity: "2",
       premium: "46,265.50",
+      totalPremium: "46,265.50",
+      netPremium: "44,050.00",
+      tpDriverOwner: "44,050.00",
+      odPremium: "",
       policyCoverType: "Third Party"
     });
   });
