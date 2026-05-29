@@ -15,4 +15,14 @@ describe("sanitizeRecordPayload", () => {
     expect(record.sourceText).toBeUndefined();
     expect(record.riskLocation).toHaveLength(2000);
   });
+
+  it("normalizes registration numbers without spaces or hyphens", () => {
+    const record = sanitizeRecordPayload({
+      vehicleNumber: "MP-04-SS-8925",
+      registrationNumber: "mp 04 ss 8925"
+    });
+
+    expect(record.vehicleNumber).toBe("MP04SS8925");
+    expect(record.registrationNumber).toBe("MP04SS8925");
+  });
 });
