@@ -692,6 +692,32 @@
   font-weight: 800;
 }
 
+.queue-card-actions {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.queue-remove {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 1px solid rgba(25, 28, 29, 0.12);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--outline);
+  box-shadow: none;
+}
+
+.queue-remove:hover {
+  border-color: rgba(186, 26, 26, 0.24);
+  color: var(--error);
+  transform: translateY(-1px);
+}
+
 .queue-error {
   display: block;
   margin: 0 0 6px;
@@ -1295,6 +1321,7 @@ th {
 .records-table .col-policy,
 .records-table .col-type,
 .records-table .col-company,
+.records-table .col-uploader,
 .records-table .col-source {
   width: 170px;
 }
@@ -2985,6 +3012,8 @@ td:last-child {
 }
 
 .auth-card {
+  position: relative;
+  overflow: hidden;
   padding: 32px !important;
   box-shadow: 0 20px 48px rgba(25, 28, 29, 0.05), 0 0 0 1px rgba(25, 28, 29, 0.02) !important;
   background: rgba(255, 255, 255, 0.85) !important;
@@ -2993,9 +3022,50 @@ td:last-child {
   border: 1px solid rgba(25, 28, 29, 0.06) !important;
 }
 
+.auth-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(46, 125, 50, 0.14), transparent 42%);
+  transition: opacity 420ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.auth-card-verified {
+  animation: auth-verified-card 900ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.auth-card-verified::before {
+  opacity: 1;
+}
+
 .auth-card-header {
+  position: relative;
   margin-bottom: 24px;
   text-align: center;
+  z-index: 1;
+}
+
+.auth-mark {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #ffffff;
+  color: var(--primary);
+  border: 1px solid rgba(25, 28, 29, 0.1);
+  box-shadow: 0 12px 28px rgba(25, 28, 29, 0.08);
+  transition: color var(--motion-fast), border-color var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.auth-card-verified .auth-mark {
+  color: #2e7d32;
+  border-color: rgba(46, 125, 50, 0.24);
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 14px 32px rgba(46, 125, 50, 0.14);
 }
 
 .auth-card-header h2 {
@@ -3035,9 +3105,37 @@ td:last-child {
   background: rgba(46, 125, 50, 0.08);
   color: #2e7d32;
   border: 1px solid rgba(46, 125, 50, 0.15);
+  animation: auth-success-pop 420ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.auth-success-stage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin: -4px 0 18px;
+  color: #2e7d32;
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  animation: auth-success-pop 520ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.auth-success-ring {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid rgba(46, 125, 50, 0.2);
+  box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.18), 0 16px 36px rgba(46, 125, 50, 0.12);
+  animation: auth-success-ring 1100ms cubic-bezier(0.2, 0, 0, 1) both;
 }
 
 .auth-form {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -3117,6 +3215,8 @@ td:last-child {
 }
 
 .auth-card-footer {
+  position: relative;
+  z-index: 1;
   text-align: center;
   font-size: var(--font-size-sm);
   color: var(--on-surface-variant);
@@ -3152,6 +3252,44 @@ td:last-child {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-4px); }
   75% { transform: translateX(4px); }
+}
+
+@keyframes auth-verified-card {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-4px) scale(1.01);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes auth-success-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes auth-success-ring {
+  0% {
+    transform: scale(0.84);
+    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.22), 0 16px 36px rgba(46, 125, 50, 0.12);
+  }
+  55% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 14px rgba(46, 125, 50, 0), 0 16px 36px rgba(46, 125, 50, 0.12);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0), 0 16px 36px rgba(46, 125, 50, 0.12);
+  }
 }
 
 .preview-form-grouped {

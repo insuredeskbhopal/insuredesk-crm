@@ -43,7 +43,24 @@ export async function GET(request) {
         pdfFileName: true,
         pdfMimeType: true,
         organizationId: true,
-        createdById: true
+        createdById: true,
+        createdBy: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        uploadedFile: {
+          select: {
+            createdAt: true,
+            createdBy: {
+              select: {
+                name: true,
+                email: true
+              }
+            }
+          }
+        }
       }
     };
 
@@ -123,7 +140,10 @@ export async function POST(request) {
       metadata: { sourceFile: record.sourceFile }
     });
 
-    return Response.json(normalizeRecord(record), { status: 201 });
+    return Response.json(normalizeRecord({
+      ...record,
+      createdBy: { name: user.name, email: user.email }
+    }), { status: 201 });
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "Failed to create policy record" },

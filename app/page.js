@@ -379,54 +379,52 @@ export default function RootPage() {
           }`}
           id="mainNav"
         >
-          <div className="max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center h-full">
-            <div className="flex items-center gap-8">
-              <a
-                className="text-headline-md font-headline-md font-bold tracking-tight text-primary entry-anim"
-                href="#"
-                style={{ animationDelay: "0.1s" }}
+          <div className="landing-nav-inner max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center h-full">
+            <a
+              className="landing-brand text-headline-md font-headline-md font-bold tracking-tight text-primary entry-anim"
+              href="#"
+              style={{ animationDelay: "0.1s" }}
+            >
+              BIMAHEADQUARTER
+            </a>
+            <div className="landing-nav-links hidden md:flex gap-6">
+              <button
+                className="font-body-md text-body-md text-secondary border-b-2 border-secondary pb-1 entry-anim bg-transparent p-0 min-h-0 text-[16px] shadow-none hover:translate-y-0 rounded-none"
+                onClick={() => scrollToSection("solutions")}
+                style={{ animationDelay: "0.2s" }}
               >
-                BIMAHEADQUARTER
-              </a>
-              <div className="hidden md:flex gap-6">
-                <button
-                  className="font-body-md text-body-md text-secondary border-b-2 border-secondary pb-1 entry-anim bg-transparent p-0 min-h-0 text-[16px] shadow-none hover:translate-y-0 rounded-none"
-                  onClick={() => scrollToSection("solutions")}
-                  style={{ animationDelay: "0.2s" }}
-                >
-                  Services
-                </button>
-                <button
-                  className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim bg-transparent p-0 min-h-0 text-[16px] shadow-none hover:translate-y-0 rounded-none"
-                  onClick={() => scrollToSection("process")}
-                  style={{ animationDelay: "0.3s" }}
-                >
-                  Claims
-                </button>
-                <button
-                  className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim bg-transparent p-0 min-h-0 text-[16px] shadow-none hover:translate-y-0 rounded-none"
-                  onClick={() => scrollToSection("solutions")}
-                  style={{ animationDelay: "0.4s" }}
-                >
-                  Plans
-                </button>
-                <button
-                  className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim bg-transparent p-0 min-h-0 text-[16px] shadow-none hover:translate-y-0 rounded-none"
-                  onClick={() => scrollToSection("partners")}
-                  style={{ animationDelay: "0.5s" }}
-                >
-                  Partners
-                </button>
-                <button
-                  className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim bg-transparent p-0 min-h-0 text-[16px] shadow-none hover:translate-y-0 rounded-none"
-                  onClick={() => scrollToSection("faq")}
-                  style={{ animationDelay: "0.6s" }}
-                >
-                  About
-                </button>
-              </div>
+                Services
+              </button>
+              <button
+                className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim bg-transparent p-0 min-h-0 text-[16px] shadow-none hover:translate-y-0 rounded-none"
+                onClick={() => scrollToSection("process")}
+                style={{ animationDelay: "0.3s" }}
+              >
+                Claims
+              </button>
+              <button
+                className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim bg-transparent p-0 min-h-0 text-[16px] shadow-none hover:translate-y-0 rounded-none"
+                onClick={() => scrollToSection("solutions")}
+                style={{ animationDelay: "0.4s" }}
+              >
+                Plans
+              </button>
+              <button
+                className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim bg-transparent p-0 min-h-0 text-[16px] shadow-none hover:translate-y-0 rounded-none"
+                onClick={() => scrollToSection("partners")}
+                style={{ animationDelay: "0.5s" }}
+              >
+                Partners
+              </button>
+              <button
+                className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim bg-transparent p-0 min-h-0 text-[16px] shadow-none hover:translate-y-0 rounded-none"
+                onClick={() => scrollToSection("faq")}
+                style={{ animationDelay: "0.6s" }}
+              >
+                About
+              </button>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="landing-nav-actions flex items-center gap-4">
               <div className="hidden lg:flex items-center gap-4 mr-4">
                 <button
                   className="p-2 rounded-full hover:bg-surface-container-low transition-all entry-anim bg-transparent border-0 min-h-0 text-primary"
@@ -458,7 +456,7 @@ export default function RootPage() {
                   style={{ animationDelay: "0.9s" }}
                   href="/crm/admin/login"
                 >
-                  Office CRM
+                  Client Login
                 </a>
               )}
 

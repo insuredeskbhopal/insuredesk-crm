@@ -38,8 +38,12 @@ next-env.d.ts
 Thumbs.db
 *.db
 
-# local project-specific data & PDF files
-/*.pdf
+# local project-specific data & personal documents
+*.pdf
+WhatsApp Image*.jpg
+WhatsApp Image*.jpeg
+WhatsApp Image*.png
+WhatsApp Image*.webp
 /api-records.json
 
 # local uploads storage

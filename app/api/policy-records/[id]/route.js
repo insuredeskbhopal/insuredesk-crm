@@ -76,6 +76,25 @@ export async function PUT(request, { params }) {
         selectedPolicyType: payload.selectedPolicyType ?? existing.selectedPolicyType,
         data: mergedData,
         updatedById: session.userId
+      },
+      include: {
+        createdBy: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        uploadedFile: {
+          select: {
+            createdAt: true,
+            createdBy: {
+              select: {
+                name: true,
+                email: true
+              }
+            }
+          }
+        }
       }
     });
 

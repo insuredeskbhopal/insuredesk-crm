@@ -4,14 +4,41 @@ import PreviewField from "../shared/PreviewField";
 import EmptyState from "../shared/EmptyState";
 import {
   FIELD_GROUPS,
+  FUEL_TYPE_OPTIONS,
+  PAYMENT_MODE_OPTIONS,
   getReviewValidation,
+  getReviewFieldValue,
   reviewStatusLabel,
-  hasValue
+  hasValue,
+  isFieldManualForUpload,
+  isManualRequiredField,
+  shouldUseExtractedVariant
 } from "@/app/lib/dashboard-helpers";
+
+const FIELD_OPTIONS = {
+  fuelType: FUEL_TYPE_OPTIONS,
+  modeOfPayment: PAYMENT_MODE_OPTIONS
+};
 
 export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, onClear, onSave }) {
   const { resolvedSchema, visibleFields, requiredKeys, missingRequired } = getReviewValidation(upload);
-  const filledFieldCount = visibleFields.filter(([, key]) => hasValue(upload?.extractedData?.[key])).length;
+  const isMotorPreview = resolvedSchema?.groupId === "motor";
+  const manualFields = upload?.manualFields || [];
+  const getPreviewValue = (key) => {
+    if (isManualRequiredField(key)) return getReviewFieldValue(upload, key);
+    if (isMotorPreview && key === "variant" && !manualFields.includes(key) && !shouldUseExtractedVariant(upload?.extractedData, upload)) return "";
+    return upload?.extractedData?.[key] || "";
+  };
+  const getFieldMeta = (key) => {
+    const hasPreviewValue = hasValue(getPreviewValue(key));
+    const isRequired = requiredKeys?.includes(key);
+    const isManual = manualFields.includes(key) || isFieldManualForUpload(upload, key);
+
+    if (!hasPreviewValue && isRequired) return "Required";
+    if (isManual) return "Manual";
+    return "";
+  };
+  const filledFieldCount = visibleFields.filter(([, key]) => hasValue(getPreviewValue(key))).length;
   const uploadStatus = normalizeUploadStatus(upload?.status);
 
   const groupedFields = FIELD_GROUPS.map(group => {
@@ -69,13 +96,12 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
                          key={key}
                          label={label}
                          meta={
-                           hasValue(upload.extractedData?.[key])
-                             ? ((upload.manualFields || []).includes(key) ? "Manual" : "")
-                             : (requiredKeys?.includes(key) ? "Required" : "")
+                           getFieldMeta(key)
                          }
-                         value={upload.extractedData?.[key] || ""}
+                         value={getPreviewValue(key)}
                          onChange={(value) => onFieldChange(key, value)}
-                         wide={["riskLocation", "description", "occupancy"].includes(key)}
+                         options={FIELD_OPTIONS[key]}
+                         wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
                       />
                     ))}
                   </div>

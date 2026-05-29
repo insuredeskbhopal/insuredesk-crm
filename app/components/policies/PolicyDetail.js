@@ -4,6 +4,32 @@ import PdfLink from "../shared/PdfLink";
 import { formatMoney } from "@/lib/analytics";
 
 export default function PolicyDetail({ client, record, onBack }) {
+  const isMotorPolicy = Boolean(
+    record.vehicleNumber ||
+    record.registrationNumber ||
+    record.engineNumber ||
+    record.chassisNumber ||
+    /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(record.policyType || "")
+  );
+  const clientDetailItems = [
+    ["Insured Name", client.name],
+    ["Contact", client.contactNumber || record.contactNumber || "-"],
+    ["Contact Person", record.contactPerson || "-"],
+    ["WhatsApp Group Name", record.whatsappGroupName || "-"]
+  ];
+  const policyDetailItems = [
+    ["Policy No.", record.policyNumber || "-"],
+    ["Policy Type", record.policyType || "-"],
+    ["Insurance Company", record.insuranceCompany || "-"],
+    ["Duration", record.duration || "-"],
+    ["PPT / MPWLC", record.pptMpwlc || "-"]
+  ];
+
+  if (!isMotorPolicy) {
+    clientDetailItems.splice(2, 0, ["District", record.district || client.district || "-"], ["Tehsil", record.tehsil || client.tehsil || "-"], ["Group Name", record.groupName || "-"]);
+    policyDetailItems.push(["Valid In", record.validIn || "-"]);
+  }
+
   return (
     <div className="policy-detail-page">
       <div className="profile-head">
@@ -26,28 +52,16 @@ export default function PolicyDetail({ client, record, onBack }) {
       </section>
 
       <section className="policy-detail-grid">
-        <DetailGroup title="Client Details" items={[
-          ["Insured Name", client.name],
-          ["Contact", client.contactNumber || record.contactNumber || "-"],
-          ["District", record.district || client.district || "-"],
-          ["Tehsil", record.tehsil || client.tehsil || "-"],
-          ["Group Name", record.groupName || "-"],
-          ["Contact Person", record.contactPerson || "-"]
-        ]} />
-        <DetailGroup title="Policy Details" items={[
-          ["Policy No.", record.policyNumber || "-"],
-          ["Policy Type", record.policyType || "-"],
-          ["Insurance Company", record.insuranceCompany || "-"],
-          ["Duration", record.duration || "-"],
-          ["PPT / MPWLC", record.pptMpwlc || "-"],
-          ["Valid In", record.validIn || "-"]
-        ]} />
-        <DetailGroup title="Risk & Description" wide items={[
-          ["Risk Location", record.riskLocation || "-"],
-          ["Occupancy", record.occupancy || "-"],
-          ["Description / Non Declaration", record.description || "-"],
-          ["Source File", record.sourceFile || record.pdfFileName || "-"]
-        ]} />
+        <DetailGroup title="Client Details" items={clientDetailItems} />
+        <DetailGroup title="Policy Details" items={policyDetailItems} />
+        {!isMotorPolicy ? (
+          <DetailGroup title="Risk & Description" wide items={[
+            ["Risk Location", record.riskLocation || "-"],
+            ["Occupancy", record.occupancy || "-"],
+            ["Description / Non Declaration", record.description || "-"],
+            ["Source File", record.sourceFile || record.pdfFileName || "-"]
+          ]} />
+        ) : null}
       </section>
 
       {record.hasPdf ? (

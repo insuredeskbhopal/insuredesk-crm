@@ -1,5 +1,29 @@
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 
+export const MANUAL_REQUIRED_FIELDS = ["contactNumber", "contactPerson"];
+export const MOTOR_MANUAL_REQUIRED_FIELDS = ["fuelType"];
+export const COMMON_REVIEW_FIELDS = ["whatsappGroupName"];
+
+export const PAYMENT_MODE_OPTIONS = [
+  { value: "", label: "Select payment mode" },
+  { value: "Cash", label: "Cash" },
+  { value: "Cheque", label: "Cheque" },
+  { value: "UPI", label: "UPI" },
+  { value: "NEFT / RTGS", label: "NEFT / RTGS" },
+  { value: "Card", label: "Card" },
+  { value: "Online", label: "Online" }
+];
+
+export const FUEL_TYPE_OPTIONS = [
+  { value: "", label: "Select fuel type" },
+  { value: "Petrol", label: "Petrol" },
+  { value: "Diesel", label: "Diesel" },
+  { value: "CNG", label: "CNG" },
+  { value: "LPG", label: "LPG" },
+  { value: "Electric", label: "Electric" },
+  { value: "Hybrid", label: "Hybrid" }
+];
+
 export const FIELD_GROUPS = [
   {
     title: "Policy Details",
@@ -19,7 +43,13 @@ export const FIELD_GROUPS = [
   {
     title: "Contact & Parties",
     fields: [
-      "contactNumber", "contactPerson", "groupName", "nomineeName", "financerName"
+      "contactNumber", "contactPerson", "whatsappGroupName"
+    ]
+  },
+  {
+    title: "Payment",
+    fields: [
+      "totalPremium", "netPremium", "tpDriverOwner", "odPremium", "dueCollection", "collectedAmount", "modeOfPayment", "remark"
     ]
   },
   {
@@ -37,9 +67,18 @@ export const FIELD_SETUP = [
   ["Policy Number", "policyNumber"],
   ["Contact Number", "contactNumber"],
   ["Contact Person", "contactPerson"],
+  ["WhatsApp Group Name", "whatsappGroupName"],
   ["Group Name", "groupName"],
   ["Policy Type", "policyType"],
   ["Premium", "premium"],
+  ["Total Premium", "totalPremium"],
+  ["Net Premium", "netPremium"],
+  ["TP + Driver + Owner", "tpDriverOwner"],
+  ["OD Premium", "odPremium"],
+  ["Due Collection", "dueCollection"],
+  ["Collected Amount", "collectedAmount"],
+  ["Mode Of Payment", "modeOfPayment"],
+  ["Remark", "remark"],
   ["Sum Insured", "sumInsured"],
   ["Start Date", "startDate"],
   ["Expiry Date", "expiryDate"],
@@ -95,9 +134,15 @@ const MOTOR_COMMON_FIELDS = [
   "ncb",
   "rtoLocation",
   "contactNumber",
-  "financerName",
-  "nomineeName",
-  "validIn"
+  "contactPerson",
+  "totalPremium",
+  "netPremium",
+  "tpDriverOwner",
+  "odPremium",
+  "dueCollection",
+  "collectedAmount",
+  "modeOfPayment",
+  "remark"
 ];
 
 export const POLICY_SCHEMA_LIBRARY = [
@@ -120,11 +165,11 @@ export const POLICY_SCHEMA_LIBRARY = [
       { id: "motor-private-car-third-party", name: "Private Car - Third Party", fields: MOTOR_COMMON_FIELDS.filter((key) => key !== "idv" && key !== "ncb").concat(["seatingCapacity"]) },
       { id: "motor-two-wheeler-package", name: "Two Wheeler - Package", fields: [...MOTOR_COMMON_FIELDS, "sumInsured", "cubicCapacity"] },
       { id: "motor-two-wheeler-third-party", name: "Two Wheeler - Third Party", fields: MOTOR_COMMON_FIELDS.filter((key) => key !== "idv" && key !== "ncb").concat(["cubicCapacity"]) },
-      { id: "motor-goods-carrying", name: "Goods Carrying Vehicle", fields: [...MOTOR_COMMON_FIELDS, "grossVehicleWeight", "riskLocation", "sumInsured"] },
-      { id: "motor-passenger-carrying", name: "Passenger Carrying Vehicle", fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "grossVehicleWeight", "riskLocation", "sumInsured"] },
-      { id: "motor-taxi-cab", name: "Taxi / Cab", fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "sumInsured", "riskLocation"] },
-      { id: "motor-school-bus", name: "School Bus", fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "grossVehicleWeight", "groupName", "riskLocation"] },
-      { id: "motor-fleet", name: "Fleet Policy", fields: [...MOTOR_COMMON_FIELDS, "groupName", "contactPerson", "riskLocation", "sumInsured"] }
+      { id: "motor-goods-carrying", name: "Goods Carrying Vehicle", fields: [...MOTOR_COMMON_FIELDS, "grossVehicleWeight", "sumInsured"] },
+      { id: "motor-passenger-carrying", name: "Passenger Carrying Vehicle", fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "grossVehicleWeight", "sumInsured"] },
+      { id: "motor-taxi-cab", name: "Taxi / Cab", fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "sumInsured"] },
+      { id: "motor-school-bus", name: "School Bus", fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "grossVehicleWeight"] },
+      { id: "motor-fleet", name: "Fleet Policy", fields: [...MOTOR_COMMON_FIELDS, "sumInsured"] }
     ]
   },
   {
@@ -200,16 +245,20 @@ export function getMissingRequiredFields(upload, visibleFields = FIELD_SETUP, re
   const fieldLabels = new Map(FIELD_SETUP.map(([label, key]) => [key, label]));
   const activeRequiredKeys = new Set(requiredKeys?.length ? requiredKeys : ["insuredName", "policyNumber"]);
   return Array.from(activeRequiredKeys)
-    .filter((key) => visibleKeys.has(key) && !hasValue(upload?.extractedData?.[key]))
+    .filter((key) => visibleKeys.has(key) && !hasValue(getReviewFieldValue(upload, key)))
     .map((key) => fieldLabels.get(key) || key);
 }
 
 export function getReviewValidation(upload, options = {}) {
   const resolvedSchema = options.resolvedSchema || inferUploadSchema(upload);
-  const visibleFields = resolvedSchema?.fields?.length
+  const manualRequiredFields = resolvedSchema?.groupId === "motor"
+    ? [...MANUAL_REQUIRED_FIELDS, ...(shouldUseExtractedFuelType(upload?.extractedData) ? [] : MOTOR_MANUAL_REQUIRED_FIELDS)]
+    : MANUAL_REQUIRED_FIELDS;
+  const schemaVisibleFields = resolvedSchema?.fields?.length
     ? FIELD_SETUP.filter(([, key]) => resolvedSchema.fields.includes(key))
     : FIELD_SETUP;
-  const requiredKeys = resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : undefined;
+  const visibleFields = addFields(schemaVisibleFields, [...manualRequiredFields, ...COMMON_REVIEW_FIELDS]);
+  const requiredKeys = addUnique(resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : ["insuredName", "policyNumber"], manualRequiredFields);
   const missingRequired = getMissingRequiredFields(upload, visibleFields, requiredKeys);
 
   return {
@@ -255,6 +304,46 @@ export function reviewStatusLabel(upload, missingRequired) {
 export function hasValue(value) {
   if (typeof value === "boolean") return true;
   return String(value ?? "").trim().length > 0;
+}
+
+export function isManualRequiredField(key) {
+  return MANUAL_REQUIRED_FIELDS.includes(key) || MOTOR_MANUAL_REQUIRED_FIELDS.includes(key);
+}
+
+export function isFieldManualForUpload(upload, key) {
+  if (key === "fuelType" && shouldUseExtractedFuelType(upload?.extractedData)) return false;
+  return isManualRequiredField(key);
+}
+
+export function shouldUseExtractedVariant(data = {}, upload = {}) {
+  const haystack = [
+    data.insuranceCompany,
+    data.companyName,
+    data.sourceFile,
+    upload.sourceFile
+  ].filter(Boolean).join(" ");
+
+  return /\bnew\s+india\b/i.test(haystack);
+}
+
+export function shouldUseExtractedFuelType(data = {}) {
+  return hasValue(data?.fuelType) && /\bTATA\s*AIG\b/i.test([data?.insuranceCompany, data?.companyName].filter(Boolean).join(" "));
+}
+
+export function getReviewFieldValue(upload, key) {
+  if (key === "fuelType" && shouldUseExtractedFuelType(upload?.extractedData)) return upload?.extractedData?.[key] || "";
+  if (isManualRequiredField(key) && Array.isArray(upload?.manualFields) && !upload.manualFields.includes(key)) return "";
+  return upload?.extractedData?.[key] || "";
+}
+
+function addFields(fields, keys) {
+  const existing = new Set(fields.map(([, key]) => key));
+  const extras = FIELD_SETUP.filter(([, key]) => keys.includes(key) && !existing.has(key));
+  return [...fields, ...extras];
+}
+
+function addUnique(values, extras) {
+  return Array.from(new Set([...(values || []), ...extras]));
 }
 
 export function inferUploadSchema(upload) {

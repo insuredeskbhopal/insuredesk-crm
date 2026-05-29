@@ -49,7 +49,24 @@ export async function GET(request) {
         pdfFileName: true,
         pdfMimeType: true,
         organizationId: true,
-        createdById: true
+        createdById: true,
+        createdBy: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        uploadedFile: {
+          select: {
+            createdAt: true,
+            createdBy: {
+              select: {
+                name: true,
+                email: true
+              }
+            }
+          }
+        }
       }
     };
 
@@ -91,6 +108,14 @@ export async function POST(request) {
           where: {
             id: payload.uploadedFileId,
             ...getTenantFilter(user, "write")
+          },
+          include: {
+            createdBy: {
+              select: {
+                name: true,
+                email: true
+              }
+            }
           }
         })
       : null;
@@ -205,7 +230,16 @@ export async function POST(request) {
       metadata: { sourceFile: record.sourceFile }
     });
 
-    return Response.json(normalizeRecord(record), { status: 201 });
+    return Response.json(normalizeRecord({
+      ...record,
+      createdBy: { name: user.name, email: user.email },
+      uploadedFile: uploadedFile
+        ? {
+            ...uploadedFile,
+            createdBy: uploadedFile.createdBy || { name: user.name, email: user.email }
+          }
+        : null
+    }), { status: 201 });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Policy record could not be saved." }, { status: 400 });
   }
@@ -257,9 +291,18 @@ function toLegacyPayload(data) {
     policyNumber: data.policyNumber,
     contactNumber: data.contactNumber || data.mobileNumber,
     contactPerson: data.contactPerson,
+    whatsappGroupName: data.whatsappGroupName,
     groupName: data.groupName,
     policyType: data.selectedPolicyType || data.detectedPolicyType || data.policyType,
     premium: data.premium,
+    totalPremium: data.totalPremium || data.premium,
+    netPremium: data.netPremium,
+    tpDriverOwner: data.tpDriverOwner,
+    odPremium: data.odPremium,
+    dueCollection: data.dueCollection,
+    collectedAmount: data.collectedAmount,
+    modeOfPayment: data.modeOfPayment,
+    remark: data.remark,
     sumInsured: data.sumInsured || data.idv,
     startDate: data.policyStartDate || data.startDate,
     expiryDate: data.policyEndDate || data.expiryDate,

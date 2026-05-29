@@ -6,10 +6,13 @@ import { useEffect, useMemo, useState } from "react";
 const PAGE_SIZE = 10;
 const DEFAULT_RECORD_COLUMNS = [
   { key: "srNo", label: "Sr No", className: "col-sr" },
-  { key: "savedAt", label: "Saved At", className: "col-saved", format: "date" },
+  { key: "savedAt", label: "Saved At", className: "col-saved", format: "dateTime" },
+  { key: "uploadedAt", label: "Uploaded At", className: "col-saved", format: "dateTime" },
+  { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },
   { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
   { key: "contactNumber", label: "Contact No.", className: "col-contact" },
   { key: "contactPerson", label: "Contact Person Name", className: "col-contact-person" },
+  { key: "whatsappGroupName", label: "WhatsApp Group Name", className: "col-group" },
   { key: "groupName", label: "Group Name", className: "col-group" },
   { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
   { key: "policyType", label: "Policy Type", className: "col-type" },
@@ -36,8 +39,27 @@ function formatDate(value) {
   return date.toLocaleDateString("en-IN");
 }
 
-function renderCell(record, column) {
-  const value = column.format === "date" ? formatDate(record[column.key]) : record[column.key] || "";
+function formatDateTime(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function renderCell(record, column, rowNumber) {
+  const value = column.key === "srNo"
+    ? rowNumber
+    : column.format === "dateTime"
+    ? formatDateTime(record[column.key])
+    : column.format === "date"
+      ? formatDate(record[column.key])
+      : record[column.key] || "";
   if (column.primary) return <strong className="record-primary">{value}</strong>;
   if (column.code) return <span className="record-code">{value}</span>;
   return value;
@@ -88,10 +110,10 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
             </tr>
           </thead>
           <tbody>
-            {records.length ? visibleRecords.map((record) => (
+            {records.length ? visibleRecords.map((record, index) => (
               <tr key={record.id}>
                 {columns.map((column) => (
-                  <td key={column.key}>{renderCell(record, column)}</td>
+                  <td key={column.key}>{renderCell(record, column, startIndex + index + 1)}</td>
                 ))}
                 {canEdit ? (
                   <td>

@@ -1,24 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldCheck, Mail, Lock, KeyRound, AlertCircle, Loader2, LogIn, Eye, EyeOff } from "lucide-react";
+import { ShieldCheck, User, Lock, AlertCircle, Loader2, LogIn, Eye, EyeOff } from "lucide-react";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [accessCode, setAccessCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const isVerified = Boolean(success);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    if (!accessCode || !email || !password) {
-      setError("Office access code, email, and password are required.");
+    if (!email || !password) {
+      setError("User ID and password are required.");
       return;
     }
 
@@ -28,7 +28,7 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, accessCode })
+        body: JSON.stringify({ email, password })
       });
 
       const data = await res.json();
@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
 
       setTimeout(() => {
         window.location.href = "/dashboard";
-      }, 800);
+      }, 1200);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -50,9 +50,12 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <section className="glass-panel auth-card">
+    <section className={`glass-panel auth-card${isVerified ? " auth-card-verified" : ""}`}>
       <div className="auth-card-header">
-        <h2>Office CRM Access</h2>
+        <div className="auth-mark" aria-hidden="true">
+          {isVerified ? <ShieldCheck size={28} /> : <LogIn size={28} />}
+        </div>
+        <h2>CRM Login</h2>
         <p>Private staff login for BIMAHEADQUARTER operations</p>
       </div>
 
@@ -70,34 +73,27 @@ export default function AdminLoginPage() {
         </div>
       )}
 
+      {isVerified && (
+        <div className="auth-success-stage" aria-hidden="true">
+          <div className="auth-success-ring">
+            <ShieldCheck size={34} />
+          </div>
+          <span>Access verified</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="auth-form">
         <label className="input-group">
-          <span>Office Access Code</span>
+          <span>User ID</span>
           <div className="input-with-icon">
-            <KeyRound size={16} className="auth-icon" />
-            <input
-              type="password"
-              placeholder="Enter office code"
-              value={accessCode}
-              onChange={(e) => setAccessCode(e.target.value)}
-              required
-              autoComplete="off"
-              disabled={loading}
-            />
-          </div>
-        </label>
-
-        <label className="input-group">
-          <span>Email Address</span>
-          <div className="input-with-icon">
-            <Mail size={16} className="auth-icon" />
+            <User size={16} className="auth-icon" />
             <input
               type="email"
-              placeholder="staff@company.com"
+              placeholder="Enter user ID"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={loading}
+              disabled={loading || isVerified}
             />
           </div>
         </label>
@@ -112,28 +108,26 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              disabled={loading}
+              disabled={loading || isVerified}
             />
             <button
               type="button"
               className="password-toggle"
               onClick={() => setShowPassword(!showPassword)}
-              disabled={loading}
+              disabled={loading || isVerified}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
         </label>
 
-        <button type="submit" className="primary-action auth-btn" disabled={loading}>
-          {loading ? <Loader2 size={16} className="spin" /> : <LogIn size={16} />}
-          <span>Enter CRM</span>
+        <button type="submit" className="primary-action auth-btn" disabled={loading || isVerified}>
+          {loading ? <Loader2 size={16} className="spin" /> : isVerified ? <ShieldCheck size={16} /> : <LogIn size={16} />}
+          <span>{isVerified ? "Verified" : "Enter CRM"}</span>
         </button>
       </form>
 
-      <div className="auth-card-footer">
-        Accounts and office codes are managed by the super admin only.
-      </div>
+      <div className="auth-card-footer">Accounts are managed by the super admin only.</div>
     </section>
   );
 }

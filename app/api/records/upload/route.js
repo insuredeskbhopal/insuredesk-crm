@@ -60,7 +60,10 @@ export async function POST(request) {
           }
         });
 
-        created.push(normalizeRecord(record));
+        created.push(normalizeRecord({
+          ...record,
+          createdBy: { name: user.name, email: user.email }
+        }));
       } catch (error) {
         const failedUpload = await persistFailedUploadedFile({
           file,

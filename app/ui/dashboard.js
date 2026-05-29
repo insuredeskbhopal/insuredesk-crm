@@ -25,6 +25,10 @@ import {
 import { EMPTY_FORM } from "@/app/ui/dashboard/constants";
 import {
   FIELD_SETUP,
+  COMMON_REVIEW_FIELDS,
+  FUEL_TYPE_OPTIONS,
+  MANUAL_REQUIRED_FIELDS,
+  PAYMENT_MODE_OPTIONS,
   POLICY_SCHEMA_LIBRARY,
   FIELD_GROUPS,
   getReviewCounts,
@@ -40,6 +44,8 @@ import {
   queueLabel,
   progressWidth,
   uniqueValues,
+  shouldUseExtractedVariant,
+  shouldUseExtractedFuelType,
   download
 } from "@/app/lib/dashboard-helpers";
 import PreviewField from "@/app/components/shared/PreviewField";
@@ -50,6 +56,10 @@ import PolicyDetail from "@/app/components/policies/PolicyDetail";
 import AnalyticsReports from "@/app/components/analytics/AnalyticsReports";
 
 const DASHBOARD_VIEW_KEY = "bimaheadquarter.dashboard.view";
+const FIELD_OPTIONS = {
+  fuelType: FUEL_TYPE_OPTIONS,
+  modeOfPayment: PAYMENT_MODE_OPTIONS
+};
 
 export default function Dashboard({
   initialRecords,
@@ -88,7 +98,7 @@ export default function Dashboard({
   const manualPolicy = manualGroup?.policies.find((policy) => policy.id === manualPolicyId) || manualGroup?.policies?.[0];
 
   const manualVisibleFields = manualPolicy?.fields?.length
-    ? FIELD_SETUP.filter(([, key]) => manualPolicy.fields.includes(key))
+    ? FIELD_SETUP.filter(([, key]) => manualPolicy.fields.includes(key) || MANUAL_REQUIRED_FIELDS.includes(key) || COMMON_REVIEW_FIELDS.includes(key))
     : FIELD_SETUP;
 
   const manualGroupedFields = FIELD_GROUPS.map(group => {
@@ -208,14 +218,25 @@ export default function Dashboard({
     const classNames = {
       srNo: "col-sr",
       savedAt: "col-saved",
+      uploadedAt: "col-saved",
+      uploadedBy: "col-uploader",
       insuredName: "col-insured",
       contactNumber: "col-contact",
       contactPerson: "col-contact-person",
+      whatsappGroupName: "col-group",
       groupName: "col-group",
       policyNumber: "col-policy",
       policyType: "col-type",
       sumInsured: "col-money",
       premium: "col-money",
+      totalPremium: "col-money",
+      netPremium: "col-money",
+      tpDriverOwner: "col-money",
+      odPremium: "col-money",
+      dueCollection: "col-money",
+      collectedAmount: "col-money",
+      modeOfPayment: "col-default",
+      remark: "col-description",
       startDate: "col-date",
       expiryDate: "col-date",
       duration: "col-duration",
@@ -232,19 +253,19 @@ export default function Dashboard({
     const selectedSchemas = recordsWithSchema
       .filter(({ validation }) => (validation.resolvedSchema?.groupId || "general") === recordViewCategory)
       .map(({ validation }) => validation);
-    const visibleKeys = new Set(["srNo", "savedAt", "insuredName"]);
+    const visibleKeys = new Set(["srNo", "savedAt", "uploadedAt", "uploadedBy", "insuredName"]);
     selectedSchemas.forEach((validation) => {
       validation.visibleFields.forEach(([, key]) => visibleKeys.add(key));
     });
     visibleKeys.add("sourceFile");
 
-    return ["srNo", "savedAt", ...FIELD_SETUP.map(([, key]) => key), "sourceFile"]
+    return ["srNo", "savedAt", "uploadedAt", "uploadedBy", ...FIELD_SETUP.map(([, key]) => key), "sourceFile"]
       .filter((key, index, list) => visibleKeys.has(key) && list.indexOf(key) === index)
       .map((key) => ({
         key,
-        label: key === "savedAt" ? "Saved At" : fieldLabels.get(key) || key,
+        label: key === "savedAt" ? "Saved At" : key === "uploadedAt" ? "Uploaded At" : key === "uploadedBy" ? "Uploaded By" : fieldLabels.get(key) || key,
         className: classNames[key] || "col-default",
-        format: key === "savedAt" ? "date" : undefined,
+        format: key === "savedAt" || key === "uploadedAt" ? "dateTime" : undefined,
         primary: key === "insuredName",
         code: key === "policyNumber"
       }));
@@ -359,7 +380,8 @@ export default function Dashboard({
           ...extracted.map((record) => ({
             ...record,
             name: record.sourceFile,
-            status: normalizeUploadStatus(record.status || UPLOAD_STATUS.REVIEW_REQUIRED)
+            status: normalizeUploadStatus(record.status || UPLOAD_STATUS.REVIEW_REQUIRED),
+            manualFields: []
           })),
           ...failed.map((item) => ({
             id: item.id,
@@ -406,6 +428,16 @@ export default function Dashboard({
     setSelectedFiles((current) => current.map((file) => (
       file.id === selectedUpload?.id ? { ...file, ...updates } : file
     )));
+  }
+
+  function removeQueuedUpload(fileId) {
+    const nextFiles = selectedFiles.filter((file) => file.id !== fileId);
+    setSelectedFiles(nextFiles);
+
+    if (selectedUploadId === fileId) {
+      const nextSelected = nextFiles.find((file) => normalizeUploadStatus(file.status) !== UPLOAD_STATUS.FAILED) || nextFiles[0] || null;
+      setSelectedUploadId(nextSelected?.id || "");
+    }
   }
 
   function updateExtractedField(key, value) {
@@ -526,6 +558,7 @@ export default function Dashboard({
             return;
           }
         }
+        const reviewedUploadData = isDynamicPolicySave ? prepareUploadReviewData(selectedUpload) : null;
         const response = await fetch(isDynamicPolicySave ? "/api/policy-records" : "/api/records", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -542,7 +575,7 @@ export default function Dashboard({
             selectedPolicyType: selectedUpload.extractedData?.policyType || "",
             confidenceScore: 0,
             extractedData: selectedUpload.extractedData || {},
-            reviewedData: selectedUpload.extractedData || {},
+            reviewedData: reviewedUploadData,
             extractionMethod: selectedUpload.extractionMethod,
             extractionQuality: {},
             extractionLog: selectedUpload.extractionLog,
@@ -565,13 +598,27 @@ export default function Dashboard({
         const saved = await response.json();
         setRecords((current) => [saved, ...current]);
         if (isDynamicPolicySave) {
-          updateSelectedUpload({ status: UPLOAD_STATUS.APPROVED, savedRecordId: saved.id });
-          const nextUpload = selectedFiles.find((file) => {
+          const updatedFiles = selectedFiles.map((file) => (
+            file.id === selectedUpload.id ? { ...file, status: UPLOAD_STATUS.APPROVED, savedRecordId: saved.id } : file
+          ));
+          const allUploadsSaved = updatedFiles.length > 0 && updatedFiles.every((file) => normalizeUploadStatus(file.status) === UPLOAD_STATUS.APPROVED);
+
+          if (allUploadsSaved) {
+            setSelectedFiles([]);
+            setSelectedUploadId("");
+          } else {
+            setSelectedFiles(updatedFiles);
+          }
+
+          const nextUpload = updatedFiles.find((file) => {
             const status = normalizeUploadStatus(file.status);
             return file.id !== selectedUpload.id && status !== UPLOAD_STATUS.FAILED && status !== UPLOAD_STATUS.APPROVED;
           });
           if (nextUpload) {
             setSelectedUploadId(nextUpload.id);
+          } else if (!allUploadsSaved) {
+            const fallbackUpload = updatedFiles.find((file) => normalizeUploadStatus(file.status) === UPLOAD_STATUS.FAILED) || null;
+            setSelectedUploadId(fallbackUpload?.id || "");
           }
         } else {
           setSelectedFiles([]);
@@ -665,7 +712,21 @@ export default function Dashboard({
                           <div>
                             <div className="queue-line">
                               <p>{file.name}</p>
-                              <span>{queueLabel(file.status)}</span>
+                              <div className="queue-card-actions">
+                                <span>{queueLabel(file.status)}</span>
+                                <button
+                                  aria-label={`Remove ${file.name} from queue`}
+                                  className="queue-remove"
+                                  title="Remove from queue"
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    removeQueuedUpload(file.id);
+                                  }}
+                                >
+                                  <X size={15} />
+                                </button>
+                              </div>
                             </div>
                             {file.detection?.policyType ? (
                               <small className="policy-detect-badge">
@@ -834,7 +895,8 @@ export default function Dashboard({
                               label={label}
                               value={editForm[key] || ""}
                               onChange={(value) => updateEditField(key, value)}
-                              wide={["riskLocation", "description", "occupancy"].includes(key)}
+                              options={FIELD_OPTIONS[key]}
+                              wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
                             />
                           ))}
                         </div>
@@ -891,7 +953,8 @@ export default function Dashboard({
                           label={label}
                           value={form[key] || ""}
                           onChange={(value) => updateField(key, value)}
-                          wide={["riskLocation", "description", "occupancy"].includes(key)}
+                          options={FIELD_OPTIONS[key]}
+                          wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
                         />
                       ))}
                     </div>
@@ -995,5 +1058,45 @@ export default function Dashboard({
         </button>
       ) : null}
     </>
+  );
+}
+
+function prepareUploadReviewData(upload) {
+  const data = { ...(upload?.extractedData || {}) };
+  const manualFields = upload?.manualFields || [];
+
+  if (!manualFields.includes("contactNumber")) {
+    data.contactNumber = "";
+  }
+  if (!manualFields.includes("contactPerson")) {
+    data.contactPerson = "";
+  }
+
+  if (!isMotorPolicyData(data)) return data;
+
+  data.riskLocation = "";
+  data.district = "";
+  data.tehsil = "";
+  data.validIn = "";
+  data.nomineeName = "";
+  data.financerName = "";
+  if (!manualFields.includes("fuelType") && !shouldUseExtractedFuelType(data)) {
+    data.fuelType = "";
+  }
+
+  if (!manualFields.includes("variant") && !shouldUseExtractedVariant(data, upload)) {
+    data.variant = "";
+  }
+
+  return data;
+}
+
+function isMotorPolicyData(data) {
+  return Boolean(
+    data.vehicleNumber ||
+    data.registrationNumber ||
+    data.engineNumber ||
+    data.chassisNumber ||
+    /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(data.policyType || "")
   );
 }
