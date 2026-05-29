@@ -159,7 +159,15 @@ describe("generic motor policy extraction", () => {
       riskLocation: "",
       validIn: "",
       nomineeName: "",
-      financerName: ""
+      financerName: "",
+      basicOwnDamage: "5016.00",
+      basicThirdPartyLiability: "3416.00",
+      netOwnDamagePremium: "11433.00",
+      netLiabilityPremium: "3691.00",
+      totalPackagePremium: "15,124.00",
+      zeroDepreciationCover: "4087.22",
+      ncb: "20%",
+      ncbPercentage: "20%"
     });
   });
 
