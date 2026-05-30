@@ -42,8 +42,6 @@ export async function GET(request) {
         confidenceScore: true,
         pdfFileName: true,
         pdfMimeType: true,
-        detectedBankSource: true,
-        selectedBankSource: true,
         organizationId: true,
         createdById: true,
         createdBy: {

@@ -11,7 +11,7 @@ const DEFAULT_RECORD_COLUMNS = [
   { key: "contactPerson", label: "Contact Person Name", className: "col-contact-person" },
   { key: "contactNumber", label: "Phone Number", className: "col-contact" },
   { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
-  { key: "bankName", label: "Bank", className: "col-bank" },
+  { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
   { key: "whatsappGroupName", label: "WhatsApp Group Name", className: "col-group" }
 ];
 
