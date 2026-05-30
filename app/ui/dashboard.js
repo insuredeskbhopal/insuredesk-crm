@@ -71,6 +71,30 @@ export default function Dashboard({
 }) {
   const [activePage, setActivePage] = useState(routeActivePage || "bulk-entry");
   const [records, setRecords] = useState(initialRecords);
+  const [renewalCounts, setRenewalCounts] = useState({
+    due30: 0,
+    due60: 0,
+    due90: 0,
+    expired: 0,
+    renewed: 0,
+    lost: 0
+  });
+
+  useEffect(() => {
+    async function fetchHeaderData() {
+      try {
+        const res = await fetch("/api/dashboard/header-data");
+        const data = await res.json();
+        if (data.success && data.renewalCounts) {
+          setRenewalCounts(data.renewalCounts);
+        }
+      } catch (err) {
+        console.error("Failed to fetch renewal counts:", err);
+      }
+    }
+    fetchHeaderData();
+  }, [records]);
+
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
   const [query, setQuery] = useState(urlQuery);
@@ -693,6 +717,70 @@ export default function Dashboard({
 
           {(activePage === "bulk-entry" || activePage === "dashboard") && (
             <>
+              {/* Renewal Counters Grid */}
+              <section style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: "16px",
+                marginBottom: "24px"
+              }}>
+                {[
+                  { label: "Due in 30 Days", count: renewalCounts.due30, color: "#f59e0b", tab: "upcoming", days: "30" },
+                  { label: "Due in 60 Days", count: renewalCounts.due60, color: "#d97706", tab: "upcoming", days: "60" },
+                  { label: "Due in 90 Days", count: renewalCounts.due90, color: "var(--accent)", tab: "upcoming", days: "90" },
+                  { label: "Expired Renewals", count: renewalCounts.expired, color: "#dc2626", tab: "expired", days: "" },
+                  { label: "Renewed Policies", count: renewalCounts.renewed, color: "#10b981", tab: "renewed", days: "" },
+                  { label: "Lost Renewals", count: renewalCounts.lost, color: "#6b7280", tab: "lost", days: "" }
+                ].map((item) => (
+                  <article
+                    key={item.label}
+                    onClick={() => {
+                      let url = `/dashboard/renewals?tab=${item.tab}`;
+                      if (item.days) {
+                        url += `&days=${item.days}`;
+                      }
+                      router.push(url);
+                    }}
+                    style={{
+                      padding: "20px",
+                      borderRadius: "16px",
+                      border: "1px solid var(--border)",
+                      background: "var(--surface)",
+                      cursor: "pointer",
+                      transition: "transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+                      position: "relative",
+                      overflow: "hidden",
+                      boxShadow: "var(--shadow-soft)"
+                    }}
+                    className="customer-card clickable-card"
+                  >
+                    <div style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: "6px",
+                      backgroundColor: item.color
+                    }} />
+                    <p style={{
+                      margin: 0,
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      color: "var(--text-secondary)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
+                    }}>{item.label}</p>
+                    <strong style={{
+                      display: "block",
+                      fontSize: "28px",
+                      fontWeight: "800",
+                      color: "var(--text-primary)",
+                      marginTop: "8px"
+                    }}>{item.count}</strong>
+                  </article>
+                ))}
+              </section>
+
               <section className="bento-grid">
                 <div className="left-stack">
                   <section className="upload-zone">
@@ -1041,17 +1129,12 @@ export default function Dashboard({
                       <div className="customer-grid">
                         {paginatedClients.map((client) => {
                           const firstLetter = client.name ? client.name.charAt(0).toUpperCase() : "?";
-                          let hash = 0;
-                          for (let j = 0; j < client.name.length; j++) {
-                            hash = client.name.charCodeAt(j) + ((hash << 5) - hash);
-                          }
-                          const hue = Math.abs(hash % 360);
-                          const avatarBg = `hsl(${hue}, 65%, 42%)`;
+                          const vehicleNumbers = formatClientVehicleNumbers(client);
 
                           return (
                             <article className="customer-card" key={client.name}>
                               <div className="customer-card-header">
-                                <div className="customer-avatar" style={{ backgroundColor: avatarBg }}>
+                                <div className="customer-avatar">
                                   {firstLetter}
                                 </div>
                                 <div className="customer-title-block">
@@ -1082,6 +1165,10 @@ export default function Dashboard({
                                   <span>Sum Insured</span>
                                   <p>{formatMoney(client.sumInsuredTotal)}</p>
                                 </div>
+                                <div className="wide">
+                                  <span>Vehicle No.</span>
+                                  <p title={vehicleNumbers}>{vehicleNumbers}</p>
+                                </div>
                               </div>
                               <button
                                 type="button"
@@ -1103,6 +1190,7 @@ export default function Dashboard({
                           <span>Policies</span>
                           <span>District</span>
                           <span>Tehsil</span>
+                          <span>Vehicle No.</span>
                           <span>Premium</span>
                           <span>Sum Insured</span>
                           <span>Action</span>
@@ -1116,6 +1204,7 @@ export default function Dashboard({
                             <span>{client.policies.length} polic{client.policies.length === 1 ? "y" : "ies"}</span>
                             <span>{client.district || "-"}</span>
                             <span>{client.tehsil || "-"}</span>
+                            <span title={formatClientVehicleNumbers(client)}>{formatClientVehicleNumbers(client)}</span>
                             <span>{formatMoney(client.premiumTotal)}</span>
                             <span>{formatMoney(client.sumInsuredTotal)}</span>
                             <button type="button" onClick={() => {
@@ -1229,6 +1318,19 @@ function prepareUploadReviewData(upload) {
   }
 
   return data;
+}
+
+function formatClientVehicleNumbers(client) {
+  const values = Array.from(new Set(
+    (client?.policies || [])
+      .map((record) => record.vehicleNumber || record.registrationNumber || "")
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+  ));
+
+  if (!values.length) return "-";
+  if (values.length <= 2) return values.join(", ");
+  return `${values.slice(0, 2).join(", ")} +${values.length - 2}`;
 }
 
 function isMotorPolicyData(data) {

@@ -117,6 +117,13 @@ model PolicyRecord {
   deletedBy               User?              @relation("PolicyDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
   deletedAt               DateTime?          @map("deleted_at") @db.Timestamptz(6)
 
+  renewalStatus           String?            @default("ACTIVE") @map("renewal_status")
+  previousPolicyId        String?            @map("previous_policy_id") @db.Uuid
+  renewedPolicyId         String?            @map("renewed_policy_id") @db.Uuid
+  renewalDate             DateTime?          @map("renewal_date") @db.Timestamptz(6)
+  lostReason              String?            @map("lost_reason")
+  isActivePolicy          Boolean            @default(true) @map("is_active_policy")
+
   @@index([savedAt])
   @@index([uploadedFileId])
   @@index([policySchemaId])

@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
+import { sanitizeRecordPayload } from "@/lib/record-validation";
 import { verifyJWT } from "@/lib/auth";
 import { canAccessResource, getTenantFilter, UserRole } from "@/lib/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
-import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 
 export const runtime = "nodejs";
 
@@ -21,6 +21,7 @@ export async function PUT(request, { params }) {
 
     const { id } = await params;
     const payload = await request.json();
+    const actorId = session.userId || session.id || null;
     const existing = await prisma.policyRecord.findFirst({
       where: {
         id,
@@ -44,38 +45,40 @@ export async function PUT(request, { params }) {
       return Response.json({ error: "Access denied" }, { status: 403 });
     }
 
-    const reviewedData = payload.reviewedData || payload.extractedData || existing.reviewedData || existing.extractedData || {};
-    const mergedData = { ...(existing.data || {}), ...reviewedData };
-    const validation = getReviewValidation({
-      sourceFile: existing.sourceFile || existing.pdfFileName || mergedData.sourceFile,
-      extractedData: mergedData
-    });
-
-    if (!validation.valid) {
-      return Response.json({
-        error: formatReviewValidationError(validation.missingRequired),
-        missingRequired: validation.missingRequired,
-        schema: validation.resolvedSchema
-          ? {
-              groupId: validation.resolvedSchema.groupId,
-              policyId: validation.resolvedSchema.policyId,
-              policyName: validation.resolvedSchema.policyName
-            }
-          : null
-      }, { status: 422 });
+    const incomingReviewedData = payload.reviewedData || payload.extractedData || {};
+    if (!Object.keys(incomingReviewedData).length) {
+      return Response.json({ error: "No policy edits were provided." }, { status: 400 });
     }
+    const sourceFile = payload.sourceFile || existing.sourceFile || existing.pdfFileName || existing.data?.sourceFile || "Untitled.pdf";
+    const reviewedData = sanitizeRecordPayload({
+      ...(existing.reviewedData || existing.extractedData || existing.data || {}),
+      ...incomingReviewedData,
+      sourceFile
+    });
+    const mergedData = sanitizeRecordPayload({
+      ...(existing.data || {}),
+      ...reviewedData,
+      sourceFile
+    });
+    const extractedData = payload.extractedData
+      ? sanitizeRecordPayload({
+          ...(existing.extractedData || {}),
+          ...payload.extractedData,
+          sourceFile
+        })
+      : existing.extractedData;
 
     const record = await prisma.policyRecord.update({
       where: { id },
       data: {
         reviewedData,
-        extractedData: payload.extractedData || existing.extractedData,
+        extractedData,
         selectedBankSource: payload.selectedBankSource ?? existing.selectedBankSource,
         selectedCompany: payload.selectedCompany ?? existing.selectedCompany,
         selectedServiceCategory: payload.selectedServiceCategory ?? existing.selectedServiceCategory,
         selectedPolicyType: payload.selectedPolicyType ?? existing.selectedPolicyType,
         data: mergedData,
-        updatedById: session.userId
+        updatedById: actorId
       },
       include: {
         createdBy: {
@@ -108,7 +111,7 @@ export async function PUT(request, { params }) {
       source: "API",
       ipAddress,
       userAgent,
-      userId: session.userId,
+      userId: actorId,
       organizationId: session.organizationId,
       metadata: { sourceFile: record.sourceFile }
     });
@@ -132,6 +135,7 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = await params;
+    const actorId = session.userId || session.id || null;
     const existing = await prisma.policyRecord.findFirst({
       where: {
         id,
@@ -160,7 +164,7 @@ export async function DELETE(request, { params }) {
       where: { id },
       data: {
         deletedAt: new Date(),
-        deletedById: session.userId
+        deletedById: actorId
       }
     });
 
@@ -174,7 +178,7 @@ export async function DELETE(request, { params }) {
       source: "API",
       ipAddress,
       userAgent,
-      userId: session.userId,
+      userId: actorId,
       organizationId: session.organizationId,
       metadata: { sourceFile: existing.sourceFile }
     });

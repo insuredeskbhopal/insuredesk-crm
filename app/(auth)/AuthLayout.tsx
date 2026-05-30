@@ -1,4 +1,5 @@
 import "../ui/dashboard.css";
+import BrandLogo from "@/app/components/brand/BrandLogo";
 
 export const metadata = {
   title: "BIMAHEADQUARTER - Authenticate",
@@ -14,7 +15,7 @@ export default function AuthLayout({ children }: Props) {
     <main className="auth-layout">
       <div className="auth-canvas">
         <div className="auth-brand">
-          <h1>BIMAHEADQUARTER</h1>
+          <BrandLogo href="/" />
           <p>Enterprise Policy Operations &amp; CRM</p>
         </div>
         {children}

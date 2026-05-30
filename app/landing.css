@@ -828,6 +828,49 @@ body:has(.landing-shell) {
   padding-left: 32px;
 }
 
+.landing-shell .partner-logo-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 210px;
+  height: 86px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.landing-shell .partner-logo-card img,
+.landing-shell .partner-logo-card span {
+  display: block;
+  width: 178px !important;
+  height: 58px !important;
+  object-fit: contain;
+}
+
+.landing-shell .partner-logo-card.sbi-general-logo img,
+.landing-shell .partner-logo-card.sbi-general-logo span {
+  width: 202px !important;
+  height: 70px !important;
+}
+
+.landing-shell .landing-brand,
+.landing-shell .footer-brand {
+  display: flex;
+  align-items: center;
+}
+
+.landing-shell .footer-brand .brand-logo-text,
+.landing-shell .footer-brand .brand-logo-mark {
+  color: #ffffff !important;
+}
+
+.landing-shell .footer-brand .brand-logo-mark {
+  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .landing-shell .reveal {
   opacity: 1;
   transform: none;

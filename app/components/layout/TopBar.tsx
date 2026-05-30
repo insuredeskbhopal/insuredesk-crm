@@ -2,6 +2,8 @@
 
 import { Bell, CalendarDays, Loader2, Settings, Activity, LogOut, FileText, FileCheck, FileX, FileWarning, Clock, Menu } from "lucide-react";
 import SearchBox from "@/app/components/shared/SearchBox";
+import BrandLogo from "@/app/components/brand/BrandLogo";
+import InsurerLogo from "@/app/components/brand/InsurerLogo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -161,7 +163,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
         >
           <Menu size={20} />
         </button>
-        <strong>BIMAHEADQUARTER</strong>
+        <BrandLogo href="/dashboard" />
         <nav>
           <Link className={isReportsActive ? "active" : ""} href="/analytics-reports">
             Reports
@@ -201,7 +203,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                       }`}
                     >
                       <div className="tb-item-header">
-                        <strong className="tb-item-strong">{r.company}</strong>
+                        <strong className="tb-item-strong"><InsurerLogo company={r.company} /></strong>
                         <span 
                           className={`tb-item-badge ${r.isExpired ? "badge-expired" : "badge-active"}`}
                         >
@@ -472,4 +474,3 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
     </header>
   );
 }
-

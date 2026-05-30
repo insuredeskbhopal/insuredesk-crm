@@ -46,9 +46,13 @@ export async function GET(request) {
     }
 
     const tenantFilter = getTenantFilter(session, "read");
-    // 1. Fetch upcoming renewals
+    
+    // 1. Fetch active-only records for header notifications and analytics list
     const rawRecords = await prisma.policyRecord.findMany({
-      where: tenantFilter,
+      where: {
+        ...tenantFilter,
+        isActivePolicy: true
+      },
       orderBy: { savedAt: "desc" },
       select: {
         id: true,
@@ -77,7 +81,7 @@ export async function GET(request) {
           daysRemaining: expiry ? Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null
         };
       })
-      .filter((r) => r.parsedExpiry !== null)
+      .filter((r) => r.parsedExpiry !== null && r.daysRemaining !== null)
       // Sort: upcoming renewals first (closest first), expired renewals last (most recent first)
       .sort((a, b) => {
         if (a.daysRemaining >= 0 && b.daysRemaining >= 0) {
@@ -100,7 +104,52 @@ export async function GET(request) {
         isExpired: r.daysRemaining < 0
       }));
 
-    // 2. Fetch recent uploads
+    // 2. Fetch all organization policy records to compile metrics/counters
+    const allOrgRecords = await prisma.policyRecord.findMany({
+      where: tenantFilter,
+      select: {
+        id: true,
+        data: true,
+        reviewedData: true,
+        renewalStatus: true,
+        isActivePolicy: true,
+        selectedCompany: true,
+        selectedPolicyType: true
+      }
+    });
+
+    let due30 = 0;
+    let due60 = 0;
+    let due90 = 0;
+    let expiredCount = 0;
+    let renewedCount = 0;
+    let lostCount = 0;
+
+    allOrgRecords.map(normalizeRecord).forEach((r) => {
+      if (r.renewalStatus === "RENEWED") {
+        renewedCount++;
+        return;
+      }
+      if (r.renewalStatus === "LOST") {
+        lostCount++;
+        return;
+      }
+      if (r.isActivePolicy) {
+        const expiry = parsePolicyDate(r.expiryDate);
+        if (expiry) {
+          const daysRemaining = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysRemaining < 0) {
+            expiredCount++;
+          } else {
+            if (daysRemaining <= 30) due30++;
+            if (daysRemaining <= 60) due60++;
+            if (daysRemaining <= 90) due90++;
+          }
+        }
+      }
+    });
+
+    // 3. Fetch recent uploads
     const uploads = await prisma.uploadedFile.findMany({
       where: tenantFilter,
       orderBy: { createdAt: "desc" },
@@ -170,6 +219,14 @@ export async function GET(request) {
     return Response.json({
       renewals,
       notifications,
+      renewalCounts: {
+        due30,
+        due60,
+        due90,
+        expired: expiredCount,
+        renewed: renewedCount,
+        lost: lostCount
+      },
       success: true
     });
   } catch (error) {

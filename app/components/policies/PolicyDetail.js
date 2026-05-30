@@ -1,6 +1,7 @@
 import { FileText, Download, X } from "lucide-react";
 import Metric from "../shared/Metric";
 import PdfLink from "../shared/PdfLink";
+import InsurerLogo from "@/app/components/brand/InsurerLogo";
 import { formatMoney } from "@/lib/analytics";
 
 export default function PolicyDetail({ client, record, onBack }) {
@@ -20,7 +21,7 @@ export default function PolicyDetail({ client, record, onBack }) {
   const policyDetailItems = [
     ["Policy No.", record.policyNumber || "-"],
     ["Policy Type", record.policyType || "-"],
-    ["Insurance Company", record.insuranceCompany || "-"],
+    ["Insurance Company", <InsurerLogo company={record.insuranceCompany} key="insurer-logo" />],
     ["Duration", record.duration || "-"],
     ["PPT / MPWLC", record.pptMpwlc || "-"]
   ];

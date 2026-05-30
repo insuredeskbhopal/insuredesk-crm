@@ -38,6 +38,7 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
             <thead>
               <tr>
                 <th>Policy No.</th>
+                <th>Vehicle No.</th>
                 <th>Type</th>
                 <th>Premium</th>
                 <th>Sum Insured</th>
@@ -53,6 +54,7 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
                       {record.policyNumber || "No policy number"}
                     </button>
                   </td>
+                  <td><strong>{record.vehicleNumber || record.registrationNumber || "-"}</strong></td>
                   <td>{record.policyType || record.sourceFile || "Policy document"}</td>
                   <td>{formatMoney(record.premium)}</td>
                   <td>{formatMoney(record.sumInsured)}</td>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, Pencil } from "lucide-react";
+import InsurerLogo from "@/app/components/brand/InsurerLogo";
 import { useEffect, useMemo, useState } from "react";
 
 const PAGE_SIZE = 10;
@@ -62,6 +63,7 @@ function renderCell(record, column, rowNumber) {
       : record[column.key] || "";
   if (column.primary) return <strong className="record-primary">{value}</strong>;
   if (column.code) return <span className="record-code">{value}</span>;
+  if (column.key === "insuranceCompany") return <InsurerLogo company={record.insuranceCompany} />;
   return value;
 }
 

@@ -2,6 +2,7 @@ import { CheckCircle, LoaderCircle, ShieldCheck, Trash2 } from "lucide-react";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 import PreviewField from "../shared/PreviewField";
 import EmptyState from "../shared/EmptyState";
+import InsurerLogo from "@/app/components/brand/InsurerLogo";
 import {
   FIELD_GROUPS,
   FUEL_TYPE_OPTIONS,
@@ -68,7 +69,7 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
           <div className="detection-summary">
             <div><span>Source File</span><strong>{upload.sourceFile || "-"}</strong></div>
             <div><span>Policy Type</span><strong>{upload.extractedData?.policyType || "-"}</strong></div>
-            <div><span>Insurance Company</span><strong>{upload.extractedData?.insuranceCompany || "-"}</strong></div>
+            <div><span>Insurance Company</span><strong><InsurerLogo company={upload.extractedData?.insuranceCompany} /></strong></div>
             <div><span>Schema</span><strong>{resolvedSchema ? `${resolvedSchema.groupLabel} / ${resolvedSchema.policyName}` : "General Review"}</strong></div>
             <div><span>Extraction</span><strong>{upload.extractionMethod || "unknown"}</strong></div>
             <div><span>Fields Filled</span><strong>{`${filledFieldCount}/${visibleFields.length}`}</strong></div>

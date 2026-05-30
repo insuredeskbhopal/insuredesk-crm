@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Script from "next/script";
+import BrandLogo from "@/app/components/brand/BrandLogo";
+import { INSURER_LOGOS } from "@/app/components/brand/logoAssets";
 
 export default function RootPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -82,6 +85,7 @@ export default function RootPage() {
       el.scrollIntoView({ behavior: "smooth" });
     }
   };
+  const partnerLogos = [...INSURER_LOGOS, ...INSURER_LOGOS];
 
   return (
     <>
@@ -380,13 +384,9 @@ export default function RootPage() {
           id="mainNav"
         >
           <div className="landing-nav-inner max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center h-full">
-            <a
-              className="landing-brand text-headline-md font-headline-md font-bold tracking-tight text-primary entry-anim"
-              href="#"
-              style={{ animationDelay: "0.1s" }}
-            >
-              BIMAHEADQUARTER
-            </a>
+            <div className="landing-brand entry-anim" style={{ animationDelay: "0.1s" }}>
+              <BrandLogo href="/" />
+            </div>
             <div className="landing-nav-links hidden md:flex gap-6">
               <button
                 className="font-body-md text-body-md text-secondary border-b-2 border-secondary pb-1 entry-anim bg-transparent p-0 min-h-0 text-[16px] shadow-none hover:translate-y-0 rounded-none"
@@ -596,44 +596,12 @@ export default function RootPage() {
               Authorized Partners with Leading Insurers
             </p>
           </div>
-          <div className="flex partner-slider whitespace-nowrap gap-16 items-center">
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              ICICI Lombard
-            </span>
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              HDFC ERGO
-            </span>
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              Tata AIG
-            </span>
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              IFFCO Tokio
-            </span>
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              New India Assurance
-            </span>
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              Axis Max Life
-            </span>
-            {/* Duplicate for infinite effect */}
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              ICICI Lombard
-            </span>
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              HDFC ERGO
-            </span>
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              Tata AIG
-            </span>
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              IFFCO Tokio
-            </span>
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              New India Assurance
-            </span>
-            <span className="text-headline-md font-bold text-outline opacity-40 text-[24px]">
-              Axis Max Life
-            </span>
+          <div className="flex partner-slider whitespace-nowrap gap-10 items-center">
+            {partnerLogos.map((logo, index) => (
+              <span className={`partner-logo-card ${logo.className || ""}`.trim()} key={`${logo.src}-${index}`}>
+                <Image src={logo.src} alt={`${logo.name} logo`} width={136} height={44} />
+              </span>
+            ))}
           </div>
         </section>
 
@@ -1187,12 +1155,9 @@ export default function RootPage() {
           <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-16">
               <div className="col-span-1 md:col-span-1">
-                <a
-                  className="text-headline-md font-bold text-white mb-6 block text-[24px]"
-                  href="#"
-                >
-                  BIMAHEADQUARTER
-                </a>
+                <div className="footer-brand mb-6">
+                  <BrandLogo href="/" />
+                </div>
                 <p className="font-body-md text-on-primary/70 mb-8 text-[16px] text-white/70">
                   Institutional insurance consultancy by InsureDesk IMF Pvt Ltd.
                   Expert advocacy for your protection.

@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleHelp, LayoutDashboard, LogOut } from "lucide-react";
+import BrandLogo from "@/app/components/brand/BrandLogo";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -10,10 +11,10 @@ const ROUTE_MAP = {
   "manual-entry": "/manual-policy-entry",
   "records": "/policy-records",
   "customers": "/customer-management",
+  "renewals": "/dashboard/renewals",
   "analytics": "/analytics-reports",
   "field-setup": "/field-setup",
   "user-management": "/admin/users",
-
   "upload-history": "/upload-history"
 };
 
@@ -51,6 +52,7 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
     if (pathname === "/manual-policy-entry") return "manual-entry";
     if (pathname === "/policy-records") return "records";
     if (pathname.startsWith("/customer-management")) return "customers";
+    if (pathname.startsWith("/dashboard/renewals")) return "renewals";
     if (pathname === "/analytics-reports") return "analytics";
     if (pathname === "/field-setup") return "field-setup";
     if (pathname === "/settings") return "settings";
@@ -79,7 +81,7 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
     <>
       <aside className={`side-nav ${isSidebarOpen ? "open" : ""}`}>
         <div className="portal-title">
-          <h1>BIMAHEADQUARTER</h1>
+          <BrandLogo href="/dashboard" />
           <p>Enterprise Portal</p>
         </div>
 

@@ -5,17 +5,18 @@
 .top-bar {
   position: fixed;
   top: 0;
+  left: 240px;
   z-index: 1200;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  width: calc(100% - 240px);
   height: 48px;
   border-bottom: 1px solid rgba(233, 236, 239, 0.82);
   background: #ffffff;
   backdrop-filter: none;
   box-shadow: 0 4px 22px rgba(25, 28, 29, 0.04);
-  padding: 0 16px 0 256px;
+  padding: 0 16px;
 }
 
 .top-brand,
@@ -32,7 +33,56 @@
 }
 
 .top-brand {
-  gap: 32px;
+  gap: 18px;
+}
+
+.top-brand .brand-logo-link {
+  display: none;
+}
+
+.brand-logo,
+.brand-logo-link,
+.insurer-logo {
+  display: inline-flex;
+  align-items: center;
+}
+
+.brand-logo,
+.brand-logo-link {
+  gap: 10px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.brand-logo-mark {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(91, 155, 213, 0.38);
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffffff 0%, #edf6ff 100%);
+  color: #1f6fae;
+  font-family: var(--font-display), Manrope, sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  box-shadow: 0 10px 24px rgba(31, 111, 174, 0.1);
+}
+
+.brand-logo-text {
+  color: #1f6fae;
+  font-family: var(--font-display), Manrope, sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.brand-logo.compact .brand-logo-mark {
+  width: 30px;
+  height: 30px;
 }
 
 .top-brand strong {
@@ -138,14 +188,34 @@
   overflow-y: auto;
   border-right: 1px solid rgba(196, 198, 207, 0.72);
   background: #ffffff;
-  padding: 56px 12px 16px;
+  padding: 20px 12px 16px;
 }
 
 .portal-title {
   margin-bottom: 26px;
   border-bottom: 1px solid rgba(25, 28, 29, 0.08);
-  padding: 0 12px;
+  padding: 0 4px;
   padding-bottom: 22px;
+}
+
+.portal-title .brand-logo {
+  width: 100%;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.portal-title .brand-logo-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  font-size: 11px;
+}
+
+.portal-title .brand-logo-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
 }
 
 .portal-title h1 {
@@ -1587,9 +1657,9 @@ td:last-child {
 .customer-directory-head,
 .customer-row {
   display: grid;
-  grid-template-columns: minmax(280px, 1.55fr) 110px minmax(120px, 0.75fr) minmax(120px, 0.75fr) minmax(130px, 0.85fr) minmax(150px, 0.95fr) 132px;
+  grid-template-columns: minmax(260px, 1.45fr) 100px minmax(110px, 0.65fr) minmax(110px, 0.65fr) minmax(150px, 0.85fr) minmax(120px, 0.78fr) minmax(140px, 0.88fr) 126px;
   align-items: center;
-  min-width: 1120px;
+  min-width: 1260px;
 }
 
 .customer-directory-head {
@@ -1735,7 +1805,7 @@ td:last-child {
   border-radius: 10px;
   background: #ffffff;
   box-shadow: var(--shadow-soft);
-  padding: 18px;
+  padding: 18px 18px 16px;
   transition: transform var(--motion-soft), box-shadow var(--motion-soft), border-color var(--motion-soft);
 }
 
@@ -1750,8 +1820,8 @@ td:last-child {
   align-items: center;
   gap: 14px;
   border-bottom: 1px solid rgba(233, 236, 239, 0.8);
-  padding-bottom: 14px;
-  margin-bottom: 14px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
 }
 
 .customer-avatar {
@@ -1761,7 +1831,9 @@ td:last-child {
   height: 44px;
   flex: 0 0 auto;
   border-radius: 50%;
-  color: #ffffff;
+  border: 1px solid rgba(196, 198, 207, 0.72);
+  background: #ffffff;
+  color: var(--primary);
   font-size: var(--font-size-md);
   font-weight: 800;
   text-transform: uppercase;
@@ -1794,15 +1866,38 @@ td:last-child {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   border-bottom: 1px solid rgba(233, 236, 239, 0.8);
-  padding-bottom: 14px;
-  margin-bottom: 14px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.customer-card-stats .stat-item {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.customer-card-stats .stat-label {
+  color: var(--on-surface-variant);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.customer-card-stats .stat-value {
+  color: var(--primary);
+  font-size: 19px;
+  font-weight: 850;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .customer-card-details {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px 14px;
-  margin-bottom: 18px;
+  gap: 16px 20px;
+  margin-bottom: 20px;
 }
 
 .customer-card-details span {
@@ -1815,10 +1910,11 @@ td:last-child {
 }
 
 .customer-card-details p {
-  margin: 2px 0 0;
+  margin: 6px 0 0;
   font-size: var(--font-size-sm);
   color: var(--on-surface);
   font-weight: 700;
+  line-height: 1.25;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1828,9 +1924,14 @@ td:last-child {
   grid-column: span 2;
 }
 
+.customer-card-details .wide p {
+  white-space: normal;
+}
+
 .view-profile-btn {
   width: 100%;
   min-height: 38px;
+  margin-top: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1970,13 +2071,13 @@ td:last-child {
 }
 
 .compact-table table {
-  min-width: 900px;
+  min-width: 1020px;
 }
 
-.compact-table td:nth-child(3),
 .compact-table td:nth-child(4),
-.compact-table th:nth-child(3),
-.compact-table th:nth-child(4) {
+.compact-table td:nth-child(5),
+.compact-table th:nth-child(4),
+.compact-table th:nth-child(5) {
   text-align: right;
 }
 
@@ -2914,7 +3015,7 @@ td:last-child {
 
   .customer-directory-head,
   .customer-row {
-    grid-template-columns: minmax(260px, 1.4fr) 100px minmax(120px, 0.8fr) minmax(120px, 0.8fr) minmax(130px, 0.9fr) minmax(150px, 1fr) 126px;
+    grid-template-columns: minmax(260px, 1.4fr) 100px minmax(110px, 0.7fr) minmax(110px, 0.7fr) minmax(150px, 0.9fr) minmax(130px, 0.8fr) minmax(150px, 0.95fr) 126px;
   }
 }
 
@@ -3179,6 +3280,11 @@ td:last-child {
   text-align: center;
 }
 
+.auth-brand .brand-logo {
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
 .auth-brand h1 {
   font-family: var(--font-display), Manrope, sans-serif;
   font-size: var(--font-size-3xl);
@@ -3193,6 +3299,47 @@ td:last-child {
   color: var(--outline);
   font-size: var(--font-size-md);
   font-weight: 500;
+}
+
+.insurer-logo {
+  --insurer-logo-width: 92px;
+  --insurer-logo-height: 40px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.insurer-logo img,
+.insurer-logo > span:first-child {
+  display: block;
+  flex: 0 0 var(--insurer-logo-width);
+  width: var(--insurer-logo-width) !important;
+  height: var(--insurer-logo-height) !important;
+  object-fit: contain;
+}
+
+.insurer-logo img {
+  object-fit: contain;
+}
+
+.insurer-logo span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.records-table .insurer-logo {
+  align-items: center;
+  --insurer-logo-width: 88px;
+  --insurer-logo-height: 36px;
+}
+
+.insurer-logo.sbi-general-logo {
+  --insurer-logo-width: 112px;
+  --insurer-logo-height: 48px;
+}
+
+.records-table .insurer-logo.sbi-general-logo {
+  --insurer-logo-width: 108px;
+  --insurer-logo-height: 44px;
 }
 
 .auth-card {
@@ -4506,7 +4653,9 @@ th {
 
 @media (max-width: 1280px) {
   .top-bar {
-    padding-left: 252px;
+    left: 240px;
+    width: calc(100% - 240px);
+    padding-left: 16px;
   }
 
   .top-brand {
@@ -4561,6 +4710,17 @@ th {
     flex: 1 1 auto;
     gap: 8px;
     min-width: 0;
+  }
+
+  .top-brand .brand-logo-link {
+    display: inline-flex;
+  }
+
+  .top-brand .brand-logo-text {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 15px;
   }
 
   .top-brand strong {

@@ -15,4 +15,22 @@ describe("getRecordSearchText", () => {
     expect(text).toContain("sehore");
     expect(text).not.toContain("very large raw pdf text");
   });
+
+  it("indexes vehicle and RTO fields for customer search", () => {
+    const text = getRecordSearchText({
+      insuredName: "Ajay Soni",
+      vehicleNumber: "MP04CM7166",
+      registrationNumber: "MP04CM7166",
+      engineNumber: "ENG12345",
+      chassisNumber: "CHS67890",
+      makeModel: "Maruti Suzuki Swift",
+      rtoLocation: "Bhopal"
+    });
+
+    expect(text).toContain("mp04cm7166");
+    expect(text).toContain("eng12345");
+    expect(text).toContain("chs67890");
+    expect(text).toContain("maruti suzuki swift");
+    expect(text).toContain("bhopal");
+  });
 });

@@ -7,6 +7,7 @@ import {
   Settings,
   Upload,
   Users,
+  RefreshCw,
 } from "lucide-react";
 
 export const NAV_ITEMS = [
@@ -14,6 +15,7 @@ export const NAV_ITEMS = [
   { id: "manual-entry", label: "Manual Policy Entry", icon: Edit3 },
   { id: "records", label: "Policy Records", icon: FileText },
   { id: "customers", label: "Customer Management", icon: Users },
+  { id: "renewals", label: "Renewals", icon: RefreshCw },
   { id: "analytics", label: "Analytics & Reports", icon: BarChart3 },
   { id: "field-setup", label: "Field Setup", icon: FileCog },
   { id: "settings", label: "Settings", icon: Settings },
