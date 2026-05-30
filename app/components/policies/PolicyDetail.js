@@ -1,4 +1,4 @@
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, X } from "lucide-react";
 import Metric from "../shared/Metric";
 import PdfLink from "../shared/PdfLink";
 import { formatMoney } from "@/lib/analytics";
@@ -68,7 +68,11 @@ export default function PolicyDetail({ client, record, onBack }) {
         <PdfLink className="pdf-link policy-detail-pdf" href={`/api/records/${record.id}/pdf`}>
           <Download size={14} /> Download PDF
         </PdfLink>
-      ) : null}
+      ) : (
+        <div className="policy-detail-pdf-missing" style={{ color: "#d93025", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", marginTop: "12px" }}>
+          <X size={16} /> PDF is missing
+        </div>
+      )}
     </div>
   );
 }

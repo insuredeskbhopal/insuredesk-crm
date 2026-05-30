@@ -61,7 +61,7 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
                     {record.hasPdf ? (
                       <PdfLink href={`/api/records/${record.id}/pdf`} title="Download PDF" ariaLabel="Download PDF" />
                     ) : (
-                      <span className="missing-pdf compact">-</span>
+                      <span className="missing-pdf compact" style={{ color: "#d93025", fontWeight: "700" }}>PDF Missing</span>
                     )}
                   </td>
                 </tr>

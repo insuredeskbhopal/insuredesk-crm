@@ -46,6 +46,12 @@ WhatsApp Image*.png
 WhatsApp Image*.webp
 /api-records.json
 
+# Allow tracking test fixtures
+!/tests/fixtures/
+!/tests/fixtures/*.pdf
+!/tests/fixtures/*.jpeg
+!/tests/fixtures/*.jpg
+
 # local uploads storage
 /storage/
 

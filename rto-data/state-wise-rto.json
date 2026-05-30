@@ -1,0 +1,5496 @@
+{
+  "Andhra Pradesh": {
+    "stateCode": "AP",
+    "rtos": {
+      "AP02": {
+        "district": "Ananthapuramu",
+        "rtoOffice": ""
+      },
+      "AP03": {
+        "district": "Chittoor",
+        "rtoOffice": ""
+      },
+      "AP04": {
+        "district": "YSR Kadapa",
+        "rtoOffice": ""
+      },
+      "AP05": {
+        "district": "East Godavari",
+        "rtoOffice": "Kakinada"
+      },
+      "AP07": {
+        "district": "Guntur",
+        "rtoOffice": ""
+      },
+      "AP16": {
+        "district": "Krishna",
+        "rtoOffice": "Vijayawada"
+      },
+      "AP18": {
+        "district": "",
+        "rtoOffice": ""
+      },
+      "AP21": {
+        "district": "Kurnool",
+        "rtoOffice": ""
+      },
+      "AP26": {
+        "district": "Nellore",
+        "rtoOffice": ""
+      },
+      "AP27": {
+        "district": "Prakasam",
+        "rtoOffice": ""
+      },
+      "AP30": {
+        "district": "Srikakulam",
+        "rtoOffice": ""
+      },
+      "AP31": {
+        "district": "Vishakhapatnam",
+        "rtoOffice": ""
+      },
+      "AP35": {
+        "district": "Vizianagaram",
+        "rtoOffice": ""
+      },
+      "AP37": {
+        "district": "West Godavari",
+        "rtoOffice": "Eluru"
+      },
+      "AP39": {
+        "district": "Tirupati",
+        "rtoOffice": "RTA"
+      },
+      "AP40": {
+        "district": "Tirupati",
+        "rtoOffice": "RTA"
+      }
+    }
+  },
+  "Arunachal Pradesh": {
+    "stateCode": "AR",
+    "rtos": {
+      "AR01": {
+        "district": "Papum Pare",
+        "rtoOffice": "Itanagar"
+      },
+      "AR02": {
+        "district": "Papum Pare",
+        "rtoOffice": "Itanagar"
+      },
+      "AR03": {
+        "district": "Tawang",
+        "rtoOffice": "Tawang"
+      },
+      "AR04": {
+        "district": "West Kameng",
+        "rtoOffice": "Bomdila"
+      },
+      "AR05": {
+        "district": "East Kameng",
+        "rtoOffice": "Seppa"
+      },
+      "AR06": {
+        "district": "Lower Subansiri",
+        "rtoOffice": "Ziro"
+      },
+      "AR07": {
+        "district": "Upper Subansiri",
+        "rtoOffice": "Daporijo"
+      },
+      "AR08": {
+        "district": "West Siang",
+        "rtoOffice": "Along"
+      },
+      "AR09": {
+        "district": "East Siang",
+        "rtoOffice": "Pasighat"
+      },
+      "AR10": {
+        "district": "Dibang Valley",
+        "rtoOffice": "Anini"
+      },
+      "AR11": {
+        "district": "Lohit",
+        "rtoOffice": "Tezu"
+      },
+      "AR12": {
+        "district": "Changlang",
+        "rtoOffice": "Changlang"
+      },
+      "AR13": {
+        "district": "Tirap",
+        "rtoOffice": "Khonsa"
+      },
+      "AR14": {
+        "district": "Upper Siang",
+        "rtoOffice": "Yingkiong"
+      },
+      "AR15": {
+        "district": "Kurung Kumey",
+        "rtoOffice": "Koloriang"
+      },
+      "AR16": {
+        "district": "Dibang Valley",
+        "rtoOffice": "Roing"
+      },
+      "AR17": {
+        "district": "Anjaw",
+        "rtoOffice": "Hawai"
+      },
+      "AR19": {
+        "district": "Kra Daadi",
+        "rtoOffice": "Palin"
+      },
+      "AR20": {
+        "district": "Namsai",
+        "rtoOffice": "Namsai"
+      },
+      "AR22": {
+        "district": "Lower Siang",
+        "rtoOffice": "Siji"
+      }
+    }
+  },
+  "Assam": {
+    "stateCode": "AS",
+    "rtos": {
+      "AS01": {
+        "district": "Kamrup",
+        "rtoOffice": "Guwahati"
+      },
+      "AS02": {
+        "district": "Nagaon",
+        "rtoOffice": "Nagaon"
+      },
+      "AS03": {
+        "district": "Jorhat",
+        "rtoOffice": "Jorhat"
+      },
+      "AS04": {
+        "district": "Sivasagar",
+        "rtoOffice": "Sivasagar"
+      },
+      "AS05": {
+        "district": "Golaghat",
+        "rtoOffice": "Golaghat"
+      },
+      "AS06": {
+        "district": "Dibrugarh",
+        "rtoOffice": "Dibrugarh"
+      },
+      "AS07": {
+        "district": "Lakhimpur",
+        "rtoOffice": "Lakhimpur"
+      },
+      "AS08": {
+        "district": "Dima Hasao",
+        "rtoOffice": "Haflong"
+      },
+      "AS09": {
+        "district": "Karbi Anglong",
+        "rtoOffice": "Karbi Anglong"
+      },
+      "AS10": {
+        "district": "Karimganj",
+        "rtoOffice": "Karimganj"
+      },
+      "AS11": {
+        "district": "Cachar",
+        "rtoOffice": "Silchar"
+      },
+      "AS12": {
+        "district": "Sonitpur",
+        "rtoOffice": "Tezpur"
+      },
+      "AS13": {
+        "district": "Darrang",
+        "rtoOffice": "Darrang"
+      },
+      "AS14": {
+        "district": "Nalbari",
+        "rtoOffice": "Nalbari"
+      },
+      "AS15": {
+        "district": "Barpeta",
+        "rtoOffice": "Barpeta"
+      },
+      "AS16": {
+        "district": "Kokrajhar",
+        "rtoOffice": "Kokrajhar"
+      },
+      "AS17": {
+        "district": "Dhubri",
+        "rtoOffice": "Dhubri"
+      },
+      "AS18": {
+        "district": "Goalpara",
+        "rtoOffice": "Goalpara"
+      },
+      "AS19": {
+        "district": "Bongaigaon",
+        "rtoOffice": "Bongaigaon"
+      },
+      "AS20": {
+        "district": "",
+        "rtoOffice": ""
+      },
+      "AS21": {
+        "district": "Morigaon",
+        "rtoOffice": "Morigaon"
+      },
+      "AS22": {
+        "district": "Dhemaji",
+        "rtoOffice": "Dhemaji"
+      },
+      "AS23": {
+        "district": "Tinsukia",
+        "rtoOffice": "Tinsukia"
+      },
+      "AS24": {
+        "district": "Hailakandi",
+        "rtoOffice": "Hailakandi"
+      },
+      "AS25": {
+        "district": "Kamrup Metropolitan",
+        "rtoOffice": "Kamrup"
+      },
+      "AS26": {
+        "district": "Chirang",
+        "rtoOffice": "Kajalgaon"
+      },
+      "AS27": {
+        "district": "Udalguri",
+        "rtoOffice": "Udalguri"
+      },
+      "AS29": {
+        "district": "Majuli",
+        "rtoOffice": "Majuli"
+      },
+      "AS30": {
+        "district": "",
+        "rtoOffice": "Assam Police"
+      },
+      "AS31": {
+        "district": "Hojai",
+        "rtoOffice": "Hojai"
+      },
+      "AS32": {
+        "district": "Biswanath",
+        "rtoOffice": "Biswanath Chariali"
+      },
+      "AS33": {
+        "district": "Charaideo",
+        "rtoOffice": "Charaideo"
+      },
+      "AS34": {
+        "district": "South Salmara-Mankachar",
+        "rtoOffice": "Hatsingimari"
+      }
+    }
+  },
+  "Bihar": {
+    "stateCode": "BR",
+    "rtos": {
+      "BR01": {
+        "district": "Patna",
+        "rtoOffice": "Patna"
+      },
+      "BR02": {
+        "district": "Gaya",
+        "rtoOffice": "Gaya"
+      },
+      "BR03": {
+        "district": "Bhojpur",
+        "rtoOffice": "Arrah"
+      },
+      "BR04": {
+        "district": "Saran",
+        "rtoOffice": "Chhapra"
+      },
+      "BR05": {
+        "district": "East Champaran",
+        "rtoOffice": "Motihari"
+      },
+      "BR06": {
+        "district": "Muzaffarpur",
+        "rtoOffice": "Muzaffarpur"
+      },
+      "BR07": {
+        "district": "Darbhanga",
+        "rtoOffice": "Darbhanga"
+      },
+      "BR08": {
+        "district": "Munger",
+        "rtoOffice": "Munger"
+      },
+      "BR09": {
+        "district": "Begusarai",
+        "rtoOffice": "Begusarai"
+      },
+      "BR10": {
+        "district": "Bhagalpur",
+        "rtoOffice": "Bhagalpur"
+      },
+      "BR11": {
+        "district": "Purnia",
+        "rtoOffice": "Purnia"
+      },
+      "BR19": {
+        "district": "Saharsa",
+        "rtoOffice": "Saharsa"
+      },
+      "BR21": {
+        "district": "Nalanda",
+        "rtoOffice": "Bihar Sharif"
+      },
+      "BR22": {
+        "district": "West Champaran",
+        "rtoOffice": "Bettiah"
+      },
+      "BR24": {
+        "district": "Rohtas",
+        "rtoOffice": "Dehri"
+      },
+      "BR25": {
+        "district": "Jehanabad",
+        "rtoOffice": "Jehanabad"
+      },
+      "BR26": {
+        "district": "Aurangabad",
+        "rtoOffice": "Aurangabad"
+      },
+      "BR27": {
+        "district": "Nawada",
+        "rtoOffice": "Nawada"
+      },
+      "BR28": {
+        "district": "Gopalganj",
+        "rtoOffice": "Gopalganj"
+      },
+      "BR29": {
+        "district": "Siwan",
+        "rtoOffice": "Siwan"
+      },
+      "BR30": {
+        "district": "Sitamarhi",
+        "rtoOffice": "Sitamarhi"
+      },
+      "BR31": {
+        "district": "Vaishali",
+        "rtoOffice": "Hajipur"
+      },
+      "BR32": {
+        "district": "Madhubani",
+        "rtoOffice": "Madhubani"
+      },
+      "BR33": {
+        "district": "Samastipur",
+        "rtoOffice": "Samastipur"
+      },
+      "BR34": {
+        "district": "Khagaria",
+        "rtoOffice": "Khagaria"
+      },
+      "BR37": {
+        "district": "Kishanganj",
+        "rtoOffice": "Kishanganj"
+      },
+      "BR38": {
+        "district": "Araria",
+        "rtoOffice": "Araria"
+      },
+      "BR39": {
+        "district": "Katihar",
+        "rtoOffice": "Katihar"
+      },
+      "BR43": {
+        "district": "Madhepura",
+        "rtoOffice": "Madhepura"
+      },
+      "BR44": {
+        "district": "Buxar",
+        "rtoOffice": "Buxar"
+      },
+      "BR45": {
+        "district": "Kaimur",
+        "rtoOffice": "Bhabua"
+      },
+      "BR46": {
+        "district": "Jamui",
+        "rtoOffice": "Jamui"
+      },
+      "BR50": {
+        "district": "Supaul",
+        "rtoOffice": "Supaul"
+      },
+      "BR51": {
+        "district": "Banka",
+        "rtoOffice": "Banka"
+      },
+      "BR52": {
+        "district": "Sheikhpura",
+        "rtoOffice": "Sheikhpura"
+      },
+      "BR53": {
+        "district": "Lakhisarai",
+        "rtoOffice": "Lakhisarai"
+      },
+      "BR55": {
+        "district": "Sheohar",
+        "rtoOffice": "Sheohar"
+      },
+      "BR56": {
+        "district": "Arwal",
+        "rtoOffice": "Arwal"
+      }
+    }
+  },
+  "Chandigarh": {
+    "stateCode": "CH",
+    "rtos": {
+      "CH01": {
+        "district": "Chandigarh",
+        "rtoOffice": "Chandigarh"
+      },
+      "CH02": {
+        "district": "Chandigarh",
+        "rtoOffice": "Chandigarh"
+      },
+      "CH03": {
+        "district": "Chandigarh",
+        "rtoOffice": "Chandigarh"
+      },
+      "CH04": {
+        "district": "Chandigarh",
+        "rtoOffice": "Chandigarh"
+      }
+    }
+  },
+  "Chhattisgarh": {
+    "stateCode": "CG",
+    "rtos": {
+      "CG01": {
+        "district": "",
+        "rtoOffice": ""
+      },
+      "CG02": {
+        "district": "",
+        "rtoOffice": ""
+      },
+      "CG03": {
+        "district": "",
+        "rtoOffice": ""
+      },
+      "CG04": {
+        "district": "Raipur",
+        "rtoOffice": "Raipur"
+      },
+      "CG05": {
+        "district": "Dhamtari",
+        "rtoOffice": "Dhamtari"
+      },
+      "CG06": {
+        "district": "Mahasamund",
+        "rtoOffice": "Mahasamund"
+      },
+      "CG07": {
+        "district": "Durg",
+        "rtoOffice": "Durg"
+      },
+      "CG08": {
+        "district": "Rajnandgaon",
+        "rtoOffice": "Rajnandgaon"
+      },
+      "CG09": {
+        "district": "Kabirdham",
+        "rtoOffice": "Kawardha"
+      },
+      "CG10": {
+        "district": "Bilaspur",
+        "rtoOffice": "Bilaspur"
+      },
+      "CG11": {
+        "district": "Champa",
+        "rtoOffice": "Janjgir"
+      },
+      "CG12": {
+        "district": "Korba",
+        "rtoOffice": "Korba"
+      },
+      "CG13": {
+        "district": "Raigarh",
+        "rtoOffice": "Raigarh"
+      },
+      "CG14": {
+        "district": "Jashpur",
+        "rtoOffice": "Jashpur Nagar"
+      },
+      "CG15": {
+        "district": "Surguja",
+        "rtoOffice": "Ambikapur"
+      },
+      "CG16": {
+        "district": "Koriya",
+        "rtoOffice": "Baikunthpur"
+      },
+      "CG17": {
+        "district": "Bastar",
+        "rtoOffice": "Jagdalpur"
+      },
+      "CG18": {
+        "district": "Dantewada",
+        "rtoOffice": "Dantewada"
+      },
+      "CG19": {
+        "district": "Kanker",
+        "rtoOffice": "Kanker"
+      },
+      "CG20": {
+        "district": "Bijapur",
+        "rtoOffice": "Bijapur"
+      },
+      "CG21": {
+        "district": "Narayanpur",
+        "rtoOffice": "Narayanpur"
+      },
+      "CG22": {
+        "district": "Baloda Bazar",
+        "rtoOffice": "Baloda Bazar"
+      },
+      "CG23": {
+        "district": "Gariaband",
+        "rtoOffice": "Gariaband"
+      },
+      "CG24": {
+        "district": "Balod",
+        "rtoOffice": "Balod"
+      },
+      "CG25": {
+        "district": "Bemetara",
+        "rtoOffice": "Bemetara"
+      },
+      "CG26": {
+        "district": "Sukma",
+        "rtoOffice": "Sukma"
+      },
+      "CG27": {
+        "district": "Kondagaon",
+        "rtoOffice": "Kondagaon"
+      },
+      "CG28": {
+        "district": "Mungeli",
+        "rtoOffice": "Mungeli"
+      },
+      "CG29": {
+        "district": "Surajpur",
+        "rtoOffice": "Surajpur"
+      },
+      "CG30": {
+        "district": "Balrampur",
+        "rtoOffice": "Balrampur"
+      }
+    }
+  },
+  "Dadra and Nagar Haveli and Daman and Diu": {
+    "stateCode": "DD",
+    "rtos": {
+      "DD01": {
+        "district": "",
+        "rtoOffice": "Silvassa"
+      },
+      "DD02": {
+        "district": "Diu",
+        "rtoOffice": "Diu"
+      },
+      "DD03": {
+        "district": "Daman",
+        "rtoOffice": "Daman"
+      }
+    }
+  },
+  "Delhi": {
+    "stateCode": "DL",
+    "rtos": {
+      "DL01": {
+        "district": "North Delhi",
+        "rtoOffice": "Mall Road, Vishwavidyalaya"
+      },
+      "DL02": {
+        "district": "Delhi",
+        "rtoOffice": "Indraprastha Depot"
+      },
+      "DL03": {
+        "district": "South Delhi",
+        "rtoOffice": "DDA Market, Sheikh Sarai"
+      },
+      "DL04": {
+        "district": "West Delhi",
+        "rtoOffice": "Janakpuri"
+      },
+      "DL05": {
+        "district": "Shahdara",
+        "rtoOffice": "Loni Road, Shahdara"
+      },
+      "DL06": {
+        "district": "Central Delhi",
+        "rtoOffice": "ISBT Sarai Kale Khan"
+      },
+      "DL07": {
+        "district": "East Delhi",
+        "rtoOffice": "DTC Depot, Mayur Vihar"
+      },
+      "DL08": {
+        "district": "North West Delhi",
+        "rtoOffice": "DTC Depot, Wazirpur"
+      },
+      "DL09": {
+        "district": "South West Delhi",
+        "rtoOffice": "Sector-10, Dwarka"
+      },
+      "DL10": {
+        "district": "West Delhi",
+        "rtoOffice": "Raja Garden"
+      },
+      "DL11": {
+        "district": "North West Delhi",
+        "rtoOffice": "DTC Depot, Rohini"
+      },
+      "DL12": {
+        "district": "South West Delhi",
+        "rtoOffice": "DTC Depot, Vasant Vihar"
+      },
+      "DL13": {
+        "district": "East Delhi",
+        "rtoOffice": "CBD Ground, Surajmal Vihar"
+      }
+    }
+  },
+  "Goa": {
+    "stateCode": "GA",
+    "rtos": {
+      "GA01": {
+        "district": "North Goa",
+        "rtoOffice": "Panaji"
+      },
+      "GA02": {
+        "district": "South Goa",
+        "rtoOffice": "Margao"
+      },
+      "GA03": {
+        "district": "",
+        "rtoOffice": "Mapusa"
+      },
+      "GA04": {
+        "district": "",
+        "rtoOffice": "Bicholim"
+      },
+      "GA05": {
+        "district": "",
+        "rtoOffice": "Ponda"
+      },
+      "GA06": {
+        "district": "",
+        "rtoOffice": "Vasco da Gama"
+      },
+      "GA07": {
+        "district": "",
+        "rtoOffice": "Panaji"
+      },
+      "GA08": {
+        "district": "",
+        "rtoOffice": "Margao"
+      },
+      "GA09": {
+        "district": "",
+        "rtoOffice": "Quepem"
+      },
+      "GA10": {
+        "district": "",
+        "rtoOffice": "Canacona"
+      },
+      "GA11": {
+        "district": "",
+        "rtoOffice": "Pernem"
+      },
+      "GA12": {
+        "district": "",
+        "rtoOffice": "Dharbandora"
+      }
+    }
+  },
+  "Gujarat": {
+    "stateCode": "GJ",
+    "rtos": {
+      "GJ01": {
+        "district": "of Western Ahmedabad",
+        "rtoOffice": "Ahmedabad (West), Subhash Bridge"
+      },
+      "GJ02": {
+        "district": "Covers entire Mehsana",
+        "rtoOffice": "Mehsana"
+      },
+      "GJ03": {
+        "district": "Covers entire Rajkot",
+        "rtoOffice": "Rajkot"
+      },
+      "GJ04": {
+        "district": "Covers entire Bhavnagar",
+        "rtoOffice": "Bhavnagar"
+      },
+      "GJ05": {
+        "district": "of Western Surat",
+        "rtoOffice": "Surat"
+      },
+      "GJ06": {
+        "district": "Covers entire Vadodara",
+        "rtoOffice": "Vadodara"
+      },
+      "GJ07": {
+        "district": "Kheda",
+        "rtoOffice": "Nadiad, Kheda District"
+      },
+      "GJ08": {
+        "district": "Banaskantha",
+        "rtoOffice": "Palanpur, Banaskantha District"
+      },
+      "GJ09": {
+        "district": "Sabarkantha",
+        "rtoOffice": "Himmatnagar, Sabarkantha District"
+      },
+      "GJ10": {
+        "district": "Covers entire Jamnagar",
+        "rtoOffice": "Jamnagar"
+      },
+      "GJ11": {
+        "district": "Covers entire Junagadh",
+        "rtoOffice": "Junagadh"
+      },
+      "GJ12": {
+        "district": "Kutch",
+        "rtoOffice": "Bhuj, Kutch District (West)"
+      },
+      "GJ13": {
+        "district": "Covers entire Surendranagar",
+        "rtoOffice": "Surendranagar"
+      },
+      "GJ14": {
+        "district": "Covers entire Amreli",
+        "rtoOffice": "Amreli"
+      },
+      "GJ15": {
+        "district": "Covers entire Valsad",
+        "rtoOffice": "Valsad"
+      },
+      "GJ16": {
+        "district": "Covers entire Bharuch",
+        "rtoOffice": "Bharuch"
+      },
+      "GJ17": {
+        "district": "Panchmahal",
+        "rtoOffice": "Godhra, Panchmahal District"
+      },
+      "GJ18": {
+        "district": "Covers entire Gandhinagar",
+        "rtoOffice": "Gandhinagar"
+      },
+      "GJ19": {
+        "district": "Surat",
+        "rtoOffice": "Bardoli, Surat District (East)"
+      },
+      "GJ20": {
+        "district": "Covers entire Dahod",
+        "rtoOffice": "Dahod"
+      },
+      "GJ21": {
+        "district": "Covers entire Navsari",
+        "rtoOffice": "Navsari"
+      },
+      "GJ22": {
+        "district": "Narmada",
+        "rtoOffice": "Rajpipla, Narmada District"
+      },
+      "GJ23": {
+        "district": "Covers entire Anand",
+        "rtoOffice": "Anand"
+      },
+      "GJ24": {
+        "district": "Covers entire Patan",
+        "rtoOffice": "Patan"
+      },
+      "GJ25": {
+        "district": "Covers entire Porbandar",
+        "rtoOffice": "Porbandar"
+      },
+      "GJ26": {
+        "district": "Tapi",
+        "rtoOffice": "Vyara, Tapi District"
+      },
+      "GJ27": {
+        "district": "of Eastern Ahmedabad",
+        "rtoOffice": "Ahmedabad (East), Vastral"
+      },
+      "GJ28": {
+        "district": "",
+        "rtoOffice": "Not Allocated"
+      },
+      "GJ29": {
+        "district": "",
+        "rtoOffice": "Not Allocated"
+      },
+      "GJ30": {
+        "district": "Dang",
+        "rtoOffice": "Ahwa, Dang District"
+      },
+      "GJ31": {
+        "district": "Aravalli",
+        "rtoOffice": "Modasa, Aravalli District"
+      },
+      "GJ32": {
+        "district": "Gir Somnath",
+        "rtoOffice": "Veraval, Gir Somnath District"
+      },
+      "GJ33": {
+        "district": "Covers entire Botad",
+        "rtoOffice": "Botad"
+      },
+      "GJ34": {
+        "district": "entire Chhota Udaipur",
+        "rtoOffice": "Chhota Udaipur"
+      },
+      "GJ35": {
+        "district": "Mahisagar",
+        "rtoOffice": "Lunawada, Mahisagar District"
+      },
+      "GJ36": {
+        "district": "Covers entire Morbi",
+        "rtoOffice": "Morbi"
+      },
+      "GJ37": {
+        "district": "Devbhoomi Dwarka",
+        "rtoOffice": "Khambhaliya, Devbhoomi Dwarka District"
+      },
+      "GJ38": {
+        "district": "Ahmedabad",
+        "rtoOffice": "Bavla, Ahmedabad District (Rural)"
+      },
+      "GJ39": {
+        "district": "Kutch",
+        "rtoOffice": "Anjar, Kutch District (East)"
+      }
+    }
+  },
+  "Haryana": {
+    "stateCode": "HR",
+    "rtos": {
+      "HR01": {
+        "district": "",
+        "rtoOffice": "Ambala"
+      },
+      "HR02": {
+        "district": "",
+        "rtoOffice": "Jagadhari"
+      },
+      "HR03": {
+        "district": "",
+        "rtoOffice": "Panchkula"
+      },
+      "HR04": {
+        "district": "",
+        "rtoOffice": "Naraingarh"
+      },
+      "HR05": {
+        "district": "",
+        "rtoOffice": "Karnal"
+      },
+      "HR06": {
+        "district": "",
+        "rtoOffice": "Panipat"
+      },
+      "HR07": {
+        "district": "",
+        "rtoOffice": "Thanesar"
+      },
+      "HR08": {
+        "district": "",
+        "rtoOffice": "Kaithal"
+      },
+      "HR09": {
+        "district": "",
+        "rtoOffice": "Guhla"
+      },
+      "HR10": {
+        "district": "",
+        "rtoOffice": "Sonipat"
+      },
+      "HR11": {
+        "district": "",
+        "rtoOffice": "Gohana"
+      },
+      "HR12": {
+        "district": "",
+        "rtoOffice": "Rohtak"
+      },
+      "HR13": {
+        "district": "",
+        "rtoOffice": "Bahadurgarh"
+      },
+      "HR14": {
+        "district": "",
+        "rtoOffice": "Jhajjar"
+      },
+      "HR15": {
+        "district": "",
+        "rtoOffice": "Meham"
+      },
+      "HR16": {
+        "district": "",
+        "rtoOffice": "Bhiwani"
+      },
+      "HR17": {
+        "district": "",
+        "rtoOffice": "Siwani"
+      },
+      "HR18": {
+        "district": "",
+        "rtoOffice": "Loharu"
+      },
+      "HR19": {
+        "district": "",
+        "rtoOffice": "Charkhi Dadri"
+      },
+      "HR20": {
+        "district": "",
+        "rtoOffice": "Hisar"
+      },
+      "HR21": {
+        "district": "",
+        "rtoOffice": "Hansi"
+      },
+      "HR22": {
+        "district": "",
+        "rtoOffice": "Fatehabad"
+      },
+      "HR23": {
+        "district": "",
+        "rtoOffice": "Tohana, Jakhal Mandi"
+      },
+      "HR24": {
+        "district": "",
+        "rtoOffice": "Sirsa"
+      },
+      "HR25": {
+        "district": "",
+        "rtoOffice": "Mandi Dabwali"
+      },
+      "HR26": {
+        "district": "",
+        "rtoOffice": "Gurugram (Gurugram North)"
+      },
+      "HR27": {
+        "district": "",
+        "rtoOffice": "Nuh"
+      },
+      "HR28": {
+        "district": "",
+        "rtoOffice": "Ferozepur Jhirka"
+      },
+      "HR29": {
+        "district": "",
+        "rtoOffice": "Ballabgarh (Faridabad South)"
+      },
+      "HR30": {
+        "district": "",
+        "rtoOffice": "Palwal"
+      },
+      "HR31": {
+        "district": "",
+        "rtoOffice": "Jind"
+      },
+      "HR32": {
+        "district": "",
+        "rtoOffice": "Narwana"
+      },
+      "HR33": {
+        "district": "",
+        "rtoOffice": "Safidon"
+      },
+      "HR34": {
+        "district": "",
+        "rtoOffice": "Mahendragarh"
+      },
+      "HR35": {
+        "district": "",
+        "rtoOffice": "Narnaul"
+      },
+      "HR36": {
+        "district": "",
+        "rtoOffice": "Rewari"
+      },
+      "HR37": {
+        "district": "",
+        "rtoOffice": "Ambala"
+      },
+      "HR38": {
+        "district": "Faridabad",
+        "rtoOffice": "Faridabad"
+      },
+      "HR39": {
+        "district": "Hisar",
+        "rtoOffice": "Hisar"
+      },
+      "HR40": {
+        "district": "",
+        "rtoOffice": "Assandh"
+      },
+      "HR41": {
+        "district": "",
+        "rtoOffice": "Pehowa"
+      },
+      "HR42": {
+        "district": "",
+        "rtoOffice": "Ganaur"
+      },
+      "HR43": {
+        "district": "",
+        "rtoOffice": "Kosli"
+      },
+      "HR44": {
+        "district": "",
+        "rtoOffice": "Ellenabad"
+      },
+      "HR45": {
+        "district": "Karnal",
+        "rtoOffice": "Karnal"
+      },
+      "HR46": {
+        "district": "Rohtak",
+        "rtoOffice": "Rohtak"
+      },
+      "HR47": {
+        "district": "Rewari",
+        "rtoOffice": "Rewari"
+      },
+      "HR48": {
+        "district": "",
+        "rtoOffice": "Tosham"
+      },
+      "HR49": {
+        "district": "",
+        "rtoOffice": "Kalka"
+      },
+      "HR50": {
+        "district": "",
+        "rtoOffice": "Hodal"
+      },
+      "HR51": {
+        "district": "",
+        "rtoOffice": "Faridabad (Faridabad North)"
+      },
+      "HR52": {
+        "district": "",
+        "rtoOffice": "Hathin"
+      },
+      "HR53": {
+        "district": "",
+        "rtoOffice": "Adampur"
+      },
+      "HR54": {
+        "district": "",
+        "rtoOffice": "Barara"
+      },
+      "HR55": {
+        "district": "Gurugram",
+        "rtoOffice": "Gurugram"
+      },
+      "HR56": {
+        "district": "",
+        "rtoOffice": "Jind"
+      },
+      "HR57": {
+        "district": "Sirsa",
+        "rtoOffice": "Sirsa"
+      },
+      "HR58": {
+        "district": "Yamunanagar",
+        "rtoOffice": "Yamunanagar"
+      },
+      "HR59": {
+        "district": "",
+        "rtoOffice": "Ratia"
+      },
+      "HR60": {
+        "district": "",
+        "rtoOffice": "Samalkha"
+      },
+      "HR61": {
+        "district": "Bhiwani",
+        "rtoOffice": "Bhiwani"
+      },
+      "HR62": {
+        "district": "Fatehabad",
+        "rtoOffice": "Fatehabad"
+      },
+      "HR63": {
+        "district": "",
+        "rtoOffice": "Jhajjar"
+      },
+      "HR64": {
+        "district": "Kaithal",
+        "rtoOffice": "Kaithal"
+      },
+      "HR65": {
+        "district": "Kurukshetra",
+        "rtoOffice": "Kurukshetra"
+      },
+      "HR66": {
+        "district": "Mahendragarh",
+        "rtoOffice": "Narnaul"
+      },
+      "HR67": {
+        "district": "Panipat",
+        "rtoOffice": "Panipat"
+      },
+      "HR68": {
+        "district": "Panchkula",
+        "rtoOffice": "Panchkula"
+      },
+      "HR69": {
+        "district": "Sonipat",
+        "rtoOffice": "Sonipat"
+      },
+      "HR70": {
+        "district": "",
+        "rtoOffice": "Chandigarh"
+      },
+      "HR71": {
+        "district": "",
+        "rtoOffice": "Bilaspur"
+      },
+      "HR72": {
+        "district": "",
+        "rtoOffice": "Sohna"
+      },
+      "HR73": {
+        "district": "Palwal",
+        "rtoOffice": "Palwal"
+      },
+      "HR74": {
+        "district": "Nuh",
+        "rtoOffice": "Nuh"
+      },
+      "HR75": {
+        "district": "",
+        "rtoOffice": "Indri"
+      },
+      "HR76": {
+        "district": "",
+        "rtoOffice": "Pataudi"
+      },
+      "HR77": {
+        "district": "",
+        "rtoOffice": "Beri"
+      },
+      "HR78": {
+        "district": "",
+        "rtoOffice": "Shahabad Markanda"
+      },
+      "HR79": {
+        "district": "",
+        "rtoOffice": "Kharkhoda"
+      },
+      "HR80": {
+        "district": "",
+        "rtoOffice": "Barwala"
+      },
+      "HR81": {
+        "district": "",
+        "rtoOffice": "Bawal"
+      },
+      "HR82": {
+        "district": "",
+        "rtoOffice": "Kanina"
+      },
+      "HR83": {
+        "district": "",
+        "rtoOffice": "Kalayat"
+      },
+      "HR84": {
+        "district": "Charkhi Dadri",
+        "rtoOffice": "Charkhi Dadri"
+      },
+      "HR85": {
+        "district": "",
+        "rtoOffice": "Ambala Cantt"
+      },
+      "HR86": {
+        "district": "",
+        "rtoOffice": "Narnaund"
+      },
+      "HR87": {
+        "district": "",
+        "rtoOffice": "Badkhal (Faridabad West)"
+      },
+      "HR88": {
+        "district": "",
+        "rtoOffice": "Badhra"
+      },
+      "HR89": {
+        "district": "",
+        "rtoOffice": "Badli"
+      },
+      "HR90": {
+        "district": "",
+        "rtoOffice": "Uchana"
+      },
+      "HR91": {
+        "district": "",
+        "rtoOffice": "Gharaunda"
+      },
+      "HR92": {
+        "district": "",
+        "rtoOffice": "Radaur"
+      },
+      "HR93": {
+        "district": "",
+        "rtoOffice": "Punhana"
+      },
+      "HR94": {
+        "district": "",
+        "rtoOffice": "Kalanwali"
+      },
+      "HR95": {
+        "district": "",
+        "rtoOffice": "Sampla"
+      },
+      "HR96": {
+        "district": "",
+        "rtoOffice": "Taoru"
+      },
+      "HR97": {
+        "district": "",
+        "rtoOffice": "Ladwa"
+      },
+      "HR98": {
+        "district": "",
+        "rtoOffice": "Badshahpur (Gurugram South)"
+      },
+      "HR99": {
+        "district": "",
+        "rtoOffice": ""
+      }
+    }
+  },
+  "Himachal Pradesh": {
+    "stateCode": "HP",
+    "rtos": {
+      "HP01": {
+        "district": "",
+        "rtoOffice": "Tourist buses & Taxis"
+      },
+      "HP02": {
+        "district": "",
+        "rtoOffice": "Tourist buses & Taxis"
+      },
+      "HP03": {
+        "district": "",
+        "rtoOffice": "Shimla (Urban)"
+      },
+      "HP04": {
+        "district": "",
+        "rtoOffice": "Kangra, Dharamsala"
+      },
+      "HP05": {
+        "district": "",
+        "rtoOffice": "Mandi"
+      },
+      "HP06": {
+        "district": "",
+        "rtoOffice": "Rampur Bushahr"
+      },
+      "HP07": {
+        "district": "",
+        "rtoOffice": "Shimla (Urban)"
+      },
+      "HP08": {
+        "district": "",
+        "rtoOffice": "Chaupal"
+      },
+      "HP08AA": {
+        "district": "",
+        "rtoOffice": "Kupvi"
+      },
+      "HP09": {
+        "district": "",
+        "rtoOffice": "Theog"
+      },
+      "HP10": {
+        "district": "",
+        "rtoOffice": "Rohru"
+      },
+      "HP11": {
+        "district": "",
+        "rtoOffice": "Arki"
+      },
+      "HP12": {
+        "district": "",
+        "rtoOffice": "Nalagarh"
+      },
+      "HP12AA": {
+        "district": "",
+        "rtoOffice": "Baddi"
+      },
+      "HP13": {
+        "district": "",
+        "rtoOffice": "Kandaghat"
+      },
+      "HP14": {
+        "district": "",
+        "rtoOffice": "Solan"
+      },
+      "HP15": {
+        "district": "",
+        "rtoOffice": "Parwanoo"
+      },
+      "HP16": {
+        "district": "",
+        "rtoOffice": "Rajgarh"
+      },
+      "HP16AA": {
+        "district": "Sirmaur",
+        "rtoOffice": "Pachhad, Sirmaur"
+      },
+      "HP17": {
+        "district": "",
+        "rtoOffice": "Paonta Sahib"
+      },
+      "HP18": {
+        "district": "",
+        "rtoOffice": "Nahan"
+      },
+      "HP19": {
+        "district": "",
+        "rtoOffice": "Amb"
+      },
+      "HP19AA": {
+        "district": "Una",
+        "rtoOffice": "Gagret, Una"
+      },
+      "HP20": {
+        "district": "",
+        "rtoOffice": "Una"
+      },
+      "HP21": {
+        "district": "Hamirpur",
+        "rtoOffice": "Barsar, Hamirpur"
+      },
+      "HP22": {
+        "district": "",
+        "rtoOffice": "Hamirpur"
+      },
+      "HP23": {
+        "district": "",
+        "rtoOffice": "Ghumarwin"
+      },
+      "HP24": {
+        "district": "",
+        "rtoOffice": "Bilaspur"
+      },
+      "HP25": {
+        "district": "",
+        "rtoOffice": "Kalpa"
+      },
+      "HP26": {
+        "district": "",
+        "rtoOffice": "Nichar, Bhaba Nagar"
+      },
+      "HP27": {
+        "district": "",
+        "rtoOffice": "Pooh"
+      },
+      "HP28": {
+        "district": "",
+        "rtoOffice": "Sarkaghat"
+      },
+      "HP29": {
+        "district": "",
+        "rtoOffice": "Jogindernagar"
+      },
+      "HP30": {
+        "district": "",
+        "rtoOffice": "Karsog"
+      },
+      "HP31": {
+        "district": "",
+        "rtoOffice": "Sundernagar"
+      },
+      "HP32": {
+        "district": "Mandi",
+        "rtoOffice": "Gohar, Mandi"
+      },
+      "HP33": {
+        "district": "",
+        "rtoOffice": "Mandi"
+      },
+      "HP33AA": {
+        "district": "",
+        "rtoOffice": "Kotli"
+      },
+      "HP34": {
+        "district": "",
+        "rtoOffice": "Kullu"
+      },
+      "HP35": {
+        "district": "Kullu",
+        "rtoOffice": "Anni, Kullu"
+      },
+      "HP35AA": {
+        "district": "",
+        "rtoOffice": "Nirmand"
+      },
+      "HP36": {
+        "district": "",
+        "rtoOffice": "Dehra"
+      },
+      "HP37": {
+        "district": "",
+        "rtoOffice": "Palampur"
+      },
+      "HP38": {
+        "district": "",
+        "rtoOffice": "Nurpur"
+      },
+      "HP39": {
+        "district": "",
+        "rtoOffice": "Dharamshala"
+      },
+      "HP40": {
+        "district": "",
+        "rtoOffice": "Kangra"
+      },
+      "HP41": {
+        "district": "",
+        "rtoOffice": "Kaza"
+      },
+      "HP42": {
+        "district": "",
+        "rtoOffice": "Keylong"
+      },
+      "HP43": {
+        "district": "",
+        "rtoOffice": "Udaipur, Lahaul and Spiti"
+      },
+      "HP44": {
+        "district": "Chamba",
+        "rtoOffice": "Churah, Chamba"
+      },
+      "HP45": {
+        "district": "",
+        "rtoOffice": "Pangi"
+      },
+      "HP46": {
+        "district": "",
+        "rtoOffice": "Bharmour"
+      },
+      "HP47": {
+        "district": "",
+        "rtoOffice": "Dalhousie"
+      },
+      "HP48": {
+        "district": "",
+        "rtoOffice": "Chamba"
+      },
+      "HP49": {
+        "district": "",
+        "rtoOffice": "Banjar"
+      },
+      "HP50": {
+        "district": "",
+        "rtoOffice": "Shimla"
+      },
+      "HP51": {
+        "district": "",
+        "rtoOffice": "Shimla (Rural)"
+      },
+      "HP52": {
+        "district": "",
+        "rtoOffice": "Shimla (Rural)"
+      },
+      "HP52AA": {
+        "district": "",
+        "rtoOffice": "Sunni Shimla"
+      },
+      "HP53": {
+        "district": "",
+        "rtoOffice": "Baijnath"
+      },
+      "HP54": {
+        "district": "",
+        "rtoOffice": "Jawali"
+      },
+      "HP55": {
+        "district": "",
+        "rtoOffice": "Nadaun"
+      },
+      "HP56": {
+        "district": "",
+        "rtoOffice": "Jaisinghpur"
+      },
+      "HP57": {
+        "district": "",
+        "rtoOffice": "Chowari"
+      },
+      "HP58": {
+        "district": "",
+        "rtoOffice": "Manali"
+      },
+      "HP59": {
+        "district": "",
+        "rtoOffice": "Solan"
+      },
+      "HP60": {
+        "district": "",
+        "rtoOffice": "Hamirpur"
+      },
+      "HP61": {
+        "district": "",
+        "rtoOffice": "Kullu"
+      },
+      "HP62": {
+        "district": "",
+        "rtoOffice": "Shimla"
+      },
+      "HP63": {
+        "district": "",
+        "rtoOffice": "Shimla"
+      },
+      "HP64": {
+        "district": "",
+        "rtoOffice": "Solan"
+      },
+      "HP65": {
+        "district": "",
+        "rtoOffice": "Mandi"
+      },
+      "HP66": {
+        "district": "",
+        "rtoOffice": "Kullu"
+      },
+      "HP67": {
+        "district": "",
+        "rtoOffice": "Hamirpur"
+      },
+      "HP68": {
+        "district": "",
+        "rtoOffice": "Kangra, Dharmsala"
+      },
+      "HP69": {
+        "district": "Bilaspur",
+        "rtoOffice": "Bilaspur"
+      },
+      "HP70": {
+        "district": "Bilaspur",
+        "rtoOffice": "Bilaspur"
+      },
+      "HP71": {
+        "district": "",
+        "rtoOffice": "Nahan"
+      },
+      "HP72": {
+        "district": "",
+        "rtoOffice": "Una"
+      },
+      "HP73": {
+        "district": "",
+        "rtoOffice": "Chamba"
+      },
+      "HP74": {
+        "district": "Hamirpur",
+        "rtoOffice": "Bhoranj, Hamirpur"
+      },
+      "HP75": {
+        "district": "",
+        "rtoOffice": "Jubbal"
+      },
+      "HP76": {
+        "district": "Mandi",
+        "rtoOffice": "Paddhar, Mandi"
+      },
+      "HP77": {
+        "district": "Shimla",
+        "rtoOffice": "Dodra Kawar, Shimla"
+      },
+      "HP78": {
+        "district": "Una",
+        "rtoOffice": "Bangana, Una"
+      },
+      "HP79": {
+        "district": "Sirmaur",
+        "rtoOffice": "Sangrah, Sirmaur"
+      },
+      "HP80": {
+        "district": "Una",
+        "rtoOffice": "Haroli, Una"
+      },
+      "HP81": {
+        "district": "",
+        "rtoOffice": "Salooni"
+      },
+      "HP82": {
+        "district": "Mandi",
+        "rtoOffice": "Balh, Mandi"
+      },
+      "HP83": {
+        "district": "Kangra",
+        "rtoOffice": "Jawalaji, Kangra"
+      },
+      "HP84": {
+        "district": "Hamirpur",
+        "rtoOffice": "Sujanpur Tihra, Hamirpur"
+      },
+      "HP85": {
+        "district": "Sirmaur",
+        "rtoOffice": "Shillai, Sirmaur"
+      },
+      "HP85AA": {
+        "district": "Sirmaur",
+        "rtoOffice": "Kaffota, Sirmaur"
+      },
+      "HP86": {
+        "district": "Mandi",
+        "rtoOffice": "Dharampur, Mandi"
+      },
+      "HP87": {
+        "district": "Mandi",
+        "rtoOffice": "Janjehli, Mandi"
+      },
+      "HP87AA": {
+        "district": "Mandi",
+        "rtoOffice": "Bali Chowki, Mandi"
+      },
+      "HP88": {
+        "district": "Kangra",
+        "rtoOffice": "Fatehpur, Kangra"
+      },
+      "HP89": {
+        "district": "Bilaspur",
+        "rtoOffice": "Jhandutta, Bilaspur"
+      },
+      "HP90": {
+        "district": "Kangra",
+        "rtoOffice": "Shahpur, Kangra"
+      },
+      "HP91": {
+        "district": "Bilaspur",
+        "rtoOffice": "Naina Devi, Swarghat, Bilaspur"
+      },
+      "HP92": {
+        "district": "",
+        "rtoOffice": "Rampur Bushahr"
+      },
+      "HP93": {
+        "district": "",
+        "rtoOffice": "Nalagarh"
+      },
+      "HP94": {
+        "district": "",
+        "rtoOffice": "Nagrota Bagwan"
+      },
+      "HP95": {
+        "district": "",
+        "rtoOffice": "Kumarsain"
+      },
+      "HP96": {
+        "district": "Kangra",
+        "rtoOffice": "Dheera, Kangra"
+      },
+      "HP97": {
+        "district": "",
+        "rtoOffice": "Indora"
+      },
+      "HP98": {
+        "district": "",
+        "rtoOffice": "Kasauli"
+      },
+      "HP99": {
+        "district": "",
+        "rtoOffice": "Kotkhai"
+      }
+    }
+  },
+  "Jammu and Kashmir": {
+    "stateCode": "JK",
+    "rtos": {
+      "JK01": {
+        "district": "Srinagar",
+        "rtoOffice": "Srinagar"
+      },
+      "JK02": {
+        "district": "Jammu",
+        "rtoOffice": "Jammu"
+      },
+      "JK03": {
+        "district": "Anantnag",
+        "rtoOffice": "Anantnag"
+      },
+      "JK04": {
+        "district": "Budgam",
+        "rtoOffice": "Budgam"
+      },
+      "JK05": {
+        "district": "Baramulla",
+        "rtoOffice": "Baramulla"
+      },
+      "JK06": {
+        "district": "Doda",
+        "rtoOffice": "Doda"
+      },
+      "JK08": {
+        "district": "Kathua",
+        "rtoOffice": "Lakhanpur, Kathua"
+      },
+      "JK09": {
+        "district": "Kupwara",
+        "rtoOffice": "Kupwara"
+      },
+      "JK11": {
+        "district": "Rajouri",
+        "rtoOffice": "Rajouri"
+      },
+      "JK12": {
+        "district": "Poonch",
+        "rtoOffice": "Poonch"
+      },
+      "JK13": {
+        "district": "Pulwama",
+        "rtoOffice": "Pulwama"
+      },
+      "JK14": {
+        "district": "Udhampur",
+        "rtoOffice": "Udhampur"
+      },
+      "JK15": {
+        "district": "Bandipora",
+        "rtoOffice": "Bandipora"
+      },
+      "JK16": {
+        "district": "Ganderbal",
+        "rtoOffice": "Ganderbal"
+      },
+      "JK17": {
+        "district": "Kishtwar",
+        "rtoOffice": "Kishtwar"
+      },
+      "JK18": {
+        "district": "Kulgam",
+        "rtoOffice": "Kulgam"
+      },
+      "JK19": {
+        "district": "Ramban",
+        "rtoOffice": "Ramban"
+      },
+      "JK20": {
+        "district": "Reasi",
+        "rtoOffice": "Reasi"
+      },
+      "JK21": {
+        "district": "Samba",
+        "rtoOffice": "Samba"
+      },
+      "JK22": {
+        "district": "Shopian",
+        "rtoOffice": "Shopian"
+      }
+    }
+  },
+  "Jharkhand": {
+    "stateCode": "JH",
+    "rtos": {
+      "JH01": {
+        "district": "Ranchi",
+        "rtoOffice": "Ranchi"
+      },
+      "JH02": {
+        "district": "Hazaribagh",
+        "rtoOffice": "Hazaribagh"
+      },
+      "JH03": {
+        "district": "Palamu",
+        "rtoOffice": "Daltonganj"
+      },
+      "JH04": {
+        "district": "Dumka",
+        "rtoOffice": "Dumka"
+      },
+      "JH05": {
+        "district": "East Singhbhum",
+        "rtoOffice": "Jamshedpur"
+      },
+      "JH06": {
+        "district": "West Singhbhum",
+        "rtoOffice": "Chaibasa"
+      },
+      "JH07": {
+        "district": "Gumla",
+        "rtoOffice": "Gumla"
+      },
+      "JH08": {
+        "district": "Lohardaga",
+        "rtoOffice": "Lohardaga"
+      },
+      "JH09": {
+        "district": "Bokaro",
+        "rtoOffice": "Bokaro"
+      },
+      "JH10": {
+        "district": "Dhanbad",
+        "rtoOffice": "Dhanbad"
+      },
+      "JH11": {
+        "district": "Giridih",
+        "rtoOffice": "Giridih"
+      },
+      "JH12": {
+        "district": "Koderma",
+        "rtoOffice": "Koderma"
+      },
+      "JH13": {
+        "district": "Chatra",
+        "rtoOffice": "Chatra"
+      },
+      "JH14": {
+        "district": "Garhwa",
+        "rtoOffice": "Garhwa"
+      },
+      "JH15": {
+        "district": "Deoghar",
+        "rtoOffice": "Deoghar"
+      },
+      "JH16": {
+        "district": "Pakur",
+        "rtoOffice": "Pakur"
+      },
+      "JH17": {
+        "district": "Godda",
+        "rtoOffice": "Godda"
+      },
+      "JH18": {
+        "district": "Sahebganj",
+        "rtoOffice": "Sahibganj"
+      },
+      "JH19": {
+        "district": "Latehar",
+        "rtoOffice": "Latehar"
+      },
+      "JH20": {
+        "district": "Simdega",
+        "rtoOffice": "Simdega"
+      },
+      "JH21": {
+        "district": "Jamtara",
+        "rtoOffice": "Jamtara"
+      },
+      "JH22": {
+        "district": "Seraikela Kharsawan",
+        "rtoOffice": "Seraikela Kharsawan"
+      },
+      "JH23": {
+        "district": "Khunti",
+        "rtoOffice": "Khunti"
+      },
+      "JH24": {
+        "district": "Ramgarh",
+        "rtoOffice": "Ramgarh"
+      }
+    }
+  },
+  "Karnataka": {
+    "stateCode": "KA",
+    "rtos": {
+      "KA01": {
+        "district": "Bengaluru Urban",
+        "rtoOffice": "21st Main Road, Agara, HSR Layout 1st Sector, Bengaluru (KA), 560102"
+      },
+      "KA02": {
+        "district": "Bengaluru Urban",
+        "rtoOffice": "12th Main Road, Rajajinagara 2nd Block, Bengaluru - 560010"
+      },
+      "KA03": {
+        "district": "Bengaluru Urban",
+        "rtoOffice": "3rd D Main Road, east of NGEF Layout, Kasturinagara, Bengaluru - 560016"
+      },
+      "KA04": {
+        "district": "Bengaluru Urban",
+        "rtoOffice": "Subedarchatram Road, Dr. Ambedkar Nagara, Yeshwanthpura, Bengaluru - 560022"
+      },
+      "KA05": {
+        "district": "Bengaluru Urban",
+        "rtoOffice": "3rd Main Road, Royal Park Residency Layout 2, Jayaprakash Nagara 9th Phase, Bengaluru - 560108"
+      },
+      "KA06": {
+        "district": "Tumakuru",
+        "rtoOffice": "Bengaluru - Honnavara Road, Ashok Nagara, Tumakuru - 572103"
+      },
+      "KA07": {
+        "district": "Kolar",
+        "rtoOffice": "Rahmat Nagara Main Road, Kanakanapalya, Kolar - 563101"
+      },
+      "KA08": {
+        "district": "Kolar",
+        "rtoOffice": "DK Halli Main Road, Henry Colony, Kolar Gold Fields, Kolar District (KA) - 563120"
+      },
+      "KA09": {
+        "district": "Mysuru",
+        "rtoOffice": "MG Road, Chamarajapura, Lakshmipura, Mysuru - 570004"
+      },
+      "KA10": {
+        "district": "Chamarajanagara",
+        "rtoOffice": "Chamarajanagara Bypass Road, Mallayanapura, Chamarajanagara - 571313"
+      },
+      "KA11": {
+        "district": "Mandya",
+        "rtoOffice": "RTO Road, Subash Nagara, Mandya - 571401"
+      },
+      "KA12": {
+        "district": "Kodagu",
+        "rtoOffice": "Abbey Falls Road, Madikeri, Kodagu District (KA) - 571201"
+      },
+      "KA13": {
+        "district": "Hassan",
+        "rtoOffice": "Arsikere - Hassan Road, Sri Rama Nagara, Hassan - 573202"
+      },
+      "KA14": {
+        "district": "Shivamogga",
+        "rtoOffice": "Savlanga Road, Basavanagudi, Shivamogga - 577201"
+      },
+      "KA15": {
+        "district": "Shivamogga",
+        "rtoOffice": "Ikkeri Road, Sagara, Shivamogga District (KA) - 577401"
+      },
+      "KA16": {
+        "district": "Chitradurga",
+        "rtoOffice": "NH Service Road, Maniyuru, Chitradurga - 577501"
+      },
+      "KA17": {
+        "district": "Davanagere",
+        "rtoOffice": "Kondajji Road, Devaraj Urs Layout B Block, Davanagere - 577004"
+      },
+      "KA18": {
+        "district": "Chikkamagaluru",
+        "rtoOffice": "KM Road, Chikkamagaluru - 577101"
+      },
+      "KA19": {
+        "district": "Dakshina Kannada",
+        "rtoOffice": "Maidan Road, Attavara, Mangaluru, Dakshina Kannada District (KA) - 575001"
+      },
+      "KA20": {
+        "district": "Udupi",
+        "rtoOffice": "Dr. VS Acharya Road, Saralebettu, Manipal, Udupi District (KA) - 576104"
+      },
+      "KA21": {
+        "district": "Dakshina Kannada",
+        "rtoOffice": "RTO Road, Bannur, Puttur, Dakshina Kannada District (KA) - 574203"
+      },
+      "KA22": {
+        "district": "Belagavi",
+        "rtoOffice": "Bachi - Raichur Road, Khade Bazar, Raviwar Peth, Belagavi - 590016"
+      },
+      "KA23": {
+        "district": "Belagavi",
+        "rtoOffice": "Nippani Road, Chikkodi, Belagavi District (KA) - 591201"
+      },
+      "KA24": {
+        "district": "Belagavi",
+        "rtoOffice": "Devalapura Road, Bailhongal, Belagavi District (KA) - 591102"
+      },
+      "KA25": {
+        "district": "Dharwad",
+        "rtoOffice": "Hubballi - Dharwad Road, Navanagara, Hubballi, Dharwad District (KA) - 580025"
+      },
+      "KA26": {
+        "district": "Gadag",
+        "rtoOffice": "Mulgund Road, Malasamudra, Gadag - 582103"
+      },
+      "KA27": {
+        "district": "Haveri",
+        "rtoOffice": "PB Road, Haveri - 581110"
+      },
+      "KA28": {
+        "district": "Vijayapura",
+        "rtoOffice": "Bagalkote Road, Bammanajogi, Vijayapura - 586109"
+      },
+      "KA29": {
+        "district": "Bagalkote",
+        "rtoOffice": "Navanagara Bypass Road, Vidyagiri, Bagalkote - 587103"
+      },
+      "KA30": {
+        "district": "Uttara Kannada",
+        "rtoOffice": "Bypass Road, Kodibag, Karwar, Uttara Kannada District (KA) - 581301"
+      },
+      "KA31": {
+        "district": "Uttara Kannada",
+        "rtoOffice": "Bashettikere Road, Basaveshwara Nagara, Sirsi, Uttara Kannada District (KA) - 581402"
+      },
+      "KA32": {
+        "district": "Kalaburagi",
+        "rtoOffice": "Sedam Road, Badepura Colony, Kalaburagi - 585101"
+      },
+      "KA33": {
+        "district": "Yadgir",
+        "rtoOffice": "Yadgir - Chittapura Road, Yadgir - 585202"
+      },
+      "KA34": {
+        "district": "Ballari",
+        "rtoOffice": "Old Trunk Road, Cantonment, Ballari - 583104"
+      },
+      "KA35": {
+        "district": "Vijayanagara",
+        "rtoOffice": "Hosapete - Harihara Road, Vivekananda Nagara, Hosapete, Vijayanagara District (KA) - 583201"
+      },
+      "KA36": {
+        "district": "Raichur",
+        "rtoOffice": "Mantralayam Road, Ashok Nagara, Raichur - 584103"
+      },
+      "KA37": {
+        "district": "Koppal",
+        "rtoOffice": "Ballari - Hubballi Road, Kidadhal, Koppal - 583231"
+      },
+      "KA38": {
+        "district": "Bidar",
+        "rtoOffice": "Naubad Road, Naubad, Bidar - 585402"
+      },
+      "KA39": {
+        "district": "Bidar",
+        "rtoOffice": "Udgir - Bidar Road, Gunj, Bhalki, Bidar District (KA) - 585328"
+      },
+      "KA40": {
+        "district": "Chikkaballapura",
+        "rtoOffice": "Chitravathi Road, Honnenahalli, Chikkaballapura - 562101"
+      },
+      "KA41": {
+        "district": "Bengaluru Urban",
+        "rtoOffice": "Ullal Main Road, Jnana Bharathi, Ullal, Bengaluru - 560091"
+      },
+      "KA42": {
+        "district": "Ramanagara",
+        "rtoOffice": "Mysuru Road, Vijayanagara, Ramanagara - 562159"
+      },
+      "KA43": {
+        "district": "Bengaluru Rural",
+        "rtoOffice": "Nandi Hills Road, Kurubarakunte, Devanahalli, Bengaluru Rural District (KA) - 562110"
+      },
+      "KA44": {
+        "district": "Tumakuru",
+        "rtoOffice": "Halepalya Road, Krishnaraja Extension, Tiptur, Tumakuru District (KA) - 572201"
+      },
+      "KA45": {
+        "district": "Mysuru",
+        "rtoOffice": "RTO Road, Housing Board Colony, Hunsur, Mysuru District (KA) - 571105"
+      },
+      "KA46": {
+        "district": "Hassan",
+        "rtoOffice": "Bengaluru - Mangaluru Road, Kollahalli, Sakleshpura, Hassan District (KA) - 573127"
+      },
+      "KA47": {
+        "district": "Uttara Kannada",
+        "rtoOffice": "Honnavar - Areangadi Road, Rama Tirtha, Honnavar, Uttara Kannada District (KA) - 581341"
+      },
+      "KA48": {
+        "district": "Bagalkote",
+        "rtoOffice": "Mudhol Road, Jamakhandi, Bagalkote District (KA) - 587301"
+      },
+      "KA49": {
+        "district": "Belagavi",
+        "rtoOffice": "Gokak Main Road, Gokak, Belagavi District (KA) - 591307"
+      },
+      "KA50": {
+        "district": "Bengaluru Urban",
+        "rtoOffice": "Singanayakanahalli Road, Singanayakanahalli, Yelahanka, Bengaluru - 560064"
+      },
+      "KA51": {
+        "district": "Bengaluru Urban",
+        "rtoOffice": "5th Main Road, BTM Layout 4th Stage, Bengaluru - 560076"
+      },
+      "KA52": {
+        "district": "Bengaluru Rural",
+        "rtoOffice": "Rahuthnahalli Main Road, Harokyathanahalli, Nelamangala, Bengaluru Rural District (KA) - 562162"
+      },
+      "KA53": {
+        "district": "Bengaluru Urban",
+        "rtoOffice": "Old Madras Road, Hosabasavanapura, Krishnarajapuram, Bengaluru - 560049"
+      },
+      "KA54": {
+        "district": "Mandya",
+        "rtoOffice": "Basaveshwara Nagara Road, Nagamangala, Mandya District (KA) - 571432"
+      },
+      "KA55": {
+        "district": "Mysuru",
+        "rtoOffice": "Mysuru Ring Road, Hale Kesare, Mysuru - 570019"
+      },
+      "KA56": {
+        "district": "Bidar",
+        "rtoOffice": "Basavakalyan Main Road, Morkhandi, Basavakalyan, Bidar District (KA) - 585327"
+      },
+      "KA57": {
+        "district": "Bengaluru Urban",
+        "rtoOffice": "BMTC Depot Road, Shanthinagara, Bengaluru - 560027"
+      },
+      "KA59": {
+        "district": "Bengaluru Urban",
+        "rtoOffice": "Anekal Road, Byagadadenahalli, Chandapura, Bengaluru Urban District (KA) - 562107"
+      },
+      "KA63": {
+        "district": "Dharwad",
+        "rtoOffice": "Hubballi - Dharwad Road, Gabbur, Hubballi, Dharwad District (KA) - 580028"
+      },
+      "KA64": {
+        "district": "Tumakuru",
+        "rtoOffice": "Gauribidanuru Road, Madhugiri, Tumakuru District (KA) - 572132"
+      },
+      "KA65": {
+        "district": "Uttara Kannada",
+        "rtoOffice": "DFA Road, Dandeli, Uttara Kannada District (KA) - 581325"
+      },
+      "KA66": {
+        "district": "Chikkamagaluru",
+        "rtoOffice": "Bengaluru - Shivamogga Road, Tarikere, Chikkamagaluru District (KA) - 577228"
+      },
+      "KA67": {
+        "district": "Chikkaballapura",
+        "rtoOffice": "Hosakote - Chintamani Road, Kanampalli Layout, Chintamani, Chikkaballapura District (KA) - 563125"
+      },
+      "KA68": {
+        "district": "Haveri",
+        "rtoOffice": "PB Road, Sangolli Rayanna Nagara, Ranebennuru, Haveri District (KA) - 581115"
+      },
+      "KA69": {
+        "district": "Belagavi",
+        "rtoOffice": "Belagavi Road, Radhapurapete, Ramdurga, Belagavi District (KA) - 591123"
+      },
+      "KA70": {
+        "district": "Dakshina Kannada",
+        "rtoOffice": "Bengaluru - Mangaluru Road, Melkar, Bantwal, Dakshina Kannada District (KA) - 574231"
+      },
+      "KA71": {
+        "district": "Belagavi",
+        "rtoOffice": "Gokak Road, Haluvalli, Athani, Belagavi District (KA) - 591304"
+      }
+    }
+  },
+  "Kerala": {
+    "stateCode": "KL",
+    "rtos": {
+      "KL01": {
+        "district": "",
+        "rtoOffice": "Thiruvananthapuram"
+      },
+      "KL02": {
+        "district": "",
+        "rtoOffice": "Kollam"
+      },
+      "KL03": {
+        "district": "",
+        "rtoOffice": "Pathanamthitta"
+      },
+      "KL04": {
+        "district": "",
+        "rtoOffice": "Alappuzha"
+      },
+      "KL05": {
+        "district": "",
+        "rtoOffice": "Kottayam"
+      },
+      "KL06": {
+        "district": "",
+        "rtoOffice": "Idukki"
+      },
+      "KL07": {
+        "district": "Ernakulam",
+        "rtoOffice": "Kochi, Ernakulam District."
+      },
+      "KL08": {
+        "district": "",
+        "rtoOffice": "Thrissur"
+      },
+      "KL09": {
+        "district": "",
+        "rtoOffice": "Palakkad"
+      },
+      "KL10": {
+        "district": "",
+        "rtoOffice": "Malappuram (part of Ernad, Perintalmanna & Tirur Taluks)"
+      },
+      "KL11": {
+        "district": "",
+        "rtoOffice": "Kozhikode"
+      },
+      "KL12": {
+        "district": "Wayanad",
+        "rtoOffice": "Kalpetta, Wayanad District"
+      },
+      "KL13": {
+        "district": "",
+        "rtoOffice": "Kannur"
+      },
+      "KL14": {
+        "district": "",
+        "rtoOffice": "Kasaragod"
+      },
+      "KL15": {
+        "district": "",
+        "rtoOffice": "Nationalised Sector I, Thiruvananthapuram"
+      },
+      "KL16": {
+        "district": "Thiruvananthapuram",
+        "rtoOffice": "Attingal, Thiruvananthapuram District"
+      },
+      "KL17": {
+        "district": "Ernakulam",
+        "rtoOffice": "Muvattupuzha, Ernakulam District"
+      },
+      "KL18": {
+        "district": "Kozhikode",
+        "rtoOffice": "Vadakara, Kozhikode District"
+      },
+      "KL19": {
+        "district": "Thiruvananthapuram",
+        "rtoOffice": "Parassala, Thiruvananthapuram District"
+      },
+      "KL20": {
+        "district": "Thiruvananthapuram",
+        "rtoOffice": "Neyyattinkara, Thiruvananthapuram District"
+      },
+      "KL21": {
+        "district": "Thiruvananthapuram",
+        "rtoOffice": "Nedumangad, Thiruvananthapuram District"
+      },
+      "KL22": {
+        "district": "",
+        "rtoOffice": "Kazhakkoottam, Thiruvananthapuram"
+      },
+      "KL23": {
+        "district": "Kollam",
+        "rtoOffice": "Karunagappalli, Kollam District"
+      },
+      "KL24": {
+        "district": "Kollam",
+        "rtoOffice": "Kottarakkara, Kollam District"
+      },
+      "KL25": {
+        "district": "Kollam",
+        "rtoOffice": "Punalur, Kollam District"
+      },
+      "KL26": {
+        "district": "Pathanamthitta",
+        "rtoOffice": "Adoor, Pathanamthitta District"
+      },
+      "KL27": {
+        "district": "Pathanamthitta",
+        "rtoOffice": "Tiruvalla, Pathanamthitta District"
+      },
+      "KL28": {
+        "district": "Pathanamthitta",
+        "rtoOffice": "Mallappally, Pathanamthitta District"
+      },
+      "KL29": {
+        "district": "Alappuzha",
+        "rtoOffice": "Kayamkulam, Alappuzha District"
+      },
+      "KL30": {
+        "district": "Alappuzha",
+        "rtoOffice": "Chengannur, Alappuzha District"
+      },
+      "KL31": {
+        "district": "Alappuzha",
+        "rtoOffice": "Mavelikkara, Alappuzha District"
+      },
+      "KL32": {
+        "district": "Alappuzha",
+        "rtoOffice": "Cherthala, Alappuzha District"
+      },
+      "KL33": {
+        "district": "Kottayam",
+        "rtoOffice": "Changanassery, Kottayam District"
+      },
+      "KL34": {
+        "district": "Kottayam",
+        "rtoOffice": "Kanjirapalli, Kottayam District"
+      },
+      "KL35": {
+        "district": "Kottayam",
+        "rtoOffice": "Pala, Kottayam District"
+      },
+      "KL36": {
+        "district": "Kottayam",
+        "rtoOffice": "Vaikom, Kottayam District"
+      },
+      "KL37": {
+        "district": "Idukki",
+        "rtoOffice": "Vandiperiyar, Idukki District"
+      },
+      "KL38": {
+        "district": "Idukki",
+        "rtoOffice": "Thodupuzha, Idukki District"
+      },
+      "KL39": {
+        "district": "Ernakulam",
+        "rtoOffice": "Thripunithura, Ernakulam District"
+      },
+      "KL40": {
+        "district": "Ernakulam",
+        "rtoOffice": "Perumbavoor, Ernakulam District"
+      },
+      "KL41": {
+        "district": "Ernakulam",
+        "rtoOffice": "Aluva, Ernakulam District"
+      },
+      "KL42": {
+        "district": "Ernakulam",
+        "rtoOffice": "North Paravur, Ernakulam District"
+      },
+      "KL43": {
+        "district": "Ernakulam",
+        "rtoOffice": "Fort Kochi & Mattancherry, Ernakulam District"
+      },
+      "KL44": {
+        "district": "Ernakulam",
+        "rtoOffice": "Kothamangalam, Ernakulam District"
+      },
+      "KL45": {
+        "district": "Thrissur",
+        "rtoOffice": "Irinjalakuda, Thrissur District"
+      },
+      "KL46": {
+        "district": "Thrissur",
+        "rtoOffice": "Guruvayur, Thrissur District"
+      },
+      "KL47": {
+        "district": "Thrissur",
+        "rtoOffice": "Kodungallur, Thrissur District"
+      },
+      "KL48": {
+        "district": "Thrissur",
+        "rtoOffice": "Wadakkancherry, Thrissur District"
+      },
+      "KL49": {
+        "district": "Palakkad",
+        "rtoOffice": "Alathur, Palakkad District"
+      },
+      "KL50": {
+        "district": "Palakkad",
+        "rtoOffice": "Mannarkkad, Palakkad District"
+      },
+      "KL51": {
+        "district": "Palakkad",
+        "rtoOffice": "Ottapalam, Palakkad District"
+      },
+      "KL52": {
+        "district": "Palakkad",
+        "rtoOffice": "Pattambi, Palakkad District"
+      },
+      "KL53": {
+        "district": "Malappuram",
+        "rtoOffice": "Perinthalmanna, Malappuram District"
+      },
+      "KL54": {
+        "district": "Malappuram",
+        "rtoOffice": "Ponnani, Malappuram District"
+      },
+      "KL55": {
+        "district": "Malappuram",
+        "rtoOffice": "Tirur, Malappuram District"
+      },
+      "KL56": {
+        "district": "Kozhikode",
+        "rtoOffice": "Koyilandy, Kozhikode District"
+      },
+      "KL57": {
+        "district": "Kozhikode",
+        "rtoOffice": "Koduvally, Kozhikode District"
+      },
+      "KL58": {
+        "district": "Kannur",
+        "rtoOffice": "Thalassery, Kannur District"
+      },
+      "KL59": {
+        "district": "Kannur",
+        "rtoOffice": "Taliparamba, Kannur District"
+      },
+      "KL60": {
+        "district": "Kasargod",
+        "rtoOffice": "Kanhangad, Kasargod District"
+      },
+      "KL61": {
+        "district": "Kollam",
+        "rtoOffice": "Kunnathur, Kollam District"
+      },
+      "KL62": {
+        "district": "Pathanamthitta",
+        "rtoOffice": "Ranni, Pathanamthitta District"
+      },
+      "KL63": {
+        "district": "Ernakulam",
+        "rtoOffice": "Angamaly, Ernakulam District"
+      },
+      "KL64": {
+        "district": "Thrissur",
+        "rtoOffice": "Chalakkudy, Thrissur District"
+      },
+      "KL65": {
+        "district": "Malappuram",
+        "rtoOffice": "Tirurangadi, Malappuram District"
+      },
+      "KL66": {
+        "district": "Alappuzha",
+        "rtoOffice": "Kuttanad, Alappuzha District"
+      },
+      "KL67": {
+        "district": "Kottayam",
+        "rtoOffice": "Uzhavoor, Kottayam District"
+      },
+      "KL68": {
+        "district": "Idukki",
+        "rtoOffice": "Devikulam, Idukki District"
+      },
+      "KL69": {
+        "district": "Idukki",
+        "rtoOffice": "Udumbanchola, Idukki District"
+      },
+      "KL70": {
+        "district": "Palakkad",
+        "rtoOffice": "Chittur, Palakkad District"
+      },
+      "KL71": {
+        "district": "Malappuram",
+        "rtoOffice": "Nilambur, Malappuram District"
+      },
+      "KL72": {
+        "district": "Wayanad",
+        "rtoOffice": "Mananthavady, Wayanad District"
+      },
+      "KL73": {
+        "district": "Wayanad",
+        "rtoOffice": "Sulthan Bathery, Wayanad District"
+      },
+      "KL74": {
+        "district": "Thiruvananthapuram",
+        "rtoOffice": "Kattakada, Thiruvananthapuram District"
+      },
+      "KL75": {
+        "district": "Thrissur",
+        "rtoOffice": "Thriprayar, Thrissur District"
+      },
+      "KL76": {
+        "district": "Kozhikode",
+        "rtoOffice": "Nanmanda, Kozhikode District"
+      },
+      "KL77": {
+        "district": "Kozhikode",
+        "rtoOffice": "Perambra, Kozhikode District"
+      },
+      "KL78": {
+        "district": "Kannur",
+        "rtoOffice": "Iritty, Kannur District"
+      },
+      "KL79": {
+        "district": "Kasargod",
+        "rtoOffice": "Vellarikundu, Kasargod District"
+      },
+      "KL80": {
+        "district": "Kollam",
+        "rtoOffice": "Pathanapuram, Kollam District"
+      },
+      "KL81": {
+        "district": "Thiruvananthapuram",
+        "rtoOffice": "Varkala, Thiruvananthapuram District"
+      },
+      "KL82": {
+        "district": "Kollam",
+        "rtoOffice": "Chadayamangalam, Kollam District"
+      },
+      "KL83": {
+        "district": "Pathanamthitta",
+        "rtoOffice": "Konni, Pathanamthitta District"
+      },
+      "KL84": {
+        "district": "Malappuram",
+        "rtoOffice": "Kondotty, Malappuram District"
+      },
+      "KL85": {
+        "district": "Kozhikode",
+        "rtoOffice": "Ramanattukara-Feroke, Kozhikode District"
+      },
+      "KL86": {
+        "district": "Kannur",
+        "rtoOffice": "Payyannur, Kannur District"
+      },
+      "KL90": {
+        "district": "",
+        "rtoOffice": "Nationalised Sector II Thiruvananthapuram"
+      },
+      "KL99": {
+        "district": "",
+        "rtoOffice": "Thiruvananthapuram"
+      }
+    }
+  },
+  "Ladakh": {
+    "stateCode": "LA",
+    "rtos": {
+      "LA01": {
+        "district": "Kargil",
+        "rtoOffice": "Kargil"
+      },
+      "LA02": {
+        "district": "Leh",
+        "rtoOffice": "Leh"
+      }
+    }
+  },
+  "Lakshadweep": {
+    "stateCode": "LD",
+    "rtos": {
+      "LD01": {
+        "district": "",
+        "rtoOffice": "Kavaratti"
+      },
+      "LD02": {
+        "district": "",
+        "rtoOffice": "Agatti"
+      },
+      "LD03": {
+        "district": "",
+        "rtoOffice": "Amini"
+      },
+      "LD04": {
+        "district": "",
+        "rtoOffice": "Androth"
+      },
+      "LD05": {
+        "district": "",
+        "rtoOffice": "Kadmat"
+      },
+      "LD06": {
+        "district": "",
+        "rtoOffice": "Kiltan"
+      },
+      "LD07": {
+        "district": "",
+        "rtoOffice": "Kalpeni"
+      },
+      "LD08": {
+        "district": "",
+        "rtoOffice": "Kalpeni"
+      },
+      "LD09": {
+        "district": "",
+        "rtoOffice": "Minicoy"
+      }
+    }
+  },
+  "Madhya Pradesh": {
+    "stateCode": "MP",
+    "rtos": {
+      "MP01": {
+        "district": "",
+        "rtoOffice": "Bhopal"
+      },
+      "MP02": {
+        "district": "",
+        "rtoOffice": "Bhopal"
+      },
+      "MP03": {
+        "district": "",
+        "rtoOffice": "Bhopal"
+      },
+      "MP04": {
+        "district": "Bhopal",
+        "rtoOffice": "Bhopal"
+      },
+      "MP05": {
+        "district": "Hoshangabad",
+        "rtoOffice": "Hoshangabad"
+      },
+      "MP06": {
+        "district": "Morena",
+        "rtoOffice": "Morena"
+      },
+      "MP07": {
+        "district": "Gwalior",
+        "rtoOffice": "Gwalior"
+      },
+      "MP08": {
+        "district": "Guna",
+        "rtoOffice": "Guna"
+      },
+      "MP09": {
+        "district": "Indore",
+        "rtoOffice": "Indore"
+      },
+      "MP10": {
+        "district": "Khargone",
+        "rtoOffice": "Khargone"
+      },
+      "MP11": {
+        "district": "Dhar",
+        "rtoOffice": "Dhar"
+      },
+      "MP12": {
+        "district": "Khandwa",
+        "rtoOffice": "Khandwa"
+      },
+      "MP13": {
+        "district": "Ujjain",
+        "rtoOffice": "Ujjain"
+      },
+      "MP14": {
+        "district": "Mandsaur",
+        "rtoOffice": "Mandsaur"
+      },
+      "MP15": {
+        "district": "Sagar",
+        "rtoOffice": "Sagar"
+      },
+      "MP16": {
+        "district": "Chhatarpur",
+        "rtoOffice": "Chhatarpur"
+      },
+      "MP17": {
+        "district": "Rewa",
+        "rtoOffice": "Rewa"
+      },
+      "MP18": {
+        "district": "Shahdol",
+        "rtoOffice": "Shahdol"
+      },
+      "MP19": {
+        "district": "Satna",
+        "rtoOffice": "Satna"
+      },
+      "MP20": {
+        "district": "Jabalpur",
+        "rtoOffice": "Jabalpur"
+      },
+      "MP21": {
+        "district": "Katni",
+        "rtoOffice": "Katni"
+      },
+      "MP22": {
+        "district": "Seoni",
+        "rtoOffice": "Seoni"
+      },
+      "MP28": {
+        "district": "Chhindwara",
+        "rtoOffice": "Chhindwara"
+      },
+      "MP30": {
+        "district": "Bhind",
+        "rtoOffice": "Bhind"
+      },
+      "MP31": {
+        "district": "Sheopur",
+        "rtoOffice": "Sheopur"
+      },
+      "MP32": {
+        "district": "Datia",
+        "rtoOffice": "Datia"
+      },
+      "MP33": {
+        "district": "Shivpuri",
+        "rtoOffice": "Shivpuri"
+      },
+      "MP34": {
+        "district": "Damoh",
+        "rtoOffice": "Damoh"
+      },
+      "MP35": {
+        "district": "Panna",
+        "rtoOffice": "Panna"
+      },
+      "MP36": {
+        "district": "Tikamgarh",
+        "rtoOffice": "Tikamgarh"
+      },
+      "MP37": {
+        "district": "Sehore",
+        "rtoOffice": "Sehore"
+      },
+      "MP38": {
+        "district": "Raisen",
+        "rtoOffice": "Raisen"
+      },
+      "MP39": {
+        "district": "Rajgarh",
+        "rtoOffice": "Rajgarh"
+      },
+      "MP40": {
+        "district": "Vidisha",
+        "rtoOffice": "Vidisha"
+      },
+      "MP41": {
+        "district": "Dewas",
+        "rtoOffice": "Dewas"
+      },
+      "MP42": {
+        "district": "Shajapur",
+        "rtoOffice": "Shajapur"
+      },
+      "MP43": {
+        "district": "Ratlam",
+        "rtoOffice": "Ratlam"
+      },
+      "MP44": {
+        "district": "Neemuch",
+        "rtoOffice": "Neemuch"
+      },
+      "MP45": {
+        "district": "Jhabua",
+        "rtoOffice": "Jhabua"
+      },
+      "MP46": {
+        "district": "Barwani",
+        "rtoOffice": "Barwani"
+      },
+      "MP47": {
+        "district": "Harda",
+        "rtoOffice": "Harda"
+      },
+      "MP48": {
+        "district": "Betul",
+        "rtoOffice": "Betul"
+      },
+      "MP49": {
+        "district": "Narsinghpur",
+        "rtoOffice": "Narsinghpur"
+      },
+      "MP50": {
+        "district": "Balaghat",
+        "rtoOffice": "Balaghat"
+      },
+      "MP51": {
+        "district": "Mandla",
+        "rtoOffice": "Mandla"
+      },
+      "MP52": {
+        "district": "Dindori",
+        "rtoOffice": "Dindori"
+      },
+      "MP53": {
+        "district": "Sidhi",
+        "rtoOffice": "Sidhi"
+      },
+      "MP54": {
+        "district": "Umaria",
+        "rtoOffice": "Umaria"
+      },
+      "MP65": {
+        "district": "Anuppur",
+        "rtoOffice": "Anuppur"
+      },
+      "MP66": {
+        "district": "Singrauli",
+        "rtoOffice": "Singrauli"
+      },
+      "MP67": {
+        "district": "Ashoknagar",
+        "rtoOffice": "Ashoknagar"
+      },
+      "MP68": {
+        "district": "Burhanpur",
+        "rtoOffice": "Burhanpur"
+      },
+      "MP69": {
+        "district": "Alirajpur",
+        "rtoOffice": "Alirajpur"
+      },
+      "MP70": {
+        "district": "Agar Malwa",
+        "rtoOffice": "Agar"
+      },
+      "MP71": {
+        "district": "Niwari",
+        "rtoOffice": "Niwari"
+      },
+      "MP72": {
+        "district": "Mauganj",
+        "rtoOffice": "Mauganj"
+      },
+      "MP73": {
+        "district": "Maihar",
+        "rtoOffice": "Maihar"
+      },
+      "MP74": {
+        "district": "Pandhurna",
+        "rtoOffice": "Pandhurna"
+      }
+    }
+  },
+  "Maharashtra": {
+    "stateCode": "MH",
+    "rtos": {
+      "MH01": {
+        "district": "Mumbai City",
+        "rtoOffice": "Location: Tardeo, Mumbai City District"
+      },
+      "MH02": {
+        "district": "Mumbai Suburban",
+        "rtoOffice": "Location: Versova Road, Andheri (W), Mumbai Suburban District"
+      },
+      "MH03": {
+        "district": "Mumbai City",
+        "rtoOffice": "Location: Wadala Truck Terminal, Mumbai City District"
+      },
+      "MH04": {
+        "district": "Also covered Palghar",
+        "rtoOffice": "Location: near Central Jail, Thane"
+      },
+      "MH05": {
+        "district": "",
+        "rtoOffice": "Location: Sahyadri Nagar, Kalyan West"
+      },
+      "MH06": {
+        "district": "",
+        "rtoOffice": "Location: Utkarsh Nagar, Pen (Town and Taluka)"
+      },
+      "MH07": {
+        "district": "Entire Sindhudurg",
+        "rtoOffice": "Location: Oros Town, Kudal Taluka"
+      },
+      "MH08": {
+        "district": "Entire Ratnagiri",
+        "rtoOffice": "Location: Kuwarbav, Ratnigiri"
+      },
+      "MH09": {
+        "district": "",
+        "rtoOffice": "Location: Tarabai Park, Kolhapur"
+      },
+      "MH10": {
+        "district": "Entire Sangli",
+        "rtoOffice": "Location: Madhav Nagar Road, Sangli City"
+      },
+      "MH11": {
+        "district": "",
+        "rtoOffice": "Location: Camp, Satara"
+      },
+      "MH12": {
+        "district": "",
+        "rtoOffice": "Location: Sangam Bridge, Raja Bahadur Mills Road, Pune"
+      },
+      "MH13": {
+        "district": "",
+        "rtoOffice": "Location: Vijapur Road, Solapur"
+      },
+      "MH14": {
+        "district": "",
+        "rtoOffice": "Location: Sector 6, Pradhikaran, Nigdi, Pimpri-Chinchwad"
+      },
+      "MH15": {
+        "district": "",
+        "rtoOffice": "Location: Panchavati, Nashik"
+      },
+      "MH16": {
+        "district": "",
+        "rtoOffice": "Location: Wambori Road, Ahilyanagar"
+      },
+      "MH17": {
+        "district": "",
+        "rtoOffice": "Location: Nevasa Road, Shrirampur"
+      },
+      "MH18": {
+        "district": "Entire Dhule",
+        "rtoOffice": "Location: Mumbai Agra Road, Dhule"
+      },
+      "MH19": {
+        "district": "",
+        "rtoOffice": "Location: Adarsh Nagar, Jalgaon"
+      },
+      "MH20": {
+        "district": "Chhatrapati Sambhaji Nagar",
+        "rtoOffice": "Location: Railway Station Road, Chhatrapati Sambhaji Nagar"
+      },
+      "MH21": {
+        "district": "Entire Jalna",
+        "rtoOffice": "Location: Nagewadi, Jalna"
+      },
+      "MH22": {
+        "district": "Entire Parbhani",
+        "rtoOffice": "Location: Manvat Road, Parbhani"
+      },
+      "MH23": {
+        "district": "",
+        "rtoOffice": "Location: Jalna Road, Beed"
+      },
+      "MH24": {
+        "district": "",
+        "rtoOffice": "Location: Babhalgaon Road, Latur"
+      },
+      "MH25": {
+        "district": "Entire Dharashiv",
+        "rtoOffice": "Location: MIDC, Dharashiv"
+      },
+      "MH26": {
+        "district": "Entire Nanded",
+        "rtoOffice": "Location: CIDCO, Nanded"
+      },
+      "MH27": {
+        "district": "Entire Amaravati",
+        "rtoOffice": "Location: Collectorate Camp, Amaravati"
+      },
+      "MH28": {
+        "district": "",
+        "rtoOffice": "Location: Malkapur Road, Buldhana"
+      },
+      "MH29": {
+        "district": "Entire Yavatmal",
+        "rtoOffice": "Location: Nagpur Road, Yavatmal"
+      },
+      "MH30": {
+        "district": "Entire Akola",
+        "rtoOffice": "Location: Murtijapur Road, Akola"
+      },
+      "MH31": {
+        "district": "",
+        "rtoOffice": "Location: opposite Giripeth Post Office, Nagpur"
+      },
+      "MH32": {
+        "district": "Entire Wardha",
+        "rtoOffice": "Location: Sevagram Road, Wardha"
+      },
+      "MH33": {
+        "district": "Entire Gadchiroli",
+        "rtoOffice": "Location: near Collector Office, Gadchiroli"
+      },
+      "MH34": {
+        "district": "Entire Chandrapur",
+        "rtoOffice": "Location: Jal Nagar Ward, Chandrapur"
+      },
+      "MH35": {
+        "district": "Entire Gondia",
+        "rtoOffice": "Location: Fulchurtola, Gondia"
+      },
+      "MH36": {
+        "district": "Entire Bhandara",
+        "rtoOffice": "Location: National Highway 6, Bhandara"
+      },
+      "MH37": {
+        "district": "Entire Washim",
+        "rtoOffice": "Location: Lakhala, Washim"
+      },
+      "MH38": {
+        "district": "Entire Hingoli",
+        "rtoOffice": "Location: Limbala Matka, Hingoli"
+      },
+      "MH39": {
+        "district": "Entire Nandurbar",
+        "rtoOffice": "Location: Sakri Road, Nandurbar"
+      },
+      "MH40": {
+        "district": "Entire Nagpur",
+        "rtoOffice": "Location: Indora, Nagpur"
+      },
+      "MH41": {
+        "district": "",
+        "rtoOffice": "Location: Camp, Malegaon"
+      },
+      "MH42": {
+        "district": "",
+        "rtoOffice": "Location: Bhigwan Road, Baramati"
+      },
+      "MH43": {
+        "district": "",
+        "rtoOffice": "Location: SBI Colony, Sector 13, Nerul, Navi Mumbai"
+      },
+      "MH44": {
+        "district": "",
+        "rtoOffice": "Location: Morewadi, Ambajogai"
+      },
+      "MH45": {
+        "district": "",
+        "rtoOffice": "Location: Anand Nagar, Akluj, Malshiras Taluka"
+      },
+      "MH46": {
+        "district": "",
+        "rtoOffice": "Location: Kalamboli, Panvel"
+      },
+      "MH47": {
+        "district": "Mumbai Suburban",
+        "rtoOffice": "Location: Dahisar West, Mumbai Suburban District"
+      },
+      "MH48": {
+        "district": "whole of Palghar",
+        "rtoOffice": "Location: Bhatpara, Virar East"
+      },
+      "MH49": {
+        "district": "",
+        "rtoOffice": "Location: Chikhali Layout, Nagpur"
+      },
+      "MH50": {
+        "district": "",
+        "rtoOffice": "Location: Supane, Karad Town"
+      },
+      "MH51": {
+        "district": "",
+        "rtoOffice": "Location: Vikash Nagar, Ichalkaranji"
+      },
+      "MH52": {
+        "district": "",
+        "rtoOffice": "Location: Shastri Nagar, Bhadgaon Road, Chalisgaon"
+      },
+      "MH53": {
+        "district": "",
+        "rtoOffice": "Location: Sanmati Nagar, Shinganpur Road, Shivaji Nagar, Phaltan"
+      },
+      "MH54": {
+        "district": "",
+        "rtoOffice": "Location: Mauje Tongaon, Bhadgaon - Pachora Marg, Opp. Ashirwad Jining, Bhadgaon, Jalgaon"
+      },
+      "MH55": {
+        "district": "",
+        "rtoOffice": "Location: Venkatesh Nagar, Ramchandra Nagar, Udgir"
+      },
+      "MH56": {
+        "district": "",
+        "rtoOffice": "Location: Near JV Mehta New Era High School, Khamgaon"
+      },
+      "MH57": {
+        "district": "",
+        "rtoOffice": "Location: Valmik Nagar, Vaijapur"
+      },
+      "MH58": {
+        "district": "",
+        "rtoOffice": "Location: Ghodbunder Rd, Kashimira, Mira Bhayander"
+      },
+      "MH59": {
+        "district": "",
+        "rtoOffice": "Location:"
+      },
+      "MH60": {
+        "district": "Entire Palghar",
+        "rtoOffice": "Location: Umroli (Speculative)"
+      }
+    }
+  },
+  "Manipur": {
+    "stateCode": "MN",
+    "rtos": {
+      "MN01": {
+        "district": "",
+        "rtoOffice": "Imphal West"
+      },
+      "MN02": {
+        "district": "",
+        "rtoOffice": "Churachandpur"
+      },
+      "MN03": {
+        "district": "",
+        "rtoOffice": "Kangpokpi"
+      },
+      "MN04": {
+        "district": "",
+        "rtoOffice": "Thoubal"
+      },
+      "MN05": {
+        "district": "",
+        "rtoOffice": "Bishnupur"
+      },
+      "MN06": {
+        "district": "",
+        "rtoOffice": "Imphal East"
+      },
+      "MN07": {
+        "district": "",
+        "rtoOffice": "Ukhrul"
+      },
+      "MN08": {
+        "district": "",
+        "rtoOffice": "Senapati"
+      }
+    }
+  },
+  "Meghalaya": {
+    "stateCode": "ML",
+    "rtos": {
+      "ML01": {
+        "district": "",
+        "rtoOffice": "Meghalaya Government vehicles"
+      },
+      "ML02": {
+        "district": "",
+        "rtoOffice": "Meghalaya Police vehicles"
+      },
+      "ML04": {
+        "district": "",
+        "rtoOffice": "Jowai"
+      },
+      "ML05": {
+        "district": "",
+        "rtoOffice": "Shillong"
+      },
+      "ML06": {
+        "district": "",
+        "rtoOffice": "Nongstoin"
+      },
+      "ML07": {
+        "district": "",
+        "rtoOffice": "William Nagar"
+      },
+      "ML08": {
+        "district": "",
+        "rtoOffice": "Tura"
+      },
+      "ML09": {
+        "district": "",
+        "rtoOffice": "Baghmara"
+      },
+      "ML10": {
+        "district": "",
+        "rtoOffice": "Nongpoh"
+      }
+    }
+  },
+  "Mizoram": {
+    "stateCode": "MZ",
+    "rtos": {
+      "MZ01": {
+        "district": "",
+        "rtoOffice": "Aizawl"
+      },
+      "MZ02": {
+        "district": "",
+        "rtoOffice": "Lunglei"
+      },
+      "MZ03": {
+        "district": "",
+        "rtoOffice": "Saiha"
+      },
+      "MZ04": {
+        "district": "",
+        "rtoOffice": "Champhai"
+      },
+      "MZ05": {
+        "district": "",
+        "rtoOffice": "Kolasib"
+      },
+      "MZ06": {
+        "district": "",
+        "rtoOffice": "Serchhip"
+      },
+      "MZ07": {
+        "district": "",
+        "rtoOffice": "Lawngtlai"
+      },
+      "MZ08": {
+        "district": "",
+        "rtoOffice": "Mamit"
+      }
+    }
+  },
+  "Nagaland": {
+    "stateCode": "NL",
+    "rtos": {
+      "NL01": {
+        "district": "Kohima",
+        "rtoOffice": "Kohima"
+      },
+      "NL02": {
+        "district": "Mokokchung",
+        "rtoOffice": "Mokokchung District"
+      },
+      "NL03": {
+        "district": "Tuensang",
+        "rtoOffice": "Tuensang District"
+      },
+      "NL04": {
+        "district": "Mon",
+        "rtoOffice": "Mon District"
+      },
+      "NL05": {
+        "district": "Wokha",
+        "rtoOffice": "Wokha District"
+      },
+      "NL06": {
+        "district": "nheboto",
+        "rtoOffice": "Zünheboto District"
+      },
+      "NL07": {
+        "district": "moukedima DistrictDimapur DistrictNiuland",
+        "rtoOffice": "Chümoukedima DistrictDimapur DistrictNiuland District"
+      },
+      "NL08": {
+        "district": "Phek",
+        "rtoOffice": "Phek District"
+      },
+      "NL09": {
+        "district": "",
+        "rtoOffice": "entire Nagaland"
+      },
+      "NL10": {
+        "district": "",
+        "rtoOffice": "entire Nagaland"
+      }
+    }
+  },
+  "Odisha": {
+    "stateCode": "OD",
+    "rtos": {
+      "OD01": {
+        "district": "Balasore",
+        "rtoOffice": "Balasore"
+      },
+      "OD02": {
+        "district": "Khurda",
+        "rtoOffice": "Bhubaneswar"
+      },
+      "OD03": {
+        "district": "Bolangir",
+        "rtoOffice": "Bolangir"
+      },
+      "OD04": {
+        "district": "Jajpur",
+        "rtoOffice": "Chandikhol"
+      },
+      "OD05": {
+        "district": "Cuttack",
+        "rtoOffice": "Cuttack"
+      },
+      "OD06": {
+        "district": "Dhenkanal",
+        "rtoOffice": "Dhenkanal"
+      },
+      "OD07": {
+        "district": "Ganjam",
+        "rtoOffice": "Chatrapur"
+      },
+      "OD08": {
+        "district": "Kalahandi",
+        "rtoOffice": "Bhawanipatna"
+      },
+      "OD09": {
+        "district": "Keonjhar",
+        "rtoOffice": "Keonjhar"
+      },
+      "OD10": {
+        "district": "Koraput",
+        "rtoOffice": "Koraput"
+      },
+      "OD11": {
+        "district": "Mayurbhanj",
+        "rtoOffice": "Baripada"
+      },
+      "OD12": {
+        "district": "Kandhamal",
+        "rtoOffice": "Phulbani"
+      },
+      "OD13": {
+        "district": "Puri",
+        "rtoOffice": "Puri"
+      },
+      "OD14": {
+        "district": "Sundargarh",
+        "rtoOffice": "Rourkela"
+      },
+      "OD15": {
+        "district": "Sambalpur",
+        "rtoOffice": "Sambalpur"
+      },
+      "OD16": {
+        "district": "Sundargarh",
+        "rtoOffice": "Sundargarh"
+      },
+      "OD17": {
+        "district": "Bargarh",
+        "rtoOffice": "Bargarh"
+      },
+      "OD18": {
+        "district": "Rayagada",
+        "rtoOffice": "Rayagada"
+      },
+      "OD19": {
+        "district": "Angul",
+        "rtoOffice": "Angul"
+      },
+      "OD20": {
+        "district": "Gajapati",
+        "rtoOffice": "Paralakhemundi"
+      },
+      "OD21": {
+        "district": "Jagatsinghpur",
+        "rtoOffice": "Jagatsinghpur"
+      },
+      "OD22": {
+        "district": "Bhadrak",
+        "rtoOffice": "Bhadrak"
+      },
+      "OD23": {
+        "district": "Jharsuguda",
+        "rtoOffice": "Jharsuguda"
+      },
+      "OD24": {
+        "district": "Nabarangpur",
+        "rtoOffice": "Nabarangpur"
+      },
+      "OD25": {
+        "district": "Nayagarh",
+        "rtoOffice": "Nayagarh"
+      },
+      "OD26": {
+        "district": "Nuapada",
+        "rtoOffice": "Nuapada"
+      },
+      "OD27": {
+        "district": "Boudh",
+        "rtoOffice": "Boudh"
+      },
+      "OD28": {
+        "district": "Debagarh",
+        "rtoOffice": "Debagarh"
+      },
+      "OD29": {
+        "district": "Kendrapara",
+        "rtoOffice": "Kendrapara"
+      },
+      "OD30": {
+        "district": "Malkangiri",
+        "rtoOffice": "Malkangiri"
+      },
+      "OD31": {
+        "district": "Subarnapur",
+        "rtoOffice": "Subarnapur"
+      },
+      "OD32": {
+        "district": "Ganjam",
+        "rtoOffice": "Bhanjanagar"
+      },
+      "OD33": {
+        "district": "Khurda",
+        "rtoOffice": "Bhubaneswar-II"
+      },
+      "OD34": {
+        "district": "Jajpur",
+        "rtoOffice": "Jajpur"
+      },
+      "OD35": {
+        "district": "Angul",
+        "rtoOffice": "Talcher"
+      }
+    }
+  },
+  "Puducherry": {
+    "stateCode": "PY",
+    "rtos": {
+      "PY01": {
+        "district": "Puducherry",
+        "rtoOffice": "Puducherry"
+      },
+      "PY02": {
+        "district": "",
+        "rtoOffice": "Karaikal"
+      },
+      "PY03": {
+        "district": "",
+        "rtoOffice": "Mahe"
+      },
+      "PY04": {
+        "district": "Yanam",
+        "rtoOffice": "Yanam"
+      },
+      "PY05": {
+        "district": "Puducherry",
+        "rtoOffice": "Oulgaret"
+      }
+    }
+  },
+  "Punjab": {
+    "stateCode": "PB",
+    "rtos": {
+      "PB01": {
+        "district": "",
+        "rtoOffice": "Rented cars, self drive cars in Chandigarh & taxi vehicles from Punjab"
+      },
+      "PB02": {
+        "district": "",
+        "rtoOffice": "Amritsar (1)"
+      },
+      "PB03": {
+        "district": "",
+        "rtoOffice": "Bathinda"
+      },
+      "PB04": {
+        "district": "",
+        "rtoOffice": "Faridkot"
+      },
+      "PB05": {
+        "district": "",
+        "rtoOffice": "Ferozpur"
+      },
+      "PB06": {
+        "district": "",
+        "rtoOffice": "Gurdaspur"
+      },
+      "PB07": {
+        "district": "",
+        "rtoOffice": "Hoshiarpur"
+      },
+      "PB08": {
+        "district": "",
+        "rtoOffice": "Jalandhar (1)"
+      },
+      "PB09": {
+        "district": "",
+        "rtoOffice": "Kapurthala"
+      },
+      "PB10": {
+        "district": "",
+        "rtoOffice": "Ludhiana (West)"
+      },
+      "PB11": {
+        "district": "",
+        "rtoOffice": "Patiala"
+      },
+      "PB12": {
+        "district": "",
+        "rtoOffice": "Rupnagar"
+      },
+      "PB13": {
+        "district": "",
+        "rtoOffice": "Sangrur"
+      },
+      "PB14": {
+        "district": "",
+        "rtoOffice": "Ajnala"
+      },
+      "PB15": {
+        "district": "",
+        "rtoOffice": "Abohar"
+      },
+      "PB16": {
+        "district": "",
+        "rtoOffice": "Anandpur Sahib"
+      },
+      "PB17": {
+        "district": "",
+        "rtoOffice": "Baba Bakala"
+      },
+      "PB18": {
+        "district": "",
+        "rtoOffice": "Batala"
+      },
+      "PB19": {
+        "district": "",
+        "rtoOffice": "Barnala"
+      },
+      "PB20": {
+        "district": "",
+        "rtoOffice": "Balachaur"
+      },
+      "PB21": {
+        "district": "",
+        "rtoOffice": "Dasuya"
+      },
+      "PB22": {
+        "district": "",
+        "rtoOffice": "Fazilka"
+      },
+      "PB23": {
+        "district": "",
+        "rtoOffice": "Fatehgarh Sahib"
+      },
+      "PB24": {
+        "district": "",
+        "rtoOffice": "Garhshankar"
+      },
+      "PB25": {
+        "district": "",
+        "rtoOffice": "Jagraon"
+      },
+      "PB26": {
+        "district": "",
+        "rtoOffice": "Khanna"
+      },
+      "PB27": {
+        "district": "",
+        "rtoOffice": "Kharar"
+      },
+      "PB28": {
+        "district": "",
+        "rtoOffice": "Malerkotla"
+      },
+      "PB29": {
+        "district": "",
+        "rtoOffice": "Moga"
+      },
+      "PB30": {
+        "district": "",
+        "rtoOffice": "Muktsar"
+      },
+      "PB31": {
+        "district": "",
+        "rtoOffice": "Mansa"
+      },
+      "PB32": {
+        "district": "",
+        "rtoOffice": "Nawanshahar"
+      },
+      "PB33": {
+        "district": "",
+        "rtoOffice": "Nakodar"
+      },
+      "PB34": {
+        "district": "",
+        "rtoOffice": "Nabha"
+      },
+      "PB35": {
+        "district": "",
+        "rtoOffice": "Pathankot"
+      },
+      "PB36": {
+        "district": "",
+        "rtoOffice": "Phagwara"
+      },
+      "PB37": {
+        "district": "",
+        "rtoOffice": "Phillaur"
+      },
+      "PB38": {
+        "district": "",
+        "rtoOffice": "Patti"
+      },
+      "PB39": {
+        "district": "",
+        "rtoOffice": "Rajpura"
+      },
+      "PB40": {
+        "district": "",
+        "rtoOffice": "Rampura Phul"
+      },
+      "PB41": {
+        "district": "",
+        "rtoOffice": "Sultanpur Lodhi"
+      },
+      "PB42": {
+        "district": "",
+        "rtoOffice": "Samana"
+      },
+      "PB43": {
+        "district": "",
+        "rtoOffice": "Samrala"
+      },
+      "PB44": {
+        "district": "",
+        "rtoOffice": "Sunam"
+      },
+      "PB45": {
+        "district": "",
+        "rtoOffice": "Talwandi Sabo"
+      },
+      "PB46": {
+        "district": "",
+        "rtoOffice": "Tarn Taran"
+      },
+      "PB47": {
+        "district": "",
+        "rtoOffice": "Zira"
+      },
+      "PB48": {
+        "district": "",
+        "rtoOffice": "Amloh"
+      },
+      "PB49": {
+        "district": "",
+        "rtoOffice": "Khamanon"
+      },
+      "PB50": {
+        "district": "",
+        "rtoOffice": "Budhlada"
+      },
+      "PB51": {
+        "district": "",
+        "rtoOffice": "Sardulgarh"
+      },
+      "PB52": {
+        "district": "",
+        "rtoOffice": "Bassi Pathana"
+      },
+      "PB53": {
+        "district": "",
+        "rtoOffice": "Malout"
+      },
+      "PB54": {
+        "district": "",
+        "rtoOffice": "Mukerian"
+      },
+      "PB55": {
+        "district": "",
+        "rtoOffice": "Payal"
+      },
+      "PB56": {
+        "district": "",
+        "rtoOffice": "Raikot"
+      },
+      "PB57": {
+        "district": "",
+        "rtoOffice": "Bhulath"
+      },
+      "PB58": {
+        "district": "",
+        "rtoOffice": "Dera Baba Nanak"
+      },
+      "PB59": {
+        "district": "",
+        "rtoOffice": "Dhuri"
+      },
+      "PB60": {
+        "district": "",
+        "rtoOffice": "Gidderbaha"
+      },
+      "PB61": {
+        "district": "",
+        "rtoOffice": "Jalalabad"
+      },
+      "PB62": {
+        "district": "",
+        "rtoOffice": "Jaitu"
+      },
+      "PB63": {
+        "district": "",
+        "rtoOffice": "Khadoor Sahib"
+      },
+      "PB64": {
+        "district": "",
+        "rtoOffice": "Moonak"
+      },
+      "PB65": {
+        "district": "",
+        "rtoOffice": "Mohali"
+      },
+      "PB66": {
+        "district": "",
+        "rtoOffice": "Nihal Singh Wala"
+      },
+      "PB67": {
+        "district": "",
+        "rtoOffice": "Shahkot"
+      },
+      "PB68": {
+        "district": "",
+        "rtoOffice": "Dhar Kalan"
+      },
+      "PB69": {
+        "district": "",
+        "rtoOffice": "Bagha Purana"
+      },
+      "PB70": {
+        "district": "",
+        "rtoOffice": "Dera Bassi"
+      },
+      "PB71": {
+        "district": "",
+        "rtoOffice": "Chamkaur Sahib"
+      },
+      "PB72": {
+        "district": "",
+        "rtoOffice": "Pattran"
+      },
+      "PB73": {
+        "district": "",
+        "rtoOffice": "Tappa Mandi"
+      },
+      "PB74": {
+        "district": "",
+        "rtoOffice": "Nangal"
+      },
+      "PB75": {
+        "district": "",
+        "rtoOffice": "Lehragaga"
+      },
+      "PB76": {
+        "district": "",
+        "rtoOffice": "Dharamkot"
+      },
+      "PB77": {
+        "district": "",
+        "rtoOffice": "Guru Har Sahai"
+      },
+      "PB78": {
+        "district": "",
+        "rtoOffice": "Banga"
+      },
+      "PB79": {
+        "district": "",
+        "rtoOffice": "Kotkapura"
+      },
+      "PB80": {
+        "district": "",
+        "rtoOffice": "Maur"
+      },
+      "PB81": {
+        "district": "",
+        "rtoOffice": "Majitha"
+      },
+      "PB82": {
+        "district": "",
+        "rtoOffice": "Ahmedgarh"
+      },
+      "PB83": {
+        "district": "",
+        "rtoOffice": "Dudhan Sadhan"
+      },
+      "PB84": {
+        "district": "",
+        "rtoOffice": "Bhawanigarh"
+      },
+      "PB85": {
+        "district": "",
+        "rtoOffice": "Kalanaur"
+      },
+      "PB86": {
+        "district": "",
+        "rtoOffice": "Dirba"
+      },
+      "PB87": {
+        "district": "",
+        "rtoOffice": "Morinda"
+      },
+      "PB88": {
+        "district": "",
+        "rtoOffice": "Bhikhiwind"
+      },
+      "PB89": {
+        "district": "",
+        "rtoOffice": "Amritsar (2)"
+      },
+      "PB90": {
+        "district": "",
+        "rtoOffice": "Jalandhar (2)"
+      },
+      "PB91": {
+        "district": "",
+        "rtoOffice": "Ludhiana (East)"
+      },
+      "PB92": {
+        "district": "",
+        "rtoOffice": "Amargarh"
+      },
+      "PB93": {
+        "district": "",
+        "rtoOffice": "Lopoke"
+      },
+      "PB99": {
+        "district": "",
+        "rtoOffice": "Dinanagar"
+      }
+    }
+  },
+  "Sikkim": {
+    "stateCode": "SK",
+    "rtos": {
+      "SK01": {
+        "district": "",
+        "rtoOffice": "Gangtok"
+      },
+      "SK02": {
+        "district": "Gyalshing",
+        "rtoOffice": "Gyalshing"
+      },
+      "SK03": {
+        "district": "",
+        "rtoOffice": "Mangan"
+      },
+      "SK04": {
+        "district": "Namchi",
+        "rtoOffice": "Jorethang"
+      },
+      "SK05": {
+        "district": "Namchi",
+        "rtoOffice": "Namchi"
+      },
+      "SK06": {
+        "district": "Soreng",
+        "rtoOffice": "Soreng"
+      },
+      "SK07": {
+        "district": "Pakyong",
+        "rtoOffice": "Pakyong"
+      },
+      "SK08": {
+        "district": "",
+        "rtoOffice": "Singtam"
+      }
+    }
+  },
+  "Tamil Nadu": {
+    "stateCode": "TN",
+    "rtos": {
+      "TN01": {
+        "district": "",
+        "rtoOffice": "Chennai (Central): Ayanavaram"
+      },
+      "TN02": {
+        "district": "",
+        "rtoOffice": "Chennai (North West): Anna Nagar"
+      },
+      "TN03": {
+        "district": "",
+        "rtoOffice": "Chennai (North East): Tondiarpet"
+      },
+      "TN04": {
+        "district": "",
+        "rtoOffice": "Chennai (East): Royapuram"
+      },
+      "TN05": {
+        "district": "",
+        "rtoOffice": "Chennai (North): Kolathur"
+      },
+      "TN06": {
+        "district": "",
+        "rtoOffice": "Chennai (South East): Mandavelli"
+      },
+      "TN07": {
+        "district": "",
+        "rtoOffice": "Chennai (South): Adyar"
+      },
+      "TN09": {
+        "district": "",
+        "rtoOffice": "Chennai (West): K. K. Nagar"
+      },
+      "TN10": {
+        "district": "",
+        "rtoOffice": "Chennai (South West): Virugambakkam"
+      },
+      "TN11": {
+        "district": "",
+        "rtoOffice": "Tambaram"
+      },
+      "TN12": {
+        "district": "",
+        "rtoOffice": "Poonamallee"
+      },
+      "TN13": {
+        "district": "",
+        "rtoOffice": "Ambattur"
+      },
+      "TN14": {
+        "district": "",
+        "rtoOffice": "Sholinganallur"
+      },
+      "TN15": {
+        "district": "",
+        "rtoOffice": "Ulundurpet"
+      },
+      "TN15M": {
+        "district": "",
+        "rtoOffice": "Kallakurichi"
+      },
+      "TN16": {
+        "district": "",
+        "rtoOffice": "Tindivanam"
+      },
+      "TN16Z": {
+        "district": "",
+        "rtoOffice": "Gingee"
+      },
+      "TN18": {
+        "district": "",
+        "rtoOffice": "Red Hills"
+      },
+      "TN18Y": {
+        "district": "",
+        "rtoOffice": "Gummidipoondi"
+      },
+      "TN19": {
+        "district": "",
+        "rtoOffice": "Chengalpattu"
+      },
+      "TN19Y": {
+        "district": "",
+        "rtoOffice": "Thirukazhugundram"
+      },
+      "TN19Z": {
+        "district": "",
+        "rtoOffice": "Madurantakam"
+      },
+      "TN20": {
+        "district": "",
+        "rtoOffice": "Tiruvallur"
+      },
+      "TN20X": {
+        "district": "",
+        "rtoOffice": "Thiruthani"
+      },
+      "TN21": {
+        "district": "",
+        "rtoOffice": "Kanchipuram"
+      },
+      "TN22": {
+        "district": "",
+        "rtoOffice": "Meenambakkam"
+      },
+      "TN23": {
+        "district": "",
+        "rtoOffice": "Vellore"
+      },
+      "TN23T": {
+        "district": "",
+        "rtoOffice": "Gudiyatham"
+      },
+      "TN24": {
+        "district": "",
+        "rtoOffice": "Krishnagiri"
+      },
+      "TN25": {
+        "district": "Thiruvannamalai",
+        "rtoOffice": "Thiruvannamalai"
+      },
+      "TN27": {
+        "district": "Salem",
+        "rtoOffice": "Salem"
+      },
+      "TN28": {
+        "district": "",
+        "rtoOffice": "Namakkal (North)"
+      },
+      "TN28Z": {
+        "district": "",
+        "rtoOffice": "Rasipuram"
+      },
+      "TN29": {
+        "district": "",
+        "rtoOffice": "Dharmapuri"
+      },
+      "TN29W": {
+        "district": "",
+        "rtoOffice": "Palacode"
+      },
+      "TN29Z": {
+        "district": "",
+        "rtoOffice": "Harur"
+      },
+      "TN30": {
+        "district": "Salem",
+        "rtoOffice": "Salem (West)"
+      },
+      "TN30W": {
+        "district": "Salem",
+        "rtoOffice": "Omalur"
+      },
+      "TN31": {
+        "district": "",
+        "rtoOffice": "Cuddalore"
+      },
+      "TN31Y": {
+        "district": "",
+        "rtoOffice": "Neyveli"
+      },
+      "TN31Z": {
+        "district": "",
+        "rtoOffice": "Panruti"
+      },
+      "TN32": {
+        "district": "",
+        "rtoOffice": "Villupuram"
+      },
+      "TN33": {
+        "district": "",
+        "rtoOffice": "Erode (East)"
+      },
+      "TN34": {
+        "district": "",
+        "rtoOffice": "Tiruchengode"
+      },
+      "TN34M": {
+        "district": "",
+        "rtoOffice": "Kumarapalayam"
+      },
+      "TN36": {
+        "district": "",
+        "rtoOffice": "Gobichettipalayam"
+      },
+      "TN36W": {
+        "district": "",
+        "rtoOffice": "Bhavani"
+      },
+      "TN36Z": {
+        "district": "",
+        "rtoOffice": "Sathyamangalam"
+      },
+      "TN37": {
+        "district": "",
+        "rtoOffice": "Coimbatore (South)"
+      },
+      "TN37Z": {
+        "district": "",
+        "rtoOffice": "Sulur"
+      },
+      "TN38": {
+        "district": "",
+        "rtoOffice": "Coimbatore (North)"
+      },
+      "TN39": {
+        "district": "",
+        "rtoOffice": "Tirupur (North)"
+      },
+      "TN39Z": {
+        "district": "",
+        "rtoOffice": "Avinashi"
+      },
+      "TN40": {
+        "district": "",
+        "rtoOffice": "Mettupalayam"
+      },
+      "TN41": {
+        "district": "",
+        "rtoOffice": "Pollachi"
+      },
+      "TN41W": {
+        "district": "",
+        "rtoOffice": "Valparai"
+      },
+      "TN42": {
+        "district": "",
+        "rtoOffice": "Tirupur (South)"
+      },
+      "TN42Y": {
+        "district": "",
+        "rtoOffice": "Kangayam"
+      },
+      "TN43": {
+        "district": "",
+        "rtoOffice": "Ooty"
+      },
+      "TN43Z": {
+        "district": "",
+        "rtoOffice": "Gudalur"
+      },
+      "TN45": {
+        "district": "",
+        "rtoOffice": "Tiruchirapalli (West)"
+      },
+      "TN45Z": {
+        "district": "",
+        "rtoOffice": "Manapparai"
+      },
+      "TN46": {
+        "district": "",
+        "rtoOffice": "Perambalur"
+      },
+      "TN47": {
+        "district": "",
+        "rtoOffice": "Karur"
+      },
+      "TN47X": {
+        "district": "",
+        "rtoOffice": "Manmangalam"
+      },
+      "TN47Y": {
+        "district": "",
+        "rtoOffice": "Aravakurichi"
+      },
+      "TN47Z": {
+        "district": "",
+        "rtoOffice": "Kulithalai"
+      },
+      "TN48": {
+        "district": "",
+        "rtoOffice": "Srirangam"
+      },
+      "TN48X": {
+        "district": "",
+        "rtoOffice": "Lalgudi"
+      },
+      "TN48Y": {
+        "district": "",
+        "rtoOffice": "Musiri"
+      },
+      "TN48Z": {
+        "district": "",
+        "rtoOffice": "Thuraiyur"
+      },
+      "TN49": {
+        "district": "",
+        "rtoOffice": "Thanjavur"
+      },
+      "TN49Y": {
+        "district": "",
+        "rtoOffice": "Pattukottai"
+      },
+      "TN50": {
+        "district": "",
+        "rtoOffice": "Tiruvarur"
+      },
+      "TN50Y": {
+        "district": "",
+        "rtoOffice": "Thiruthuraipoondi"
+      },
+      "TN50Z": {
+        "district": "",
+        "rtoOffice": "Mannargudi"
+      },
+      "TN51": {
+        "district": "",
+        "rtoOffice": "Nagapattinam"
+      },
+      "TN52": {
+        "district": "",
+        "rtoOffice": "Sankagiri"
+      },
+      "TN54": {
+        "district": "Salem",
+        "rtoOffice": "Salem (East)"
+      },
+      "TN55": {
+        "district": "",
+        "rtoOffice": "Pudukottai"
+      },
+      "TN55BQ": {
+        "district": "",
+        "rtoOffice": "Alangudi"
+      },
+      "TN55Y": {
+        "district": "",
+        "rtoOffice": "Iluppur"
+      },
+      "TN55Z": {
+        "district": "",
+        "rtoOffice": "Aranthangi"
+      },
+      "TN56": {
+        "district": "",
+        "rtoOffice": "Perundurai"
+      },
+      "TN57": {
+        "district": "",
+        "rtoOffice": "Dindigul"
+      },
+      "TN57V": {
+        "district": "",
+        "rtoOffice": "Vedasandur"
+      },
+      "TN57W": {
+        "district": "",
+        "rtoOffice": "Natham"
+      },
+      "TN58": {
+        "district": "",
+        "rtoOffice": "Madurai (South)"
+      },
+      "TN58Y": {
+        "district": "",
+        "rtoOffice": "Usilampatti"
+      },
+      "TN58Z": {
+        "district": "",
+        "rtoOffice": "Thirumangalam"
+      },
+      "TN59": {
+        "district": "",
+        "rtoOffice": "Madurai (North)"
+      },
+      "TN59V": {
+        "district": "",
+        "rtoOffice": "Vadipatti"
+      },
+      "TN59Z": {
+        "district": "",
+        "rtoOffice": "Melur"
+      },
+      "TN60": {
+        "district": "",
+        "rtoOffice": "Theni"
+      },
+      "TN60Z": {
+        "district": "",
+        "rtoOffice": "Uthamapalayam"
+      },
+      "TN61": {
+        "district": "",
+        "rtoOffice": "Ariyalur"
+      },
+      "TN63": {
+        "district": "Sivaganga",
+        "rtoOffice": "Sivaganga"
+      },
+      "TN63Z": {
+        "district": "Sivaganga",
+        "rtoOffice": "Karaikudi"
+      },
+      "TN64": {
+        "district": "",
+        "rtoOffice": "Madurai (Central)"
+      },
+      "TN65": {
+        "district": "",
+        "rtoOffice": "Ramanathapuram"
+      },
+      "TN65Z": {
+        "district": "",
+        "rtoOffice": "Paramakudi"
+      },
+      "TN66": {
+        "district": "",
+        "rtoOffice": "Coimbatore (Central)"
+      },
+      "TN67": {
+        "district": "",
+        "rtoOffice": "Virudhunagar"
+      },
+      "TN67W": {
+        "district": "",
+        "rtoOffice": "Aruppukottai"
+      },
+      "TN68": {
+        "district": "",
+        "rtoOffice": "Kumbakonam"
+      },
+      "TN69": {
+        "district": "",
+        "rtoOffice": "Thoothukudi"
+      },
+      "TN70": {
+        "district": "",
+        "rtoOffice": "Hosur"
+      },
+      "TN72": {
+        "district": "",
+        "rtoOffice": "Tirunelveli"
+      },
+      "TN72V": {
+        "district": "",
+        "rtoOffice": "Valliyur"
+      },
+      "TN73": {
+        "district": "",
+        "rtoOffice": "Ranipet"
+      },
+      "TN73Z": {
+        "district": "",
+        "rtoOffice": "Arakkonam"
+      },
+      "TN74": {
+        "district": "",
+        "rtoOffice": "Nagercoil"
+      },
+      "TN75": {
+        "district": "",
+        "rtoOffice": "Marthandam"
+      },
+      "TN76": {
+        "district": "",
+        "rtoOffice": "Tenkasi"
+      },
+      "TN76Y": {
+        "district": "",
+        "rtoOffice": "Ambasamudram"
+      },
+      "TN77": {
+        "district": "",
+        "rtoOffice": "Attur"
+      },
+      "TN77Z": {
+        "district": "",
+        "rtoOffice": "Vazhapadi"
+      },
+      "TN78": {
+        "district": "",
+        "rtoOffice": "Dharapuram"
+      },
+      "TN78M": {
+        "district": "",
+        "rtoOffice": "Udumalpet"
+      },
+      "TN79": {
+        "district": "",
+        "rtoOffice": "Sankarankovil"
+      },
+      "TN81": {
+        "district": "",
+        "rtoOffice": "Tiruchirapalli (East)"
+      },
+      "TN81Z": {
+        "district": "",
+        "rtoOffice": "Thiruverumbur"
+      },
+      "TN82": {
+        "district": "",
+        "rtoOffice": "Mayiladuthurai"
+      },
+      "TN82Z": {
+        "district": "",
+        "rtoOffice": "Sirkazhi"
+      },
+      "TN83": {
+        "district": "Tirupattur",
+        "rtoOffice": "Vaniyambadi"
+      },
+      "TN83M": {
+        "district": "Tirupattur",
+        "rtoOffice": "Thirupattur"
+      },
+      "TN83Y": {
+        "district": "Tirupattur",
+        "rtoOffice": "Ambur"
+      },
+      "TN84": {
+        "district": "",
+        "rtoOffice": "Srivilliputhur"
+      },
+      "TN84U": {
+        "district": "",
+        "rtoOffice": "Rajapalayam"
+      },
+      "TN85": {
+        "district": "",
+        "rtoOffice": "Kundrathur"
+      },
+      "TN86": {
+        "district": "",
+        "rtoOffice": "Erode (West)"
+      },
+      "TN87": {
+        "district": "",
+        "rtoOffice": "Sriperumbudur"
+      },
+      "TN88": {
+        "district": "",
+        "rtoOffice": "Namakkal (South)"
+      },
+      "TN88Z": {
+        "district": "Namakkal",
+        "rtoOffice": "Paramathi Velur"
+      },
+      "TN90": {
+        "district": "",
+        "rtoOffice": "Salem (South)"
+      },
+      "TN91": {
+        "district": "",
+        "rtoOffice": "Chidambaram"
+      },
+      "TN91Z": {
+        "district": "",
+        "rtoOffice": "Virudhachalam"
+      },
+      "TN92": {
+        "district": "",
+        "rtoOffice": "Thiruchendur"
+      },
+      "TN93": {
+        "district": "",
+        "rtoOffice": "Mettur"
+      },
+      "TN94": {
+        "district": "",
+        "rtoOffice": "Palani"
+      },
+      "TN94Z": {
+        "district": "",
+        "rtoOffice": "Oddanchatram"
+      },
+      "TN95": {
+        "district": "",
+        "rtoOffice": "Sivakasi"
+      },
+      "TN96": {
+        "district": "",
+        "rtoOffice": "Kovilpatti"
+      },
+      "TN97": {
+        "district": "",
+        "rtoOffice": "Arani"
+      },
+      "TN97Z": {
+        "district": "",
+        "rtoOffice": "Cheyyar"
+      },
+      "TN99": {
+        "district": "",
+        "rtoOffice": "Coimbatore (West)"
+      }
+    }
+  },
+  "Telangana": {
+    "stateCode": "TG",
+    "rtos": {
+      "AP01": {
+        "district": "Adilabad",
+        "rtoOffice": ""
+      },
+      "AP09": {
+        "district": "",
+        "rtoOffice": "Khairatabad"
+      },
+      "AP10": {
+        "district": "",
+        "rtoOffice": "Secunderabad"
+      },
+      "AP11": {
+        "district": "",
+        "rtoOffice": "Malakpet"
+      },
+      "AP12": {
+        "district": "",
+        "rtoOffice": "Kishanbagh"
+      },
+      "AP13": {
+        "district": "",
+        "rtoOffice": "Mehdipatnam"
+      },
+      "AP15": {
+        "district": "Karimnagar",
+        "rtoOffice": ""
+      },
+      "AP20": {
+        "district": "Khammam",
+        "rtoOffice": ""
+      },
+      "AP22": {
+        "district": "Mahabubnagar",
+        "rtoOffice": ""
+      },
+      "AP23": {
+        "district": "Medak",
+        "rtoOffice": ""
+      },
+      "AP24": {
+        "district": "Nalgonda",
+        "rtoOffice": ""
+      },
+      "AP25": {
+        "district": "Nizamabad",
+        "rtoOffice": ""
+      },
+      "AP28": {
+        "district": "Rangareddy",
+        "rtoOffice": ""
+      },
+      "AP29": {
+        "district": "Rangareddy",
+        "rtoOffice": ""
+      },
+      "AP36": {
+        "district": "Warangal",
+        "rtoOffice": ""
+      },
+      "TG01": {
+        "district": "Adilabad",
+        "rtoOffice": "Adilabad"
+      },
+      "TG02": {
+        "district": "Karimnagar",
+        "rtoOffice": "Karimnagar"
+      },
+      "TG03": {
+        "district": "Hanamkonda",
+        "rtoOffice": "Warangal"
+      },
+      "TG04": {
+        "district": "Khammam",
+        "rtoOffice": "Khammam"
+      },
+      "TG05": {
+        "district": "Nalgonda",
+        "rtoOffice": "Nalgonda"
+      },
+      "TG06": {
+        "district": "Mahbubnagar",
+        "rtoOffice": "Mahbubnagar"
+      },
+      "TG07": {
+        "district": "",
+        "rtoOffice": "Attapur (Hyderabad)*"
+      },
+      "TG08": {
+        "district": "Medchal-Malkajgiri",
+        "rtoOffice": "Medchal (Hyderabad)*"
+      },
+      "TG09": {
+        "district": "",
+        "rtoOffice": "Khairtabad (Hyderabad)"
+      },
+      "TG10": {
+        "district": "",
+        "rtoOffice": "Secunderabad (Hyderabad)"
+      },
+      "TG11": {
+        "district": "",
+        "rtoOffice": "Malakpet (Hyderabad)"
+      },
+      "TG12": {
+        "district": "",
+        "rtoOffice": "Kishanbagh (Hyderabad)"
+      },
+      "TG13": {
+        "district": "",
+        "rtoOffice": "Tolichowki (Hyderabad)"
+      },
+      "TG14": {
+        "district": "",
+        "rtoOffice": "Hyderabad"
+      },
+      "TG15": {
+        "district": "Sangareddy",
+        "rtoOffice": "Sangareddy"
+      },
+      "TG16": {
+        "district": "Nizamabad",
+        "rtoOffice": "Nizamabad"
+      },
+      "TG17": {
+        "district": "Kamareddy",
+        "rtoOffice": "Kamareddy"
+      },
+      "TG18": {
+        "district": "Nirmal",
+        "rtoOffice": "Nirmal"
+      },
+      "TG19": {
+        "district": "Mancherial",
+        "rtoOffice": "Mancherial"
+      },
+      "TG20": {
+        "district": "Komaram Bheem",
+        "rtoOffice": "Asifabad"
+      },
+      "TG21": {
+        "district": "Jagtial",
+        "rtoOffice": "Jagtial"
+      },
+      "TG22": {
+        "district": "Peddapalli",
+        "rtoOffice": "Peddapalli"
+      },
+      "TG23": {
+        "district": "Sircilla",
+        "rtoOffice": "Sircilla"
+      },
+      "TG24": {
+        "district": "Warangal",
+        "rtoOffice": "Warangal"
+      },
+      "TG25": {
+        "district": "Jayashankar Bhupalpally",
+        "rtoOffice": "Bhupalpalle"
+      },
+      "TG26": {
+        "district": "Mahabubabad",
+        "rtoOffice": "Mahabubabad"
+      },
+      "TG27": {
+        "district": "Jangaon",
+        "rtoOffice": "Jangaon"
+      },
+      "TG28": {
+        "district": "Bhadradri Kothagudem",
+        "rtoOffice": "Kothagudem"
+      },
+      "TG29": {
+        "district": "Suryapet",
+        "rtoOffice": "Suryapet"
+      },
+      "TG30": {
+        "district": "Yadadri Bhuvanagiri",
+        "rtoOffice": "Bhuvanagiri"
+      },
+      "TG31": {
+        "district": "Nagarkurnool",
+        "rtoOffice": "Nagarkurnool"
+      },
+      "TG32": {
+        "district": "Wanaparthy",
+        "rtoOffice": "Wanaparthy"
+      },
+      "TG33": {
+        "district": "Jogulamba Gadwal",
+        "rtoOffice": "Gadwal"
+      },
+      "TG34": {
+        "district": "Vikarabad",
+        "rtoOffice": "Vikarabad"
+      },
+      "TG35": {
+        "district": "Medak",
+        "rtoOffice": "Medak"
+      },
+      "TG36": {
+        "district": "Siddipet",
+        "rtoOffice": "Siddipet"
+      },
+      "TG37": {
+        "district": "Mulugu",
+        "rtoOffice": "Mulugu"
+      },
+      "TG38": {
+        "district": "Narayanpet",
+        "rtoOffice": "Narayanpet"
+      }
+    }
+  },
+  "Tripura": {
+    "stateCode": "TR",
+    "rtos": {
+      "TR01": {
+        "district": "West Tripura",
+        "rtoOffice": "Agartala"
+      },
+      "TR02": {
+        "district": "Unakoti",
+        "rtoOffice": "Kailasahar"
+      },
+      "TR03": {
+        "district": "Gomati",
+        "rtoOffice": "Udaipur"
+      },
+      "TR04": {
+        "district": "Dhalai",
+        "rtoOffice": "Ambassa"
+      },
+      "TR05": {
+        "district": "North Tripura",
+        "rtoOffice": "Dharmanagar"
+      },
+      "TR06": {
+        "district": "Khowai",
+        "rtoOffice": "Teliamura"
+      },
+      "TR07": {
+        "district": "Sipahijala",
+        "rtoOffice": "Bishramganj"
+      },
+      "TR08": {
+        "district": "South Tripura",
+        "rtoOffice": "Santirbazar"
+      }
+    }
+  },
+  "Uttar Pradesh": {
+    "stateCode": "UP",
+    "rtos": {
+      "UP01": {
+        "district": "",
+        "rtoOffice": "Defunct"
+      },
+      "UP02": {
+        "district": "",
+        "rtoOffice": "Defunct"
+      },
+      "UP03": {
+        "district": "",
+        "rtoOffice": "Defunct"
+      },
+      "UP04": {
+        "district": "",
+        "rtoOffice": "Defunct"
+      },
+      "UP05": {
+        "district": "",
+        "rtoOffice": "Defunct"
+      },
+      "UP06": {
+        "district": "",
+        "rtoOffice": "Defunct"
+      },
+      "UP07": {
+        "district": "",
+        "rtoOffice": "Defunct"
+      },
+      "UP08": {
+        "district": "",
+        "rtoOffice": "Defunct"
+      },
+      "UP09": {
+        "district": "",
+        "rtoOffice": "Defunct"
+      },
+      "UP10": {
+        "district": "",
+        "rtoOffice": "Defunct"
+      },
+      "UP11": {
+        "district": "Saharanpur",
+        "rtoOffice": "Saharanpur"
+      },
+      "UP12": {
+        "district": "Muzaffarnagar",
+        "rtoOffice": "Muzaffarnagar"
+      },
+      "UP13": {
+        "district": "Bulandshahr",
+        "rtoOffice": "Bulandshahr"
+      },
+      "UP14": {
+        "district": "Ghaziabad",
+        "rtoOffice": "Ghaziabad"
+      },
+      "UP15": {
+        "district": "Meerut",
+        "rtoOffice": "Meerut"
+      },
+      "UP16": {
+        "district": "Gautam Buddha Nagar",
+        "rtoOffice": "Noida"
+      },
+      "UP17": {
+        "district": "Bagpat",
+        "rtoOffice": "Baghpat"
+      },
+      "UP19": {
+        "district": "Shamli",
+        "rtoOffice": "Shamli"
+      },
+      "UP20": {
+        "district": "Bijnor",
+        "rtoOffice": "Bijnor"
+      },
+      "UP21": {
+        "district": "Moradabad",
+        "rtoOffice": "Moradabad"
+      },
+      "UP22": {
+        "district": "Rampur",
+        "rtoOffice": "Rampur"
+      },
+      "UP23": {
+        "district": "Amroha",
+        "rtoOffice": "Amroha"
+      },
+      "UP24": {
+        "district": "Badaun",
+        "rtoOffice": "Badaun"
+      },
+      "UP25": {
+        "district": "Bareilly",
+        "rtoOffice": "Bareilly"
+      },
+      "UP26": {
+        "district": "Pilibhit",
+        "rtoOffice": "Pilibhit"
+      },
+      "UP27": {
+        "district": "Shahjahanpur",
+        "rtoOffice": "Shahjahanpur"
+      },
+      "UP30": {
+        "district": "Hardoi",
+        "rtoOffice": "Hardoi"
+      },
+      "UP31": {
+        "district": "Lakhimpur Kheri",
+        "rtoOffice": "Lakhimpur"
+      },
+      "UP32": {
+        "district": "Lucknow",
+        "rtoOffice": "Lucknow"
+      },
+      "UP33": {
+        "district": "Raebareli",
+        "rtoOffice": "Raebareli"
+      },
+      "UP34": {
+        "district": "Sitapur",
+        "rtoOffice": "Sitapur"
+      },
+      "UP35": {
+        "district": "Unnao",
+        "rtoOffice": "Unnao"
+      },
+      "UP36": {
+        "district": "Amethi",
+        "rtoOffice": "Amethi"
+      },
+      "UP37": {
+        "district": "Hapur",
+        "rtoOffice": "Hapur"
+      },
+      "UP38": {
+        "district": "Sambhal",
+        "rtoOffice": "Bahjoi"
+      },
+      "UP40": {
+        "district": "Bahraich",
+        "rtoOffice": "Bahraich"
+      },
+      "UP41": {
+        "district": "Barabanki",
+        "rtoOffice": "Barabanki"
+      },
+      "UP42": {
+        "district": "Ayodhya",
+        "rtoOffice": "Ayodhya"
+      },
+      "UP43": {
+        "district": "Gonda",
+        "rtoOffice": "Gonda"
+      },
+      "UP44": {
+        "district": "Sultanpur",
+        "rtoOffice": "Sultanpur"
+      },
+      "UP45": {
+        "district": "",
+        "rtoOffice": "Akbarpur"
+      },
+      "UP46": {
+        "district": "Shravasti",
+        "rtoOffice": "Shravasti"
+      },
+      "UP47": {
+        "district": "Balrampur",
+        "rtoOffice": "Balrampur"
+      },
+      "UP50": {
+        "district": "Azamgarh",
+        "rtoOffice": "Azamgarh"
+      },
+      "UP51": {
+        "district": "Basti",
+        "rtoOffice": "Basti"
+      },
+      "UP52": {
+        "district": "Deoria",
+        "rtoOffice": "Deoria"
+      },
+      "UP53": {
+        "district": "Gorakhpur",
+        "rtoOffice": "Gorakhpur"
+      },
+      "UP54": {
+        "district": "Mau",
+        "rtoOffice": "Mau"
+      },
+      "UP55": {
+        "district": "Siddharthnagar",
+        "rtoOffice": "Siddharthnagar"
+      },
+      "UP56": {
+        "district": "Maharajganj",
+        "rtoOffice": "Maharajganj"
+      },
+      "UP57": {
+        "district": "Kushinagar",
+        "rtoOffice": "Padrauna"
+      },
+      "UP58": {
+        "district": "",
+        "rtoOffice": "Khalilabad"
+      },
+      "UP60": {
+        "district": "Ballia",
+        "rtoOffice": "Ballia"
+      },
+      "UP61": {
+        "district": "Ghazipur",
+        "rtoOffice": "Ghazipur"
+      },
+      "UP62": {
+        "district": "Jaunpur",
+        "rtoOffice": "Jaunpur"
+      },
+      "UP63": {
+        "district": "Mirzapur",
+        "rtoOffice": "Mirzapur"
+      },
+      "UP64": {
+        "district": "Sonbhadra",
+        "rtoOffice": "Robertsganj"
+      },
+      "UP65": {
+        "district": "Varanasi",
+        "rtoOffice": "Varanasi"
+      },
+      "UP66": {
+        "district": "Bhadohi",
+        "rtoOffice": "Gyanpur"
+      },
+      "UP67": {
+        "district": "Chandauli",
+        "rtoOffice": "Chandauli"
+      },
+      "UP70": {
+        "district": "Prayagraj",
+        "rtoOffice": "Prayagraj"
+      },
+      "UP71": {
+        "district": "Fatehpur",
+        "rtoOffice": "Fatehpur"
+      },
+      "UP72": {
+        "district": "Pratapgarh",
+        "rtoOffice": "Pratapgarh"
+      },
+      "UP73": {
+        "district": "Kaushambi",
+        "rtoOffice": "Manjhanpur"
+      },
+      "UP74": {
+        "district": "Kannauj",
+        "rtoOffice": "Kannauj"
+      },
+      "UP75": {
+        "district": "Etawah",
+        "rtoOffice": "Etawah"
+      },
+      "UP76": {
+        "district": "Farrukhabad",
+        "rtoOffice": "Farrukhabad"
+      },
+      "UP77": {
+        "district": "Kanpur Dehat",
+        "rtoOffice": "Akbarpur"
+      },
+      "UP78": {
+        "district": "Kanpur Nagar",
+        "rtoOffice": "Kanpur"
+      },
+      "UP79": {
+        "district": "Auraiya",
+        "rtoOffice": "Auraiya"
+      },
+      "UP80": {
+        "district": "Agra",
+        "rtoOffice": "Agra"
+      },
+      "UP81": {
+        "district": "Aligarh",
+        "rtoOffice": "Aligarh"
+      },
+      "UP82": {
+        "district": "Etah",
+        "rtoOffice": "Etah"
+      },
+      "UP83": {
+        "district": "Firozabad",
+        "rtoOffice": "Firozabad"
+      },
+      "UP84": {
+        "district": "Mainpuri",
+        "rtoOffice": "Mainpuri"
+      },
+      "UP85": {
+        "district": "Mathura",
+        "rtoOffice": "Mathura"
+      },
+      "UP86": {
+        "district": "Hathras",
+        "rtoOffice": "Hathras"
+      },
+      "UP87": {
+        "district": "Kasganj",
+        "rtoOffice": "Kasganj"
+      },
+      "UP90": {
+        "district": "Banda",
+        "rtoOffice": "Banda"
+      },
+      "UP91": {
+        "district": "Hamirpur",
+        "rtoOffice": "Hamirpur"
+      },
+      "UP92": {
+        "district": "Jalaun",
+        "rtoOffice": "Jalaun"
+      },
+      "UP93": {
+        "district": "Jhansi",
+        "rtoOffice": "Jhansi"
+      },
+      "UP94": {
+        "district": "Lalitpur",
+        "rtoOffice": "Lalitpur"
+      },
+      "UP95": {
+        "district": "Mahoba",
+        "rtoOffice": "Mahoba"
+      },
+      "UP96": {
+        "district": "Chitrakoot",
+        "rtoOffice": "Chitrakoot Dham"
+      }
+    }
+  },
+  "Uttarakhand": {
+    "stateCode": "UK",
+    "rtos": {
+      "UK01": {
+        "district": "Almora",
+        "rtoOffice": "Almora"
+      },
+      "UK02": {
+        "district": "Bageshwar",
+        "rtoOffice": "Bageshwar"
+      },
+      "UK03": {
+        "district": "Champawat",
+        "rtoOffice": "Champawat"
+      },
+      "UK04": {
+        "district": "Nainital",
+        "rtoOffice": "Haldwani"
+      },
+      "UK05": {
+        "district": "Pithoragarh",
+        "rtoOffice": "Pithoragarh"
+      },
+      "UK06": {
+        "district": "Udham Singh Nagar",
+        "rtoOffice": "Rudrapur"
+      },
+      "UK07": {
+        "district": "Dehradun",
+        "rtoOffice": "Dehradun"
+      },
+      "UK08": {
+        "district": "Haridwar",
+        "rtoOffice": "Haridwar"
+      },
+      "UK09": {
+        "district": "Tehri Garhwal",
+        "rtoOffice": "Tehri"
+      },
+      "UK10": {
+        "district": "Uttarkashi",
+        "rtoOffice": "Uttarkashi"
+      },
+      "UK11": {
+        "district": "Chamoli",
+        "rtoOffice": "Gopeshwar"
+      },
+      "UK12": {
+        "district": "Pauri Garhwal",
+        "rtoOffice": "Pauri"
+      },
+      "UK13": {
+        "district": "Rudraprayag",
+        "rtoOffice": "Rudraprayag"
+      },
+      "UK14": {
+        "district": "Dehradun",
+        "rtoOffice": "Rishikesh"
+      },
+      "UK15": {
+        "district": "Pauri Garhwal",
+        "rtoOffice": "Kotdwar"
+      },
+      "UK16": {
+        "district": "Dehradun",
+        "rtoOffice": "Vikasnagar"
+      },
+      "UK17": {
+        "district": "Haridwar",
+        "rtoOffice": "Roorkee"
+      },
+      "UK18": {
+        "district": "Udham Singh Nagar",
+        "rtoOffice": "Kashipur"
+      },
+      "UK19": {
+        "district": "Nainital",
+        "rtoOffice": "Ramnagar"
+      },
+      "UK20": {
+        "district": "Almora",
+        "rtoOffice": "Ranikhet"
+      }
+    }
+  },
+  "West Bengal": {
+    "stateCode": "WB",
+    "rtos": {
+      "WB01": {
+        "district": "Kolkata",
+        "rtoOffice": "Beltala (two Wheelers)"
+      },
+      "WB02": {
+        "district": "Kolkata",
+        "rtoOffice": "Beltala (four Wheelers private vehicles)"
+      },
+      "WB03": {
+        "district": "Kolkata",
+        "rtoOffice": "Beltala (commercial goods carriages)"
+      },
+      "WB04": {
+        "district": "Kolkata",
+        "rtoOffice": "Beltala (commercial passenger vehicles)"
+      },
+      "WB05": {
+        "district": "Kolkata",
+        "rtoOffice": "Kasba (commercial vehicles)"
+      },
+      "WB06": {
+        "district": "Kolkata",
+        "rtoOffice": "Kasba (private vehicles)"
+      },
+      "WB07": {
+        "district": "Kolkata",
+        "rtoOffice": "Salt Lake (commercial vehicles)"
+      },
+      "WB08": {
+        "district": "Kolkata",
+        "rtoOffice": "Salt Lake (private vehicles)"
+      },
+      "WB09": {
+        "district": "Kolkata",
+        "rtoOffice": "Behala (commercial vehicles)"
+      },
+      "WB10": {
+        "district": "Kolkata",
+        "rtoOffice": "Behala (private vehicles)"
+      },
+      "WB11": {
+        "district": "Howrah",
+        "rtoOffice": "Howrah (commercial vehicles)"
+      },
+      "WB12": {
+        "district": "Howrah",
+        "rtoOffice": "Howrah (private vehicles)"
+      },
+      "WB13": {
+        "district": "Howrah",
+        "rtoOffice": "Uluberia (commercial vehicles)"
+      },
+      "WB14": {
+        "district": "Howrah",
+        "rtoOffice": "Uluberia (private vehicles)"
+      },
+      "WB15": {
+        "district": "Hooghly",
+        "rtoOffice": "Chinsurah (commercial vehicles)"
+      },
+      "WB16": {
+        "district": "Hooghly",
+        "rtoOffice": "Chinsurah (private vehicles)"
+      },
+      "WB17": {
+        "district": "Hooghly",
+        "rtoOffice": "Serampore (commercial vehicles)"
+      },
+      "WB18": {
+        "district": "Hooghly",
+        "rtoOffice": "Serampore (private vehicles)"
+      },
+      "WB19": {
+        "district": "South 24 Parganas",
+        "rtoOffice": "Alipore (commercial vehicles)"
+      },
+      "WB20": {
+        "district": "South 24 Parganas",
+        "rtoOffice": "Alipore (private vehicles)"
+      },
+      "WB21": {
+        "district": "North 24 Parganas",
+        "rtoOffice": "Basirhat (commercial vehicles)"
+      },
+      "WB22": {
+        "district": "North 24 Parganas",
+        "rtoOffice": "Basirhat (private vehicles)"
+      },
+      "WB23": {
+        "district": "North 24 Parganas",
+        "rtoOffice": "Barrackpore (commercial vehicles)"
+      },
+      "WB24": {
+        "district": "North 24 Parganas",
+        "rtoOffice": "Barrackpore (private vehicles)"
+      },
+      "WB25": {
+        "district": "North 24 Parganas",
+        "rtoOffice": "Barasat (commercial vehicles)"
+      },
+      "WB26": {
+        "district": "North 24 Parganas",
+        "rtoOffice": "Barasat (private vehicles)"
+      },
+      "WB27": {
+        "district": "North 24 Parganas",
+        "rtoOffice": "Bangaon (commercial vehicles)"
+      },
+      "WB28": {
+        "district": "North 24 Parganas",
+        "rtoOffice": "Bangaon (private vehicles)"
+      },
+      "WB29": {
+        "district": "Purba Medinipur",
+        "rtoOffice": "Tamluk (commercial vehicles)"
+      },
+      "WB30": {
+        "district": "Purba Medinipur",
+        "rtoOffice": "Tamluk (private vehicles)"
+      },
+      "WB31": {
+        "district": "Purba Medinipur",
+        "rtoOffice": "Contai (commercial vehicles)"
+      },
+      "WB32": {
+        "district": "Purba Medinipur",
+        "rtoOffice": "Contai (private vehicles)"
+      },
+      "WB33": {
+        "district": "Paschim Medinipur",
+        "rtoOffice": "Medinipur (commercial vehicles)"
+      },
+      "WB34": {
+        "district": "Paschim Medinipur",
+        "rtoOffice": "Medinipur (private vehicles)"
+      },
+      "WB35": {
+        "district": "Paschim Medinipur",
+        "rtoOffice": "Kharagpur (commercial vehicles)"
+      },
+      "WB36": {
+        "district": "Paschim Medinipur",
+        "rtoOffice": "Kharagpur (private vehicles)"
+      },
+      "WB37": {
+        "district": "Paschim Bardhaman",
+        "rtoOffice": "Asansol (commercial vehicles)"
+      },
+      "WB38": {
+        "district": "Paschim Bardhaman",
+        "rtoOffice": "Asansol (private vehicles)"
+      },
+      "WB39": {
+        "district": "Paschim Bardhaman",
+        "rtoOffice": "Durgapur (commercial vehicles), also SBSTC buses are registered here."
+      },
+      "WB40": {
+        "district": "Paschim Bardhaman",
+        "rtoOffice": "Durgapur (private vehicles)"
+      },
+      "WB41": {
+        "district": "Purba Bardhaman",
+        "rtoOffice": "Bardhaman (commercial vehicles)"
+      },
+      "WB42": {
+        "district": "Purba Bardhaman",
+        "rtoOffice": "Bardhaman (private vehicles)"
+      },
+      "WB43": {
+        "district": "Purba Bardhaman",
+        "rtoOffice": "Kalna (commercial vehicles)"
+      },
+      "WB44": {
+        "district": "Purba Bardhaman",
+        "rtoOffice": "Kalna (private vehicles)"
+      },
+      "WB45": {
+        "district": "Birbhum",
+        "rtoOffice": "Rampurhat (commercial vehicles)"
+      },
+      "WB46": {
+        "district": "Birbhum",
+        "rtoOffice": "Rampurhat (private vehicles)"
+      },
+      "WB47": {
+        "district": "Birbhum",
+        "rtoOffice": "Bolpur (commercial vehicles)"
+      },
+      "WB48": {
+        "district": "Birbhum",
+        "rtoOffice": "Bolpur (private vehicles)"
+      },
+      "WB49": {
+        "district": "Jhargram",
+        "rtoOffice": "Jhargram (commercial vehicles)"
+      },
+      "WB50": {
+        "district": "Jhargram",
+        "rtoOffice": "Jhargram (private vehicles)"
+      },
+      "WB51": {
+        "district": "Nadia",
+        "rtoOffice": "Krishnanagar (commercial vehicles)"
+      },
+      "WB52": {
+        "district": "Nadia",
+        "rtoOffice": "Krishnanagar (private vehicles)"
+      },
+      "WB53": {
+        "district": "Birbhum",
+        "rtoOffice": "Birbhum (commercial vehicles)"
+      },
+      "WB54": {
+        "district": "Birbhum",
+        "rtoOffice": "Birbhum (private vehicles)"
+      },
+      "WB55": {
+        "district": "Purulia",
+        "rtoOffice": "Purulia (commercial vehicles)"
+      },
+      "WB56": {
+        "district": "Purulia",
+        "rtoOffice": "Purulia (private vehicles)"
+      },
+      "WB57": {
+        "district": "Murshidabad",
+        "rtoOffice": "Murshidabad (commercial vehicles)"
+      },
+      "WB58": {
+        "district": "Murshidabad",
+        "rtoOffice": "Murshidabad (private vehicles)"
+      },
+      "WB59": {
+        "district": "Uttar Dinajpur",
+        "rtoOffice": "Raiganj (commercial vehicles)"
+      },
+      "WB60": {
+        "district": "Uttar Dinajpur",
+        "rtoOffice": "Raiganj (private vehicles)"
+      },
+      "WB61": {
+        "district": "Dakshin Dinajpur",
+        "rtoOffice": "Balurghat (commercial vehicles)"
+      },
+      "WB62": {
+        "district": "Dakshin Dinajpur",
+        "rtoOffice": "Balurghat (private vehicles)"
+      },
+      "WB63": {
+        "district": "Cooch Behar",
+        "rtoOffice": "Cooch Behar (commercial vehicles), also NBSTC buses are registered here."
+      },
+      "WB64": {
+        "district": "Cooch Behar",
+        "rtoOffice": "Cooch Behar (private vehicles)"
+      },
+      "WB65": {
+        "district": "Malda",
+        "rtoOffice": "Malda City (commercial vehicles)"
+      },
+      "WB66": {
+        "district": "Malda",
+        "rtoOffice": "Malda City (private vehicles)"
+      },
+      "WB67": {
+        "district": "Bankura",
+        "rtoOffice": "Bankura (commercial vehicles)"
+      },
+      "WB68": {
+        "district": "Bankura",
+        "rtoOffice": "Bankura (private vehicles)"
+      },
+      "WB69": {
+        "district": "Alipurduar",
+        "rtoOffice": "Alipurduar (commercial vehicles)"
+      },
+      "WB70": {
+        "district": "Alipurduar",
+        "rtoOffice": "Alipurduar (private vehicles)"
+      },
+      "WB71": {
+        "district": "Jalpaiguri",
+        "rtoOffice": "Jalpaiguri (commercial vehicles)"
+      },
+      "WB72": {
+        "district": "Jalpaiguri",
+        "rtoOffice": "Jalpaiguri (private vehicles)"
+      },
+      "WB73": {
+        "district": "Darjeeling",
+        "rtoOffice": "Siliguri (commercial vehicles)"
+      },
+      "WB74": {
+        "district": "Darjeeling",
+        "rtoOffice": "Siliguri (private vehicles)"
+      },
+      "WB75": {
+        "district": "Purba Bardhaman",
+        "rtoOffice": "Katwa (private and commercial vehicles)"
+      },
+      "WB76": {
+        "district": "Darjeeling",
+        "rtoOffice": "Darjeeling (commercial vehicles)"
+      },
+      "WB77": {
+        "district": "Darjeeling",
+        "rtoOffice": "Darjeeling (private vehicles)"
+      },
+      "WB78": {
+        "district": "Kalimpong",
+        "rtoOffice": "Kalimpong (commercial vehicles)"
+      },
+      "WB79": {
+        "district": "Kalimpong",
+        "rtoOffice": "Kalimpong (private vehicles)"
+      },
+      "WB80": {
+        "district": "Purulia",
+        "rtoOffice": "Manbazar (private and commercial vehicles)"
+      },
+      "WB81": {
+        "district": "Purulia",
+        "rtoOffice": "Raghunathpur (commercial vehicles)"
+      },
+      "WB82": {
+        "district": "Purulia",
+        "rtoOffice": "Raghunathpur (private vehicles)"
+      },
+      "WB83": {
+        "district": "Malda",
+        "rtoOffice": "Chanchal (commercial vehicles)"
+      },
+      "WB84": {
+        "district": "Malda",
+        "rtoOffice": "Chanchal (private vehicles)"
+      },
+      "WB85": {
+        "district": "Cooch Behar",
+        "rtoOffice": "Mathabhanga (commercial vehicles)"
+      },
+      "WB86": {
+        "district": "Cooch Behar",
+        "rtoOffice": "Mathabhanga (private vehicles)"
+      },
+      "WB87": {
+        "district": "Bankura",
+        "rtoOffice": "Bishnupur (commercial vehicles)"
+      },
+      "WB88": {
+        "district": "Bankura",
+        "rtoOffice": "Bishnupur (private vehicles)"
+      },
+      "WB89": {
+        "district": "Nadia",
+        "rtoOffice": "Kalyani (commercial vehicles)"
+      },
+      "WB90": {
+        "district": "Nadia",
+        "rtoOffice": "Kalyani (private vehicles)"
+      },
+      "WB91": {
+        "district": "Uttar Dinajpur",
+        "rtoOffice": "Islampur (commercial vehicles)"
+      },
+      "WB92": {
+        "district": "Uttar Dinajpur",
+        "rtoOffice": "Islampur (private vehicles)"
+      },
+      "WB93": {
+        "district": "Murshidabad",
+        "rtoOffice": "Jangipur (commercial vehicles)"
+      },
+      "WB94": {
+        "district": "Murshidabad",
+        "rtoOffice": "Jangipur (private vehicles)"
+      },
+      "WB95": {
+        "district": "South 24 Parganas",
+        "rtoOffice": "Baruipur (commercial vehicles)"
+      },
+      "WB96": {
+        "district": "South 24 Parganas",
+        "rtoOffice": "Baruipur (private vehicles)"
+      },
+      "WB97": {
+        "district": "South 24 Parganas",
+        "rtoOffice": "Diamond Harbour (commercial vehicles)"
+      },
+      "WB98": {
+        "district": "South 24 Parganas",
+        "rtoOffice": "Canning (All vehicles)"
+      },
+      "WB99": {
+        "district": "Murshidabad",
+        "rtoOffice": "Kandi (Private and Commercial vehicles)"
+      }
+    }
+  }
+}

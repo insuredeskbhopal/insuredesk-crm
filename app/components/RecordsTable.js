@@ -133,7 +133,9 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
                     <a className="pdf-icon-link" href={`/api/records/${record.id}/pdf`} title="Download PDF" aria-label="Download PDF">
                       <Download size={14} />
                     </a>
-                  ) : "-"}
+                  ) : (
+                    <span className="missing-pdf compact" style={{ color: "#d93025", fontWeight: "700", fontSize: "11px" }}>Missing</span>
+                  )}
                 </td>
               </tr>
             )) : (

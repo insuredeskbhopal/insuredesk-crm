@@ -20,7 +20,9 @@ import {
   SlidersHorizontal,
   LoaderCircle,
   Trash2,
-  Upload
+  Upload,
+  LayoutGrid,
+  List
 } from "lucide-react";
 import { EMPTY_FORM } from "@/app/ui/dashboard/constants";
 import {
@@ -78,6 +80,8 @@ export default function Dashboard({
   const [selectedPolicyId, setSelectedPolicyId] = useState(routePolicyId || "");
   const [hasLoadedView, setHasLoadedView] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [customerPage, setCustomerPage] = useState(1);
+  const [customerViewType, setCustomerViewType] = useState("grid");
   const [toast, setToast] = useState("");
   const [alert, setAlert] = useState(null);
   const [isRecordFilterOpen, setIsRecordFilterOpen] = useState(false);
@@ -272,6 +276,20 @@ export default function Dashboard({
   }, [recordViewCategory, recordsWithSchema]);
   const activeRecordFilterCount = (recordFilterField && recordFilterValue.trim() ? 1 : 0) + (recordPdfFilter !== "all" ? 1 : 0);
   const clientProfiles = buildClientProfiles(filteredRecords, parseMoney);
+  const CUSTOMERS_PER_PAGE = 12;
+  const customerPageCount = Math.max(1, Math.ceil(clientProfiles.length / CUSTOMERS_PER_PAGE));
+  const customerStartIndex = (customerPage - 1) * CUSTOMERS_PER_PAGE;
+  const paginatedClients = useMemo(() => {
+    return clientProfiles.slice(customerStartIndex, customerStartIndex + CUSTOMERS_PER_PAGE);
+  }, [clientProfiles, customerStartIndex]);
+  const customerPageNumbers = useMemo(
+    () => Array.from({ length: customerPageCount }, (_, index) => index + 1),
+    [customerPageCount]
+  );
+  const goToPage = (page) => {
+    setCustomerPage(Math.min(Math.max(1, page), customerPageCount));
+  };
+
   const selectedClient = selectedClientName
     ? buildClientProfiles(records, parseMoney).find((client) => client.name === selectedClientName)
     : null;
@@ -326,6 +344,10 @@ export default function Dashboard({
       setRecordViewCategory("all");
     }
   }, [recordViewCategory, recordViewOptions]);
+
+  useEffect(() => {
+    setCustomerPage(1);
+  }, [query]);
 
   function handleFilePick(fileList) {
     const files = Array.from(fileList || []);
@@ -989,35 +1011,153 @@ export default function Dashboard({
                   }}
                 />
               ) : (
-                <div className="customer-directory">
-                  <div className="customer-directory-head">
-                    <span>Customer</span>
-                    <span>Policies</span>
-                    <span>District</span>
-                    <span>Tehsil</span>
-                    <span>Premium</span>
-                    <span>Sum Insured</span>
-                    <span>Action</span>
-                  </div>
-                  {clientProfiles.length ? clientProfiles.map((client) => (
-                    <article className="customer-row" key={client.name}>
-                      <div className="customer-name-cell">
-                        <strong>{client.name}</strong>
-                        <small>{client.contactNumber || "No contact recorded"}</small>
-                      </div>
-                      <span>{client.policies.length} polic{client.policies.length === 1 ? "y" : "ies"}</span>
-                      <span>{client.district || "-"}</span>
-                      <span>{client.tehsil || "-"}</span>
-                      <span>{formatMoney(client.premiumTotal)}</span>
-                      <span>{formatMoney(client.sumInsuredTotal)}</span>
-                      <button type="button" onClick={() => {
-                        router.push(`/customer-management/${encodeURIComponent(client.name)}`);
-                      }}>
-                        View Profile
+                <>
+                  <div className="customer-controls-row">
+                    <span className="customer-count-label">
+                      Showing {clientProfiles.length ? customerStartIndex + 1 : 0}-{Math.min(customerStartIndex + CUSTOMERS_PER_PAGE, clientProfiles.length)} of {clientProfiles.length} customers
+                    </span>
+                    <div className="view-type-toggles">
+                      <button
+                        type="button"
+                        className={customerViewType === "grid" ? "active" : ""}
+                        onClick={() => setCustomerViewType("grid")}
+                        title="Grid View"
+                      >
+                        <LayoutGrid size={18} /> Grid
                       </button>
-                    </article>
-                  )) : <EmptyState>No saved customers yet.</EmptyState>}
-                </div>
+                      <button
+                        type="button"
+                        className={customerViewType === "list" ? "active" : ""}
+                        onClick={() => setCustomerViewType("list")}
+                        title="List View"
+                      >
+                        <List size={18} /> List
+                      </button>
+                    </div>
+                  </div>
+
+                  {clientProfiles.length ? (
+                    customerViewType === "grid" ? (
+                      <div className="customer-grid">
+                        {paginatedClients.map((client) => {
+                          const firstLetter = client.name ? client.name.charAt(0).toUpperCase() : "?";
+                          let hash = 0;
+                          for (let j = 0; j < client.name.length; j++) {
+                            hash = client.name.charCodeAt(j) + ((hash << 5) - hash);
+                          }
+                          const hue = Math.abs(hash % 360);
+                          const avatarBg = `hsl(${hue}, 65%, 42%)`;
+
+                          return (
+                            <article className="customer-card" key={client.name}>
+                              <div className="customer-card-header">
+                                <div className="customer-avatar" style={{ backgroundColor: avatarBg }}>
+                                  {firstLetter}
+                                </div>
+                                <div className="customer-title-block">
+                                  <h3 title={client.name}>{client.name}</h3>
+                                  <p className="customer-contact-text">{client.contactNumber || "No contact recorded"}</p>
+                                </div>
+                              </div>
+                              <div className="customer-card-stats">
+                                <div className="stat-item">
+                                  <span className="stat-label">Policies</span>
+                                  <strong className="stat-value">{client.policies.length}</strong>
+                                </div>
+                                <div className="stat-item">
+                                  <span className="stat-label">Premium</span>
+                                  <strong className="stat-value">{formatMoney(client.premiumTotal)}</strong>
+                                </div>
+                              </div>
+                              <div className="customer-card-details">
+                                <div>
+                                  <span>District</span>
+                                  <p title={client.district || "-"}>{client.district || "-"}</p>
+                                </div>
+                                <div>
+                                  <span>Tehsil</span>
+                                  <p title={client.tehsil || "-"}>{client.tehsil || "-"}</p>
+                                </div>
+                                <div className="wide">
+                                  <span>Sum Insured</span>
+                                  <p>{formatMoney(client.sumInsuredTotal)}</p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                className="view-profile-btn"
+                                onClick={() => {
+                                  router.push(`/customer-management/${encodeURIComponent(client.name)}`);
+                                }}
+                              >
+                                View Profile
+                              </button>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="customer-directory">
+                        <div className="customer-directory-head">
+                          <span>Customer</span>
+                          <span>Policies</span>
+                          <span>District</span>
+                          <span>Tehsil</span>
+                          <span>Premium</span>
+                          <span>Sum Insured</span>
+                          <span>Action</span>
+                        </div>
+                        {paginatedClients.map((client) => (
+                          <article className="customer-row" key={client.name}>
+                            <div className="customer-name-cell">
+                              <strong>{client.name}</strong>
+                              <small>{client.contactNumber || "No contact recorded"}</small>
+                            </div>
+                            <span>{client.policies.length} polic{client.policies.length === 1 ? "y" : "ies"}</span>
+                            <span>{client.district || "-"}</span>
+                            <span>{client.tehsil || "-"}</span>
+                            <span>{formatMoney(client.premiumTotal)}</span>
+                            <span>{formatMoney(client.sumInsuredTotal)}</span>
+                            <button type="button" onClick={() => {
+                              router.push(`/customer-management/${encodeURIComponent(client.name)}`);
+                            }}>
+                              View Profile
+                            </button>
+                          </article>
+                        ))}
+                      </div>
+                    )
+                  ) : (
+                    <EmptyState>No saved customers yet.</EmptyState>
+                  )}
+
+                  {clientProfiles.length > CUSTOMERS_PER_PAGE ? (
+                    <div className="table-pagination customer-pagination" aria-label="Customer pagination">
+                      <span>
+                        Showing {customerStartIndex + 1}-{Math.min(customerStartIndex + CUSTOMERS_PER_PAGE, clientProfiles.length)} of {clientProfiles.length}
+                      </span>
+                      <div className="table-page-list">
+                        <button type="button" onClick={() => goToPage(customerPage - 1)} disabled={customerPage === 1}>
+                          Prev
+                        </button>
+                        {customerPageNumbers.map((page) => (
+                          <button
+                            aria-current={customerPage === page ? "page" : undefined}
+                            className={customerPage === page ? "active" : ""}
+                            key={page}
+                            type="button"
+                            onClick={() => goToPage(page)}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                        <button type="button" onClick={() => goToPage(customerPage + 1)} disabled={customerPage === customerPageCount}>
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </>
               )}
             </section>
           )}

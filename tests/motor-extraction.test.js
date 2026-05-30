@@ -89,7 +89,7 @@ describe("generic motor policy extraction", () => {
   });
 
   it("locks the IFFCO Tokio motor extraction contract for future policy additions", () => {
-    const iffcoSampleText = readFileSync("_debug_raw_text.txt", "utf8");
+    const iffcoSampleText = readFileSync("tests/fixtures/_debug_raw_text.txt", "utf8");
     const result = extractPolicyFromText(iffcoSampleText, "YASH DUBEY_MP04QD1357_2026-27 POLICY.pdf");
 
     expect(result).toMatchObject({
@@ -124,7 +124,7 @@ describe("generic motor policy extraction", () => {
   });
 
   it("locks the New India motor extraction contract for future policy additions", async () => {
-    const sourceFile = "VIJAY KUMAR KATRE_MP04ED8912_2026-27 POLICY.pdf";
+    const sourceFile = "tests/fixtures/VIJAY KUMAR KATRE_MP04ED8912_2026-27 POLICY.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
 
@@ -440,7 +440,7 @@ describe("generic motor policy extraction", () => {
   });
 
   it("locks the TATA AIG motor extraction contract for the Auto Secure format", async () => {
-    const sourceFile = "SMITA PANDEY_MP04CX1283_2026-27 POLICY.pdf";
+    const sourceFile = "tests/fixtures/SMITA PANDEY_MP04CX1283_2026-27 POLICY.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
 
@@ -620,5 +620,27 @@ describe("generic motor policy extraction", () => {
     expect(result.vehicleNumber).toBe("");
     expect(result.engineNumber).toBe("");
     expect(result.chassisNumber).toBe("");
+  });
+
+  it("enriches RTO location and rto fields from the vehicle registration number", () => {
+    const text = `
+      TWO WHEELER POLICY CERTIFICATE
+      Registration Mark & No. MP-04-CX-1283
+      Engine No. F8DN6202347
+    `;
+    const result = extractPolicyFromText(text, "generic-two-wheeler.pdf");
+    expect(result.vehicleNumber).toBe("MP-04-CX-1283");
+    expect(result.rtoLocation).toBe("BHOPAL");
+    expect(result.rto).toBe("BHOPAL");
+
+    const textDelhi = `
+      PRIVATE CAR PACKAGE POLICY
+      Registration Mark & No. DL-03-BC-1111
+      Engine No. XJN6B20464
+    `;
+    const resultDelhi = extractPolicyFromText(textDelhi, "delhi-private-car.pdf");
+    expect(resultDelhi.vehicleNumber).toBe("DL-03-BC-1111");
+    expect(resultDelhi.rtoLocation).toBe("DDA MARKET, SHEIKH SARAI");
+    expect(resultDelhi.rto).toBe("DDA MARKET, SHEIKH SARAI");
   });
 });
