@@ -1,7 +1,7 @@
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 
 export const MANUAL_REQUIRED_FIELDS = ["contactNumber", "contactPerson"];
-export const MOTOR_MANUAL_REQUIRED_FIELDS = ["fuelType"];
+export const MOTOR_MANUAL_REQUIRED_FIELDS = [];
 export const COMMON_REVIEW_FIELDS = ["whatsappGroupName"];
 
 export const PAYMENT_MODE_OPTIONS = [
@@ -251,9 +251,7 @@ export function getMissingRequiredFields(upload, visibleFields = FIELD_SETUP, re
 
 export function getReviewValidation(upload, options = {}) {
   const resolvedSchema = options.resolvedSchema || inferUploadSchema(upload);
-  const manualRequiredFields = resolvedSchema?.groupId === "motor"
-    ? [...MANUAL_REQUIRED_FIELDS, ...(shouldUseExtractedFuelType(upload?.extractedData) ? [] : MOTOR_MANUAL_REQUIRED_FIELDS)]
-    : MANUAL_REQUIRED_FIELDS;
+  const manualRequiredFields = MANUAL_REQUIRED_FIELDS;
   const schemaVisibleFields = resolvedSchema?.fields?.length
     ? FIELD_SETUP.filter(([, key]) => resolvedSchema.fields.includes(key))
     : FIELD_SETUP;
