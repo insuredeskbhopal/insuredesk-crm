@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         name,
         password: hashed,
         role: requestedRole,
-        organizationId: requester.role === 'SUPER_ADMIN' ? organizationId ?? undefined : requester.organizationId,
+        organizationId: requester.role === 'SUPER_ADMIN' ? organizationId ?? requester.organizationId ?? undefined : requester.organizationId,
       },
       select: {
         id: true,

@@ -74,7 +74,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (data.role && !canManageRole(requester.role, data.role)) {
     return NextResponse.json({ error: 'You cannot assign this role' }, { status: 403 });
   }
-  if (requester.role !== 'SUPER_ADMIN') {
+  if (requester.role === 'SUPER_ADMIN' && data.organizationId === undefined) {
+    data.organizationId = targetUser.organizationId ?? requester.organizationId ?? undefined;
+  } else if (requester.role !== 'SUPER_ADMIN') {
     data.organizationId = requester.organizationId ?? undefined;
   }
   // If password is being updated, hash it first
