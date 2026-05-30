@@ -61,7 +61,7 @@ export const FIELD_GROUPS = [
 ];
 
 export const FIELD_SETUP = [
-  ["Sr No", "srNo"],
+  ["Customer ID", "customerId"],
   ["Source File", "sourceFile"],
   ["Insured Name", "insuredName"],
   ["Policy Number", "policyNumber"],

@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 const PAGE_SIZE = 10;
 const DEFAULT_RECORD_COLUMNS = [
-  { key: "srNo", label: "Sr No", className: "col-sr" },
+  { key: "customerId", label: "Customer ID", className: "col-customer" },
   { key: "savedAt", label: "Saved At", className: "col-saved", format: "dateTime" },
   { key: "uploadedAt", label: "Uploaded At", className: "col-saved", format: "dateTime" },
   { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },
@@ -53,10 +53,8 @@ function formatDateTime(value) {
   });
 }
 
-function renderCell(record, column, rowNumber) {
-  const value = column.key === "srNo"
-    ? rowNumber
-    : column.format === "dateTime"
+function renderCell(record, column) {
+  const value = column.format === "dateTime"
     ? formatDateTime(record[column.key])
     : column.format === "date"
       ? formatDate(record[column.key])
@@ -112,10 +110,10 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
             </tr>
           </thead>
           <tbody>
-            {records.length ? visibleRecords.map((record, index) => (
+            {records.length ? visibleRecords.map((record) => (
               <tr key={record.id}>
                 {columns.map((column) => (
-                  <td key={column.key}>{renderCell(record, column, startIndex + index + 1)}</td>
+                  <td key={column.key}>{renderCell(record, column)}</td>
                 ))}
                 {canEdit ? (
                   <td>

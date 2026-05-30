@@ -23,7 +23,7 @@ export const NAV_ITEMS = [
 ];
 
 export const EMPTY_FORM = {
-  srNo: "",
+  customerId: "",
   sourceFile: "",
   status: "pending",
   insuredName: "",
@@ -75,7 +75,7 @@ export const EMPTY_FORM = {
 };
 
 export const FIELD_SETUP = [
-  ["Sr No", "srNo"],
+  ["Customer ID", "customerId"],
   ["Insured Name", "insuredName"],
   ["Policy Number", "policyNumber"],
   ["Contact Number", "contactNumber"],

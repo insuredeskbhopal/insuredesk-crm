@@ -244,7 +244,7 @@ export default function Dashboard({
 
     const fieldLabels = new Map(FIELD_SETUP.map(([label, key]) => [key, label]));
     const classNames = {
-      srNo: "col-sr",
+      customerId: "col-customer",
       savedAt: "col-saved",
       uploadedAt: "col-saved",
       uploadedBy: "col-uploader",
@@ -281,13 +281,13 @@ export default function Dashboard({
     const selectedSchemas = recordsWithSchema
       .filter(({ validation }) => (validation.resolvedSchema?.groupId || "general") === recordViewCategory)
       .map(({ validation }) => validation);
-    const visibleKeys = new Set(["srNo", "savedAt", "uploadedAt", "uploadedBy", "insuredName"]);
+    const visibleKeys = new Set(["customerId", "savedAt", "uploadedAt", "uploadedBy", "insuredName"]);
     selectedSchemas.forEach((validation) => {
       validation.visibleFields.forEach(([, key]) => visibleKeys.add(key));
     });
     visibleKeys.add("sourceFile");
 
-    return ["srNo", "savedAt", "uploadedAt", "uploadedBy", ...FIELD_SETUP.map(([, key]) => key), "sourceFile"]
+    return ["customerId", "savedAt", "uploadedAt", "uploadedBy", ...FIELD_SETUP.map(([, key]) => key), "sourceFile"]
       .filter((key, index, list) => visibleKeys.has(key) && list.indexOf(key) === index)
       .map((key) => ({
         key,
