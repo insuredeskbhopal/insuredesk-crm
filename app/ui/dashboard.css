@@ -54,6 +54,14 @@
   text-decoration: none;
 }
 
+.brand-logo-image {
+  display: block;
+  width: 176px;
+  height: 74px;
+  object-fit: contain;
+  object-position: center;
+}
+
 .brand-logo-mark {
   display: inline-grid;
   place-items: center;
@@ -83,6 +91,11 @@
 .brand-logo.compact .brand-logo-mark {
   width: 30px;
   height: 30px;
+}
+
+.brand-logo.compact .brand-logo-image {
+  width: 48px;
+  height: 34px;
 }
 
 .top-brand strong {
@@ -202,6 +215,11 @@
   width: 100%;
   margin-bottom: 6px;
   gap: 8px;
+}
+
+.portal-title .brand-logo-image {
+  width: 192px;
+  height: 88px;
 }
 
 .portal-title .brand-logo-mark {
@@ -3286,6 +3304,11 @@ td:last-child {
   margin-bottom: 8px;
 }
 
+.auth-brand .brand-logo-image {
+  width: 240px;
+  height: 136px;
+}
+
 .auth-brand h1 {
   font-family: var(--font-display), Manrope, sans-serif;
   font-size: var(--font-size-3xl);
@@ -4722,6 +4745,11 @@ th {
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: 15px;
+  }
+
+  .top-brand .brand-logo-image {
+    width: 132px;
+    height: 48px;
   }
 
   .top-brand strong {

@@ -3,8 +3,13 @@ import Link from "next/link";
 export default function BrandLogo({ href, className = "", compact = false }) {
   const content = (
     <span className={`brand-logo ${compact ? "compact" : ""} ${className}`.trim()}>
-      <span className="brand-logo-mark" aria-hidden="true">BH</span>
-      {!compact ? <span className="brand-logo-text">BIMAHEADQUARTER</span> : null}
+      <img
+        className="brand-logo-image"
+        src="/brand/main-logo-wide.png"
+        alt="Bima Headquarter"
+        width="1024"
+        height="570"
+      />
     </span>
   );
 

@@ -861,6 +861,30 @@ body:has(.landing-shell) {
   align-items: center;
 }
 
+.landing-shell .brand-logo,
+.landing-shell .brand-logo-link {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  text-decoration: none;
+}
+
+.landing-shell .landing-brand .brand-logo-image {
+  display: block;
+  width: 206px !important;
+  height: 66px !important;
+  object-fit: contain;
+  object-position: center;
+}
+
+.landing-shell .footer-brand .brand-logo-image {
+  display: block;
+  width: 210px !important;
+  height: 118px !important;
+  object-fit: contain;
+  object-position: center;
+}
+
 .landing-shell .footer-brand .brand-logo-text,
 .landing-shell .footer-brand .brand-logo-mark {
   color: #ffffff !important;
