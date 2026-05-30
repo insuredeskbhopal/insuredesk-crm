@@ -7,30 +7,12 @@ import { useEffect, useMemo, useState } from "react";
 const PAGE_SIZE = 10;
 const DEFAULT_RECORD_COLUMNS = [
   { key: "customerId", label: "Customer ID", className: "col-customer" },
-  { key: "savedAt", label: "Saved At", className: "col-saved", format: "dateTime" },
-  { key: "uploadedAt", label: "Uploaded At", className: "col-saved", format: "dateTime" },
-  { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },
   { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
-  { key: "contactNumber", label: "Contact No.", className: "col-contact" },
   { key: "contactPerson", label: "Contact Person Name", className: "col-contact-person" },
-  { key: "whatsappGroupName", label: "WhatsApp Group Name", className: "col-group" },
-  { key: "groupName", label: "Group Name", className: "col-group" },
+  { key: "contactNumber", label: "Phone Number", className: "col-contact" },
   { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
-  { key: "policyType", label: "Policy Type", className: "col-type" },
-  { key: "sumInsured", label: "Sum Insured", className: "col-money" },
-  { key: "premium", label: "Premium", className: "col-money" },
-  { key: "startDate", label: "Start Date", className: "col-date" },
-  { key: "expiryDate", label: "Expiry Date", className: "col-date" },
-  { key: "duration", label: "Duration", className: "col-duration" },
-  { key: "riskLocation", label: "Risk Location", className: "col-location" },
-  { key: "district", label: "District", className: "col-district" },
-  { key: "tehsil", label: "Tehsil", className: "col-tehsil" },
-  { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
-  { key: "description", label: "Description / Non Declaration", className: "col-description" },
-  { key: "pptMpwlc", label: "PPT / MPWLC", className: "col-ppt" },
-  { key: "occupancy", label: "Occupancy", className: "col-occupancy" },
-  { key: "validIn", label: "Valid In", className: "col-valid" },
-  { key: "sourceFile", label: "Source File", className: "col-source" }
+  { key: "bankName", label: "Bank", className: "col-bank" },
+  { key: "whatsappGroupName", label: "WhatsApp Group Name", className: "col-group" }
 ];
 
 function formatDate(value) {

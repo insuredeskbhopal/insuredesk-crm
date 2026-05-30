@@ -24,4 +24,17 @@ describe("record customer ID", () => {
     expect(record.customerId).toBe("VIJA6655");
     expect(record.srNo).toBeUndefined();
   });
+
+  it("normalizes bank from selected or extracted bank fields", () => {
+    const record = normalizeRecord({
+      id: "record-2",
+      selectedBankSource: "HDFC Bank",
+      data: {
+        insuredName: "Rahul Sharma",
+        contactNumber: "9123456789"
+      }
+    });
+
+    expect(record.bankName).toBe("HDFC Bank");
+  });
 });

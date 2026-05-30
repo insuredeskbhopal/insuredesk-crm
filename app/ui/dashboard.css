@@ -1370,12 +1370,13 @@ th {
 }
 
 .records-table {
-  min-width: 2360px;
+  width: 100%;
+  min-width: 1080px;
   table-layout: fixed;
 }
 
 .records-table .col-customer {
-  width: 72px;
+  width: 104px;
 }
 
 .records-table .col-saved {
@@ -1383,24 +1384,25 @@ th {
 }
 
 .records-table .col-insured {
-  width: 240px;
+  width: 210px;
 }
 
 .records-table .col-contact,
 .records-table .col-contact-person,
 .records-table .col-policy,
+.records-table .col-bank,
 .records-table .col-type,
 .records-table .col-company,
 .records-table .col-uploader,
 .records-table .col-source {
-  width: 170px;
+  width: 150px;
 }
 
 .records-table .col-group,
 .records-table .col-location,
 .records-table .col-description,
 .records-table .col-occupancy {
-  width: 230px;
+  width: 180px;
 }
 
 .records-table .col-money {
@@ -1420,7 +1422,7 @@ th {
 }
 
 .records-table .col-pdf {
-  width: 64px;
+  width: 56px;
 }
 
 .records-table .col-action {
@@ -1475,12 +1477,12 @@ th {
 
 .records-table th:nth-child(2),
 .records-table td:nth-child(2) {
-  left: 72px;
+  left: 104px;
 }
 
 .records-table th:nth-child(3),
 .records-table td:nth-child(3) {
-  left: 222px;
+  left: 314px;
   box-shadow: 8px 0 14px rgba(25, 28, 29, 0.04);
 }
 
