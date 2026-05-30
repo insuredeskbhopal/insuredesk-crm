@@ -200,6 +200,88 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("locks the ICICI Lombard motor extraction contract for the private car format", async () => {
+    const sourceFile = "tests/fixtures/LEENA SAJWANI_MP04CR2712_2026-27 policy.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "ICICI_LOMBARD_MOTOR_V1",
+      insuredName: "LEENA SAJWANI",
+      policyNumber: "3001/393418852/01/000",
+      policyType: "Private Car Package Policy",
+      insuranceCompany: "ICICI Lombard General Insurance Company Limited",
+      contactNumber: "91******92",
+      customerMobile: "91******92",
+      customerEmail: "IN**************@GMAIL.COM",
+      vehicleNumber: "MP04CR2712",
+      registrationNumber: "MP04CR2712",
+      makeModel: "HYUNDAI CRETA 1.4 CRDI S",
+      vehicleMake: "HYUNDAI",
+      vehicleModel: "CRETA 1.4 CRDI S",
+      bodyType: "SUV",
+      manufacturingYear: "2016",
+      registrationDate: "19/09/2016",
+      engineNumber: "D4FCGM128109",
+      chassisNumber: "MALC281RLGM127005",
+      fuelType: "Diesel",
+      cubicCapacity: "1396",
+      seatingCapacity: "5",
+      idv: "400000.00",
+      sumInsured: "400000.00",
+      totalIdv: "400000.00",
+      premium: "6662.00",
+      totalPremium: "6662.00",
+      netPremium: "5646.00",
+      odPremium: "1305.00",
+      tpDriverOwner: "4341.00",
+      startDate: "26/05/2026 00:00",
+      expiryDate: "25/05/2027",
+      duration: "12 months",
+      policyCoverType: "Package",
+      rtoLocation: "BHOPAL",
+      rto: "BHOPAL",
+      ncb: "45%",
+      ncbPercentage: "45%",
+      basicOwnDamage: "2011.00",
+      roadSideAssistance: "199.00",
+      basicThirdPartyLiability: "3416.00",
+      legalLiabilityToPaidDriver: "50.00",
+      paCoverForOwnerDriver: "675.00",
+      unnamedPaCover: "200.00",
+      netOwnDamagePremium: "1305.00",
+      netLiabilityPremium: "4341.00",
+      totalPackagePremium: "5646.00",
+      cgst: "508.14",
+      sgst: "508.14",
+      gstAmount: "1016.00",
+      previousPolicyNumber: "3001/393418852/00/000",
+      previousPolicyValidity: "26-05-2025 to 25-05-2026",
+      previousInsurer: "ICICI LOMBARD",
+      previousYearNcb: "35%",
+      issuanceDate: "14/05/2026",
+      invoiceNumber: "1005261085360",
+      covernoteNumber: "393418852",
+      premiumCollectionNumber: "1265882514",
+      receiptDate: "14/05/2026",
+      cscName: "INSUREDESK",
+      cscCode: "IMF240706",
+      cscContactNumber: "8818889660",
+      servicingBranchName: "Bhopal",
+      servicingBranchAddress: "Maple High Street, 5Th Floor, Opposite Aashima Mall, Hoshangabad Road, Bhopal, Madhya Pradesh-462026",
+      geographicalArea: "India",
+      compulsoryDeductible: "1000.00",
+      voluntaryDeductible: "0.00",
+      gstin: "23AAACI7904G1ZV",
+      hsnSacCode: "997134 / GENERAL INSURANCE SERVICES",
+      applicableImtClauses: "16 , 28 , 22",
+      nomineeName: "",
+      financerName: "",
+      riskLocation: "",
+      validIn: ""
+    });
+  });
+
   it("derives missing New India premium values from available totals", () => {
     const text = `
       Private Car Package Policy

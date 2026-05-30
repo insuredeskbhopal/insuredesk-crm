@@ -51,18 +51,18 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(canAccessResource(session, "write", user2, orgB)).toBe(false);
     });
 
-    // 4. AGENT Role Tests (Ownership Boundaries)
-    it("allows AGENT to read and write their own created records in their organization", () => {
+    // 4. AGENT Role Tests (Office-wide reads, ownership-bound writes)
+    it("allows AGENT to read office records and write their own created records in their organization", () => {
       const session = { id: user1, role: UserRole.AGENT, organizationId: orgA };
 
       expect(canAccessResource(session, "read", user1, orgA)).toBe(true);
+      expect(canAccessResource(session, "read", user2, orgA)).toBe(true);
       expect(canAccessResource(session, "write", user1, orgA)).toBe(true);
     });
 
-    it("blocks AGENT from reading or writing other agents' records, even in the same organization", () => {
+    it("blocks AGENT from writing other agents' records, even in the same organization", () => {
       const session = { id: user1, role: UserRole.AGENT, organizationId: orgA };
 
-      expect(canAccessResource(session, "read", user2, orgA)).toBe(false);
       expect(canAccessResource(session, "write", user2, orgA)).toBe(false);
     });
 
@@ -103,16 +103,16 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(filter).toEqual({ organizationId: orgA, deletedAt: null });
     });
 
-    it("scopes queries to organizationId AND createdById for AGENT", () => {
+    it("scopes read queries to organizationId for AGENT so office CRM data is visible", () => {
       const session = { id: user1, role: UserRole.AGENT, organizationId: orgA };
       const filter = getTenantFilter(session, "read");
 
-      expect(filter).toEqual({ organizationId: orgA, deletedAt: null, createdById: user1 });
+      expect(filter).toEqual({ organizationId: orgA, deletedAt: null });
     });
 
-    it("uses userId from JWT payloads when generating AGENT ownership filters", () => {
+    it("uses userId from JWT payloads when generating AGENT write ownership filters", () => {
       const session = { userId: user1, role: UserRole.AGENT, organizationId: orgA };
-      const filter = getTenantFilter(session, "read");
+      const filter = getTenantFilter(session, "write");
 
       expect(filter).toEqual({ organizationId: orgA, deletedAt: null, createdById: user1 });
     });
