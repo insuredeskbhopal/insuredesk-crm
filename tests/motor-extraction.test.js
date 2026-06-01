@@ -204,6 +204,9 @@ describe("generic motor policy extraction", () => {
       fuelType: "Diesel",
       cubicCapacity: "2184",
       seatingCapacity: "7",
+      startDate: "21/05/2026",
+      expiryDate: "20/05/2027",
+      duration: "12 months",
       idv: "1723680.00",
       sumInsured: "1723680.00",
       premium: "33681.92",
@@ -796,6 +799,43 @@ describe("generic motor policy extraction", () => {
     expect(result.vehicleNumber).toBe("");
     expect(result.engineNumber).toBe("");
     expect(result.chassisNumber).toBe("");
+  });
+
+  it("extracts policy periods across common insurer wordings", () => {
+    const cases = [
+      {
+        text: "Private Car Policy\nPolicy No. ABC12345\nPeriod of cover 11/05/2026 to 10/05/2027",
+        startDate: "11/05/2026",
+        expiryDate: "10/05/2027"
+      },
+      {
+        text: "Private Car Policy\nPolicy No. ABC12345\nPeriod of Insurance From: 00:00 hours of 18/05/2026 To Midnight of 17/05/2027",
+        startDate: "18/05/2026",
+        expiryDate: "17/05/2027"
+      },
+      {
+        text: "Private Car Policy\nPolicy No. ABC12345\nFrom: 00:00 Hours of 26/05/2026 To: Midnight On 25/05/2027",
+        startDate: "26/05/2026",
+        expiryDate: "25/05/2027"
+      },
+      {
+        text: "Private Car Policy\nPolicy No. ABC12345\nPolicy effective from 0001 hrs 21/05/2026\nTo MidNight 20/05/2027",
+        startDate: "21/05/2026",
+        expiryDate: "20/05/2027"
+      },
+      {
+        text: "Private Car Policy\nPolicy No. ABC12345\nStart Date: 09/05/2026\nEnd Date: 08/05/2027",
+        startDate: "09/05/2026",
+        expiryDate: "08/05/2027"
+      }
+    ];
+
+    for (const item of cases) {
+      const result = extractPolicyFromText(item.text, "period-format.pdf");
+      expect(result.startDate).toBe(item.startDate);
+      expect(result.expiryDate).toBe(item.expiryDate);
+      expect(result.duration).toBe("12 months");
+    }
   });
 
   it("enriches RTO location and rto fields from the vehicle registration number", () => {
