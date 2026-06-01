@@ -245,7 +245,9 @@ describe("AI extraction review guardrails", () => {
   });
 
   it("clears unsupported extracted values when AI is unavailable", async () => {
+    const previousOpenAiKey = process.env.OPENAI_API_KEY;
     const previousKey = process.env.GROQ_API_KEY;
+    delete process.env.OPENAI_API_KEY;
     delete process.env.GROQ_API_KEY;
 
     let review;
@@ -259,6 +261,7 @@ describe("AI extraction review guardrails", () => {
         }
       });
     } finally {
+      if (previousOpenAiKey) process.env.OPENAI_API_KEY = previousOpenAiKey;
       if (previousKey) process.env.GROQ_API_KEY = previousKey;
     }
 
