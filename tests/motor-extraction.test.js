@@ -725,4 +725,56 @@ describe("generic motor policy extraction", () => {
     expect(resultDelhi.rtoLocation).toBe("DDA MARKET, SHEIKH SARAI");
     expect(resultDelhi.rto).toBe("DDA MARKET, SHEIKH SARAI");
   });
+
+  it("locks the TATA AIG motor extraction contract for the Chanchal Anand Soni format", async () => {
+    const sourceFile = "tests/fixtures/MRS CHANCHAL ANAND SONI_MP04ZH3416_2026-27.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "TATA_AIG_MOTOR_V1",
+      insuranceCompany: "TATA AIG",
+      policyNumber: "6206191778 00 00",
+      insuredName: "MRS CHANCHAL ANAND SONI",
+      vehicleNumber: "MP 04 ZH 3415",
+      registrationNumber: "MP 04 ZH 3415",
+      engineNumber: "K15CN9223488",
+      chassisNumber: "MA3CNC62SPD328639",
+      premium: "21466.00",
+      totalPremium: "21466.00",
+      netPremium: "18075.00",
+      odPremium: "6084.56",
+      tpDriverOwner: "4051.00",
+      gstAmount: "3253.56"
+    });
+  });
+
+  it("locks the Bajaj Allianz motor extraction contract for the Sorin Patel format", async () => {
+    const sourceFile = "tests/fixtures/Mr sorin patel ji Policy_MP04ED7840_2026-27.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "BAJAJ_ALLIANZ_MOTOR_V1",
+      insuranceCompany: "Bajaj Allianz General Insurance Company Limited",
+      policyNumber: "OG-27-2301-1801-00000166",
+      insuredName: "SORIN PATEL",
+      vehicleNumber: "MP04ED7840",
+      registrationNumber: "MP04ED7840",
+      engineNumber: "K15BN1314344",
+      chassisNumber: "MA3NYFJ1SNE955105",
+      premium: "12,984.00",
+      totalPremium: "12,984.00",
+      netPremium: "11,004.00",
+      odPremium: "7,207.00",
+      tpDriverOwner: "3,797.00",
+      gstAmount: "1980.00",
+      cubicCapacity: "1462",
+      fuelType: "PETROL",
+      seatingCapacity: "5",
+      manufacturingYear: "2022",
+      startDate: "29/05/2026",
+      expiryDate: "28/05/2027"
+    });
+  });
 });
