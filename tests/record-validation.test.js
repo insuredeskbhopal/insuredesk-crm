@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sanitizeRecordPayload, validateContactNumber, validateContactPerson } from "../lib/record-validation";
-import { getReviewValidation } from "../app/lib/dashboard-helpers";
+import { getReviewFieldValue, getReviewValidation, shouldUseExtractedFuelType } from "../app/lib/dashboard-helpers";
 
 describe("sanitizeRecordPayload", () => {
   it("normalizes whitespace and drops unsupported raw extraction fields", () => {
@@ -98,5 +98,25 @@ describe("sanitizeRecordPayload", () => {
       "Contact Person cannot contain numbers.",
       "Contact Number must be exactly 10 digits."
     ]);
+  });
+
+  it("keeps verified New India and IFFCO motor fuel types from extraction", () => {
+    const newIndiaData = {
+      documentFormat: "NEW_INDIA_MOTOR_V1",
+      insuranceCompany: "The New India Assurance Company Limited",
+      policyType: "Private Car Package Policy",
+      fuelType: "Diesel"
+    };
+    const iffcoData = {
+      documentFormat: "IFFCO_TOKIO_MOTOR_V1",
+      insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
+      policyType: "TWO WHEELER POLICY",
+      fuelType: "Petrol"
+    };
+
+    expect(shouldUseExtractedFuelType(newIndiaData)).toBe(true);
+    expect(shouldUseExtractedFuelType(iffcoData)).toBe(true);
+    expect(getReviewFieldValue({ extractedData: newIndiaData, manualFields: [] }, "fuelType")).toBe("Diesel");
+    expect(getReviewFieldValue({ extractedData: iffcoData, manualFields: [] }, "fuelType")).toBe("Petrol");
   });
 });

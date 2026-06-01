@@ -123,8 +123,42 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("recognizes abbreviated IFFCO Tokio company names without scrambling fields", () => {
+    const text = `
+      IFFCO TOKIO GEN INSU. CO. LTD.
+      Policy Schedule
+      TWO WHEELER POLICY
+      Policy # : N7470840
+      Name of the Insured YASH DUBEY
+      Insured Motor Vehicle Details & Premium Calculation
+      Registration Mark & No.
+      Engine No.
+      Seating Capacity
+      MP04QD13572016
+      Make of Vehicle
+      220Package24300.00
+      Chassis No.
+      2
+      BAJAJ PULSAR 220 DTS-Fi
+      DKZCGA00240
+      MD2A13EZ3GCA30996
+      Fuel Type Petrol
+      Net Premium 1,752.00
+    `;
+
+    const result = extractPolicyFromText(text, "YASH DUBEY_MP04QD1357_2026-27 POLICY.pdf");
+
+    expect(result.documentFormat).toBe("IFFCO_TOKIO_MOTOR_V1");
+    expect(result.insuranceCompany).toBe("IFFCO-TOKIO GENERAL INSURANCE CO.LTD");
+    expect(result.registrationNumber).toBe("MP04QD1357");
+    expect(result.engineNumber).toBe("DKZCGA00240");
+    expect(result.chassisNumber).toBe("MD2A13EZ3GCA30996");
+    expect(result.fuelType).toBe("Petrol");
+    expect(result.makeModel).toBe("BAJAJ PULSAR 220 DTS-Fi");
+  });
+
   it("locks the New India motor extraction contract for future policy additions", async () => {
-    const sourceFile = "tests/fixtures/VIJAY KUMAR KATRE_MP04ED8912_2026-27 POLICY.pdf";
+    const sourceFile = "tests/fixtures/THE NEW INDIA.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
 
@@ -202,7 +236,7 @@ describe("generic motor policy extraction", () => {
 
   
   it("locks the ICICI Lombard motor extraction contract for the private car format", async () => {
-    const sourceFile = "tests/fixtures/LEENA SAJWANI_MP04CR2712_2026-27 policy.pdf";
+    const sourceFile = "tests/fixtures/ICICI LOMBARD.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
 
@@ -239,7 +273,7 @@ describe("generic motor policy extraction", () => {
       startDate: "26/05/2026 00:00",
       expiryDate: "25/05/2027",
       duration: "12 months",
-      policyCoverType: "Package",
+      policyCoverType: "Comprehensive",
       rtoLocation: "BHOPAL",
       rto: "BHOPAL",
       ncb: "45%",
@@ -523,7 +557,7 @@ describe("generic motor policy extraction", () => {
   });
 
   it("locks the TATA AIG motor extraction contract for the Auto Secure format", async () => {
-    const sourceFile = "tests/fixtures/SMITA PANDEY_MP04CX1283_2026-27 POLICY.pdf";
+    const sourceFile = "tests/fixtures/TATA AIG.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
 
@@ -531,41 +565,41 @@ describe("generic motor policy extraction", () => {
       documentFormat: "TATA_AIG_MOTOR_V1",
       insuranceCompany: "TATA AIG",
       policyType: "Auto Secure - Private Car Package Policy",
-      policyCoverType: "Package",
-      insuredName: "SMITA PANDEY",
-      contactPerson: "SMITA PANDEY",
-      contactNumber: "+9196**40**88",
-      policyNumber: "6202897883 02 00",
-      customerId: "6165380790",
+      policyCoverType: "Comprehensive",
+      insuredName: "MRS CHANCHAL ANAND SONI",
+      contactPerson: "MRS CHANCHAL ANAND SONI",
+      contactNumber: "+9188**88**60",
+      policyNumber: "6206191778 00 00",
+      customerId: "6204718724",
       gstin: "NA",
-      vehicleNumber: "MP 04 CX 1283",
-      registrationNumber: "MP 04 CX 1283",
-      makeModel: "MARUTI ALTO",
-      variant: "VXI",
-      fuelType: "PETROL",
-      engineNumber: "F8DN6202347",
-      chassisNumber: "MA3EUA61S00E48033",
-      bodyType: "HATCH BACK",
-      cubicCapacity: "796",
-      manufacturingYear: "2019",
-      registrationDate: "18/06/2019",
-      seatingCapacity: "5",
+      vehicleNumber: "MP04ZH3415",
+      registrationNumber: "MP04ZH3415",
+      makeModel: "MARUTI XL6",
+      variant: "ZETA M",
+      fuelType: "CNG",
+      engineNumber: "K15CN9223488",
+      chassisNumber: "MA3CNC62SPD328639",
+      bodyType: "SUV",
+      cubicCapacity: "1462",
+      manufacturingYear: "2023",
+      registrationDate: "26/04/2023",
+      seatingCapacity: "6",
       rtoLocation: "BHOPAL",
       geographicalArea: "India",
-      idv: "173731.00",
-      sumInsured: "173731.00",
-      premium: "6421.00",
-      totalPremium: "6421.00",
-      netPremium: "5441.00",
-      odPremium: "1219.63",
-      tpDriverOwner: "2519.00",
-      ncb: "45%",
+      idv: "907994.00",
+      sumInsured: "907994.00",
+      premium: "21466.00",
+      totalPremium: "21466.00",
+      netPremium: "18075.00",
+      odPremium: "6084.56",
+      tpDriverOwner: "4051.00",
+      ncb: "20%",
       modeOfPayment: "paymentLinkCustomer",
-      receiptNumber: "PD300022255333",
-      receiptDate: "27/05/2026",
-      payerName: "SMITA PANDEY",
-      nomineeName: "LEGAL HEIR",
-      nomineeAge: "34",
+      receiptNumber: "PD300021604783",
+      receiptDate: "21/04/2026",
+      payerName: "CHANCHAL ANAND SONI",
+      nomineeName: "anand soni",
+      nomineeAge: "38",
       nomineeRelationship: "Spouse"
     });
   });
@@ -652,6 +686,7 @@ describe("generic motor policy extraction", () => {
     expect(result.chassisNumber).toBe("MA1NA2XJXN6B94278");
     expect(result.engineNumber).toBe("XJN6B20464");
     expect(result.seatingCapacity).toBe("7");
+    expect(result.fuelType).toBe("Diesel");
     expect(result.makeModel).toBe("MAHINDRA/BOLERO NEO");
     expect(result.variant).toBe("N8");
     expect(result.cubicCapacity).toBe("1493");

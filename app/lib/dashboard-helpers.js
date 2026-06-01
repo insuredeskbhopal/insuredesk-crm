@@ -338,7 +338,20 @@ export function shouldUseExtractedVariant(data = {}, upload = {}) {
 }
 
 export function shouldUseExtractedFuelType(data = {}) {
-  return hasValue(data?.fuelType) && /\bTATA\s*AIG\b/i.test([data?.insuranceCompany, data?.companyName].filter(Boolean).join(" "));
+  if (!hasValue(data?.fuelType) || !isRecognizedFuelType(data.fuelType)) return false;
+
+  const documentFormat = String(data?.documentFormat || data?.policyUnderstanding?.documentFormat || "");
+  if (/_MOTOR_V\d+$/i.test(documentFormat)) return true;
+
+  const haystack = [
+    data?.insuranceCompany,
+    data?.companyName,
+    data?.policyType,
+    data?.sourceFile
+  ].filter(Boolean).join(" ");
+
+  return /\b(?:TATA\s*AIG|New\s+India|IFFCO[-\s]?TOKIO|HDFC\s+ERGO|ICICI\s+Lombard|Bajaj\s+Allianz|Go\s+Digit|Generali|Royal\s+Sundaram)\b/i.test(haystack) &&
+    /\b(?:motor|vehicle|private\s+car|two\s+wheeler|package|registration|chassis|engine)\b/i.test(haystack);
 }
 
 export function getReviewFieldValue(upload, key) {
@@ -355,6 +368,10 @@ function addFields(fields, keys) {
 
 function addUnique(values, extras) {
   return Array.from(new Set([...(values || []), ...extras]));
+}
+
+function isRecognizedFuelType(value = "") {
+  return /^(petrol|diesel|cng|lpg|electric|ev|hybrid)$/i.test(String(value || "").trim());
 }
 
 export function inferUploadSchema(upload) {
