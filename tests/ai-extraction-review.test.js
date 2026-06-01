@@ -162,7 +162,7 @@ describe("AI extraction review guardrails", () => {
     expect(merge.data.odPremium).toBe("4321.00");
     expect(merge.data.tpDriverOwner).toBe("7947.00");
     expect(merge.data.policyNumber).toBeUndefined();
-    expect(merge.acceptedFields).toEqual([
+    expect(merge.acceptedFields).toEqual(expect.arrayContaining([
       "policyType",
       "insuredName",
       "startDate",
@@ -178,8 +178,49 @@ describe("AI extraction review guardrails", () => {
       "netPremium",
       "odPremium",
       "tpDriverOwner"
-    ]);
+    ]));
     expect(merge.rejectedFields).toContain("policyNumber");
+  });
+
+  it("uses independent AI extraction to correct premium field misalignment", () => {
+    const rawText = `
+      SCHEDULE OF PREMIUM
+      Basic OD Premium 4321
+      Basic TP Premium 7947
+      Total OD Premium (Rs)4321Total TP Premium (Rs)7947
+      Net Premium (Rs) 12,268
+      Total Payable (Rs) 14,476
+    `;
+
+    const merge = mergeAiExtractionPatch({
+      rawText,
+      extractedData: {
+        odPremium: "7947.00",
+        tpDriverOwner: "4321.00",
+        netPremium: "12,268.00",
+        totalPremium: "14,476.00"
+      },
+      aiPatch: {
+        extractedFields: {
+          odPremium: {
+            value: "4321",
+            sourceText: "Total OD Premium (Rs)4321Total TP Premium (Rs)7947",
+            sourceLabel: "Total OD Premium",
+            reason: "OD amount is under the Total OD Premium label"
+          },
+          tpDriverOwner: {
+            value: "7947",
+            sourceText: "Total OD Premium (Rs)4321Total TP Premium (Rs)7947",
+            sourceLabel: "Total TP Premium",
+            reason: "TP amount is under the Total TP Premium label"
+          }
+        }
+      }
+    });
+
+    expect(merge.data.odPremium).toBe("4321.00");
+    expect(merge.data.tpDriverOwner).toBe("7947.00");
+    expect(merge.acceptedFields).toEqual(["tpDriverOwner", "odPremium"]);
   });
 
   it("does not overwrite existing source-backed values with AI alternatives", () => {

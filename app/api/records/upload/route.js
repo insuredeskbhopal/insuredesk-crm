@@ -3,7 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/record-validation";
 import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploadList } from "@/lib/upload-validation";
-import { extractPolicyFromPdf } from "@/lib/pdf-extractor.cjs";
+import { extractTextFromPdf } from "@/lib/pdf-text";
+import { extractPolicyFromText } from "@/lib/pdf-extractor.cjs";
+import { reviewPolicyExtractionWithAi } from "@/lib/ai-extraction-review";
 import { verifyJWT } from "@/lib/auth";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/upload-failure";
@@ -36,8 +38,19 @@ export async function POST(request) {
       try {
         buffer = await validatePdfFile(file);
 
-        const extracted = await extractPolicyFromPdf(buffer, file.name);
-        const data = sanitizeRecordPayload(extracted);
+        const textResult = await extractTextFromPdf(buffer);
+        const rawText = textResult.rawText;
+        if (!rawText) {
+          throw new Error(textResult.ocrAttempted ? "No text could be extracted." : "PDF text extraction returned no content.");
+        }
+
+        const ruleBasedData = extractPolicyFromText(rawText, file.name);
+        const aiReviewedExtraction = await reviewPolicyExtractionWithAi({
+          rawText,
+          extractedData: ruleBasedData,
+          sourceFile: file.name || ""
+        });
+        const data = sanitizeRecordPayload(aiReviewedExtraction.data);
         const validation = getReviewValidation({
           sourceFile: file.name || data.sourceFile,
           extractedData: data
