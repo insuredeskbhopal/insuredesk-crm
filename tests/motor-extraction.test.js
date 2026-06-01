@@ -777,4 +777,33 @@ describe("generic motor policy extraction", () => {
       expiryDate: "28/05/2027"
     });
   });
+  
+  it("locks the Go Digit motor extraction contract for the Rupal Mishra format", async () => {
+    const sourceFile = "tests/fixtures/RUPAL MISHRA_MP13ZK7907_2026-27 POLICY.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "GO_DIGIT_MOTOR_V1",
+      insuranceCompany: "Go Digit General Insurance Ltd.",
+      policyNumber: "IA253693640",
+      insuredName: "RUPAL MISHRA",
+      vehicleNumber: "MP13ZK7907",
+      registrationNumber: "MP13ZK7907",
+      engineNumber: "REVTRN20CVXM49003",
+      chassisNumber: "MAT632252RPC55194",
+      premium: "13099.83",
+      totalPremium: "13099.83",
+      netPremium: "11101.55",
+      odPremium: "11101.55",
+      tpDriverOwner: "0.00",
+      gstAmount: "1998.28",
+      cubicCapacity: "1199",
+      fuelType: "PETROL",
+      seatingCapacity: "5",
+      manufacturingYear: "2024",
+      startDate: "30/05/2026",
+      expiryDate: "29/05/2027"
+    });
+  });
 });

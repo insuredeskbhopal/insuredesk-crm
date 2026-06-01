@@ -18,4 +18,9 @@ describe("upload validation", () => {
   it("rejects non-PDF signatures", async () => {
     await expect(validatePdfFile(makeFile({ content: "not a pdf" }))).rejects.toThrow(UploadValidationError);
   });
+
+  it("accepts PDF signatures with leading spaces", async () => {
+    const buffer = await validatePdfFile(makeFile({ content: "   \n%PDF-1.7\n" }));
+    expect(buffer.subarray(0, 5).toString("utf8")).toBe("%PDF-");
+  });
 });
