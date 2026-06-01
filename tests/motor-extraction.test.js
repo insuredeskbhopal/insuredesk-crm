@@ -537,6 +537,23 @@ describe("generic motor policy extraction", () => {
     expect(result.insuranceCompany).toBe("TATA AIG");
   });
 
+  it("builds Tata AIG duration from normalized policy dates", () => {
+    const text = `
+      TATA AIG General Insurance Company Limited
+      Auto Secure - Private Car Package Policy
+      Policy No. 6202897883 02 00
+      Own Damage Cover 09/05/2026 to 08/05/2027
+      Registration No. MP 04 CX 1283
+      Name of the Insured SMITA PANDEY
+    `;
+
+    const result = extractPolicyFromText(text, "tata-aig-auto-secure.pdf");
+
+    expect(result.startDate).toBe("2026-05-09");
+    expect(result.expiryDate).toBe("2027-05-08");
+    expect(result.duration).toBe("12 months");
+  });
+
   it("extracts Royal Sundaram goods carrying liability policy headers and vehicle details", () => {
     const text = `
       Royal Sundaram General Insurance Co. Limited
