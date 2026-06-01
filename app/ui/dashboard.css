@@ -3685,6 +3685,31 @@ label span em.meta-manual {
   border: 1px solid rgba(33, 150, 243, 0.16);
 }
 
+label.has-error input,
+label.has-error select,
+label.has-error textarea {
+  border-color: rgba(211, 47, 47, 0.72);
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.08);
+}
+
+label.is-disabled input,
+label.is-disabled select,
+label.is-disabled textarea {
+  cursor: not-allowed;
+  background: #eef1f4;
+  color: var(--on-surface-variant);
+}
+
+.field-error-message {
+  display: block;
+  margin-top: 2px;
+  color: #c62828;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  line-height: 1.3;
+  text-transform: none;
+}
+
 .manual-entry-container {
   display: flex;
   flex-direction: column;

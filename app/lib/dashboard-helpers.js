@@ -1,6 +1,7 @@
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
+import { validateContactPerson, validateContactNumber } from "@/lib/record-validation";
 
-export const MANUAL_REQUIRED_FIELDS = ["contactNumber", "contactPerson"];
+export const MANUAL_REQUIRED_FIELDS = ["contactPerson", "contactNumber"];
 export const MOTOR_MANUAL_REQUIRED_FIELDS = [];
 export const COMMON_REVIEW_FIELDS = ["whatsappGroupName"];
 
@@ -43,7 +44,7 @@ export const FIELD_GROUPS = [
   {
     title: "Contact & Parties",
     fields: [
-      "contactNumber", "contactPerson", "whatsappGroupName"
+      "contactPerson", "contactNumber", "whatsappGroupName"
     ]
   },
   {
@@ -65,8 +66,8 @@ export const FIELD_SETUP = [
   ["Source File", "sourceFile"],
   ["Insured Name", "insuredName"],
   ["Policy Number", "policyNumber"],
-  ["Contact Number", "contactNumber"],
   ["Contact Person", "contactPerson"],
+  ["Contact Number", "contactNumber"],
   ["WhatsApp Group Name", "whatsappGroupName"],
   ["Group Name", "groupName"],
   ["Policy Type", "policyType"],
@@ -133,8 +134,8 @@ const MOTOR_COMMON_FIELDS = [
   "duration",
   "ncb",
   "rtoLocation",
-  "contactNumber",
   "contactPerson",
+  "contactNumber",
   "totalPremium",
   "netPremium",
   "tpDriverOwner",
@@ -177,7 +178,7 @@ export const POLICY_SCHEMA_LIBRARY = [
     label: "Life Policy",
     description: "Term, endowment, and savings-linked life policies.",
     policies: [
-      { id: "life-term", name: "Term Life", fields: ["insuredName", "policyNumber", "contactNumber", "contactPerson", "policyType", "premium", "startDate", "expiryDate", "duration", "insuranceCompany", "description"] },
+      { id: "life-term", name: "Term Life", fields: ["insuredName", "policyNumber", "contactPerson", "contactNumber", "policyType", "premium", "startDate", "expiryDate", "duration", "insuranceCompany", "description"] },
       { id: "life-endowment", name: "Endowment", fields: ["insuredName", "policyNumber", "contactNumber", "groupName", "policyType", "premium", "startDate", "expiryDate", "duration", "insuranceCompany", "validIn"] }
     ]
   },
@@ -186,7 +187,7 @@ export const POLICY_SCHEMA_LIBRARY = [
     label: "Health Policy",
     description: "Individual, family, and group mediclaim.",
     policies: [
-      { id: "health-individual", name: "Individual Health", fields: ["insuredName", "policyNumber", "contactNumber", "contactPerson", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "duration", "insuranceCompany"] },
+      { id: "health-individual", name: "Individual Health", fields: ["insuredName", "policyNumber", "contactPerson", "contactNumber", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "duration", "insuranceCompany"] },
       { id: "health-family", name: "Family Floater", fields: ["insuredName", "policyNumber", "contactNumber", "groupName", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "duration", "insuranceCompany", "description"] }
     ]
   },
@@ -204,7 +205,7 @@ export const POLICY_SCHEMA_LIBRARY = [
     label: "Cyber Policy",
     description: "Cyber liability and breach response cover.",
     policies: [
-      { id: "cyber-sme", name: "Cyber SME", fields: ["insuredName", "policyNumber", "contactNumber", "contactPerson", "policyType", "premium", "startDate", "expiryDate", "duration", "insuranceCompany", "description", "validIn"] },
+      { id: "cyber-sme", name: "Cyber SME", fields: ["insuredName", "policyNumber", "contactPerson", "contactNumber", "policyType", "premium", "startDate", "expiryDate", "duration", "insuranceCompany", "description", "validIn"] },
       { id: "cyber-enterprise", name: "Cyber Enterprise", fields: ["insuredName", "policyNumber", "groupName", "policyType", "premium", "startDate", "expiryDate", "duration", "riskLocation", "insuranceCompany", "description"] }
     ]
   },
@@ -259,16 +260,28 @@ export function getReviewValidation(upload, options = {}) {
   const requiredKeys = addUnique(resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : ["insuredName", "policyNumber"], manualRequiredFields);
   const missingRequired = getMissingRequiredFields(upload, visibleFields, requiredKeys);
 
+  const contactPersonVal = getReviewFieldValue(upload, "contactPerson");
+  const contactNumberVal = getReviewFieldValue(upload, "contactNumber");
+  const contactPersonErr = validateContactPerson(contactPersonVal);
+  const contactNumberErr = validateContactNumber(contactNumberVal);
+  const contactErrors = [contactPersonErr, contactNumberErr].filter(Boolean);
+
   return {
     resolvedSchema,
     visibleFields,
     requiredKeys,
     missingRequired,
-    valid: missingRequired.length === 0
+    contactErrors,
+    contactFieldErrors: {
+      contactPerson: contactPersonErr,
+      contactNumber: contactNumberErr
+    },
+    valid: missingRequired.length === 0 && contactErrors.length === 0
   };
 }
 
-export function formatReviewValidationError(missingRequired) {
+export function formatReviewValidationError(missingRequired, contactErrors = []) {
+  if (contactErrors.length) return contactErrors.join(" ");
   return `Fill required field${missingRequired.length === 1 ? "" : "s"} before saving: ${missingRequired.join(", ")}.`;
 }
 

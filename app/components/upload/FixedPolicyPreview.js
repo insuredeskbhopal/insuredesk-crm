@@ -1,6 +1,7 @@
 import { CheckCircle, LoaderCircle, ShieldCheck, Trash2 } from "lucide-react";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 import PreviewField from "../shared/PreviewField";
+import { validateContactPerson, validateContactNumber } from "@/lib/record-validation";
 import EmptyState from "../shared/EmptyState";
 import InsurerLogo from "@/app/components/brand/InsurerLogo";
 import {
@@ -22,7 +23,8 @@ const FIELD_OPTIONS = {
 };
 
 export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, onClear, onSave }) {
-  const { resolvedSchema, visibleFields, requiredKeys, missingRequired } = getReviewValidation(upload);
+  const validation = getReviewValidation(upload);
+  const { resolvedSchema, visibleFields, requiredKeys, missingRequired } = validation;
   const isMotorPreview = resolvedSchema?.groupId === "motor";
   const manualFields = upload?.manualFields || [];
   const getPreviewValue = (key) => {
@@ -92,19 +94,35 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
                 <fieldset key={group.title} className="preview-fieldset">
                   <legend className="preview-legend">{group.title}</legend>
                   <div className="preview-form">
-                    {group.fields.map(([label, key]) => (
-                      <PreviewField
-                         key={key}
-                         label={label}
-                         meta={
-                           getFieldMeta(key)
-                         }
-                         value={getPreviewValue(key)}
-                         onChange={(value) => onFieldChange(key, value)}
-                         options={FIELD_OPTIONS[key]}
-                         wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
-                      />
-                    ))}
+                    {group.fields.map(([label, key]) => {
+                      const isContactNumber = key === "contactNumber";
+                      const isContactPerson = key === "contactPerson";
+                      
+                      let fieldError = "";
+                      let isDisabled = false;
+
+                      if (isContactPerson) {
+                        fieldError = validateContactPerson(getPreviewValue(key));
+                      } else if (isContactNumber) {
+                        fieldError = validateContactNumber(getPreviewValue(key));
+                        const personVal = getPreviewValue("contactPerson");
+                        isDisabled = !personVal || !!validateContactPerson(personVal);
+                      }
+
+                      return (
+                        <PreviewField
+                           key={key}
+                           label={label}
+                           meta={getFieldMeta(key)}
+                           value={getPreviewValue(key)}
+                           onChange={(value) => onFieldChange(key, value)}
+                           options={FIELD_OPTIONS[key]}
+                           wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
+                           error={fieldError}
+                           disabled={isDisabled}
+                        />
+                      );
+                    })}
                   </div>
                 </fieldset>
               ))}
@@ -113,7 +131,7 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
 
           <div className="preview-actions">
             <button type="button" onClick={onClear}><Trash2 size={18} /> Clear</button>
-            <button className="secondary-action" type="button" onClick={onSave} disabled={isSaving || uploadStatus === UPLOAD_STATUS.APPROVED || Boolean(missingRequired.length)}>
+            <button className="secondary-action" type="button" onClick={onSave} disabled={isSaving || uploadStatus === UPLOAD_STATUS.APPROVED || !validation.valid}>
               {isSaving ? <LoaderCircle size={18} className="spin" /> : <CheckCircle size={18} />}
               Verify & Save
             </button>

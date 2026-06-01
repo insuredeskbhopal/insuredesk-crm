@@ -4,6 +4,7 @@ import { useDeferredValue, useEffect, useMemo, useState, useTransition } from "r
 import { useRouter, useSearchParams } from "next/navigation";
 import "./dashboard.css";
 import { getRecordSearchText } from "@/lib/search";
+import { validateContactNumber, validateContactPerson } from "@/lib/record-validation";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 import { buildAnalytics, formatMoney, parseMoney } from "@/lib/analytics";
 import PageHeader from "@/app/components/layout/PageHeader";
@@ -520,6 +521,12 @@ export default function Dashboard({
     startSaving(async () => {
       try {
         setAlert(null);
+        if (!editValidation.valid) {
+          const message = formatReviewValidationError(editValidation.missingRequired, editValidation.contactErrors);
+          setAlert({ type: "error", title: "Review incomplete", message });
+          setToast("Fix contact details before saving");
+          return;
+        }
         const reviewedData = editValidation.visibleFields.reduce((payload, [, key]) => ({
           ...payload,
           [key]: editForm[key] ?? ""
@@ -584,23 +591,23 @@ export default function Dashboard({
             setAlert({ type: "info", title: "Already saved", message: `${selectedUpload.sourceFile} is already saved.` });
             return;
           }
-          const { missingRequired } = getReviewValidation(selectedUpload);
-          if (missingRequired.length) {
-            const message = formatReviewValidationError(missingRequired);
+          const validation = getReviewValidation(selectedUpload);
+          if (!validation.valid) {
+            const message = formatReviewValidationError(validation.missingRequired, validation.contactErrors);
             setAlert({ type: "error", title: "Review incomplete", message });
-            setToast("Fill required fields before saving");
+            setToast("Fix contact details before saving");
             return;
           }
         } else if (activePage === "manual-entry") {
           const resolvedSchema = resolvePolicySchema(manualGroup?.id, manualPolicy?.id);
-          const { missingRequired } = getReviewValidation(
+          const validation = getReviewValidation(
             { sourceFile: form.sourceFile, extractedData: form },
             { resolvedSchema }
           );
-          if (missingRequired.length) {
-            const message = formatReviewValidationError(missingRequired);
+          if (!validation.valid) {
+            const message = formatReviewValidationError(validation.missingRequired, validation.contactErrors);
             setAlert({ type: "error", title: "Review incomplete", message });
-            setToast("Fill required fields before saving");
+            setToast("Fix contact details before saving");
             return;
           }
         }
@@ -999,16 +1006,27 @@ export default function Dashboard({
                       <fieldset key={group.title} className="preview-fieldset">
                         <legend className="preview-legend">{group.title}</legend>
                         <div className="preview-form">
-                          {group.fields.map(([label, key]) => (
-                            <PreviewField
-                              key={key}
-                              label={label}
-                              value={editForm[key] || ""}
-                              onChange={(value) => updateEditField(key, value)}
-                              options={FIELD_OPTIONS[key]}
-                              wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
-                            />
-                          ))}
+                          {group.fields.map(([label, key]) => {
+                            const contactPersonError = validateContactPerson(editForm.contactPerson);
+                            const isContactNumber = key === "contactNumber";
+                            const error = key === "contactPerson"
+                              ? contactPersonError
+                              : isContactNumber
+                                ? validateContactNumber(editForm.contactNumber)
+                                : "";
+                            return (
+                              <PreviewField
+                                key={key}
+                                label={label}
+                                value={editForm[key] || ""}
+                                onChange={(value) => updateEditField(key, value)}
+                                options={FIELD_OPTIONS[key]}
+                                wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
+                                error={error}
+                                disabled={isContactNumber && Boolean(contactPersonError)}
+                              />
+                            );
+                          })}
                         </div>
                       </fieldset>
                     ))}
@@ -1057,16 +1075,27 @@ export default function Dashboard({
                   <fieldset key={group.title} className="preview-fieldset">
                     <legend className="preview-legend">{group.title}</legend>
                     <div className="preview-form">
-                      {group.fields.map(([label, key]) => (
-                        <PreviewField
-                          key={key}
-                          label={label}
-                          value={form[key] || ""}
-                          onChange={(value) => updateField(key, value)}
-                          options={FIELD_OPTIONS[key]}
-                          wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
-                        />
-                      ))}
+                      {group.fields.map(([label, key]) => {
+                        const contactPersonError = validateContactPerson(form.contactPerson);
+                        const isContactNumber = key === "contactNumber";
+                        const error = key === "contactPerson"
+                          ? contactPersonError
+                          : isContactNumber
+                            ? validateContactNumber(form.contactNumber)
+                            : "";
+                        return (
+                          <PreviewField
+                            key={key}
+                            label={label}
+                            value={form[key] || ""}
+                            onChange={(value) => updateField(key, value)}
+                            options={FIELD_OPTIONS[key]}
+                            wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
+                            error={error}
+                            disabled={isContactNumber && Boolean(contactPersonError)}
+                          />
+                        );
+                      })}
                     </div>
                   </fieldset>
                 ))}

@@ -4,6 +4,7 @@ import { sanitizeRecordPayload } from "@/lib/record-validation";
 import { verifyJWT } from "@/lib/auth";
 import { canAccessResource, getTenantFilter, UserRole } from "@/lib/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 
 export const runtime = "nodejs";
 
@@ -67,6 +68,21 @@ export async function PUT(request, { params }) {
           sourceFile
         })
       : existing.extractedData;
+    const validation = getReviewValidation({
+      sourceFile,
+      extractedData: mergedData
+    });
+
+    if (validation.contactErrors.length) {
+      return Response.json({ error: validation.contactErrors.join(" ") }, { status: 400 });
+    }
+
+    if (!validation.valid) {
+      return Response.json({
+        error: formatReviewValidationError(validation.missingRequired, validation.contactErrors),
+        missingRequired: validation.missingRequired
+      }, { status: 422 });
+    }
 
     const record = await prisma.policyRecord.update({
       where: { id },

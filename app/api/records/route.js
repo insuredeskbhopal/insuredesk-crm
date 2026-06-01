@@ -101,9 +101,13 @@ export async function POST(request) {
       extractedData: data
     });
 
+    if (validation.contactErrors.length) {
+      return Response.json({ error: validation.contactErrors.join(" ") }, { status: 400 });
+    }
+
     if (!validation.valid) {
       return Response.json({
-        error: formatReviewValidationError(validation.missingRequired),
+        error: formatReviewValidationError(validation.missingRequired, validation.contactErrors),
         missingRequired: validation.missingRequired,
         schema: validation.resolvedSchema
           ? {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sanitizeRecordPayload } from "../lib/record-validation";
+import { sanitizeRecordPayload, validateContactNumber, validateContactPerson } from "../lib/record-validation";
 import { getReviewValidation } from "../app/lib/dashboard-helpers";
 
 describe("sanitizeRecordPayload", () => {
@@ -49,5 +49,54 @@ describe("sanitizeRecordPayload", () => {
     expect(validation.requiredKeys).not.toContain("fuelType");
     expect(validation.missingRequired).not.toContain("Fuel Type");
     expect(validation.valid).toBe(true);
+  });
+
+  it("validates contact person as required and name-only", () => {
+    expect(validateContactPerson("")).toBe("Contact Person is required.");
+    expect(validateContactPerson("Asha Sharma")).toBe("");
+    expect(validateContactPerson("A. Sharma")).toBe("");
+    expect(validateContactPerson("Asha 123")).toBe("Contact Person cannot contain numbers.");
+    expect(validateContactPerson("Asha-Sharma")).toBe("Contact Person cannot contain numbers.");
+  });
+
+  it("validates contact number as exactly 10 digits", () => {
+    expect(validateContactNumber("")).toBe("Contact Number is required.");
+    expect(validateContactNumber("9876543210")).toBe("");
+    expect(validateContactNumber("98765 43210")).toBe("Contact Number must be exactly 10 digits.");
+    expect(validateContactNumber("987654321")).toBe("Contact Number must be exactly 10 digits.");
+    expect(validateContactNumber("987654321A")).toBe("Contact Number must be exactly 10 digits.");
+  });
+
+  it("includes contact format errors in review validation", () => {
+    const validation = getReviewValidation({
+      sourceFile: "manual-entry",
+      extractedData: {
+        insuredName: "Example Client",
+        policyNumber: "POL-001",
+        insuranceCompany: "Example Insurer",
+        premium: "1000",
+        startDate: "01/01/2026",
+        expiryDate: "01/01/2027",
+        contactPerson: "Example 42",
+        contactNumber: "98765 43210"
+      }
+    }, {
+      resolvedSchema: {
+        groupId: "health",
+        groupLabel: "Health Policy",
+        policyId: "health-individual",
+        policyName: "Individual Health",
+        fields: ["insuredName", "policyNumber", "insuranceCompany", "premium", "startDate", "expiryDate", "contactPerson", "contactNumber"],
+        requiredFields: ["insuredName", "policyNumber", "insuranceCompany", "premium", "startDate", "expiryDate"]
+      }
+    });
+
+    expect(validation.valid).toBe(false);
+    expect(validation.contactFieldErrors.contactPerson).toBe("Contact Person cannot contain numbers.");
+    expect(validation.contactFieldErrors.contactNumber).toBe("Contact Number must be exactly 10 digits.");
+    expect(validation.contactErrors).toEqual([
+      "Contact Person cannot contain numbers.",
+      "Contact Number must be exactly 10 digits."
+    ]);
   });
 });

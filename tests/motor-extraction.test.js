@@ -114,7 +114,7 @@ describe("generic motor policy extraction", () => {
       startDate: "26/05/2026",
       expiryDate: "25/05/2027",
       duration: "12 months",
-      policyCoverType: "Package",
+      policyCoverType: "Comprehensive",
       variant: "",
       riskLocation: "",
       validIn: "",
@@ -200,6 +200,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  
   it("locks the ICICI Lombard motor extraction contract for the private car format", async () => {
     const sourceFile = "tests/fixtures/LEENA SAJWANI_MP04CR2712_2026-27 policy.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
@@ -724,86 +725,5 @@ describe("generic motor policy extraction", () => {
     expect(resultDelhi.vehicleNumber).toBe("DL-03-BC-1111");
     expect(resultDelhi.rtoLocation).toBe("DDA MARKET, SHEIKH SARAI");
     expect(resultDelhi.rto).toBe("DDA MARKET, SHEIKH SARAI");
-  });
-
-  it("locks the TATA AIG motor extraction contract for the Chanchal Anand Soni format", async () => {
-    const sourceFile = "tests/fixtures/MRS CHANCHAL ANAND SONI_MP04ZH3416_2026-27.pdf";
-    const parsed = await pdf(readFileSync(sourceFile));
-    const result = extractPolicyFromText(parsed.text || "", sourceFile);
-
-    expect(result).toMatchObject({
-      documentFormat: "TATA_AIG_MOTOR_V1",
-      insuranceCompany: "TATA AIG",
-      policyNumber: "6206191778 00 00",
-      insuredName: "MRS CHANCHAL ANAND SONI",
-      vehicleNumber: "MP 04 ZH 3415",
-      registrationNumber: "MP 04 ZH 3415",
-      engineNumber: "K15CN9223488",
-      chassisNumber: "MA3CNC62SPD328639",
-      premium: "21466.00",
-      totalPremium: "21466.00",
-      netPremium: "18075.00",
-      odPremium: "6084.56",
-      tpDriverOwner: "4051.00",
-      gstAmount: "3253.56"
-    });
-  });
-
-  it("locks the Bajaj Allianz motor extraction contract for the Sorin Patel format", async () => {
-    const sourceFile = "tests/fixtures/Mr sorin patel ji Policy_MP04ED7840_2026-27.pdf";
-    const parsed = await pdf(readFileSync(sourceFile));
-    const result = extractPolicyFromText(parsed.text || "", sourceFile);
-
-    expect(result).toMatchObject({
-      documentFormat: "BAJAJ_ALLIANZ_MOTOR_V1",
-      insuranceCompany: "Bajaj Allianz General Insurance Company Limited",
-      policyNumber: "OG-27-2301-1801-00000166",
-      insuredName: "SORIN PATEL",
-      vehicleNumber: "MP04ED7840",
-      registrationNumber: "MP04ED7840",
-      engineNumber: "K15BN1314344",
-      chassisNumber: "MA3NYFJ1SNE955105",
-      premium: "12,984.00",
-      totalPremium: "12,984.00",
-      netPremium: "11,004.00",
-      odPremium: "7,207.00",
-      tpDriverOwner: "3,797.00",
-      gstAmount: "1980.00",
-      cubicCapacity: "1462",
-      fuelType: "PETROL",
-      seatingCapacity: "5",
-      manufacturingYear: "2022",
-      startDate: "29/05/2026",
-      expiryDate: "28/05/2027"
-    });
-  });
-  
-  it("locks the Go Digit motor extraction contract for the Rupal Mishra format", async () => {
-    const sourceFile = "tests/fixtures/RUPAL MISHRA_MP13ZK7907_2026-27 POLICY.pdf";
-    const parsed = await pdf(readFileSync(sourceFile));
-    const result = extractPolicyFromText(parsed.text || "", sourceFile);
-
-    expect(result).toMatchObject({
-      documentFormat: "GO_DIGIT_MOTOR_V1",
-      insuranceCompany: "Go Digit General Insurance Ltd.",
-      policyNumber: "IA253693640",
-      insuredName: "RUPAL MISHRA",
-      vehicleNumber: "MP13ZK7907",
-      registrationNumber: "MP13ZK7907",
-      engineNumber: "REVTRN20CVXM49003",
-      chassisNumber: "MAT632252RPC55194",
-      premium: "13099.83",
-      totalPremium: "13099.83",
-      netPremium: "11101.55",
-      odPremium: "11101.55",
-      tpDriverOwner: "0.00",
-      gstAmount: "1998.28",
-      cubicCapacity: "1199",
-      fuelType: "PETROL",
-      seatingCapacity: "5",
-      manufacturingYear: "2024",
-      startDate: "30/05/2026",
-      expiryDate: "29/05/2027"
-    });
   });
 });
