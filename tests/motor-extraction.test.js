@@ -266,6 +266,44 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("extracts New India commercial vehicle package policy details", async () => {
+    const sourceFile = "tests/fixtures/RAHUL   RAI_MP04HE6044_2026-27 POLICY.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "NEW_INDIA_MOTOR_V1",
+      insuranceCompany: "The New India Assurance Company Limited",
+      insuredName: "RAHUL RAI",
+      policyNumber: "45140031260100001497",
+      policyType: "Commercial Vehicle Package Policy",
+      vehicleNumber: "MP-04-HE-6044",
+      registrationNumber: "MP-04-HE-6044",
+      makeModel: "ASHOK LEYL/2518 IL",
+      vehicleMake: "ASHOK LEYL",
+      vehicleModel: "2518 IL",
+      manufacturingYear: "2016",
+      engineNumber: "GDPZ111607",
+      chassisNumber: "MB1CTCFD5GPDT2142",
+      fuelType: "Diesel",
+      cubicCapacity: "0",
+      seatingCapacity: "3",
+      grossVehicleWeight: "28000",
+      idv: "615600.00",
+      premium: "48,149.00",
+      totalPremium: "48,149.00",
+      netPremium: "45,645.00",
+      odPremium: "1595.00",
+      tpDriverOwner: "44050.00",
+      startDate: "25/05/2026",
+      expiryDate: "24/05/2027",
+      duration: "12 months",
+      policyCoverType: "Package",
+      ncb: "50%",
+      rtoLocation: "BHOPAL"
+    });
+  });
+
   it("extracts New India premium fields from alternate financial labels", () => {
     const text = `
       PRIVATE CAR PACKAGE POLICY
