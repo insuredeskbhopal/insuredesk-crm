@@ -1,7 +1,8 @@
 // @vitest-environment node
 
 import { createRequire } from "node:module";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const require = createRequire(import.meta.url);
@@ -9,6 +10,31 @@ const { extractPolicyFromText } = require("../lib/pdf-extractor.cjs");
 const pdf = require("pdf-parse");
 
 describe("generic motor policy extraction", () => {
+  it("keeps all motor fixture PDFs on sane core vehicle fields", async () => {
+    const fixtureDir = "tests/fixtures";
+    const pdfFiles = readdirSync(fixtureDir).filter((name) => name.toLowerCase().endsWith(".pdf"));
+
+    for (const fileName of pdfFiles) {
+      const sourceFile = path.join(fixtureDir, fileName);
+      const parsed = await pdf(readFileSync(sourceFile));
+      const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+      expect(result.documentFormat, fileName).toMatch(/_MOTOR_V1$/);
+      expect(result.insuranceCompany || result.companyName, fileName).not.toBe("");
+      expect(result.policyNumber, fileName).not.toBe("");
+      const registrationNumber = result.registrationNumber || result.vehicleNumber || "";
+      const compactRegistration = registrationNumber.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+      const compactEngine = String(result.engineNumber || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+
+      expect(registrationNumber, fileName).toMatch(/[A-Z]{2}[-\s]?\d{1,2}[-\s]?[A-Z]{1,3}[-\s]?\d{4}/i);
+      expect(compactEngine, fileName).not.toBe(compactRegistration);
+      expect(compactEngine, fileName).not.toContain(compactRegistration);
+      expect(result.engineNumber, fileName).not.toMatch(/^(?:ENGINE|MOTOR|SEATING|CHASSIS)$/i);
+      expect(result.chassisNumber, fileName).toMatch(/^[A-Z0-9]{10,25}$/i);
+      expect(result.chassisNumber, fileName).not.toMatch(/^(?:ENGINE|MOTOR|SEATING|CHASSIS)$/i);
+    }
+  });
+
   it("parses dense motor vehicle table seating and cover values without company-only rules", () => {
     const text = `
       TWO WHEELER POLICY CERTIFICATE
@@ -155,6 +181,38 @@ describe("generic motor policy extraction", () => {
     expect(result.chassisNumber).toBe("MD2A13EZ3GCA30996");
     expect(result.fuelType).toBe("Petrol");
     expect(result.makeModel).toBe("BAJAJ PULSAR 220 DTS-Fi");
+  });
+
+  it("locks the IFFCO Tokio private car dense table contract", async () => {
+    const sourceFile = "tests/fixtures/SHRIDHAR RENEWABLE ENERGY PRIVATE LIMITED_MP04ZJ1165_2026-27 - Copy.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "IFFCO_TOKIO_MOTOR_V1",
+      insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
+      policyType: "Private Car Policy",
+      insuredName: "SHRIDHAR RENEWABLE ENERGY PRIVATE LIMITED",
+      contactPerson: "SHRIDHAR RENEWABLE ENERGY PRIVATE LIMITED",
+      policyNumber: "N7415324",
+      vehicleNumber: "MP04ZJ1165",
+      registrationNumber: "MP04ZJ1165",
+      makeModel: "XUV700 AX7 D AT LUXURY PACK",
+      manufacturingYear: "2023",
+      engineNumber: "ZTP4D64994",
+      chassisNumber: "MA1NE2ZTFP6E12261",
+      fuelType: "Diesel",
+      cubicCapacity: "2184",
+      seatingCapacity: "7",
+      idv: "1723680.00",
+      sumInsured: "1723680.00",
+      premium: "33681.92",
+      totalPremium: "33681.92",
+      netPremium: "28544.00",
+      odPremium: "4321.00",
+      tpDriverOwner: "7947.00",
+      policyCoverType: "Comprehensive"
+    });
   });
 
   it("locks the New India motor extraction contract for future policy additions", async () => {

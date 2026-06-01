@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { extractTextFromPdf } from "@/lib/pdf-text";
 import { extractPolicyFromText } from "@/lib/pdf-extractor.cjs";
+import { reviewPolicyExtractionWithAi } from "@/lib/ai-extraction-review";
 import { sanitizeRecordPayload } from "@/lib/record-validation";
 import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploadList } from "@/lib/upload-validation";
 import { verifyJWT } from "@/lib/auth";
@@ -61,7 +62,13 @@ export async function POST(request) {
           throw new Error(textResult.ocrAttempted ? "No text could be extracted from this PDF using text extraction or OCR." : "PDF text extraction returned no content.");
         }
 
-        const extractedData = sanitizeRecordPayload(extractPolicyFromText(rawText, file.name || ""));
+        const deterministicData = extractPolicyFromText(rawText, file.name || "");
+        const aiReviewedExtraction = await reviewPolicyExtractionWithAi({
+          rawText,
+          extractedData: deterministicData,
+          sourceFile: file.name || ""
+        });
+        const extractedData = sanitizeRecordPayload(aiReviewedExtraction.data);
 
         // 3. Save UploadedFile record to database, referencing storage path and excluding binary bytes
         const uploadedFile = await prisma.uploadedFile.create({
