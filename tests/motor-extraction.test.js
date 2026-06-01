@@ -218,6 +218,47 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("locks the IFFCO Tokio standalone OD private car contract", async () => {
+    const sourceFile = "tests/fixtures/POOJA-SHARMA-MP04ZX6611 (1).pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "IFFCO_TOKIO_MOTOR_V1",
+      insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
+      policyType: "Private Car Stand Alone Own Damage Policy",
+      insuredName: "POOJA SHARMA",
+      contactPerson: "POOJA SHARMA",
+      policyNumber: "N3282897",
+      vehicleNumber: "MP04ZX6611",
+      registrationNumber: "MP04ZX6611",
+      makeModel: "KIA SELTOS HTK 1.5 PETROL",
+      manufacturingYear: "2024",
+      engineNumber: "G4FLRV750594",
+      chassisNumber: "MZBEP812LRN622303",
+      fuelType: "Petrol",
+      cubicCapacity: "1497",
+      seatingCapacity: "5",
+      startDate: "02/05/2025",
+      expiryDate: "01/05/2026",
+      duration: "12 months",
+      idv: "1131120.00",
+      sumInsured: "1131120.00",
+      totalIdv: "1131120.00",
+      premium: "12624.82",
+      totalPremium: "12624.82",
+      netPremium: "3754.00",
+      odPremium: "3754.00",
+      basicOwnDamage: "4692.00",
+      cgst: "962.91",
+      sgst: "962.91",
+      gstAmount: "1,925.82",
+      ncbPercentage: "20%",
+      policyCoverType: "Own Damage",
+      financerName: "PRATHAMA UP GRAMIN BANK"
+    });
+  });
+
   it("locks the New India motor extraction contract for future policy additions", async () => {
     const sourceFile = "tests/fixtures/THE NEW INDIA.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
