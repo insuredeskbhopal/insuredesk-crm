@@ -11,7 +11,7 @@ export default function InsurerLogo({ company, className = "", showName = true }
 
   return (
     <span className={`insurer-logo ${logo.className || ""} ${className}`.trim()} title={label}>
-      <Image src={logo.src} alt={`${logo.name} logo`} width={96} height={36} />
+      <Image unoptimized src={logo.src} alt={`${logo.name} logo`} width={96} height={36} />
       {showName ? <span>{label}</span> : null}
     </span>
   );

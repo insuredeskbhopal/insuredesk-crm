@@ -71,6 +71,7 @@ export async function POST(request) {
 
     return Response.json({ success: true, policy: updatedPolicy });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("Mark policy lost failed:", error);
+    return Response.json({ error: "Failed to mark policy as lost." }, { status: 500 });
   }
 }

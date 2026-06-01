@@ -52,7 +52,8 @@ export async function GET(request) {
 
     return Response.json({ policyTypes: Array.from(policyTypes).sort() });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("Renewals policy-types fetch failed:", error);
+    return Response.json({ error: "Failed to load policy types." }, { status: 500 });
   }
 }
 

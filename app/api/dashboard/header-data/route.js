@@ -47,23 +47,25 @@ export async function GET(request) {
 
     const tenantFilter = getTenantFilter(session, "read");
     
-    // 1. Fetch active-only records for header notifications and analytics list
-    const rawRecords = await prisma.policyRecord.findMany({
-      where: {
-        ...tenantFilter,
-        isActivePolicy: true
-      },
+    // Single query: Fetch all organization policy records with necessary fields
+    const allOrgRawRecords = await prisma.policyRecord.findMany({
+      where: tenantFilter,
       orderBy: { savedAt: "desc" },
       select: {
         id: true,
         savedAt: true,
         data: true,
         reviewedData: true,
-        pdfFileName: true
+        pdfFileName: true,
+        renewalStatus: true,
+        isActivePolicy: true,
+        selectedCompany: true,
+        selectedPolicyType: true
       }
     });
-    
-    const records = rawRecords.map(normalizeRecord);
+
+    const allOrgRecords = allOrgRawRecords.map(normalizeRecord);
+    const records = allOrgRecords.filter((r) => r.isActivePolicy);
     const today = startOfDay(new Date());
     
     // Filter and map policies that have a valid expiry date
@@ -104,20 +106,6 @@ export async function GET(request) {
         isExpired: r.daysRemaining < 0
       }));
 
-    // 2. Fetch all organization policy records to compile metrics/counters
-    const allOrgRecords = await prisma.policyRecord.findMany({
-      where: tenantFilter,
-      select: {
-        id: true,
-        data: true,
-        reviewedData: true,
-        renewalStatus: true,
-        isActivePolicy: true,
-        selectedCompany: true,
-        selectedPolicyType: true
-      }
-    });
-
     let due30 = 0;
     let due60 = 0;
     let due90 = 0;
@@ -125,7 +113,7 @@ export async function GET(request) {
     let renewedCount = 0;
     let lostCount = 0;
 
-    allOrgRecords.map(normalizeRecord).forEach((r) => {
+    allOrgRecords.forEach((r) => {
       if (r.renewalStatus === "RENEWED") {
         renewedCount++;
         return;

@@ -161,6 +161,7 @@ export async function GET(request) {
       currentPage: page
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("Renewals policies fetch failed:", error);
+    return Response.json({ error: "Failed to load renewal policies." }, { status: 500 });
   }
 }

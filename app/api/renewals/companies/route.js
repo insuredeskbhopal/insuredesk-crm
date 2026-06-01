@@ -41,6 +41,7 @@ export async function GET(request) {
 
     return Response.json({ companies: Array.from(companies).sort() });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("Renewals companies fetch failed:", error);
+    return Response.json({ error: "Failed to load companies." }, { status: 500 });
   }
 }

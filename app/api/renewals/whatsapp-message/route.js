@@ -77,6 +77,7 @@ BimaHeadquarter`;
 
     return Response.json({ success: true, message: text, url });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("WhatsApp message generation failed:", error);
+    return Response.json({ error: "Failed to generate WhatsApp message." }, { status: 500 });
   }
 }

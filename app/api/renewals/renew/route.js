@@ -127,6 +127,7 @@ export async function POST(request) {
 
     return Response.json(normalizeRecord(result), { status: 201 });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("Policy renewal failed:", error);
+    return Response.json({ error: "Policy renewal failed. Please try again." }, { status: 500 });
   }
 }

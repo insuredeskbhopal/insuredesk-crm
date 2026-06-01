@@ -53,6 +53,7 @@ export async function POST(request) {
       fileSize: buffer.byteLength
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("PDF extraction for renewal failed:", error);
+    return Response.json({ error: "PDF extraction failed. Please try again." }, { status: 500 });
   }
 }

@@ -599,7 +599,7 @@ export default function RootPage() {
           <div className="flex partner-slider whitespace-nowrap gap-10 items-center">
             {partnerLogos.map((logo, index) => (
               <span className={`partner-logo-card ${logo.className || ""}`.trim()} key={`${logo.src}-${index}`}>
-                <Image src={logo.src} alt={`${logo.name} logo`} width={136} height={44} />
+                <Image unoptimized src={logo.src} alt={`${logo.name} logo`} width={136} height={44} />
               </span>
             ))}
           </div>

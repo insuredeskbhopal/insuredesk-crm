@@ -70,10 +70,16 @@ export function parseMoney(value) {
 
 export function formatDate(value) {
   if (!value) return "";
-  return new Intl.DateTimeFormat("en-IN", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(new Date(value));
+  try {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "";
+    return new Intl.DateTimeFormat("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short"
+    }).format(date);
+  } catch {
+    return "";
+  }
 }
 
 export function download(filename, content, type) {
