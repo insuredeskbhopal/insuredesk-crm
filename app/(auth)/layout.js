@@ -3,7 +3,11 @@ import BrandLogo from "@/app/components/brand/BrandLogo";
 
 export const metadata = {
   title: "BIMAHEADQUARTER - Authenticate",
-  description: "Secure admin-managed login portal"
+  description: "Secure admin-managed login portal",
+  icons: {
+    icon: { url: "/favicon.png", type: "image/png" },
+    apple: "/apple-icon.png"
+  }
 };
 
 export default function AuthLayout({ children }) {

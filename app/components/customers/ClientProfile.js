@@ -11,7 +11,7 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
           <div className="profile-avatar"><Users size={20} /></div>
           <div>
             <p className="eyebrow">Client Profile</p>
-            <h2>{client.name}</h2>
+            <h2>{client.name} {client.customerId ? <span style={{ fontSize: "16px", color: "var(--text-secondary)", fontWeight: "500" }}>(#{client.customerId})</span> : null}</h2>
             <span>
               {client.policies.length} linked polic{client.policies.length === 1 ? "y" : "ies"}
               {client.district ? ` · ${client.district}` : ""}

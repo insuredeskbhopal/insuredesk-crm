@@ -537,7 +537,8 @@ export function buildClientProfiles(records, parseMoney) {
       sumInsuredTotal: 0,
       district: record.district || "",
       tehsil: record.tehsil || "",
-      contactNumber: record.contactNumber || ""
+      contactNumber: record.contactNumber || "",
+      customerId: record.customerId || ""
     };
 
     current.policies.push(record);
@@ -546,6 +547,7 @@ export function buildClientProfiles(records, parseMoney) {
     current.district ||= record.district || "";
     current.tehsil ||= record.tehsil || "";
     current.contactNumber ||= record.contactNumber || "";
+    current.customerId ||= record.customerId || "";
     profiles.set(name, current);
   });
 

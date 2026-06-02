@@ -73,12 +73,18 @@ export default function Dashboard({
   const [activePage, setActivePage] = useState(routeActivePage || "bulk-entry");
   const [records, setRecords] = useState(initialRecords);
   const [renewalCounts, setRenewalCounts] = useState({
-    due30: 0,
-    due60: 0,
-    due90: 0,
+    eodPremium: 0,
+    eodCount: 0,
+    mtdPremium: 0,
+    mtdCount: 0,
+    ytdPremium: 0,
+    ytdCount: 0,
     expired: 0,
+    expiredPremium: 0,
     renewed: 0,
-    lost: 0
+    renewedPremium: 0,
+    lost: 0,
+    lostPremium: 0
   });
 
   useEffect(() => {
@@ -732,21 +738,53 @@ export default function Dashboard({
                 marginBottom: "24px"
               }}>
                 {[
-                  { label: "Due in 30 Days", count: renewalCounts.due30, color: "#f59e0b", tab: "upcoming", days: "30" },
-                  { label: "Due in 60 Days", count: renewalCounts.due60, color: "#d97706", tab: "upcoming", days: "60" },
-                  { label: "Due in 90 Days", count: renewalCounts.due90, color: "var(--accent)", tab: "upcoming", days: "90" },
-                  { label: "Expired Renewals", count: renewalCounts.expired, color: "#dc2626", tab: "expired", days: "" },
-                  { label: "Renewed Policies", count: renewalCounts.renewed, color: "#10b981", tab: "renewed", days: "" },
-                  { label: "Lost Renewals", count: renewalCounts.lost, color: "#6b7280", tab: "lost", days: "" }
+                  {
+                    label: "EOD Total Premium",
+                    value: renewalCounts.eodPremium ? formatMoney(renewalCounts.eodPremium) : "₹0",
+                    subtext: `${renewalCounts.eodCount} polic${renewalCounts.eodCount === 1 ? "y" : "ies"} saved today`,
+                    color: "#f59e0b",
+                    tab: "all"
+                  },
+                  {
+                    label: "MTD Total Premium",
+                    value: renewalCounts.mtdPremium ? formatMoney(renewalCounts.mtdPremium) : "₹0",
+                    subtext: `${renewalCounts.mtdCount} polic${renewalCounts.mtdCount === 1 ? "y" : "ies"} saved this month`,
+                    color: "#d97706",
+                    tab: "all"
+                  },
+                  {
+                    label: "YTD Total Premium",
+                    value: renewalCounts.ytdPremium ? formatMoney(renewalCounts.ytdPremium) : "₹0",
+                    subtext: `${renewalCounts.ytdCount} polic${renewalCounts.ytdCount === 1 ? "y" : "ies"} saved this year`,
+                    color: "var(--accent)",
+                    tab: "all"
+                  },
+                  {
+                    label: "Expired Premium",
+                    value: renewalCounts.expiredPremium ? formatMoney(renewalCounts.expiredPremium) : "₹0",
+                    subtext: `${renewalCounts.expired} expired polic${renewalCounts.expired === 1 ? "y" : "ies"}`,
+                    color: "#dc2626",
+                    tab: "expired"
+                  },
+                  {
+                    label: "Renewed Premium",
+                    value: renewalCounts.renewedPremium ? formatMoney(renewalCounts.renewedPremium) : "₹0",
+                    subtext: `${renewalCounts.renewed} renewed polic${renewalCounts.renewed === 1 ? "y" : "ies"}`,
+                    color: "#10b981",
+                    tab: "renewed"
+                  },
+                  {
+                    label: "Lost Premium",
+                    value: renewalCounts.lostPremium ? formatMoney(renewalCounts.lostPremium) : "₹0",
+                    subtext: `${renewalCounts.lost} lost polic${renewalCounts.lost === 1 ? "y" : "ies"}`,
+                    color: "#6b7280",
+                    tab: "lost"
+                  }
                 ].map((item) => (
                   <article
                     key={item.label}
                     onClick={() => {
-                      let url = `/dashboard/renewals?tab=${item.tab}`;
-                      if (item.days) {
-                        url += `&days=${item.days}`;
-                      }
-                      router.push(url);
+                      router.push(`/dashboard/renewals?tab=${item.tab}`);
                     }}
                     style={{
                       padding: "20px",
@@ -779,11 +817,18 @@ export default function Dashboard({
                     }}>{item.label}</p>
                     <strong style={{
                       display: "block",
-                      fontSize: "28px",
+                      fontSize: "24px",
                       fontWeight: "800",
                       color: "var(--text-primary)",
                       marginTop: "8px"
-                    }}>{item.count}</strong>
+                    }}>{item.value}</strong>
+                    <small style={{
+                      display: "block",
+                      fontSize: "11px",
+                      fontWeight: "600",
+                      color: "var(--text-secondary)",
+                      marginTop: "4px"
+                    }}>{item.subtext}</small>
                   </article>
                 ))}
               </section>
@@ -1168,7 +1213,10 @@ export default function Dashboard({
                                 </div>
                                 <div className="customer-title-block">
                                   <h3 title={client.name}>{client.name}</h3>
-                                  <p className="customer-contact-text">{client.contactNumber || "No contact recorded"}</p>
+                                  <p className="customer-contact-text">
+                                    {client.customerId ? `ID: ${client.customerId} · ` : ""}
+                                    {client.contactNumber || "No contact recorded"}
+                                  </p>
                                 </div>
                               </div>
                               <div className="customer-card-stats">
@@ -1228,7 +1276,10 @@ export default function Dashboard({
                           <article className="customer-row" key={client.name}>
                             <div className="customer-name-cell">
                               <strong>{client.name}</strong>
-                              <small>{client.contactNumber || "No contact recorded"}</small>
+                              <small>
+                                {client.customerId ? `ID: ${client.customerId} · ` : ""}
+                                {client.contactNumber || "No contact recorded"}
+                              </small>
                             </div>
                             <span>{client.policies.length} polic{client.policies.length === 1 ? "y" : "ies"}</span>
                             <span>{client.district || "-"}</span>

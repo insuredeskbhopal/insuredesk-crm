@@ -7,6 +7,11 @@ import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 
 export const dynamic = "force-dynamic";
 
+function parseMoney(value) {
+  if (typeof value === "number") return value;
+  return Number(String(value || "").replace(/,/g, "")) || 0;
+}
+
 function formatRelativeTime(dateString) {
   const now = new Date();
   const diffMs = now - new Date(dateString);
@@ -106,20 +111,56 @@ export async function GET(request) {
         isExpired: r.daysRemaining < 0
       }));
 
-    let due30 = 0;
-    let due60 = 0;
-    let due90 = 0;
+    let eodPremium = 0;
+    let eodCount = 0;
+    let mtdPremium = 0;
+    let mtdCount = 0;
+    let ytdPremium = 0;
+    let ytdCount = 0;
+
     let expiredCount = 0;
+    let expiredPremium = 0;
     let renewedCount = 0;
+    let renewedPremium = 0;
     let lostCount = 0;
+    let lostPremium = 0;
+
+    let due10 = 0;
+    let due20 = 0;
+    let due30 = 0;
+
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const startOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startOfThisYear = new Date(today.getFullYear(), 0, 1);
 
     allOrgRecords.forEach((r) => {
+      const premiumVal = parseMoney(r.totalPremium || r.premium);
+      const savedDate = r.savedAt ? new Date(r.savedAt) : (r.uploadedAt ? new Date(r.uploadedAt) : null);
+
+      if (savedDate) {
+        const savedTime = savedDate.getTime();
+        if (savedTime >= startOfToday.getTime()) {
+          eodPremium += premiumVal;
+          eodCount++;
+        }
+        if (savedTime >= startOfThisMonth.getTime()) {
+          mtdPremium += premiumVal;
+          mtdCount++;
+        }
+        if (savedTime >= startOfThisYear.getTime()) {
+          ytdPremium += premiumVal;
+          ytdCount++;
+        }
+      }
+
       if (r.renewalStatus === "RENEWED") {
         renewedCount++;
+        renewedPremium += premiumVal;
         return;
       }
       if (r.renewalStatus === "LOST") {
         lostCount++;
+        lostPremium += premiumVal;
         return;
       }
       if (r.isActivePolicy) {
@@ -128,10 +169,11 @@ export async function GET(request) {
           const daysRemaining = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
           if (daysRemaining < 0) {
             expiredCount++;
+            expiredPremium += premiumVal;
           } else {
+            if (daysRemaining <= 10) due10++;
+            if (daysRemaining <= 20) due20++;
             if (daysRemaining <= 30) due30++;
-            if (daysRemaining <= 60) due60++;
-            if (daysRemaining <= 90) due90++;
           }
         }
       }
@@ -208,12 +250,21 @@ export async function GET(request) {
       renewals,
       notifications,
       renewalCounts: {
+        eodPremium,
+        eodCount,
+        mtdPremium,
+        mtdCount,
+        ytdPremium,
+        ytdCount,
+        due10,
+        due20,
         due30,
-        due60,
-        due90,
         expired: expiredCount,
+        expiredPremium,
         renewed: renewedCount,
-        lost: lostCount
+        renewedPremium,
+        lost: lostCount,
+        lostPremium
       },
       success: true
     });

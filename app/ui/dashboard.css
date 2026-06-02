@@ -1531,9 +1531,9 @@ th {
   height: 44px;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(25, 28, 29, 0.24);
+  border: none;
   border-radius: 8px;
-  background: #ffffff;
+  background: transparent;
   color: #000000;
   box-shadow: none;
 }
@@ -1545,13 +1545,12 @@ th {
 
 .record-icon-action {
   cursor: pointer;
-  background: #f6f7f8;
+  background: transparent;
 }
 
 .record-icon-action:hover,
 .pdf-icon-link:hover {
-  border-color: rgba(25, 28, 29, 0.46);
-  background: #eef0f2;
+  background: rgba(15, 23, 42, 0.05);
 }
 
 .table-pagination {
