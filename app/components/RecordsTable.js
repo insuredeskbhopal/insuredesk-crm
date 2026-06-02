@@ -66,7 +66,7 @@ const DEFAULT_RECORD_COLUMNS = [
   { key: "contactNumber", label: "Phone Number", className: "col-contact" },
   { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
   { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
-  { key: "whatsappGroupName", label: "WhatsApp Group Name", className: "col-group" }
+  { key: "whatsappGroupName", label: "WP Group Name", className: "col-group" }
 ];
 
 function formatDate(value) {

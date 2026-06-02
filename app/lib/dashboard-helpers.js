@@ -68,7 +68,7 @@ export const FIELD_SETUP = [
   ["Policy Number", "policyNumber"],
   ["Contact Person", "contactPerson"],
   ["Contact Number", "contactNumber"],
-  ["WhatsApp Group Name", "whatsappGroupName"],
+  ["WP Group Name", "whatsappGroupName"],
   ["Group Name", "groupName"],
   ["Policy Type", "policyType"],
   ["Premium", "premium"],
