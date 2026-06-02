@@ -314,8 +314,8 @@ export default function Dashboard({
     return clientProfiles.slice(customerStartIndex, customerStartIndex + CUSTOMERS_PER_PAGE);
   }, [clientProfiles, customerStartIndex]);
   const customerPageNumbers = useMemo(
-    () => Array.from({ length: customerPageCount }, (_, index) => index + 1),
-    [customerPageCount]
+    () => getPageNumbers(customerPage, customerPageCount),
+    [customerPage, customerPageCount]
   );
   const goToPage = (page) => {
     setCustomerPage(Math.min(Math.max(1, page), customerPageCount));
@@ -1309,16 +1309,35 @@ export default function Dashboard({
                         <button type="button" onClick={() => goToPage(customerPage - 1)} disabled={customerPage === 1}>
                           Prev
                         </button>
-                        {customerPageNumbers.map((page) => (
-                          <button
-                            aria-current={customerPage === page ? "page" : undefined}
-                            className={customerPage === page ? "active" : ""}
-                            key={page}
-                            type="button"
-                            onClick={() => goToPage(page)}
-                          >
-                            {page}
-                          </button>
+                        {customerPageNumbers.map((page, index) => (
+                          page === "..." ? (
+                            <span
+                              key={`ellipsis-${index}`}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                minWidth: "34px",
+                                minHeight: "32px",
+                                color: "var(--text-secondary, #64748b)",
+                                fontSize: "14px",
+                                fontWeight: "700",
+                                userSelect: "none"
+                              }}
+                            >
+                              ...
+                            </span>
+                          ) : (
+                            <button
+                              aria-current={customerPage === page ? "page" : undefined}
+                              className={customerPage === page ? "active" : ""}
+                              key={page}
+                              type="button"
+                              onClick={() => goToPage(page)}
+                            >
+                              {page}
+                            </button>
+                          )
                         ))}
                         <button type="button" onClick={() => goToPage(customerPage + 1)} disabled={customerPage === customerPageCount}>
                           Next
@@ -1421,4 +1440,31 @@ function isMotorPolicyData(data) {
     data.chassisNumber ||
     /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(data.policyType || "")
   );
+}
+
+function getPageNumbers(currentPage, totalPages) {
+  const pages = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    let start = Math.max(2, currentPage - 1);
+    let end = Math.min(totalPages - 1, currentPage + 1);
+    if (currentPage <= 4) {
+      end = 5;
+    } else if (currentPage >= totalPages - 3) {
+      start = totalPages - 4;
+    }
+    if (start > 2) {
+      pages.push("...");
+    }
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    if (end < totalPages - 1) {
+      pages.push("...");
+    }
+    pages.push(totalPages);
+  }
+  return pages;
 }

@@ -355,10 +355,32 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
     () => records.slice(startIndex, startIndex + PAGE_SIZE),
     [records, startIndex]
   );
-  const pageNumbers = useMemo(
-    () => Array.from({ length: pageCount }, (_, index) => index + 1),
-    [pageCount]
-  );
+  const visiblePageNumbers = useMemo(() => {
+    const pages = [];
+    if (pageCount <= 7) {
+      for (let i = 1; i <= pageCount; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      let start = Math.max(2, currentPage - 1);
+      let end = Math.min(pageCount - 1, currentPage + 1);
+      if (currentPage <= 4) {
+        end = 5;
+      } else if (currentPage >= pageCount - 3) {
+        start = pageCount - 4;
+      }
+      if (start > 2) {
+        pages.push("...");
+      }
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      if (end < pageCount - 1) {
+        pages.push("...");
+      }
+      pages.push(pageCount);
+    }
+    return pages;
+  }, [currentPage, pageCount]);
   const tableMinWidth = columns.length < DEFAULT_RECORD_COLUMNS.length
     ? Math.max(980, (columns.length * 132) + (canEdit ? 88 : 0) + 64)
     : undefined;
@@ -451,16 +473,35 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
             <button type="button" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
               Prev
             </button>
-            {pageNumbers.map((page) => (
-              <button
-                aria-current={currentPage === page ? "page" : undefined}
-                className={currentPage === page ? "active" : ""}
-                key={page}
-                type="button"
-                onClick={() => goToPage(page)}
-              >
-                {page}
-              </button>
+            {visiblePageNumbers.map((page, index) => (
+              page === "..." ? (
+                <span
+                  key={`ellipsis-${index}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minWidth: "34px",
+                    minHeight: "32px",
+                    color: "#64748b",
+                    fontSize: "14px",
+                    fontWeight: "700",
+                    userSelect: "none"
+                  }}
+                >
+                  ...
+                </span>
+              ) : (
+                <button
+                  aria-current={currentPage === page ? "page" : undefined}
+                  className={currentPage === page ? "active" : ""}
+                  key={page}
+                  type="button"
+                  onClick={() => goToPage(page)}
+                >
+                  {page}
+                </button>
+              )
             ))}
             <button type="button" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === pageCount}>
               Next

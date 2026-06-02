@@ -297,10 +297,29 @@ export default function UserManagement() {
             <span>Page {page} of {pageCount} · {meta.total} users</span>
             <div className="table-page-list">
               <button type="button" disabled={page === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>Prev</button>
-              {Array.from({ length: pageCount }, (_, index) => index + 1).map((item) => (
-                <button className={page === item ? "active" : ""} key={item} type="button" onClick={() => setPage(item)}>
-                  {item}
-                </button>
+              {getPageNumbers(page, pageCount).map((item, index) => (
+                item === "..." ? (
+                  <span
+                    key={`ellipsis-${index}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: "34px",
+                      minHeight: "32px",
+                      color: "var(--text-secondary, #64748b)",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      userSelect: "none"
+                    }}
+                  >
+                    ...
+                  </span>
+                ) : (
+                  <button className={page === item ? "active" : ""} key={item} type="button" onClick={() => setPage(item)}>
+                    {item}
+                  </button>
+                )
               ))}
               <button type="button" disabled={page === pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>Next</button>
             </div>
@@ -309,4 +328,31 @@ export default function UserManagement() {
       </section>
     </section>
   );
+}
+
+function getPageNumbers(currentPage, totalPages) {
+  const pages = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    let start = Math.max(2, currentPage - 1);
+    let end = Math.min(totalPages - 1, currentPage + 1);
+    if (currentPage <= 4) {
+      end = 5;
+    } else if (currentPage >= totalPages - 3) {
+      start = totalPages - 4;
+    }
+    if (start > 2) {
+      pages.push("...");
+    }
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    if (end < totalPages - 1) {
+      pages.push("...");
+    }
+    pages.push(totalPages);
+  }
+  return pages;
 }

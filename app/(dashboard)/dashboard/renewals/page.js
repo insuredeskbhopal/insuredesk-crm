@@ -1029,15 +1029,34 @@ export default function RenewalsPage() {
                   <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
                     Prev
                   </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pNum) => (
-                    <button
-                      key={pNum}
-                      type="button"
-                      className={page === pNum ? "active" : ""}
-                      onClick={() => setPage(pNum)}
-                    >
-                      {pNum}
-                    </button>
+                  {getPageNumbers(page, totalPages).map((pNum, index) => (
+                    pNum === "..." ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          minWidth: "34px",
+                          minHeight: "32px",
+                          color: "var(--text-secondary, #64748b)",
+                          fontSize: "14px",
+                          fontWeight: "700",
+                          userSelect: "none"
+                        }}
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={pNum}
+                        type="button"
+                        className={page === pNum ? "active" : ""}
+                        onClick={() => setPage(pNum)}
+                      >
+                        {pNum}
+                      </button>
+                    )
                   ))}
                   <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
                     Next
@@ -1699,4 +1718,31 @@ function formatDateTime(value) {
     hour: "2-digit",
     minute: "2-digit"
   });
+}
+
+function getPageNumbers(currentPage, totalPages) {
+  const pages = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    let start = Math.max(2, currentPage - 1);
+    let end = Math.min(totalPages - 1, currentPage + 1);
+    if (currentPage <= 4) {
+      end = 5;
+    } else if (currentPage >= totalPages - 3) {
+      start = totalPages - 4;
+    }
+    if (start > 2) {
+      pages.push("...");
+    }
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    if (end < totalPages - 1) {
+      pages.push("...");
+    }
+    pages.push(totalPages);
+  }
+  return pages;
 }

@@ -135,6 +135,10 @@ async function main() {
   const validationModule = await import("../lib/record-validation.js");
   const sanitizeRecordPayload = validationModule.sanitizeRecordPayload;
 
+  console.log("Importing buildCustomerId helper...");
+  const recordsModule = await import("../lib/records.js");
+  const buildCustomerId = recordsModule.buildCustomerId;
+
   // Make script idempotent
   console.log("Clearing previous imports from 'Last month abhi.xlsx'...");
   const deleteResult = await prisma.policyRecord.deleteMany({
@@ -184,17 +188,26 @@ async function main() {
       }
     }
 
+    // Generate customer ID according to the system logic, blank should be blank
+    let customerIdVal = "";
+    const insuredNameStr = String(payload.insuredName || "").trim();
+    const contactNumberStr = String(payload.contactNumber || "").trim();
+    if (insuredNameStr !== "" && contactNumberStr !== "") {
+      customerIdVal = buildCustomerId(insuredNameStr, contactNumberStr);
+    }
+    payload.customerId = customerIdVal;
+
     // Sanitize the raw payload (converts missing keys to empty strings)
     const data = sanitizeRecordPayload(payload);
 
-    // Timeline date based on startDate, fallback to current Date
-    const recordDate = data.startDate ? new Date(data.startDate) : new Date();
+    // Set exact entry date as requested: 29-04-2026 11:00 AM local time (+05:30)
+    const recordDate = new Date("2026-04-29T11:00:00+05:30");
 
     const policyRecordPayload = {
       id: randomUUID(),
       savedAt: recordDate,
       createdAt: recordDate,
-      updatedAt: new Date(),
+      updatedAt: recordDate,
       data: data,
       pdfFileName: "Last month abhi.xlsx",
       pdfMimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
