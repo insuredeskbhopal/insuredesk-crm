@@ -1,8 +1,7 @@
 import { verifyJWT } from "@/lib/auth";
 import { validatePdfFile } from "@/lib/upload-validation";
 import { extractTextFromPdf } from "@/lib/pdf-text";
-import { extractPolicyFromText } from "@/lib/pdf-extractor.cjs";
-import { reviewPolicyExtractionWithAi } from "@/lib/ai-extraction-review";
+import { extractPolicyDataFromTextResult } from "@/lib/policy-extraction-pipeline";
 import { sanitizeRecordPayload } from "@/lib/record-validation";
 import { uploadFile } from "@/lib/storage";
 
@@ -42,13 +41,11 @@ export async function POST(request) {
       throw new Error(textResult.ocrAttempted ? "No text could be extracted." : "PDF text extraction returned no content.");
     }
 
-    const ruleBasedData = extractPolicyFromText(rawText, file.name || "");
-    const aiReviewedExtraction = await reviewPolicyExtractionWithAi({
-      rawText,
-      extractedData: ruleBasedData,
+    const extraction = await extractPolicyDataFromTextResult({
+      textResult,
       sourceFile: file.name || ""
     });
-    const extractedData = sanitizeRecordPayload(aiReviewedExtraction.data);
+    const extractedData = sanitizeRecordPayload(extraction.data);
 
     return Response.json({
       success: true,

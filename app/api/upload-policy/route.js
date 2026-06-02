@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { extractTextFromPdf } from "@/lib/pdf-text";
-import { extractPolicyFromText } from "@/lib/pdf-extractor.cjs";
-import { reviewPolicyExtractionWithAi } from "@/lib/ai-extraction-review";
+import { extractPolicyDataFromTextResult } from "@/lib/policy-extraction-pipeline";
 import { sanitizeRecordPayload } from "@/lib/record-validation";
 import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploadList } from "@/lib/upload-validation";
 import { verifyJWT } from "@/lib/auth";
@@ -10,6 +9,7 @@ import { uploadFile } from "@/lib/storage";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/upload-failure";
+import { buildUploadDetection } from "@/lib/upload-detection";
 
 export const runtime = "nodejs";
 
@@ -62,13 +62,12 @@ export async function POST(request) {
           throw new Error(textResult.ocrAttempted ? "No text could be extracted from this PDF using text extraction or OCR." : "PDF text extraction returned no content.");
         }
 
-        const deterministicData = extractPolicyFromText(rawText, file.name || "");
-        const aiReviewedExtraction = await reviewPolicyExtractionWithAi({
-          rawText,
-          extractedData: deterministicData,
+        const extraction = await extractPolicyDataFromTextResult({
+          textResult,
           sourceFile: file.name || ""
         });
-        const extractedData = sanitizeRecordPayload(aiReviewedExtraction.data);
+        const extractedData = sanitizeRecordPayload(extraction.data);
+        const detection = buildUploadDetection(extractedData);
 
         // 3. Save UploadedFile record to database, referencing storage path and excluding binary bytes
         const uploadedFile = await prisma.uploadedFile.create({
@@ -80,11 +79,11 @@ export async function POST(request) {
             rawText,
             extractionMethod: extractedData.extractionMethod || extractionMethod,
             status: UPLOAD_STATUS.REVIEW_REQUIRED,
-            detectedBankSourceName: "",
+            detectedBankSourceName: detection.bankSource?.name || "",
             detectedCompanyName: extractedData.insuranceCompany || "",
-            detectedServiceCategoryName: "",
+            detectedServiceCategoryName: extractedData.documentCategory || "",
             detectedPolicyTypeName: extractedData.policyType || "",
-            confidenceScore: extractedData.confidenceScore || 0,
+            confidenceScore: detection.confidenceScore,
             extractedData,
             extractionQuality: extractedData.extractionQuality || {},
             extractionLog: {
@@ -131,8 +130,13 @@ export async function POST(request) {
           sourceFile: uploadedFile.sourceFile,
           status: normalizeUploadStatus(uploadedFile.status),
           rawText,
-          detection: null,
-          selected: {},
+          detection,
+          selected: {
+            bankSourceName: detection.bankSource?.name || "",
+            companyName: detection.company?.name || "",
+            serviceCategoryName: detection.serviceCategory?.name || "",
+            policyTypeName: detection.policyType?.name || ""
+          },
           extractedData,
           extractionMethod: extractedData.extractionMethod || extractionMethod,
           extractionLog: {

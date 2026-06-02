@@ -52,6 +52,7 @@ import {
   shouldUseExtractedFuelType,
   download
 } from "@/app/lib/dashboard-helpers";
+import { hasUploadDetection } from "@/lib/upload-detection";
 import PreviewField from "@/app/components/shared/PreviewField";
 import FixedPolicyPreview from "@/app/components/upload/FixedPolicyPreview";
 import FieldSetupPanel from "@/app/components/field-setup/FieldSetupPanel";
@@ -1108,9 +1109,9 @@ export default function Dashboard({
                                 </button>
                               </div>
                             </div>
-                            {file.detection?.policyType ? (
+                            {hasUploadDetection(file.detection) ? (
                               <small className="policy-detect-badge">
-                                {file.detection.bankSource?.name || "Unknown Source"} / {file.detection.company?.name || "Unknown"} / {file.detection.serviceCategory?.name || "Uncategorized"} / {file.detection.policyType?.name}
+                                {file.detection.bankSource?.name || "Unknown Source"} / {file.detection.company?.name || "Unknown"} / {file.detection.serviceCategory?.name || "Uncategorized"} / {file.detection.policyType?.name || "Policy"}
                                 {" "}({Math.round((file.detection.confidenceScore || 0) * 100)}%)
                               </small>
                             ) : null}

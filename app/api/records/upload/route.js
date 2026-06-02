@@ -4,8 +4,7 @@ import { normalizeRecord } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/record-validation";
 import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploadList } from "@/lib/upload-validation";
 import { extractTextFromPdf } from "@/lib/pdf-text";
-import { extractPolicyFromText } from "@/lib/pdf-extractor.cjs";
-import { reviewPolicyExtractionWithAi } from "@/lib/ai-extraction-review";
+import { extractPolicyDataFromTextResult } from "@/lib/policy-extraction-pipeline";
 import { verifyJWT } from "@/lib/auth";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/upload-failure";
@@ -44,13 +43,11 @@ export async function POST(request) {
           throw new Error(textResult.ocrAttempted ? "No text could be extracted." : "PDF text extraction returned no content.");
         }
 
-        const ruleBasedData = extractPolicyFromText(rawText, file.name);
-        const aiReviewedExtraction = await reviewPolicyExtractionWithAi({
-          rawText,
-          extractedData: ruleBasedData,
+        const extraction = await extractPolicyDataFromTextResult({
+          textResult,
           sourceFile: file.name || ""
         });
-        const data = sanitizeRecordPayload(aiReviewedExtraction.data);
+        const data = sanitizeRecordPayload(extraction.data);
         const validation = getReviewValidation({
           sourceFile: file.name || data.sourceFile,
           extractedData: data
