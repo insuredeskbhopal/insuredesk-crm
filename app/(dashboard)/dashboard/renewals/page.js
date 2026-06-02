@@ -40,6 +40,29 @@ const LOST_REASON_OPTIONS = [
   { value: "Other", label: "Other (specify in remarks)" }
 ];
 
+function getRenewalVehicleNumber(record = {}) {
+  return record.vehicleNumber || record.registrationNumber || "";
+}
+
+function isMotorRenewalPolicy(record = {}) {
+  const haystack = [
+    record.displayPolicyType,
+    record.policyType,
+    record.originalPolicyType,
+    record.selectedPolicyType,
+    record.documentCategory,
+    getRenewalVehicleNumber(record),
+    record.engineNumber,
+    record.chassisNumber
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return /\b(motor|vehicle|private\s+car|two\s+wheeler|commercial\s+vehicle|goods\s+carrying|registration|chassis|engine)\b/.test(haystack) ||
+    /\b[a-z]{2}[-\s]?\d{1,2}(?:[-\s]?[a-z]{1,3})?[-\s]?\d{4}\b/.test(haystack);
+}
+
 export default function RenewalsPage() {
   const searchParams = useSearchParams();
 
@@ -875,6 +898,7 @@ export default function RenewalsPage() {
                   <tr>
                     <th>Customer Name / Contact Person</th>
                     <th>Policy Type</th>
+                    <th>Vehicle No.</th>
                     <th>Contact Number</th>
                     <th>WhatsApp Link</th>
                     <th>Expiry Date</th>
@@ -888,6 +912,7 @@ export default function RenewalsPage() {
                     const daysText = getDaysRemainingText(p.expiryDate);
                     const isExpired = daysText === "Expired";
                     const isDueToday = daysText === "Due Today";
+                    const vehicleNumber = isMotorRenewalPolicy(p) ? getRenewalVehicleNumber(p) : "";
                     
                     return (
                       <tr key={p.id}>
@@ -900,6 +925,7 @@ export default function RenewalsPage() {
                           </div>
                         </td>
                         <td>{p.displayPolicyType || p.policyType || "-"}</td>
+                        <td><span className="record-code">{vehicleNumber || "-"}</span></td>
                         <td><span className="record-code">{p.contactNumber || "-"}</span></td>
                         <td>
                           {p.contactNumber ? (

@@ -43,10 +43,13 @@ export async function POST(request) {
     const expiryDate = policy.expiryDate || "soon";
     const policyType = policy.policyType || "Insurance";
     const customerName = policy.insuredName || "Customer";
+    const vehicleNumber = getMotorVehicleNumber(policy);
+    const vehicleLine = vehicleNumber ? `\nVehicle No.: ${vehicleNumber}\n` : "";
 
     const text = `Hello ${customerName},
 
 Your ${policyType} policy with ${companyName} is due for renewal on ${expiryDate}.
+${vehicleLine}
 
 Please contact us for renewal assistance.
 
@@ -80,4 +83,28 @@ BimaHeadquarter`;
     console.error("WhatsApp message generation failed:", error);
     return Response.json({ error: "Failed to generate WhatsApp message." }, { status: 500 });
   }
+}
+
+function getMotorVehicleNumber(policy = {}) {
+  const vehicleNumber = policy.vehicleNumber || policy.registrationNumber || "";
+  if (!vehicleNumber) return "";
+
+  const haystack = [
+    policy.displayPolicyType,
+    policy.policyType,
+    policy.originalPolicyType,
+    policy.selectedPolicyType,
+    policy.documentCategory,
+    vehicleNumber,
+    policy.engineNumber,
+    policy.chassisNumber
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  const isMotor = /\b(motor|vehicle|private\s+car|two\s+wheeler|commercial\s+vehicle|goods\s+carrying|registration|chassis|engine)\b/.test(haystack) ||
+    /\b[a-z]{2}[-\s]?\d{1,2}(?:[-\s]?[a-z]{1,3})?[-\s]?\d{4}\b/.test(haystack);
+
+  return isMotor ? vehicleNumber : "";
 }
