@@ -3,6 +3,7 @@ import KpiCard from "./KpiCard";
 import ReportPanel from "./ReportPanel";
 import ReportRow from "./ReportRow";
 import { formatMoney } from "@/lib/analytics";
+import InsurerLogo from "@/app/components/brand/InsurerLogo";
 
 export default function AnalyticsReports({ analytics, onSelectReport }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -96,6 +97,8 @@ export default function AnalyticsReports({ analytics, onSelectReport }) {
               subtitle="Policy count by insurer. Click a bar for records."
               items={analytics.insurers}
               max={analytics.maxInsurerCount}
+              compactInsurer
+              horizontal
               onSelect={onSelectReport}
             />
             <BarReport
@@ -219,35 +222,67 @@ function DonutReport({ title, subtitle, items, onSelect }) {
   );
 }
 
-function BarReport({ title, subtitle, items, max, valueType = "count", onSelect }) {
+function BarReport({ title, subtitle, items, max, valueType = "count", compactInsurer = false, horizontal = false, onSelect }) {
   return (
-    <section className="glass-panel report-panel chart-panel">
+    <section className={`glass-panel report-panel chart-panel ${horizontal ? "wide-chart-panel" : ""}`}>
       <div>
         <p className="eyebrow">Bar Report</p>
         <h2>{title}</h2>
         <span>{subtitle}</span>
       </div>
-      <div className="report-list">
+      <div className={`report-list ${horizontal ? "horizontal-scroll" : ""}`}>
         {items.map((item) => (
-          <ReportBar key={item.id} item={item} max={max} valueType={valueType} onClick={() => onSelect(item.report)} />
+          <ReportBar key={item.id} item={item} max={max} valueType={valueType} compactInsurer={compactInsurer} onClick={() => onSelect(item.report)} />
         ))}
       </div>
     </section>
   );
 }
 
-function ReportBar({ item, max, valueType = "count", onClick }) {
+function ReportBar({ item, max, valueType = "count", compactInsurer = false, onClick }) {
   const measure = valueType === "money" ? item.amount : item.count;
   const width = `${Math.max(4, (measure / Math.max(1, max)) * 100)}%`;
+  const value = valueType === "money" ? formatMoney(item.amount) : item.count;
+  const premium = item.amount ? formatMoney(item.amount) : "";
 
   return (
-    <button className="report-bar-row" type="button" onClick={onClick}>
-      <span>{item.label}</span>
+    <button className={`report-bar-row ${compactInsurer ? "compact-insurer-bar" : ""}`} type="button" title={item.label} onClick={onClick}>
+      {compactInsurer ? (
+        <span className="report-insurer-mark" aria-label={item.label}>
+          <InsurerLogo company={item.label} showName={false} />
+          <b>{getInsurerShortCode(item.label)}</b>
+        </span>
+      ) : (
+        <span>{item.label}</span>
+      )}
       <div><i style={{ width }} /></div>
-      <strong>{valueType === "money" ? formatMoney(item.amount) : item.count}</strong>
-      <small>{item.hint}</small>
+      <strong>{value}</strong>
+      <small>{compactInsurer ? premium : item.hint}</small>
     </button>
   );
+}
+
+function getInsurerShortCode(label = "") {
+  const text = String(label || "").toUpperCase();
+  if (/NEW\s+INDIA/.test(text)) return "NIA";
+  if (/IFFCO/.test(text)) return "IFFCO";
+  if (/TATA\s*AIG/.test(text)) return "TATA";
+  if (/HDFC/.test(text)) return "HDFC";
+  if (/ICICI/.test(text)) return "ICICI";
+  if (/BAJAJ/.test(text)) return "BAJAJ";
+  if (/ROYAL\s+SUNDARAM/.test(text)) return "RSA";
+  if (/GENERALI/.test(text)) return "FG";
+  if (/GO\s*DIGIT|DIGIT/.test(text)) return "DIGIT";
+  if (/SBI/.test(text)) return "SBI";
+  if (/UNITED\s+INDIA/.test(text)) return "UIIC";
+  if (/ORIENTAL/.test(text)) return "OIC";
+  if (/NATIONAL/.test(text)) return "NIC";
+  const words = text
+    .replace(/\b(?:THE|GENERAL|INSURANCE|COMPANY|LIMITED|LTD|CO)\b/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  return (words.map((word) => word[0]).join("") || "INS").slice(0, 5);
 }
 
 function buildDonutGradient(items) {

@@ -15,6 +15,11 @@ export const INSURER_LOGOS = [
     aliases: ["iffco tokio", "iffco-tokio"]
   },
   {
+    name: "TATA AIG",
+    src: "/logo/tata-aig-general-insurance.png",
+    aliases: ["tata aig", "tata-aig"]
+  },
+  {
     name: "New India Assurance",
     src: "/logo/new-india-assurance.svg",
     aliases: ["new india", "the new india assurance"]
@@ -38,6 +43,11 @@ export const INSURER_LOGOS = [
     name: "Bajaj Allianz",
     src: "/logo/bajaj-allianz-general-insurance.svg",
     aliases: ["bajaj allianz"]
+  },
+  {
+    name: "Royal Sundaram",
+    src: "/logo/royal-sundaram-general-insurance.png",
+    aliases: ["royal sundaram", "royal-sundaram"]
   },
   {
     name: "SBI General Insurance",

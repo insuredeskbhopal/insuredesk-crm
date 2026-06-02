@@ -4,7 +4,9 @@ export function filterRecordsForReport(records, filter) {
   if (filter.type === "all") return records;
   if (filter.type === "hasPdf") return records.filter((record) => Boolean(record.hasPdf) === filter.value);
   if (filter.type === "district") return records.filter((record) => (record.district || "Unknown district") === filter.value);
-  if (filter.type === "insuranceCompany") return records.filter((record) => (record.insuranceCompany || "Unknown insurer") === filter.value);
+  if (filter.type === "insuranceCompany") {
+    return records.filter((record) => normalizeInsuranceCompanyReportName(record.insuranceCompany) === filter.value);
+  }
   if (filter.type === "policyType") return records.filter((record) => (record.policyType || "Unknown policy type") === filter.value);
   if (filter.type === "customerName") return records.filter((record) => (record.insuredName || "Unnamed insured") === filter.value);
   if (filter.type === "recordIds") return records.filter((record) => filter.value.includes(record.id));
@@ -56,6 +58,35 @@ export const FAMILY_LABELS = {
   cyber: "Cyber Policy",
   misc: "Other Policies"
 };
+
+export function normalizeInsuranceCompanyReportName(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "Unknown insurer";
+
+  const text = raw
+    .toUpperCase()
+    .replace(/&/g, " AND ")
+    .replace(/[^A-Z0-9]+/g, " ")
+    .replace(/\b(?:THE|GENERAL|INSURANCE|ASSURANCE|COMPANY|LIMITED|LTD|CO|PVT|PRIVATE)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (/\bNEW\s+INDIA\b/.test(text)) return "New India Assurance";
+  if (/\bIFFCO\s+TOKIO\b/.test(text)) return "IFFCO Tokio General Insurance";
+  if (/\bTATA\s*AIG\b/.test(text)) return "TATA AIG";
+  if (/\bHDFC\s+ERGO\b/.test(text)) return "HDFC ERGO";
+  if (/\bICICI\s+LOMBARD\b/.test(text)) return "ICICI Lombard";
+  if (/\bBAJAJ\s+ALLIANZ\b/.test(text)) return "Bajaj Allianz";
+  if (/\bROYAL\s+SUNDARAM\b/.test(text)) return "Royal Sundaram";
+  if (/\bFUTURE\s+GENERALI\b|\bGENERALI\b/.test(text)) return "Generali";
+  if (/\bGO\s+DIGIT\b|\bDIGIT\b/.test(text)) return "Go Digit";
+  if (/\bSBI\b/.test(text)) return "SBI General";
+  if (/\bUNITED\s+INDIA\b/.test(text)) return "United India";
+  if (/\bORIENTAL\b/.test(text)) return "Oriental Insurance";
+  if (/\bNATIONAL\b/.test(text)) return "National Insurance";
+
+  return raw.replace(/\s+/g, " ");
+}
 
 export function getRecordFamily(record) {
   const policyType = (record.policyType || "").toLowerCase();

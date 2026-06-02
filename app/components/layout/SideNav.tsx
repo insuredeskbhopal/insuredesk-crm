@@ -2,6 +2,7 @@
 
 import { CircleHelp, LayoutDashboard, LogOut } from "lucide-react";
 import BrandLogo from "@/app/components/brand/BrandLogo";
+import { cachedJson } from "@/app/lib/client-api";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -29,8 +30,7 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
 
     const loadUser = async () => {
       try {
-        const response = await fetch("/api/auth/me");
-        const payload = await response.json();
+        const payload = await cachedJson("/api/auth/me", { ttlMs: 10000 });
         if (isMounted && payload?.success) {
           setUserRole(payload.user?.role || "");
         }

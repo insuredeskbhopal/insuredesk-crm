@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 import EmptyState from "@/app/components/shared/EmptyState";
+import { cachedJson } from "@/app/lib/client-api";
 
 const PAYMENT_MODE_OPTIONS = [
   { value: "", label: "Select payment mode" },
@@ -390,8 +391,7 @@ export default function RenewalsPage() {
   useEffect(() => {
     async function fetchHeaderData() {
       try {
-        const res = await fetch("/api/dashboard/header-data");
-        const data = await res.json();
+        const data = await cachedJson("/api/dashboard/header-data", { ttlMs: 5000 });
         if (data.success && data.renewalCounts) {
           setRenewalCounts(data.renewalCounts);
         }

@@ -4,6 +4,7 @@ import { useDeferredValue, useEffect, useMemo, useState, useTransition } from "r
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import "./dashboard.css";
+import { cachedJson } from "@/app/lib/client-api";
 import { getRecordSearchText } from "@/lib/search";
 import { validateContactNumber, validateContactPerson } from "@/lib/record-validation";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
@@ -92,8 +93,7 @@ export default function Dashboard({
   useEffect(() => {
     async function fetchHeaderData() {
       try {
-        const res = await fetch("/api/dashboard/header-data");
-        const data = await res.json();
+        const data = await cachedJson("/api/dashboard/header-data", { ttlMs: 5000 });
         if (data.success && data.renewalCounts) {
           setRenewalCounts(data.renewalCounts);
         }
@@ -109,6 +109,7 @@ export default function Dashboard({
   const [query, setQuery] = useState(urlQuery);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [selectedUploadId, setSelectedUploadId] = useState("");
+  const [isUploadDragging, setIsUploadDragging] = useState(false);
   const [selectedClientName, setSelectedClientName] = useState(routeClientName || "");
   const [selectedPolicyId, setSelectedPolicyId] = useState(routePolicyId || "");
   const [hasLoadedView, setHasLoadedView] = useState(false);
@@ -194,9 +195,11 @@ export default function Dashboard({
     let ignore = false;
     async function loadCurrentUser() {
       try {
-        const response = await fetch("/api/auth/me", { cache: "no-store" });
-        if (!response.ok) return;
-        const payload = await response.json();
+        const payload = await cachedJson("/api/auth/me", {
+          ttlMs: 10000,
+          fetchOptions: { cache: "no-store" }
+        });
+        if (!payload?.success) return;
         if (!ignore) setCurrentUserRole(payload?.user?.role || "");
       } catch {}
     }
@@ -517,6 +520,26 @@ export default function Dashboard({
         setToast(message);
       }
     });
+  }
+
+  function handleUploadDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!isUploadDragging) setIsUploadDragging(true);
+  }
+
+  function handleUploadDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.currentTarget.contains(event.relatedTarget)) return;
+    setIsUploadDragging(false);
+  }
+
+  function handleUploadDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsUploadDragging(false);
+    handleFilePick(event.dataTransfer?.files);
   }
 
   function updateField(key, value) {
@@ -1127,18 +1150,32 @@ export default function Dashboard({
 
               <section className="bento-grid">
                 <div className="left-stack">
-                  <section className="upload-zone">
+                  <section
+                    className={`upload-zone ${isUploadDragging ? "drag-active" : ""}`}
+                    onDragEnter={handleUploadDragOver}
+                    onDragOver={handleUploadDragOver}
+                    onDragLeave={handleUploadDragLeave}
+                    onDrop={handleUploadDrop}
+                  >
                     <div className="zone-glow glow-a" />
                     <div className="zone-glow glow-b" />
                     <div className="zone-content">
                       <div className="zone-icon">
                         <Upload size={40} />
                       </div>
-                      <h3>Drop PDF files here</h3>
+                      <h3>Drag or drop PDF files here</h3>
                       <p>Upload one or many policy PDFs. Each file is classified, reviewed one by one, then saved after missing details are added.</p>
                       <label className="browse-button">
                         Browse Files
-                        <input type="file" accept="application/pdf" multiple onChange={(event) => handleFilePick(event.target.files)} />
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          multiple
+                          onChange={(event) => {
+                            handleFilePick(event.target.files);
+                            event.target.value = "";
+                          }}
+                        />
                       </label>
                     </div>
                   </section>

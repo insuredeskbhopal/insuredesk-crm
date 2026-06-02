@@ -4,6 +4,7 @@ import { Bell, CalendarDays, Loader2, Settings, Activity, LogOut, FileText, File
 import SearchBox from "@/app/components/shared/SearchBox";
 import BrandLogo from "@/app/components/brand/BrandLogo";
 import InsurerLogo from "@/app/components/brand/InsurerLogo";
+import { cachedJson } from "@/app/lib/client-api";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -29,8 +30,10 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
 
   const fetchHeaderData = async () => {
     try {
-      const res = await fetch("/api/dashboard/header-data", { cache: "no-store" });
-      const data = await res.json();
+      const data = await cachedJson("/api/dashboard/header-data", {
+        ttlMs: 5000,
+        fetchOptions: { cache: "no-store" }
+      });
       if (data.success) {
         setRenewals(data.renewals || []);
         setNotifications(data.notifications || []);
@@ -50,8 +53,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
     fetchHeaderData();
     const fetchUser = async () => {
       try {
-        const res = await fetch("/api/auth/me");
-        const data = await res.json();
+        const data = await cachedJson("/api/auth/me", { ttlMs: 10000 });
         if (data.success && data.user) {
           setUser({
             name: data.user.name || data.user.email.split("@")[0],

@@ -512,8 +512,21 @@
   box-shadow: 0 14px 30px rgba(25, 28, 29, 0.06);
 }
 
+.upload-zone.drag-active {
+  border-color: rgba(30, 58, 138, 0.78);
+  background:
+    linear-gradient(135deg, rgba(30, 58, 138, 0.1) 0%, rgba(59, 130, 246, 0.08) 50%, rgba(139, 92, 246, 0.1) 100%),
+    #ffffff;
+  box-shadow: 0 18px 36px rgba(25, 28, 29, 0.1);
+  transform: translateY(-1px);
+}
+
 .upload-zone:hover::before {
   animation: aiMeshWave 6s ease-in-out infinite;
+}
+
+.upload-zone.drag-active .zone-icon {
+  transform: scale(1.08);
 }
 
 .zone-glow {
@@ -2528,8 +2541,27 @@ td:last-child {
   min-width: 0;
 }
 
+.report-list.horizontal-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  min-height: 80px;
+}
+
+.report-list.horizontal-scroll .report-bar-row {
+  flex: 0 0 240px;
+  min-width: 240px;
+  max-width: 240px;
+}
+
 .chart-panel {
   min-height: 360px;
+}
+
+.chart-panel.wide-chart-panel {
+  grid-column: 1 / -1;
+  min-height: 220px;
 }
 
 .donut-report {
@@ -2702,6 +2734,15 @@ td:last-child {
   padding: 12px 14px;
 }
 
+.report-bar-row.compact-insurer-bar {
+  grid-template-columns: 128px auto;
+  align-items: center;
+  justify-content: start;
+  gap: 18px;
+  min-height: 148px;
+  padding: 14px 18px;
+}
+
 .report-bar-row:hover,
 .report-bar-row:active,
 .report-bar-row:focus,
@@ -2736,6 +2777,14 @@ td:last-child {
   color: var(--primary);
 }
 
+.compact-insurer-bar strong {
+  min-width: 2ch;
+  color: var(--on-surface);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  text-align: right;
+}
+
 .report-row small,
 .report-bar-row small {
   display: block;
@@ -2750,6 +2799,22 @@ td:last-child {
   font-weight: 700;
 }
 
+.compact-insurer-bar small {
+  display: none;
+  grid-column: auto;
+  justify-self: end;
+  min-width: 0;
+  margin: 0;
+  color: var(--on-surface);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  line-height: 1.1;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .report-bar-row div {
   grid-column: 1 / -1;
   min-width: 0;
@@ -2759,12 +2824,66 @@ td:last-child {
   background: rgba(25, 28, 29, 0.07);
 }
 
+.compact-insurer-bar div {
+  display: none;
+}
+
 .report-bar-row i {
   display: block;
   height: 100%;
   border-radius: inherit;
   background: #5b9bd5;
   min-width: 4px;
+}
+
+.report-insurer-mark {
+  display: grid;
+  width: 124px;
+  height: 124px;
+  align-items: center;
+  justify-items: center;
+  min-width: 0;
+}
+
+.report-insurer-mark .insurer-logo {
+  width: 124px;
+  height: 124px;
+  --insurer-logo-width: 124px;
+  --insurer-logo-height: 124px;
+  justify-content: center;
+  overflow: visible;
+}
+
+.report-insurer-mark .insurer-logo img {
+  object-fit: contain;
+  object-position: center;
+}
+
+.report-insurer-mark b {
+  display: none;
+  width: 124px;
+  height: 124px;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid rgba(25, 28, 29, 0.1);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--on-surface);
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  line-height: 1.1;
+  padding: 4px;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.report-insurer-mark > span:not(.insurer-logo) {
+  display: none;
+}
+
+.report-insurer-mark > span:not(.insurer-logo) + b,
+.report-insurer-mark > span:only-child + b {
+  display: grid;
 }
 
 .report-drilldown {

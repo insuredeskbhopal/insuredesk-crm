@@ -818,6 +818,41 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("extracts the renamed Bajaj General private car package schedule", async () => {
+    const sourceFile = "tests/fixtures/SHREENATH DAS TANK_MP39C3588_2026-27 (1).pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "BAJAJ_ALLIANZ_MOTOR_V1",
+      insuranceCompany: "Bajaj General Insurance Limited",
+      policyType: "Private Car Package Policy",
+      policyCoverType: "Comprehensive",
+      insuredName: "SHREENATH DAS TANK",
+      policyNumber: "OG-27-2806-1801-00000005",
+      startDate: "16/05/2026",
+      expiryDate: "15/05/2027",
+      vehicleNumber: "MP39C3588",
+      registrationNumber: "MP39C3588",
+      makeModel: "MARUTI - WAGON R",
+      fuelType: "PETROL",
+      engineNumber: "K10BN5050389",
+      chassisNumber: "MA3EWDE1S00E76759",
+      cubicCapacity: "998",
+      manufacturingYear: "2018",
+      seatingCapacity: "5",
+      idv: "2,37,928.00",
+      premium: "3,529.00",
+      totalPremium: "3,529.00",
+      netPremium: "2,991.00",
+      odPremium: "515.00",
+      tpDriverOwner: "2,475.00",
+      ncb: "50%",
+      previousInsurer: "Tata AIG General Insurance Company Limited.",
+      previousPolicyNumber: "62047193400000"
+    });
+  });
+
   it("extracts Tata AIG engine number when the engine label wraps across lines", () => {
     const text = `
       TATA AIG General Insurance Company Limited
