@@ -1,6 +1,7 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import "./dashboard.css";
 import { getRecordSearchText } from "@/lib/search";
@@ -116,6 +117,13 @@ export default function Dashboard({
   const [toast, setToast] = useState("");
   const [alert, setAlert] = useState(null);
   const [isRecordFilterOpen, setIsRecordFilterOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState("xlsx");
+  const [exportCategory, setExportCategory] = useState("all");
+  const [exportDuration, setExportDuration] = useState("all");
+  const [exportCustomStart, setExportCustomStart] = useState("");
+  const [exportCustomEnd, setExportCustomEnd] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
   const [recordFilterField, setRecordFilterField] = useState("");
   const [recordFilterValue, setRecordFilterValue] = useState("");
   const [recordPdfFilter, setRecordPdfFilter] = useState("all");
@@ -715,6 +723,197 @@ export default function Dashboard({
     });
   }
 
+  async function handleExportSubmit() {
+    setIsExporting(true);
+    try {
+      let list = records;
+
+      if (exportCategory !== "all") {
+        list = list.filter(record => {
+          const isMotor = isMotorPolicyData(record);
+          if (exportCategory === "motor") {
+            return isMotor;
+          }
+          if (exportCategory === "non-motor") {
+            return !isMotor;
+          }
+          
+          const policyType = (record.policyType || "").toLowerCase();
+          const remark = (record.remark || "").toLowerCase();
+          const riskLocation = (record.riskLocation || "").toLowerCase();
+          const description = (record.description || "").toLowerCase();
+          const insuredName = (record.insuredName || "").toLowerCase();
+
+          if (exportCategory === "fire") {
+            return policyType.includes("fire") || policyType.includes("sfsp") || policyType.includes("burglary");
+          }
+          if (exportCategory === "warehouse") {
+            return policyType.includes("warehouse") || 
+                   remark.includes("warehouse") || 
+                   riskLocation.includes("warehouse") || 
+                   description.includes("warehouse") ||
+                   insuredName.includes("warehouse");
+          }
+          return true;
+        });
+      }
+
+      if (exportDuration !== "all") {
+        const now = new Date();
+        list = list.filter(record => {
+          const dateVal = record.savedAt ? new Date(record.savedAt) : (record.createdAt ? new Date(record.createdAt) : null);
+          if (!dateVal || Number.isNaN(dateVal.getTime())) return false;
+          
+          const diffMs = now.getTime() - dateVal.getTime();
+          const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+          if (exportDuration === "today") {
+            const today = new Date();
+            return dateVal.getDate() === today.getDate() &&
+                   dateVal.getMonth() === today.getMonth() &&
+                   dateVal.getFullYear() === today.getFullYear();
+          }
+          if (exportDuration === "past-3-days") {
+            return diffDays <= 3;
+          }
+          if (exportDuration === "past-week") {
+            return diffDays <= 7;
+          }
+          if (exportDuration === "past-month") {
+            return diffDays <= 30;
+          }
+          if (exportDuration === "past-3-months") {
+            return diffDays <= 90;
+          }
+          if (exportDuration === "past-6-months") {
+            return diffDays <= 180;
+          }
+          if (exportDuration === "past-year") {
+            return diffDays <= 365;
+          }
+          if (exportDuration === "custom") {
+            if (exportCustomStart) {
+              const start = new Date(exportCustomStart);
+              start.setHours(0, 0, 0, 0);
+              if (dateVal < start) return false;
+            }
+            if (exportCustomEnd) {
+              const end = new Date(exportCustomEnd);
+              end.setHours(23, 59, 59, 999);
+              if (dateVal > end) return false;
+            }
+            return true;
+          }
+          return true;
+        });
+      }
+
+      if (!list.length) {
+        setAlert({ type: "error", title: "No records", message: "No records found matching the selected export filters." });
+        setIsExporting(false);
+        return;
+      }
+
+      if (exportFormat === "csv") {
+        const headers = FIELD_SETUP.map(([label]) => label);
+        const keys = FIELD_SETUP.map(([, key]) => key);
+        const csvRows = [headers.map(h => `"${h.replace(/"/g, '""')}"`).join(",")];
+
+        list.forEach(record => {
+          const rowValues = keys.map(key => {
+            const val = record[key] ?? "";
+            return `"${String(val).replace(/"/g, '""')}"`;
+          });
+          csvRows.push(rowValues.join(","));
+        });
+
+        const csvContent = "\ufeff" + csvRows.join("\n");
+        download("policy-records-export.csv", csvContent, "text/csv;charset=utf-8;");
+        setToast("CSV exported successfully");
+      } else if (exportFormat === "xlsx") {
+        const XLSX = await import("xlsx");
+        const data = list.map(record => {
+          const obj = {};
+          FIELD_SETUP.forEach(([label, key]) => {
+            obj[label] = record[key] ?? "";
+          });
+          return obj;
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Policy Records");
+
+        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+        const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "policy-records-export.xlsx";
+        link.click();
+        URL.revokeObjectURL(url);
+        setToast("Excel exported successfully");
+      } else if (exportFormat === "pdf") {
+        const { jsPDF } = await import("jspdf");
+        await import("jspdf-autotable");
+
+        const doc = new jsPDF("l", "mm", "a4");
+        doc.setFontSize(16);
+        doc.text("Policy Records Export", 14, 15);
+        doc.setFontSize(10);
+        doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 22);
+
+        const selectedColumns = [
+          { header: "Customer ID", dataKey: "customerId" },
+          { header: "Insured Name", dataKey: "insuredName" },
+          { header: "Policy Number", dataKey: "policyNumber" },
+          { header: "Policy Type", dataKey: "policyType" },
+          { header: "Total Premium", dataKey: "totalPremium" },
+          { header: "Sum Insured", dataKey: "sumInsured" },
+          { header: "Start Date", dataKey: "startDate" },
+          { header: "Expiry Date", dataKey: "expiryDate" },
+          { header: "Company", dataKey: "insuranceCompany" }
+        ];
+
+        const tableData = list.map(record => {
+          const row = {};
+          selectedColumns.forEach(col => {
+            let val = record[col.dataKey] ?? "";
+            if (["startDate", "expiryDate"].includes(col.dataKey) && val) {
+              const d = new Date(val);
+              if (!Number.isNaN(d.getTime())) {
+                val = d.toLocaleDateString("en-IN");
+              }
+            }
+            row[col.dataKey] = val;
+          });
+          return row;
+        });
+
+        doc.autoTable({
+          columns: selectedColumns,
+          body: tableData,
+          startY: 28,
+          theme: "striped",
+          headStyles: { fillColor: [30, 58, 138] },
+          styles: { fontSize: 8, cellPadding: 2 },
+          margin: { top: 25, bottom: 20 }
+        });
+
+        doc.save("policy-records-export.pdf");
+        setToast("PDF exported successfully");
+      }
+
+      setIsExportModalOpen(false);
+    } catch (err) {
+      console.error("Export error:", err);
+      setAlert({ type: "error", title: "Export failed", message: err.message || "An error occurred during export." });
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <>
           <PageHeader
@@ -945,6 +1144,9 @@ export default function Dashboard({
                   <h2>Saved policy records</h2>
                 </div>
                 <div className="actions">
+                  <button type="button" disabled={!records.length} onClick={() => setIsExportModalOpen(true)}>
+                    <Download size={17} /> Export As
+                  </button>
                   <button type="button" disabled={!records.length} onClick={() => download("policy-records.json", JSON.stringify(records, null, 2), "application/json")}>
                     <Download size={17} /> JSON
                   </button>
@@ -1031,6 +1233,293 @@ export default function Dashboard({
                 onEdit={startEditRecord}
               />
             </section>
+          )}
+
+          {typeof window !== "undefined" && isExportModalOpen && createPortal(
+            <div
+              className="tb-modal-backdrop"
+              onClick={() => setIsExportModalOpen(false)}
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(15, 23, 42, 0.25)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                zIndex: 2000,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "24px"
+              }}
+            >
+              <div
+                className="tb-modal-card"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "24px",
+                  boxShadow: "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
+                  width: "100%",
+                  maxWidth: "480px",
+                  maxHeight: "90vh",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                  border: "none",
+                  animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both"
+                }}
+              >
+                {/* Modal Header */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "20px 24px",
+                    borderBottom: "1px solid #f1f5f9",
+                    backgroundColor: "#ffffff",
+                    color: "#0f172a"
+                  }}
+                >
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Data Export</span>
+                    <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "800", color: "#0f172a" }}>
+                      Export Policy Records
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => setIsExportModalOpen(false)}
+                    aria-label="Close export dialog"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.05)",
+                      border: "none",
+                      color: "#64748b",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "50%",
+                      transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.1)"}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.05)"}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div
+                  style={{
+                    padding: "24px",
+                    overflowY: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "20px",
+                    backgroundColor: "#ffffff"
+                  }}
+                >
+                  {/* Format selection */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <span style={{ fontSize: "13px", fontWeight: "700", color: "#334155" }}>Export Format</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                      {[
+                        { value: "xlsx", label: "Excel (.xlsx)" },
+                        { value: "csv", label: "CSV (.csv)" },
+                        { value: "pdf", label: "PDF Tabular (.pdf)" }
+                      ].map((fmt) => (
+                        <button
+                          key={fmt.value}
+                          type="button"
+                          onClick={() => setExportFormat(fmt.value)}
+                          style={{
+                            padding: "12px 8px",
+                            borderRadius: "12px",
+                            border: exportFormat === fmt.value ? "2px solid #0f172a" : "1px solid #cbd5e1",
+                            backgroundColor: exportFormat === fmt.value ? "#f8fafc" : "#ffffff",
+                            color: exportFormat === fmt.value ? "#0f172a" : "#475569",
+                            fontWeight: "700",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            transition: "all 0.2s"
+                          }}
+                        >
+                          {fmt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Category selection */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label htmlFor="export-category-select" style={{ fontSize: "13px", fontWeight: "700", color: "#334155" }}>Policy Category</label>
+                    <select
+                      id="export-category-select"
+                      value={exportCategory}
+                      onChange={(e) => setExportCategory(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        borderRadius: "12px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "14px",
+                        color: "#0f172a",
+                        fontWeight: "600",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="all">All Categories</option>
+                      <option value="fire">Fire Policy</option>
+                      <option value="warehouse">Warehouse Policy</option>
+                      <option value="motor">Motor Policy</option>
+                      <option value="non-motor">Non Motor Policy</option>
+                    </select>
+                  </div>
+
+                  {/* Time duration selection */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label htmlFor="export-duration-select" style={{ fontSize: "13px", fontWeight: "700", color: "#334155" }}>Time Duration</label>
+                    <select
+                      id="export-duration-select"
+                      value={exportDuration}
+                      onChange={(e) => setExportDuration(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        borderRadius: "12px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "14px",
+                        color: "#0f172a",
+                        fontWeight: "600",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="all">All Time</option>
+                      <option value="today">Today</option>
+                      <option value="past-3-days">Past 3 Days</option>
+                      <option value="past-week">Past Week</option>
+                      <option value="past-month">Past Month</option>
+                      <option value="past-3-months">Past 3 Months</option>
+                      <option value="past-6-months">Past 6 Months</option>
+                      <option value="past-year">Past Year</option>
+                      <option value="custom">Custom Range...</option>
+                    </select>
+                  </div>
+
+                  {/* Custom date pickers */}
+                  {exportDuration === "custom" && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", animation: "fade-in 0.2s ease-out" }}>
+                      <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                        <span style={{ fontSize: "12px", fontWeight: "600", color: "#64748b" }}>Start Date</span>
+                        <input
+                          type="date"
+                          value={exportCustomStart}
+                          onChange={(e) => setExportCustomStart(e.target.value)}
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: "8px",
+                            border: "1px solid #cbd5e1",
+                            fontSize: "13px",
+                            color: "#0f172a",
+                            fontWeight: "600"
+                          }}
+                        />
+                      </label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                        <span style={{ fontSize: "12px", fontWeight: "600", color: "#64748b" }}>End Date</span>
+                        <input
+                          type="date"
+                          value={exportCustomEnd}
+                          onChange={(e) => setExportCustomEnd(e.target.value)}
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: "8px",
+                            border: "1px solid #cbd5e1",
+                            fontSize: "13px",
+                            color: "#0f172a",
+                            fontWeight: "600"
+                          }}
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                {/* Modal Footer */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "16px 24px",
+                    borderTop: "1px solid #f1f5f9",
+                    backgroundColor: "#ffffff"
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setIsExportModalOpen(false)}
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: "12px",
+                      border: "1px solid #cbd5e1",
+                      backgroundColor: "#ffffff",
+                      color: "#475569",
+                      cursor: "pointer",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f8fafc"}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#ffffff"}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExportSubmit}
+                    disabled={isExporting}
+                    style={{
+                      padding: "10px 24px",
+                      borderRadius: "12px",
+                      border: "1px solid #cbd5e1",
+                      backgroundColor: "#ffffff",
+                      color: "#0f172a",
+                      cursor: "pointer",
+                      fontWeight: "700",
+                      fontSize: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      opacity: isExporting ? 0.7 : 1,
+                      transition: "background-color 0.2s, border-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isExporting) {
+                        e.currentTarget.style.backgroundColor = "#f8fafc";
+                        e.currentTarget.style.borderColor = "#0f172a";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isExporting) {
+                        e.currentTarget.style.backgroundColor = "#ffffff";
+                        e.currentTarget.style.borderColor = "#cbd5e1";
+                      }
+                    }}
+                  >
+                    {isExporting ? <LoaderCircle size={16} className="spin" /> : <Download size={16} />}
+                    {isExporting ? "Exporting..." : "Download Export"}
+                  </button>
+                </div>
+              </div>
+            </div>
+            , document.body
           )}
 
           {editingRecord ? (
