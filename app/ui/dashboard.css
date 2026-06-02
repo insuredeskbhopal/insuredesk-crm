@@ -1402,7 +1402,7 @@ th {
 
 .records-table {
   width: 100%;
-  min-width: 1080px;
+  min-width: 1220px;
   table-layout: fixed;
 }
 
@@ -1421,6 +1421,7 @@ th {
 .records-table .col-contact,
 .records-table .col-contact-person,
 .records-table .col-policy,
+.records-table .col-vehicle,
 .records-table .col-type,
 .records-table .col-company,
 .records-table .col-uploader,

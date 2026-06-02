@@ -65,6 +65,7 @@ const DEFAULT_RECORD_COLUMNS = [
   { key: "contactPerson", label: "Contact Person Name", className: "col-contact-person" },
   { key: "contactNumber", label: "Phone Number", className: "col-contact" },
   { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
+  { key: "vehicleNumber", label: "Vehicle No.", className: "col-vehicle", code: true, fallbackKey: "registrationNumber" },
   { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
   { key: "whatsappGroupName", label: "WP Group Name", className: "col-group" }
 ];
@@ -90,11 +91,12 @@ function formatDateTime(value) {
 }
 
 function renderCell(record, column) {
+  const rawValue = record[column.key] || (column.fallbackKey ? record[column.fallbackKey] : "");
   const value = column.format === "dateTime"
-    ? formatDateTime(record[column.key])
+    ? formatDateTime(rawValue)
     : column.format === "date"
-      ? formatDate(record[column.key])
-      : record[column.key] || "";
+      ? formatDate(rawValue)
+      : rawValue || "";
   if (column.primary) return <strong className="record-primary">{value}</strong>;
   if (column.code) return <span className="record-code">{value}</span>;
   return value;
