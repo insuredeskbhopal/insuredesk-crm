@@ -228,7 +228,7 @@ describe("generic motor policy extraction", () => {
       insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
       policyType: "Commercial Vehicle Package Policy",
       insuredName: "AGRAWAL CONSTRUCTION WORKS",
-      policyNumber: "1-817LODF8P400",
+      policyNumber: "N7302031",
       startDate: "09/05/2026",
       expiryDate: "08/05/2027",
       vehicleNumber: "MP04YN2006",
@@ -260,7 +260,7 @@ describe("generic motor policy extraction", () => {
       insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
       policyType: "Private Car Package Policy",
       insuredName: "ANU ARORA",
-      policyNumber: "1-7XSKPUJ7P400",
+      policyNumber: "N7181312",
       startDate: "07/05/2026",
       expiryDate: "06/05/2027",
       vehicleNumber: "MP04ED6434",
@@ -406,6 +406,79 @@ describe("generic motor policy extraction", () => {
       policyCoverType: "Package",
       ncb: "50%",
       rtoLocation: "BHOPAL"
+    });
+  });
+
+  it("extracts New India two wheeler package policy details", async () => {
+    const sourceFile = "tests/fixtures/MANOJ KUMAR TRIPATHI_MP04SS8925_2026-27 POLICY.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "NEW_INDIA_MOTOR_V1",
+      insuranceCompany: "The New India Assurance Company Limited",
+      insuredName: "MANOJ KUMAR TRIPATHI",
+      policyNumber: "45140031260100001785",
+      policyType: "Two Wheeler Package Policy",
+      vehicleNumber: "MP-04-SS-8925",
+      registrationNumber: "MP-04-SS-8925",
+      makeModel: "HONDA/ACTIVA 3G",
+      vehicleMake: "HONDA",
+      vehicleModel: "ACTIVA 3G",
+      variant: "STANDARD",
+      manufacturingYear: "2015",
+      engineNumber: "JF50E72328208",
+      chassisNumber: "ME4JF504JF7328151",
+      fuelType: "Petrol",
+      cubicCapacity: "109",
+      seatingCapacity: "2",
+      idv: "15480.00",
+      premium: "948.00",
+      totalPremium: "948.00",
+      netPremium: "804.00",
+      odPremium: "90.00",
+      tpDriverOwner: "714.00",
+      startDate: "01/06/2026",
+      expiryDate: "31/05/2027",
+      policyCoverType: "Package",
+      ncb: "45%",
+      rtoLocation: "BHOPAL"
+    });
+  });
+
+  it("extracts New India private car liability policy details", async () => {
+    const sourceFile = "tests/fixtures/RAKESH ASAI_CG074035_2026-27.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "NEW_INDIA_MOTOR_V1",
+      insuranceCompany: "The New India Assurance Company Limited",
+      insuredName: "RAKESH ASAI",
+      policyNumber: "45140031260200001299",
+      policyType: "Private Car Liability Policy",
+      vehicleNumber: "CG-07-4035",
+      registrationNumber: "CG-07-4035",
+      makeModel: "MARUTI SUZ/800",
+      vehicleMake: "MARUTI SUZ",
+      vehicleModel: "800",
+      variant: "MARUTI 800",
+      manufacturingYear: "2003",
+      engineNumber: "2626208",
+      chassisNumber: "SB308IN1890826",
+      fuelType: "Petrol",
+      cubicCapacity: "796",
+      seatingCapacity: "4",
+      idv: "0.00",
+      premium: "2,854.00",
+      totalPremium: "2,854.00",
+      netPremium: "2,419.00",
+      odPremium: "0.00",
+      tpDriverOwner: "2419.00",
+      startDate: "15/05/2026",
+      expiryDate: "14/05/2027",
+      policyCoverType: "Third Party",
+      rtoLocation: "DURG"
     });
   });
 
