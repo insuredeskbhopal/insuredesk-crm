@@ -822,6 +822,9 @@ export default function Dashboard({
         list.forEach(record => {
           const rowValues = keys.map(key => {
             const val = record[key] ?? "";
+            if (key === "policyNumber" && val) {
+              return `="` + String(val).replace(/"/g, '""') + `"`;
+            }
             return `"${String(val).replace(/"/g, '""')}"`;
           });
           csvRows.push(rowValues.join(","));
@@ -831,7 +834,8 @@ export default function Dashboard({
         download("policy-records-export.csv", csvContent, "text/csv;charset=utf-8;");
         setToast("CSV exported successfully");
       } else if (exportFormat === "xlsx") {
-        const XLSX = await import("xlsx");
+        const XLSXModule = await import("xlsx");
+        const XLSX = XLSXModule.default || XLSXModule;
         const data = list.map(record => {
           const obj = {};
           FIELD_SETUP.forEach(([label, key]) => {
@@ -841,6 +845,24 @@ export default function Dashboard({
         });
 
         const worksheet = XLSX.utils.json_to_sheet(data);
+
+        // Force Policy Number column to treat values as text/string cells
+        let policyNumberColIndex = -1;
+        const headersList = FIELD_SETUP.map(([label]) => label);
+        policyNumberColIndex = headersList.indexOf("Policy Number");
+        
+        if (policyNumberColIndex !== -1) {
+          const range = XLSX.utils.decode_range(worksheet["!ref"]);
+          for (let r = range.s.r + 1; r <= range.e.r; r++) {
+            const cellAddress = XLSX.utils.encode_cell({ r, c: policyNumberColIndex });
+            if (worksheet[cellAddress]) {
+              worksheet[cellAddress].t = "s";
+              worksheet[cellAddress].v = String(worksheet[cellAddress].v);
+              delete worksheet[cellAddress].z;
+            }
+          }
+        }
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Policy Records");
 
@@ -855,8 +877,11 @@ export default function Dashboard({
         URL.revokeObjectURL(url);
         setToast("Excel exported successfully");
       } else if (exportFormat === "pdf") {
-        const { jsPDF } = await import("jspdf");
-        await import("jspdf-autotable");
+        const jspdfModule = await import("jspdf");
+        const jsPDF = jspdfModule.jsPDF || jspdfModule.default || jspdfModule;
+        
+        const autoTableModule = await import("jspdf-autotable");
+        const autoTable = autoTableModule.default || autoTableModule;
 
         const doc = new jsPDF("l", "mm", "a4");
         doc.setFontSize(16);
@@ -864,17 +889,10 @@ export default function Dashboard({
         doc.setFontSize(10);
         doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 22);
 
-        const selectedColumns = [
-          { header: "Customer ID", dataKey: "customerId" },
-          { header: "Insured Name", dataKey: "insuredName" },
-          { header: "Policy Number", dataKey: "policyNumber" },
-          { header: "Policy Type", dataKey: "policyType" },
-          { header: "Total Premium", dataKey: "totalPremium" },
-          { header: "Sum Insured", dataKey: "sumInsured" },
-          { header: "Start Date", dataKey: "startDate" },
-          { header: "Expiry Date", dataKey: "expiryDate" },
-          { header: "Company", dataKey: "insuranceCompany" }
-        ];
+        const selectedColumns = FIELD_SETUP.map(([label, key]) => ({
+          header: label,
+          dataKey: key
+        }));
 
         const tableData = list.map(record => {
           const row = {};
@@ -891,14 +909,15 @@ export default function Dashboard({
           return row;
         });
 
-        doc.autoTable({
+        autoTable(doc, {
           columns: selectedColumns,
           body: tableData,
           startY: 28,
           theme: "striped",
-          headStyles: { fillColor: [30, 58, 138] },
-          styles: { fontSize: 8, cellPadding: 2 },
-          margin: { top: 25, bottom: 20 }
+          styles: { fontSize: 7, cellPadding: 2, overflow: "linebreak" },
+          margin: { top: 25, bottom: 20 },
+          horizontalPageBreak: true,
+          horizontalPageBreakRepeat: "customerId"
         });
 
         doc.save("policy-records-export.pdf");
