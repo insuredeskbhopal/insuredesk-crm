@@ -218,6 +218,70 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("extracts the IFFCO Tokio compressed commercial vehicle table", async () => {
+    const sourceFile = "tests/fixtures/AGRAWAL CONSTRUCTION WORKS_MP04YN2006 POLICY (1).PDF";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "IFFCO_TOKIO_MOTOR_V1",
+      insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
+      policyType: "Commercial Vehicle Package Policy",
+      insuredName: "AGRAWAL CONSTRUCTION WORKS",
+      policyNumber: "1-817LODF8P400",
+      startDate: "09/05/2026",
+      expiryDate: "08/05/2027",
+      vehicleNumber: "MP04YN2006",
+      registrationNumber: "MP04YN2006",
+      makeModel: "TATA LPK 2821.K",
+      engineNumber: "RMCCUX103453",
+      chassisNumber: "DTRMXMAT835401S1C09841",
+      cubicCapacity: "2000",
+      manufacturingYear: "2025",
+      seatingCapacity: "2",
+      idv: "3739960.00",
+      premium: "22119.10",
+      totalPremium: "22119.10",
+      netPremium: "11452.00",
+      odPremium: "4135.00",
+      tpDriverOwner: "7317.00",
+      ncb: "20%",
+      policyCoverType: "Package"
+    });
+  });
+
+  it("extracts the IFFCO Tokio compressed private car table", async () => {
+    const sourceFile = "tests/fixtures/ANU  ARORA_MP04ED6434_2026-27.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "IFFCO_TOKIO_MOTOR_V1",
+      insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
+      policyType: "Private Car Package Policy",
+      insuredName: "ANU ARORA",
+      policyNumber: "1-7XSKPUJ7P400",
+      startDate: "07/05/2026",
+      expiryDate: "06/05/2027",
+      vehicleNumber: "MP04ED6434",
+      registrationNumber: "MP04ED6434",
+      makeModel: "MARUTI EECO 7 STR STD",
+      engineNumber: "G12BN1098352",
+      chassisNumber: "MA3ERLF1S00A44711",
+      cubicCapacity: "1196",
+      manufacturingYear: "2022",
+      seatingCapacity: "7",
+      idv: "324000.00",
+      premium: "6099.42",
+      totalPremium: "6099.42",
+      netPremium: "5168.00",
+      odPremium: "1422.00",
+      tpDriverOwner: "3746.00",
+      ncb: "45%",
+      policyCoverType: "Comprehensive"
+    });
+  });
+
   it("locks the IFFCO Tokio standalone OD private car contract", async () => {
     const sourceFile = "tests/fixtures/POOJA-SHARMA-MP04ZX6611 (1).pdf";
     const parsed = await pdf(readFileSync(sourceFile));
