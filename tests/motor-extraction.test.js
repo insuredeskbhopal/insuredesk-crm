@@ -26,7 +26,7 @@ describe("generic motor policy extraction", () => {
       const compactRegistration = registrationNumber.replace(/[^A-Z0-9]/gi, "").toUpperCase();
       const compactEngine = String(result.engineNumber || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
 
-      expect(registrationNumber, fileName).toMatch(/(?:[A-Z]{2}[-\s]?\d{1,2}[-\s]?[A-Z]{1,3}[-\s]?\d{4}|[A-Z]{2}[-\s]\d{1,2}[-\s]\d{4})/i);
+      expect(registrationNumber, fileName).toMatch(/(?:[A-Z]{2}[-\s]?\d{1,2}[-\s]?[A-Z]{1,3}[-\s]?\d{4}|[A-Z]{2}[-\s]\d{1,2}[-\s]\d{4}|[A-Z]{2}[-\s]\d{1,2})/i);
       expect(compactEngine, fileName).not.toBe(compactRegistration);
       expect(compactEngine, fileName).not.toContain(compactRegistration);
       expect(result.engineNumber, fileName).not.toMatch(/^(?:ENGINE|MOTOR|SEATING|CHASSIS)$/i);
@@ -398,6 +398,36 @@ describe("generic motor policy extraction", () => {
       idv: "6,28,803.00",
       totalIdv: "6,28,803.00",
       sumInsured: "6,28,803.00"
+    });
+  });
+
+  it("extracts New India glued registration no when a new vehicle only has an RTO prefix", () => {
+    const text = `
+      THE NEW INDIA ASSURANCE CO. LTD.
+      Commercial Vehicle Package Policy Enhanced Covers
+      Policy Number :45140031260300001471
+      Insured's NameVIJAY KUMAR MISHRA CONST PVT LTD
+      VEHICLE DETAILS
+      Chassis no./Engine NumberMAT567014T3B06261/7B62300D03162B64556307
+      Type of fuel:DieselCubic capacity(cc)/Wattage(kW): 0cc
+      Make/Model:TATA/SIGNA 2830.KRegistration no.MP-04
+      Seating capacity including Driver: 3
+      INSURED DECLARED VALUE (Rs)
+      VehicleTrailerNon-Elec AccElectrical AccBi-fuel/CNG/LPG kitTotal Value
+      1364770000013647700
+    `;
+
+    const result = extractPolicyFromText(text, "new-india-new-vehicle.pdf");
+
+    expect(result).toMatchObject({
+      insuranceCompany: "The New India Assurance Company Limited",
+      vehicleNumber: "MP-04",
+      registrationNumber: "MP-04",
+      makeModel: "TATA/SIGNA 2830.K",
+      chassisNumber: "MAT567014T3B06261",
+      engineNumber: "7B62300D03162B64556307",
+      idv: "13647700.00",
+      totalIdv: "13647700.00"
     });
   });
 
