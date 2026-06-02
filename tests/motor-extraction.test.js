@@ -26,7 +26,7 @@ describe("generic motor policy extraction", () => {
       const compactRegistration = registrationNumber.replace(/[^A-Z0-9]/gi, "").toUpperCase();
       const compactEngine = String(result.engineNumber || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
 
-      expect(registrationNumber, fileName).toMatch(/[A-Z]{2}[-\s]?\d{1,2}[-\s]?[A-Z]{1,3}[-\s]?\d{4}/i);
+      expect(registrationNumber, fileName).toMatch(/(?:[A-Z]{2}[-\s]?\d{1,2}[-\s]?[A-Z]{1,3}[-\s]?\d{4}|[A-Z]{2}[-\s]\d{1,2}[-\s]\d{4})/i);
       expect(compactEngine, fileName).not.toBe(compactRegistration);
       expect(compactEngine, fileName).not.toContain(compactRegistration);
       expect(result.engineNumber, fileName).not.toMatch(/^(?:ENGINE|MOTOR|SEATING|CHASSIS)$/i);
@@ -371,6 +371,33 @@ describe("generic motor policy extraction", () => {
       tpDriverOwner: "3,691.00",
       odPremium: "11,433.00",
       gstAmount: "2,722.00"
+    });
+  });
+
+  it("treats New India registration no as vehicle number and IDV as insured declared value", () => {
+    const text = `
+      PRIVATE CAR PACKAGE POLICY
+      The New India Assurance Company Limited
+      Policy No 45140031260300008888
+      Name of Insured SURESH PATEL
+      VEHICLE DETAILS
+      Registration no. MP-04-CX-1283
+      Chassis No. MA1NA2XJXN6B94278
+      Engine No. XJN6B20464
+      Make / Model MAHINDRA/BOLERO NEO
+      Insured Declared Value (IDV) Rs. 6,28,803
+      Total Premium : 17,846
+    `;
+
+    const result = extractPolicyFromText(text, "new-india-registration-idv.pdf");
+
+    expect(result).toMatchObject({
+      insuranceCompany: "The New India Assurance Company Limited",
+      vehicleNumber: "MP-04-CX-1283",
+      registrationNumber: "MP-04-CX-1283",
+      idv: "6,28,803.00",
+      totalIdv: "6,28,803.00",
+      sumInsured: "6,28,803.00"
     });
   });
 
