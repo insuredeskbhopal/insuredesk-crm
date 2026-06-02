@@ -818,6 +818,36 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("extracts Tata AIG engine number when the engine label wraps across lines", () => {
+    const text = `
+      TATA AIG General Insurance Company Limited
+      Auto Secure - Private Car Package Policy
+      Policy No.6206191778 00 00
+      Own Damage Cover22/04/2026 (00:00 Hrs)21/04/2027 (Midnight)
+      NameMRS CHANCHAL ANAND SONI
+      Vehicle Details - Accurate Vehicle Details, Custom Insurance:
+      Registration No.MP 04 ZH 3415
+      Make / Model /
+      Variant
+      MARUTI / XL6 / ZETA M
+      Fuel TypeCNG
+      Engine Number /
+      Motor No. (for EV)
+      K15CN9223488
+      Chassis No.
+      MA3CNC62SPD328639
+      Body TypeSUV
+      CC/KW1462
+      Mfg. Year2023
+    `;
+
+    const result = extractPolicyFromText(text, "tata-aig-wrapped-engine.pdf");
+
+    expect(result.documentFormat).toBe("TATA_AIG_MOTOR_V1");
+    expect(result.engineNumber).toBe("K15CN9223488");
+    expect(result.chassisNumber).toBe("MA3CNC62SPD328639");
+  });
+
   it("does not assign a company-specific motor parser from generic policy words", () => {
     const genericPrivateCarText = `
       PRIVATE CAR COMPREHENSIVE POLICY

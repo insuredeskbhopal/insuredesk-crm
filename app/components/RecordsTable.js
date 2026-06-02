@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Download, Pencil, Eye, X, Printer } from "lucide-react";
+import { Download, Pencil, Eye, X, Printer, Trash2 } from "lucide-react";
 
 function DetailField({ label, value, wide }) {
   if (value === undefined || value === null || String(value).trim() === "") return null;
@@ -100,7 +100,7 @@ function renderCell(record, column) {
   return value;
 }
 
-export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS, canEdit = false, onEdit }) {
+export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS, canEdit = false, onEdit, canDelete = false, onDelete }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
@@ -382,7 +382,7 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
     return pages;
   }, [currentPage, pageCount]);
   const tableMinWidth = columns.length < DEFAULT_RECORD_COLUMNS.length
-    ? Math.max(980, (columns.length * 132) + (canEdit ? 88 : 0) + 64)
+    ? Math.max(980, (columns.length * 132) + (canEdit ? 88 : 0) + (canDelete ? 88 : 0) + 64)
     : undefined;
 
   useEffect(() => {
@@ -403,6 +403,7 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
             ))}
             <col className="col-action" />
             {canEdit ? <col className="col-action" /> : null}
+            {canDelete ? <col className="col-action" /> : null}
             <col className="col-pdf" />
           </colgroup>
           <thead>
@@ -412,6 +413,7 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
               ))}
               <th>View</th>
               {canEdit ? <th>Edit</th> : null}
+              {canDelete ? <th>Delete</th> : null}
               <th>PDF</th>
             </tr>
           </thead>
@@ -445,6 +447,19 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
                     </button>
                   </td>
                 ) : null}
+                {canDelete ? (
+                  <td>
+                    <button
+                      aria-label={`Delete ${record.policyNumber || record.insuredName || "policy record"}`}
+                      className="record-icon-action danger"
+                      title="Delete duplicate policy record"
+                      type="button"
+                      onClick={() => onDelete?.(record)}
+                    >
+                      <Trash2 size={20} strokeWidth={2.5} />
+                    </button>
+                  </td>
+                ) : null}
                 <td>
                   {record.hasPdf ? (
                     <a className="pdf-icon-link" href={`/api/records/${record.id}/pdf`} title="Download PDF" aria-label="Download PDF">
@@ -457,7 +472,7 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
               </tr>
             )) : (
               <tr>
-                <td className="empty" colSpan={columns.length + (canEdit ? 3 : 2)}>No database records yet.</td>
+                <td className="empty" colSpan={columns.length + 2 + (canEdit ? 1 : 0) + (canDelete ? 1 : 0)}>No database records yet.</td>
               </tr>
             )}
           </tbody>

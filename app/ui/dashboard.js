@@ -239,6 +239,24 @@ export default function Dashboard({
       extractedData: record
     })
   })), [policyRecordResults]);
+  const duplicateRecordIds = useMemo(() => {
+    const groups = new Map();
+    policyRecordResults.forEach((record) => {
+      const key = getDuplicatePolicyKey(record);
+      if (!key) return;
+      const group = groups.get(key) || [];
+      group.push(record.id);
+      groups.set(key, group);
+    });
+
+    const ids = new Set();
+    groups.forEach((group) => {
+      if (group.length > 1) {
+        group.forEach((id) => ids.add(id));
+      }
+    });
+    return ids;
+  }, [policyRecordResults]);
   const recordViewOptions = useMemo(() => {
     const categories = new Map();
     recordsWithSchema.forEach(({ validation }) => {
@@ -247,16 +265,35 @@ export default function Dashboard({
       const existing = categories.get(key) || { key, label, count: 0 };
       categories.set(key, { ...existing, count: existing.count + 1 });
     });
-    return [{ key: "all", label: "All Records", count: policyRecordResults.length }, ...Array.from(categories.values())];
-  }, [policyRecordResults.length, recordsWithSchema]);
+    return [
+      { key: "all", label: "All Records", count: policyRecordResults.length },
+      { key: "duplicates", label: "Duplicate Policies", count: duplicateRecordIds.size },
+      ...Array.from(categories.values())
+    ];
+  }, [duplicateRecordIds.size, policyRecordResults.length, recordsWithSchema]);
   const visiblePolicyRecordResults = useMemo(() => {
     if (recordViewCategory === "all") return policyRecordResults;
+    if (recordViewCategory === "duplicates") {
+      return policyRecordResults.filter((record) => duplicateRecordIds.has(record.id));
+    }
     return recordsWithSchema
       .filter(({ validation }) => (validation.resolvedSchema?.groupId || "general") === recordViewCategory)
       .map(({ record }) => record);
-  }, [policyRecordResults, recordViewCategory, recordsWithSchema]);
+  }, [duplicateRecordIds, policyRecordResults, recordViewCategory, recordsWithSchema]);
   const recordViewColumns = useMemo(() => {
     if (recordViewCategory === "all") return undefined;
+    if (recordViewCategory === "duplicates") {
+      return [
+        { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
+        { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
+        { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
+        { key: "vehicleNumber", label: "Vehicle No.", className: "col-default" },
+        { key: "expiryDate", label: "Expiry Date", className: "col-date", format: "date" },
+        { key: "savedAt", label: "Saved At", className: "col-saved", format: "dateTime" },
+        { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },
+        { key: "sourceFile", label: "Source File", className: "col-source" }
+      ];
+    }
 
     const fieldLabels = new Map(FIELD_SETUP.map(([label, key]) => [key, label]));
     const classNames = {
@@ -574,6 +611,42 @@ export default function Dashboard({
       } catch (error) {
         const message = error?.message || "Policy record could not be updated.";
         setAlert({ type: "error", title: "Update failed", message });
+        setToast(message);
+      }
+    });
+  }
+
+  function deletePolicyRecord(record) {
+    if (!canEditPolicyRecords) {
+      setAlert({ type: "error", title: "Delete unavailable", message: "Only admin, super admin, and manager roles can delete policy records." });
+      return;
+    }
+    if (!record?.id) return;
+    const label = record.policyNumber || record.insuredName || "this policy record";
+    if (!window.confirm(`Delete duplicate policy record ${label}?`)) return;
+
+    startSaving(async () => {
+      try {
+        const response = await fetch(`/api/policy-records/${record.id}`, {
+          method: "DELETE"
+        });
+        if (!response.ok) {
+          let message = "Policy record could not be deleted.";
+          try {
+            const payload = await response.json();
+            if (payload?.error) message = payload.error;
+          } catch {}
+          setAlert({ type: "error", title: "Delete failed", message });
+          setToast(message);
+          return;
+        }
+
+        setRecords((current) => current.filter((item) => item.id !== record.id));
+        setAlert({ type: "success", title: "Record deleted", message: `${label} was removed.` });
+        setToast("Policy record deleted");
+      } catch (error) {
+        const message = error?.message || "Policy record could not be deleted.";
+        setAlert({ type: "error", title: "Delete failed", message });
         setToast(message);
       }
     });
@@ -1251,6 +1324,8 @@ export default function Dashboard({
                 columns={recordViewColumns}
                 canEdit={canEditPolicyRecords}
                 onEdit={startEditRecord}
+                canDelete={canEditPolicyRecords && recordViewCategory === "duplicates"}
+                onDelete={deletePolicyRecord}
               />
             </section>
           )}
@@ -1949,6 +2024,25 @@ function isMotorPolicyData(data) {
     data.chassisNumber ||
     /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(data.policyType || "")
   );
+}
+
+function getDuplicatePolicyKey(record = {}) {
+  const policyNumber = compactDuplicateValue(record.policyNumber);
+  if (policyNumber) return `policy:${policyNumber}`;
+
+  const fallbackParts = [
+    record.insuranceCompany,
+    record.insuredName,
+    record.vehicleNumber || record.registrationNumber,
+    record.expiryDate
+  ].map(compactDuplicateValue);
+
+  if (fallbackParts.filter(Boolean).length < 3) return "";
+  return `fallback:${fallbackParts.join("|")}`;
+}
+
+function compactDuplicateValue(value = "") {
+  return String(value || "").replace(/[^a-z0-9]/gi, "").toLowerCase();
 }
 
 function getPageNumbers(currentPage, totalPages) {

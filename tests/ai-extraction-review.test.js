@@ -23,6 +23,33 @@ describe("AI extraction review guardrails", () => {
     expect(issues).toContain("expiryDate missing");
   });
 
+  it("flags empty compact identifier values as invalid instead of source-backed", () => {
+    const issues = getExtractionAuthenticityIssues({
+      insuranceCompany: "TATA AIG",
+      policyType: "Auto Secure - Private Car Package Policy",
+      insuredName: "MRS CHANCHAL ANAND SONI",
+      policyNumber: "6206191778 00 00",
+      startDate: "2026-04-22",
+      expiryDate: "2027-04-21",
+      registrationNumber: "MP04ZH3415",
+      vehicleNumber: "MP04ZH3415",
+      makeModel: "MARUTI XL6",
+      engineNumber: "/",
+      chassisNumber: "MA3CNC62SPD328639",
+      fuelType: "CNG",
+      cubicCapacity: "1462",
+      seatingCapacity: "6",
+      idv: "907994.00",
+      premium: "21466.00",
+      totalPremium: "21466.00",
+      netPremium: "18075.00",
+      odPremium: "6084.56",
+      tpDriverOwner: "4051.00"
+    }, "Engine Number / Motor No. (for EV)\nK15CN9223488\nChassis No.MA3CNC62SPD328639");
+
+    expect(issues).toContain("engineNumber is invalid");
+  });
+
   it("accepts AI fields only when source evidence exists and current values are missing or weak", () => {
     const rawText = `
       IFFCO-TOKIO GENERAL INSURANCE CO.LTD

@@ -109,9 +109,10 @@ export async function GET(request) {
 
       if (tab === "upcoming") {
         if (expiry === null) return false;
-        // Upcoming defaults to <= 90 Days and >= 0 (due today or in the future)
-        const maxDays = daysParam ? parseInt(daysParam, 10) : 90;
-        return daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= maxDays;
+        // Renewal worklist should only show policies with fewer than 30 days remaining.
+        const requestedMaxDays = daysParam ? parseInt(daysParam, 10) : 29;
+        const maxDays = Math.min(Number.isFinite(requestedMaxDays) ? requestedMaxDays : 29, 29);
+        return daysRemaining !== null && daysRemaining >= 0 && daysRemaining < 30 && daysRemaining <= maxDays;
       } else if (tab === "expired") {
         if (expiry === null) return false;
         return daysRemaining !== null && daysRemaining < 0;
