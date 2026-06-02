@@ -961,48 +961,48 @@ export default function Dashboard({
                     value: renewalCounts.eodPremium ? formatMoney(renewalCounts.eodPremium) : "₹0",
                     subtext: `${renewalCounts.eodCount} polic${renewalCounts.eodCount === 1 ? "y" : "ies"} saved today`,
                     color: "#f59e0b",
-                    tab: "all"
+                    reportPeriod: "eod"
                   },
                   {
                     label: "MTD Total Premium",
                     value: renewalCounts.mtdPremium ? formatMoney(renewalCounts.mtdPremium) : "₹0",
                     subtext: `${renewalCounts.mtdCount} polic${renewalCounts.mtdCount === 1 ? "y" : "ies"} saved this month`,
                     color: "#d97706",
-                    tab: "all"
+                    reportPeriod: "mtd"
                   },
                   {
                     label: "YTD Total Premium",
                     value: renewalCounts.ytdPremium ? formatMoney(renewalCounts.ytdPremium) : "₹0",
                     subtext: `${renewalCounts.ytdCount} polic${renewalCounts.ytdCount === 1 ? "y" : "ies"} saved this year`,
                     color: "var(--accent)",
-                    tab: "all"
+                    reportPeriod: "ytd"
                   },
                   {
                     label: "Expired Premium",
                     value: renewalCounts.expiredPremium ? formatMoney(renewalCounts.expiredPremium) : "₹0",
                     subtext: `${renewalCounts.expired} expired polic${renewalCounts.expired === 1 ? "y" : "ies"}`,
                     color: "#dc2626",
-                    tab: "expired"
+                    reportPeriod: "expired"
                   },
                   {
                     label: "Renewed Premium",
                     value: renewalCounts.renewedPremium ? formatMoney(renewalCounts.renewedPremium) : "₹0",
                     subtext: `${renewalCounts.renewed} renewed polic${renewalCounts.renewed === 1 ? "y" : "ies"}`,
                     color: "#10b981",
-                    tab: "renewed"
+                    reportPeriod: "renewed"
                   },
                   {
                     label: "Lost Premium",
                     value: renewalCounts.lostPremium ? formatMoney(renewalCounts.lostPremium) : "₹0",
                     subtext: `${renewalCounts.lost} lost polic${renewalCounts.lost === 1 ? "y" : "ies"}`,
                     color: "#6b7280",
-                    tab: "lost"
+                    reportPeriod: "lost"
                   }
                 ].map((item) => (
                   <article
                     key={item.label}
                     onClick={() => {
-                      router.push(`/dashboard/renewals?tab=${item.tab}`);
+                      router.push(`/premium-reports/${item.reportPeriod}`);
                     }}
                     style={{
                       padding: "20px",
