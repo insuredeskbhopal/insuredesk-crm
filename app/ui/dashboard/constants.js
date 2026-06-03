@@ -12,7 +12,14 @@ import {
 
 export const NAV_ITEMS = [
   { id: "bulk-entry", label: "Bulk PDF Upload", icon: Upload },
-  { id: "manual-entry", label: "Manual Policy Entry", icon: Edit3 },
+  {
+    id: "manual-entry",
+    label: "Manual Policy Entry",
+    icon: Edit3,
+    children: [
+      { id: "customer-profiling", label: "Customer Profiling" }
+    ]
+  },
   { id: "records", label: "Policy Records", icon: FileText },
   { id: "customers", label: "Customer Management", icon: Users },
   { id: "renewals", label: "Renewals", icon: RefreshCw },

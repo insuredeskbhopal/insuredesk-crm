@@ -1,6 +1,7 @@
 import { CheckCircle, LoaderCircle, ShieldCheck, Trash2 } from "lucide-react";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
 import PreviewField from "../shared/PreviewField";
+import { applyAiSuggestionToReviewField, getEligibleAiSuggestion } from "./aiSuggestionHelpers";
 import { validateContactPerson, validateContactNumber } from "@/lib/record-validation";
 import EmptyState from "../shared/EmptyState";
 import InsurerLogo from "@/app/components/brand/InsurerLogo";
@@ -120,6 +121,8 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
                            wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
                            error={fieldError}
                            disabled={isDisabled}
+                           suggestion={getEligibleAiSuggestion(upload, key)}
+                           onApplySuggestion={(suggestion) => applyAiSuggestionToReviewField({ fieldKey: key, suggestion, onFieldChange })}
                         />
                       );
                     })}

@@ -1,9 +1,11 @@
-export default function PreviewField({ label, meta, value, onChange, type = "text", wide, options, error, disabled }) {
+export default function PreviewField({ label, meta, value, onChange, type = "text", wide, options, error, disabled, suggestion, onApplySuggestion }) {
   const metaClass = meta ? `meta-${meta.toLowerCase().replace(" ", "-")}` : "";
+  const hasSuggestion = Boolean(suggestion?.suggestedValue);
   const labelEl = (
     <span>
       {label}
       {meta ? <em className={metaClass}>{meta}</em> : null}
+      {hasSuggestion ? <em className="meta-ai-suggestion">AI suggestion available</em> : null}
     </span>
   );
 
@@ -28,6 +30,24 @@ export default function PreviewField({ label, meta, value, onChange, type = "tex
     <label className={classes}>
       {labelEl}
       {inputEl}
+      {hasSuggestion ? (
+        <div className="ai-suggestion-card">
+          <div>
+            <strong>Suggested value</strong>
+            <span>{suggestion.suggestedValue}</span>
+          </div>
+          <div>
+            <strong>Current value</strong>
+            <span>{value || "-"}</span>
+          </div>
+          {suggestion.evidenceText ? (
+            <blockquote>{suggestion.evidenceText}</blockquote>
+          ) : null}
+          <button type="button" onClick={() => onApplySuggestion ? onApplySuggestion(suggestion) : onChange(suggestion.suggestedValue)} disabled={disabled}>
+            Apply Suggestion
+          </button>
+        </div>
+      ) : null}
       {error ? <span className="field-error-message">{error}</span> : null}
     </label>
   );

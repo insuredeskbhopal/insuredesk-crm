@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleHelp, LayoutDashboard, LogOut } from "lucide-react";
+import { ChevronDown, CircleHelp, LayoutDashboard, LogOut } from "lucide-react";
 import BrandLogo from "@/app/components/brand/BrandLogo";
 import { cachedJson } from "@/app/lib/client-api";
 import { useRouter, usePathname } from "next/navigation";
@@ -10,6 +10,7 @@ const ROUTE_MAP = {
   "dashboard": "/dashboard",
   "bulk-entry": "/bulk-upload",
   "manual-entry": "/manual-policy-entry",
+  "customer-profiling": "/dashboard/manual-entry/customer-profiling",
   "records": "/policy-records",
   "customers": "/customer-management",
   "renewals": "/dashboard/renewals",
@@ -50,6 +51,7 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
     if (pathname === "/dashboard") return "dashboard";
     if (pathname === "/bulk-upload") return "bulk-entry";
     if (pathname === "/manual-policy-entry") return "manual-entry";
+    if (pathname === "/dashboard/manual-entry/customer-profiling") return "customer-profiling";
     if (pathname === "/policy-records") return "records";
     if (pathname.startsWith("/customer-management")) return "customers";
     if (pathname.startsWith("/dashboard/renewals")) return "renewals";
@@ -95,10 +97,23 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
             return true;
           }).map((item) => {
             const Icon = item.icon;
+            const isParentActive = activePage === item.id || item.children?.some((child) => child.id === activePage);
             return (
-              <button className={activePage === item.id ? "active" : ""} type="button" key={item.id} onClick={() => handleNavigate(item.id)}>
-                <Icon size={20} /> {item.label}
-              </button>
+              <div className="side-nav-group" key={item.id}>
+                <button className={isParentActive ? "active" : ""} type="button" onClick={() => handleNavigate(item.id)}>
+                  <Icon size={20} /> {item.label}
+                  {item.children?.length ? <ChevronDown className="side-nav-chevron" size={14} /> : null}
+                </button>
+                {item.children?.length && isParentActive ? (
+                  <div className="side-nav-submenu">
+                    {item.children.map((child) => (
+                      <button className={activePage === child.id ? "active" : ""} type="button" key={child.id} onClick={() => handleNavigate(child.id)}>
+                        {child.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             );
           })}
         </nav>

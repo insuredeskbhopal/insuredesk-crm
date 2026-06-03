@@ -49,6 +49,7 @@ model Organization {
   policyRecords PolicyRecord[]
   uploadedFiles UploadedFile[]
   auditLogs     AuditLog[]
+  customerProfiles CustomerProfile[]
 
   @@map("organizations")
 }
@@ -73,6 +74,55 @@ model AuditLog {
   @@index([createdAt])
   @@index([userId])
   @@map("audit_logs")
+}
+
+model CustomerProfile {
+  id                  String       @id @default(uuid()) @db.Uuid
+  name                String
+  phone               String
+  alternatePhone      String?      @map("alternate_phone")
+  email               String?
+  address             String?
+  city                String?
+  state               String?
+  occupation          String?
+  businessType        String?      @map("business_type")
+  contactPersonName   String?      @map("contact_person_name")
+  customerType        String       @default("New") @map("customer_type")
+  assignedTo          String?      @map("assigned_to")
+  referenceSource     String?      @map("reference_source")
+  sourcePolicyId      String?      @map("source_policy_id") @db.Uuid
+  sourcePolicyNumber  String?      @map("source_policy_number")
+  sourcePolicyType    String?      @map("source_policy_type")
+  sourceCompany       String?      @map("source_company")
+  selectedLOBs        Json         @default("[]") @map("selected_lobs")
+  lobDetails          Json         @default("{}") @map("lob_details")
+  status              String       @default("New Lead")
+  followUpDate        DateTime?    @map("follow_up_date") @db.Timestamptz(6)
+  lastFollowUpDate    DateTime?    @map("last_follow_up_date") @db.Timestamptz(6)
+  nextFollowUpDate    DateTime?    @map("next_follow_up_date") @db.Timestamptz(6)
+  followUpRemark      String?      @map("follow_up_remark")
+  followUpOutcome     String?      @map("follow_up_outcome")
+  remarks             String?
+  convertedToCustomer Boolean      @default(false) @map("converted_to_customer")
+  convertedPolicyId   String?      @map("converted_policy_id") @db.Uuid
+  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime?    @map("deleted_at") @db.Timestamptz(6)
+
+  organizationId      String?      @map("organization_id") @db.Uuid
+  organization        Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdById         String?      @map("created_by_id") @db.Uuid
+  createdBy           User?        @relation("CustomerProfileCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById         String?      @map("updated_by_id") @db.Uuid
+  updatedBy           User?        @relation("CustomerProfileUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([phone])
+  @@index([sourcePolicyNumber])
+  @@index([organizationId])
+  @@index([createdById])
+  @@index([deletedAt])
+  @@map("customer_profiles")
 }
 
 model PolicyRecord {
@@ -308,6 +358,8 @@ model User {
   deletedUploads UploadedFile[] @relation("UploadDeletedBy")
 
   auditLogs      AuditLog[]
+  createdCustomerProfiles CustomerProfile[] @relation("CustomerProfileCreatedBy")
+  updatedCustomerProfiles CustomerProfile[] @relation("CustomerProfileUpdatedBy")
 
   @@index([organizationId])
   @@index([role])
