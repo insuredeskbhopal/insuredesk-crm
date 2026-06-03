@@ -19,12 +19,12 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
     });
 
     // 2. ADMIN Role Tests
-    it("allows ADMIN to read, write, delete inside their own organization", () => {
+    it("allows ADMIN to read and write inside their own organization but not delete", () => {
       const session = { id: user1, role: UserRole.ADMIN, organizationId: orgA };
 
       expect(canAccessResource(session, "read", user2, orgA)).toBe(true);
       expect(canAccessResource(session, "write", user2, orgA)).toBe(true);
-      expect(canAccessResource(session, "delete", user2, orgA)).toBe(true);
+      expect(canAccessResource(session, "delete", user2, orgA)).toBe(false);
     });
 
     it("blocks ADMIN from accessing resources belonging to another organization", () => {

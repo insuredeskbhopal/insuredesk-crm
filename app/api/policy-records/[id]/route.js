@@ -146,7 +146,7 @@ export async function DELETE(request, { params }) {
     }
 
     const session = await verifyJWT(token);
-    if (!session || session.role === "VIEWER") {
+    if (!session || session.role !== UserRole.SUPER_ADMIN) {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -175,6 +175,21 @@ export async function DELETE(request, { params }) {
       return Response.json({ error: "Access denied" }, { status: 403 });
     }
 
+    let payload = {};
+    try {
+      payload = await request.json();
+    } catch {}
+    const policyNumber = existing.reviewedData?.policyNumber || existing.data?.policyNumber || existing.extractedData?.policyNumber || "";
+    const deleteLabel = policyNumber || id;
+    const expectedConfirmation = `DELETE ${deleteLabel}`;
+
+    if (String(payload.confirmation || "").trim() !== expectedConfirmation) {
+      return Response.json({
+        error: `Type "${expectedConfirmation}" to delete this policy record.`,
+        expectedConfirmation
+      }, { status: 428 });
+    }
+
     // Perform enterprise Soft Delete
     await prisma.policyRecord.update({
       where: { id },
@@ -196,7 +211,7 @@ export async function DELETE(request, { params }) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { sourceFile: existing.sourceFile }
+      metadata: { sourceFile: existing.sourceFile, policyNumber }
     });
 
     return new Response(null, { status: 204 });

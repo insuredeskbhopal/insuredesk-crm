@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { normalizeRecord } from "@/lib/records";
-import { requireDeleteConfirmation } from "@/lib/security";
 import { sanitizeRecordPayload } from "@/lib/record-validation";
 import { randomUUID } from "node:crypto";
 import { verifyJWT } from "@/lib/auth";
@@ -157,47 +156,8 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
-  try {
-    const token = request.cookies.get("token")?.value;
-    if (!token) {
-      return Response.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    const user = await verifyJWT(token);
-    // Bulk delete restricted to SUPER_ADMIN and ADMIN roles
-    if (!user || (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN")) {
-      return Response.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
-    const guard = requireDeleteConfirmation(request);
-    if (guard) return guard;
-
-    const tenantFilter = getTenantFilter(user, "write");
-    const actorId = user.userId || user.id;
-
-    // Perform enterprise Soft Delete rather than hard deleting
-    await prisma.policyRecord.updateMany({
-      where: tenantFilter,
-      data: {
-        deletedAt: new Date(),
-        deletedById: actorId
-      }
-    });
-
-    const { ipAddress, userAgent } = getAuditMetadata(request);
-    await logAudit({
-      action: "BULK_DELETE_RECORDS",
-      entityType: "PolicyRecord",
-      severity: "CRITICAL",
-      source: "API",
-      ipAddress,
-      userAgent,
-      userId: actorId,
-      organizationId: user.organizationId
-    });
-
-    return new Response(null, { status: 204 });
-  } catch {
-    return Response.json({ error: "Failed to delete records" }, { status: 500 });
-  }
+  return Response.json(
+    { error: "Bulk delete is disabled. Delete policy records one at a time as super admin." },
+    { status: 405 }
+  );
 }

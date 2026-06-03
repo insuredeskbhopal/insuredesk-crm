@@ -62,9 +62,11 @@ describe("sanitizeRecordPayload", () => {
   it("validates contact number as exactly 10 digits", () => {
     expect(validateContactNumber("")).toBe("Contact Number is required.");
     expect(validateContactNumber("9876543210")).toBe("");
-    expect(validateContactNumber("98765 43210")).toBe("Contact Number must be exactly 10 digits.");
-    expect(validateContactNumber("987654321")).toBe("Contact Number must be exactly 10 digits.");
-    expect(validateContactNumber("987654321A")).toBe("Contact Number must be exactly 10 digits.");
+    expect(validateContactNumber("XXXXXX4257")).toBe("");
+    expect(validateContactNumber("91******92")).toBe("");
+    expect(validateContactNumber("98765 43210")).toBe("Contact Number must be exactly 10 digits or a masked policy contact number.");
+    expect(validateContactNumber("987654321")).toBe("Contact Number must be exactly 10 digits or a masked policy contact number.");
+    expect(validateContactNumber("987654321A")).toBe("Contact Number must be exactly 10 digits or a masked policy contact number.");
   });
 
   it("includes contact format errors in review validation", () => {
@@ -93,10 +95,10 @@ describe("sanitizeRecordPayload", () => {
 
     expect(validation.valid).toBe(false);
     expect(validation.contactFieldErrors.contactPerson).toBe("Contact Person cannot contain numbers.");
-    expect(validation.contactFieldErrors.contactNumber).toBe("Contact Number must be exactly 10 digits.");
+    expect(validation.contactFieldErrors.contactNumber).toBe("Contact Number must be exactly 10 digits or a masked policy contact number.");
     expect(validation.contactErrors).toEqual([
       "Contact Person cannot contain numbers.",
-      "Contact Number must be exactly 10 digits."
+      "Contact Number must be exactly 10 digits or a masked policy contact number."
     ]);
   });
 

@@ -22,7 +22,6 @@ import {
   X,
   SlidersHorizontal,
   LoaderCircle,
-  Trash2,
   Upload,
   LayoutGrid,
   List
@@ -376,6 +375,7 @@ export default function Dashboard({
 
   const analytics = useMemo(() => buildAnalytics(filteredRecords), [filteredRecords]);
   const canEditPolicyRecords = ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(currentUserRole);
+  const canDeletePolicyRecords = currentUserRole === "SUPER_ADMIN";
   const editValidation = useMemo(() => getReviewValidation({
     sourceFile: editingRecord?.sourceFile || "",
     extractedData: editForm
@@ -640,18 +640,27 @@ export default function Dashboard({
   }
 
   function deletePolicyRecord(record) {
-    if (!canEditPolicyRecords) {
-      setAlert({ type: "error", title: "Delete unavailable", message: "Only admin, super admin, and manager roles can delete policy records." });
+    if (!canDeletePolicyRecords) {
+      setAlert({ type: "error", title: "Delete unavailable", message: "Only super admin can delete policy records." });
       return;
     }
     if (!record?.id) return;
+    const deleteLabel = record.policyNumber || record.id;
+    const expectedConfirmation = `DELETE ${deleteLabel}`;
+    const confirmation = window.prompt(`Type "${expectedConfirmation}" to delete this policy record.`);
+
+    if (confirmation !== expectedConfirmation) {
+      setAlert({ type: "info", title: "Delete cancelled", message: "Typed confirmation did not match. No policy record was deleted." });
+      return;
+    }
     const label = record.policyNumber || record.insuredName || "this policy record";
-    if (!window.confirm(`Delete duplicate policy record ${label}?`)) return;
 
     startSaving(async () => {
       try {
         const response = await fetch(`/api/policy-records/${record.id}`, {
-          method: "DELETE"
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirmation })
         });
         if (!response.ok) {
           let message = "Policy record could not be deleted.";
@@ -794,28 +803,6 @@ export default function Dashboard({
         const message = error?.message || "Record could not be saved.";
         setAlert({ type: "error", title: "Save failed", message });
         setToast(message);
-      }
-    });
-  }
-
-  function deleteAllRecords() {
-    startSaving(async () => {
-      try {
-        const response = await fetch("/api/records", {
-          method: "DELETE",
-          headers: {
-            "x-confirm-delete": "DELETE_ALL_POLICY_RECORDS"
-          }
-        });
-        if (!response.ok) {
-          setAlert({ type: "error", title: "Delete failed", message: "Policy records could not be deleted." });
-          return;
-        }
-        setRecords([]);
-        setAlert({ type: "success", title: "Records deleted", message: "All policy records were removed." });
-        setToast("All policy records deleted");
-      } catch (error) {
-        setAlert({ type: "error", title: "Delete failed", message: error?.message || "Policy records could not be deleted." });
       }
     });
   }
@@ -1280,9 +1267,6 @@ export default function Dashboard({
                   <button type="button" disabled={!records.length} onClick={() => download("policy-records.json", JSON.stringify(records, null, 2), "application/json")}>
                     <Download size={17} /> JSON
                   </button>
-                  <button type="button" disabled={!records.length || isSaving} onClick={deleteAllRecords}>
-                    <Trash2 size={17} /> Delete All
-                  </button>
                 </div>
               </div>
               <div className="records-search-row">
@@ -1361,7 +1345,7 @@ export default function Dashboard({
                 columns={recordViewColumns}
                 canEdit={canEditPolicyRecords}
                 onEdit={startEditRecord}
-                canDelete={canEditPolicyRecords && recordViewCategory === "duplicates"}
+                canDelete={canDeletePolicyRecords}
                 onDelete={deletePolicyRecord}
               />
             </section>
