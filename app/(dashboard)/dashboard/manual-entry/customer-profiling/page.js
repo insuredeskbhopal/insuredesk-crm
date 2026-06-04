@@ -449,6 +449,16 @@ export default function CustomerProfilingPage() {
       `Policy Interest: ${followUpMeta.policyInterest || "-"}`,
       `Next Follow-up Date: ${followUpMeta.nextFollowUpDate ? formatDate(followUpMeta.nextFollowUpDate) : "-"}`
     ];
+    if (followUpMeta.policyInterest && LOB_FIELDS[followUpMeta.policyInterest]) {
+      LOB_FIELDS[followUpMeta.policyInterest].forEach(([key, label, type]) => {
+        const val = form.lobDetails?.[followUpMeta.policyInterest]?.[key];
+        let displayVal = val || "-";
+        if (type === "date" && val) {
+          displayVal = formatDate(val);
+        }
+        metadataLines.push(`${label}: ${displayVal}`);
+      });
+    }
     const remarkWithMetadata = `${metadataLines.join("\n")}\n\nRemark: ${remark}`;
 
     const entry = {
@@ -644,6 +654,24 @@ export default function CustomerProfilingPage() {
                     <input type="date" value={followUpMeta.nextFollowUpDate} onChange={(event) => setFollowUpMeta((current) => ({ ...current, nextFollowUpDate: event.target.value }))} />
                   </label>
                 </div>
+                {followUpMeta.policyInterest && LOB_FIELDS[followUpMeta.policyInterest] ? (
+                  <fieldset className="lob-detail-card" style={{ margin: "14px 0", border: "1px dashed rgba(25, 28, 29, 0.2)", padding: "16px", borderRadius: "12px", background: "#fafafa" }}>
+                    <legend style={{ fontWeight: "700", textTransform: "uppercase", fontSize: "11px", padding: "0 8px", color: "var(--primary)", letterSpacing: "0.5px" }}>
+                      {followUpMeta.policyInterest} Details
+                    </legend>
+                    <div className="customer-profile-grid two" style={{ gap: "12px" }}>
+                      {LOB_FIELDS[followUpMeta.policyInterest].map(([key, label, type]) => (
+                        <Field
+                          key={key}
+                          label={label}
+                          type={type || "text"}
+                          value={form.lobDetails?.[followUpMeta.policyInterest]?.[key] || ""}
+                          onChange={(value) => updateLobField(followUpMeta.policyInterest, key, value)}
+                        />
+                      ))}
+                    </div>
+                  </fieldset>
+                ) : null}
                 <textarea value={followUpDraft} placeholder="Type follow-up remark..." onChange={(event) => setFollowUpDraft(event.target.value)} />
                 <button type="button" onClick={saveFollowUpRemark} disabled={isPending}>Save Remark</button>
               </div>
