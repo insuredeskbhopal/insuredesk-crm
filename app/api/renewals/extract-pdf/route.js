@@ -1,8 +1,8 @@
 import { verifyJWT } from "@/lib/auth";
-import { validatePdfFile } from "@/lib/upload-validation";
-import { extractTextFromPdf } from "@/lib/pdf-text";
-import { extractPolicyDataFromTextResult } from "@/lib/policy-extraction-pipeline";
-import { sanitizeRecordPayload } from "@/lib/record-validation";
+import { validatePdfFile } from "@/lib/uploads/validation";
+import { extractTextFromPdf } from "@/lib/policies/pdf/text";
+import { extractPolicyDataFromTextResult } from "@/lib/policies/extraction-pipeline";
+import { sanitizeRecordPayload } from "@/lib/records/validation";
 import { uploadFile } from "@/lib/storage";
 
 export const runtime = "nodejs";

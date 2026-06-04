@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/rbac";
+import { getTenantFilter } from "@/lib/auth/rbac";
 import { normalizeRecord } from "@/lib/records";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 

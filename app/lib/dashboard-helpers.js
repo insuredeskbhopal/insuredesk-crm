@@ -1,5 +1,5 @@
-import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
-import { validateContactPerson, validateContactNumber } from "@/lib/record-validation";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
+import { validateContactPerson, validateContactNumber } from "@/lib/records/validation";
 
 export const MANUAL_REQUIRED_FIELDS = ["contactPerson", "contactNumber"];
 export const MOTOR_MANUAL_REQUIRED_FIELDS = [];

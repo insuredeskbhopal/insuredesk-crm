@@ -1,8 +1,8 @@
 import { CheckCircle, LoaderCircle, ShieldCheck, Trash2 } from "lucide-react";
-import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 import PreviewField from "../shared/PreviewField";
 import { applyAiSuggestionToReviewField, getEligibleAiSuggestion } from "./aiSuggestionHelpers";
-import { validateContactPerson, validateContactNumber } from "@/lib/record-validation";
+import { validateContactPerson, validateContactNumber } from "@/lib/records/validation";
 import EmptyState from "../shared/EmptyState";
 import InsurerLogo from "@/app/components/brand/InsurerLogo";
 import {

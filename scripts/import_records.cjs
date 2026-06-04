@@ -20,7 +20,7 @@ async function main() {
 
   // Dynamically import the ES module sanitizer from within the workspace
   console.log("Importing sanitizeRecordPayload ESM helper...");
-  const validationModule = await import("../lib/record-validation.js");
+  const validationModule = await import("../lib/records/validation.js");
   const sanitizeRecordPayload = validationModule.sanitizeRecordPayload;
 
   // Make the script idempotent by clearing previous imports

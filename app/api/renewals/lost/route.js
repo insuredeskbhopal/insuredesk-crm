@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/rbac";
+import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 
 export const runtime = "nodejs";

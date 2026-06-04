@@ -3,7 +3,7 @@ import {
   validateExtractionNonDestructive,
   validatePolicyCrossFields,
   validatePolicyFields
-} from "../lib/policy-validation-engine.cjs";
+} from "../lib/policies/validation-engine.cjs";
 
 describe("policy validation engine", () => {
   it("passes realistic motor policy fields without changing values", () => {

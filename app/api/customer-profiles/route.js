@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/rbac";
+import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
-import { normalizeProfilePhone, sanitizeCustomerProfilePayload, serializeCustomerProfile } from "@/lib/customer-profile-utils";
+import { normalizeProfilePhone, sanitizeCustomerProfilePayload, serializeCustomerProfile } from "@/lib/customer-profiles/utils";
 
 export const runtime = "nodejs";
 
@@ -15,9 +15,11 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const phone = normalizeProfilePhone(searchParams.get("phone") || "");
     const tenantFilter = getTenantFilter(user, "read");
+    const actorId = user.userId || user.id;
+    const ownProfileFilter = getCustomerProfileOwnerFilter(user);
     if (!phone) {
       const profiles = await prisma.customerProfile.findMany({
-        where: tenantFilter,
+        where: ownProfileFilter,
         orderBy: { updatedAt: "desc" },
         take: 500,
         include: {
@@ -38,24 +40,72 @@ export async function GET(request) {
       });
     }
 
-    const profiles = await prisma.customerProfile.findMany({
-      where: {
-        ...tenantFilter,
-        phone: { contains: phone }
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 50,
-      include: {
-        createdBy: { select: { name: true, email: true } },
-        updatedBy: { select: { name: true, email: true } }
-      }
-    });
+    const [profiles, policyRecords] = await Promise.all([
+      prisma.customerProfile.findMany({
+        where: {
+          ...ownProfileFilter,
+          phone: { contains: phone }
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 50,
+        include: {
+          createdBy: { select: { name: true, email: true } },
+          updatedBy: { select: { name: true, email: true } }
+        }
+      }),
+      prisma.policyRecord.findMany({
+        where: tenantFilter,
+        orderBy: { savedAt: "desc" },
+        take: 200,
+        select: {
+          id: true,
+          savedAt: true,
+          data: true,
+          reviewedData: true,
+          createdBy: { select: { name: true, email: true } }
+        }
+      })
+    ]);
 
     const serializedProfiles = profiles.map(serializeCustomerProfile);
+    const claimedByAnotherUser = await prisma.customerProfile.findFirst({
+      where: {
+        ...getCustomerProfileClaimFilter(user),
+        phone: { contains: phone },
+        NOT: { createdById: actorId }
+      },
+      select: { id: true }
+    });
+
+    if (claimedByAnotherUser && !serializedProfiles.length) {
+      return NextResponse.json({
+        profiles: [],
+        policyMatches: [],
+        claimedByAnotherUser: true
+      });
+    }
+
+    const policyMatches = policyRecords
+      .map((record) => {
+        const payload = record.reviewedData || record.data || {};
+        return {
+          id: record.id,
+          savedAt: record.savedAt,
+          name: payload.insuredName || payload.customerName || "",
+          phone: payload.contactNumber || payload.customerMobile || "",
+          policyNumber: payload.policyNumber || "",
+          policyType: payload.policyType || "",
+          insuranceCompany: payload.insuranceCompany || payload.companyName || "",
+          remarks: payload.remark || "",
+          assignedTo: record.createdBy?.name || record.createdBy?.email || ""
+        };
+      })
+      .filter((record) => normalizeProfilePhone(record.phone) === phone);
 
     return NextResponse.json({
       profiles: serializedProfiles,
-      policyMatches: []
+      policyMatches: claimedByAnotherUser ? [] : policyMatches,
+      claimedByAnotherUser: Boolean(claimedByAnotherUser)
     });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to search customer profiles." }, { status: 500 });
@@ -113,6 +163,33 @@ export async function POST(request) {
     const data = sanitizeCustomerProfilePayload(body);
 
     const actorId = user.userId || user.id;
+    if (data.phone) {
+      const existing = await prisma.customerProfile.findFirst({
+        where: {
+          ...getCustomerProfileClaimFilter(user),
+          phone: { contains: data.phone }
+        },
+        include: {
+          createdBy: { select: { name: true, email: true } },
+          updatedBy: { select: { name: true, email: true } }
+        }
+      });
+
+      if (existing) {
+        const isOwnLead = existing.createdById === actorId;
+        return NextResponse.json(
+          {
+            error: isOwnLead
+              ? "This phone number already exists in your Customer Profiling leads."
+              : "This phone number is already claimed by another user in Customer Profiling.",
+            profile: isOwnLead ? serializeCustomerProfile(existing) : null,
+            claimedByAnotherUser: !isOwnLead
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     const record = await prisma.customerProfile.create({
       data: {
         ...data,
@@ -153,4 +230,22 @@ async function requireSession(request) {
   const session = await verifyJWT(token);
   if (!session) return { response: NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }) };
   return session;
+}
+
+function getCustomerProfileOwnerFilter(user) {
+  const actorId = user.userId || user.id;
+  return {
+    ...getTenantFilter(user, "read"),
+    createdById: actorId
+  };
+}
+
+function getCustomerProfileClaimFilter(user) {
+  const filter = {
+    deletedAt: null
+  };
+  if (user.organizationId) {
+    filter.organizationId = user.organizationId;
+  }
+  return filter;
 }

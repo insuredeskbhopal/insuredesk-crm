@@ -21,6 +21,7 @@
     "@napi-rs/canvas": "^1.0.0",
     "@prisma/client": "^6.8.2",
     "bcryptjs": "^3.0.3",
+    "googleapis": "^173.0.0",
     "jose": "^6.2.3",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",

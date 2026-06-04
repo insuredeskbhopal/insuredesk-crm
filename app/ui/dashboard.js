@@ -5,10 +5,10 @@ import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import "./dashboard.css";
 import { cachedJson } from "@/app/lib/client-api";
-import { getRecordSearchText } from "@/lib/search";
-import { validateContactNumber, validateContactPerson } from "@/lib/record-validation";
-import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
-import { buildAnalytics, formatMoney, parseMoney } from "@/lib/analytics";
+import { getRecordSearchText } from "@/lib/records/search";
+import { validateContactNumber, validateContactPerson } from "@/lib/records/validation";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
+import { buildAnalytics, formatMoney, parseMoney } from "@/lib/records/analytics";
 import PageHeader from "@/app/components/layout/PageHeader";
 import RecordsTable from "@/app/components/RecordsTable";
 import AlertCard from "@/app/components/shared/AlertCard";
@@ -52,7 +52,7 @@ import {
   shouldUseExtractedFuelType,
   download
 } from "@/app/lib/dashboard-helpers";
-import { hasUploadDetection } from "@/lib/upload-detection";
+import { hasUploadDetection } from "@/lib/uploads/detection";
 import PreviewField from "@/app/components/shared/PreviewField";
 import FixedPolicyPreview from "@/app/components/upload/FixedPolicyPreview";
 import FieldSetupPanel from "@/app/components/field-setup/FieldSetupPanel";

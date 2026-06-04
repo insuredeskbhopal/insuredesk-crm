@@ -1,4 +1,4 @@
-import { getPolicySchema } from "@/lib/policy-field-setup";
+import { getPolicySchema } from "@/lib/policies/field-setup";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);

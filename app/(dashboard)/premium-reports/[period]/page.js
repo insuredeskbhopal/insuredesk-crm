@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { normalizeRecord } from "@/lib/records";
-import { loadScopedPolicyRecords } from "@/lib/scoped-data";
-import { formatMoney, parseMoney } from "@/lib/analytics";
+import { loadScopedPolicyRecords } from "@/lib/records/scoped-data";
+import { formatMoney, parseMoney } from "@/lib/records/analytics";
 import { parsePolicyDate, startOfDay } from "@/app/lib/reporting/filters";
 
 const REPORTS = {

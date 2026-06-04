@@ -1,4 +1,4 @@
-import { createFieldSetup, getFieldSetupCatalog } from "@/lib/policy-field-setup";
+import { createFieldSetup, getFieldSetupCatalog } from "@/lib/policies/field-setup";
 
 export async function GET() {
   return Response.json(await getFieldSetupCatalog());

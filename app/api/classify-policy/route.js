@@ -1,4 +1,4 @@
-import { classifyPolicyText } from "@/lib/policy-classifier";
+import { classifyPolicyText } from "@/lib/policies/classifier";
 
 export const runtime = "nodejs";
 

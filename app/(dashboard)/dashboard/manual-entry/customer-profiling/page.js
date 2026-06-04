@@ -48,12 +48,13 @@ const EMPTY_COUNTERS = {
   converted: 0,
   lost: 0
 };
+const EMPTY_SEARCH_RESULTS = { profiles: [], policyMatches: [], claimedByAnotherUser: false };
 
 const AGENT_JOURNEY_STEPS = [
   ["1", "Enter phone", "Check whether this number is already in Customer Profiling."],
   ["2", "Add client", "Capture basic profile details and assign the owner."],
   ["3", "Save profile", "Store the client separately from policy records."],
-  ["4", "View more", "Open the full profile page before calling the client."],
+  ["4", "View more", "Open the profile before calling the client."],
   ["5", "Discuss need", "Select policy interest and capture required details after the call."],
   ["6", "Upload policy", "When converted, send the agent to policy upload."]
 ];
@@ -195,10 +196,11 @@ export default function CustomerProfilingPage() {
     policyInterest: "",
     status: "Follow-up Required"
   });
-  const [searchResults, setSearchResults] = useState({ profiles: [], policyMatches: [] });
+  const [searchResults, setSearchResults] = useState(EMPTY_SEARCH_RESULTS);
   const [profiles, setProfiles] = useState([]);
   const [counters, setCounters] = useState(EMPTY_COUNTERS);
   const [filterOptions, setFilterOptions] = useState({ assignedTo: [], lobs: [] });
+  const [currentUser, setCurrentUser] = useState(null);
   const [filters, setFilters] = useState({
     q: "",
     status: "",
@@ -209,8 +211,11 @@ export default function CustomerProfilingPage() {
   const [alert, setAlert] = useState(null);
   const [isPending, startTransition] = useTransition();
 
-  const phone = form.phone.replace(/\D/g, "");
-  const hasMatches = searchResults.profiles.length > 0;
+  const phone = form.phone.replace(/\D/g, "").slice(0, 10);
+  const isValidProfilePhone = phone.length === 10;
+  const hasMatches = searchResults.profiles.length > 0 || searchResults.policyMatches.length > 0;
+  const isClaimedByAnotherUser = Boolean(searchResults.claimedByAnotherUser);
+  const hasExternalMatches = isClaimedByAnotherUser || (hasMatches && searchResults.profiles.some((profile) => !canCurrentUserHandleProfile(profile, currentUser)));
   const cityOptions = useMemo(() => {
     return ["", ...new Set([...(STATE_CITY_OPTIONS[form.state] || []), form.city].filter(Boolean))];
   }, [form.state, form.city]);
@@ -222,11 +227,12 @@ export default function CustomerProfilingPage() {
 
   useEffect(() => {
     loadProfiles();
+    loadCurrentUser();
   }, [filters.q, filters.status, filters.assignedTo, filters.lob, filters.followUpDate]);
 
   useEffect(() => {
-    if (phone.length < 6) {
-      setSearchResults({ profiles: [], policyMatches: [] });
+    if (!isValidProfilePhone) {
+      setSearchResults(EMPTY_SEARCH_RESULTS);
       return;
     }
 
@@ -249,9 +255,13 @@ export default function CustomerProfilingPage() {
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [phone]);
+  }, [phone, isValidProfilePhone]);
 
   function updateField(key, value) {
+    if (key === "phone" || key === "alternatePhone") {
+      setForm((current) => ({ ...current, [key]: value.replace(/\D/g, "").slice(0, 10) }));
+      return;
+    }
     setForm((current) => ({ ...current, [key]: value }));
   }
 
@@ -304,6 +314,37 @@ export default function CustomerProfilingPage() {
     });
   }
 
+  function usePolicyLead(record) {
+    const inferredLob = inferLobFromPolicyType(record.policyType);
+    setSelectedExistingId("");
+    setConvertType("");
+    setFollowUpDraft("");
+    setFollowUpMeta({
+      outcome: "Call Back Later",
+      mode: "Call",
+      priority: "Normal",
+      nextFollowUpDate: "",
+      policyInterest: inferredLob || "",
+      status: "Follow-up Required"
+    });
+    setForm({
+      ...EMPTY_FORM,
+      name: record.name || "",
+      phone: record.phone || phone,
+      customerType: "Existing",
+      assignedTo: record.assignedTo || currentUser?.name || "",
+      referenceSource: "Policy Record",
+      sourcePolicyId: record.id || "",
+      sourcePolicyNumber: record.policyNumber || "",
+      sourcePolicyType: record.policyType || "",
+      sourceCompany: record.insuranceCompany || "",
+      selectedLOBs: inferredLob ? [inferredLob] : [],
+      lobDetails: {},
+      remarks: [record.policyNumber ? `Source policy ${record.policyNumber}` : "", record.policyType, record.insuranceCompany].filter(Boolean).join(" / ")
+    });
+    setAlert({ type: "success", message: "Policy customer loaded into the lead form. Save Profile to add it to Customer Profiling." });
+  }
+
   function newProfile() {
     setSelectedExistingId("");
     setConvertType("");
@@ -317,7 +358,7 @@ export default function CustomerProfilingPage() {
       status: "Follow-up Required"
     });
     setForm(EMPTY_FORM);
-    setSearchResults({ profiles: [], policyMatches: [] });
+    setSearchResults(EMPTY_SEARCH_RESULTS);
   }
 
   async function loadProfiles() {
@@ -333,10 +374,26 @@ export default function CustomerProfilingPage() {
     setFilterOptions(payload.filterOptions || { assignedTo: [], lobs: [] });
   }
 
+  async function loadCurrentUser() {
+    if (currentUser) return;
+    const response = await fetch("/api/auth/me");
+    if (!response.ok) return;
+    const payload = await response.json().catch(() => ({}));
+    if (payload.success) setCurrentUser(payload.user);
+  }
+
   function submitProfile() {
     startTransition(async () => {
       setAlert(null);
       try {
+        if (form.phone && form.phone.replace(/\D/g, "").length !== 10) {
+          setAlert({ type: "error", message: "Phone number must be exactly 10 digits." });
+          return;
+        }
+        if (!selectedExistingId && searchResults.claimedByAnotherUser) {
+          setAlert({ type: "error", message: "This phone number is already claimed by another user in Customer Profiling." });
+          return;
+        }
         const response = await fetch(selectedExistingId ? `/api/customer-profiles/${selectedExistingId}` : "/api/customer-profiles", {
           method: selectedExistingId ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -355,7 +412,7 @@ export default function CustomerProfilingPage() {
         } else {
           setForm(EMPTY_FORM);
         }
-        setSearchResults({ profiles: [], policyMatches: [] });
+        setSearchResults(EMPTY_SEARCH_RESULTS);
         setAlert({ type: "success", message: selectedExistingId ? "Customer profile details updated." : "Customer profile saved. Click View More to fill full details on the right." });
         await loadProfiles();
       } catch (error) {
@@ -505,32 +562,41 @@ export default function CustomerProfilingPage() {
             <h2>Customer Profile Check</h2>
             <p>Enter phone number to check whether another agent is already handling this profiling lead.</p>
           </div>
-          <Search size={20} />
+          <div className="profile-table-actions">
+            <button type="button" onClick={newProfile}>New Profile</button>
+            <Search size={20} />
+          </div>
         </div>
         <div className="customer-profile-grid two">
           <Field label="Phone Number" value={form.phone} onChange={(value) => updateField("phone", value)} />
           <SelectField label="Customer Type" value={form.customerType} options={CUSTOMER_TYPES} onChange={(value) => updateField("customerType", value)} />
         </div>
 
-        {hasMatches ? (
-          <div className="duplicate-warning">
-            <AlertTriangle size={18} />
+        {hasMatches || isClaimedByAnotherUser ? (
+          <div className={hasExternalMatches ? "duplicate-warning" : "duplicate-clear"}>
+            {hasExternalMatches ? <AlertTriangle size={18} /> : <CheckCircle size={18} />}
             <div>
-              <strong>This phone number has related records.</strong>
-              <p>This number already exists in Customer Profiling.</p>
-              {assignedNames[0] ? <p>Existing follow-up is being handled by {assignedNames[0]}.</p> : null}
+              <strong>{isClaimedByAnotherUser ? "This phone number is already claimed in Customer Profiling." : hasExternalMatches ? "This phone number is being handled by another user." : "This phone number has matching records."}</strong>
+              <p>{isClaimedByAnotherUser ? "Another user has already added this lead. You cannot view or add it from this page." : hasExternalMatches ? "Check the existing lead before creating another follow-up." : "Select an existing profile or policy customer to create a lead."}</p>
+              {!isClaimedByAnotherUser && hasExternalMatches && assignedNames[0] ? <p>Existing follow-up is being handled by {assignedNames[0]}.</p> : null}
             </div>
           </div>
-        ) : phone.length >= 6 ? (
+        ) : isValidProfilePhone ? (
           <div className="duplicate-clear">
             <CheckCircle size={18} /> No matching Customer Profile found. You can add this client.
+          </div>
+        ) : phone.length ? (
+          <div className="customer-profile-alert error">
+            <AlertTriangle size={18} /> Phone number must be exactly 10 digits.
           </div>
         ) : null}
 
         {hasMatches ? (
           <ExistingCustomerTable
             profiles={searchResults.profiles}
+            policyMatches={searchResults.policyMatches}
             onSelectProfile={openProfile}
+            onSelectPolicy={usePolicyLead}
           />
         ) : null}
       </section>
@@ -649,6 +715,15 @@ export default function CustomerProfilingPage() {
                   <UserPlus size={20} />
                 </div>
 
+                {form.sourcePolicyId ? (
+                  <div className="source-policy-strip">
+                    <span>Policy source</span>
+                    <strong>{form.sourcePolicyNumber || "Existing policy record"}</strong>
+                    {form.sourcePolicyType ? <span>{form.sourcePolicyType}</span> : null}
+                    {form.sourceCompany ? <span>{form.sourceCompany}</span> : null}
+                  </div>
+                ) : null}
+
                 <div className="customer-profile-grid">
                   <Field label="Customer Name" value={form.name} onChange={(value) => updateField("name", value)} />
                   <Field label="Alternate Phone Number" value={form.alternatePhone} onChange={(value) => updateField("alternatePhone", value)} />
@@ -690,8 +765,8 @@ export default function CustomerProfilingPage() {
               <section className="customer-profile-card compact-profile-form">
                 <div className="customer-profile-section-head">
                   <div>
-                    <h2>Conversion</h2>
-                    <p>Use only after the client buys and policy is ready to upload.</p>
+                    <h2>Policy Interest Details</h2>
+                    <p>Select the client interest and capture the required discussion details.</p>
                   </div>
                 </div>
                 <div className="lob-checklist">
@@ -702,8 +777,29 @@ export default function CustomerProfilingPage() {
                     </label>
                   ))}
                 </div>
+
+                {form.selectedLOBs.map((lob) => (
+                  <fieldset key={lob} className="lob-detail-card">
+                    <legend>{lob}</legend>
+                    <div className="customer-profile-grid">
+                      {(LOB_FIELDS[lob] || LOB_FIELDS.Other).map(([key, label, type]) => (
+                        <Field
+                          key={key}
+                          label={label}
+                          type={type || "text"}
+                          value={form.lobDetails?.[lob]?.[key] || ""}
+                          onChange={(value) => updateLobField(lob, key, value)}
+                        />
+                      ))}
+                    </div>
+                  </fieldset>
+                ))}
+
+                <div className="customer-profile-grid">
+                  <Field label="Policy Interest Remark" wide value={form.followUpRemark} onChange={(value) => updateField("followUpRemark", value)} />
+                </div>
                 <div className="customer-profile-actions inline-actions">
-                  <button type="button" onClick={submitProfile} disabled={isPending}>Save Policy Interest</button>
+                  <button type="button" onClick={submitProfile} disabled={isPending}>Save Interest Details</button>
                   <select value={convertType} onChange={(event) => setConvertType(event.target.value)}>
                     <option value="">Select converted policy type</option>
                     {form.selectedLOBs.map((lob) => (
@@ -794,7 +890,15 @@ function formatDateTime(value) {
   });
 }
 
-function ExistingCustomerTable({ profiles, onSelectProfile }) {
+function canCurrentUserHandleProfile(profile, user) {
+  if (!user) return false;
+  if (user.role === "SUPER_ADMIN") return true;
+  const userTokens = [user.name, user.email].filter(Boolean).map((value) => value.toLowerCase());
+  const ownerTokens = [profile.assignedTo, profile.createdBy].filter(Boolean).map((value) => value.toLowerCase());
+  return ownerTokens.some((owner) => userTokens.includes(owner));
+}
+
+function ExistingCustomerTable({ profiles, policyMatches, onSelectProfile, onSelectPolicy }) {
   return (
     <div className="existing-customer-table">
       <table>
@@ -821,10 +925,35 @@ function ExistingCustomerTable({ profiles, onSelectProfile }) {
               <td><button type="button" onClick={() => onSelectProfile(profile)}>Use Lead</button></td>
             </tr>
           ))}
+          {policyMatches.map((record) => (
+            <tr key={`policy-${record.id}`}>
+              <td>Policy</td>
+              <td>{record.name || "-"}</td>
+              <td>{record.phone || "-"}</td>
+              <td>{[record.policyType, record.insuranceCompany].filter(Boolean).join(" / ") || "-"}</td>
+              <td>{record.assignedTo || "-"}</td>
+              <td>{record.remarks || record.policyNumber || "-"}</td>
+              <td><button type="button" onClick={() => onSelectPolicy(record)}>Select Lead</button></td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
   );
+}
+
+function inferLobFromPolicyType(policyType = "") {
+  const normalized = policyType.toLowerCase();
+  if (!normalized) return "";
+  const match = LOB_OPTIONS.find((lob) => {
+    const [keyword] = lob.toLowerCase().split(" insurance");
+    return keyword && normalized.includes(keyword);
+  });
+  if (match) return match;
+  if (normalized.includes("vehicle") || normalized.includes("car") || normalized.includes("bike")) return "Motor Insurance";
+  if (normalized.includes("medical") || normalized.includes("mediclaim")) return "Health Insurance";
+  if (normalized.includes("shop") || normalized.includes("office")) return "Shop / Office Insurance";
+  return "Other";
 }
 
 function Field({ label, value, onChange, type = "text", wide = false }) {

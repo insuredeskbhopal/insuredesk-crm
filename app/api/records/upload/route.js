@@ -1,14 +1,14 @@
 import { randomUUID } from "node:crypto";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
-import { sanitizeRecordPayload } from "@/lib/record-validation";
-import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploadList } from "@/lib/upload-validation";
-import { extractTextFromPdf } from "@/lib/pdf-text";
-import { extractPolicyDataFromTextResult } from "@/lib/policy-extraction-pipeline";
+import { sanitizeRecordPayload } from "@/lib/records/validation";
+import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploadList } from "@/lib/uploads/validation";
+import { extractTextFromPdf } from "@/lib/policies/pdf/text";
+import { extractPolicyDataFromTextResult } from "@/lib/policies/extraction-pipeline";
 import { verifyJWT } from "@/lib/auth";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
-import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/upload-failure";
-import { UPLOAD_STATUS } from "@/lib/upload-status";
+import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/uploads/failure";
+import { UPLOAD_STATUS } from "@/lib/uploads/status";
 
 export const runtime = "nodejs";
 

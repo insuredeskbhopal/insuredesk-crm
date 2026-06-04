@@ -1,4 +1,4 @@
-import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 
 export function pageTitle(page) {
   return {

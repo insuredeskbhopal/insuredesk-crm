@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { comparePassword, signJWT } from "@/lib/auth";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 

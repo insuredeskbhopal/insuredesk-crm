@@ -1,18 +1,18 @@
 import { randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
-import { sanitizeRecordPayload } from "@/lib/record-validation";
+import { sanitizeRecordPayload } from "@/lib/records/validation";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/rbac";
+import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
-import { UPLOAD_STATUS } from "@/lib/upload-status";
+import { UPLOAD_STATUS } from "@/lib/uploads/status";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 
 export const runtime = "nodejs";
 
 const require = createRequire(import.meta.url);
-const { saveCorrection } = require("../../../lib/policy-intelligence/trainingMemory.js");
+const { saveCorrection } = require("../../../lib/policies/intelligence/trainingMemory.js");
 
 export async function GET(request) {
   try {

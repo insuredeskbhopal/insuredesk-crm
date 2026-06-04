@@ -2,9 +2,9 @@
 export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { requireUserManager } from '@/lib/authMiddleware';
-import { canManageRole, getAssignableRoles, getVisibleUserWhere } from '@/lib/userManagementPermissions';
+import { prisma } from '@/lib/db/prisma';
+import { requireUserManager } from '@/lib/auth/middleware';
+import { canManageRole, getAssignableRoles, getVisibleUserWhere } from '@/lib/auth/user-permissions';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';

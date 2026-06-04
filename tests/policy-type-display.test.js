@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizePolicyFamily, withRenewalPolicyDisplay } from "../lib/policy-type-display";
+import { normalizePolicyFamily, withRenewalPolicyDisplay } from "../lib/policies/type-display";
 
 describe("renewal policy type display", () => {
   it("shows broad motor policy families instead of cover wording", () => {

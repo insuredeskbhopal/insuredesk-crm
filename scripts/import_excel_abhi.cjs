@@ -132,11 +132,11 @@ async function main() {
 
   // Dynamically import ESM helper from workspace
   console.log("Importing sanitizeRecordPayload ESM helper...");
-  const validationModule = await import("../lib/record-validation.js");
+  const validationModule = await import("../lib/records/validation.js");
   const sanitizeRecordPayload = validationModule.sanitizeRecordPayload;
 
   console.log("Importing buildCustomerId helper...");
-  const recordsModule = await import("../lib/records.js");
+  const recordsModule = await import("../lib/records/index.js");
   const buildCustomerId = recordsModule.buildCustomerId;
 
   // Make script idempotent

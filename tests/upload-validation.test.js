@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { UploadValidationError, validatePdfFile, validateUploadList } from "../lib/upload-validation";
+import { UploadValidationError, validatePdfFile, validateUploadList } from "../lib/uploads/validation";
 
 function makeFile({ content = "%PDF-1.7\n", type = "application/pdf", name = "policy.pdf" } = {}) {
   return new File([content], name, { type });

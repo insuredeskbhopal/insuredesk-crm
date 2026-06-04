@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
-import { sanitizeRecordPayload } from "@/lib/record-validation";
+import { sanitizeRecordPayload } from "@/lib/records/validation";
 import { randomUUID } from "node:crypto";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/rbac";
+import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 

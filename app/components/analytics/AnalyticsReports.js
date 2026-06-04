@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import KpiCard from "./KpiCard";
 import ReportPanel from "./ReportPanel";
 import ReportRow from "./ReportRow";
-import { formatMoney } from "@/lib/analytics";
+import { formatMoney } from "@/lib/records/analytics";
 import InsurerLogo from "@/app/components/brand/InsurerLogo";
 
 export default function AnalyticsReports({ analytics, onSelectReport }) {

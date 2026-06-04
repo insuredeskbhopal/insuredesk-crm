@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource, getTenantFilter } from "@/lib/rbac";
+import { canAccessResource, getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
-import { sanitizeCustomerProfilePayload, serializeCustomerProfile } from "@/lib/customer-profile-utils";
+import { sanitizeCustomerProfilePayload, serializeCustomerProfile } from "@/lib/customer-profiles/utils";
 
 export const runtime = "nodejs";
 
@@ -20,7 +20,7 @@ export async function GET(request, { params }) {
     const profile = await prisma.customerProfile.findFirst({
       where: {
         id,
-        ...getTenantFilter(session, "read")
+        ...getCustomerProfileOwnerFilter(session)
       },
       include: {
         createdBy: { select: { name: true, email: true } },
@@ -51,7 +51,7 @@ export async function PUT(request, { params }) {
     const existing = await prisma.customerProfile.findFirst({
       where: {
         id,
-        ...getTenantFilter(session, "write")
+        ...getCustomerProfileOwnerFilter(session)
       }
     });
 
@@ -97,4 +97,12 @@ export async function PUT(request, { params }) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Customer profile could not be updated." }, { status: 500 });
   }
+}
+
+function getCustomerProfileOwnerFilter(user) {
+  const actorId = user.userId || user.id;
+  return {
+    ...getTenantFilter(user, "read"),
+    createdById: actorId
+  };
 }

@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/rbac";
+import { getTenantFilter } from "@/lib/auth/rbac";
 import { normalizeRecord } from "@/lib/records";
-import { getRecordSearchText } from "@/lib/search";
-import { withRenewalPolicyDisplay } from "@/lib/policy-type-display";
+import { getRecordSearchText } from "@/lib/records/search";
+import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
 import { parsePolicyDate, startOfDay } from "@/app/lib/reporting/filters";
 
 export const dynamic = "force-dynamic";

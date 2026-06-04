@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { parsePolicyDate, startOfDay } from "@/app/lib/reporting/filters";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/rbac";
-import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
+import { getTenantFilter } from "@/lib/auth/rbac";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 
 export const dynamic = "force-dynamic";
 

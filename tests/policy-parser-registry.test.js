@@ -3,7 +3,7 @@ import {
   createParserRegistry,
   runParserRegistry,
   toParserContract
-} from "../lib/policy-parser-registry.cjs";
+} from "../lib/policies/parser-registry.cjs";
 
 describe("policy parser registry", () => {
   it("runs registered parsers in priority order and returns the standard contract", () => {

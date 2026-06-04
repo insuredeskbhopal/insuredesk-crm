@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource, getTenantFilter } from "@/lib/rbac";
+import { canAccessResource, getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -25,7 +25,7 @@ export async function POST(request, { params }) {
     const existing = await prisma.customerProfile.findFirst({
       where: {
         id,
-        ...getTenantFilter(session, "write")
+        ...getCustomerProfileOwnerFilter(session)
       }
     });
 
@@ -66,4 +66,12 @@ export async function POST(request, { params }) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Customer profile could not be converted." }, { status: 500 });
   }
+}
+
+function getCustomerProfileOwnerFilter(user) {
+  const actorId = user.userId || user.id;
+  return {
+    ...getTenantFilter(user, "read"),
+    createdById: actorId
+  };
 }

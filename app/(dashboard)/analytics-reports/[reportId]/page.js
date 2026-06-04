@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { normalizeRecord } from "@/lib/records";
-import { loadScopedPolicyRecords } from "@/lib/scoped-data";
-import { findReportById, getReportRecords, formatMoney } from "@/lib/analytics";
+import { loadScopedPolicyRecords } from "@/lib/records/scoped-data";
+import { findReportById, getReportRecords, formatMoney } from "@/lib/records/analytics";
 import RecordsTable from "@/app/components/RecordsTable";
 
 export default async function AnalyticsReportPage({ params }) {

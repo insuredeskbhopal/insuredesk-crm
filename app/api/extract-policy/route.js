@@ -1,9 +1,9 @@
-import { extractFieldsForSchema } from "@/lib/policy-extractor";
-import { getPolicySchema } from "@/lib/policy-field-setup";
-import { prisma } from "@/lib/prisma";
+import { extractFieldsForSchema } from "@/lib/policies/extractor";
+import { getPolicySchema } from "@/lib/policies/field-setup";
+import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/rbac";
-import { UPLOAD_STATUS } from "@/lib/upload-status";
+import { getTenantFilter } from "@/lib/auth/rbac";
+import { UPLOAD_STATUS } from "@/lib/uploads/status";
 
 export const runtime = "nodejs";
 

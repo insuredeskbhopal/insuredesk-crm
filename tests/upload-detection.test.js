@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildUploadDetection, hasUploadDetection } from "../lib/upload-detection";
+import { buildUploadDetection, hasUploadDetection } from "../lib/uploads/detection";
 
 describe("upload detection summary", () => {
   it("builds a queue-safe detection payload from final motor extraction fields", () => {

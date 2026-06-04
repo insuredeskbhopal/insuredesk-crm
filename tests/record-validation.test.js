@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sanitizeRecordPayload, validateContactNumber, validateContactPerson } from "../lib/record-validation";
+import { sanitizeRecordPayload, validateContactNumber, validateContactPerson } from "../lib/records/validation";
 import { getReviewFieldValue, getReviewValidation, shouldUseExtractedFuelType } from "../app/lib/dashboard-helpers";
 
 describe("sanitizeRecordPayload", () => {

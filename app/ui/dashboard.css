@@ -3975,7 +3975,9 @@ label.is-disabled textarea {
 }
 
 .customer-profile-list-panel.followup-active {
-  min-height: calc(100vh - 170px);
+  height: calc(100vh - 170px);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .customer-profile-list-panel > .customer-profile-section-head button {
@@ -3989,6 +3991,9 @@ label.is-disabled textarea {
   flex-direction: column;
   gap: 14px;
   min-width: 0;
+  max-height: calc(100vh - 170px);
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .compact-profile-form {
@@ -4046,55 +4051,6 @@ label.is-disabled textarea {
   color: var(--on-surface);
   font-size: var(--font-size-2xl);
   line-height: 1;
-}
-
-.agent-journey-card {
-  gap: 14px;
-}
-
-.agent-journey-steps {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.agent-journey-step {
-  display: flex;
-  gap: 10px;
-  min-height: 92px;
-  padding: 12px;
-  border: 1px solid rgba(233, 236, 239, 0.95);
-  border-radius: 8px;
-  background: #fafbfc;
-}
-
-.agent-journey-step strong {
-  display: grid;
-  flex: 0 0 28px;
-  width: 28px;
-  height: 28px;
-  place-items: center;
-  border-radius: 999px;
-  background: var(--primary);
-  color: #ffffff;
-  font-size: var(--font-size-xs);
-  line-height: 1;
-}
-
-.agent-journey-step span {
-  display: block;
-  color: var(--on-surface);
-  font-size: var(--font-size-sm);
-  font-weight: 900;
-  line-height: 1.2;
-}
-
-.agent-journey-step p {
-  margin: 5px 0 0;
-  color: var(--on-surface-variant);
-  font-size: var(--font-size-xs);
-  font-weight: 650;
-  line-height: 1.35;
 }
 
 .customer-profile-section-head {
@@ -4372,12 +4328,12 @@ label.is-disabled textarea {
 
 .followup-chat-thread {
   display: flex;
-  flex: 1;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 10px;
   height: auto;
   max-height: none;
-  min-height: 260px;
+  min-height: 0;
   overflow-y: auto;
   padding: 12px;
   border: 1px solid rgba(233, 236, 239, 0.95);
@@ -4448,6 +4404,7 @@ label.is-disabled textarea {
 
 .followup-compose {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 10px;
   margin-top: auto;
@@ -4507,10 +4464,6 @@ label.is-disabled textarea {
     grid-template-columns: minmax(0, 1fr) minmax(340px, 380px);
   }
 
-  .agent-journey-steps {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .customer-profile-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4555,13 +4508,6 @@ label.is-disabled textarea {
     grid-template-columns: 1fr;
   }
 
-  .agent-journey-steps {
-    grid-template-columns: 1fr;
-  }
-
-  .agent-journey-step {
-    min-height: 0;
-  }
 }
 
 .manual-actions {

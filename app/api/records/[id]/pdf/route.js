@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/prisma";
-import { securityHeaders } from "@/lib/security";
+import { prisma } from "@/lib/db/prisma";
+import { securityHeaders } from "@/lib/auth/security";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource, getTenantFilter } from "@/lib/rbac";
+import { canAccessResource, getTenantFilter } from "@/lib/auth/rbac";
 import { getLocalPhysicalPath, getSignedUrl } from "@/lib/storage";
-import { downloadGoogleDriveFile } from "@/lib/google-drive-storage";
+import { downloadGoogleDriveFile } from "@/lib/storage/google-drive-storage";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { NextResponse } from "next/server";
 import fs from "fs/promises";

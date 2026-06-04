@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canAccessResource, getTenantFilter, UserRole } from "../lib/rbac";
+import { canAccessResource, getTenantFilter, UserRole } from "../lib/auth/rbac";
 
 describe("SaaS Multi-Tenancy & RBAC Tests", () => {
   const orgA = "org-aaaa-aaaa-aaaa-aaaa";

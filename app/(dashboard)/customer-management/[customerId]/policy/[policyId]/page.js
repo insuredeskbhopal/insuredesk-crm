@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { normalizeRecord } from "@/lib/records";
 import Dashboard from "@/app/ui/dashboard";
-import { loadScopedPolicyRecords } from "@/lib/scoped-data";
+import { loadScopedPolicyRecords } from "@/lib/records/scoped-data";
 
 export default async function PolicyDetailPage({ params }) {
   const { customerId, policyId } = await params;

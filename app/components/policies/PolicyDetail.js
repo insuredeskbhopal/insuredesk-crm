@@ -2,7 +2,7 @@ import { FileText, Download, X } from "lucide-react";
 import Metric from "../shared/Metric";
 import PdfLink from "../shared/PdfLink";
 import InsurerLogo from "@/app/components/brand/InsurerLogo";
-import { formatMoney } from "@/lib/analytics";
+import { formatMoney } from "@/lib/records/analytics";
 
 export default function PolicyDetail({ client, record, onBack }) {
   const isMotorPolicy = Boolean(

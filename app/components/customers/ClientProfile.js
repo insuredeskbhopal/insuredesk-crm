@@ -1,7 +1,7 @@
 import { Users } from "lucide-react";
 import Metric from "../shared/Metric";
 import PdfLink from "../shared/PdfLink";
-import { formatMoney } from "@/lib/analytics";
+import { formatMoney } from "@/lib/records/analytics";
 
 export default function ClientProfile({ client, onBack, onPolicySelect }) {
   return (

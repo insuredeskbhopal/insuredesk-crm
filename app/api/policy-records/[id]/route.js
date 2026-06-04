@@ -1,8 +1,8 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
-import { sanitizeRecordPayload } from "@/lib/record-validation";
+import { sanitizeRecordPayload } from "@/lib/records/validation";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource, getTenantFilter, UserRole } from "@/lib/rbac";
+import { canAccessResource, getTenantFilter, UserRole } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 

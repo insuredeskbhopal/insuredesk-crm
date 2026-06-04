@@ -1,15 +1,15 @@
 import { randomUUID } from "node:crypto";
-import { prisma } from "@/lib/prisma";
-import { extractTextFromPdf } from "@/lib/pdf-text";
-import { extractPolicyDataFromTextResult } from "@/lib/policy-extraction-pipeline";
-import { sanitizeRecordPayload } from "@/lib/record-validation";
-import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploadList } from "@/lib/upload-validation";
+import { prisma } from "@/lib/db/prisma";
+import { extractTextFromPdf } from "@/lib/policies/pdf/text";
+import { extractPolicyDataFromTextResult } from "@/lib/policies/extraction-pipeline";
+import { sanitizeRecordPayload } from "@/lib/records/validation";
+import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploadList } from "@/lib/uploads/validation";
 import { verifyJWT } from "@/lib/auth";
 import { uploadFile } from "@/lib/storage";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
-import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/upload-status";
-import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/upload-failure";
-import { buildUploadDetection } from "@/lib/upload-detection";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
+import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/uploads/failure";
+import { buildUploadDetection } from "@/lib/uploads/detection";
 
 export const runtime = "nodejs";
 
