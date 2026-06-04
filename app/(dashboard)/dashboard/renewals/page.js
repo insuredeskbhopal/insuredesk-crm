@@ -46,11 +46,26 @@ function getRenewalVehicleNumber(record = {}) {
 }
 
 function isMotorRenewalPolicy(record = {}) {
+  const type = String(
+    record.selectedPolicyType || 
+    record.displayPolicyType || 
+    record.policyType || 
+    record.originalPolicyType || 
+    ""
+  ).toLowerCase();
+
+  // If the policy type matches known non-motor categories, it is not a motor policy
+  if (/\b(fire|health|life|home|cyber|wc|gpa|marine|liability|travel|personal accident|pa)\b/i.test(type)) {
+    return false;
+  }
+
+  // Check if type matches motor keywords
+  if (/\b(motor|vehicle|private\s+car|two\s+wheeler|commercial\s+vehicle|goods\s+carrying|gcv|pcv|car|bike|scooter)\b/i.test(type)) {
+    return true;
+  }
+
+  // Fallback to checking other fields if policyType is empty/generic, but make sure it has motor keywords or registration numbers
   const haystack = [
-    record.displayPolicyType,
-    record.policyType,
-    record.originalPolicyType,
-    record.selectedPolicyType,
     record.documentCategory,
     getRenewalVehicleNumber(record),
     record.engineNumber,
@@ -1353,9 +1368,11 @@ export default function RenewalsPage() {
 
                   {/* Manual Correction Fields */}
                   <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
-                    <h4 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "12px" }}>Insured Details & vehicle info (Verify & Correct)</h4>
+                    <h4 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "12px" }}>
+                      {isMotorRenewalPolicy(renewPolicy) ? "Insured Details & vehicle info (Verify & Correct)" : "Insured Details (Verify & Correct)"}
+                    </h4>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                      <label>
+                      <label style={{ gridColumn: isMotorRenewalPolicy(renewPolicy) ? undefined : "span 2" }}>
                         <span style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Insured Name</span>
                         <input
                           value={renewForm.insuredName}
@@ -1364,32 +1381,36 @@ export default function RenewalsPage() {
                         />
                       </label>
 
-                      <label>
-                        <span style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Vehicle Registration No.</span>
-                        <input
-                          value={renewForm.vehicleNumber}
-                          onChange={(e) => setRenewForm({...renewForm, vehicleNumber: e.target.value})}
-                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--surface)", color: "var(--text-primary)", fontSize: "14px" }}
-                        />
-                      </label>
+                      {isMotorRenewalPolicy(renewPolicy) && (
+                        <>
+                          <label>
+                            <span style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Vehicle Registration No.</span>
+                            <input
+                              value={renewForm.vehicleNumber}
+                              onChange={(e) => setRenewForm({...renewForm, vehicleNumber: e.target.value})}
+                              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--surface)", color: "var(--text-primary)", fontSize: "14px" }}
+                            />
+                          </label>
 
-                      <label>
-                        <span style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Engine Number</span>
-                        <input
-                          value={renewForm.engineNumber}
-                          onChange={(e) => setRenewForm({...renewForm, engineNumber: e.target.value})}
-                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--surface)", color: "var(--text-primary)", fontSize: "14px" }}
-                        />
-                      </label>
+                          <label>
+                            <span style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Engine Number</span>
+                            <input
+                              value={renewForm.engineNumber}
+                              onChange={(e) => setRenewForm({...renewForm, engineNumber: e.target.value})}
+                              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--surface)", color: "var(--text-primary)", fontSize: "14px" }}
+                            />
+                          </label>
 
-                      <label>
-                        <span style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Chassis Number</span>
-                        <input
-                          value={renewForm.chassisNumber}
-                          onChange={(e) => setRenewForm({...renewForm, chassisNumber: e.target.value})}
-                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--surface)", color: "var(--text-primary)", fontSize: "14px" }}
-                        />
-                      </label>
+                          <label>
+                            <span style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Chassis Number</span>
+                            <input
+                              value={renewForm.chassisNumber}
+                              onChange={(e) => setRenewForm({...renewForm, chassisNumber: e.target.value})}
+                              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--surface)", color: "var(--text-primary)", fontSize: "14px" }}
+                            />
+                          </label>
+                        </>
+                      )}
                     </div>
                   </div>
                 </>
@@ -1554,23 +1575,25 @@ export default function RenewalsPage() {
                 <DetailField label="Due Collection" value={selectedRecord.dueCollection} />
               </DetailSection>
 
-              <DetailSection title="Vehicle Details">
-                <DetailField label="Vehicle Number" value={selectedRecord.vehicleNumber} />
-                <DetailField label="Make & Model" value={selectedRecord.makeModel} wide />
-                <DetailField label="Variant" value={selectedRecord.variant} />
-                <DetailField label="Registration Number" value={selectedRecord.registrationNumber} />
-                <DetailField label="Registration Date" value={selectedRecord.registrationDate ? formatDate(selectedRecord.registrationDate) : ""} />
-                <DetailField label="Manufacturing Year" value={selectedRecord.manufacturingYear} />
-                <DetailField label="Fuel Type" value={selectedRecord.fuelType} />
-                <DetailField label="Engine Number" value={selectedRecord.engineNumber} />
-                <DetailField label="Chassis Number" value={selectedRecord.chassisNumber} />
-                <DetailField label="Seating Capacity" value={selectedRecord.seatingCapacity} />
-                <DetailField label="Cubic Capacity" value={selectedRecord.cubicCapacity} />
-                <DetailField label="IDV" value={selectedRecord.idv} />
-                <DetailField label="NCB" value={selectedRecord.ncb} />
-                <DetailField label="Cover Type" value={selectedRecord.policyCoverType} />
-                <DetailField label="RTO Location" value={selectedRecord.rtoLocation} />
-              </DetailSection>
+              {isMotorRenewalPolicy(selectedRecord) && (
+                <DetailSection title="Vehicle Details">
+                  <DetailField label="Vehicle Number" value={selectedRecord.vehicleNumber} />
+                  <DetailField label="Make & Model" value={selectedRecord.makeModel} wide />
+                  <DetailField label="Variant" value={selectedRecord.variant} />
+                  <DetailField label="Registration Number" value={selectedRecord.registrationNumber} />
+                  <DetailField label="Registration Date" value={selectedRecord.registrationDate ? formatDate(selectedRecord.registrationDate) : ""} />
+                  <DetailField label="Manufacturing Year" value={selectedRecord.manufacturingYear} />
+                  <DetailField label="Fuel Type" value={selectedRecord.fuelType} />
+                  <DetailField label="Engine Number" value={selectedRecord.engineNumber} />
+                  <DetailField label="Chassis Number" value={selectedRecord.chassisNumber} />
+                  <DetailField label="Seating Capacity" value={selectedRecord.seatingCapacity} />
+                  <DetailField label="Cubic Capacity" value={selectedRecord.cubicCapacity} />
+                  <DetailField label="IDV" value={selectedRecord.idv} />
+                  <DetailField label="NCB" value={selectedRecord.ncb} />
+                  <DetailField label="Cover Type" value={selectedRecord.policyCoverType} />
+                  <DetailField label="RTO Location" value={selectedRecord.rtoLocation} />
+                </DetailSection>
+              )}
 
               <DetailSection title="Additional & Risk Details">
                 <DetailField label="Nominee Name" value={selectedRecord.nomineeName} />
