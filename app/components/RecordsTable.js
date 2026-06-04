@@ -516,11 +516,11 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
                     onClick={toggleSelectAll}
                   >
                     {allVisibleSelected ? (
-                      <CheckSquare size={18} strokeWidth={2.5} />
+                      <CheckSquare size={18} strokeWidth={1.6} />
                     ) : someVisibleSelected ? (
-                      <MinusSquare size={18} strokeWidth={2.5} />
+                      <MinusSquare size={18} strokeWidth={1.6} />
                     ) : (
-                      <Square size={18} strokeWidth={2.5} />
+                      <Square size={18} strokeWidth={1.6} />
                     )}
                   </button>
                 </th>
@@ -548,9 +548,9 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
                         onClick={() => toggleSelectId(record.id)}
                       >
                         {isMarked ? (
-                          <CheckSquare size={18} strokeWidth={2.5} />
+                          <CheckSquare size={18} strokeWidth={1.6} />
                         ) : (
-                          <Square size={18} strokeWidth={2.5} />
+                          <Square size={18} strokeWidth={1.6} />
                         )}
                       </button>
                     </td>
@@ -890,7 +890,7 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
         <div className="mark-action-bar">
           <div className="mark-action-bar-inner">
             <div className="mark-action-info">
-              <CheckSquare size={18} strokeWidth={2.5} />
+              <CheckSquare size={18} strokeWidth={1.6} />
               <span><strong>{selectedIds.size}</strong> record{selectedIds.size === 1 ? "" : "s"} marked</span>
             </div>
             <div className="mark-action-buttons">
