@@ -42,7 +42,11 @@ export async function GET(request) {
 
     const where = {
       ...tenantFilter,
-      deletedAt: null
+      deletedAt: null,
+      NOT: [
+        { sourceFile: "Renewal Page data.xlsx" },
+        { sourceFile: "Manual Renewal" }
+      ]
     };
 
     const andFilters = [];

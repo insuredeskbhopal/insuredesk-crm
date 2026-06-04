@@ -135,6 +135,7 @@ export async function GET(request) {
         FROM pdf_records
         WHERE deleted_at IS NULL
           AND ($1::boolean OR organization_id = $2::uuid)
+          AND (source_file IS NULL OR source_file NOT IN ('Renewal Page data.xlsx', 'Manual Renewal'))
       ),
       dated AS (
         SELECT 
