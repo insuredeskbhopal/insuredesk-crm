@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Download, Pencil, Eye, X, Printer, Trash2 } from "lucide-react";
+import { Download, Pencil, Eye, X, Printer, Trash2, CheckSquare, Square, MinusSquare } from "lucide-react";
 
 function DetailField({ label, value, wide }) {
   if (value === undefined || value === null || String(value).trim() === "") return null;
@@ -102,9 +102,63 @@ function renderCell(record, column) {
   return value;
 }
 
+const COLUMN_WIDTHS = {
+  "col-mark": 48,
+  "col-customer": 104,
+  "col-saved": 150,
+  "col-insured": 210,
+  "col-contact": 150,
+  "col-contact-person": 150,
+  "col-policy": 150,
+  "col-vehicle": 150,
+  "col-type": 150,
+  "col-company": 150,
+  "col-uploader": 150,
+  "col-source": 150,
+  "col-group": 180,
+  "col-location": 180,
+  "col-description": 180,
+  "col-occupancy": 180,
+  "col-money": 140,
+  "col-date": 120,
+  "col-duration": 125,
+  "col-district": 125,
+  "col-tehsil": 125,
+  "col-ppt": 125,
+  "col-valid": 125,
+  "col-pdf": 56,
+  "col-action": 88,
+  "col-default": 150,
+};
+
 export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS, canEdit = false, onEdit, canDelete = false, onDelete }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+
+  const getStickyStyle = (colIndex) => {
+    if (colIndex >= 3) return {};
+
+    const baseOffset = canDelete ? 48 : 0;
+    let leftOffset = baseOffset;
+
+    for (let i = 0; i < colIndex; i++) {
+      const col = columns[i];
+      const className = col?.className || "col-default";
+      const width = COLUMN_WIDTHS[className] || 150;
+      leftOffset += width;
+    }
+
+    return {
+      left: `${leftOffset}px`,
+    };
+  };
+
+  const getStickyClassName = (colIndex) => {
+    if (colIndex >= 3) return "";
+    const isLastSticky = colIndex === Math.min(2, columns.length - 1);
+    return `sticky-col ${isLastSticky ? "sticky-col-last" : ""}`;
+  };
 
   const handlePrint = (record) => {
     if (!record) return;
@@ -384,15 +438,57 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
     return pages;
   }, [currentPage, pageCount]);
   const tableMinWidth = columns.length < DEFAULT_RECORD_COLUMNS.length
-    ? Math.max(980, (columns.length * 132) + (canEdit ? 88 : 0) + (canDelete ? 88 : 0) + 64)
+    ? Math.max(980, (columns.length * 132) + (canEdit ? 88 : 0) + (canDelete ? 48 : 0) + 64)
     : undefined;
 
   useEffect(() => {
     setCurrentPage(1);
   }, [records]);
 
+  // Clear selections when records change (e.g. after delete)
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [records]);
+
   const goToPage = (page) => {
     setCurrentPage(Math.min(Math.max(1, page), pageCount));
+  };
+
+  const toggleSelectId = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const allVisibleSelected = visibleRecords.length > 0 && visibleRecords.every((r) => selectedIds.has(r.id));
+  const someVisibleSelected = visibleRecords.some((r) => selectedIds.has(r.id));
+
+  const toggleSelectAll = () => {
+    if (allVisibleSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        visibleRecords.forEach((r) => next.delete(r.id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        visibleRecords.forEach((r) => next.add(r.id));
+        return next;
+      });
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (!selectedIds.size || !onDelete) return;
+    const selectedRecords = records.filter((r) => selectedIds.has(r.id));
+    onDelete(selectedRecords);
   };
 
   return (
@@ -400,79 +496,104 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
       <div className="table-wrap records-table-wrap">
         <table className="records-table" style={tableMinWidth ? { minWidth: tableMinWidth } : undefined}>
           <colgroup>
+            {canDelete ? <col className="col-mark" /> : null}
             {columns.map((column) => (
               <col key={column.key} className={column.className || "col-default"} />
             ))}
             <col className="col-action" />
             {canEdit ? <col className="col-action" /> : null}
-            {canDelete ? <col className="col-action" /> : null}
             <col className="col-pdf" />
           </colgroup>
           <thead>
             <tr>
-              {columns.map((column) => (
-                <th key={column.key}>{column.label}</th>
+              {canDelete ? (
+                <th className="sticky-col" style={{ left: 0 }}>
+                  <button
+                    className="record-mark-toggle"
+                    type="button"
+                    title={allVisibleSelected ? "Unmark all" : "Mark all"}
+                    aria-label={allVisibleSelected ? "Unmark all records on this page" : "Mark all records on this page"}
+                    onClick={toggleSelectAll}
+                  >
+                    {allVisibleSelected ? (
+                      <CheckSquare size={18} strokeWidth={2.5} />
+                    ) : someVisibleSelected ? (
+                      <MinusSquare size={18} strokeWidth={2.5} />
+                    ) : (
+                      <Square size={18} strokeWidth={2.5} />
+                    )}
+                  </button>
+                </th>
+              ) : null}
+              {columns.map((column, index) => (
+                <th key={column.key} className={getStickyClassName(index)} style={getStickyStyle(index)}>{column.label}</th>
               ))}
               <th>View</th>
               {canEdit ? <th>Edit</th> : null}
-              {canDelete ? <th>Delete</th> : null}
               <th>PDF</th>
             </tr>
           </thead>
           <tbody>
-            {records.length ? visibleRecords.map((record) => (
-              <tr key={record.id}>
-                {columns.map((column) => (
-                  <td key={column.key}>{renderCell(record, column)}</td>
-                ))}
-                <td>
-                  <button
-                    aria-label={`View details of ${record.policyNumber || record.insuredName || "policy record"}`}
-                    className="record-icon-action"
-                    title="View policy details"
-                    type="button"
-                    onClick={() => setSelectedRecord(record)}
-                  >
-                    <Eye size={20} strokeWidth={2.5} />
-                  </button>
-                </td>
-                {canEdit ? (
+            {records.length ? visibleRecords.map((record) => {
+              const isMarked = selectedIds.has(record.id);
+              return (
+                <tr key={record.id} className={isMarked ? "row-marked" : ""}>
+                  {canDelete ? (
+                    <td className="sticky-col" style={{ left: 0 }}>
+                      <button
+                        className={`record-mark-toggle ${isMarked ? "marked" : ""}`}
+                        type="button"
+                        title={isMarked ? "Unmark" : "Mark"}
+                        aria-label={isMarked ? `Unmark ${record.policyNumber || record.insuredName || "record"}` : `Mark ${record.policyNumber || record.insuredName || "record"}`}
+                        onClick={() => toggleSelectId(record.id)}
+                      >
+                        {isMarked ? (
+                          <CheckSquare size={18} strokeWidth={2.5} />
+                        ) : (
+                          <Square size={18} strokeWidth={2.5} />
+                        )}
+                      </button>
+                    </td>
+                  ) : null}
+                  {columns.map((column, index) => (
+                    <td key={column.key} className={getStickyClassName(index)} style={getStickyStyle(index)}>{renderCell(record, column)}</td>
+                  ))}
                   <td>
                     <button
-                      aria-label={`Edit ${record.policyNumber || record.insuredName || "policy record"}`}
+                      aria-label={`View details of ${record.policyNumber || record.insuredName || "policy record"}`}
                       className="record-icon-action"
-                      title="Edit policy record"
+                      title="View policy details"
                       type="button"
-                      onClick={() => onEdit?.(record)}
+                      onClick={() => setSelectedRecord(record)}
                     >
-                      <Pencil size={24} strokeWidth={2.7} />
+                      <Eye size={20} strokeWidth={2.5} />
                     </button>
                   </td>
-                ) : null}
-                {canDelete ? (
+                  {canEdit ? (
+                    <td>
+                      <button
+                        aria-label={`Edit ${record.policyNumber || record.insuredName || "policy record"}`}
+                        className="record-icon-action"
+                        title="Edit policy record"
+                        type="button"
+                        onClick={() => onEdit?.(record)}
+                      >
+                        <Pencil size={24} strokeWidth={2.7} />
+                      </button>
+                    </td>
+                  ) : null}
                   <td>
-                    <button
-                      aria-label={`Delete ${record.policyNumber || record.insuredName || "policy record"}`}
-                      className="record-icon-action danger"
-                      title="Delete duplicate policy record"
-                      type="button"
-                      onClick={() => onDelete?.(record)}
-                    >
-                      <Trash2 size={20} strokeWidth={2.5} />
-                    </button>
+                    {record.hasPdf ? (
+                      <a className="pdf-icon-link" href={`/api/records/${record.id}/pdf`} title="Download PDF" aria-label="Download PDF">
+                        <Download size={14} />
+                      </a>
+                    ) : (
+                      <span className="missing-pdf compact" style={{ color: "#d93025", fontWeight: "700", fontSize: "11px" }}>Missing</span>
+                    )}
                   </td>
-                ) : null}
-                <td>
-                  {record.hasPdf ? (
-                    <a className="pdf-icon-link" href={`/api/records/${record.id}/pdf`} title="Download PDF" aria-label="Download PDF">
-                      <Download size={14} />
-                    </a>
-                  ) : (
-                    <span className="missing-pdf compact" style={{ color: "#d93025", fontWeight: "700", fontSize: "11px" }}>Missing</span>
-                  )}
-                </td>
-              </tr>
-            )) : (
+                </tr>
+              );
+            }) : (
               <tr>
                 <td className="empty" colSpan={columns.length + 2 + (canEdit ? 1 : 0) + (canDelete ? 1 : 0)}>No database records yet.</td>
               </tr>
@@ -763,6 +884,35 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
           </div>
         </div>
         , document.body)}
+
+      {/* Floating action bar when records are marked */}
+      {canDelete && selectedIds.size > 0 && typeof window !== "undefined" && createPortal(
+        <div className="mark-action-bar">
+          <div className="mark-action-bar-inner">
+            <div className="mark-action-info">
+              <CheckSquare size={18} strokeWidth={2.5} />
+              <span><strong>{selectedIds.size}</strong> record{selectedIds.size === 1 ? "" : "s"} marked</span>
+            </div>
+            <div className="mark-action-buttons">
+              <button
+                className="mark-action-clear"
+                type="button"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                Clear
+              </button>
+              <button
+                className="mark-action-delete"
+                type="button"
+                onClick={handleDeleteSelected}
+              >
+                <Trash2 size={16} strokeWidth={2.5} />
+                Delete Selected
+              </button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
     </div>
   );
 }

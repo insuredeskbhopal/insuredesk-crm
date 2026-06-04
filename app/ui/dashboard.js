@@ -639,45 +639,89 @@ export default function Dashboard({
     });
   }
 
-  function deletePolicyRecord(record) {
+  function deletePolicyRecord(recordsToDelete) {
     if (!canDeletePolicyRecords) {
       setAlert({ type: "error", title: "Delete unavailable", message: "Only super admin can delete policy records." });
       return;
     }
-    if (!record?.id) return;
-    const deleteLabel = record.policyNumber || record.id;
-    const expectedConfirmation = `DELETE ${deleteLabel}`;
-    const confirmation = window.prompt(`Type "${expectedConfirmation}" to delete this policy record.`);
 
-    if (confirmation !== expectedConfirmation) {
-      setAlert({ type: "info", title: "Delete cancelled", message: "Typed confirmation did not match. No policy record was deleted." });
-      return;
+    const isArray = Array.isArray(recordsToDelete);
+    const items = isArray ? recordsToDelete : [recordsToDelete];
+    if (items.length === 0) return;
+
+    let confirmation = "";
+    if (isArray) {
+      confirmation = window.prompt(`Type "DELETE" to delete all ${items.length} selected policy records.`);
+      if (confirmation !== "DELETE") {
+        setAlert({ type: "info", title: "Delete cancelled", message: "Confirmation did not match. No policy records were deleted." });
+        return;
+      }
+    } else {
+      const record = items[0];
+      if (!record?.id) return;
+      const deleteLabel = record.policyNumber || record.id;
+      const expectedConfirmation = `DELETE ${deleteLabel}`;
+      confirmation = window.prompt(`Type "${expectedConfirmation}" to delete this policy record.`);
+      if (confirmation !== expectedConfirmation) {
+        setAlert({ type: "info", title: "Delete cancelled", message: "Typed confirmation did not match. No policy record was deleted." });
+        return;
+      }
     }
-    const label = record.policyNumber || record.insuredName || "this policy record";
 
     startSaving(async () => {
       try {
-        const response = await fetch(`/api/policy-records/${record.id}`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ confirmation })
-        });
-        if (!response.ok) {
-          let message = "Policy record could not be deleted.";
+        let deletedCount = 0;
+        let failedCount = 0;
+        let lastErrorMessage = "";
+        const deletedIds = [];
+
+        for (const record of items) {
+          const deleteLabel = record.policyNumber || record.id;
+          const payloadConfirmation = `DELETE ${deleteLabel}`;
           try {
-            const payload = await response.json();
-            if (payload?.error) message = payload.error;
-          } catch {}
-          setAlert({ type: "error", title: "Delete failed", message });
-          setToast(message);
-          return;
+            const response = await fetch(`/api/policy-records/${record.id}`, {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ confirmation: payloadConfirmation })
+            });
+            if (response.ok) {
+              deletedCount++;
+              deletedIds.push(record.id);
+            } else {
+              failedCount++;
+              try {
+                const payload = await response.json();
+                if (payload?.error) lastErrorMessage = payload.error;
+              } catch {}
+            }
+          } catch (e) {
+            failedCount++;
+            lastErrorMessage = e.message;
+          }
         }
 
-        setRecords((current) => current.filter((item) => item.id !== record.id));
-        setAlert({ type: "success", title: "Record deleted", message: `${label} was removed.` });
-        setToast("Policy record deleted");
+        if (deletedCount > 0) {
+          const deletedSet = new Set(deletedIds);
+          setRecords((current) => current.filter((item) => !deletedSet.has(item.id)));
+        }
+
+        if (failedCount === 0) {
+          setAlert({
+            type: "success",
+            title: isArray ? "Records deleted" : "Record deleted",
+            message: isArray ? `${deletedCount} policy records were deleted.` : `${items[0].policyNumber || items[0].insuredName || "this policy record"} was removed.`
+          });
+          setToast(isArray ? `${deletedCount} records deleted` : "Policy record deleted");
+        } else {
+          setAlert({
+            type: "warning",
+            title: "Delete completed with errors",
+            message: `Successfully deleted ${deletedCount} records. Failed to delete ${failedCount} records. Last error: ${lastErrorMessage || "Unknown error"}`
+          });
+          setToast(`Deleted ${deletedCount} records, ${failedCount} failed`);
+        }
       } catch (error) {
-        const message = error?.message || "Policy record could not be deleted.";
+        const message = error?.message || "Policy records could not be deleted.";
         setAlert({ type: "error", title: "Delete failed", message });
         setToast(message);
       }

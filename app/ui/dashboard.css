@@ -1508,45 +1508,170 @@ th {
   color: var(--on-surface);
 }
 
-.records-table th:nth-child(1),
-.records-table td:nth-child(1),
-.records-table th:nth-child(2),
-.records-table td:nth-child(2),
-.records-table th:nth-child(3),
-.records-table td:nth-child(3) {
+.records-table th.sticky-col,
+.records-table td.sticky-col {
   position: sticky;
   z-index: 2;
   background: #ffffff;
+  transition: background var(--motion-fast);
 }
 
-.records-table th:nth-child(1),
-.records-table th:nth-child(2),
-.records-table th:nth-child(3) {
+.records-table th.sticky-col {
   z-index: 4;
   background: #f3f4f5;
 }
 
-.records-table th:nth-child(1),
-.records-table td:nth-child(1) {
-  left: 0;
-}
-
-.records-table th:nth-child(2),
-.records-table td:nth-child(2) {
-  left: 104px;
-}
-
-.records-table th:nth-child(3),
-.records-table td:nth-child(3) {
-  left: 314px;
+.records-table td.sticky-col-last,
+.records-table th.sticky-col-last {
   box-shadow: 8px 0 14px rgba(25, 28, 29, 0.04);
 }
 
-.records-table td:nth-child(9),
-.records-table td:nth-child(10),
-.records-table th:nth-child(9),
-.records-table th:nth-child(10) {
+tbody tr:hover td.sticky-col {
+  background: #f8f9fa;
+}
+
+tbody tr.row-marked td.sticky-col {
+  background: #f0f4ff;
+}
+
+tbody tr.row-marked:hover td.sticky-col {
+  background: #e8eeff;
+}
+
+tbody tr.row-marked {
+  background-color: rgba(30, 58, 138, 0.04) !important;
+}
+
+.records-table .col-mark {
+  width: 48px;
+}
+
+.records-table .col-money,
+.records-table td.col-money,
+.records-table th.col-money {
   text-align: right;
+}
+
+.record-mark-toggle {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: #64748b;
+  box-shadow: none !important;
+  transition: all 0.2s ease;
+}
+
+.record-mark-toggle:hover {
+  background: rgba(15, 23, 42, 0.05) !important;
+  color: var(--primary);
+}
+
+.record-mark-toggle.marked {
+  color: var(--primary);
+}
+
+/* Floating Action Bar styling */
+.mark-action-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  animation: slide-up-fade 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.mark-action-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(25, 28, 29, 0.12);
+  border-radius: 16px;
+  padding: 10px 18px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.mark-action-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.mark-action-info strong {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.mark-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mark-action-clear {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569 !important;
+  background: transparent !important;
+  border: 1px solid rgba(71, 85, 105, 0.2) !important;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mark-action-clear:hover {
+  background: rgba(71, 85, 105, 0.05) !important;
+  border-color: rgba(71, 85, 105, 0.4) !important;
+  transform: translateY(-1px) !important;
+}
+
+.mark-action-delete {
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff !important;
+  background: #dc2626 !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15) !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mark-action-delete:hover {
+  background: #b91c1c !important;
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.25) !important;
+  transform: translateY(-1px) !important;
+}
+
+.mark-action-delete svg {
+  color: #ffffff !important;
 }
 
 .record-primary {
