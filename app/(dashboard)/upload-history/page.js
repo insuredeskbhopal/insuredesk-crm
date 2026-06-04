@@ -47,8 +47,31 @@ function statusLabel(status) {
   }[normalized];
 }
 
-export default async function UploadHistoryPage() {
-  const uploads = await loadScopedUploads({
+function getPageNumbers(currentPage, totalPages) {
+  const pages = [];
+  const maxVisible = 5;
+  if (totalPages <= maxVisible) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (currentPage > 3) pages.push("...");
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (currentPage < totalPages - 2) pages.push("...");
+    pages.push(totalPages);
+  }
+  return pages;
+}
+
+export default async function UploadHistoryPage(props) {
+  const searchParams = await props.searchParams;
+  const page = parseInt(searchParams.page || "1", 10);
+  const limit = parseInt(searchParams.limit || "20", 10);
+
+  const { uploads, totalCount, totalPages } = await loadScopedUploads({
+    page,
+    limit,
     select: {
       id: true,
       sourceFile: true,
@@ -120,6 +143,51 @@ export default async function UploadHistoryPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="table-pagination" style={{ marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: "1px solid var(--border, #e2e8f0)" }}>
+            <span style={{ fontSize: "14px", color: "var(--text-secondary, #64748b)" }}>Showing page {page} of {totalPages} ({totalCount} uploads found)</span>
+            <div className="table-page-list" style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+              {page > 1 ? (
+                <a href={`?page=${page - 1}&limit=${limit}`} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", textDecoration: "none", color: "var(--text-primary)", fontSize: "14px" }}>
+                  Prev
+                </a>
+              ) : (
+                <span style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", color: "var(--text-secondary, #cbd5e1)", fontSize: "14px", cursor: "not-allowed" }}>Prev</span>
+              )}
+              {getPageNumbers(page, totalPages).map((pNum, index) => (
+                pNum === "..." ? (
+                  <span key={`ellipsis-${index}`} style={{ padding: "0 8px", color: "var(--text-secondary, #64748b)" }}>...</span>
+                ) : (
+                  <a
+                    key={pNum}
+                    href={`?page=${pNum}&limit=${limit}`}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid var(--border, #cbd5e1)",
+                      background: page === pNum ? "var(--primary, #1e3a8a)" : "#ffffff",
+                      color: page === pNum ? "#ffffff" : "var(--text-primary, #0f172a)",
+                      textDecoration: "none",
+                      fontSize: "14px",
+                      fontWeight: page === pNum ? "bold" : "normal"
+                    }}
+                  >
+                    {pNum}
+                  </a>
+                )
+              ))}
+              {page < totalPages ? (
+                <a href={`?page=${page + 1}&limit=${limit}`} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", textDecoration: "none", color: "var(--text-primary)", fontSize: "14px" }}>
+                  Next
+                </a>
+              ) : (
+                <span style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", color: "var(--text-secondary, #cbd5e1)", fontSize: "14px", cursor: "not-allowed" }}>Next</span>
+              )}
+            </div>
+          </div>
+        )}
       </section>
     </>
   );

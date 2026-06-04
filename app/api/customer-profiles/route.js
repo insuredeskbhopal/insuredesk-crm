@@ -17,25 +17,144 @@ export async function GET(request) {
     const tenantFilter = getTenantFilter(user, "read");
     const actorId = user.userId || user.id;
     const ownProfileFilter = getCustomerProfileOwnerFilter(user);
+
     if (!phone) {
-      const profiles = await prisma.customerProfile.findMany({
-        where: ownProfileFilter,
-        orderBy: { updatedAt: "desc" },
-        take: 500,
-        include: {
-          createdBy: { select: { name: true, email: true } },
-          updatedBy: { select: { name: true, email: true } }
-        }
-      });
+      const page = parseInt(searchParams.get("page") || "1", 10);
+      const limit = parseInt(searchParams.get("limit") || "20", 10);
+      const skip = (page - 1) * limit;
+
+      const status = searchParams.get("status") || "";
+      const assignedTo = searchParams.get("assignedTo") || "";
+      const lob = searchParams.get("lob") || "";
+      const followUpDate = searchParams.get("followUpDate") || "";
+      const q = searchParams.get("q") || "";
+
+      const where = {
+        ...ownProfileFilter,
+        deletedAt: null
+      };
+
+      const andFilters = [];
+
+      if (status) {
+        where.status = status;
+      }
+
+      if (assignedTo) {
+        where.assignedTo = { contains: assignedTo, mode: "insensitive" };
+      }
+
+      if (lob) {
+        where.selectedLOBs = { array_contains: lob };
+      }
+
+      if (followUpDate) {
+        const start = new Date(`${followUpDate}T00:00:00.000Z`);
+        const end = new Date(`${followUpDate}T23:59:59.999Z`);
+        andFilters.push({
+          OR: [
+            { nextFollowUpDate: { gte: start, lte: end } },
+            { followUpDate: { gte: start, lte: end } }
+          ]
+        });
+      }
+
+      if (q) {
+        andFilters.push({
+          OR: [
+            { name: { contains: q, mode: "insensitive" } },
+            { phone: { contains: q, mode: "insensitive" } }
+          ]
+        });
+      }
+
+      if (andFilters.length > 0) {
+        where.AND = andFilters;
+      }
+
+      // Fetch paginated profiles and total counts in parallel
+      const [profiles, totalCount, counts, allProfilesForFilters] = await Promise.all([
+        prisma.customerProfile.findMany({
+          where,
+          orderBy: { updatedAt: "desc" },
+          skip,
+          take: limit,
+          include: {
+            createdBy: { select: { name: true, email: true } },
+            updatedBy: { select: { name: true, email: true } }
+          }
+        }),
+        prisma.customerProfile.count({ where }),
+        prisma.customerProfile.groupBy({
+          by: ["status", "convertedToCustomer"],
+          where: {
+            ...ownProfileFilter,
+            deletedAt: null
+          },
+          _count: {
+            id: true
+          }
+        }),
+        prisma.customerProfile.findMany({
+          where: {
+            ...ownProfileFilter,
+            deletedAt: null
+          },
+          select: {
+            assignedTo: true,
+            selectedLOBs: true
+          }
+        })
+      ]);
+
       const serialized = profiles.map(serializeCustomerProfile);
-      const filtered = filterProfiles(serialized, searchParams);
+
+      // Build counters from the aggregated status counts
+      let totalProfiles = 0;
+      let newLeads = 0;
+      let followUpRequired = 0;
+      let interested = 0;
+      let converted = 0;
+      let lost = 0;
+
+      for (const c of counts) {
+        const countVal = c._count.id || 0;
+        totalProfiles += countVal;
+        if (c.status === "New Lead") newLeads += countVal;
+        if (c.status === "Follow-up Required") followUpRequired += countVal;
+        if (c.status === "Interested") interested += countVal;
+        if (c.status === "Converted" || c.convertedToCustomer) converted += countVal;
+        if (c.status === "Lost") lost += countVal;
+      }
+
+      const counters = {
+        totalProfiles,
+        newLeads,
+        followUpRequired,
+        interested,
+        converted,
+        lost
+      };
+
+      const filterOptions = {
+        assignedTo: unique(allProfilesForFilters.map((profile) => profile.assignedTo)),
+        lobs: unique(allProfilesForFilters.flatMap((profile) => {
+          try {
+            return Array.isArray(profile.selectedLOBs) ? profile.selectedLOBs : [];
+          } catch {
+            return [];
+          }
+        }))
+      };
+
       return NextResponse.json({
-        profiles: filtered,
-        counters: buildCounters(serialized),
-        filterOptions: {
-          assignedTo: unique(serialized.map((profile) => profile.assignedTo)),
-          lobs: unique(serialized.flatMap((profile) => profile.selectedLOBs || []))
-        },
+        profiles: serialized,
+        total: totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit) || 1,
+        counters,
+        filterOptions,
         policyMatches: []
       });
     }
@@ -54,7 +173,18 @@ export async function GET(request) {
         }
       }),
       prisma.policyRecord.findMany({
-        where: tenantFilter,
+        where: {
+          ...tenantFilter,
+          deletedAt: null,
+          OR: [
+            { reviewedData: { path: ['contactNumber'], string_contains: phone } },
+            { reviewedData: { path: ['Contact No.'], string_contains: phone } },
+            { reviewedData: { path: ['customerMobile'], string_contains: phone } },
+            { data: { path: ['contactNumber'], string_contains: phone } },
+            { data: { path: ['Contact No.'], string_contains: phone } },
+            { data: { path: ['customerMobile'], string_contains: phone } }
+          ]
+        },
         orderBy: { savedAt: "desc" },
         take: 200,
         select: {
@@ -110,41 +240,6 @@ export async function GET(request) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to search customer profiles." }, { status: 500 });
   }
-}
-
-function filterProfiles(profiles, searchParams) {
-  const status = searchParams.get("status") || "";
-  const assignedTo = String(searchParams.get("assignedTo") || "").toLowerCase();
-  const lob = searchParams.get("lob") || "";
-  const followUpDate = searchParams.get("followUpDate") || "";
-  const query = String(searchParams.get("q") || "").toLowerCase();
-
-  return profiles.filter((profile) => {
-    if (status && profile.status !== status) return false;
-    if (assignedTo && !String(profile.assignedTo || "").toLowerCase().includes(assignedTo)) return false;
-    if (lob && !(profile.selectedLOBs || []).includes(lob)) return false;
-    if (followUpDate) {
-      const next = profile.nextFollowUpDate ? new Date(profile.nextFollowUpDate).toISOString().slice(0, 10) : "";
-      const legacy = profile.followUpDate ? new Date(profile.followUpDate).toISOString().slice(0, 10) : "";
-      if (next !== followUpDate && legacy !== followUpDate) return false;
-    }
-    if (query) {
-      const haystack = `${profile.name} ${profile.phone}`.toLowerCase();
-      if (!haystack.includes(query)) return false;
-    }
-    return true;
-  });
-}
-
-function buildCounters(profiles) {
-  return {
-    totalProfiles: profiles.length,
-    newLeads: profiles.filter((profile) => profile.status === "New Lead").length,
-    followUpRequired: profiles.filter((profile) => profile.status === "Follow-up Required").length,
-    interested: profiles.filter((profile) => profile.status === "Interested").length,
-    converted: profiles.filter((profile) => profile.status === "Converted" || profile.convertedToCustomer).length,
-    lost: profiles.filter((profile) => profile.status === "Lost").length
-  };
 }
 
 function unique(values) {

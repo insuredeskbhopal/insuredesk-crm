@@ -20,58 +20,137 @@ export async function GET(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limitParam = searchParams.get("limit");
-    const pageParam = searchParams.get("page");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const skip = (page - 1) * limit;
+
+    const q = searchParams.get("q") || "";
+    const status = searchParams.get("status") || "";
+    const company = searchParams.get("company") || "";
+    const policyType = searchParams.get("policyType") || "";
+    const assignedTo = searchParams.get("assignedTo") || "";
 
     // Retrieve scoped filter for multi-tenancy and RBAC
     const tenantFilter = getTenantFilter(user, "read");
 
-    let queryOptions = {
-      where: tenantFilter,
-      orderBy: { savedAt: "desc" },
-      select: {
-        id: true,
-        savedAt: true,
-        data: true,
-        reviewedData: true,
-        extractedData: true,
-        extractionMethod: true,
-        extractionQuality: true,
-        extractionLog: true,
-        confidenceScore: true,
-        pdfFileName: true,
-        pdfMimeType: true,
-        organizationId: true,
-        createdById: true,
-        createdBy: {
-          select: {
-            name: true,
-            email: true
-          }
-        },
-        uploadedFile: {
-          select: {
-            createdAt: true,
-            createdBy: {
-              select: {
-                name: true,
-                email: true
-              }
+    const where = {
+      ...tenantFilter,
+      deletedAt: null
+    };
+
+    const andFilters = [];
+
+    if (q.trim()) {
+      const searchTerms = q.trim().toLowerCase();
+      const searchKeys = [
+        'insuredName', 'policyNumber', 'contactNumber', 'contactPerson', 
+        'whatsappGroupName', 'groupName', 'policyType', 'vehicleNumber', 
+        'registrationNumber', 'engineNumber', 'chassisNumber', 'makeModel', 
+        'rtoLocation', 'district', 'tehsil', 'insuranceCompany'
+      ];
+      const searchOrs = [];
+      for (const key of searchKeys) {
+        searchOrs.push({ reviewedData: { path: [key], string_contains: searchTerms, mode: 'insensitive' } });
+        searchOrs.push({ data: { path: [key], string_contains: searchTerms, mode: 'insensitive' } });
+      }
+      andFilters.push({ OR: searchOrs });
+    }
+
+    if (status) {
+      andFilters.push({
+        OR: [
+          { reviewedData: { path: ['status'], equals: status, mode: 'insensitive' } },
+          { data: { path: ['status'], equals: status, mode: 'insensitive' } }
+        ]
+      });
+    }
+
+    if (company) {
+      andFilters.push({
+        OR: [
+          { selectedCompany: { equals: company, mode: 'insensitive' } },
+          { reviewedData: { path: ['insuranceCompany'], equals: company, mode: 'insensitive' } },
+          { data: { path: ['insuranceCompany'], equals: company, mode: 'insensitive' } }
+        ]
+      });
+    }
+
+    if (policyType) {
+      andFilters.push({
+        OR: [
+          { selectedPolicyType: { equals: policyType, mode: 'insensitive' } },
+          { reviewedData: { path: ['policyType'], equals: policyType, mode: 'insensitive' } },
+          { data: { path: ['policyType'], equals: policyType, mode: 'insensitive' } }
+        ]
+      });
+    }
+
+    if (assignedTo) {
+      andFilters.push({
+        OR: [
+          { createdBy: { name: { contains: assignedTo, mode: 'insensitive' } } },
+          { createdBy: { email: { contains: assignedTo, mode: 'insensitive' } } }
+        ]
+      });
+    }
+
+    if (andFilters.length > 0) {
+      where.AND = andFilters;
+    }
+
+    const selectOptions = {
+      id: true,
+      savedAt: true,
+      data: true,
+      reviewedData: true,
+      extractedData: true,
+      extractionMethod: true,
+      extractionQuality: true,
+      extractionLog: true,
+      confidenceScore: true,
+      pdfFileName: true,
+      pdfMimeType: true,
+      organizationId: true,
+      createdById: true,
+      createdBy: {
+        select: {
+          name: true,
+          email: true
+        }
+      },
+      uploadedFile: {
+        select: {
+          createdAt: true,
+          createdBy: {
+            select: {
+              name: true,
+              email: true
             }
           }
         }
       }
     };
 
-    if (limitParam) {
-      const limit = parseInt(limitParam, 10) || 50;
-      const page = parseInt(pageParam || "1", 10) || 1;
-      queryOptions.take = limit;
-      queryOptions.skip = (page - 1) * limit;
-    }
+    const [records, totalCount] = await Promise.all([
+      prisma.policyRecord.findMany({
+        where,
+        orderBy: { savedAt: "desc" },
+        select: selectOptions,
+        skip,
+        take: limit
+      }),
+      prisma.policyRecord.count({ where })
+    ]);
 
-    const records = await prisma.policyRecord.findMany(queryOptions);
-    return Response.json(records.map(normalizeRecord));
+    const normalized = records.map(normalizeRecord);
+
+    return Response.json({
+      records: normalized,
+      total: totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit) || 1
+    });
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "Failed to retrieve records." },
@@ -155,7 +234,7 @@ export async function POST(request) {
   }
 }
 
-export async function DELETE(request) {
+export async function DELETE() {
   return Response.json(
     { error: "Bulk delete is disabled. Delete policy records one at a time as super admin." },
     { status: 405 }

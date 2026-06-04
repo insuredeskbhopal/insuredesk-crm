@@ -190,6 +190,10 @@ export default function CustomerProfilingPage() {
   const [profiles, setProfiles] = useState([]);
   const [counters, setCounters] = useState(EMPTY_COUNTERS);
   const [filterOptions, setFilterOptions] = useState({ assignedTo: [], lobs: [] });
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
   const [filters, setFilters] = useState({
     q: "",
@@ -219,6 +223,10 @@ export default function CustomerProfilingPage() {
   useEffect(() => {
     loadProfiles();
     loadCurrentUser();
+  }, [filters.q, filters.status, filters.assignedTo, filters.lob, filters.followUpDate, page, limit]);
+
+  useEffect(() => {
+    setPage(1);
   }, [filters.q, filters.status, filters.assignedTo, filters.lob, filters.followUpDate]);
 
   useEffect(() => {
@@ -357,12 +365,16 @@ export default function CustomerProfilingPage() {
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.set(key, value);
     });
+    params.set("page", page);
+    params.set("limit", limit);
     const response = await fetch(`/api/customer-profiles?${params.toString()}`);
     if (!response.ok) return;
     const payload = await response.json();
     setProfiles(payload.profiles || []);
     setCounters(payload.counters || EMPTY_COUNTERS);
     setFilterOptions(payload.filterOptions || { assignedTo: [], lobs: [] });
+    setTotalCount(payload.total || 0);
+    setTotalPages(payload.totalPages || 1);
   }
 
   async function loadCurrentUser() {
@@ -1003,6 +1015,44 @@ export default function CustomerProfilingPage() {
                 profiles={profiles}
                 onEdit={openProfile}
               />
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="table-pagination" style={{ marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "14px", color: "var(--text-secondary, #64748b)" }}>Showing page {page} of {totalPages} ({totalCount} profiles found)</span>
+                  <div className="table-page-list" style={{ display: "flex", gap: "6px" }}>
+                    <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", cursor: page === 1 ? "not-allowed" : "pointer" }}>
+                      Prev
+                    </button>
+                    {getPageNumbers(page, totalPages).map((pNum, index) => (
+                      pNum === "..." ? (
+                        <span key={`ellipsis-${index}`} style={{ padding: "0 8px", color: "var(--text-secondary, #64748b)" }}>...</span>
+                      ) : (
+                        <button
+                          key={pNum}
+                          type="button"
+                          className={page === pNum ? "active" : ""}
+                          onClick={() => setPage(pNum)}
+                          style={{
+                            padding: "6px 12px",
+                            borderRadius: "6px",
+                            border: "1px solid var(--border, #cbd5e1)",
+                            background: page === pNum ? "var(--primary, #1e3a8a)" : "#ffffff",
+                            color: page === pNum ? "#ffffff" : "var(--text-primary, #0f172a)",
+                            cursor: "pointer",
+                            fontWeight: page === pNum ? "bold" : "normal"
+                          }}
+                        >
+                          {pNum}
+                        </button>
+                      )
+                    ))}
+                    <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", cursor: page === totalPages ? "not-allowed" : "pointer" }}>
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </section>
@@ -1610,4 +1660,21 @@ function SelectField({ label, value, options, onChange }) {
       </select>
     </label>
   );
+}
+
+function getPageNumbers(currentPage, totalPages) {
+  const pages = [];
+  const maxVisible = 5;
+  if (totalPages <= maxVisible) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (currentPage > 3) pages.push("...");
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (currentPage < totalPages - 2) pages.push("...");
+    pages.push(totalPages);
+  }
+  return pages;
 }

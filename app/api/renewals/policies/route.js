@@ -1,10 +1,8 @@
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/auth/rbac";
 import { normalizeRecord } from "@/lib/records";
-import { getRecordSearchText } from "@/lib/records/search";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
-import { parsePolicyDate, startOfDay } from "@/app/lib/reporting/filters";
+import { startOfDay } from "@/app/lib/reporting/filters";
 
 export const dynamic = "force-dynamic";
 
@@ -27,138 +25,171 @@ export async function GET(request) {
     const q = searchParams.get("q") || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const offset = (page - 1) * limit;
     const daysParam = searchParams.get("days");
 
-    const tenantFilter = getTenantFilter(user, "read");
-
-    // Construct DB where filters for status
-    let statusFilter = {};
-    if (tab === "upcoming") {
-      statusFilter = {
-        isActivePolicy: true,
-        renewalStatus: "ACTIVE"
-      };
-    } else if (tab === "expired") {
-      statusFilter = {
-        isActivePolicy: true,
-        renewalStatus: "ACTIVE"
-      };
-    } else if (tab === "renewed") {
-      statusFilter = {
-        renewalStatus: "RENEWED"
-      };
-    } else if (tab === "lost") {
-      statusFilter = {
-        renewalStatus: "LOST"
-      };
-    } else {
-      // "all" tab: no active/inactive filter
-      statusFilter = {};
-    }
-
-    // Database query - select only necessary fields, excluding heavy raw text or bytes
-    const rawRecords = await prisma.policyRecord.findMany({
-      where: {
-        ...tenantFilter,
-        ...statusFilter,
-        // Optional performance optimizations in DB:
-        ...(company !== "All" ? { selectedCompany: company } : {})
-      },
-      select: {
-        id: true,
-        savedAt: true,
-        data: true,
-        reviewedData: true,
-        renewalStatus: true,
-        previousPolicyId: true,
-        renewedPolicyId: true,
-        renewalDate: true,
-        lostReason: true,
-        isActivePolicy: true,
-        selectedCompany: true,
-        selectedPolicyType: true,
-        pdfFileName: true
-      }
-    });
+    const requestedMaxDays = daysParam ? parseInt(daysParam, 10) : 29;
+    const maxDays = Math.min(Number.isFinite(requestedMaxDays) ? requestedMaxDays : 29, 29);
 
     const today = startOfDay(new Date());
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-    // Normalize and filter in memory for robust date calculations and fallback mappings
-    let filtered = rawRecords.map((record) => withRenewalPolicyDisplay(normalizeRecord(record)));
+    const isSuperAdmin = user.role === "SUPER_ADMIN";
+    const orgId = user.organizationId || "";
 
-    // Apply strict filters in memory
-    filtered = filtered.filter((r) => {
-      // 1. Company Filter Match
-      if (company !== "All") {
-        const c1 = String(company).trim().toLowerCase();
-        const c2 = String(r.insuranceCompany || "").trim().toLowerCase();
-        if (c1 !== c2) return false;
-      }
+    const queryParams = [
+      isSuperAdmin,
+      orgId,
+      todayStr,
+      tab,
+      maxDays,
+      company,
+      policyType,
+      q.trim(),
+      `%${q.trim().toLowerCase()}%`
+    ];
 
-      // 2. Policy Type Filter Match
-      if (policyType !== "All") {
-        const t1 = String(policyType).trim().toLowerCase();
-        const t2 = String(r.displayPolicyType || r.policyType || "").trim().toLowerCase();
-        if (t1 !== t2) return false;
-      }
+    const baseCTE = `
+      WITH normalized_policies AS (
+        SELECT 
+          id,
+          saved_at,
+          is_active_policy,
+          renewal_status,
+          selected_company,
+          selected_policy_type,
+          COALESCE(reviewed_data->>'insuranceCompany', reviewed_data->>'Insurance Company', data->>'insuranceCompany', data->>'Insurance Company', '') AS company,
+          COALESCE(reviewed_data->>'policyType', reviewed_data->>'Policy Type', data->>'policyType', data->>'Policy Type', '') AS policy_type,
+          COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry,
+          LOWER(
+            COALESCE(reviewed_data->>'insuredName', data->>'insuredName', '') || ' ' ||
+            COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') || ' ' ||
+            COALESCE(reviewed_data->>'contactNumber', data->>'contactNumber', '') || ' ' ||
+            COALESCE(reviewed_data->>'vehicleNumber', data->>'vehicleNumber', '') || ' ' ||
+            COALESCE(selected_company, '') || ' ' ||
+            COALESCE(selected_policy_type, '')
+          ) AS search_text
+        FROM pdf_records
+        WHERE deleted_at IS NULL
+          AND ($1::boolean OR organization_id = $2::uuid)
+      ),
+      parsed_policies AS (
+        SELECT 
+          id,
+          saved_at,
+          is_active_policy,
+          renewal_status,
+          company,
+          policy_type,
+          selected_company,
+          selected_policy_type,
+          search_text,
+          (CASE 
+            WHEN raw_expiry ~ '^\\d{4}-\\d{2}-\\d{2}' THEN CAST(SUBSTRING(raw_expiry FROM 1 FOR 10) AS DATE)
+            WHEN raw_expiry ~ '^\\d{1,2}[/-]\\d{1,2}[/-]\\d{4}' THEN TO_DATE(REPLACE(raw_expiry, '/', '-'), 'DD-MM-YYYY')
+            WHEN raw_expiry ~ '^\\d{1,2}[/-]\\d{1,2}[/-]\\d{2}' THEN TO_DATE(REPLACE(raw_expiry, '/', '-'), 'DD-MM-YY')
+            ELSE NULL
+           END) AS expiry_date
+        FROM normalized_policies
+      ),
+      filtered_policies AS (
+        SELECT 
+          id,
+          saved_at,
+          expiry_date,
+          (expiry_date - $3::date) AS days_remaining
+        FROM parsed_policies
+        WHERE 
+          -- Tab Filter
+          (
+            ($4 = 'upcoming' AND is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND (expiry_date - $3::date) >= 0 AND (expiry_date - $3::date) < 30 AND (expiry_date - $3::date) <= $5::integer)
+            OR ($4 = 'expired' AND is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND (expiry_date - $3::date) < 0)
+            OR ($4 = 'renewed' AND renewal_status = 'RENEWED')
+            OR ($4 = 'lost' AND renewal_status = 'LOST')
+            OR ($4 = 'all')
+          )
+          -- Company Filter
+          AND (
+            $6 = 'All' 
+            OR LOWER(company) = LOWER($6) 
+            OR LOWER(selected_company) = LOWER($6)
+          )
+          -- Policy Type Filter
+          AND (
+            $7 = 'All' 
+            OR LOWER(policy_type) = LOWER($7) 
+            OR LOWER(selected_policy_type) = LOWER($7)
+          )
+          -- Text Search
+          AND (
+            $8 = '' 
+            OR search_text LIKE $9
+          )
+      )
+    `;
 
-      // 3. Expiry Date & Tab Filters
-      const expiry = parsePolicyDate(r.expiryDate);
-      const daysRemaining = expiry ? Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
-      r.daysRemaining = daysRemaining; // attach for easy UI usage
+    const countQuery = `${baseCTE} SELECT COUNT(*)::integer as count FROM filtered_policies`;
+    const dataQuery = `
+      ${baseCTE} 
+      SELECT id, days_remaining FROM filtered_policies
+      ORDER BY 
+        CASE WHEN $4 = 'upcoming' THEN days_remaining END ASC,
+        CASE WHEN $4 = 'expired' THEN days_remaining END DESC,
+        CASE WHEN $4 NOT IN ('upcoming', 'expired') THEN saved_at END DESC,
+        saved_at DESC
+      LIMIT $10::integer OFFSET $11::integer
+    `;
 
-      if (tab === "upcoming") {
-        if (expiry === null) return false;
-        // Renewal worklist should only show policies with fewer than 30 days remaining.
-        const requestedMaxDays = daysParam ? parseInt(daysParam, 10) : 29;
-        const maxDays = Math.min(Number.isFinite(requestedMaxDays) ? requestedMaxDays : 29, 29);
-        return daysRemaining !== null && daysRemaining >= 0 && daysRemaining < 30 && daysRemaining <= maxDays;
-      } else if (tab === "expired") {
-        if (expiry === null) return false;
-        return daysRemaining !== null && daysRemaining < 0;
-      }
+    const [countResult, dataResult] = await Promise.all([
+      prisma.$queryRawUnsafe(countQuery, ...queryParams),
+      prisma.$queryRawUnsafe(dataQuery, ...queryParams, limit, offset)
+    ]);
 
-      return true;
+    const totalCount = countResult[0]?.count || 0;
+    const ids = dataResult.map((r) => r.id);
+    const daysRemainingMap = {};
+    dataResult.forEach((r) => {
+      daysRemainingMap[r.id] = r.days_remaining;
     });
 
-    // 4. Text Search
-    if (q.trim()) {
-      const searchTerms = q.trim().toLowerCase();
-      filtered = filtered.filter((r) => {
-        return getRecordSearchText(r).includes(searchTerms);
+    let policies = [];
+    if (ids.length > 0) {
+      const rawRecords = await prisma.policyRecord.findMany({
+        where: { id: { in: ids } },
+        select: {
+          id: true,
+          savedAt: true,
+          data: true,
+          reviewedData: true,
+          renewalStatus: true,
+          previousPolicyId: true,
+          renewedPolicyId: true,
+          renewalDate: true,
+          lostReason: true,
+          isActivePolicy: true,
+          selectedCompany: true,
+          selectedPolicyType: true,
+          pdfFileName: true
+        }
+      });
+
+      const recordMap = {};
+      rawRecords.forEach((record) => {
+        recordMap[record.id] = record;
+      });
+
+      const orderedRecords = ids.map((id) => recordMap[id]).filter(Boolean);
+      policies = orderedRecords.map((record) => {
+        const normalized = withRenewalPolicyDisplay(normalizeRecord(record));
+        normalized.daysRemaining = daysRemainingMap[record.id];
+        return normalized;
       });
     }
-
-    // 5. Sorting
-    if (tab === "upcoming") {
-      // Sort upcoming renewals first (closest first)
-      filtered.sort((a, b) => {
-        if (a.daysRemaining === null) return 1;
-        if (b.daysRemaining === null) return -1;
-        return a.daysRemaining - b.daysRemaining;
-      });
-    } else if (tab === "expired") {
-      // Most recently expired first
-      filtered.sort((a, b) => {
-        if (a.daysRemaining === null) return 1;
-        if (b.daysRemaining === null) return -1;
-        return b.daysRemaining - a.daysRemaining;
-      });
-    } else {
-      // Sort other tabs by savedAt desc
-      filtered.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
-    }
-
-    // 6. Pagination
-    const totalCount = filtered.length;
-    const pagesCount = Math.ceil(totalCount / limit);
-    const startIdx = (page - 1) * limit;
-    const paginated = filtered.slice(startIdx, startIdx + limit);
 
     return Response.json({
-      policies: paginated,
+      policies,
       totalCount,
-      pages: pagesCount || 1,
+      pages: Math.ceil(totalCount / limit) || 1,
       currentPage: page
     });
   } catch (error) {

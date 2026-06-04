@@ -70,10 +70,25 @@ export default function Dashboard({
   initialRecords,
   activePage: routeActivePage,
   selectedClientName: routeClientName,
-  selectedPolicyId: routePolicyId
+  selectedPolicyId: routePolicyId,
+  totalCount = 0,
+  currentPage = 1,
+  limit: _limit = 20,
+  totalPages = 1,
+  initialQ: _initialQ = "",
+  initialFilterField = "",
+  initialFilterValue = "",
+  initialPdfFilter = "all",
+  initialViewCategory = "all",
+  tabCounts = null
 }) {
   const [activePage, setActivePage] = useState(routeActivePage || "bulk-entry");
   const [records, setRecords] = useState(initialRecords);
+
+  useEffect(() => {
+    setRecords(initialRecords);
+  }, [initialRecords]);
+
   const [renewalCounts, setRenewalCounts] = useState({
     eodPremium: 0,
     eodCount: 0,
@@ -125,16 +140,50 @@ export default function Dashboard({
   const [exportCustomStart, setExportCustomStart] = useState("");
   const [exportCustomEnd, setExportCustomEnd] = useState("");
   const [isExporting, setIsExporting] = useState(false);
-  const [recordFilterField, setRecordFilterField] = useState("");
-  const [recordFilterValue, setRecordFilterValue] = useState("");
-  const [recordPdfFilter, setRecordPdfFilter] = useState("all");
-  const [recordViewCategory, setRecordViewCategory] = useState("all");
+  const [recordFilterField, setRecordFilterField] = useState(initialFilterField);
+  const [recordFilterValue, setRecordFilterValue] = useState(initialFilterValue);
+  const [recordPdfFilter, setRecordPdfFilter] = useState(initialPdfFilter);
+  const [recordViewCategory, setRecordViewCategory] = useState(initialViewCategory);
   const [currentUserRole, setCurrentUserRole] = useState("");
   const [editingRecord, setEditingRecord] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [isSaving, startSaving] = useTransition();
   const [isUploading, startUploading] = useTransition();
   const deferredQuery = useDeferredValue(query);
+
+  const updateRecordQueryParams = (newParams = {}) => {
+    const params = new window.URLSearchParams(window.location.search);
+    const qVal = newParams.q !== undefined ? newParams.q : query;
+    const fieldVal = newParams.filterField !== undefined ? newParams.filterField : recordFilterField;
+    const valueVal = newParams.filterValue !== undefined ? newParams.filterValue : recordFilterValue;
+    const pdfVal = newParams.pdfFilter !== undefined ? newParams.pdfFilter : recordPdfFilter;
+    const catVal = newParams.viewCategory !== undefined ? newParams.viewCategory : recordViewCategory;
+    const pageVal = newParams.page !== undefined ? newParams.page : 1;
+
+    if (qVal.trim()) params.set("q", qVal.trim()); else params.delete("q");
+    if (fieldVal) params.set("filterField", fieldVal); else params.delete("filterField");
+    if (valueVal.trim()) params.set("filterValue", valueVal.trim()); else params.delete("filterValue");
+    if (pdfVal && pdfVal !== "all") params.set("pdfFilter", pdfVal); else params.delete("pdfFilter");
+    if (catVal && catVal !== "all") params.set("viewCategory", catVal); else params.delete("viewCategory");
+    if (pageVal > 1) params.set("page", pageVal); else params.delete("page");
+
+    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  useEffect(() => {
+    if (!hasLoadedView) {
+      setHasLoadedView(true);
+      return;
+    }
+    const handler = window.setTimeout(() => {
+      updateRecordQueryParams({ q: query });
+    }, 450);
+    return () => window.clearTimeout(handler);
+  }, [query]);
+
+  const handleRecordPageChange = (pNum) => {
+    updateRecordQueryParams({ page: pNum });
+  };
 
   const [manualGroupId, setManualGroupId] = useState(POLICY_SCHEMA_LIBRARY[0]?.id || "");
   const manualGroup = POLICY_SCHEMA_LIBRARY.find((group) => group.id === manualGroupId) || POLICY_SCHEMA_LIBRARY[0];
@@ -260,6 +309,19 @@ export default function Dashboard({
     return ids;
   }, [policyRecordResults]);
   const recordViewOptions = useMemo(() => {
+    if (activePage === "records" && tabCounts) {
+      return [
+        { key: "all", label: "All Records", count: tabCounts.all || 0 },
+        { key: "duplicates", label: "Duplicate Policies", count: tabCounts.duplicates || 0 },
+        { key: "motor", label: "Motor Policy", count: tabCounts.motor || 0 },
+        { key: "health", label: "Health Policy", count: tabCounts.health || 0 },
+        { key: "fire", label: "Fire Policy", count: tabCounts.fire || 0 },
+        { key: "life", label: "Life Policy", count: tabCounts.life || 0 },
+        { key: "home", label: "Home Policy", count: tabCounts.home || 0 },
+        { key: "cyber", label: "Cyber Policy", count: tabCounts.cyber || 0 }
+      ].filter(opt => opt.key === "all" || opt.key === "duplicates" || opt.count > 0);
+    }
+
     const categories = new Map();
     recordsWithSchema.forEach(({ validation }) => {
       const key = validation.resolvedSchema?.groupId || "general";
@@ -272,8 +334,9 @@ export default function Dashboard({
       { key: "duplicates", label: "Duplicate Policies", count: duplicateRecordIds.size },
       ...Array.from(categories.values())
     ];
-  }, [duplicateRecordIds.size, policyRecordResults.length, recordsWithSchema]);
+  }, [duplicateRecordIds.size, policyRecordResults.length, recordsWithSchema, activePage, tabCounts]);
   const visiblePolicyRecordResults = useMemo(() => {
+    if (activePage === "records") return records;
     if (recordViewCategory === "all") return policyRecordResults;
     if (recordViewCategory === "duplicates") {
       return policyRecordResults.filter((record) => duplicateRecordIds.has(record.id));
@@ -281,7 +344,7 @@ export default function Dashboard({
     return recordsWithSchema
       .filter(({ validation }) => (validation.resolvedSchema?.groupId || "general") === recordViewCategory)
       .map(({ record }) => record);
-  }, [duplicateRecordIds, policyRecordResults, recordViewCategory, recordsWithSchema]);
+  }, [activePage, records, recordViewCategory, policyRecordResults, duplicateRecordIds, recordsWithSchema]);
   const recordViewColumns = useMemo(() => {
     if (recordViewCategory === "all") return undefined;
     if (recordViewCategory === "duplicates") {
@@ -1328,7 +1391,13 @@ export default function Dashboard({
                 <div className="record-filter-panel">
                   <label>
                     <span>Filter Field</span>
-                    <select value={recordFilterField} onChange={(event) => setRecordFilterField(event.target.value)}>
+                    <select
+                      value={recordFilterField}
+                      onChange={(event) => {
+                        setRecordFilterField(event.target.value);
+                        updateRecordQueryParams({ filterField: event.target.value, page: 1 });
+                      }}
+                    >
                       <option value="">Any field</option>
                       {FIELD_SETUP.map(([label, key]) => (
                         <option key={key} value={key}>{label}</option>
@@ -1341,11 +1410,23 @@ export default function Dashboard({
                       value={recordFilterValue}
                       placeholder="Type value to find..."
                       onChange={(event) => setRecordFilterValue(event.target.value)}
+                      onBlur={() => updateRecordQueryParams({ filterValue: recordFilterValue, page: 1 })}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          updateRecordQueryParams({ filterValue: recordFilterValue, page: 1 });
+                        }
+                      }}
                     />
                   </label>
                   <label>
                     <span>PDF Status</span>
-                    <select value={recordPdfFilter} onChange={(event) => setRecordPdfFilter(event.target.value)}>
+                    <select
+                      value={recordPdfFilter}
+                      onChange={(event) => {
+                        setRecordPdfFilter(event.target.value);
+                        updateRecordQueryParams({ pdfFilter: event.target.value, page: 1 });
+                      }}
+                    >
                       <option value="all">All records</option>
                       <option value="with">With PDF</option>
                       <option value="missing">Missing PDF</option>
@@ -1357,6 +1438,7 @@ export default function Dashboard({
                       setRecordFilterField("");
                       setRecordFilterValue("");
                       setRecordPdfFilter("all");
+                      updateRecordQueryParams({ filterField: "", filterValue: "", pdfFilter: "all", page: 1 });
                     }}
                   >
                     Clear
@@ -1377,7 +1459,10 @@ export default function Dashboard({
                     key={option.key}
                     className={recordViewCategory === option.key ? "active" : ""}
                     type="button"
-                    onClick={() => setRecordViewCategory(option.key)}
+                    onClick={() => {
+                      setRecordViewCategory(option.key);
+                      updateRecordQueryParams({ viewCategory: option.key, page: 1 });
+                    }}
                   >
                     {option.label}
                     <span>{option.count}</span>
@@ -1392,6 +1477,44 @@ export default function Dashboard({
                 canDelete={canDeletePolicyRecords}
                 onDelete={deletePolicyRecord}
               />
+
+              {/* Pagination Controls */}
+              {activePage === "records" && totalPages > 1 && (
+                <div className="table-pagination" style={{ marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "14px", color: "var(--text-secondary, #64748b)" }}>Showing page {currentPage} of {totalPages} ({totalCount} records found)</span>
+                  <div className="table-page-list" style={{ display: "flex", gap: "6px" }}>
+                    <button type="button" onClick={() => handleRecordPageChange(currentPage - 1)} disabled={currentPage === 1} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", cursor: currentPage === 1 ? "not-allowed" : "pointer" }}>
+                      Prev
+                    </button>
+                    {getPageNumbers(currentPage, totalPages).map((pNum, index) => (
+                      pNum === "..." ? (
+                        <span key={`ellipsis-${index}`} style={{ padding: "0 8px", color: "var(--text-secondary, #64748b)" }}>...</span>
+                      ) : (
+                        <button
+                          key={pNum}
+                          type="button"
+                          className={currentPage === pNum ? "active" : ""}
+                          onClick={() => handleRecordPageChange(pNum)}
+                          style={{
+                            padding: "6px 12px",
+                            borderRadius: "6px",
+                            border: "1px solid var(--border, #cbd5e1)",
+                            background: currentPage === pNum ? "var(--primary, #1e3a8a)" : "#ffffff",
+                            color: currentPage === pNum ? "#ffffff" : "var(--text-primary, #0f172a)",
+                            cursor: "pointer",
+                            fontWeight: currentPage === pNum ? "bold" : "normal"
+                          }}
+                        >
+                          {pNum}
+                        </button>
+                      )
+                    ))}
+                    <button type="button" onClick={() => handleRecordPageChange(currentPage + 1)} disabled={currentPage === totalPages} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }}>
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </section>
           )}
 
