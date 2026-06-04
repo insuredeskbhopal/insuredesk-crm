@@ -412,19 +412,32 @@ export default function CustomerProfilingPage() {
     });
   }
 
-  const generateMessageText = (profile, conversionType) => {
+  const generateMessageText = (profile, conversionType, handoffRemark) => {
     if (!profile) return "";
     let lines = [];
-    lines.push(`*CONVERTED LEAD DETAILS*`);
-    lines.push(`*Name*: ${profile.name || "-"}`);
-    lines.push(`*Phone*: ${profile.phone || "-"}`);
-    if (profile.email) lines.push(`*Email*: ${profile.email}`);
-    if (profile.city || profile.state) lines.push(`*Location*: ${[profile.city, profile.state].filter(Boolean).join(", ")}`);
-    if (profile.address) lines.push(`*Address*: ${profile.address}`);
-    lines.push(`*Policy Interest*: ${conversionType || "General Insurance"}`);
     
+    // 1. Which policy the client asked for
+    lines.push(`*We need this policy*: ${conversionType || "General Insurance"}`);
+    lines.push(``);
+    
+    // 2. Handoff Instruction
+    if (handoffRemark) {
+      lines.push(`*Handoff Instruction (for Agent/Team)*: ${handoffRemark}`);
+      lines.push(``);
+    }
+    
+    // 3. Client details
+    lines.push(`*CLIENT DETAILS*`);
+    lines.push(`- *Name*: ${profile.name || "-"}`);
+    lines.push(`- *Phone*: ${profile.phone || "-"}`);
+    if (profile.email) lines.push(`- *Email*: ${profile.email}`);
+    if (profile.city || profile.state) lines.push(`- *Location*: ${[profile.city, profile.state].filter(Boolean).join(", ")}`);
+    if (profile.address) lines.push(`- *Address*: ${profile.address}`);
+    
+    // 4. LOB Specific Details
     if (conversionType && LOB_FIELDS[conversionType]) {
-      lines.push(`\n*Details*:`);
+      lines.push(``);
+      lines.push(`*Policy Interest Details*:`);
       LOB_FIELDS[conversionType].forEach(([key, label, type]) => {
         const val = profile.lobDetails?.[conversionType]?.[key];
         let displayVal = val || "-";
@@ -435,14 +448,34 @@ export default function CustomerProfilingPage() {
       });
     }
 
+    // 5. Last two conversation follow-ups
+    const followUps = profile.lobDetails?.followUps || [];
+    if (followUps.length > 0) {
+      lines.push(``);
+      lines.push(`*Last 2 Conversations*:`);
+      const lastTwo = followUps.slice(-2);
+      lastTwo.forEach((entry, idx) => {
+        const dateStr = entry.createdAt ? formatDateTime(entry.createdAt) : "-";
+        const author = entry.createdBy || "Agent";
+        const cleanRemark = entry.rawRemark || entry.remark || "-";
+        lines.push(`[${idx + 1}] *Date*: ${dateStr} | *By*: ${author}`);
+        lines.push(`*Remark*: ${cleanRemark}`);
+      });
+    } else if (profile.followUpRemark) {
+      lines.push(``);
+      lines.push(`*Last Conversation*:`);
+      lines.push(`*Remark*: ${profile.followUpRemark}`);
+    }
+
     if (profile.remarks) {
-      lines.push(`\n*Remarks*: ${profile.remarks}`);
+      lines.push(``);
+      lines.push(`*General Remarks*: ${profile.remarks}`);
     }
 
     return lines.join("\n");
   };
 
-  const handlePrintProfile = (profile, conversionType) => {
+  const handlePrintProfile = (profile, conversionType, handoffRemark) => {
     if (!profile) return;
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
@@ -496,6 +529,39 @@ export default function CustomerProfilingPage() {
       });
     }
 
+    let followUpsHtml = "";
+    const followUps = profile.lobDetails?.followUps || [];
+    if (followUps.length > 0) {
+      const lastTwo = followUps.slice(-2);
+      followUpsHtml = `
+        <div class="section">
+          <h3>Last 2 Conversations</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            ${lastTwo.map((entry, idx) => {
+              const dateStr = entry.createdAt ? formatDateTime(entry.createdAt) : "-";
+              const author = entry.createdBy || "Agent";
+              const cleanRemark = entry.rawRemark || entry.remark || "-";
+              return `
+                <div class="field" style="background: #ffffff; border-color: #e2e8f0;">
+                  <span class="label" style="font-size: 8px; font-weight: 700; color: #64748b; margin-bottom: 4px;">Conversation #${idx + 1} - ${dateStr} by ${author}</span>
+                  <span class="value" style="font-size: 11px; font-weight: 500; color: #334155; display: block; white-space: pre-wrap;">${cleanRemark}</span>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    } else if (profile.followUpRemark) {
+      followUpsHtml = `
+        <div class="section">
+          <h3>Last Conversation</h3>
+          <div class="field" style="background: #ffffff; border-color: #e2e8f0;">
+            <span class="value" style="font-size: 11px; font-weight: 500; color: #334155; display: block; white-space: pre-wrap;">${profile.followUpRemark}</span>
+          </div>
+        </div>
+      `;
+    }
+
     printWindow.document.write(`
       <html>
         <head>
@@ -516,13 +582,13 @@ export default function CustomerProfilingPage() {
               padding-bottom: 12px;
               margin-bottom: 20px;
             }
-            .header h1 {
+            .header-left h1 {
               margin: 0;
-              font-size: 22px;
+              font-size: 20px;
               font-weight: 800;
               color: #1e3a8a;
             }
-            .header p {
+            .header-left p {
               margin: 4px 0 0;
               color: #64748b;
               font-size: 11px;
@@ -530,17 +596,24 @@ export default function CustomerProfilingPage() {
               letter-spacing: 1px;
               font-weight: 700;
             }
+            .print-logo {
+              height: 48px;
+              width: auto;
+              object-fit: contain;
+            }
             .section {
               margin-bottom: 20px;
               page-break-inside: avoid;
             }
             .section h3 {
               margin: 0 0 10px;
-              font-size: 14px;
+              font-size: 13px;
               font-weight: 700;
               color: #0f172a;
               border-bottom: 1px solid #e2e8f0;
               padding-bottom: 6px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
             }
             .grid {
               display: grid;
@@ -562,7 +635,7 @@ export default function CustomerProfilingPage() {
               margin-bottom: 2px;
             }
             .value {
-              font-size: 12px;
+              font-size: 11px;
               font-weight: 600;
               color: #0f172a;
             }
@@ -577,20 +650,31 @@ export default function CustomerProfilingPage() {
         </head>
         <body>
           <div class="header">
-            <div>
+            <div class="header-left">
               <h1>Lead Converted Successfully</h1>
-              <p>Conversion details for team handoff</p>
+              <p>We need this policy: ${conversionType}</p>
             </div>
+            <img src="${window.location.origin}/brand/main-logo-wide.png" alt="Logo" class="print-logo" />
           </div>
           
+          ${handoffRemark ? `
+            <div class="section">
+              <h3>Handoff Instruction / Team Remark</h3>
+              <div class="field" style="background: #eff6ff; border-color: #bfdbfe;">
+                <span class="value" style="font-weight: 600; color: #1e3a8a; display: block; white-space: pre-wrap;">${handoffRemark}</span>
+              </div>
+            </div>
+          ` : ""}
+
           ${renderPrintSection("General Client Information", generalFields)}
           ${lobFields.length ? renderPrintSection(`${conversionType} Details`, lobFields) : ""}
+          ${followUpsHtml}
           
           ${profile.remarks ? `
             <div class="section">
               <h3>Remarks</h3>
               <div class="field" style="background: #fffbeb; border-color: #fef3c7;">
-                <span class="value" style="font-weight: 500;">${profile.remarks}</span>
+                <span class="value" style="font-weight: 500; white-space: pre-wrap;">${profile.remarks}</span>
               </div>
             </div>
           ` : ""}
@@ -614,6 +698,12 @@ export default function CustomerProfilingPage() {
       return;
     }
 
+    const handoffRemark = window.prompt("Enter handoff remark / instructions for the team (Required):");
+    if (!handoffRemark || !handoffRemark.trim()) {
+      alert("Handoff remark is required to convert the lead.");
+      return;
+    }
+
     startTransition(async () => {
       const response = await fetch(`/api/customer-profiles/${selectedExistingId}/convert`, {
         method: "POST",
@@ -627,7 +717,8 @@ export default function CustomerProfilingPage() {
       }
       setConversionModalData({
         profile: form,
-        conversionType: conversionType
+        conversionType: conversionType,
+        handoffRemark: handoffRemark.trim()
       });
       setAlert({ type: "success", message: "Customer profile converted successfully!" });
       await loadProfiles();
@@ -1099,7 +1190,7 @@ export default function CustomerProfilingPage() {
                 <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Message Summary Preview</span>
                 <textarea
                   readOnly
-                  value={generateMessageText(conversionModalData.profile, conversionModalData.conversionType)}
+                  value={generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark)}
                   style={{
                     width: "100%",
                     height: "180px",
@@ -1120,7 +1211,7 @@ export default function CustomerProfilingPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType);
+                    const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark);
                     if (typeof window !== "undefined" && window.navigator && window.navigator.clipboard) {
                       window.navigator.clipboard.writeText(text);
                       alert("Message summary copied to clipboard!");
@@ -1147,7 +1238,7 @@ export default function CustomerProfilingPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType);
+                    const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark);
                     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
                   }}
                   style={{
@@ -1181,7 +1272,7 @@ export default function CustomerProfilingPage() {
             >
               <button
                 type="button"
-                onClick={() => handlePrintProfile(conversionModalData.profile, conversionModalData.conversionType)}
+                onClick={() => handlePrintProfile(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark)}
                 style={{
                   padding: "10px 20px",
                   borderRadius: "12px",
