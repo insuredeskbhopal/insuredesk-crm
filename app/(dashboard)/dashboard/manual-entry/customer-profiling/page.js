@@ -2,8 +2,8 @@
 
 /* global AbortController, clearTimeout */
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { AlertTriangle, CheckCircle, Search, UserPlus } from "lucide-react";
+import { createPortal } from "react-dom";
+import { AlertTriangle, CheckCircle, Search, UserPlus, X } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 
 const EMPTY_FORM = {
@@ -174,7 +174,6 @@ const LOB_FIELDS = {
 };
 
 export default function CustomerProfilingPage() {
-  const router = useRouter();
   const [form, setForm] = useState(EMPTY_FORM);
   const [selectedExistingId, setSelectedExistingId] = useState("");
   const [convertType, setConvertType] = useState("");
@@ -201,6 +200,7 @@ export default function CustomerProfilingPage() {
   });
   const [alert, setAlert] = useState(null);
   const [isPending, startTransition] = useTransition();
+  const [conversionModalData, setConversionModalData] = useState(null);
 
   const phone = form.phone.replace(/\D/g, "").slice(0, 10);
   const isValidProfilePhone = phone.length === 10;
@@ -412,6 +412,201 @@ export default function CustomerProfilingPage() {
     });
   }
 
+  const generateMessageText = (profile, conversionType) => {
+    if (!profile) return "";
+    let lines = [];
+    lines.push(`*CONVERTED LEAD DETAILS*`);
+    lines.push(`*Name*: ${profile.name || "-"}`);
+    lines.push(`*Phone*: ${profile.phone || "-"}`);
+    if (profile.email) lines.push(`*Email*: ${profile.email}`);
+    if (profile.city || profile.state) lines.push(`*Location*: ${[profile.city, profile.state].filter(Boolean).join(", ")}`);
+    if (profile.address) lines.push(`*Address*: ${profile.address}`);
+    lines.push(`*Policy Interest*: ${conversionType || "General Insurance"}`);
+    
+    if (conversionType && LOB_FIELDS[conversionType]) {
+      lines.push(`\n*Details*:`);
+      LOB_FIELDS[conversionType].forEach(([key, label, type]) => {
+        const val = profile.lobDetails?.[conversionType]?.[key];
+        let displayVal = val || "-";
+        if (type === "date" && val) {
+          displayVal = formatDate(val);
+        }
+        lines.push(`- ${label}: ${displayVal}`);
+      });
+    }
+
+    if (profile.remarks) {
+      lines.push(`\n*Remarks*: ${profile.remarks}`);
+    }
+
+    return lines.join("\n");
+  };
+
+  const handlePrintProfile = (profile, conversionType) => {
+    if (!profile) return;
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      window.alert("Please allow popups to print lead details.");
+      return;
+    }
+
+    const renderPrintSection = (title, fields) => {
+      const validFields = fields.filter(([_, val]) => val !== undefined && val !== null && String(val).trim() !== "");
+      if (validFields.length === 0) return "";
+      return `
+        <div class="section">
+          <h3>${title}</h3>
+          <div class="grid">
+            ${validFields.map(([lbl, val]) => `
+              <div class="field">
+                <span class="label">${lbl}</span>
+                <span class="value">${val}</span>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    };
+
+    const generalFields = [
+      ["Name", profile.name],
+      ["Phone", profile.phone],
+      ["Alternate Phone", profile.alternatePhone],
+      ["Email", profile.email],
+      ["State", profile.state],
+      ["City", profile.city],
+      ["Address", profile.address],
+      ["Occupation", profile.occupation],
+      ["Business Type", profile.businessType],
+      ["Assigned To", profile.assignedTo],
+      ["Reference Source", profile.referenceSource],
+      ["Status", "Converted"],
+      ["Conversion Target LOB", conversionType]
+    ];
+
+    const lobFields = [];
+    if (conversionType && LOB_FIELDS[conversionType]) {
+      LOB_FIELDS[conversionType].forEach(([key, label, type]) => {
+        const val = profile.lobDetails?.[conversionType]?.[key];
+        let displayVal = val;
+        if (type === "date" && val) {
+          displayVal = formatDate(val);
+        }
+        lobFields.push([label, displayVal]);
+      });
+    }
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Converted Lead - ${profile.name || "Details"}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              color: #0f172a;
+              padding: 24px;
+              line-height: 1.4;
+              margin: 0;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2px solid #1e3a8a;
+              padding-bottom: 12px;
+              margin-bottom: 20px;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 22px;
+              font-weight: 800;
+              color: #1e3a8a;
+            }
+            .header p {
+              margin: 4px 0 0;
+              color: #64748b;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              font-weight: 700;
+            }
+            .section {
+              margin-bottom: 20px;
+              page-break-inside: avoid;
+            }
+            .section h3 {
+              margin: 0 0 10px;
+              font-size: 14px;
+              font-weight: 700;
+              color: #0f172a;
+              border-bottom: 1px solid #e2e8f0;
+              padding-bottom: 6px;
+            }
+            .grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 12px;
+            }
+            .field {
+              padding: 8px 12px;
+              background: #f8fafc;
+              border: 1px solid #f1f5f9;
+              border-radius: 6px;
+            }
+            .label {
+              font-size: 9px;
+              font-weight: 600;
+              color: #64748b;
+              text-transform: uppercase;
+              display: block;
+              margin-bottom: 2px;
+            }
+            .value {
+              font-size: 12px;
+              font-weight: 600;
+              color: #0f172a;
+            }
+            @media print {
+              .field {
+                background: #f8fafc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1>Lead Converted Successfully</h1>
+              <p>Conversion details for team handoff</p>
+            </div>
+          </div>
+          
+          ${renderPrintSection("General Client Information", generalFields)}
+          ${lobFields.length ? renderPrintSection(`${conversionType} Details`, lobFields) : ""}
+          
+          ${profile.remarks ? `
+            <div class="section">
+              <h3>Remarks</h3>
+              <div class="field" style="background: #fffbeb; border-color: #fef3c7;">
+                <span class="value" style="font-weight: 500;">${profile.remarks}</span>
+              </div>
+            </div>
+          ` : ""}
+
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   function convertProfile() {
     const conversionType = convertType || form.selectedLOBs?.[0] || "General Insurance";
     if (!selectedExistingId) {
@@ -430,7 +625,12 @@ export default function CustomerProfilingPage() {
         setAlert({ type: "error", message: payload.error || "Conversion could not be started." });
         return;
       }
-      router.push(payload.redirectUrl || `/bulk-upload?profileId=${selectedExistingId}`);
+      setConversionModalData({
+        profile: form,
+        conversionType: conversionType
+      });
+      setAlert({ type: "success", message: "Customer profile converted successfully!" });
+      await loadProfiles();
     });
   }
 
@@ -806,7 +1006,7 @@ export default function CustomerProfilingPage() {
                     ))}
                   </select>
                   <button className="secondary-action" type="button" onClick={convertProfile} disabled={isPending}>
-                    Converted - Upload Policy
+                    Convert Lead
                   </button>
                 </div>
               </section>
@@ -814,6 +1014,208 @@ export default function CustomerProfilingPage() {
           )}
         </aside>
       </div>
+
+      {typeof window !== "undefined" && conversionModalData && createPortal(
+        <div
+          className="tb-modal-backdrop"
+          onClick={() => setConversionModalData(null)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.25)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            zIndex: 2000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px"
+          }}
+        >
+          <div
+            className="tb-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#ffffff",
+              borderRadius: "24px",
+              boxShadow: "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
+              width: "100%",
+              maxWidth: "600px",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              border: "none",
+              animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both"
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "20px 24px",
+                borderBottom: "1px solid #f1f5f9"
+              }}
+            >
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "var(--primary)" }}>Lead Converted</span>
+                <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "850", color: "#0f172a" }}>
+                  Team Handoff Options
+                </h2>
+              </div>
+              <button
+                onClick={() => setConversionModalData(null)}
+                aria-label="Close"
+                style={{
+                  background: "rgba(15, 23, 42, 0.05)",
+                  border: "none",
+                  color: "#64748b",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "50%",
+                  transition: "background-color 0.2s"
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <p style={{ margin: 0, fontSize: "14px", color: "#475569", lineHeight: "1.5" }}>
+                This lead has been successfully marked as <strong>Converted</strong>. You can now format a message for WhatsApp / team share, or print a summary for handoff.
+              </p>
+
+              {/* Message Preview Textarea */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Message Summary Preview</span>
+                <textarea
+                  readOnly
+                  value={generateMessageText(conversionModalData.profile, conversionModalData.conversionType)}
+                  style={{
+                    width: "100%",
+                    height: "180px",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    border: "1px solid #e2e8f0",
+                    background: "#f8fafc",
+                    fontFamily: "monospace",
+                    fontSize: "12px",
+                    color: "#334155",
+                    resize: "none"
+                  }}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType);
+                    if (typeof window !== "undefined" && window.navigator && window.navigator.clipboard) {
+                      window.navigator.clipboard.writeText(text);
+                      alert("Message summary copied to clipboard!");
+                    } else {
+                      alert("Clipboard copy not supported in this browser. Please copy the preview manually.");
+                    }
+                  }}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "12px",
+                    border: "1px solid #cbd5e1",
+                    backgroundColor: "#ffffff",
+                    color: "#0f172a",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px"
+                  }}
+                >
+                  Copy Message
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType);
+                    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                  }}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "12px",
+                    border: "none",
+                    backgroundColor: "#25D366",
+                    color: "#ffffff",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px"
+                  }}
+                >
+                  Send on WhatsApp
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "16px 24px",
+                borderTop: "1px solid #f1f5f9"
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => handlePrintProfile(conversionModalData.profile, conversionModalData.conversionType)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "12px",
+                  border: "1px solid var(--primary)",
+                  backgroundColor: "#ffffff",
+                  color: "var(--primary)",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}
+              >
+                Print Summary
+              </button>
+              <button
+                type="button"
+                onClick={() => setConversionModalData(null)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "12px",
+                  border: "none",
+                  backgroundColor: "var(--primary)",
+                  color: "#ffffff",
+                  fontWeight: "600",
+                  cursor: "pointer"
+                }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
     </div>
   );
 }
