@@ -386,30 +386,44 @@ export default function CustomerProfileDetailPage({ params }) {
       return;
     }
 
-    const handoffRemark = window.prompt("Enter handoff remark / instructions for the team (Required):");
-    if (!handoffRemark || !handoffRemark.trim()) {
-      alert("Handoff remark is required to convert the lead.");
+    setConversionModalData({
+      profile: form,
+      conversionType: conversionType,
+      handoffRemark: "",
+      step: "remark",
+      error: ""
+    });
+  }
+
+  async function submitConversion(remark) {
+    if (!remark || !remark.trim()) {
+      setConversionModalData(current => ({ ...current, error: "Handoff remark is required to convert the lead." }));
       return;
     }
 
     startTransition(async () => {
-      const response = await fetch(`/api/customer-profiles/${profileId}/convert`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ insuranceType: conversionType })
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setAlert({ type: "error", message: payload.error || "Conversion could not be started." });
-        return;
+      try {
+        const response = await fetch(`/api/customer-profiles/${profileId}/convert`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ insuranceType: conversionModalData.conversionType })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setConversionModalData(current => ({ ...current, error: payload.error || "Conversion could not be started." }));
+          return;
+        }
+        setConversionModalData(current => ({
+          ...current,
+          handoffRemark: remark.trim(),
+          step: "options",
+          error: ""
+        }));
+        setForm((current) => ({ ...current, status: "Converted" }));
+        setAlert({ type: "success", message: "Customer profile converted successfully!" });
+      } catch (err) {
+        setConversionModalData(current => ({ ...current, error: err.message || "An error occurred." }));
       }
-      setConversionModalData({
-        profile: form,
-        conversionType: conversionType,
-        handoffRemark: handoffRemark.trim()
-      });
-      setForm((current) => ({ ...current, status: "Converted" }));
-      setAlert({ type: "success", message: "Customer profile converted successfully!" });
     });
   }
 
@@ -542,168 +556,290 @@ export default function CustomerProfileDetailPage({ params }) {
               animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both"
             }}
           >
-            {/* Modal Header */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "20px 24px",
-                borderBottom: "1px solid #f1f5f9"
-              }}
-            >
-              <div>
-                <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "var(--primary)" }}>Lead Converted</span>
-                <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "850", color: "#0f172a" }}>
-                  Team Handoff Options
-                </h2>
-              </div>
-              <button
-                onClick={() => setConversionModalData(null)}
-                aria-label="Close"
-                style={{
-                  background: "rgba(15, 23, 42, 0.05)",
-                  border: "none",
-                  color: "#64748b",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "50%",
-                  transition: "background-color 0.2s"
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-              <p style={{ margin: 0, fontSize: "14px", color: "#475569", lineHeight: "1.5" }}>
-                This lead has been successfully marked as <strong>Converted</strong>. You can now format a message for WhatsApp / team share, or print a summary for handoff.
-              </p>
-
-              {/* Message Preview Textarea */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Message Summary Preview</span>
-                <textarea
-                  readOnly
-                  value={generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark)}
+            {conversionModalData.step === "remark" ? (
+              <>
+                {/* Step 1: Collect Handoff Remark */}
+                <div
                   style={{
-                    width: "100%",
-                    height: "180px",
-                    padding: "12px",
-                    borderRadius: "8px",
-                    border: "1px solid #e2e8f0",
-                    background: "#f8fafc",
-                    fontFamily: "monospace",
-                    fontSize: "12px",
-                    color: "#334155",
-                    resize: "none"
-                  }}
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark);
-                    if (typeof window !== "undefined" && window.navigator && window.navigator.clipboard) {
-                      window.navigator.clipboard.writeText(text);
-                      alert("Message summary copied to clipboard!");
-                    } else {
-                      alert("Clipboard copy not supported in this browser. Please copy the preview manually.");
-                    }
-                  }}
-                  style={{
-                    padding: "12px",
-                    borderRadius: "12px",
-                    border: "1px solid #cbd5e1",
-                    backgroundColor: "#ffffff",
-                    color: "#0f172a",
-                    fontWeight: "600",
-                    cursor: "pointer",
                     display: "flex",
+                    justifyContent: "space-between",
                     alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px"
+                    padding: "20px 24px",
+                    borderBottom: "1px solid #f1f5f9"
                   }}
                 >
-                  Copy Message
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark);
-                    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-                  }}
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "var(--primary)" }}>Lead Conversion</span>
+                    <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "850", color: "#0f172a" }}>
+                      Enter Handoff Instructions
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => setConversionModalData(null)}
+                    aria-label="Close"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.05)",
+                      border: "none",
+                      color: "#64748b",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      transition: "background-color 0.2s"
+                    }}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <p style={{ margin: 0, fontSize: "14px", color: "#475569", lineHeight: "1.5" }}>
+                    Please enter the handoff remark or instructions for the relevant team who will be handling this converted lead.
+                  </p>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Handoff Remark / Instructions (Required)</span>
+                    <textarea
+                      placeholder="Type the remark for the team here..."
+                      value={conversionModalData.handoffRemark || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setConversionModalData(current => ({ ...current, handoffRemark: val, error: "" }));
+                      }}
+                      style={{
+                        width: "100%",
+                        height: "120px",
+                        padding: "12px",
+                        borderRadius: "8px",
+                        border: "1px solid #e2e8f0",
+                        background: "#ffffff",
+                        fontSize: "14px",
+                        color: "#334155",
+                        resize: "none"
+                      }}
+                    />
+                  </div>
+
+                  {conversionModalData.error ? (
+                    <div style={{ color: "#ef4444", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <AlertTriangle size={16} />
+                      <span>{conversionModalData.error}</span>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div
                   style={{
-                    padding: "12px",
-                    borderRadius: "12px",
-                    border: "none",
-                    backgroundColor: "#25D366",
-                    color: "#ffffff",
-                    fontWeight: "600",
-                    cursor: "pointer",
                     display: "flex",
+                    justifyContent: "flex-end",
                     alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px"
+                    padding: "16px 24px",
+                    borderTop: "1px solid #f1f5f9",
+                    gap: "12px"
                   }}
                 >
-                  Send on WhatsApp
-                </button>
-              </div>
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => setConversionModalData(null)}
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: "12px",
+                      border: "1px solid #cbd5e1",
+                      backgroundColor: "#ffffff",
+                      color: "#475569",
+                      fontWeight: "600",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => submitConversion(conversionModalData.handoffRemark)}
+                    disabled={isPending}
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: "12px",
+                      border: "none",
+                      backgroundColor: "var(--primary)",
+                      color: "#ffffff",
+                      fontWeight: "600",
+                      cursor: "pointer"
+                    }}
+                  >
+                    {isPending ? "Converting..." : "Convert Lead"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Step 2: Converted options */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "20px 24px",
+                    borderBottom: "1px solid #f1f5f9"
+                  }}
+                >
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "var(--primary)" }}>Lead Converted</span>
+                    <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "850", color: "#0f172a" }}>
+                      Team Handoff Options
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => setConversionModalData(null)}
+                    aria-label="Close"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.05)",
+                      border: "none",
+                      color: "#64748b",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      transition: "background-color 0.2s"
+                    }}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
 
-            {/* Modal Footer */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "16px 24px",
-                borderTop: "1px solid #f1f5f9"
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => handlePrintProfile(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark)}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: "12px",
-                  border: "1px solid var(--primary)",
-                  backgroundColor: "#ffffff",
-                  color: "var(--primary)",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px"
-                }}
-              >
-                Print Summary
-              </button>
-              <button
-                type="button"
-                onClick={() => setConversionModalData(null)}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: "12px",
-                  border: "none",
-                  backgroundColor: "var(--primary)",
-                  color: "#ffffff",
-                  fontWeight: "600",
-                  cursor: "pointer"
-                }}
-              >
-                Done
-              </button>
-            </div>
+                {/* Modal Body */}
+                <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                  <p style={{ margin: 0, fontSize: "14px", color: "#475569", lineHeight: "1.5" }}>
+                    This lead has been successfully marked as <strong>Converted</strong>. You can now format a message for WhatsApp / team share, or print a summary for handoff.
+                  </p>
+
+                  {/* Message Preview Textarea */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Message Summary Preview</span>
+                    <textarea
+                      readOnly
+                      value={generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark)}
+                      style={{
+                        width: "100%",
+                        height: "180px",
+                        padding: "12px",
+                        borderRadius: "8px",
+                        border: "1px solid #e2e8f0",
+                        background: "#f8fafc",
+                        fontFamily: "monospace",
+                        fontSize: "12px",
+                        color: "#334155",
+                        resize: "none"
+                      }}
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark);
+                        if (typeof window !== "undefined" && window.navigator && window.navigator.clipboard) {
+                          window.navigator.clipboard.writeText(text);
+                          alert("Message summary copied to clipboard!");
+                        } else {
+                          alert("Clipboard copy not supported in this browser. Please copy the preview manually.");
+                        }
+                      }}
+                      style={{
+                        padding: "12px",
+                        borderRadius: "12px",
+                        border: "1px solid #cbd5e1",
+                        backgroundColor: "#ffffff",
+                        color: "#0f172a",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      Copy Message
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark);
+                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                      }}
+                      style={{
+                        padding: "12px",
+                        borderRadius: "12px",
+                        border: "none",
+                        backgroundColor: "#25D366",
+                        color: "#ffffff",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px"
+                      }}
+                    >
+                      Send on WhatsApp
+                    </button>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "16px 24px",
+                    borderTop: "1px solid #f1f5f9"
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handlePrintProfile(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark)}
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: "12px",
+                      border: "1px solid var(--primary)",
+                      backgroundColor: "#ffffff",
+                      color: "var(--primary)",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}
+                  >
+                    Print Summary
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConversionModalData(null)}
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: "12px",
+                      border: "none",
+                      backgroundColor: "var(--primary)",
+                      color: "#ffffff",
+                      fontWeight: "600",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Done
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       , document.body)}
