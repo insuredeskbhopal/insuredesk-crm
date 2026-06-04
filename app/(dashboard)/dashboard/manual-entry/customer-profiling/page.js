@@ -50,15 +50,6 @@ const EMPTY_COUNTERS = {
 };
 const EMPTY_SEARCH_RESULTS = { profiles: [], policyMatches: [], claimedByAnotherUser: false };
 
-const AGENT_JOURNEY_STEPS = [
-  ["1", "Enter phone", "Check whether this number is already in Customer Profiling."],
-  ["2", "Add client", "Capture basic profile details and assign the owner."],
-  ["3", "Save profile", "Store the client separately from policy records."],
-  ["4", "View more", "Open the profile before calling the client."],
-  ["5", "Discuss need", "Select policy interest and capture required details after the call."],
-  ["6", "Upload policy", "When converted, send the agent to policy upload."]
-];
-
 const STATE_CITY_OPTIONS = {
   "Andaman and Nicobar Islands": ["Bamboo Flat", "Diglipur", "Mayabunder", "Port Blair", "Rangat"],
   "Andhra Pradesh": ["Adoni", "Amalapuram", "Amaravati", "Anakapalle", "Anantapur", "Bhimavaram", "Chittoor", "Eluru", "Guntakal", "Guntur", "Hindupur", "Kadapa", "Kakinada", "Kurnool", "Machilipatnam", "Madanapalle", "Nandyal", "Narasaraopet", "Nellore", "Ongole", "Proddatur", "Rajahmundry", "Srikakulam", "Tadepalligudem", "Tenali", "Tirupati", "Vijayawada", "Visakhapatnam", "Vizianagaram"],
@@ -534,26 +525,6 @@ export default function CustomerProfilingPage() {
         <CounterCard label="Interested" value={counters.interested} />
         <CounterCard label="Converted" value={counters.converted} />
         <CounterCard label="Lost" value={counters.lost} />
-      </section>
-
-      <section className="customer-profile-card agent-journey-card">
-        <div className="customer-profile-section-head">
-          <div>
-            <h2>Agent Journey</h2>
-            <p>Recommended flow for turning an existing policy customer into a cross-sell profiling lead.</p>
-          </div>
-        </div>
-        <div className="agent-journey-steps">
-          {AGENT_JOURNEY_STEPS.map(([number, title, detail]) => (
-            <div className="agent-journey-step" key={number}>
-              <strong>{number}</strong>
-              <div>
-                <span>{title}</span>
-                <p>{detail}</p>
-              </div>
-            </div>
-          ))}
-        </div>
       </section>
 
       <section className="customer-profile-card">
