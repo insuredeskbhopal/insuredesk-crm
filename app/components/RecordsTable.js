@@ -131,7 +131,7 @@ const COLUMN_WIDTHS = {
   "col-default": 150,
 };
 
-export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS, canEdit = false, onEdit, canDelete = false, onDelete }) {
+export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS, canEdit = false, onEdit, canDelete = false, onDelete, paginate = true }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -405,11 +405,11 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
     printWindow.document.close();
   };
 
-  const pageCount = Math.max(1, Math.ceil(records.length / PAGE_SIZE));
-  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const pageCount = paginate ? Math.max(1, Math.ceil(records.length / PAGE_SIZE)) : 1;
+  const startIndex = paginate ? (currentPage - 1) * PAGE_SIZE : 0;
   const visibleRecords = useMemo(
-    () => records.slice(startIndex, startIndex + PAGE_SIZE),
-    [records, startIndex]
+    () => paginate ? records.slice(startIndex, startIndex + PAGE_SIZE) : records,
+    [paginate, records, startIndex]
   );
   const visiblePageNumbers = useMemo(() => {
     const pages = [];
@@ -602,7 +602,7 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
         </table>
       </div>
 
-      {records.length > PAGE_SIZE ? (
+      {paginate && records.length > PAGE_SIZE ? (
         <div className="table-pagination" aria-label="Table pagination">
           <span>
             Showing {startIndex + 1}-{Math.min(startIndex + PAGE_SIZE, records.length)} of {records.length}

@@ -80,7 +80,8 @@ export default function Dashboard({
   initialFilterValue = "",
   initialPdfFilter = "all",
   initialViewCategory = "all",
-  tabCounts = null
+  tabCounts = null,
+  serverLoadError = ""
 }) {
   const [activePage, setActivePage] = useState(routeActivePage || "bulk-entry");
   const [records, setRecords] = useState(initialRecords);
@@ -131,7 +132,11 @@ export default function Dashboard({
   const [customerPage, setCustomerPage] = useState(1);
   const [customerViewType, setCustomerViewType] = useState("grid");
   const [toast, setToast] = useState("");
-  const [alert, setAlert] = useState(null);
+  const [alert, setAlert] = useState(serverLoadError ? {
+    type: "error",
+    title: "Database temporarily unavailable",
+    message: serverLoadError
+  } : null);
   const [isRecordFilterOpen, setIsRecordFilterOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState("xlsx");
@@ -254,6 +259,16 @@ export default function Dashboard({
   useEffect(() => {
     setRecordPdfFilter(initialPdfFilter);
   }, [initialPdfFilter]);
+
+  useEffect(() => {
+    if (serverLoadError) {
+      setAlert({
+        type: "error",
+        title: "Database temporarily unavailable",
+        message: serverLoadError
+      });
+    }
+  }, [serverLoadError]);
 
   useEffect(() => {
     let ignore = false;
@@ -1492,6 +1507,7 @@ export default function Dashboard({
                 onEdit={startEditRecord}
                 canDelete={canDeletePolicyRecords}
                 onDelete={deletePolicyRecord}
+                paginate={false}
               />
 
               {/* Pagination Controls */}

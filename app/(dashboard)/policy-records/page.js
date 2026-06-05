@@ -29,49 +29,28 @@ export default async function PolicyRecordsPage(props) {
     ]
   };
 
-  const [totalAll, totalDuplicates, motorCount, healthCount, fireCount, lifeCount, homeCount, cyberCount, dataPayload] = await Promise.all([
-    prisma.policyRecord.count({ where: basePolicyWhere }),
-    // duplicates count
-    prisma.$queryRaw`
-      SELECT COUNT(*)::integer as count FROM pdf_records
-      WHERE deleted_at IS NULL
-        AND (${isSuperAdmin}::boolean OR organization_id = ${orgId}::uuid)
-        AND (source_file IS NULL OR source_file NOT IN ('Renewal Page data.xlsx', 'Manual Renewal'))
-        AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (
-          SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
-          FROM pdf_records
-          WHERE deleted_at IS NULL
-            AND (${isSuperAdmin}::boolean OR organization_id = ${orgId}::uuid)
-            AND (source_file IS NULL OR source_file NOT IN ('Renewal Page data.xlsx', 'Manual Renewal'))
-            AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
-          GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
-          HAVING COUNT(*) > 1
-        )
-    `.then(res => res[0]?.count || 0),
-    // motor count
-    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['motor', 'vehicle', 'car', 'two wheeler', 'bike', 'scooter', 'commercial vehicle', 'taxi', 'cab', 'bus']) }),
-    // health count
-    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['health', 'mediclaim', 'hospital', 'family floater']) }),
-    // fire count
-    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['fire', 'sfsp', 'burglary', 'msme', 'warehouse', 'stock', 'property']) }),
-    // life count
-    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['life assured', 'life policy', 'term life', 'endowment']) }),
-    // home count
-    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['home building', 'home contents', 'home policy']) }),
-    // cyber count
-    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['cyber', 'ransomware', 'data breach']) }),
-    // load scoped policy records
-    loadScopedPolicyRecords({
-      includeInactive: true,
-      page,
-      limit,
-      q,
-      filterField,
-      filterValue,
-      pdfFilter,
-      viewCategory
-    })
-  ]);
+  const dataPayload = await loadScopedPolicyRecords({
+    includeInactive: true,
+    page,
+    limit,
+    q,
+    filterField,
+    filterValue,
+    pdfFilter,
+    viewCategory
+  });
+  const countsPayload = await loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId });
+  const {
+    totalAll,
+    totalDuplicates,
+    motorCount,
+    healthCount,
+    fireCount,
+    lifeCount,
+    homeCount,
+    cyberCount,
+    error: countsError
+  } = countsPayload;
 
   const { records, totalCount, totalPages } = dataPayload;
 
@@ -100,8 +79,54 @@ export default async function PolicyRecordsPage(props) {
       initialPdfFilter={pdfFilter}
       initialViewCategory={viewCategory}
       tabCounts={tabCounts}
+      serverLoadError={countsError || (dataPayload.serverLoadError ? "Policy records could not be loaded from the database. Please try again after database access is restored." : "")}
     />
   );
+}
+
+async function loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId }) {
+  try {
+    const [totalAll, totalDuplicates, motorCount, healthCount, fireCount, lifeCount, homeCount, cyberCount] = await Promise.all([
+      prisma.policyRecord.count({ where: basePolicyWhere }),
+      prisma.$queryRaw`
+        SELECT COUNT(*)::integer as count FROM pdf_records
+        WHERE deleted_at IS NULL
+          AND (${isSuperAdmin}::boolean OR organization_id = ${orgId}::uuid)
+          AND (source_file IS NULL OR source_file NOT IN ('Renewal Page data.xlsx', 'Manual Renewal'))
+          AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (
+            SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
+            FROM pdf_records
+            WHERE deleted_at IS NULL
+              AND (${isSuperAdmin}::boolean OR organization_id = ${orgId}::uuid)
+              AND (source_file IS NULL OR source_file NOT IN ('Renewal Page data.xlsx', 'Manual Renewal'))
+              AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
+            GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
+            HAVING COUNT(*) > 1
+          )
+      `.then(res => res[0]?.count || 0),
+      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['motor', 'vehicle', 'car', 'two wheeler', 'bike', 'scooter', 'commercial vehicle', 'taxi', 'cab', 'bus']) }),
+      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['health', 'mediclaim', 'hospital', 'family floater']) }),
+      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['fire', 'sfsp', 'burglary', 'msme', 'warehouse', 'stock', 'property']) }),
+      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['life assured', 'life policy', 'term life', 'endowment']) }),
+      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['home building', 'home contents', 'home policy']) }),
+      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['cyber', 'ransomware', 'data breach']) })
+    ]);
+
+    return { totalAll, totalDuplicates, motorCount, healthCount, fireCount, lifeCount, homeCount, cyberCount, error: "" };
+  } catch (error) {
+    console.error("Policy record tab counts failed:", error instanceof Error ? error.message : error);
+    return {
+      totalAll: 0,
+      totalDuplicates: 0,
+      motorCount: 0,
+      healthCount: 0,
+      fireCount: 0,
+      lifeCount: 0,
+      homeCount: 0,
+      cyberCount: 0,
+      error: "Policy records could not be loaded from the database. Please try again after database access is restored."
+    };
+  }
 }
 
 function withPolicyTypeTerms(baseWhere, terms) {
