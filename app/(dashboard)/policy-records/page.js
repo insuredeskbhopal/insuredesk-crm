@@ -20,60 +20,46 @@ export default async function PolicyRecordsPage(props) {
   const tenantFilter = session ? getTenantFilter(session, "read") : { id: "00000000-0000-0000-0000-000000000000" };
   const isSuperAdmin = session?.role === "SUPER_ADMIN";
   const orgId = session?.organizationId || null;
+  const basePolicyWhere = {
+    ...tenantFilter,
+    deletedAt: null,
+    NOT: [
+      { sourceFile: "Renewal Page data.xlsx" },
+      { sourceFile: "Manual Renewal" }
+    ]
+  };
 
   const [totalAll, totalDuplicates, motorCount, healthCount, fireCount, lifeCount, homeCount, cyberCount, dataPayload] = await Promise.all([
-    prisma.policyRecord.count({ where: { ...tenantFilter, deletedAt: null, isActivePolicy: true } }),
+    prisma.policyRecord.count({ where: basePolicyWhere }),
     // duplicates count
     prisma.$queryRaw`
       SELECT COUNT(*)::integer as count FROM pdf_records
       WHERE deleted_at IS NULL
         AND (${isSuperAdmin}::boolean OR organization_id = ${orgId}::uuid)
+        AND (source_file IS NULL OR source_file NOT IN ('Renewal Page data.xlsx', 'Manual Renewal'))
         AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (
           SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
           FROM pdf_records
           WHERE deleted_at IS NULL
             AND (${isSuperAdmin}::boolean OR organization_id = ${orgId}::uuid)
+            AND (source_file IS NULL OR source_file NOT IN ('Renewal Page data.xlsx', 'Manual Renewal'))
             AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
           GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
           HAVING COUNT(*) > 1
         )
     `.then(res => res[0]?.count || 0),
     // motor count
-    prisma.policyRecord.count({ where: { ...tenantFilter, deletedAt: null, isActivePolicy: true, OR: [
-      { selectedPolicyType: { contains: 'motor', mode: 'insensitive' } },
-      { reviewedData: { path: ['policyType'], string_contains: 'motor' } },
-      { data: { path: ['policyType'], string_contains: 'motor' } }
-    ] } }),
+    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['motor', 'vehicle', 'car', 'two wheeler', 'bike', 'scooter', 'commercial vehicle', 'taxi', 'cab', 'bus']) }),
     // health count
-    prisma.policyRecord.count({ where: { ...tenantFilter, deletedAt: null, isActivePolicy: true, OR: [
-      { selectedPolicyType: { contains: 'health', mode: 'insensitive' } },
-      { reviewedData: { path: ['policyType'], string_contains: 'health' } },
-      { data: { path: ['policyType'], string_contains: 'health' } }
-    ] } }),
+    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['health', 'mediclaim', 'hospital', 'family floater']) }),
     // fire count
-    prisma.policyRecord.count({ where: { ...tenantFilter, deletedAt: null, isActivePolicy: true, OR: [
-      { selectedPolicyType: { contains: 'fire', mode: 'insensitive' } },
-      { reviewedData: { path: ['policyType'], string_contains: 'fire' } },
-      { data: { path: ['policyType'], string_contains: 'fire' } }
-    ] } }),
+    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['fire', 'sfsp', 'burglary', 'msme', 'warehouse', 'stock', 'property']) }),
     // life count
-    prisma.policyRecord.count({ where: { ...tenantFilter, deletedAt: null, isActivePolicy: true, OR: [
-      { selectedPolicyType: { contains: 'life', mode: 'insensitive' } },
-      { reviewedData: { path: ['policyType'], string_contains: 'life' } },
-      { data: { path: ['policyType'], string_contains: 'life' } }
-    ] } }),
+    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['life assured', 'life policy', 'term life', 'endowment']) }),
     // home count
-    prisma.policyRecord.count({ where: { ...tenantFilter, deletedAt: null, isActivePolicy: true, OR: [
-      { selectedPolicyType: { contains: 'home', mode: 'insensitive' } },
-      { reviewedData: { path: ['policyType'], string_contains: 'home' } },
-      { data: { path: ['policyType'], string_contains: 'home' } }
-    ] } }),
+    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['home building', 'home contents', 'home policy']) }),
     // cyber count
-    prisma.policyRecord.count({ where: { ...tenantFilter, deletedAt: null, isActivePolicy: true, OR: [
-      { selectedPolicyType: { contains: 'cyber', mode: 'insensitive' } },
-      { reviewedData: { path: ['policyType'], string_contains: 'cyber' } },
-      { data: { path: ['policyType'], string_contains: 'cyber' } }
-    ] } }),
+    prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['cyber', 'ransomware', 'data breach']) }),
     // load scoped policy records
     loadScopedPolicyRecords({
       includeInactive: true,
@@ -116,4 +102,15 @@ export default async function PolicyRecordsPage(props) {
       tabCounts={tabCounts}
     />
   );
+}
+
+function withPolicyTypeTerms(baseWhere, terms) {
+  return {
+    ...baseWhere,
+    OR: terms.flatMap((term) => [
+      { selectedPolicyType: { contains: term, mode: "insensitive" } },
+      { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+      { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } }
+    ])
+  };
 }

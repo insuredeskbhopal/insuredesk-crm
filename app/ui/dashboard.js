@@ -240,6 +240,22 @@ export default function Dashboard({
   }, [urlQuery]);
 
   useEffect(() => {
+    setRecordViewCategory(initialViewCategory);
+  }, [initialViewCategory]);
+
+  useEffect(() => {
+    setRecordFilterField(initialFilterField);
+  }, [initialFilterField]);
+
+  useEffect(() => {
+    setRecordFilterValue(initialFilterValue);
+  }, [initialFilterValue]);
+
+  useEffect(() => {
+    setRecordPdfFilter(initialPdfFilter);
+  }, [initialPdfFilter]);
+
+  useEffect(() => {
     let ignore = false;
     async function loadCurrentUser() {
       try {
