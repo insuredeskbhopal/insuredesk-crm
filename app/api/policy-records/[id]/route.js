@@ -5,8 +5,10 @@ import { verifyJWT } from "@/lib/auth";
 import { canAccessResource, getTenantFilter, UserRole } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
+import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
 
 export const runtime = "nodejs";
+const { normalizeInsuranceCompanyName } = insuranceCompanyMaster;
 
 export async function PUT(request, { params }) {
   try {
@@ -68,6 +70,10 @@ export async function PUT(request, { params }) {
           sourceFile
         })
       : existing.extractedData;
+    const selectedCompany = normalizeInsuranceCompanyName(
+      payload.selectedCompany ?? reviewedData.insuranceCompany ?? existing.selectedCompany,
+      existing.rawText || ""
+    );
     const validation = getReviewValidation({
       sourceFile,
       extractedData: mergedData
@@ -90,7 +96,7 @@ export async function PUT(request, { params }) {
         reviewedData,
         extractedData,
         selectedBankSource: payload.selectedBankSource ?? existing.selectedBankSource,
-        selectedCompany: payload.selectedCompany ?? existing.selectedCompany,
+        selectedCompany,
         selectedServiceCategory: payload.selectedServiceCategory ?? existing.selectedServiceCategory,
         selectedPolicyType: payload.selectedPolicyType ?? existing.selectedPolicyType,
         data: mergedData,

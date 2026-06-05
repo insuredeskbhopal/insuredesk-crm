@@ -122,7 +122,7 @@ describe("generic motor policy extraction", () => {
       insuredName: "YASH DUBEY",
       policyNumber: "N7470840",
       policyType: "TWO WHEELER POLICY",
-      insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
+      insuranceCompany: "IFFCO Tokio General Insurance Company Limited",
       contactNumber: "8818889660",
       contactPerson: "YASH DUBEY",
       vehicleNumber: "MP04QD1357",
@@ -175,7 +175,7 @@ describe("generic motor policy extraction", () => {
     const result = extractPolicyFromText(text, "YASH DUBEY_MP04QD1357_2026-27 POLICY.pdf");
 
     expect(result.documentFormat).toBe("IFFCO_TOKIO_MOTOR_V1");
-    expect(result.insuranceCompany).toBe("IFFCO-TOKIO GENERAL INSURANCE CO.LTD");
+    expect(result.insuranceCompany).toBe("IFFCO Tokio General Insurance Company Limited");
     expect(result.registrationNumber).toBe("MP04QD1357");
     expect(result.engineNumber).toBe("DKZCGA00240");
     expect(result.chassisNumber).toBe("MD2A13EZ3GCA30996");
@@ -190,7 +190,7 @@ describe("generic motor policy extraction", () => {
 
     expect(result).toMatchObject({
       documentFormat: "IFFCO_TOKIO_MOTOR_V1",
-      insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
+      insuranceCompany: "IFFCO Tokio General Insurance Company Limited",
       policyType: "Private Car Policy",
       insuredName: "SHRIDHAR RENEWABLE ENERGY PRIVATE LIMITED",
       contactPerson: "SHRIDHAR RENEWABLE ENERGY PRIVATE LIMITED",
@@ -225,7 +225,7 @@ describe("generic motor policy extraction", () => {
 
     expect(result).toMatchObject({
       documentFormat: "IFFCO_TOKIO_MOTOR_V1",
-      insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
+      insuranceCompany: "IFFCO Tokio General Insurance Company Limited",
       policyType: "Commercial Vehicle Package Policy",
       insuredName: "AGRAWAL CONSTRUCTION WORKS",
       policyNumber: "N7302031",
@@ -257,7 +257,7 @@ describe("generic motor policy extraction", () => {
 
     expect(result).toMatchObject({
       documentFormat: "IFFCO_TOKIO_MOTOR_V1",
-      insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
+      insuranceCompany: "IFFCO Tokio General Insurance Company Limited",
       policyType: "Private Car Package Policy",
       insuredName: "ANU ARORA",
       policyNumber: "N7181312",
@@ -289,7 +289,7 @@ describe("generic motor policy extraction", () => {
 
     expect(result).toMatchObject({
       documentFormat: "IFFCO_TOKIO_MOTOR_V1",
-      insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
+      insuranceCompany: "IFFCO Tokio General Insurance Company Limited",
       policyType: "Private Car Stand Alone Own Damage Policy",
       insuredName: "POOJA SHARMA",
       contactPerson: "POOJA SHARMA",
@@ -676,9 +676,9 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("locks the HDFC ERGO motor extraction contract for future policy additions", () => {
+  it("locks the HDFC ERGO General Insurance Company Limited motor extraction contract for future policy additions", () => {
     const hdfcSampleText = `
-      HDFC ERGO General Insurance Company Limited
+      HDFC ERGO General Insurance Company Limited General Insurance Company Limited
       Certificate of Insurance cum Policy Schedule
       23112012345678901234
       PRIVATE CAR COMPREHENSIVE POLICY
@@ -717,7 +717,7 @@ describe("generic motor policy extraction", () => {
       Total Premium 18191
       Due Collection 18191
       Collected Amount 10000
-      Previous Policy No. HDFCPREV123Valid 26/05/2025 to 25/05/2026 of HDFC ERGO
+      Previous Policy No. HDFCPREV123Valid 26/05/2025 to 25/05/2026 of HDFC ERGO General Insurance Company Limited
       NCB 20%
       Payment Details UPI987654
       Bank Name HDFC BANK
@@ -733,7 +733,7 @@ describe("generic motor policy extraction", () => {
       insuredName: "RAHUL SHARMA",
       policyNumber: "23112012345678901234",
       policyType: "PRIVATE CAR COMPREHENSIVE POLICY",
-      insuranceCompany: "HDFC ERGO",
+      insuranceCompany: "HDFC ERGO General Insurance Company Limited",
       contactNumber: "9876543210",
       vehicleNumber: "MP-04-CX-1234",
       registrationNumber: "MP-04-CX-1234",
@@ -793,7 +793,7 @@ describe("generic motor policy extraction", () => {
 
   it("preserves the exact Tata AIG policy type from the Auto Secure header", () => {
     const text = `
-      TATA AIG General Insurance Company Limited
+      Tata AIG General Insurance Company Limited General Insurance Company Limited
       Auto Secure - Private Car Package Policy
       Policy No. 6202897883 02 00
       Registration No. MP 04 CX 1283
@@ -807,12 +807,12 @@ describe("generic motor policy extraction", () => {
     const result = extractPolicyFromText(text, "tata-aig-auto-secure.pdf");
 
     expect(result.policyType).toBe("Auto Secure - Private Car Package Policy");
-    expect(result.insuranceCompany).toBe("TATA AIG");
+    expect(result.insuranceCompany).toBe("Tata AIG General Insurance Company Limited");
   });
 
   it("builds Tata AIG duration from normalized policy dates", () => {
     const text = `
-      TATA AIG General Insurance Company Limited
+      Tata AIG General Insurance Company Limited General Insurance Company Limited
       Auto Secure - Private Car Package Policy
       Policy No. 6202897883 02 00
       Own Damage Cover 09/05/2026 to 08/05/2027
@@ -829,7 +829,7 @@ describe("generic motor policy extraction", () => {
 
   it("extracts Royal Sundaram goods carrying liability policy headers and vehicle details", () => {
     const text = `
-      Royal Sundaram General Insurance Co. Limited
+      Royal Sundaram General Insurance Company Limited
       May 09, 2026
       Mr.SUNEEL KUMAR SHUKLA
       WARD NO 23
@@ -883,7 +883,7 @@ describe("generic motor policy extraction", () => {
 
     expect(result).toMatchObject({
       documentFormat: "ROYAL_SUNDARAM_MOTOR_V1",
-      insuranceCompany: "Royal Sundaram General Insurance Co. Limited",
+      insuranceCompany: "Royal Sundaram General Insurance Company Limited",
       policyType: "Goods Carrying Vehicle Policy \u2013 Liability only [Reprint]",
       insuredName: "Mr.SUNEEL KUMAR SHUKLA",
       policyNumber: "VGT0605988000100",
@@ -907,14 +907,14 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("locks the TATA AIG motor extraction contract for the Auto Secure format", async () => {
+  it("locks the Tata AIG General Insurance Company Limited motor extraction contract for the Auto Secure format", async () => {
     const sourceFile = "tests/fixtures/TATA AIG.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
 
     expect(result).toMatchObject({
       documentFormat: "TATA_AIG_MOTOR_V1",
-      insuranceCompany: "TATA AIG",
+      insuranceCompany: "Tata AIG General Insurance Company Limited",
       policyType: "Auto Secure - Private Car Package Policy",
       policyCoverType: "Comprehensive",
       insuredName: "MRS CHANCHAL ANAND SONI",
@@ -962,7 +962,7 @@ describe("generic motor policy extraction", () => {
 
     expect(result).toMatchObject({
       documentFormat: "BAJAJ_ALLIANZ_MOTOR_V1",
-      insuranceCompany: "Bajaj General Insurance Limited",
+      insuranceCompany: "Bajaj Allianz General Insurance Company Limited",
       policyType: "Private Car Package Policy",
       policyCoverType: "Comprehensive",
       insuredName: "SHREENATH DAS TANK",
@@ -992,7 +992,7 @@ describe("generic motor policy extraction", () => {
 
   it("extracts Tata AIG engine number when the engine label wraps across lines", () => {
     const text = `
-      TATA AIG General Insurance Company Limited
+      Tata AIG General Insurance Company Limited General Insurance Company Limited
       Auto Secure - Private Car Package Policy
       Policy No.6206191778 00 00
       Own Damage Cover22/04/2026 (00:00 Hrs)21/04/2027 (Midnight)
@@ -1039,13 +1039,13 @@ describe("generic motor policy extraction", () => {
 
     expect(result.documentFormat).not.toBe("TATA_AIG_MOTOR_V1");
     expect(result.documentFormat).not.toBe("HDFC_ERGO_MOTOR_V1");
-    expect(result.insuranceCompany).not.toBe("TATA AIG");
-    expect(result.insuranceCompany).not.toBe("HDFC ERGO");
+    expect(result.insuranceCompany).not.toBe("Tata AIG General Insurance Company Limited");
+    expect(result.insuranceCompany).not.toBe("HDFC ERGO General Insurance Company Limited");
   });
 
   it("uses Generali Central company text instead of Tata AIG assumptions", () => {
     const generaliText = `
-      Generali Central Insurance Company Limited
+      Future Generali India Insurance Company Limited
       Motor Protect Private Car Package Policy
       Policy No.:132/02/11/0527/MTP/1010484553
       Name of Insured/Proposer MRS SARITA VERMA
@@ -1071,8 +1071,8 @@ describe("generic motor policy extraction", () => {
     const result = extractPolicyFromText(generaliText, "generali-motor.pdf");
 
     expect(result.documentFormat).toBe("GENERALI_MOTOR_V1");
-    expect(result.insuranceCompany).toBe("Generali Central Insurance Company Limited");
-    expect(result.insuranceCompany).not.toBe("TATA AIG");
+    expect(result.insuranceCompany).toBe("Future Generali India Insurance Company Limited");
+    expect(result.insuranceCompany).not.toBe("Tata AIG General Insurance Company Limited");
   });
 
   it("matches label-adjacent motor values when table cells are glued to the next label", () => {

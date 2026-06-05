@@ -1,5 +1,6 @@
 "use client";
 
+/* global AbortController, clearTimeout */
 import React, { useState, useEffect, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
@@ -20,6 +21,25 @@ import {
 import PageHeader from "@/app/components/layout/PageHeader";
 import EmptyState from "@/app/components/shared/EmptyState";
 import { cachedJson } from "@/app/lib/client-api";
+import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
+
+const { getInsuranceCompanyNames, normalizeInsuranceCompanyName } = insuranceCompanyMaster;
+const MASTER_COMPANY_NAMES = getInsuranceCompanyNames();
+const MASTER_COMPANY_SET = new Set(MASTER_COMPANY_NAMES);
+
+function getCleanCompanyOptions(companies = []) {
+  const source = Array.isArray(companies) && companies.length > 0 ? companies : MASTER_COMPANY_NAMES;
+  const seen = new Set();
+
+  return source
+    .map((company) => normalizeInsuranceCompanyName(company))
+    .filter((company) => MASTER_COMPANY_SET.has(company))
+    .filter((company) => {
+      if (seen.has(company)) return false;
+      seen.add(company);
+      return true;
+    });
+}
 
 const PAYMENT_MODE_OPTIONS = [
   { value: "", label: "Select payment mode" },
@@ -40,6 +60,152 @@ const LOST_REASON_OPTIONS = [
   { value: "Dissatisfied with service", label: "Dissatisfied with service" },
   { value: "Other", label: "Other (specify in remarks)" }
 ];
+
+const FOLLOW_UP_STATUS_OPTIONS = [
+  { value: "Follow-up Scheduled", label: "Follow-up Scheduled" },
+  { value: "Client Interested", label: "Client Interested" },
+  { value: "Client Not Reachable", label: "Client Not Reachable" },
+  { value: "Quote Shared", label: "Quote Shared" },
+  { value: "Payment Pending", label: "Payment Pending" },
+  { value: "Document Pending", label: "Document Pending" },
+  { value: "Closed", label: "Closed" }
+];
+
+const FOLLOW_UP_MODE_OPTIONS = [
+  { value: "Phone Call", label: "Phone Call" },
+  { value: "WhatsApp", label: "WhatsApp" },
+  { value: "Email", label: "Email" },
+  { value: "Office Visit", label: "Office Visit" },
+  { value: "Client Visit", label: "Client Visit" },
+  { value: "Other", label: "Other" }
+];
+
+const FOLLOW_UP_PRIORITY_OPTIONS = [
+  { value: "Normal", label: "Normal" },
+  { value: "High", label: "High" },
+  { value: "Urgent", label: "Urgent" },
+  { value: "Low", label: "Low" }
+];
+
+const POLICY_TYPE_OPTIONS = [
+  { label: "Motor", value: "Motor Policy" },
+  { label: "Health", value: "Health Policy" },
+  { label: "Life", value: "Life Policy" },
+  { label: "Fire", value: "Fire Policy" },
+  { label: "Marine", value: "Marine Policy" },
+  { label: "Travel", value: "Travel Policy" },
+  { label: "Commercial", value: "Commercial Policy" },
+  { label: "Other", value: "Other Policy" }
+];
+
+const POLICY_TYPE_TABLE_COLUMNS = {
+  all: [
+    { key: "customer", label: "Customer Name / Contact Person", className: "col-insured" },
+    { key: "policyType", label: "Policy Type", className: "col-type" },
+    { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
+    { key: "contactNumber", label: "Contact Number", className: "col-contact" },
+    { key: "expiryDate", label: "Expiry Date", className: "col-date" },
+    { key: "daysRemaining", label: "Days Remaining", className: "col-duration" },
+    { key: "renewalStatus", label: "Renewal Status", className: "col-status" },
+    { key: "actions", label: "Actions", className: "col-action" }
+  ],
+  motor: [
+    { key: "customer", label: "Customer Name", className: "col-insured" },
+    { key: "vehicleNumber", label: "Vehicle Number", className: "col-vehicle" },
+    { key: "contactNumber", label: "Contact Number", className: "col-contact" },
+    { key: "expiryDate", label: "Expiry Date", className: "col-date" },
+    { key: "daysRemaining", label: "Days Remaining", className: "col-duration" },
+    { key: "renewalStatus", label: "Renewal Status", className: "col-status" },
+    { key: "actions", label: "Actions", className: "col-action" }
+  ],
+  health: [
+    { key: "customer", label: "Customer Name", className: "col-insured" },
+    { key: "planName", label: "Plan Name", className: "col-description" },
+    { key: "sumInsured", label: "Sum Insured", className: "col-money" },
+    { key: "contactNumber", label: "Contact Number", className: "col-contact" },
+    { key: "expiryDate", label: "Expiry Date", className: "col-date" },
+    { key: "daysRemaining", label: "Days Remaining", className: "col-duration" },
+    { key: "renewalStatus", label: "Renewal Status", className: "col-status" },
+    { key: "actions", label: "Actions", className: "col-action" }
+  ],
+  life: [
+    { key: "customer", label: "Customer Name", className: "col-insured" },
+    { key: "planName", label: "Plan Name", className: "col-description" },
+    { key: "sumAssured", label: "Sum Assured", className: "col-money" },
+    { key: "contactNumber", label: "Contact Number", className: "col-contact" },
+    { key: "expiryDate", label: "Expiry Date", className: "col-date" },
+    { key: "daysRemaining", label: "Days Remaining", className: "col-duration" },
+    { key: "renewalStatus", label: "Renewal Status", className: "col-status" },
+    { key: "actions", label: "Actions", className: "col-action" }
+  ],
+  fire: [
+    { key: "customer", label: "Customer Name", className: "col-insured" },
+    { key: "riskLocation", label: "Risk Location", className: "col-location" },
+    { key: "sumInsured", label: "Sum Insured", className: "col-money" },
+    { key: "contactNumber", label: "Contact Number", className: "col-contact" },
+    { key: "expiryDate", label: "Expiry Date", className: "col-date" },
+    { key: "daysRemaining", label: "Days Remaining", className: "col-duration" },
+    { key: "renewalStatus", label: "Renewal Status", className: "col-status" },
+    { key: "actions", label: "Actions", className: "col-action" }
+  ],
+  marine: [
+    { key: "customer", label: "Customer Name", className: "col-insured" },
+    { key: "cargoDescription", label: "Cargo Description", className: "col-description" },
+    { key: "sumInsured", label: "Sum Insured", className: "col-money" },
+    { key: "contactNumber", label: "Contact Number", className: "col-contact" },
+    { key: "expiryDate", label: "Expiry Date", className: "col-date" },
+    { key: "daysRemaining", label: "Days Remaining", className: "col-duration" },
+    { key: "renewalStatus", label: "Renewal Status", className: "col-status" },
+    { key: "actions", label: "Actions", className: "col-action" }
+  ],
+  travel: [
+    { key: "customer", label: "Customer Name", className: "col-insured" },
+    { key: "destination", label: "Destination", className: "col-location" },
+    { key: "travelPeriod", label: "Travel Period", className: "col-duration" },
+    { key: "contactNumber", label: "Contact Number", className: "col-contact" },
+    { key: "expiryDate", label: "Expiry Date", className: "col-date" },
+    { key: "daysRemaining", label: "Days Remaining", className: "col-duration" },
+    { key: "renewalStatus", label: "Renewal Status", className: "col-status" },
+    { key: "actions", label: "Actions", className: "col-action" }
+  ],
+  commercial: [
+    { key: "customer", label: "Customer Name", className: "col-insured" },
+    { key: "businessName", label: "Business Name", className: "col-company" },
+    { key: "sumInsured", label: "Sum Insured", className: "col-money" },
+    { key: "contactNumber", label: "Contact Number", className: "col-contact" },
+    { key: "expiryDate", label: "Expiry Date", className: "col-date" },
+    { key: "daysRemaining", label: "Days Remaining", className: "col-duration" },
+    { key: "renewalStatus", label: "Renewal Status", className: "col-status" },
+    { key: "actions", label: "Actions", className: "col-action" }
+  ],
+  other: [
+    { key: "customer", label: "Customer Name", className: "col-insured" },
+    { key: "coverageName", label: "Coverage Name", className: "col-description" },
+    { key: "contactNumber", label: "Contact Number", className: "col-contact" },
+    { key: "expiryDate", label: "Expiry Date", className: "col-date" },
+    { key: "daysRemaining", label: "Days Remaining", className: "col-duration" },
+    { key: "renewalStatus", label: "Renewal Status", className: "col-status" },
+    { key: "actions", label: "Actions", className: "col-action" }
+  ]
+};
+
+function getPolicyTableKey(selectedPolicyType) {
+  const value = String(selectedPolicyType || "").toLowerCase();
+  if (!value || value === "all") return "all";
+  if (value.includes("motor")) return "motor";
+  if (value.includes("health")) return "health";
+  if (value.includes("life")) return "life";
+  if (value.includes("fire")) return "fire";
+  if (value.includes("marine")) return "marine";
+  if (value.includes("travel")) return "travel";
+  if (value.includes("commercial")) return "commercial";
+  return "other";
+}
+
+function firstPresent(...values) {
+  const found = values.find((value) => value !== undefined && value !== null && String(value).trim() !== "");
+  return found === undefined ? "-" : String(found);
+}
 
 function getRenewalVehicleNumber(record = {}) {
   return record.vehicleNumber || record.registrationNumber || "";
@@ -83,13 +249,12 @@ export default function RenewalsPage() {
   const searchParams = useSearchParams();
 
   // Load defaults from URL search params (if clicked from dashboard counters)
-  const urlTab = searchParams.get("tab") || "upcoming";
+  const urlTab = searchParams.get("tab") || "all";
   const urlDays = searchParams.get("days") || "";
 
   // Dropdown states
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState("All");
-  const [policyTypes, setPolicyTypes] = useState([]);
   const [selectedPolicyType, setSelectedPolicyType] = useState("All");
 
   // Tab & search states
@@ -118,6 +283,17 @@ export default function RenewalsPage() {
   const [renewPolicy, setRenewPolicy] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [pdfUploaded, setPdfUploaded] = useState(false);
+  const [remarkModalOpen, setRemarkModalOpen] = useState(false);
+  const [remarkPolicy, setRemarkPolicy] = useState(null);
+  const [remarkForm, setRemarkForm] = useState({
+    remark: "",
+    nextFollowUpDate: "",
+    followUpStatus: "Follow-up Scheduled",
+    followUpMode: "Phone Call",
+    priority: "Normal",
+    nextAction: ""
+  });
+  const [savingRemark, setSavingRemark] = useState(false);
 
   const handlePrint = (record) => {
     if (!record) return;
@@ -415,7 +591,7 @@ export default function RenewalsPage() {
       }
     }
     fetchHeaderData();
-  }, [policies]);
+  }, []);
 
   // Synchronise state with URL params changes (clicking on counters)
   useEffect(() => {
@@ -426,21 +602,17 @@ export default function RenewalsPage() {
     }
     if (daysParam) {
       setDaysFilter(daysParam);
-    } else {
+    } else if ((tabParam || urlTab) !== "upcoming") {
       setDaysFilter("");
+    } else {
+      setDaysFilter("10");
     }
   }, [searchParams]);
 
-  // Fetch company options and policy type options initially
+  // Fetch company options for the current policy type selection.
   useEffect(() => {
-    fetchCompaniesList();
-    fetchPolicyTypesList("All");
-  }, []);
-
-  // Fetch policy types whenever company filter changes
-  useEffect(() => {
-    fetchPolicyTypesList(selectedCompany);
-  }, [selectedCompany]);
+    fetchCompaniesList(selectedPolicyType);
+  }, [selectedPolicyType]);
 
   // Reset page when tab, company, policyType, or search term changes
   useEffect(() => {
@@ -449,7 +621,15 @@ export default function RenewalsPage() {
 
   // Fetch policies when filters, page or tabs change
   useEffect(() => {
-    fetchPoliciesList();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      fetchPoliciesList(controller.signal);
+    }, q ? 250 : 0);
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [selectedCompany, selectedPolicyType, activeTab, daysFilter, q, page]);
 
   const showToastMsg = (msg) => {
@@ -457,31 +637,24 @@ export default function RenewalsPage() {
     setTimeout(() => setToast(""), 4000);
   };
 
-  const fetchCompaniesList = async () => {
+  const fetchCompaniesList = async (policyType = selectedPolicyType) => {
     try {
-      const res = await fetch("/api/renewals/companies");
+      const res = await fetch(`/api/renewals/companies?policyType=${encodeURIComponent(policyType)}`);
       const data = await res.json();
       if (res.ok) {
-        setCompanies(data.companies || []);
+        const cleanCompanies = getCleanCompanyOptions(data.companies);
+        setCompanies(cleanCompanies);
+        if (selectedCompany !== "All" && !cleanCompanies.includes(selectedCompany)) {
+          setSelectedCompany("All");
+        }
       }
     } catch {
+      setCompanies(MASTER_COMPANY_NAMES);
       setError("Failed to fetch companies list.");
     }
   };
 
-  const fetchPolicyTypesList = async (company) => {
-    try {
-      const res = await fetch(`/api/renewals/policy-types?company=${encodeURIComponent(company)}`);
-      const data = await res.json();
-      if (res.ok) {
-        setPolicyTypes(data.policyTypes || []);
-      }
-    } catch {
-      setError("Failed to fetch policy types list.");
-    }
-  };
-
-  const fetchPoliciesList = async () => {
+  const fetchPoliciesList = async (signal) => {
     setLoading(true);
     setError("");
     try {
@@ -489,7 +662,7 @@ export default function RenewalsPage() {
       if (daysFilter) {
         url += `&days=${daysFilter}`;
       }
-      const res = await fetch(url);
+      const res = await fetch(url, { signal });
       const data = await res.json();
       if (res.ok) {
         setPolicies(data.policies || []);
@@ -498,11 +671,27 @@ export default function RenewalsPage() {
       } else {
         setError(data.error || "Failed to load policies.");
       }
-    } catch {
+    } catch (error) {
+      if (error.name === "AbortError") return;
       setError("Network error loading policies.");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
+  };
+
+  const handleStatusChange = (value) => {
+    setActiveTab(value);
+    setDaysFilter(value === "upcoming" ? "10" : "");
+    setPage(1);
+  };
+
+  const clearRenewalFilters = () => {
+    setSelectedPolicyType("All");
+    setSelectedCompany("All");
+    setActiveTab("all");
+    setDaysFilter("");
+    setQ("");
+    setPage(1);
   };
 
   const handleWhatsApp = async (policy) => {
@@ -533,6 +722,72 @@ export default function RenewalsPage() {
     setLostReason("");
     setLostRemarks("");
     setLostModalOpen(true);
+  };
+
+  const handleAddRemark = (policy) => {
+    setRemarkPolicy(policy);
+    setRemarkForm({
+      remark: "",
+      nextFollowUpDate: "",
+      followUpStatus: "Follow-up Scheduled",
+      followUpMode: "Phone Call",
+      priority: "Normal",
+      nextAction: ""
+    });
+    setSelectedRecord(null);
+    setRemarkModalOpen(true);
+  };
+
+  const submitRemark = async () => {
+    const remark = remarkForm.remark.trim();
+    if (!remarkPolicy || !remark) {
+      showToastMsg("Please enter a remark.");
+      return;
+    }
+    setSavingRemark(true);
+    try {
+      const res = await fetch("/api/renewals/remarks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          policyId: remarkPolicy.id,
+          remark,
+          nextFollowUpDate: remarkForm.nextFollowUpDate,
+          followUpStatus: remarkForm.followUpStatus,
+          followUpMode: remarkForm.followUpMode,
+          priority: remarkForm.priority,
+          nextAction: remarkForm.nextAction
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const nextRecord = {
+          ...remarkPolicy,
+          remark,
+          renewalFollowUp: data.followUp,
+          renewalRemarks: [data.remark, ...(Array.isArray(remarkPolicy.renewalRemarks) ? remarkPolicy.renewalRemarks : [])]
+        };
+        setPolicies((current) => current.map((policy) => policy.id === remarkPolicy.id ? nextRecord : policy));
+        setSelectedRecord((current) => current?.id === remarkPolicy.id ? { ...current, ...nextRecord } : current);
+        setRemarkModalOpen(false);
+        setRemarkPolicy(null);
+        setRemarkForm({
+          remark: "",
+          nextFollowUpDate: "",
+          followUpStatus: "Follow-up Scheduled",
+          followUpMode: "Phone Call",
+          priority: "Normal",
+          nextAction: ""
+        });
+        showToastMsg("Remark saved.");
+      } else {
+        showToastMsg(data.error || "Failed to save remark.");
+      }
+    } catch {
+      showToastMsg("Network error saving remark.");
+    } finally {
+      setSavingRemark(false);
+    }
   };
 
   const submitMarkLost = async () => {
@@ -722,6 +977,109 @@ export default function RenewalsPage() {
     return `${diffDays} Days`;
   };
 
+  const activeTableKey = getPolicyTableKey(selectedPolicyType);
+  const tableColumns = POLICY_TYPE_TABLE_COLUMNS[activeTableKey] || POLICY_TYPE_TABLE_COLUMNS.all;
+
+  const renderCustomerCell = (record, showContactPerson = true) => (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <strong className="record-primary">{record.insuredName || "Unnamed"}</strong>
+      {showContactPerson && record.contactPerson && record.contactPerson !== record.insuredName && (
+        <small style={{ color: "var(--text-secondary)", fontSize: "11px" }}>Contact Person: {record.contactPerson}</small>
+      )}
+    </div>
+  );
+
+  const renderStatusBadge = (record) => (
+    <span style={{
+      padding: "4px 8px",
+      borderRadius: "12px",
+      fontSize: "11px",
+      fontWeight: "600",
+      backgroundColor: record.renewalStatus === "LOST" ? "rgba(220,38,38,0.1)" : record.renewalStatus === "RENEWED" ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
+      color: record.renewalStatus === "LOST" ? "#dc2626" : record.renewalStatus === "RENEWED" ? "#10b981" : "#f59e0b"
+    }}>
+      {record.renewalStatus || "ACTIVE"}
+    </span>
+  );
+
+  const renderActionMenu = (record) => (
+    <div className="renewal-row-actions">
+      <button
+        type="button"
+        onClick={() => setSelectedRecord(record)}
+        className="renewal-action-trigger"
+        aria-label="Open renewal actions"
+        title="Actions"
+      >
+        <span aria-hidden="true">...</span>
+      </button>
+      <div className="renewal-action-menu" role="menu" aria-label="Renewal actions">
+        <button type="button" onClick={() => setSelectedRecord(record)} role="menuitem">
+          <Eye size={14} /> View
+        </button>
+        {record.contactNumber ? (
+          <button type="button" onClick={() => handleWhatsApp(record)} role="menuitem">
+            <MessageSquare size={14} /> WhatsApp
+          </button>
+        ) : null}
+        <button type="button" onClick={() => handleAddRemark(record)} role="menuitem">
+          <FileText size={14} /> Remark
+        </button>
+        {record.renewalStatus === "ACTIVE" ? (
+          <>
+            <button type="button" onClick={() => handleRenew(record)} role="menuitem">
+              <RefreshCw size={14} /> Renew
+            </button>
+            <button type="button" onClick={() => handleMarkLost(record)} className="danger" role="menuitem">
+              <Trash2 size={14} /> Lost
+            </button>
+          </>
+        ) : (
+          <button type="button" disabled role="menuitem">
+            Closed
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderRenewalCell = (record, column) => {
+    const daysText = getDaysRemainingText(record.expiryDate);
+    const isExpired = daysText === "Expired";
+    const isDueToday = daysText === "Due Today";
+
+    if (column.key === "customer") {
+      return renderCustomerCell(record, activeTableKey === "all");
+    }
+    if (column.key === "policyType") return firstPresent(record.displayPolicyType, record.policyType);
+    if (column.key === "insuranceCompany") return firstPresent(record.insuranceCompany);
+    if (column.key === "vehicleNumber") return <span className="record-code">{firstPresent(getRenewalVehicleNumber(record))}</span>;
+    if (column.key === "contactNumber") return <span className="record-code">{firstPresent(record.contactNumber)}</span>;
+    if (column.key === "expiryDate") return firstPresent(record.expiryDate);
+    if (column.key === "daysRemaining") {
+      return (
+        <span style={{
+          color: isExpired ? "#dc2626" : isDueToday ? "#f59e0b" : "var(--text-primary)",
+          fontWeight: (isExpired || isDueToday) ? "600" : "normal"
+        }}>
+          {daysText}
+        </span>
+      );
+    }
+    if (column.key === "renewalStatus") return renderStatusBadge(record);
+    if (column.key === "actions") return renderActionMenu(record);
+    if (column.key === "planName") return firstPresent(record.planName, record.policyCoverType, record.description, record.displayPolicyType, record.policyType);
+    if (column.key === "sumInsured") return firstPresent(record.sumInsured);
+    if (column.key === "sumAssured") return firstPresent(record.sumAssured, record.sumInsured);
+    if (column.key === "riskLocation") return firstPresent(record.riskLocation, record.description);
+    if (column.key === "cargoDescription") return firstPresent(record.cargoDescription, record.description, record.policyCoverType);
+    if (column.key === "destination") return firstPresent(record.destination, record.validIn, record.description);
+    if (column.key === "travelPeriod") return firstPresent(record.travelPeriod, record.duration, record.startDate && record.expiryDate ? `${record.startDate} - ${record.expiryDate}` : "");
+    if (column.key === "businessName") return firstPresent(record.businessName, record.groupName, record.insuredName);
+    if (column.key === "coverageName") return firstPresent(record.coverageName, record.policyCoverType, record.description, record.displayPolicyType, record.policyType);
+    return "-";
+  };
+
   return (
     <>
       <PageHeader 
@@ -776,21 +1134,19 @@ export default function RenewalsPage() {
               width: "6px",
               backgroundColor: item.color
             }} />
-            <p style={{
-              margin: 0,
-              fontSize: "12px",
-              fontWeight: "700",
-              color: "var(--text-secondary)",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px"
-            }}>{item.label}</p>
             <strong style={{
               display: "block",
               fontSize: "28px",
               fontWeight: "800",
-              color: "var(--text-primary)",
-              marginTop: "8px"
+              color: item.color,
+              marginBottom: "4px"
             }}>{item.value}</strong>
+            <p style={{
+              margin: 0,
+              fontSize: "14px",
+              fontWeight: "700",
+              color: "var(--text-primary)"
+            }}>{item.label}</p>
           </article>
         ))}
       </section>
@@ -804,52 +1160,72 @@ export default function RenewalsPage() {
         </section>
       ) : null}
 
-      {/* Dropdown Filters at the Top */}
-      <section className="glass-panel" style={{ padding: "20px", marginBottom: "20px" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", alignItems: "center" }}>
-          <div style={{ flex: "1", minWidth: "220px" }}>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "6px" }}>Company Filter</label>
-            <select 
-              value={selectedCompany} 
-              onChange={(e) => setSelectedCompany(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: "8px",
-                border: "1px solid var(--border)",
-                backgroundColor: "var(--surface)",
-                color: "var(--text-primary)",
-                fontSize: "14px"
+      {/* Policy Type and Company Selection */}
+      <section className="glass-panel renewal-selection-panel">
+        <div className="renewal-policy-row">
+          <span>Policy Type</span>
+          <div className="renewal-type-tabs" aria-label="Policy type filters">
+            {POLICY_TYPE_OPTIONS.map((type) => (
+              <button
+                key={type.value}
+                type="button"
+                className={selectedPolicyType === type.value ? "active" : ""}
+                onClick={() => {
+                  setSelectedPolicyType(selectedPolicyType === type.value ? "All" : type.value);
+                  setSelectedCompany("All");
+                  setPage(1);
+                }}
+              >
+                {type.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="renewal-filter-row">
+          <label>
+            <span>Insurance Company</span>
+            <select
+              value={selectedCompany}
+              onChange={(event) => {
+                setSelectedCompany(event.target.value);
+                setPage(1);
               }}
             >
-              <option value="All">All Companies</option>
+              <option value="All">Select Company</option>
               {companies.map((company) => (
                 <option key={company} value={company}>{company}</option>
               ))}
             </select>
+          </label>
+
+          <label>
+            <span>Status</span>
+            <select
+              value={activeTab}
+              onChange={(event) => handleStatusChange(event.target.value)}
+            >
+              <option value="all">All Status</option>
+              <option value="upcoming">Upcoming (10 Days)</option>
+              <option value="expired">Expired Policies</option>
+              <option value="renewed">Renewed Policies</option>
+              <option value="lost">Lost Policies</option>
+            </select>
+          </label>
+
+          <div className="search-box renewal-search-box">
+            <Search size={18} style={{ color: "var(--outline)", marginLeft: "12px", marginRight: "8px" }} />
+            <input
+              type="text"
+              value={q}
+              placeholder="Search by Insured Name, Policy No., or Vehicle No..."
+              onChange={(event) => setQ(event.target.value)}
+            />
           </div>
 
-          <div style={{ flex: "1", minWidth: "220px" }}>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "6px" }}>Policy Type Filter</label>
-            <select 
-              value={selectedPolicyType} 
-              onChange={(e) => setSelectedPolicyType(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: "8px",
-                border: "1px solid var(--border)",
-                backgroundColor: "var(--surface)",
-                color: "var(--text-primary)",
-                fontSize: "14px"
-              }}
-            >
-              <option value="All">All Policy Types</option>
-              {policyTypes.map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
+          <button className="renewal-clear-btn" type="button" onClick={clearRenewalFilters}>
+            Clear Filters
+          </button>
         </div>
       </section>
 
@@ -859,46 +1235,23 @@ export default function RenewalsPage() {
         {/* Navigation Tabs */}
         <div className="record-view-tabs" style={{ marginBottom: "20px" }} aria-label="Renewal list views">
           {[
-            { key: "upcoming", label: daysFilter ? `Upcoming (${daysFilter} Days)` : "Upcoming Renewals" },
+            { key: "all", label: "All Policies" },
+            { key: "upcoming", label: "Upcoming (10 Days)" },
             { key: "expired", label: "Expired Policies" },
             { key: "renewed", label: "Renewed Policies" },
-            { key: "lost", label: "Lost Policies" },
-            { key: "all", label: "All Policies" }
+            { key: "lost", label: "Lost Policies" }
           ].map((tab) => (
             <button
               key={tab.key}
               className={activeTab === tab.key ? "active" : ""}
               type="button"
               onClick={() => {
-                setActiveTab(tab.key);
-                if (tab.key !== "upcoming") setDaysFilter("");
+                handleStatusChange(tab.key);
               }}
             >
               {tab.label}
             </button>
           ))}
-        </div>
-
-        {/* Search Bar */}
-        <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "16px" }}>
-          <div className="search-box" style={{ flex: "1" }}>
-            <Search size={18} style={{ color: "var(--outline)", marginLeft: "12px", marginRight: "8px" }} />
-            <input 
-              type="text" 
-              value={q} 
-              placeholder="Search by Insured Name, Policy Number, or Vehicle Number..." 
-              onChange={(e) => setQ(e.target.value)} 
-              style={{
-                width: "100%",
-                border: "none",
-                background: "transparent",
-                outline: "none",
-                padding: "10px 0",
-                fontSize: "14px",
-                color: "var(--text-primary)"
-              }}
-            />
-          </div>
         </div>
 
         {loading ? (
@@ -908,156 +1261,38 @@ export default function RenewalsPage() {
         ) : policies.length ? (
           <>
             <div className="table-wrap">
-              <table className="records-table">
+              <table className="records-table renewal-policy-table">
+                <colgroup>
+                  {tableColumns.map((column) => (
+                    <col key={column.key} className={column.className} />
+                  ))}
+                </colgroup>
                 <thead>
                   <tr>
-                    <th>Customer Name / Contact Person</th>
-                    <th>Policy Type</th>
-                    <th>Vehicle No.</th>
-                    <th>Contact Number</th>
-                    <th>WhatsApp Link</th>
-                    <th>Expiry Date</th>
-                    <th>Days Remaining</th>
-                    <th>Renewal Status</th>
-                    <th style={{ textAlign: "right" }}>Actions</th>
+                    {tableColumns.map((column) => (
+                      <th
+                        key={column.key}
+                        className={column.className}
+                        style={column.key === "actions" ? { textAlign: "right" } : undefined}
+                      >
+                        {column.label}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {policies.map((p) => {
-                    const daysText = getDaysRemainingText(p.expiryDate);
-                    const isExpired = daysText === "Expired";
-                    const isDueToday = daysText === "Due Today";
-                    const vehicleNumber = isMotorRenewalPolicy(p) ? getRenewalVehicleNumber(p) : "";
-                    
-                    return (
-                      <tr key={p.id}>
-                        <td>
-                          <div style={{ display: "flex", flexDirection: "column" }}>
-                            <strong className="record-primary">{p.insuredName || "Unnamed"}</strong>
-                            {p.contactPerson && p.contactPerson !== p.insuredName && (
-                              <small style={{ color: "var(--text-secondary)", fontSize: "11px" }}>Contact Person: {p.contactPerson}</small>
-                            )}
-                          </div>
+                  {policies.map((p) => (
+                    <tr key={p.id}>
+                      {tableColumns.map((column) => (
+                        <td
+                          key={column.key}
+                          className={`${column.className || ""}${column.key === "actions" ? " renewal-action-cell" : ""}`}
+                        >
+                          {renderRenewalCell(p, column)}
                         </td>
-                        <td>{p.displayPolicyType || p.policyType || "-"}</td>
-                        <td><span className="record-code">{vehicleNumber || "-"}</span></td>
-                        <td><span className="record-code">{p.contactNumber || "-"}</span></td>
-                        <td>
-                          {p.contactNumber ? (
-                            <button
-                              type="button"
-                              onClick={() => handleWhatsApp(p)}
-                              style={{
-                                background: "none",
-                                border: "none",
-                                cursor: "pointer",
-                                color: "#10b981",
-                                textDecoration: "underline",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                padding: 0,
-                                fontSize: "13px"
-                              }}
-                            >
-                              <MessageSquare size={13} /> Chat Link
-                            </button>
-                          ) : (
-                            <span style={{ color: "var(--text-secondary)", fontSize: "12px" }}>No number</span>
-                          )}
-                        </td>
-                        <td>{p.expiryDate || "-"}</td>
-                        <td style={{ 
-                          color: isExpired ? "#dc2626" : isDueToday ? "#f59e0b" : "var(--text-primary)", 
-                          fontWeight: (isExpired || isDueToday) ? "600" : "normal" 
-                        }}>
-                          {daysText}
-                        </td>
-                        <td>
-                          <span style={{
-                            padding: "4px 8px",
-                            borderRadius: "12px",
-                            fontSize: "11px",
-                            fontWeight: "600",
-                            backgroundColor: p.renewalStatus === "LOST" ? "rgba(220,38,38,0.1)" : p.renewalStatus === "RENEWED" ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
-                            color: p.renewalStatus === "LOST" ? "#dc2626" : p.renewalStatus === "RENEWED" ? "#10b981" : "#f59e0b"
-                          }}>
-                            {p.renewalStatus || "ACTIVE"}
-                          </span>
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                          <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedRecord(p)}
-                              style={{
-                                padding: "6px 12px",
-                                borderRadius: "8px",
-                                border: "1px solid var(--primary, #1f6fae)",
-                                backgroundColor: "rgba(31, 111, 174, 0.05)",
-                                color: "var(--primary, #1f6fae)",
-                                cursor: "pointer",
-                                fontSize: "12px",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                fontWeight: "600"
-                              }}
-                              title="View Policy Details"
-                            >
-                              <Eye size={14} /> View
-                            </button>
-                            {p.renewalStatus === "ACTIVE" ? (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRenew(p)}
-                                  style={{
-                                    padding: "6px 12px",
-                                    borderRadius: "8px",
-                                    border: "1px solid var(--accent)",
-                                    backgroundColor: "rgba(var(--accent-rgb), 0.05)",
-                                    color: "var(--accent)",
-                                    cursor: "pointer",
-                                    fontSize: "12px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                    fontWeight: "600"
-                                  }}
-                                  title="Renew Policy"
-                                >
-                                  <RefreshCw size={14} /> Renew
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleMarkLost(p)}
-                                  style={{
-                                    padding: "6px 12px",
-                                    borderRadius: "8px",
-                                    border: "1px solid #dc2626",
-                                    backgroundColor: "rgba(220,38,38,0.05)",
-                                    color: "#dc2626",
-                                    cursor: "pointer",
-                                    fontSize: "12px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                    fontWeight: "600"
-                                  }}
-                                  title="Mark Business as Lost"
-                                >
-                                  <Trash2 size={14} /> Lost
-                                </button>
-                              </>
-                            ) : (
-                              <span style={{ color: "var(--text-secondary)", fontSize: "12px", display: "flex", alignItems: "center" }}>Closed</span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -1185,6 +1420,166 @@ export default function RenewalsPage() {
                 style={{ background: "#dc2626", color: "white" }}
               >
                 Mark Lost
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Add Renewal Remark */}
+      {remarkModalOpen && remarkPolicy && (
+        <div className="tb-modal-backdrop" onClick={() => setRemarkModalOpen(false)}>
+          <div className="tb-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "720px", width: "92%" }}>
+            <div className="tb-modal-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
+              <h3 className="tb-status-title tb-modal-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <FileText size={20} /> Add Renewal Remark
+              </h3>
+            </div>
+            <div className="tb-modal-body" style={{ marginTop: "12px" }}>
+              <p style={{ color: "var(--text-secondary)", fontSize: "13px", margin: "0 0 16px" }}>
+                Customer: <strong>{remarkPolicy.insuredName || "Unnamed"}</strong><br/>
+                Policy Number: <strong>{remarkPolicy.policyNumber || "-"}</strong>
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px", marginBottom: "12px" }}>
+                <label style={{ display: "block" }}>
+                  <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Follow-up Status</span>
+                  <select
+                    value={remarkForm.followUpStatus}
+                    onChange={(event) => setRemarkForm((current) => ({ ...current, followUpStatus: event.target.value }))}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border)",
+                      backgroundColor: "var(--surface)",
+                      color: "var(--text-primary)",
+                      fontSize: "14px"
+                    }}
+                  >
+                    {FOLLOW_UP_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label style={{ display: "block" }}>
+                  <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Next Follow-up Date</span>
+                  <input
+                    type="date"
+                    value={remarkForm.nextFollowUpDate}
+                    onChange={(event) => setRemarkForm((current) => ({ ...current, nextFollowUpDate: event.target.value }))}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border)",
+                      backgroundColor: "var(--surface)",
+                      color: "var(--text-primary)",
+                      fontSize: "14px"
+                    }}
+                  />
+                </label>
+
+                <label style={{ display: "block" }}>
+                  <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Contact Mode</span>
+                  <select
+                    value={remarkForm.followUpMode}
+                    onChange={(event) => setRemarkForm((current) => ({ ...current, followUpMode: event.target.value }))}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border)",
+                      backgroundColor: "var(--surface)",
+                      color: "var(--text-primary)",
+                      fontSize: "14px"
+                    }}
+                  >
+                    {FOLLOW_UP_MODE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label style={{ display: "block" }}>
+                  <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Priority</span>
+                  <select
+                    value={remarkForm.priority}
+                    onChange={(event) => setRemarkForm((current) => ({ ...current, priority: event.target.value }))}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border)",
+                      backgroundColor: "var(--surface)",
+                      color: "var(--text-primary)",
+                      fontSize: "14px"
+                    }}
+                  >
+                    {FOLLOW_UP_PRIORITY_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <label style={{ display: "block", marginBottom: "12px" }}>
+                <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Next Action</span>
+                <input
+                  type="text"
+                  value={remarkForm.nextAction}
+                  onChange={(event) => setRemarkForm((current) => ({ ...current, nextAction: event.target.value }))}
+                  placeholder="Example: Share quote, collect payment, call again, collect document"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--surface)",
+                    color: "var(--text-primary)",
+                    fontSize: "14px"
+                  }}
+                />
+              </label>
+
+              <label style={{ display: "block" }}>
+                <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Remark *</span>
+                <textarea
+                  value={remarkForm.remark}
+                  onChange={(event) => setRemarkForm((current) => ({ ...current, remark: event.target.value }))}
+                  placeholder="Type client response, call summary, discussion notes, payment update..."
+                  autoFocus
+                  style={{
+                    width: "100%",
+                    minHeight: "110px",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--surface)",
+                    color: "var(--text-primary)",
+                    fontSize: "14px"
+                  }}
+                />
+              </label>
+            </div>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px", marginTop: "16px", borderTop: "1px solid var(--border)" }}>
+              <button
+                type="button"
+                onClick={() => setRemarkModalOpen(false)}
+                className="tb-modal-done-btn"
+                style={{ background: "var(--surface-variant)", color: "var(--text-secondary)" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitRemark}
+                disabled={savingRemark}
+                className="tb-modal-done-btn"
+                style={{ background: "var(--accent)", color: "white", display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                {savingRemark && <Loader2 className="spin" size={16} />}
+                Save Remark
               </button>
             </div>
           </div>
@@ -1607,6 +2002,14 @@ export default function RenewalsPage() {
                 <DetailField label="Remarks" value={selectedRecord.remark} wide />
               </DetailSection>
 
+              <DetailSection title="Latest Follow-up">
+                <RenewalFollowUpSummary followUp={selectedRecord.renewalFollowUp} />
+              </DetailSection>
+
+              <DetailSection title="Renewal Remark History">
+                <RenewalRemarkHistory remarks={selectedRecord.renewalRemarks} />
+              </DetailSection>
+
               <DetailSection title="Metadata">
                 <DetailField label="Source PDF File" value={selectedRecord.sourceFile} wide />
                 <DetailField label="Created By" value={selectedRecord.uploadedByEmail || selectedRecord.uploadedBy} />
@@ -1627,6 +2030,26 @@ export default function RenewalsPage() {
                 backgroundColor: "#ffffff"
               }}
             >
+              <button
+                onClick={() => handleAddRemark(selectedRecord)}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "12px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: "#ffffff",
+                  color: "#0f172a",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  transition: "background-color 0.2s, border-color 0.2s"
+                }}
+              >
+                <FileText size={16} />
+                Add Remark
+              </button>
               <button 
                 onClick={() => handlePrint(selectedRecord)}
                 style={{
@@ -1711,6 +2134,90 @@ function DetailField({ label, value, wide }) {
       <span style={{ fontSize: "10px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</span>
       <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a", wordBreak: "break-all" }}>{String(value)}</span>
     </div>
+  );
+}
+
+function RenewalRemarkHistory({ remarks }) {
+  const items = Array.isArray(remarks) ? remarks : [];
+  return (
+    <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: "10px" }}>
+      {items.length ? (
+        items.map((remark) => (
+          <div
+            key={remark.id || `${remark.createdAt}-${remark.text}`}
+            style={{
+              padding: "12px",
+              borderRadius: "8px",
+              border: "1px solid #e2e8f0",
+              background: "#f8fafc"
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", marginBottom: "6px", flexWrap: "wrap" }}>
+              <strong style={{ fontSize: "12px", color: "#0f172a" }}>{remark.createdBy || "User"}</strong>
+              <span style={{ fontSize: "11px", color: "#64748b" }}>
+                {remark.type ? `${remark.type} · ` : ""}{remark.createdAt ? formatDateTime(remark.createdAt) : ""}
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+              {remark.followUpStatus ? <FollowUpPill label={remark.followUpStatus} /> : null}
+              {remark.nextFollowUpDate ? <FollowUpPill label={`Next: ${formatDate(remark.nextFollowUpDate)}`} /> : null}
+              {remark.followUpMode ? <FollowUpPill label={remark.followUpMode} /> : null}
+              {remark.priority ? <FollowUpPill label={`Priority: ${remark.priority}`} /> : null}
+            </div>
+            <p style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: "13px", lineHeight: 1.45, color: "#334155" }}>
+              {remark.text}
+            </p>
+            {remark.nextAction ? (
+              <p style={{ margin: "8px 0 0", whiteSpace: "pre-wrap", fontSize: "12px", lineHeight: 1.4, color: "#475569" }}>
+                <strong>Next action:</strong> {remark.nextAction}
+              </p>
+            ) : null}
+          </div>
+        ))
+      ) : (
+        <div style={{ padding: "12px", borderRadius: "8px", background: "#f8fafc", color: "#64748b", fontSize: "13px" }}>
+          No renewal remarks saved yet.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RenewalFollowUpSummary({ followUp }) {
+  if (!followUp || typeof followUp !== "object") {
+    return (
+      <div style={{ gridColumn: "1 / -1", padding: "12px", borderRadius: "8px", background: "#f8fafc", color: "#64748b", fontSize: "13px" }}>
+        No follow-up scheduled yet.
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <DetailField label="Follow-up Status" value={followUp.followUpStatus} />
+      <DetailField label="Next Follow-up Date" value={followUp.nextFollowUpDate ? formatDate(followUp.nextFollowUpDate) : ""} />
+      <DetailField label="Contact Mode" value={followUp.followUpMode} />
+      <DetailField label="Priority" value={followUp.priority} />
+      <DetailField label="Next Action" value={followUp.nextAction} wide />
+      <DetailField label="Last Updated By" value={followUp.lastRemarkBy} />
+      <DetailField label="Last Updated At" value={followUp.lastRemarkAt ? formatDateTime(followUp.lastRemarkAt) : ""} />
+    </>
+  );
+}
+
+function FollowUpPill({ label }) {
+  return (
+    <span style={{
+      borderRadius: "999px",
+      background: "#ffffff",
+      border: "1px solid #e2e8f0",
+      color: "#475569",
+      fontSize: "11px",
+      fontWeight: 700,
+      padding: "3px 8px"
+    }}>
+      {label}
+    </span>
   );
 }
 

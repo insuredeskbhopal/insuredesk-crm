@@ -4,6 +4,7 @@ import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { normalizeRecord } from "@/lib/records";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { sanitizeRecordPayload } from "@/lib/records/validation";
 
 export const runtime = "nodejs";
 
@@ -66,24 +67,42 @@ export async function POST(request) {
 
       // 2. Create the new PolicyRecord
       const newPolicyId = randomUUID();
+      const standardizedRenewedData = sanitizeRecordPayload(renewedData);
+      const previousData = oldPolicy.reviewedData || oldPolicy.data || {};
+      const previousRemarks = Array.isArray(previousData.renewalRemarks) ? previousData.renewalRemarks : [];
+      if (renewedData.remark) {
+        standardizedRenewedData.renewalRemarks = [
+          {
+            id: randomUUID(),
+            text: String(renewedData.remark).trim(),
+            createdAt: new Date().toISOString(),
+            createdBy: user.name || user.email || "User",
+            createdById: actorId || null,
+            type: "RENEWED"
+          },
+          ...previousRemarks
+        ];
+      } else if (previousRemarks.length) {
+        standardizedRenewedData.renewalRemarks = previousRemarks;
+      }
       const newPolicy = await tx.policyRecord.create({
         data: {
           id: newPolicyId,
           savedAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date(),
-          data: renewedData,
+          data: standardizedRenewedData,
           pdfFileName: pdfInfo?.fileName || "",
           pdfMimeType: pdfInfo?.fileType || "application/pdf",
           sourceFile: pdfInfo?.fileName || "Manual Renewal",
           rawText: pdfInfo?.rawText || "",
-          detectedCompany: renewedData.insuranceCompany || "",
-          detectedPolicyType: renewedData.policyType || "",
-          selectedCompany: renewedData.insuranceCompany || "",
-          selectedPolicyType: renewedData.policyType || "",
+          detectedCompany: standardizedRenewedData.insuranceCompany || "",
+          detectedPolicyType: standardizedRenewedData.policyType || "",
+          selectedCompany: standardizedRenewedData.insuranceCompany || "",
+          selectedPolicyType: standardizedRenewedData.policyType || "",
           confidenceScore: 1.0,
-          extractedData: renewedData,
-          reviewedData: renewedData,
+          extractedData: standardizedRenewedData,
+          reviewedData: standardizedRenewedData,
           extractionMethod: pdfInfo ? "pdf_text" : "manual_entry",
           uploadedFileId: uploadedFileId,
           organizationId: user.organizationId,
@@ -97,13 +116,25 @@ export async function POST(request) {
       });
 
       // 3. Update the old PolicyRecord
+      const oldPolicyData = oldPolicy.data || {};
+      const oldPolicyReviewedData = oldPolicy.reviewedData || {};
+      if (renewedData.remark) {
+        const renewedRemark = standardizedRenewedData.renewalRemarks[0];
+        oldPolicyData.remark = renewedRemark.text;
+        oldPolicyReviewedData.remark = renewedRemark.text;
+        oldPolicyData.renewalRemarks = [renewedRemark, ...(Array.isArray(oldPolicyData.renewalRemarks) ? oldPolicyData.renewalRemarks : [])];
+        oldPolicyReviewedData.renewalRemarks = [renewedRemark, ...(Array.isArray(oldPolicyReviewedData.renewalRemarks) ? oldPolicyReviewedData.renewalRemarks : [])];
+      }
+
       await tx.policyRecord.update({
         where: { id: previousPolicyId },
         data: {
           renewalStatus: "RENEWED",
           isActivePolicy: false,
           renewedPolicyId: newPolicyId,
-          renewalDate: new Date()
+          renewalDate: new Date(),
+          data: oldPolicyData,
+          reviewedData: oldPolicyReviewedData
         }
       });
 

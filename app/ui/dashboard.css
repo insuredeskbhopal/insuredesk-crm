@@ -1371,6 +1371,222 @@ label span em {
   padding: 0 8px;
 }
 
+.renewal-selection-panel {
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+
+.renewal-policy-row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  border-bottom: 1px solid rgba(25, 28, 29, 0.1);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+
+.renewal-policy-row > span,
+.renewal-filter-row label > span {
+  color: #111827;
+  font-size: var(--font-size-sm);
+  font-weight: 900;
+}
+
+.renewal-type-tabs {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(78px, 1fr));
+  gap: 10px;
+  align-items: center;
+}
+
+.renewal-type-tabs button {
+  min-height: 44px;
+  border: 1px solid rgba(25, 28, 29, 0.14) !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #1b1f22 !important;
+  box-shadow: none !important;
+  justify-content: center;
+  padding: 0 12px;
+  font-weight: 900;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.renewal-type-tabs button:hover {
+  border-color: rgba(25, 28, 29, 0.28) !important;
+  background: #fafafa !important;
+  transform: translateY(-1px);
+}
+
+.renewal-type-tabs button.active {
+  border-color: rgba(17, 24, 39, 0.36) !important;
+  background: #f5f6f7 !important;
+}
+
+.renewal-filter-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(180px, 0.65fr) minmax(280px, 1.6fr) auto;
+  gap: 18px;
+  align-items: end;
+}
+
+.renewal-filter-row label {
+  display: grid;
+  gap: 8px;
+}
+
+.renewal-filter-row select,
+.renewal-search-box {
+  min-height: 46px;
+  border: 1px solid rgba(25, 28, 29, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1b1f22;
+}
+
+.renewal-filter-row select {
+  font-size: var(--font-size-sm);
+  padding: 0 14px;
+}
+
+.renewal-search-box {
+  display: flex;
+  align-items: center;
+}
+
+.renewal-search-box input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  outline: none;
+  padding: 0 12px 0 0;
+}
+
+.renewal-clear-btn {
+  min-height: 46px;
+  border: 1px solid rgba(25, 28, 29, 0.14) !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #1b1f22 !important;
+  box-shadow: none !important;
+  padding: 0 18px;
+  font-weight: 800;
+}
+
+.renewal-action-cell {
+  overflow: visible !important;
+  position: relative;
+  text-align: right;
+}
+
+.renewal-row-actions {
+  display: inline-flex;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.renewal-action-trigger {
+  width: 36px;
+  height: 32px;
+  border: 1px solid rgba(25, 28, 29, 0.12) !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  line-height: 1;
+  padding: 0;
+}
+
+.renewal-action-trigger:hover,
+.renewal-row-actions:focus-within .renewal-action-trigger {
+  border-color: rgba(25, 28, 29, 0.28) !important;
+  background: #f8fafc !important;
+}
+
+.renewal-action-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 132px;
+  display: none;
+  border: 1px solid rgba(25, 28, 29, 0.12);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+  padding: 6px;
+  text-align: left;
+}
+
+.renewal-row-actions:hover .renewal-action-menu,
+.renewal-row-actions:focus-within .renewal-action-menu {
+  display: grid;
+  gap: 4px;
+}
+
+.renewal-action-menu button {
+  width: 100%;
+  min-height: 34px;
+  justify-content: flex-start;
+  gap: 8px;
+  border: 0 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  padding: 0 10px;
+}
+
+.renewal-action-menu button:hover:not(:disabled),
+.renewal-action-menu button:focus-visible:not(:disabled) {
+  background: #f3f6f8 !important;
+}
+
+.renewal-action-menu button.danger {
+  color: #dc2626 !important;
+}
+
+.renewal-action-menu button:disabled {
+  color: #6b7280 !important;
+  cursor: default;
+  opacity: 0.75;
+}
+
+@media (max-width: 1100px) {
+  .renewal-policy-row {
+    grid-template-columns: 1fr;
+  }
+
+  .renewal-type-tabs {
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  }
+
+  .renewal-filter-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .renewal-search-box {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .renewal-filter-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 
 .search-box input {
   border: 0;
@@ -1402,16 +1618,17 @@ table {
   width: 100%;
   min-width: 960px;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 th,
 td {
   border-bottom: 1px solid #e9ecef;
-  padding: 12px 14px;
+  padding: 12px 16px;
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
   font-size: var(--font-size-md);
-  line-height: 1.35;
+  line-height: 1.45;
 }
 
 tbody tr {
@@ -1427,7 +1644,7 @@ th {
 
 .records-table {
   width: 100%;
-  min-width: 1220px;
+  min-width: 1320px;
   table-layout: fixed;
 }
 
@@ -1440,7 +1657,7 @@ th {
 }
 
 .records-table .col-insured {
-  width: 210px;
+  width: 220px;
 }
 
 .records-table .col-contact,
@@ -1451,6 +1668,14 @@ th {
 .records-table .col-company,
 .records-table .col-uploader,
 .records-table .col-source {
+  width: 160px;
+}
+
+.records-table .col-whatsapp {
+  width: 150px;
+}
+
+.records-table .col-status {
   width: 150px;
 }
 
@@ -1482,7 +1707,7 @@ th {
 }
 
 .records-table .col-action {
-  width: 88px;
+  width: 92px;
 }
 
 .records-table .col-default {
@@ -1493,19 +1718,98 @@ th {
   position: sticky;
   top: 0;
   z-index: 3;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .records-table th,
 .records-table td {
   max-width: none;
-  height: 52px;
-  padding: 13px 14px;
-  overflow-wrap: anywhere;
+  min-height: 56px;
+  padding: 14px 16px;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .records-table td {
   color: var(--on-surface);
+}
+
+.records-table th {
+  color: #111827;
+  font-size: var(--font-size-sm);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+
+.records-table td,
+.records-table td span,
+.records-table td small,
+.records-table td strong,
+.records-table td button {
+  overflow-wrap: anywhere;
+}
+
+.records-table td:not(.col-money):not(.renewal-action-cell) {
+  white-space: normal;
+}
+
+.records-table .record-primary {
+  display: block;
+  line-height: 1.35;
+}
+
+.records-table .record-code {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.renewal-policy-table.records-table {
+  min-width: 100%;
+  table-layout: fixed;
+}
+
+.renewal-policy-table.records-table th,
+.renewal-policy-table.records-table td {
+  padding: 13px 12px;
+}
+
+.renewal-policy-table .col-insured {
+  width: 20%;
+}
+
+.renewal-policy-table .col-company,
+.renewal-policy-table .col-description,
+.renewal-policy-table .col-location {
+  width: 17%;
+}
+
+.renewal-policy-table .col-type,
+.renewal-policy-table .col-contact,
+.renewal-policy-table .col-vehicle,
+.renewal-policy-table .col-money {
+  width: 12%;
+}
+
+.renewal-policy-table .col-date,
+.renewal-policy-table .col-duration,
+.renewal-policy-table .col-status {
+  width: 10%;
+}
+
+.renewal-policy-table .col-action {
+  width: 68px;
+}
+
+.renewal-policy-table td {
+  font-size: var(--font-size-sm);
+}
+
+.renewal-policy-table .col-action,
+.renewal-policy-table .renewal-action-cell {
+  text-align: right;
 }
 
 .records-table th.sticky-col,

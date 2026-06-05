@@ -73,7 +73,8 @@ export async function GET(request) {
       }
 
       // Fetch paginated profiles and total counts in parallel
-      const [profiles, totalCount, counts, allProfilesForFilters] = await Promise.all([
+      const lobOptionsQuery = buildCustomerProfileLobOptionsQuery(ownProfileFilter);
+      const [profiles, totalCount, counts, assignedToOptions, lobRows] = await Promise.all([
         prisma.customerProfile.findMany({
           where,
           orderBy: { updatedAt: "desc" },
@@ -98,13 +99,16 @@ export async function GET(request) {
         prisma.customerProfile.findMany({
           where: {
             ...ownProfileFilter,
-            deletedAt: null
+            deletedAt: null,
+            assignedTo: { not: null }
           },
+          distinct: ["assignedTo"],
+          orderBy: { assignedTo: "asc" },
           select: {
-            assignedTo: true,
-            selectedLOBs: true
+            assignedTo: true
           }
-        })
+        }),
+        prisma.$queryRawUnsafe(lobOptionsQuery.sql, ...lobOptionsQuery.params)
       ]);
 
       const serialized = profiles.map(serializeCustomerProfile);
@@ -137,14 +141,8 @@ export async function GET(request) {
       };
 
       const filterOptions = {
-        assignedTo: unique(allProfilesForFilters.map((profile) => profile.assignedTo)),
-        lobs: unique(allProfilesForFilters.flatMap((profile) => {
-          try {
-            return Array.isArray(profile.selectedLOBs) ? profile.selectedLOBs : [];
-          } catch {
-            return [];
-          }
-        }))
+        assignedTo: unique(assignedToOptions.map((profile) => profile.assignedTo)),
+        lobs: unique(lobRows.map((row) => row.lob))
       };
 
       return NextResponse.json({
@@ -244,6 +242,31 @@ export async function GET(request) {
 
 function unique(values) {
   return Array.from(new Set(values.filter(Boolean))).sort((a, b) => a.localeCompare(b));
+}
+
+function buildCustomerProfileLobOptionsQuery(ownerFilter = {}) {
+  const params = [];
+  const conditions = ["deleted_at IS NULL"];
+
+  if (ownerFilter.organizationId) {
+    params.push(ownerFilter.organizationId);
+    conditions.push(`organization_id = $${params.length}::uuid`);
+  }
+
+  if (ownerFilter.createdById) {
+    params.push(ownerFilter.createdById);
+    conditions.push(`created_by_id = $${params.length}::uuid`);
+  }
+
+  return {
+    sql: `
+      SELECT DISTINCT lob
+      FROM customer_profiles, jsonb_array_elements_text(selected_lobs) AS lob
+      WHERE ${conditions.join(" AND ")}
+      ORDER BY lob ASC
+    `,
+    params
+  };
 }
 
 export async function POST(request) {

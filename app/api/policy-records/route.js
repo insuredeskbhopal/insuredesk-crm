@@ -8,11 +8,13 @@ import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { UPLOAD_STATUS } from "@/lib/uploads/status";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
+import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
 
 export const runtime = "nodejs";
 
 const require = createRequire(import.meta.url);
 const { saveCorrection } = require("../../../lib/policies/intelligence/trainingMemory.js");
+const { normalizeInsuranceCompanyName } = insuranceCompanyMaster;
 
 export async function GET(request) {
   try {
@@ -207,17 +209,25 @@ export async function POST(request) {
       return Response.json({ error: "Uploaded file was not found or access denied." }, { status: 404 });
     }
 
-    const extractedData = payload.extractedData || {};
+    const extractedData = standardizePolicyCompany(payload.extractedData || {});
     if (!Object.keys(extractedData).length) {
       return Response.json({ error: "No reviewed policy data was provided." }, { status: 400 });
     }
-    const reviewedData = payload.reviewedData || extractedData;
+    const reviewedData = standardizePolicyCompany(payload.reviewedData || extractedData);
+    const detectedCompany = normalizeInsuranceCompanyName(
+      payload.detectedCompany || uploadedFile?.detectedCompanyName || extractedData.insuranceCompany || extractedData.companyName,
+      uploadedFile?.rawText || payload.rawText || ""
+    );
+    const selectedCompany = normalizeInsuranceCompanyName(
+      payload.selectedCompany || reviewedData.insuranceCompany || detectedCompany,
+      uploadedFile?.rawText || payload.rawText || ""
+    );
     const legacyPayload = sanitizeRecordPayload(toLegacyPayload({
       ...reviewedData,
       sourceFile: payload.sourceFile || uploadedFile?.sourceFile,
-      detectedCompany: payload.detectedCompany,
+      detectedCompany,
       detectedPolicyType: payload.detectedPolicyType,
-      selectedCompany: payload.selectedCompany,
+      selectedCompany,
       selectedPolicyType: payload.selectedPolicyType
     }));
     const validation = getReviewValidation({
@@ -253,11 +263,11 @@ export async function POST(request) {
         sourceFile: uploadedFile?.sourceFile || payload.sourceFile || legacyPayload.sourceFile,
         rawText: uploadedFile?.rawText || payload.rawText || "",
         detectedBankSource: payload.detectedBankSource || uploadedFile?.detectedBankSourceName || "",
-        detectedCompany: payload.detectedCompany || uploadedFile?.detectedCompanyName || "",
+        detectedCompany,
         detectedServiceCategory: payload.detectedServiceCategory || uploadedFile?.detectedServiceCategoryName || "",
         detectedPolicyType: payload.detectedPolicyType || uploadedFile?.detectedPolicyTypeName || "",
         selectedBankSource: payload.selectedBankSource || "",
-        selectedCompany: payload.selectedCompany || "",
+        selectedCompany,
         selectedServiceCategory: payload.selectedServiceCategory || "",
         selectedPolicyType: payload.selectedPolicyType || "",
         confidenceScore: Number(payload.confidenceScore ?? uploadedFile?.confidenceScore ?? 0),
@@ -369,6 +379,19 @@ function normalizeCompareValue(value) {
   return String(value ?? "").replace(/\s+/g, " ").trim();
 }
 
+function standardizePolicyCompany(data = {}) {
+  if (!data || typeof data !== "object") return {};
+  const standardCompany = normalizeInsuranceCompanyName(
+    data.insuranceCompany || data.companyName || data.insurerName || data.selectedCompany || data.detectedCompany,
+    data.sourceText || ""
+  );
+  if (!standardCompany) return data;
+  return {
+    ...data,
+    insuranceCompany: standardCompany,
+    companyName: standardCompany
+  };
+}
 
 function toLegacyPayload(data) {
   return {
@@ -397,7 +420,7 @@ function toLegacyPayload(data) {
     riskLocation: data.riskLocation || data.propertyAddress,
     district: data.district,
     tehsil: data.tehsil,
-    insuranceCompany: data.selectedCompany || data.detectedCompany || data.insurerName,
+    insuranceCompany: data.insuranceCompany || data.selectedCompany || data.detectedCompany || data.insurerName || data.companyName,
     description: data.description || data.occupancy,
     pptMpwlc: data.pptMpwlc,
     occupancy: data.occupancy,

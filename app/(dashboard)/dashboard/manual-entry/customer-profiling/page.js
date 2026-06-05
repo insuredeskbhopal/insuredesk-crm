@@ -221,9 +221,20 @@ export default function CustomerProfilingPage() {
   }, [searchResults]);
 
   useEffect(() => {
-    loadProfiles();
-    loadCurrentUser();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      loadProfiles(controller.signal);
+    }, filters.q ? 250 : 0);
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [filters.q, filters.status, filters.assignedTo, filters.lob, filters.followUpDate, page, limit]);
+
+  useEffect(() => {
+    loadCurrentUser();
+  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -360,21 +371,27 @@ export default function CustomerProfilingPage() {
     setSearchResults(EMPTY_SEARCH_RESULTS);
   }
 
-  async function loadProfiles() {
+  async function loadProfiles(signal) {
     const params = new window.URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.set(key, value);
     });
     params.set("page", page);
     params.set("limit", limit);
-    const response = await fetch(`/api/customer-profiles?${params.toString()}`);
-    if (!response.ok) return;
-    const payload = await response.json();
-    setProfiles(payload.profiles || []);
-    setCounters(payload.counters || EMPTY_COUNTERS);
-    setFilterOptions(payload.filterOptions || { assignedTo: [], lobs: [] });
-    setTotalCount(payload.total || 0);
-    setTotalPages(payload.totalPages || 1);
+    try {
+      const response = await fetch(`/api/customer-profiles?${params.toString()}`, { signal });
+      if (!response.ok) return;
+      const payload = await response.json();
+      setProfiles(payload.profiles || []);
+      setCounters(payload.counters || EMPTY_COUNTERS);
+      setFilterOptions(payload.filterOptions || { assignedTo: [], lobs: [] });
+      setTotalCount(payload.total || 0);
+      setTotalPages(payload.totalPages || 1);
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        setAlert({ type: "error", message: "Customer profiles could not be loaded." });
+      }
+    }
   }
 
   async function loadCurrentUser() {

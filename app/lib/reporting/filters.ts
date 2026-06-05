@@ -1,3 +1,7 @@
+import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
+
+const { normalizeInsuranceCompanyName } = insuranceCompanyMaster;
+
 export function filterRecordsForReport(records, filter) {
   if (!filter) return [];
 
@@ -62,30 +66,7 @@ export const FAMILY_LABELS = {
 export function normalizeInsuranceCompanyReportName(value) {
   const raw = String(value || "").trim();
   if (!raw) return "Unknown insurer";
-
-  const text = raw
-    .toUpperCase()
-    .replace(/&/g, " AND ")
-    .replace(/[^A-Z0-9]+/g, " ")
-    .replace(/\b(?:THE|GENERAL|INSURANCE|ASSURANCE|COMPANY|LIMITED|LTD|CO|PVT|PRIVATE)\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  if (/\bNEW\s+INDIA\b/.test(text)) return "New India Assurance";
-  if (/\bIFFCO\s+TOKIO\b/.test(text)) return "IFFCO Tokio General Insurance";
-  if (/\bTATA\s*AIG\b/.test(text)) return "TATA AIG";
-  if (/\bHDFC\s+ERGO\b/.test(text)) return "HDFC ERGO";
-  if (/\bICICI\s+LOMBARD\b/.test(text)) return "ICICI Lombard";
-  if (/\bBAJAJ\s+ALLIANZ\b/.test(text)) return "Bajaj Allianz";
-  if (/\bROYAL\s+SUNDARAM\b/.test(text)) return "Royal Sundaram";
-  if (/\bFUTURE\s+GENERALI\b|\bGENERALI\b/.test(text)) return "Generali";
-  if (/\bGO\s+DIGIT\b|\bDIGIT\b/.test(text)) return "Go Digit";
-  if (/\bSBI\b/.test(text)) return "SBI General";
-  if (/\bUNITED\s+INDIA\b/.test(text)) return "United India";
-  if (/\bORIENTAL\b/.test(text)) return "Oriental Insurance";
-  if (/\bNATIONAL\b/.test(text)) return "National Insurance";
-
-  return raw.replace(/\s+/g, " ");
+  return normalizeInsuranceCompanyName(raw) || raw.replace(/\s+/g, " ");
 }
 
 export function getRecordFamily(record) {

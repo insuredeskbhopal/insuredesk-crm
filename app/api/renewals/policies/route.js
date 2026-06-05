@@ -35,7 +35,7 @@ export async function GET(request) {
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     const isSuperAdmin = user.role === "SUPER_ADMIN";
-    const orgId = user.organizationId || "";
+    const orgId = user.organizationId || null;
 
     const queryParams = [
       isSuperAdmin,
@@ -62,6 +62,19 @@ export async function GET(request) {
           COALESCE(reviewed_data->>'policyType', reviewed_data->>'Policy Type', data->>'policyType', data->>'Policy Type', '') AS policy_type,
           COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry,
           LOWER(
+            COALESCE(selected_policy_type, '') || ' ' ||
+            COALESCE(reviewed_data->>'policyType', reviewed_data->>'Policy Type', data->>'policyType', data->>'Policy Type', '') || ' ' ||
+            COALESCE(reviewed_data->>'documentCategory', data->>'documentCategory', '') || ' ' ||
+            COALESCE(reviewed_data->>'policyCoverType', data->>'policyCoverType', '') || ' ' ||
+            COALESCE(reviewed_data->>'insuranceCompany', reviewed_data->>'Insurance Company', data->>'insuranceCompany', data->>'Insurance Company', '') || ' ' ||
+            COALESCE(reviewed_data->>'sourceFile', data->>'sourceFile', '') || ' ' ||
+            COALESCE(reviewed_data->>'description', data->>'description', '') || ' ' ||
+            COALESCE(reviewed_data->>'vehicleNumber', data->>'vehicleNumber', '') || ' ' ||
+            COALESCE(reviewed_data->>'registrationNumber', data->>'registrationNumber', '') || ' ' ||
+            COALESCE(reviewed_data->>'engineNumber', data->>'engineNumber', '') || ' ' ||
+            COALESCE(reviewed_data->>'chassisNumber', data->>'chassisNumber', '')
+          ) AS policy_haystack,
+          LOWER(
             COALESCE(reviewed_data->>'insuredName', data->>'insuredName', '') || ' ' ||
             COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') || ' ' ||
             COALESCE(reviewed_data->>'contactNumber', data->>'contactNumber', '') || ' ' ||
@@ -84,6 +97,17 @@ export async function GET(request) {
           selected_company,
           selected_policy_type,
           search_text,
+          (CASE
+            WHEN policy_haystack ~ '\\m(motor|vehicle|private\\s+car|two\\s+wheeler|commercial\\s+vehicle|goods\\s+carrying|auto\\s+secure|registration|chassis|engine)\\M'
+              OR policy_haystack ~ '\\m[a-z]{2}[-\\s]?\\d{1,2}[-\\s]?[a-z]{1,3}[-\\s]?\\d{4}\\M' THEN 'Motor Policy'
+            WHEN policy_haystack ~ '\\m(fire|sfsp|standard\\s+fire|msme\\s+suraksha|burglary|warehouse|stock|contents|property|industrial\\s+all\\s+risk)\\M' THEN 'Fire Policy'
+            WHEN policy_haystack ~ '\\m(health|mediclaim|medical|family\\s+floater|critical\\s+illness|hospital|personal\\s+accident|pa policy)\\M' THEN 'Health Policy'
+            WHEN policy_haystack ~ '\\m(life|term\\s+life|endowment|ulip|whole\\s+life|annuity|pension)\\M' THEN 'Life Policy'
+            WHEN policy_haystack ~ '\\m(travel|journey|overseas|student\\s+travel)\\M' THEN 'Travel Policy'
+            WHEN policy_haystack ~ '\\m(marine|transit|cargo|inland\\s+transit)\\M' THEN 'Marine Policy'
+            WHEN policy_haystack ~ '\\m(commercial|business|shop|office|sme|package)\\M' THEN 'Commercial Policy'
+            ELSE 'Other Policy'
+           END) AS policy_family,
           (CASE 
             WHEN raw_expiry ~ '^\\d{4}-\\d{2}-\\d{2}' THEN CAST(SUBSTRING(raw_expiry FROM 1 FOR 10) AS DATE)
             WHEN raw_expiry ~ '^\\d{1,2}[/-]\\d{1,2}[/-]\\d{4}' THEN TO_DATE(REPLACE(raw_expiry, '/', '-'), 'DD-MM-YYYY')
@@ -119,6 +143,8 @@ export async function GET(request) {
             $7 = 'All' 
             OR LOWER(policy_type) = LOWER($7) 
             OR LOWER(selected_policy_type) = LOWER($7)
+            OR LOWER(policy_family) = LOWER($7)
+            OR LOWER(policy_family) = LOWER($7 || ' Policy')
           )
           -- Text Search
           AND (

@@ -19,7 +19,7 @@ export default async function PolicyRecordsPage(props) {
   const session = await getCurrentSessionFromCookies();
   const tenantFilter = session ? getTenantFilter(session, "read") : { id: "00000000-0000-0000-0000-000000000000" };
   const isSuperAdmin = session?.role === "SUPER_ADMIN";
-  const orgId = session?.organizationId || "";
+  const orgId = session?.organizationId || null;
 
   const [totalAll, totalDuplicates, motorCount, healthCount, fireCount, lifeCount, homeCount, cyberCount, dataPayload] = await Promise.all([
     prisma.policyRecord.count({ where: { ...tenantFilter, deletedAt: null, isActivePolicy: true } }),

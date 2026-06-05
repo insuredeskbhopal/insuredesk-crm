@@ -35,7 +35,7 @@ export async function GET(request) {
     const tenantFilter = getTenantFilter(session, "read");
     
     const isSuperAdmin = session.role === "SUPER_ADMIN";
-    const orgId = session.organizationId || "";
+    const orgId = session.organizationId || null;
 
     const today = startOfDay(new Date());
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -135,7 +135,6 @@ export async function GET(request) {
         FROM pdf_records
         WHERE deleted_at IS NULL
           AND ($1::boolean OR organization_id = $2::uuid)
-          AND (source_file IS NULL OR source_file NOT IN ('Renewal Page data.xlsx', 'Manual Renewal'))
       ),
       dated AS (
         SELECT 
@@ -169,12 +168,12 @@ export async function GET(request) {
         COUNT(CASE WHEN renewal_status = 'LOST' THEN 1 END)::integer as lost_count,
         SUM(CASE WHEN renewal_status = 'LOST' THEN premium ELSE 0 END)::numeric as lost_premium,
         -- Expired
-        COUNT(CASE WHEN is_active_policy = true AND expiry_date IS NOT NULL AND expiry_date < $3::date THEN 1 END)::integer as expired_count,
-        SUM(CASE WHEN is_active_policy = true AND expiry_date IS NOT NULL AND expiry_date < $3::date THEN premium ELSE 0 END)::numeric as expired_premium,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date < $3::date THEN 1 END)::integer as expired_count,
+        SUM(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date < $3::date THEN premium ELSE 0 END)::numeric as expired_premium,
         -- Upcoming Dues
-        COUNT(CASE WHEN is_active_policy = true AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 10 THEN 1 END)::integer as due10,
-        COUNT(CASE WHEN is_active_policy = true AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 20 THEN 1 END)::integer as due20,
-        COUNT(CASE WHEN is_active_policy = true AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 30 THEN 1 END)::integer as due30
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 10 THEN 1 END)::integer as due10,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 20 THEN 1 END)::integer as due20,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 30 THEN 1 END)::integer as due30
       FROM dated
     `;
 

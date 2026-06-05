@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 
@@ -35,12 +36,21 @@ export async function POST(request) {
       return Response.json({ error: "Policy not found or access denied" }, { status: 404 });
     }
 
-    // Merge remarks into data and reviewedData JSON payloads if provided
     const existingReviewedData = policy.reviewedData || {};
     const existingData = policy.data || {};
     if (remarks) {
+      const renewalRemark = {
+        id: randomUUID(),
+        text: String(remarks).trim(),
+        createdAt: new Date().toISOString(),
+        createdBy: user.name || user.email || "User",
+        createdById: user.userId || user.id || null,
+        type: "LOST"
+      };
       existingReviewedData.remark = remarks;
       existingData.remark = remarks;
+      existingReviewedData.renewalRemarks = [renewalRemark, ...(Array.isArray(existingReviewedData.renewalRemarks) ? existingReviewedData.renewalRemarks : [])];
+      existingData.renewalRemarks = [renewalRemark, ...(Array.isArray(existingData.renewalRemarks) ? existingData.renewalRemarks : [])];
     }
 
     const updatedPolicy = await prisma.policyRecord.update({

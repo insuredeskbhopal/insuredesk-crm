@@ -1,9 +1,9 @@
 const { PrismaClient } = require("@prisma/client");
+const { INSURANCE_COMPANY_MASTER } = require("../lib/master/insurance-companies.cjs");
 
 const prisma = new PrismaClient();
 
 const bankSources = ["HDFC Bank", "SBI", "ICICI Bank", "Direct Client", "Broker Channel"];
-const companies = ["HDFC ERGO", "ICICI Lombard", "Tata AIG", "Bajaj Allianz", "New India Assurance"];
 const categories = [
   ["Vehicle Insurance", ["vehicle", "motor", "chassis", "engine", "idv"]],
   ["Health Insurance", ["health", "tpa", "hospitalization", "mediclaim"]],
@@ -30,8 +30,12 @@ async function main() {
     await prisma.bankSource.upsert({ where: { name }, update: { active: true }, create: { name, aliases: [] } });
   }
 
-  for (const name of companies) {
-    await prisma.insuranceCompany.upsert({ where: { name }, update: { active: true }, create: { name, aliases: [] } });
+  for (const company of INSURANCE_COMPANY_MASTER) {
+    await prisma.insuranceCompany.upsert({
+      where: { name: company.name },
+      update: { aliases: company.aliases, active: company.active },
+      create: { name: company.name, aliases: company.aliases, active: company.active }
+    });
   }
 
   for (const [name, keywords] of categories) {
