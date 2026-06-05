@@ -64,6 +64,7 @@ export async function PUT(request, { params }) {
     }
 
     const data = sanitizeCustomerProfilePayload(await request.json());
+    const actorLabel = session.name || session.email || "";
 
     const actorId = session.userId || session.id;
     const profile = await prisma.customerProfile.update({
@@ -71,6 +72,7 @@ export async function PUT(request, { params }) {
       data: {
         ...data,
         name: data.name || "Unnamed Customer",
+        assignedTo: data.assignedTo || existing.assignedTo || actorLabel,
         updatedById: actorId
       },
       include: {
@@ -101,6 +103,10 @@ export async function PUT(request, { params }) {
 
 function getCustomerProfileOwnerFilter(user) {
   const actorId = user.userId || user.id;
+  if (user.role === "SUPER_ADMIN") {
+    return getTenantFilter(user, "read");
+  }
+
   return {
     ...getTenantFilter(user, "read"),
     createdById: actorId

@@ -367,7 +367,10 @@ export default function CustomerProfilingPage() {
       policyInterest: "",
       status: "Follow-up Required"
     });
-    setForm(EMPTY_FORM);
+    setForm({
+      ...EMPTY_FORM,
+      assignedTo: currentUser?.name || currentUser?.email || ""
+    });
     setSearchResults(EMPTY_SEARCH_RESULTS);
   }
 
@@ -399,7 +402,13 @@ export default function CustomerProfilingPage() {
     const response = await fetch("/api/auth/me");
     if (!response.ok) return;
     const payload = await response.json().catch(() => ({}));
-    if (payload.success) setCurrentUser(payload.user);
+    if (payload.success) {
+      setCurrentUser(payload.user);
+      const creatorLabel = payload.user?.name || payload.user?.email || "";
+      if (creatorLabel) {
+        setForm((current) => (current.assignedTo || selectedExistingId) ? current : { ...current, assignedTo: creatorLabel });
+      }
+    }
   }
 
   function submitProfile() {

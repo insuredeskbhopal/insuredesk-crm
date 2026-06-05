@@ -41,7 +41,13 @@ export async function GET(request) {
       }
 
       if (assignedTo) {
-        where.assignedTo = { contains: assignedTo, mode: "insensitive" };
+        andFilters.push({
+          OR: [
+            { assignedTo: { contains: assignedTo, mode: "insensitive" } },
+            { createdBy: { name: { contains: assignedTo, mode: "insensitive" } } },
+            { createdBy: { email: { contains: assignedTo, mode: "insensitive" } } }
+          ]
+        });
       }
 
       if (lob) {
@@ -99,13 +105,11 @@ export async function GET(request) {
         prisma.customerProfile.findMany({
           where: {
             ...ownProfileFilter,
-            deletedAt: null,
-            assignedTo: { not: null }
+            deletedAt: null
           },
-          distinct: ["assignedTo"],
-          orderBy: { assignedTo: "asc" },
           select: {
-            assignedTo: true
+            assignedTo: true,
+            createdBy: { select: { name: true, email: true } }
           }
         }),
         prisma.$queryRawUnsafe(lobOptionsQuery.sql, ...lobOptionsQuery.params)
@@ -141,7 +145,7 @@ export async function GET(request) {
       };
 
       const filterOptions = {
-        assignedTo: unique(assignedToOptions.map((profile) => profile.assignedTo)),
+        assignedTo: unique(assignedToOptions.map((profile) => profile.assignedTo || profile.createdBy?.name || profile.createdBy?.email)),
         lobs: unique(lobRows.map((row) => row.lob))
       };
 
@@ -281,11 +285,16 @@ export async function POST(request) {
     const data = sanitizeCustomerProfilePayload(body);
 
     const actorId = user.userId || user.id;
-    if (data.phone) {
+    const creatorLabel = user.name || user.email || "";
+    const profileData = {
+      ...data,
+      assignedTo: data.assignedTo || creatorLabel
+    };
+    if (profileData.phone) {
       const existing = await prisma.customerProfile.findFirst({
         where: {
           ...getCustomerProfileClaimFilter(user),
-          phone: { contains: data.phone }
+          phone: { contains: profileData.phone }
         },
         include: {
           createdBy: { select: { name: true, email: true } },
@@ -310,8 +319,8 @@ export async function POST(request) {
 
     const record = await prisma.customerProfile.create({
       data: {
-        ...data,
-        name: data.name || "Unnamed Customer",
+        ...profileData,
+        name: profileData.name || "Unnamed Customer",
         organizationId: user.organizationId,
         createdById: actorId,
         updatedById: actorId
@@ -352,6 +361,10 @@ async function requireSession(request) {
 
 function getCustomerProfileOwnerFilter(user) {
   const actorId = user.userId || user.id;
+  if (user.role === "SUPER_ADMIN") {
+    return getTenantFilter(user, "read");
+  }
+
   return {
     ...getTenantFilter(user, "read"),
     createdById: actorId

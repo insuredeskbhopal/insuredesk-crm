@@ -70,6 +70,10 @@ export async function POST(request, { params }) {
 
 function getCustomerProfileOwnerFilter(user) {
   const actorId = user.userId || user.id;
+  if (user.role === "SUPER_ADMIN") {
+    return getTenantFilter(user, "read");
+  }
+
   return {
     ...getTenantFilter(user, "read"),
     createdById: actorId
