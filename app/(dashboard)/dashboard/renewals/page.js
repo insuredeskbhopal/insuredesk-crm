@@ -1427,34 +1427,45 @@ export default function RenewalsPage() {
       )}
 
       {/* MODAL: Add Renewal Remark */}
-      {remarkModalOpen && remarkPolicy && (
-        <div className="tb-modal-backdrop" onClick={() => setRemarkModalOpen(false)}>
-          <div className="tb-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "720px", width: "92%" }}>
-            <div className="tb-modal-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
-              <h3 className="tb-status-title tb-modal-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <FileText size={20} /> Add Renewal Remark
-              </h3>
+      {typeof window !== "undefined" && remarkModalOpen && remarkPolicy && createPortal(
+        <div className="tb-modal-backdrop renewal-remark-backdrop" onClick={() => setRemarkModalOpen(false)}>
+          <div className="tb-modal-card renewal-remark-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="renewal-remark-header">
+              <div className="renewal-remark-title">
+                <span className="renewal-remark-icon"><FileText size={18} /></span>
+                <div>
+                  <p>Add follow-up note</p>
+                  <h3>Add Renewal Remark</h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="renewal-remark-close"
+                onClick={() => setRemarkModalOpen(false)}
+                aria-label="Close remark modal"
+              >
+                <X size={18} />
+              </button>
             </div>
-            <div className="tb-modal-body" style={{ marginTop: "12px" }}>
-              <p style={{ color: "var(--text-secondary)", fontSize: "13px", margin: "0 0 16px" }}>
-                Customer: <strong>{remarkPolicy.insuredName || "Unnamed"}</strong><br/>
-                Policy Number: <strong>{remarkPolicy.policyNumber || "-"}</strong>
-              </p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px", marginBottom: "12px" }}>
-                <label style={{ display: "block" }}>
-                  <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Follow-up Status</span>
+
+            <div className="renewal-remark-body">
+              <div className="renewal-remark-summary">
+                <div>
+                  <span>Customer</span>
+                  <strong>{remarkPolicy.insuredName || "Unnamed"}</strong>
+                </div>
+                <div>
+                  <span>Policy Number</span>
+                  <strong>{remarkPolicy.policyNumber || "-"}</strong>
+                </div>
+              </div>
+
+              <div className="renewal-remark-grid">
+                <label className="renewal-remark-field">
+                  <span>Follow-up Status</span>
                   <select
                     value={remarkForm.followUpStatus}
                     onChange={(event) => setRemarkForm((current) => ({ ...current, followUpStatus: event.target.value }))}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: "8px",
-                      border: "1px solid var(--border)",
-                      backgroundColor: "var(--surface)",
-                      color: "var(--text-primary)",
-                      fontSize: "14px"
-                    }}
                   >
                     {FOLLOW_UP_STATUS_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -1462,38 +1473,20 @@ export default function RenewalsPage() {
                   </select>
                 </label>
 
-                <label style={{ display: "block" }}>
-                  <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Next Follow-up Date</span>
+                <label className="renewal-remark-field">
+                  <span>Next Follow-up Date</span>
                   <input
                     type="date"
                     value={remarkForm.nextFollowUpDate}
                     onChange={(event) => setRemarkForm((current) => ({ ...current, nextFollowUpDate: event.target.value }))}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: "8px",
-                      border: "1px solid var(--border)",
-                      backgroundColor: "var(--surface)",
-                      color: "var(--text-primary)",
-                      fontSize: "14px"
-                    }}
                   />
                 </label>
 
-                <label style={{ display: "block" }}>
-                  <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Contact Mode</span>
+                <label className="renewal-remark-field">
+                  <span>Contact Mode</span>
                   <select
                     value={remarkForm.followUpMode}
                     onChange={(event) => setRemarkForm((current) => ({ ...current, followUpMode: event.target.value }))}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: "8px",
-                      border: "1px solid var(--border)",
-                      backgroundColor: "var(--surface)",
-                      color: "var(--text-primary)",
-                      fontSize: "14px"
-                    }}
                   >
                     {FOLLOW_UP_MODE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -1501,20 +1494,11 @@ export default function RenewalsPage() {
                   </select>
                 </label>
 
-                <label style={{ display: "block" }}>
-                  <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Priority</span>
+                <label className="renewal-remark-field">
+                  <span>Priority</span>
                   <select
                     value={remarkForm.priority}
                     onChange={(event) => setRemarkForm((current) => ({ ...current, priority: event.target.value }))}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: "8px",
-                      border: "1px solid var(--border)",
-                      backgroundColor: "var(--surface)",
-                      color: "var(--text-primary)",
-                      fontSize: "14px"
-                    }}
                   >
                     {FOLLOW_UP_PRIORITY_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -1523,51 +1507,32 @@ export default function RenewalsPage() {
                 </label>
               </div>
 
-              <label style={{ display: "block", marginBottom: "12px" }}>
-                <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Next Action</span>
+              <label className="renewal-remark-field renewal-remark-wide">
+                <span>Next Action</span>
                 <input
                   type="text"
                   value={remarkForm.nextAction}
                   onChange={(event) => setRemarkForm((current) => ({ ...current, nextAction: event.target.value }))}
                   placeholder="Example: Share quote, collect payment, call again, collect document"
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--border)",
-                    backgroundColor: "var(--surface)",
-                    color: "var(--text-primary)",
-                    fontSize: "14px"
-                  }}
                 />
               </label>
 
-              <label style={{ display: "block" }}>
-                <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Remark *</span>
+              <label className="renewal-remark-field renewal-remark-wide">
+                <span>Remark *</span>
                 <textarea
                   value={remarkForm.remark}
                   onChange={(event) => setRemarkForm((current) => ({ ...current, remark: event.target.value }))}
                   placeholder="Type client response, call summary, discussion notes, payment update..."
                   autoFocus
-                  style={{
-                    width: "100%",
-                    minHeight: "110px",
-                    padding: "10px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--border)",
-                    backgroundColor: "var(--surface)",
-                    color: "var(--text-primary)",
-                    fontSize: "14px"
-                  }}
                 />
               </label>
             </div>
-            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px", marginTop: "16px", borderTop: "1px solid var(--border)" }}>
+
+            <div className="renewal-remark-footer">
               <button
                 type="button"
                 onClick={() => setRemarkModalOpen(false)}
-                className="tb-modal-done-btn"
-                style={{ background: "var(--surface-variant)", color: "var(--text-secondary)" }}
+                className="renewal-remark-secondary"
               >
                 Cancel
               </button>
@@ -1575,8 +1540,7 @@ export default function RenewalsPage() {
                 type="button"
                 onClick={submitRemark}
                 disabled={savingRemark}
-                className="tb-modal-done-btn"
-                style={{ background: "var(--accent)", color: "white", display: "flex", alignItems: "center", gap: "8px" }}
+                className="renewal-remark-primary"
               >
                 {savingRemark && <Loader2 className="spin" size={16} />}
                 Save Remark
@@ -1584,7 +1548,7 @@ export default function RenewalsPage() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
 
       {/* MODAL: Renew Policy */}
       {renewModalOpen && renewPolicy && (
