@@ -42,7 +42,7 @@ export function buildClientProfiles(records) {
     };
 
     current.policies.push(record);
-    current.premiumTotal += parseMoney(record.premium);
+    current.premiumTotal += parseMoney(getPremiumValue(record));
     current.sumInsuredTotal += parseMoney(record.sumInsured);
     current.district ||= record.district || "";
     current.tehsil ||= record.tehsil || "";
@@ -51,6 +51,10 @@ export function buildClientProfiles(records) {
   });
 
   return Array.from(profiles.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function getPremiumValue(record = {}) {
+  return record.netPremium || record.totalPremium || record.premium || "";
 }
 
 export function formatMoney(value) {

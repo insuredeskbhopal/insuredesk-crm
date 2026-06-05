@@ -16,8 +16,7 @@ export function formatMoney(value) {
 export function calculateReportTotals(records) {
   return {
     totalRecords: records.length,
-    totalPremium: records.reduce((sum, record) => sum + parseMoney(record.premium), 0),
+    totalPremium: records.reduce((sum, record) => sum + parseMoney(record.netPremium || record.totalPremium || record.premium), 0),
     totalSumInsured: records.reduce((sum, record) => sum + parseMoney(record.sumInsured), 0)
   };
 }
-

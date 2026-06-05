@@ -56,7 +56,7 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
                   </td>
                   <td><strong>{record.vehicleNumber || record.registrationNumber || "-"}</strong></td>
                   <td>{record.policyType || record.sourceFile || "Policy document"}</td>
-                  <td>{formatMoney(record.premium)}</td>
+                  <td>{formatMoney(record.netPremium || record.totalPremium || record.premium)}</td>
                   <td>{formatMoney(record.sumInsured)}</td>
                   <td>{record.startDate || "-"} - {record.expiryDate || "-"}</td>
                   <td>

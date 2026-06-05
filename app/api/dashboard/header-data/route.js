@@ -130,7 +130,7 @@ export async function GET(request) {
           saved_at,
           is_active_policy,
           renewal_status,
-          CAST(COALESCE(NULLIF(regexp_replace(COALESCE(reviewed_data->>'totalPremium', reviewed_data->>'premium', data->>'totalPremium', data->>'premium'), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium,
+          CAST(COALESCE(NULLIF(regexp_replace(COALESCE(reviewed_data->>'netPremium', data->>'netPremium', reviewed_data->>'totalPremium', reviewed_data->>'premium', data->>'totalPremium', data->>'premium'), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium,
           COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry
         FROM pdf_records
         WHERE deleted_at IS NULL

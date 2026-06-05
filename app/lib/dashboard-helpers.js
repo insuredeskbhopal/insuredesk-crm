@@ -542,7 +542,7 @@ export function buildClientProfiles(records, parseMoney) {
     };
 
     current.policies.push(record);
-    current.premiumTotal += parseMoney(record.premium);
+    current.premiumTotal += parseMoney(getPremiumValue(record));
     current.sumInsuredTotal += parseMoney(record.sumInsured);
     current.district ||= record.district || "";
     current.tehsil ||= record.tehsil || "";
@@ -552,6 +552,10 @@ export function buildClientProfiles(records, parseMoney) {
   });
 
   return Array.from(profiles.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function getPremiumValue(record = {}) {
+  return record.netPremium || record.totalPremium || record.premium || "";
 }
 
 export function loadDashboardView(DASHBOARD_VIEW_KEY) {

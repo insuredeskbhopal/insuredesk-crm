@@ -238,7 +238,7 @@ function getSavedDate(record) {
 }
 
 function getPremium(record) {
-  return parseMoney(record.totalPremium || record.premium);
+  return parseMoney(record.netPremium || record.totalPremium || record.premium);
 }
 
 function formatDateTime(value) {

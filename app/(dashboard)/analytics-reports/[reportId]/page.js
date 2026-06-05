@@ -31,7 +31,7 @@ export default async function AnalyticsReportPage({ params }) {
 
   const reportFilter = report.report || report;
   const matchingRecords = getReportRecords(normalizedRecords, reportFilter);
-  const totalPremium = matchingRecords.reduce((sum, record) => sum + parseMoneyValue(record.premium), 0);
+  const totalPremium = matchingRecords.reduce((sum, record) => sum + parseMoneyValue(getPremiumValue(record)), 0);
   const totalSumInsured = matchingRecords.reduce((sum, record) => sum + parseMoneyValue(record.sumInsured), 0);
   const pdfCount = matchingRecords.filter((record) => record.hasPdf).length;
   const latestRecord = matchingRecords
@@ -122,6 +122,10 @@ export default async function AnalyticsReportPage({ params }) {
 
 function parseMoneyValue(value) {
   return Number(String(value || "").replace(/,/g, "")) || 0;
+}
+
+function getPremiumValue(record = {}) {
+  return record.netPremium || record.totalPremium || record.premium || "";
 }
 
 function buildContextItems(report, records, latestRecord) {
