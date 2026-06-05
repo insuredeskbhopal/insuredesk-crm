@@ -63,7 +63,7 @@ export default async function PremiumReportPage({ params }) {
     );
   }
 
-  const rawRecords = await loadScopedPolicyRecords({ includeInactive: true });
+  const rawRecords = await loadScopedPolicyRecords({ includeInactive: true, excludeRenewalSources: false });
   const records = rawRecords.map(normalizeRecord);
   const today = startOfDay(new Date());
   const filteredRecords = filterPremiumRecords(records, reportId, today);
@@ -196,7 +196,7 @@ function filterPremiumRecords(records, reportId, today) {
       if (reportId === "renewed") return record.renewalStatus === "RENEWED";
       if (reportId === "lost") return record.renewalStatus === "LOST";
       if (reportId === "expired") {
-        if (!record.isActivePolicy) return false;
+        if (!record.isActivePolicy || record.renewalStatus !== "ACTIVE") return false;
         const expiry = parsePolicyDate(record.expiryDate);
         return expiry && expiry < today;
       }
