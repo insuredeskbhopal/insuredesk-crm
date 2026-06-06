@@ -228,7 +228,8 @@ export default function RootPage() {
         rel="stylesheet"
       />
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
             vertical-align: middle;
@@ -428,9 +429,8 @@ export default function RootPage() {
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         {/* TopNavBar */}
         <nav
-          className={`bg-surface-container-lowest/0 backdrop-blur-0 sticky top-0 z-50 border-b border-transparent transition-all duration-300 h-20 flex items-center ${
-            scrolled ? "scrolled" : ""
-          }`}
+          className={`bg-surface-container-lowest/0 backdrop-blur-0 sticky top-0 z-50 border-b border-transparent transition-all duration-300 h-20 flex items-center ${scrolled ? "scrolled" : ""
+            }`}
           id="mainNav"
         >
           <div className="landing-nav-inner max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center h-full">
@@ -491,7 +491,7 @@ export default function RootPage() {
                   <span className="material-symbols-outlined text-primary">chat</span>
                 </button>
               </div>
-              
+
               {user ? (
                 <a
                   className="hidden md:block font-label-md text-label-md px-6 py-3 rounded-lg border border-secondary text-secondary hover:bg-secondary/5 transition-all entry-anim flex items-center justify-center text-[14px]"
@@ -526,16 +526,16 @@ export default function RootPage() {
             className="parallax-bg absolute inset-0 -z-20 bg-gradient-to-b from-surface-container/30 to-background"
             style={{ transform: `translateY(${scrollY * 0.4}px)` }}
           ></div>
-          
+
           {/* Centered Background Parallax Logo behind the text */}
-          <div 
+          <div
             className="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none transition-all duration-300 ease-out preserve-3d"
             style={{
               transform: `translate3d(var(--bmx, 0px), calc(var(--bmy, 0px) + ${scrollY * 0.1}px), 0) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))`,
             }}
           >
             {/* Floating Logo wrapper with slow breathing/floating animation */}
-            <div className="animate-float opacity-[0.10] w-full max-w-[500px] md:max-w-[700px] px-8">
+            <div className="animate-float opacity-[0.10] w-full max-w-[280px] md:max-w-[360px] px-4">
               <img
                 src="/brand/main-logo-wide.png"
                 alt=""
@@ -565,7 +565,7 @@ export default function RootPage() {
                 don't have to.
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
-                 <button
+                <button
                   className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all entry-anim border-0 min-h-0 text-[14px]"
                   style={{ animationDelay: "0.2s" }}
                   onClick={() => scrollToSection("solutions")}
