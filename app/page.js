@@ -521,28 +521,31 @@ export default function RootPage() {
           </div>
         </nav>
 
-        <header className="relative pt-20 pb-32 overflow-hidden" id="hero">
+        <header className="relative pt-20 pb-32 overflow-hidden flex items-center justify-center min-h-[600px]" id="hero">
           <div
             className="parallax-bg absolute inset-0 -z-10 bg-gradient-to-b from-surface-container/30 to-background"
             style={{ transform: `translateY(${scrollY * 0.4}px)` }}
           ></div>
           
-          {/* Background watermark logo */}
+          {/* Centered Background Parallax Logo behind the text */}
           <div 
-            className="absolute top-1/2 left-[60%] -translate-x-1/2 -translate-y-1/2 -z-10 w-[600px] md:w-[800px] opacity-[0.04] pointer-events-none transition-all duration-300 ease-out"
+            className="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none transition-all duration-300 ease-out preserve-3d"
             style={{
-              transform: `translate3d(calc(-50% + var(--bmx, 0px)), calc(-50% + var(--bmy, 0px) + ${scrollY * 0.1}px), 0)`,
+              transform: `translate3d(var(--bmx, 0px), calc(var(--bmy, 0px) + ${scrollY * 0.1}px), 0) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))`,
             }}
           >
-            <img
-              src="/brand/main-logo-wide.png"
-              alt=""
-              className="w-full h-auto animate-slow-spin"
-            />
+            {/* Floating Logo wrapper with slow breathing/floating animation */}
+            <div className="animate-float opacity-[0.06] w-full max-w-[500px] md:max-w-[700px] px-8">
+              <img
+                src="/brand/main-logo-wide.png"
+                alt=""
+                className="w-full h-auto select-none"
+              />
+            </div>
           </div>
 
-          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="entry-anim">
+          <div className="max-w-4xl mx-auto px-margin-mobile md:px-margin-desktop text-center flex flex-col items-center justify-center relative z-10">
+            <div className="entry-anim flex flex-col items-center">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[12px] mb-6">
                 <span
                   className="material-symbols-outlined text-[16px]"
@@ -556,12 +559,12 @@ export default function RootPage() {
                 Your Trusted Insurance &amp;{" "}
                 <span className="text-secondary">Claim Consulting</span> Partner
               </h1>
-              <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-xl text-[18px]">
+              <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl mx-auto text-[18px]">
                 Helping Individuals &amp; Businesses Choose the Right Insurance
                 with Expert Claim Assistance. We navigate the complexity so you
                 don't have to.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 justify-center">
                  <button
                   className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all entry-anim border-0 min-h-0 text-[14px]"
                   style={{ animationDelay: "0.2s" }}
@@ -577,7 +580,7 @@ export default function RootPage() {
                   Claim Assistance
                 </button>
               </div>
-              <div className="mt-12 flex items-center gap-8 grayscale opacity-70">
+              <div className="mt-12 flex flex-wrap items-center justify-center gap-8 grayscale opacity-70">
                 <div className="flex flex-col">
                   <span className="font-headline-md text-headline-md text-primary text-[24px] font-bold">
                     10+
@@ -603,30 +606,6 @@ export default function RootPage() {
                   <span className="font-label-md text-[12px] uppercase tracking-wider">
                     Trusted
                   </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Large Interactive 3D Parallax Logo (No Card) */}
-            <div className="relative flex items-center justify-center min-h-[380px] entry-anim" style={{ animationDelay: "0.1s" }}>
-              {/* Glowing Background Neon Orb */}
-              <div className="absolute w-[300px] h-[300px] md:w-[450px] md:h-[450px] bg-gradient-to-tr from-primary/10 via-secondary/15 to-transparent rounded-full blur-[90px]"></div>
-              
-              {/* Interactive 3D Parallax Container */}
-              <div 
-                className="relative z-10 w-full max-w-[420px] transition-all duration-300 ease-out preserve-3d"
-                style={{
-                  transform: `translate3d(var(--mx, 0px), var(--my, 0px), 0) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))`,
-                  perspective: '1000px'
-                }}
-              >
-                {/* Floating Logo wrapper */}
-                <div className="animate-float">
-                  <img
-                    src="/brand/main-logo-wide.png"
-                    alt="Bima Headquarter Logo"
-                    className="w-full h-auto drop-shadow-[0_20px_20px_rgba(3,22,56,0.12)] hover:drop-shadow-[0_30px_30px_rgba(28,108,57,0.22)] transition-all duration-300 select-none"
-                  />
                 </div>
               </div>
             </div>
