@@ -205,6 +205,7 @@ export default function CustomerProfilingPage() {
   const [alert, setAlert] = useState(null);
   const [isPending, startTransition] = useTransition();
   const [conversionModalData, setConversionModalData] = useState(null);
+  const [lobDetailsExpanded, setLobDetailsExpanded] = useState(true);
 
   const phone = form.phone.replace(/\D/g, "").slice(0, 10);
   const isValidProfilePhone = phone.length === 10;
@@ -987,7 +988,11 @@ export default function CustomerProfilingPage() {
                   </label>
                   <label>
                     <span>Policy Interest</span>
-                    <select value={followUpMeta.policyInterest} onChange={(event) => setFollowUpMeta((current) => ({ ...current, policyInterest: event.target.value }))}>
+                    <select value={followUpMeta.policyInterest} onChange={(event) => {
+                      const val = event.target.value;
+                      setFollowUpMeta((current) => ({ ...current, policyInterest: val }));
+                      setLobDetailsExpanded(true);
+                    }}>
                       <option value="">Policy interest</option>
                       {LOB_OPTIONS.map((lob) => <option key={lob} value={lob}>{lob}</option>)}
                     </select>
@@ -999,20 +1004,40 @@ export default function CustomerProfilingPage() {
                 </div>
                 {followUpMeta.policyInterest && LOB_FIELDS[followUpMeta.policyInterest] ? (
                   <fieldset className="lob-detail-card" style={{ margin: "14px 0", border: "1px dashed rgba(25, 28, 29, 0.2)", padding: "16px", borderRadius: "12px", background: "#fafafa" }}>
-                    <legend style={{ fontWeight: "700", textTransform: "uppercase", fontSize: "11px", padding: "0 8px", color: "var(--primary)", letterSpacing: "0.5px" }}>
-                      {followUpMeta.policyInterest} Details
+                    <legend 
+                      onClick={() => setLobDetailsExpanded(!lobDetailsExpanded)} 
+                      style={{ 
+                        fontWeight: "700", 
+                        textTransform: "uppercase", 
+                        fontSize: "11px", 
+                        padding: "0 8px", 
+                        color: "var(--primary)", 
+                        letterSpacing: "0.5px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        userSelect: "none"
+                      }}
+                    >
+                      <span>{followUpMeta.policyInterest} Details</span>
+                      <span style={{ fontSize: "10px", color: "#64748b", fontWeight: "normal" }}>
+                        {lobDetailsExpanded ? "▼ Collapse" : "▲ Expand"}
+                      </span>
                     </legend>
-                    <div className="customer-profile-grid two" style={{ gap: "12px" }}>
-                      {LOB_FIELDS[followUpMeta.policyInterest].map(([key, label, type]) => (
-                        <Field
-                          key={key}
-                          label={label}
-                          type={type || "text"}
-                          value={form.lobDetails?.[followUpMeta.policyInterest]?.[key] || ""}
-                          onChange={(value) => updateLobField(followUpMeta.policyInterest, key, value)}
-                        />
-                      ))}
-                    </div>
+                    {lobDetailsExpanded && (
+                      <div className="customer-profile-grid two" style={{ gap: "12px" }}>
+                        {LOB_FIELDS[followUpMeta.policyInterest].map(([key, label, type]) => (
+                          <Field
+                            key={key}
+                            label={label}
+                            type={type || "text"}
+                            value={form.lobDetails?.[followUpMeta.policyInterest]?.[key] || ""}
+                            onChange={(value) => updateLobField(followUpMeta.policyInterest, key, value)}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </fieldset>
                 ) : null}
                 <textarea value={followUpDraft} placeholder="Type follow-up remark..." onChange={(event) => setFollowUpDraft(event.target.value)} />
