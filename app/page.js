@@ -477,8 +477,8 @@ export default function RootPage() {
             className="parallax-bg absolute inset-0 -z-10 bg-gradient-to-b from-surface-container/30 to-background"
             style={{ transform: `translateY(${scrollY * 0.4}px)` }}
           ></div>
-          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="entry-anim">
+          <div className="max-w-4xl mx-auto px-margin-mobile md:px-margin-desktop text-center flex flex-col items-center">
+            <div className="entry-anim flex flex-col items-center">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[12px] mb-6">
                 <span
                   className="material-symbols-outlined text-[16px]"
@@ -492,13 +492,13 @@ export default function RootPage() {
                 Your Trusted Insurance &amp;{" "}
                 <span className="text-secondary">Claim Consulting</span> Partner
               </h1>
-              <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-xl text-[18px]">
+              <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl mx-auto text-[18px]">
                 Helping Individuals &amp; Businesses Choose the Right Insurance
                 with Expert Claim Assistance. We navigate the complexity so you
                 don't have to.
               </p>
-              <div className="flex flex-wrap gap-4">
-                <button
+              <div className="flex flex-wrap gap-4 justify-center">
+                 <button
                   className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all entry-anim border-0 min-h-0 text-[14px]"
                   style={{ animationDelay: "0.2s" }}
                   onClick={() => scrollToSection("solutions")}
@@ -513,7 +513,7 @@ export default function RootPage() {
                   Claim Assistance
                 </button>
               </div>
-              <div className="mt-12 flex items-center gap-8 grayscale opacity-70">
+              <div className="mt-12 flex flex-wrap items-center justify-center gap-8 grayscale opacity-70">
                 <div className="flex flex-col">
                   <span className="font-headline-md text-headline-md text-primary text-[24px] font-bold">
                     10+
@@ -540,50 +540,6 @@ export default function RootPage() {
                     Trusted
                   </span>
                 </div>
-              </div>
-            </div>
-            <div className="relative entry-anim" style={{ animationDelay: "0.1s" }}>
-              <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
-                <img
-                  alt="Modern insurance office environment"
-                  className="w-full h-full object-cover aspect-[4/3]"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMBVNmgNzHJiQpWghzz0ODWXDQxYzlDUtB-Vv3SSzmsof6hICAnbf71wxKb8ScKhzoLoLfk9UtOhzz5sGj_w0mLE-M2lE5dH3pjxyCWYxXvmTgu24XaHxZt2yTeAc6B4LL4A2hv0uXC597tjZwC0_okDid6ZjZzpR6QqJSlrQUg4ceoGlrLKLC-h1T3xbAV04MN6ltK80pKly7y0S56tU50INm1HO1zJ-W0qw5Owa3yV8L5eim1NqmNwYTxbB8LK91VhF8Y07d1X0"
-                />
-              </div>
-              {/* Floating Elements with Parallax */}
-              <div
-                className="parallax-item absolute -top-6 -right-6 glass-card p-6 rounded-2xl z-20 flex items-center gap-4"
-                style={{ transform: `translateY(${scrollY * 0.05}px)` }}
-              >
-                <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center">
-                  <span
-                    className="material-symbols-outlined text-on-secondary-container text-secondary"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    shield_with_heart
-                  </span>
-                </div>
-                <div>
-                  <p className="font-label-md text-primary font-bold text-[14px]">
-                    99% Claims
-                  </p>
-                  <p className="text-[12px] text-on-surface-variant">
-                    Settlement Success
-                  </p>
-                </div>
-              </div>
-              <div
-                className="parallax-item absolute -bottom-8 -left-8 glass-card p-6 rounded-2xl z-20 flex items-center gap-4"
-                style={{ transform: `translateY(${scrollY * -0.03}px)` }}
-              >
-                <div className="flex -space-x-3">
-                  <div className="w-10 h-10 rounded-full border-2 border-white bg-secondary/20 flex items-center justify-center text-[10px] text-secondary font-bold">BH</div>
-                  <div className="w-10 h-10 rounded-full border-2 border-white bg-primary/20 flex items-center justify-center text-[10px] text-primary font-bold">ID</div>
-                  <div className="w-10 h-10 rounded-full border-2 border-white bg-secondary-container flex items-center justify-center text-[10px] text-on-secondary-container font-bold">+5k</div>
-                </div>
-                <p className="font-label-md text-primary font-bold text-[14px]">
-                  5k+ Trusted Clients
-                </p>
               </div>
             </div>
           </div>
