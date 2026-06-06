@@ -521,9 +521,9 @@ export default function RootPage() {
           </div>
         </nav>
 
-        <header className="relative pt-20 pb-32 overflow-hidden flex items-center justify-center min-h-[600px]" id="hero">
+        <header className="relative pt-20 pb-32 overflow-hidden flex items-center justify-center min-h-[600px] isolate" id="hero">
           <div
-            className="parallax-bg absolute inset-0 -z-10 bg-gradient-to-b from-surface-container/30 to-background"
+            className="parallax-bg absolute inset-0 -z-20 bg-gradient-to-b from-surface-container/30 to-background"
             style={{ transform: `translateY(${scrollY * 0.4}px)` }}
           ></div>
           
@@ -535,7 +535,7 @@ export default function RootPage() {
             }}
           >
             {/* Floating Logo wrapper with slow breathing/floating animation */}
-            <div className="animate-float opacity-[0.06] w-full max-w-[500px] md:max-w-[700px] px-8">
+            <div className="animate-float opacity-[0.10] w-full max-w-[500px] md:max-w-[700px] px-8">
               <img
                 src="/brand/main-logo-wide.png"
                 alt=""
