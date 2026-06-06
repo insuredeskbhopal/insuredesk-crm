@@ -6,6 +6,8 @@ import {
   Download,
   Eye,
   FilePlus2,
+  MessageSquarePlus,
+  MoreVertical,
   Paperclip,
   Pencil,
   Plus,
@@ -27,7 +29,9 @@ const CLAIM_FIELDS = [
   { key: "claimNo", label: "Claim No.", placeholder: "Enter claim number", required: true },
   { key: "groupName", label: "Group Name", placeholder: "Enter group name" },
   { key: "claimDate", label: "Claim Date", type: "date" },
-  { key: "claimType", label: "Claim Type", type: "select", options: ["Motor", "Health", "Life", "Fire", "Marine", "Travel", "Other"] }
+  { key: "claimType", label: "Claim Type", type: "select", options: ["Motor", "Health", "Life", "Fire", "Marine", "Travel", "Other"] },
+  { key: "claimStatus", label: "Claim Status", type: "select", options: ["Open", "Follow Up", "Documents Pending", "Settled", "Rejected"] },
+  { key: "followUpDate", label: "Follow-up Date", type: "date" }
 ];
 
 const EMPTY_CLAIM = {
@@ -40,7 +44,10 @@ const EMPTY_CLAIM = {
   claimDescription: "",
   claimDate: "",
   claimType: "Motor",
+  claimStatus: "Open",
+  followUpDate: "",
   currentRemark: "",
+  remarks: [],
   documents: []
 };
 
@@ -53,8 +60,19 @@ const DETAIL_FIELDS = [
   ["Group Name", "groupName"],
   ["Claim Date", "claimDate"],
   ["Claim Type", "claimType"],
+  ["Claim Status", "claimStatus"],
+  ["Follow-up Date", "followUpDate"],
   ["Claim Description", "claimDescription"],
   ["Current Remark", "currentRemark"]
+];
+
+const FILTERS = [
+  { id: "all", label: "All Claims", accent: "orange" },
+  { id: "open", label: "Open Claims", accent: "amber" },
+  { id: "follow-up", label: "Follow Ups", accent: "blue" },
+  { id: "documents", label: "Documents Pending", accent: "red" },
+  { id: "settled", label: "Settled Claims", accent: "green" },
+  { id: "rejected", label: "Rejected Claims", accent: "slate" }
 ];
 
 export default function ClaimsManagementPage() {
@@ -64,6 +82,12 @@ export default function ClaimsManagementPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState("");
   const [selectedClaimId, setSelectedClaimId] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [openMenuId, setOpenMenuId] = useState("");
+  const [deleteCandidate, setDeleteCandidate] = useState(null);
+  const [remarkTarget, setRemarkTarget] = useState(null);
+  const [remarkDraft, setRemarkDraft] = useState("");
+  const [followUpDraft, setFollowUpDraft] = useState("");
   const [documentName, setDocumentName] = useState("");
   const [documentError, setDocumentError] = useState("");
 
@@ -82,8 +106,9 @@ export default function ClaimsManagementPage() {
 
   const filteredClaims = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (!normalized) return claims;
     return claims.filter((item) =>
+      matchesClaimFilter(item, activeFilter) &&
+      (!normalized ||
       [
         item.insuredName,
         item.mobileNo,
@@ -93,10 +118,13 @@ export default function ClaimsManagementPage() {
         item.groupName,
         item.claimDescription,
         item.claimType,
+        item.claimStatus,
         item.currentRemark
-      ].join(" ").toLowerCase().includes(normalized)
+      ].join(" ").toLowerCase().includes(normalized))
     );
-  }, [claims, query]);
+  }, [activeFilter, claims, query]);
+
+  const filterCounts = useMemo(() => getFilterCounts(claims), [claims]);
 
   const selectedClaim = claims.find((item) => item.id === selectedClaimId) || null;
 
@@ -106,15 +134,17 @@ export default function ClaimsManagementPage() {
     setSelectedClaimId("");
     setDocumentName("");
     setDocumentError("");
+    setOpenMenuId("");
     setIsFormOpen(true);
   }
 
   function openEditForm(item) {
-    setClaim({ ...EMPTY_CLAIM, ...item, documents: item.documents || [] });
+    setClaim({ ...EMPTY_CLAIM, ...item, documents: item.documents || [], remarks: item.remarks || [] });
     setEditingId(item.id);
     setSelectedClaimId("");
     setDocumentName("");
     setDocumentError("");
+    setOpenMenuId("");
     setIsFormOpen(true);
   }
 
@@ -138,6 +168,7 @@ export default function ClaimsManagementPage() {
       id: editingId || createClaimId(),
       createdAt: claim.createdAt || now,
       updatedAt: now,
+      remarks: claim.remarks || [],
       documents: claim.documents || []
     };
 
@@ -146,6 +177,39 @@ export default function ClaimsManagementPage() {
       return [record, ...current];
     });
     closeForm();
+  }
+
+  function openRemarkForm(item) {
+    setRemarkTarget(item);
+    setRemarkDraft("");
+    setFollowUpDraft(item.followUpDate || "");
+    setOpenMenuId("");
+  }
+
+  function saveRemark(event) {
+    event.preventDefault();
+    if (!remarkTarget || !remarkDraft.trim()) return;
+    const note = {
+      id: createClaimId(),
+      text: remarkDraft.trim(),
+      followUpDate: followUpDraft,
+      createdAt: new Date().toISOString()
+    };
+
+    setClaims((current) => current.map((item) => {
+      if (item.id !== remarkTarget.id) return item;
+      return {
+        ...item,
+        currentRemark: note.text,
+        followUpDate: followUpDraft,
+        claimStatus: followUpDraft ? "Follow Up" : item.claimStatus,
+        remarks: [note, ...(item.remarks || [])],
+        updatedAt: new Date().toISOString()
+      };
+    }));
+    setRemarkTarget(null);
+    setRemarkDraft("");
+    setFollowUpDraft("");
   }
 
   async function uploadClaimDocument(event) {
@@ -187,6 +251,8 @@ export default function ClaimsManagementPage() {
   function deleteClaim(id) {
     setClaims((current) => current.filter((item) => item.id !== id));
     if (selectedClaimId === id) setSelectedClaimId("");
+    setDeleteCandidate(null);
+    setOpenMenuId("");
   }
 
   return (
@@ -299,6 +365,20 @@ export default function ClaimsManagementPage() {
         </section>
       ) : null}
 
+      <section className="claims-filter-grid">
+        {FILTERS.map((filter) => (
+          <button
+            key={filter.id}
+            type="button"
+            className={`claims-filter-card accent-${filter.accent}${activeFilter === filter.id ? " active" : ""}`}
+            onClick={() => setActiveFilter(filter.id)}
+          >
+            <strong>{(filterCounts[filter.id] || 0).toLocaleString("en-IN")}</strong>
+            <span>{filter.label}</span>
+          </button>
+        ))}
+      </section>
+
       <section className="claims-register-panel">
         <div className="claims-register-head">
           <div>
@@ -327,6 +407,8 @@ export default function ClaimsManagementPage() {
                 <th>CLAIM NO.</th>
                 <th>CLAIM DATE</th>
                 <th>CLAIM TYPE</th>
+                <th>STATUS</th>
+                <th>FOLLOW UP</th>
                 <th>CURRENT REMARK</th>
                 <th>DOCUMENTS</th>
                 <th>ACTION</th>
@@ -342,25 +424,40 @@ export default function ClaimsManagementPage() {
                   <td>{item.claimNo || "-"}</td>
                   <td>{formatDate(item.claimDate)}</td>
                   <td>{item.claimType || "-"}</td>
+                  <td>{item.claimStatus || "Open"}</td>
+                  <td>{formatDate(item.followUpDate)}</td>
                   <td>{item.currentRemark || "-"}</td>
                   <td>{(item.documents || []).length.toLocaleString("en-IN")}</td>
                   <td>
-                    <div className="claims-row-actions">
-                      <button type="button" onClick={() => setSelectedClaimId(item.id)} aria-label="View claim">
-                        <Eye size={15} />
+                    <div className="claims-action-menu">
+                      <button type="button" onClick={() => setOpenMenuId(openMenuId === item.id ? "" : item.id)} aria-label="Open claim actions">
+                        <MoreVertical size={16} />
                       </button>
-                      <button type="button" onClick={() => openEditForm(item)} aria-label="Edit claim">
-                        <Pencil size={15} />
-                      </button>
-                      <button type="button" onClick={() => deleteClaim(item.id)} aria-label="Delete claim">
-                        <Trash2 size={15} />
-                      </button>
+                      {openMenuId === item.id ? (
+                        <div className="claims-action-popover">
+                          <button type="button" onClick={() => { setSelectedClaimId(item.id); setOpenMenuId(""); }}>
+                            <Eye size={15} /> View More
+                          </button>
+                          <button type="button" onClick={() => openEditForm(item)}>
+                            <Pencil size={15} /> Edit
+                          </button>
+                          <button type="button" onClick={() => { openEditForm(item); }}>
+                            <Paperclip size={15} /> Upload Document
+                          </button>
+                          <button type="button" onClick={() => openRemarkForm(item)}>
+                            <MessageSquarePlus size={15} /> Add Remark
+                          </button>
+                          <button type="button" className="danger" onClick={() => { setDeleteCandidate(item); setOpenMenuId(""); }}>
+                            <Trash2 size={15} /> Delete
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
               )) : (
                 <tr>
-                  <td className="claims-empty-row" colSpan={10}>No claim records added yet. Click Add Claim to create one.</td>
+                  <td className="claims-empty-row" colSpan={12}>No claim records added yet. Click Add Claim to create one.</td>
                 </tr>
               )}
             </tbody>
@@ -369,8 +466,9 @@ export default function ClaimsManagementPage() {
       </section>
 
       {selectedClaim ? (
-        <section className="claims-register-panel claims-detail-panel">
-          <div className="claims-register-head">
+        <div className="claims-modal-backdrop" role="dialog" aria-modal="true">
+          <section className="claims-register-panel claims-detail-panel">
+            <div className="claims-register-head">
             <div>
               <span><Eye size={18} /> Claim Details</span>
               <strong>{selectedClaim.claimNo || selectedClaim.insuredName || "Claim record"}</strong>
@@ -383,25 +481,82 @@ export default function ClaimsManagementPage() {
                 <X size={16} />
               </button>
             </div>
-          </div>
+            </div>
 
-          <div className="claims-detail-grid">
+            <div className="claims-detail-grid">
             {DETAIL_FIELDS.map(([label, key]) => (
               <div key={key}>
                 <span>{label}</span>
-                <strong>{key === "claimDate" ? formatDate(selectedClaim[key]) : selectedClaim[key] || "-"}</strong>
+                <strong>{key === "claimDate" || key === "followUpDate" ? formatDate(selectedClaim[key]) : selectedClaim[key] || "-"}</strong>
               </div>
             ))}
-          </div>
+            </div>
 
-          <div className="claims-document-uploader view-only">
+            <div className="claims-document-uploader view-only">
             <div>
               <span><Paperclip size={17} /> Uploaded Documents</span>
               <strong>{(selectedClaim.documents || []).length.toLocaleString("en-IN")} files available for download.</strong>
             </div>
             <DocumentList documents={selectedClaim.documents || []} />
-          </div>
-        </section>
+            </div>
+
+            <div className="claims-document-uploader view-only">
+              <div>
+                <span><MessageSquarePlus size={17} /> Remarks & Follow-up</span>
+                <strong>{(selectedClaim.remarks || []).length.toLocaleString("en-IN")} saved remarks.</strong>
+              </div>
+              <RemarkList remarks={selectedClaim.remarks || []} />
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {remarkTarget ? (
+        <div className="claims-modal-backdrop" role="dialog" aria-modal="true">
+          <form className="claims-register-panel claims-remark-card" onSubmit={saveRemark}>
+            <div className="claims-register-head">
+              <div>
+                <span><MessageSquarePlus size={18} /> Add Remark</span>
+                <strong>{remarkTarget.claimNo || remarkTarget.insuredName || "Claim follow-up"}</strong>
+              </div>
+              <button type="button" className="claims-icon-action" onClick={() => setRemarkTarget(null)} aria-label="Close remark">
+                <X size={18} />
+              </button>
+            </div>
+            <label className="claims-wide-field">
+              <span>Remark *</span>
+              <textarea value={remarkDraft} required rows={4} placeholder="Enter claim follow-up remark" onChange={(event) => setRemarkDraft(event.target.value)} />
+            </label>
+            <label className="claims-wide-field">
+              <span>Next Follow-up Date</span>
+              <input type="date" value={followUpDraft} onChange={(event) => setFollowUpDraft(event.target.value)} />
+            </label>
+            <div className="claims-form-actions">
+              <button type="button" className="secondary-action" onClick={() => setRemarkTarget(null)}>Cancel</button>
+              <button type="submit" className="primary-action">Save Remark</button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+
+      {deleteCandidate ? (
+        <div className="claims-modal-backdrop" role="dialog" aria-modal="true">
+          <section className="claims-register-panel claims-delete-card">
+            <div className="claims-register-head">
+              <div>
+                <span><Trash2 size={18} /> Delete Claim</span>
+                <strong>Are you sure you really want to delete this claim?</strong>
+              </div>
+            </div>
+            <p>
+              This will remove claim {deleteCandidate.claimNo || deleteCandidate.insuredName || "record"} from this browser.
+            </p>
+            <div className="claims-form-actions">
+              <button type="button" className="secondary-action" onClick={() => setDeleteCandidate(null)}>Cancel</button>
+              <button type="button" className="claims-danger-action" onClick={() => deleteClaim(deleteCandidate.id)}>Yes, Delete</button>
+            </div>
+          </section>
+        </div>
       ) : null}
     </div>
   );
@@ -434,6 +589,43 @@ function DocumentList({ documents, onRemove }) {
       ))}
     </div>
   );
+}
+
+function RemarkList({ remarks }) {
+  if (!remarks.length) {
+    return <p className="claims-document-empty">No remarks added yet.</p>;
+  }
+
+  return (
+    <div className="claims-remark-list">
+      {remarks.map((remark) => (
+        <div key={remark.id} className="claims-remark-item">
+          <strong>{remark.text}</strong>
+          <span>
+            {formatDate(remark.createdAt)}
+            {remark.followUpDate ? ` | Follow-up ${formatDate(remark.followUpDate)}` : ""}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function matchesClaimFilter(item, filter) {
+  const status = (item.claimStatus || "Open").toLowerCase();
+  if (filter === "open") return status === "open";
+  if (filter === "follow-up") return status === "follow up" || Boolean(item.followUpDate);
+  if (filter === "documents") return status === "documents pending";
+  if (filter === "settled") return status === "settled";
+  if (filter === "rejected") return status === "rejected";
+  return true;
+}
+
+function getFilterCounts(claims) {
+  return FILTERS.reduce((counts, filter) => ({
+    ...counts,
+    [filter.id]: claims.filter((claim) => matchesClaimFilter(claim, filter.id)).length
+  }), {});
 }
 
 function readFileAsDataUrl(file) {
