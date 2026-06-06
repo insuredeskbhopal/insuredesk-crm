@@ -36,7 +36,7 @@ export default function DashboardLayout({ children }) {
       params.delete("q");
     }
 
-    if (["/policy-records", "/customer-management", "/dashboard", "/bulk-upload"].includes(pathname)) {
+    if (["/policy-records", "/customer-management", "/dashboard", "/bulk-upload", "/operations"].includes(pathname)) {
       router.push(`${pathname}?${params.toString()}`);
     } else {
       router.push(`/policy-records?${params.toString()}`);

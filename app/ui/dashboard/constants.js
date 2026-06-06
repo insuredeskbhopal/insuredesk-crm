@@ -1,7 +1,7 @@
 // app/ui/dashboard/constants.js
 import {
   BarChart3,
-  Edit3,
+  BriefcaseBusiness,
   FileCog,
   FileText,
   Settings,
@@ -12,14 +12,7 @@ import {
 
 export const NAV_ITEMS = [
   { id: "bulk-entry", label: "Bulk PDF Upload", icon: Upload },
-  {
-    id: "manual-entry",
-    label: "Manual Policy Entry",
-    icon: Edit3,
-    children: [
-      { id: "customer-profiling", label: "Customer Profiling" }
-    ]
-  },
+  { id: "operations", label: "Operations Hub", icon: BriefcaseBusiness },
   { id: "records", label: "Policy Records", icon: FileText },
   { id: "customers", label: "Customer Management", icon: Users },
   { id: "renewals", label: "Renewals", icon: RefreshCw },

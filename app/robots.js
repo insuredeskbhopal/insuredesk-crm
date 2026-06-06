@@ -17,6 +17,7 @@ export default function robots() {
           "/field-setup/",
           "/login",
           "/manual-policy-entry/",
+          "/operations/",
           "/policy-records/",
           "/premium-reports/",
           "/settings/",
@@ -29,4 +30,3 @@ export default function robots() {
     host: SITE_URL
   };
 }
-
