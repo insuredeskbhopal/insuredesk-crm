@@ -22,11 +22,7 @@ export default async function PolicyRecordsPage(props) {
   const orgId = session?.organizationId || null;
   const basePolicyWhere = {
     ...tenantFilter,
-    deletedAt: null,
-    NOT: [
-      { sourceFile: "Renewal Page data.xlsx" },
-      { sourceFile: "Manual Renewal" }
-    ]
+    deletedAt: null
   };
 
   const dataPayload = await loadScopedPolicyRecords({
@@ -92,13 +88,11 @@ async function loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId 
         SELECT COUNT(*)::integer as count FROM pdf_records
         WHERE deleted_at IS NULL
           AND (${isSuperAdmin}::boolean OR organization_id = ${orgId}::uuid)
-          AND (source_file IS NULL OR source_file NOT IN ('Renewal Page data.xlsx', 'Manual Renewal'))
           AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (
             SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
             FROM pdf_records
             WHERE deleted_at IS NULL
               AND (${isSuperAdmin}::boolean OR organization_id = ${orgId}::uuid)
-              AND (source_file IS NULL OR source_file NOT IN ('Renewal Page data.xlsx', 'Manual Renewal'))
               AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
             GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
             HAVING COUNT(*) > 1

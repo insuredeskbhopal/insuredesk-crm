@@ -53,7 +53,7 @@ function excelDateToString(excelDate) {
       return "";
     }
   }
-  
+
   const num = Number(excelDate);
   if (isNaN(num)) {
     // Attempt to parse text date
@@ -73,7 +73,7 @@ function excelDateToString(excelDate) {
     const utc_days = Math.floor(num - 25569);
     const utc_value = utc_days * 86400;
     const date_info = new Date(utc_value * 1000);
-    
+
     const yyyy = date_info.getFullYear();
     const mm = String(date_info.getMonth() + 1).padStart(2, "0");
     const dd = String(date_info.getDate()).padStart(2, "0");
@@ -125,18 +125,18 @@ async function main() {
   const workbook = XLSX.readFile(excelPath);
   const firstSheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
-  
+
   // Parse rows as raw JSON objects
   const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
   console.log(`Loaded ${rawRows.length} raw rows from sheet "${firstSheetName}".`);
 
   // Dynamically import ESM helper from workspace
   console.log("Importing sanitizeRecordPayload ESM helper...");
-  const validationModule = await import("../lib/records/validation.js");
+  const validationModule = await import("../lib/record-validation.js");
   const sanitizeRecordPayload = validationModule.sanitizeRecordPayload;
 
   console.log("Importing buildCustomerId helper...");
-  const recordsModule = await import("../lib/records/index.js");
+  const recordsModule = await import("../lib/records.js");
   const buildCustomerId = recordsModule.buildCustomerId;
 
   // Make script idempotent
@@ -190,10 +190,8 @@ async function main() {
 
     // Generate customer ID according to the system logic, blank should be blank
     let customerIdVal = "";
-    const insuredNameStr = String(payload.insuredName || "").trim();
-    const contactNumberStr = String(payload.contactNumber || "").trim();
-    if (insuredNameStr !== "" && contactNumberStr !== "") {
-      customerIdVal = buildCustomerId(insuredNameStr, contactNumberStr);
+    if (payload.insuredName && payload.insuredName.trim() !== "" && payload.contactNumber && payload.contactNumber.trim() !== "") {
+      customerIdVal = buildCustomerId(payload.insuredName, payload.contactNumber);
     }
     payload.customerId = customerIdVal;
 

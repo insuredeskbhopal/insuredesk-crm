@@ -35,11 +35,7 @@ export async function GET(request) {
 
     const where = {
       ...tenantFilter,
-      deletedAt: null,
-      NOT: [
-        { sourceFile: "Renewal Page data.xlsx" },
-        { sourceFile: "Manual Renewal" }
-      ]
+      deletedAt: null
     };
 
     const andFilters = [];
@@ -206,10 +202,16 @@ export async function POST(request) {
         id: randomUUID(),
         savedAt: new Date(),
         data,
+        sourceFile: data.sourceFile || "Manual Entry",
+        selectedCompany: data.insuranceCompany || "",
+        selectedPolicyType: data.policyType || "",
+        reviewedData: data,
+        extractedData: data,
         organizationId: user.organizationId,
         createdById: actorId
       }
     });
+
 
     // Record creation audit
     const { ipAddress, userAgent } = getAuditMetadata(request);
