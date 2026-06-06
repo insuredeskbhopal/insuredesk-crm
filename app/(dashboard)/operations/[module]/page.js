@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, BadgeCheck, ClipboardList } from "lucide-react";
+import { BadgeCheck, ClipboardList } from "lucide-react";
+import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
 import { getOperationsModule } from "@/app/lib/operations-modules";
 
 export default async function OperationsModulePage({ params }) {
@@ -13,9 +13,7 @@ export default async function OperationsModulePage({ params }) {
 
   return (
     <div className="operations-module-page">
-      <Link className="operations-back-link" href="/operations">
-        <ArrowLeft size={18} /> Operations Hub
-      </Link>
+      <OperationsBackLink />
 
       <section className={`operations-module-detail accent-${operationsModule.accent}`}>
         <div className="operations-module-detail-head">
