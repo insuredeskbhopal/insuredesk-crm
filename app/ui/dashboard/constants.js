@@ -25,8 +25,8 @@ export const NAV_ITEMS = [
   { id: "renewals", label: "Renewals", icon: RefreshCw },
   { id: "analytics", label: "Analytics & Reports", icon: BarChart3 },
   { id: "field-setup", label: "Field Setup", icon: FileCog },
+  { id: "user-management", label: "User Management", icon: Users, roles: ["SUPER_ADMIN"] },
   { id: "settings", label: "Settings", icon: Settings },
-  { id: "user-management", label: "User Management", icon: Users, roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"] },
 ];
 
 export const EMPTY_FORM = {

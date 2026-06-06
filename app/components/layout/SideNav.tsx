@@ -17,6 +17,7 @@ const ROUTE_MAP = {
   "analytics": "/analytics-reports",
   "field-setup": "/field-setup",
   "user-management": "/admin/users",
+  "settings": "/settings",
   "upload-history": "/upload-history"
 };
 
