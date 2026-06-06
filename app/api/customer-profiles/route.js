@@ -229,7 +229,24 @@ export async function GET(request) {
           policyType: payload.policyType || "",
           insuranceCompany: payload.insuranceCompany || payload.companyName || "",
           remarks: payload.remark || "",
-          assignedTo: record.createdBy?.name || record.createdBy?.email || ""
+          assignedTo: record.createdBy?.name || record.createdBy?.email || "",
+          vehicleNumber: payload.vehicleNumber || payload.registrationNumber || "",
+          registrationNumber: payload.registrationNumber || "",
+          makeModel: payload.makeModel || payload.variant || "",
+          engineNumber: payload.engineNumber || "",
+          chassisNumber: payload.chassisNumber || "",
+          idv: payload.idv || "",
+          sumInsured: payload.sumInsured || "",
+          startDate: payload.startDate || "",
+          expiryDate: payload.expiryDate || "",
+          duration: payload.duration || "",
+          riskLocation: payload.riskLocation || "",
+          district: payload.district || "",
+          tehsil: payload.tehsil || "",
+          occupancy: payload.occupancy || "",
+          validIn: payload.validIn || "",
+          description: payload.description || "",
+          remark: payload.remark || ""
         };
       })
       .filter((record) => normalizeProfilePhone(record.phone) === phone);

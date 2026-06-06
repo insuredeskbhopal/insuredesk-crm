@@ -325,19 +325,103 @@ export default function CustomerProfilingPage() {
     });
   }
 
+  function mapPolicyRecordToLobDetails(record, lob) {
+    if (!lob) return {};
+    const details = {};
+    
+    let expiryStr = "";
+    if (record.expiryDate) {
+      try {
+        expiryStr = new Date(record.expiryDate).toISOString().slice(0, 10);
+      } catch (e) {
+        expiryStr = record.expiryDate;
+      }
+    }
+
+    let startStr = "";
+    if (record.startDate) {
+      try {
+        startStr = new Date(record.startDate).toISOString().slice(0, 10);
+      } catch (e) {
+        startStr = record.startDate;
+      }
+    }
+
+    if (lob === "Motor Insurance") {
+      details.vehicleType = record.vehicleType || record.makeModel || "";
+      details.vehicleNumber = record.vehicleNumber || record.registrationNumber || "";
+      details.existingPolicyAvailable = "Yes";
+      details.renewalDate = expiryStr;
+    } else if (lob === "Warehouse Insurance") {
+      details.warehouseLocation = record.riskLocation || "";
+      details.stockValue = record.sumInsured || "";
+      details.existingInsuranceAvailable = "Yes";
+      details.renewalDate = expiryStr;
+    } else if (lob === "Life Insurance") {
+      details.existingLifeCover = "Yes";
+    } else if (lob === "Health Insurance") {
+      details.existingHealthCover = "Yes";
+      details.sumInsuredNeed = record.sumInsured || "";
+      details.renewalDate = expiryStr;
+    } else if (lob === "Fire Insurance") {
+      details.riskLocation = record.riskLocation || "";
+      details.propertyValue = record.sumInsured || "";
+      details.occupancy = record.occupancy || "";
+      details.renewalDate = expiryStr;
+    } else if (lob === "Marine Insurance") {
+      details.cargoType = record.description || "";
+      details.annualTransitValue = record.sumInsured || "";
+      details.existingInsuranceAvailable = "Yes";
+    } else if (lob === "Travel Insurance") {
+      details.destination = record.validIn || "";
+      details.travelDate = startStr;
+      details.tripDuration = record.duration || "";
+    } else if (lob === "Cyber Insurance") {
+      details.existingInsuranceAvailable = "Yes";
+    } else if (lob === "Shop / Office Insurance") {
+      details.shopLocation = record.riskLocation || "";
+      details.assetValue = record.sumInsured || "";
+      details.renewalDate = expiryStr;
+    } else if (lob === "Business Insurance") {
+      details.businessCategory = record.policyType || "";
+      details.keyRisk = record.description || "";
+    } else {
+      details.insuranceNeed = record.policyType || "";
+      details.estimatedValue = record.sumInsured || "";
+      details.notes = record.remark || "";
+    }
+    return details;
+  }
+
   function usePolicyLead(record) {
     const inferredLob = inferLobFromPolicyType(record.policyType);
     setSelectedExistingId("");
     setConvertType("");
     setFollowUpDraft("");
+
+    let nextFollowUpDate = "";
+    if (record.expiryDate) {
+      try {
+        nextFollowUpDate = new Date(record.expiryDate).toISOString().slice(0, 10);
+      } catch (e) {
+        nextFollowUpDate = record.expiryDate;
+      }
+    }
+
     setFollowUpMeta({
       outcome: "Call Back Later",
       mode: "Call",
       priority: "Normal",
-      nextFollowUpDate: "",
+      nextFollowUpDate: nextFollowUpDate,
       policyInterest: inferredLob || "",
       status: "Follow-up Required"
     });
+
+    const lobDetails = {};
+    if (inferredLob) {
+      lobDetails[inferredLob] = mapPolicyRecordToLobDetails(record, inferredLob);
+    }
+
     setForm({
       ...EMPTY_FORM,
       name: record.name || "",
@@ -350,10 +434,10 @@ export default function CustomerProfilingPage() {
       sourcePolicyType: record.policyType || "",
       sourceCompany: record.insuranceCompany || "",
       selectedLOBs: inferredLob ? [inferredLob] : [],
-      lobDetails: {},
+      lobDetails: lobDetails,
       remarks: [record.policyNumber ? `Source policy ${record.policyNumber}` : "", record.policyType, record.insuranceCompany].filter(Boolean).join(" / ")
     });
-    setAlert({ type: "success", message: "Policy customer loaded into the lead form. Save Profile to add it to Customer Profiling." });
+    setAlert({ type: "success", message: "Policy customer loaded with saved details. Save Profile to add it to Customer Profiling." });
   }
 
   function newProfile() {
