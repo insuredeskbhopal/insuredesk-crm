@@ -5113,6 +5113,47 @@ label.is-disabled textarea {
   gap: 14px;
 }
 
+.user-form .lob-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  grid-column: span 2;
+  margin: 12px 0;
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.user-form .lob-checklist label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 36px !important;
+  padding: 8px 10px !important;
+  border: 1px solid rgba(233, 236, 239, 0.9) !important;
+  border-radius: 8px !important;
+  color: var(--on-surface) !important;
+  font-size: var(--font-size-xs) !important;
+  font-weight: 750 !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.user-form .lob-checklist input[type="checkbox"] {
+  flex: 0 0 auto !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+}
+
 .user-form-actions {
   display: flex;
   justify-content: flex-end;

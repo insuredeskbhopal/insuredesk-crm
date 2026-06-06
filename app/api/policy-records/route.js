@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/records/validation";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/auth/rbac";
+import { getTenantFilter, applyLOBRestriction } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { UPLOAD_STATUS } from "@/lib/uploads/status";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
@@ -46,6 +46,7 @@ export async function GET(request) {
       ...tenantFilter,
       deletedAt: null
     };
+    applyLOBRestriction(where, user);
 
     const andFilters = [];
 

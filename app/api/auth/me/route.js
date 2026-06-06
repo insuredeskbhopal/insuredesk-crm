@@ -25,7 +25,8 @@ export async function GET(request) {
         role: true,
         organizationId: true,
         deletedAt: true,
-        createdAt: true
+        createdAt: true,
+        assignedLOBs: true
       }
     });
 

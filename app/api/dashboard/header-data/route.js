@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { startOfDay } from "@/app/lib/reporting/filters";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/auth/rbac";
+import { getTenantFilter, getLOBFilterSQL, applyLOBRestriction } from "@/lib/auth/rbac";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +36,7 @@ export async function GET(request) {
     
     const isSuperAdmin = session.role === "SUPER_ADMIN";
     const orgId = session.organizationId || null;
+    const lobSql = isSuperAdmin ? "" : getLOBFilterSQL(session.assignedLOBs);
 
     const today = startOfDay(new Date());
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -61,6 +62,7 @@ export async function GET(request) {
         FROM pdf_records
         WHERE deleted_at IS NULL
           AND ($1::boolean OR organization_id = $2::uuid)
+          ${lobSql}
       ),
       parsed_policies AS (
         SELECT 
@@ -135,6 +137,7 @@ export async function GET(request) {
         FROM pdf_records
         WHERE deleted_at IS NULL
           AND ($1::boolean OR organization_id = $2::uuid)
+          ${lobSql}
       ),
       dated AS (
         SELECT 
@@ -226,7 +229,7 @@ export async function GET(request) {
         createdAt: true,
         errorMessage: true,
         policyRecords: {
-          where: tenantFilter,
+          where: applyLOBRestriction({ ...tenantFilter }, session),
           select: {
             id: true,
             data: true,

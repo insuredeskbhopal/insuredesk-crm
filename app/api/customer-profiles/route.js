@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/auth/rbac";
+import { getTenantFilter, getCustomerProfileScopedFilter, getCustomerProfileOwnerFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { normalizeProfilePhone, sanitizeCustomerProfilePayload, serializeCustomerProfile } from "@/lib/customer-profiles/utils";
 
@@ -16,7 +16,7 @@ export async function GET(request) {
     const phone = normalizeProfilePhone(searchParams.get("phone") || "");
     const tenantFilter = getTenantFilter(user, "read");
     const actorId = user.userId || user.id;
-    const ownProfileFilter = getCustomerProfileOwnerFilter(user);
+    const ownProfileFilter = getCustomerProfileScopedFilter(user);
 
     if (!phone) {
       const page = parseInt(searchParams.get("page") || "1", 10);
@@ -79,7 +79,7 @@ export async function GET(request) {
       }
 
       // Fetch paginated profiles and total counts in parallel
-      const lobOptionsQuery = buildCustomerProfileLobOptionsQuery(ownProfileFilter);
+      const lobOptionsQuery = buildCustomerProfileLobOptionsQuery(ownProfileFilter, user.role === "SUPER_ADMIN" ? null : user.assignedLOBs);
       const [profiles, totalCount, counts, assignedToOptions, lobRows] = await Promise.all([
         prisma.customerProfile.findMany({
           where,
@@ -376,17 +376,7 @@ async function requireSession(request) {
   return session;
 }
 
-function getCustomerProfileOwnerFilter(user) {
-  const actorId = user.userId || user.id;
-  if (user.role === "SUPER_ADMIN") {
-    return getTenantFilter(user, "read");
-  }
 
-  return {
-    ...getTenantFilter(user, "read"),
-    createdById: actorId
-  };
-}
 
 function getCustomerProfileClaimFilter(user) {
   const filter = {

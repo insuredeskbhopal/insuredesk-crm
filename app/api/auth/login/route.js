@@ -55,7 +55,8 @@ export async function POST(request) {
       email: user.email,
       name: user.name,
       role: user.role,
-      organizationId: user.organizationId
+      organizationId: user.organizationId,
+      assignedLOBs: user.assignedLOBs || []
     });
 
     // Extract IP and UA for success audit
@@ -84,7 +85,8 @@ export async function POST(request) {
         email: user.email,
         name: user.name,
         role: user.role,
-        organizationId: user.organizationId
+        organizationId: user.organizationId,
+        assignedLOBs: user.assignedLOBs || []
       }
     });
 

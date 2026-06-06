@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canAccessResource, getTenantFilter, UserRole } from "../lib/auth/rbac";
+import { canAccessResource, getTenantFilter, UserRole, applyLOBRestriction, getLOBFilterSQL } from "../lib/auth/rbac";
 
 describe("SaaS Multi-Tenancy & RBAC Tests", () => {
   const orgA = "org-aaaa-aaaa-aaaa-aaaa";
@@ -122,6 +122,41 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       const filter = getTenantFilter(session, "write");
 
       expect(filter.id).toBe("00000000-0000-0000-0000-000000000000");
+    });
+  });
+
+  describe("LOB Scoping Filters", () => {
+    it("returns unmodified where clause for SUPER_ADMIN", () => {
+      const session = { id: user1, role: UserRole.SUPER_ADMIN, organizationId: orgA, assignedLOBs: ["Motor Insurance"] };
+      const where = { organizationId: orgA };
+      const result = applyLOBRestriction(where, session);
+      expect(result).toEqual({ organizationId: orgA });
+    });
+
+    it("returns blocking filter if assignedLOBs is empty array and role is not SUPER_ADMIN", () => {
+      const session = { id: user1, role: UserRole.AGENT, organizationId: orgA, assignedLOBs: [] };
+      const where = { organizationId: orgA };
+      const result = applyLOBRestriction(where, session);
+      expect(result.id).toBe("00000000-0000-0000-0000-000000000000");
+    });
+
+    it("generates correct Prisma query filters when assignedLOBs is present", () => {
+      const session = { id: user1, role: UserRole.AGENT, organizationId: orgA, assignedLOBs: ["Motor Insurance"] };
+      const where = { organizationId: orgA };
+      const result = applyLOBRestriction(where, session);
+      expect(result.AND).toBeDefined();
+      expect(result.AND[0].OR.length).toBeGreaterThan(0);
+      expect(result.AND[0].OR[0].selectedPolicyType.contains).toBe("motor");
+    });
+
+    it("returns correct getLOBFilterSQL output", () => {
+      const sql = getLOBFilterSQL(["Motor Insurance"]);
+      expect(sql).toContain("LOWER(COALESCE(selected_policy_type, '')) LIKE '%motor%'");
+    });
+
+    it("blocks queries in SQL when assignedLOBs is empty array", () => {
+      const sql = getLOBFilterSQL([]);
+      expect(sql).toBe("AND 1=0");
     });
   });
 });

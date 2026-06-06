@@ -15,6 +15,7 @@ const createUserSchema = z.object({
   password: z.string().min(8),
   role: z.enum(['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'AGENT', 'VIEWER']).optional(),
   organizationId: z.string().uuid().optional(),
+  assignedLOBs: z.array(z.string()).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest) {
         organizationId: true,
         createdAt: true,
         updatedAt: true,
+        assignedLOBs: true,
       },
     }),
   ]);
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest) {
   if (!parseResult.success) {
     return NextResponse.json({ error: 'Invalid request body', details: parseResult.error.format() }, { status: 422 });
   }
-  const { email, name, password, role, organizationId } = parseResult.data;
+  const { email, name, password, role, organizationId, assignedLOBs } = parseResult.data;
   const requestedRole = role ?? 'AGENT';
 
   if (!canManageRole(requester.role, requestedRole)) {
@@ -80,6 +82,7 @@ export async function POST(request: NextRequest) {
         password: hashed,
         role: requestedRole,
         organizationId: requester.role === 'SUPER_ADMIN' ? organizationId ?? requester.organizationId ?? undefined : requester.organizationId,
+        assignedLOBs: assignedLOBs ?? [],
       },
       select: {
         id: true,
@@ -89,6 +92,7 @@ export async function POST(request: NextRequest) {
         organizationId: true,
         createdAt: true,
         updatedAt: true,
+        assignedLOBs: true,
       },
     });
 

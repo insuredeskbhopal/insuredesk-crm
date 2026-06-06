@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource, getTenantFilter } from "@/lib/auth/rbac";
+import { canAccessResource, getTenantFilter, getCustomerProfileScopedFilter, getCustomerProfileOwnerFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -25,7 +25,7 @@ export async function POST(request, { params }) {
     const existing = await prisma.customerProfile.findFirst({
       where: {
         id,
-        ...getCustomerProfileOwnerFilter(session)
+        ...getCustomerProfileScopedFilter(session)
       }
     });
 
@@ -68,14 +68,4 @@ export async function POST(request, { params }) {
   }
 }
 
-function getCustomerProfileOwnerFilter(user) {
-  const actorId = user.userId || user.id;
-  if (user.role === "SUPER_ADMIN") {
-    return getTenantFilter(user, "read");
-  }
 
-  return {
-    ...getTenantFilter(user, "read"),
-    createdById: actorId
-  };
-}

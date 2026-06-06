@@ -367,6 +367,7 @@ model User {
   organizationId String?        @map("organization_id") @db.Uuid
   organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz(6)
+  assignedLOBs   Json           @default("[]") @map("assigned_lobs")
   
   createdPolicies PolicyRecord[] @relation("PolicyCreatedBy")
   updatedPolicies PolicyRecord[] @relation("PolicyUpdatedBy")

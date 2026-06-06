@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, Edit3, Plus, RefreshCcw, Search, Trash2, X } from "lucide-react";
+import { Check, Edit3, Plus, RefreshCcw, Search, Trash2, X, Eye, EyeOff } from "lucide-react";
 
 const ROLES = ["SUPER_ADMIN", "ADMIN", "MANAGER", "AGENT", "VIEWER"];
 const ROLE_LABELS = {
@@ -12,11 +12,26 @@ const ROLE_LABELS = {
   VIEWER: "Viewer"
 };
 
+const LOB_OPTIONS = [
+  "Motor Insurance",
+  "Health Insurance",
+  "Life Insurance",
+  "Warehouse Insurance",
+  "Fire Insurance",
+  "Marine Insurance",
+  "Travel Insurance",
+  "Cyber Insurance",
+  "Shop / Office Insurance",
+  "Business Insurance",
+  "Other"
+];
+
 const EMPTY_FORM = {
   name: "",
   email: "",
   password: "",
-  role: "AGENT"
+  role: "AGENT",
+  assignedLOBs: []
 };
 
 function formatDate(value) {
@@ -31,6 +46,8 @@ export default function UserManagement() {
   const [meta, setMeta] = useState({ total: 0, page: 1, pageSize: 10 });
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [lobFilter, setLobFilter] = useState("all");
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingUserId, setEditingUserId] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -38,21 +55,37 @@ export default function UserManagement() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const pageCount = Math.max(1, Math.ceil(meta.total / meta.pageSize));
   const assignableRoles = meta.assignableRoles?.length ? meta.assignableRoles : ["AGENT", "VIEWER"];
   const filteredUsers = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return users;
-    return users.filter((user) => {
-      return [
-        user.name,
-        user.email,
-        ROLE_LABELS[user.role] || user.role,
-        user.organizationId
-      ].some((value) => String(value || "").toLowerCase().includes(normalized));
-    });
-  }, [query, users]);
+    let result = users;
+
+    const normalizedQuery = query.trim().toLowerCase();
+    if (normalizedQuery) {
+      result = result.filter((user) => {
+        return [
+          user.name,
+          user.email,
+          ROLE_LABELS[user.role] || user.role,
+          user.organizationId
+        ].some((value) => String(value || "").toLowerCase().includes(normalizedQuery));
+      });
+    }
+
+    if (roleFilter !== "all") {
+      result = result.filter((user) => user.role === roleFilter);
+    }
+
+    if (lobFilter !== "all") {
+      result = result.filter((user) => 
+        Array.isArray(user.assignedLOBs) && user.assignedLOBs.includes(lobFilter)
+      );
+    }
+
+    return result;
+  }, [query, roleFilter, lobFilter, users]);
 
   const roleCounts = useMemo(() => {
     return users.reduce((counts, user) => {
@@ -86,6 +119,7 @@ export default function UserManagement() {
     setForm(EMPTY_FORM);
     setEditingUserId("");
     setIsFormOpen(false);
+    setShowPassword(false);
   };
 
   const startCreate = () => {
@@ -94,6 +128,7 @@ export default function UserManagement() {
     setForm({ ...EMPTY_FORM, role: assignableRoles[0] || "AGENT" });
     setEditingUserId("");
     setIsFormOpen(true);
+    setShowPassword(false);
   };
 
   const startEdit = (user) => {
@@ -103,10 +138,21 @@ export default function UserManagement() {
       name: user.name || "",
       email: user.email || "",
       password: "",
-      role: user.role || "AGENT"
+      role: user.role || "AGENT",
+      assignedLOBs: Array.isArray(user.assignedLOBs) ? user.assignedLOBs : []
     });
     setEditingUserId(user.id);
     setIsFormOpen(true);
+    setShowPassword(false);
+  };
+
+  const toggleLOB = (lob) => {
+    setForm((current) => {
+      const selected = new Set(current.assignedLOBs || []);
+      if (selected.has(lob)) selected.delete(lob);
+      else selected.add(lob);
+      return { ...current, assignedLOBs: Array.from(selected) };
+    });
   };
 
   const saveUser = async (event) => {
@@ -118,7 +164,8 @@ export default function UserManagement() {
     const body = {
       name: form.name.trim() || undefined,
       email: form.email.trim(),
-      role: form.role
+      role: form.role,
+      assignedLOBs: form.assignedLOBs || []
     };
 
     if (!editingUserId || form.password.trim()) {
@@ -210,18 +257,40 @@ export default function UserManagement() {
             </label>
             <label>
               <span>Email</span>
-              <input required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="user@example.com" />
+              <input required type="email" autoComplete="off" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="user@example.com" />
             </label>
-            <label>
+            <label style={{ position: "relative" }}>
               <span>{editingUserId ? "New Password" : "Password"}</span>
-              <input
-                required={!editingUserId}
-                minLength={8}
-                type="password"
-                value={form.password}
-                onChange={(event) => setForm({ ...form, password: event.target.value })}
-                placeholder={editingUserId ? "Leave blank to keep current" : "Minimum 8 characters"}
-              />
+              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                <input
+                  required={!editingUserId}
+                  minLength={8}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={form.password}
+                  onChange={(event) => setForm({ ...form, password: event.target.value })}
+                  placeholder={editingUserId ? "Leave blank to keep current" : "Minimum 8 characters"}
+                  style={{ width: "100%", paddingRight: "40px" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#64748b",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "4px"
+                  }}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </label>
             <label>
               <span>Role</span>
@@ -231,7 +300,25 @@ export default function UserManagement() {
                 ))}
               </select>
             </label>
-            <div className="user-form-actions">
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", margin: "12px 0", gridColumn: "span 2" }}>
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Assigned Processes (LOBs)</span>
+              <div className="lob-checklist">
+                {LOB_OPTIONS.map((lob) => {
+                  const isChecked = (form.assignedLOBs || []).includes(lob);
+                  return (
+                    <label key={lob}>
+                      <input 
+                        type="checkbox" 
+                        checked={isChecked} 
+                        onChange={() => toggleLOB(lob)} 
+                      />
+                      <span>{lob}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="user-form-actions" style={{ gridColumn: "span 2" }}>
               <button type="button" onClick={resetForm}>Cancel</button>
               <button className={isSaving ? "is-busy" : ""} type="submit" disabled={isSaving}>
                 <Check size={17} /> {isSaving ? "Saving..." : "Save User"}
@@ -242,15 +329,61 @@ export default function UserManagement() {
       ) : null}
 
       <section className="glass-panel user-table-panel">
-        <div className="panel-head">
+        <div className="panel-head" style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <p className="eyebrow">Users</p>
             <h2>Portal accounts</h2>
           </div>
-          <label className="user-search">
-            <Search size={17} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search users..." />
-          </label>
+          <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
+            <select 
+              value={roleFilter} 
+              onChange={(event) => setRoleFilter(event.target.value)}
+              style={{
+                width: "160px",
+                minWidth: "160px",
+                flex: "0 0 auto",
+                minHeight: "38px",
+                padding: "0 12px",
+                borderRadius: "8px",
+                border: "1px solid rgba(25, 28, 29, 0.12)",
+                fontSize: "13px",
+                fontWeight: "600",
+                background: "#ffffff",
+                cursor: "pointer"
+              }}
+            >
+              <option value="all">All Roles</option>
+              {ROLES.map((role) => (
+                <option key={role} value={role}>{ROLE_LABELS[role] || role}</option>
+              ))}
+            </select>
+            <select 
+              value={lobFilter} 
+              onChange={(event) => setLobFilter(event.target.value)}
+              style={{
+                width: "200px",
+                minWidth: "200px",
+                flex: "0 0 auto",
+                minHeight: "38px",
+                padding: "0 12px",
+                borderRadius: "8px",
+                border: "1px solid rgba(25, 28, 29, 0.12)",
+                fontSize: "13px",
+                fontWeight: "600",
+                background: "#ffffff",
+                cursor: "pointer"
+              }}
+            >
+              <option value="all">All Processes</option>
+              {LOB_OPTIONS.map((lob) => (
+                <option key={lob} value={lob}>{lob}</option>
+              ))}
+            </select>
+            <label className="user-search" style={{ margin: 0, width: "240px", minWidth: "240px", flex: "0 0 auto" }}>
+              <Search size={17} />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search users..." />
+            </label>
+          </div>
         </div>
 
         <div className="user-table-wrap">
@@ -273,6 +406,26 @@ export default function UserManagement() {
                   <td>
                     <strong>{user.name || "Unnamed user"}</strong>
                     <small>{user.email}</small>
+                    {Array.isArray(user.assignedLOBs) && user.assignedLOBs.length > 0 ? (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "6px" }}>
+                        {user.assignedLOBs.map((lob) => (
+                          <span key={lob} style={{
+                            fontSize: "10px",
+                            fontWeight: "600",
+                            background: "rgba(30, 58, 138, 0.08)",
+                            color: "var(--primary, #1e3a8a)",
+                            padding: "2px 6px",
+                            borderRadius: "4px"
+                          }}>
+                            {lob.replace(" Insurance", "")}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: "10px", color: "#64748b", marginTop: "6px", fontStyle: "italic" }}>
+                        No processes assigned
+                      </div>
+                    )}
                   </td>
                   <td><span className="role-pill">{ROLE_LABELS[user.role] || user.role}</span></td>
                   <td>{user.organizationId || "-"}</td>

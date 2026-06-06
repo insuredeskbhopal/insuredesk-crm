@@ -15,6 +15,7 @@ const updateUserSchema = z.object({
   password: z.string().min(8).optional(),
   role: z.enum(['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'AGENT', 'VIEWER']).optional(),
   organizationId: z.string().uuid().optional(),
+  assignedLOBs: z.array(z.string()).optional(),
 });
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       organizationId: true,
       createdAt: true,
       updatedAt: true,
+      assignedLOBs: true,
     },
   });
   if (!user) {
@@ -95,6 +97,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         organizationId: true,
         createdAt: true,
         updatedAt: true,
+        assignedLOBs: true,
       },
     });
     return NextResponse.json(updated);
