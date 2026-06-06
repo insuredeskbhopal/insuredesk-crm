@@ -19,8 +19,6 @@ import {
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
 
-const STORAGE_KEY = "bimaheadquarter:manual-claims";
-
 const CLAIM_FIELDS = [
   { key: "insuredName", label: "Insured Name", placeholder: "Enter insured name", required: true },
   { key: "mobileNo", label: "Mobile No.", placeholder: "Enter mobile number", inputMode: "tel" },
@@ -90,19 +88,13 @@ export default function ClaimsManagementPage() {
   const [followUpDraft, setFollowUpDraft] = useState("");
   const [documentName, setDocumentName] = useState("");
   const [documentError, setDocumentError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    try {
-      const savedClaims = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "[]");
-      if (Array.isArray(savedClaims)) setClaims(savedClaims);
-    } catch {
-      setClaims([]);
-    }
+    loadClaims();
   }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(claims));
-  }, [claims]);
 
   const filteredClaims = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -160,23 +152,42 @@ export default function ClaimsManagementPage() {
     setClaim((current) => ({ ...current, [key]: value }));
   }
 
-  function saveClaim(event) {
-    event.preventDefault();
-    const now = new Date().toISOString();
-    const record = {
-      ...claim,
-      id: editingId || createClaimId(),
-      createdAt: claim.createdAt || now,
-      updatedAt: now,
-      remarks: claim.remarks || [],
-      documents: claim.documents || []
-    };
+  async function loadClaims() {
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch("/api/claims?limit=500", { cache: "no-store" });
+      const payload = await readJsonResponse(response);
+      setClaims(Array.isArray(payload.claims) ? payload.claims : []);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Claims could not be loaded from database.");
+      setClaims([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
-    setClaims((current) => {
-      if (editingId) return current.map((item) => item.id === editingId ? record : item);
-      return [record, ...current];
-    });
-    closeForm();
+  async function saveClaim(event) {
+    event.preventDefault();
+    setIsSaving(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch(editingId ? `/api/claims/${editingId}` : "/api/claims", {
+        method: editingId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(claim)
+      });
+      const savedClaim = await readJsonResponse(response);
+      setClaims((current) => {
+        if (editingId) return current.map((item) => item.id === editingId ? savedClaim : item);
+        return [savedClaim, ...current];
+      });
+      closeForm();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Claim could not be saved to database.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function openRemarkForm(item) {
@@ -186,30 +197,27 @@ export default function ClaimsManagementPage() {
     setOpenMenuId("");
   }
 
-  function saveRemark(event) {
+  async function saveRemark(event) {
     event.preventDefault();
     if (!remarkTarget || !remarkDraft.trim()) return;
-    const note = {
-      id: createClaimId(),
-      text: remarkDraft.trim(),
-      followUpDate: followUpDraft,
-      createdAt: new Date().toISOString()
-    };
-
-    setClaims((current) => current.map((item) => {
-      if (item.id !== remarkTarget.id) return item;
-      return {
-        ...item,
-        currentRemark: note.text,
-        followUpDate: followUpDraft,
-        claimStatus: followUpDraft ? "Follow Up" : item.claimStatus,
-        remarks: [note, ...(item.remarks || [])],
-        updatedAt: new Date().toISOString()
-      };
-    }));
-    setRemarkTarget(null);
-    setRemarkDraft("");
-    setFollowUpDraft("");
+    setIsSaving(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch(`/api/claims/${remarkTarget.id}/remarks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: remarkDraft.trim(), followUpDate: followUpDraft })
+      });
+      const updatedClaim = await readJsonResponse(response);
+      setClaims((current) => current.map((item) => item.id === updatedClaim.id ? updatedClaim : item));
+      setRemarkTarget(null);
+      setRemarkDraft("");
+      setFollowUpDraft("");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Claim remark could not be saved to database.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   async function uploadClaimDocument(event) {
@@ -248,11 +256,21 @@ export default function ClaimsManagementPage() {
     }));
   }
 
-  function deleteClaim(id) {
-    setClaims((current) => current.filter((item) => item.id !== id));
-    if (selectedClaimId === id) setSelectedClaimId("");
-    setDeleteCandidate(null);
-    setOpenMenuId("");
+  async function deleteClaim(id) {
+    setIsSaving(true);
+    setErrorMessage("");
+    try {
+      const response = await fetch(`/api/claims/${id}`, { method: "DELETE" });
+      if (!response.ok) await readJsonResponse(response);
+      setClaims((current) => current.filter((item) => item.id !== id));
+      if (selectedClaimId === id) setSelectedClaimId("");
+      setDeleteCandidate(null);
+      setOpenMenuId("");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Claim could not be deleted from database.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -276,6 +294,13 @@ export default function ClaimsManagementPage() {
           Track claims with generic servicing fields first, then open View More for full details and supporting documents.
         </p>
       </section>
+
+      {errorMessage ? (
+        <section className="claims-status-banner error">
+          <span>{errorMessage}</span>
+          <button type="button" onClick={loadClaims}>Retry</button>
+        </section>
+      ) : null}
 
       {isFormOpen ? (
         <section className="claims-register-panel claims-form-panel">
@@ -357,8 +382,8 @@ export default function ClaimsManagementPage() {
               <button type="button" className="secondary-action" onClick={() => setClaim(EMPTY_CLAIM)}>
                 <RotateCcw size={17} /> Reset
               </button>
-              <button type="submit" className="primary-action">
-                <FilePlus2 size={17} /> {editingId ? "Update Claim" : "Save Claim"}
+              <button type="submit" className="primary-action" disabled={isSaving}>
+                <FilePlus2 size={17} /> {isSaving ? "Saving..." : editingId ? "Update Claim" : "Save Claim"}
               </button>
             </div>
           </form>
@@ -415,7 +440,11 @@ export default function ClaimsManagementPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredClaims.length ? filteredClaims.map((item, index) => (
+              {isLoading ? (
+                <tr>
+                  <td className="claims-empty-row" colSpan={12}>Loading claims from database...</td>
+                </tr>
+              ) : filteredClaims.length ? filteredClaims.map((item, index) => (
                 <tr key={item.id}>
                   <td>{index + 1}</td>
                   <td>{item.insuredName || "-"}</td>
@@ -457,7 +486,7 @@ export default function ClaimsManagementPage() {
                 </tr>
               )) : (
                 <tr>
-                  <td className="claims-empty-row" colSpan={12}>No claim records added yet. Click Add Claim to create one.</td>
+                  <td className="claims-empty-row" colSpan={12}>No claim records found in database. Click Add Claim to create one.</td>
                 </tr>
               )}
             </tbody>
@@ -523,6 +552,13 @@ export default function ClaimsManagementPage() {
                 <X size={18} />
               </button>
             </div>
+            <section className="claims-previous-remarks">
+              <div>
+                <span>Previous Remarks</span>
+                <strong>{(remarkTarget.remarks || []).length.toLocaleString("en-IN")} saved</strong>
+              </div>
+              <RemarkList remarks={remarkTarget.remarks || []} />
+            </section>
             <label className="claims-wide-field">
               <span>Remark *</span>
               <textarea value={remarkDraft} required rows={4} placeholder="Enter claim follow-up remark" onChange={(event) => setRemarkDraft(event.target.value)} />
@@ -533,7 +569,9 @@ export default function ClaimsManagementPage() {
             </label>
             <div className="claims-form-actions">
               <button type="button" className="secondary-action" onClick={() => setRemarkTarget(null)}>Cancel</button>
-              <button type="submit" className="primary-action">Save Remark</button>
+              <button type="submit" className="primary-action" disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save Remark"}
+              </button>
             </div>
           </form>
         </div>
@@ -549,11 +587,13 @@ export default function ClaimsManagementPage() {
               </div>
             </div>
             <p>
-              This will remove claim {deleteCandidate.claimNo || deleteCandidate.insuredName || "record"} from this browser.
+              This will remove claim {deleteCandidate.claimNo || deleteCandidate.insuredName || "record"} from the database.
             </p>
             <div className="claims-form-actions">
               <button type="button" className="secondary-action" onClick={() => setDeleteCandidate(null)}>Cancel</button>
-              <button type="button" className="claims-danger-action" onClick={() => deleteClaim(deleteCandidate.id)}>Yes, Delete</button>
+              <button type="button" className="claims-danger-action" disabled={isSaving} onClick={() => deleteClaim(deleteCandidate.id)}>
+                {isSaving ? "Deleting..." : "Yes, Delete"}
+              </button>
             </div>
           </section>
         </div>
@@ -635,6 +675,14 @@ function readFileAsDataUrl(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+async function readJsonResponse(response) {
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || "Database request failed.");
+  }
+  return payload;
 }
 
 function formatDate(value) {
