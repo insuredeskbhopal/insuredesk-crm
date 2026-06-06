@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { PUBLIC_ROUTE_PATHS } from "@/lib/seo/site";
 
 const SECRET_KEY = process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? "" : "dev-only-jwt-secret-change-me");
 if (!SECRET_KEY) {
@@ -18,7 +19,13 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/logo") ||
     pathname.startsWith("/brand") ||
     pathname.startsWith("/docs") ||
-    pathname === "/favicon.ico"
+    pathname === "/ai.txt" ||
+    pathname === "/apple-icon.png" ||
+    pathname === "/favicon.ico" ||
+    pathname === "/favicon.png" ||
+    pathname === "/llms.txt" ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml"
   ) {
     return NextResponse.next();
   }
@@ -35,7 +42,7 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPage = pathname === ADMIN_LOGIN_PATH;
   const isAuthApi = pathname.startsWith("/api/auth");
-  const isPublicPage = pathname === "/" || isAuthPage;
+  const isPublicPage = PUBLIC_ROUTE_PATHS.includes(pathname) || isAuthPage;
 
   if (pathname === "/login" || pathname === "/signup") {
     return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : ADMIN_LOGIN_PATH, request.url));

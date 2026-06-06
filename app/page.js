@@ -2,9 +2,155 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Script from "next/script";
 import BrandLogo from "@/app/components/brand/BrandLogo";
 import { INSURER_LOGOS } from "@/app/components/brand/logoAssets";
+import {
+  BUSINESS_DETAILS,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL
+} from "@/lib/seo/site";
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      alternateName: "Bima Headquarter",
+      legalName: BUSINESS_DETAILS.legalName,
+      url: SITE_URL,
+      logo: `${SITE_URL}/brand/main-logo-wide.png`,
+      email: BUSINESS_DETAILS.email,
+      telephone: BUSINESS_DETAILS.phone,
+      description: SITE_DESCRIPTION,
+      areaServed: BUSINESS_DETAILS.serviceArea,
+      knowsAbout: [
+        "Insurance consulting",
+        "Claim assistance",
+        "Motor insurance",
+        "Health insurance",
+        "Life insurance",
+        "Business insurance",
+        "Warehouse insurance",
+        "Fire insurance",
+        "Marine insurance",
+        "Cyber insurance"
+      ]
+    },
+    {
+      "@type": "LocalBusiness",
+      "@id": `${SITE_URL}/#local-business`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      image: `${SITE_URL}/brand/main-logo-wide.png`,
+      telephone: BUSINESS_DETAILS.phone,
+      email: BUSINESS_DETAILS.email,
+      address: {
+        "@type": "PostalAddress",
+        ...BUSINESS_DETAILS.address
+      },
+      areaServed: {
+        "@type": "Country",
+        name: BUSINESS_DETAILS.serviceArea
+      },
+      parentOrganization: {
+        "@id": `${SITE_URL}/#organization`
+      },
+      priceRange: "$$"
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      headline: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      publisher: {
+        "@id": `${SITE_URL}/#organization`
+      },
+      inLanguage: "en-IN"
+    },
+    {
+      "@type": "Service",
+      "@id": `${SITE_URL}/#insurance-consulting-service`,
+      name: "Insurance and Claim Consulting",
+      serviceType: "Insurance consulting and claim assistance",
+      provider: {
+        "@id": `${SITE_URL}/#organization`
+      },
+      areaServed: {
+        "@type": "Country",
+        name: BUSINESS_DETAILS.serviceArea
+      },
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Insurance Consulting Services",
+        itemListElement: [
+          "Motor insurance consulting",
+          "Health insurance consulting",
+          "Life insurance consulting",
+          "Business insurance consulting",
+          "Warehouse insurance consulting",
+          "Claim documentation support",
+          "Claim settlement assistance"
+        ].map((name) => ({
+          "@type": "Offer",
+          itemOffered: {
+            "@type": "Service",
+            name
+          }
+        }))
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${SITE_URL}/#faq`,
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "Is the first consultation really free?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. BIMAHEADQUARTER provides an initial policy review and consultation at no cost to help clients understand coverage gaps and potential savings."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "How many insurance partners does BIMAHEADQUARTER work with?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "BIMAHEADQUARTER works with over 10 leading national insurance companies to help clients compare policy options and features."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Can BIMAHEADQUARTER help with a claim for a policy bought elsewhere?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. Claim Assistance is available for policyholders even when the policy was not originally purchased through BIMAHEADQUARTER. Fees may apply for third-party advocacy."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${SITE_URL}/#breadcrumb`,
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: SITE_URL
+        }
+      ]
+    }
+  ]
+};
 
 export default function RootPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -118,6 +264,7 @@ export default function RootPage() {
     }
   };
   const partnerLogos = [...INSURER_LOGOS, ...INSURER_LOGOS];
+  const heroInsurerLogos = INSURER_LOGOS;
 
   return (
     <>
@@ -217,6 +364,12 @@ export default function RootPage() {
           }
         `}
       </Script>
+      <Script
+        id="bimaheadquarter-structured-data"
+        type="application/ld+json"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
 
       {/* Inject external fonts & CSS references */}
       <link
@@ -493,21 +646,21 @@ export default function RootPage() {
               </div>
 
               {user ? (
-                <a
+                <Link
                   className="hidden md:block font-label-md text-label-md px-6 py-3 rounded-lg border border-secondary text-secondary hover:bg-secondary/5 transition-all entry-anim flex items-center justify-center text-[14px]"
                   style={{ animationDelay: "0.9s" }}
                   href="/dashboard"
                 >
                   Go to CRM Dashboard
-                </a>
+                </Link>
               ) : (
-                <a
+                <Link
                   className="hidden md:block font-label-md text-label-md px-6 py-3 rounded-lg border border-secondary text-secondary hover:bg-secondary/5 transition-all entry-anim flex items-center justify-center text-[14px]"
                   style={{ animationDelay: "0.9s" }}
                   href="/crm/admin/login"
                 >
                   Client Login
-                </a>
+                </Link>
               )}
 
               <button
@@ -529,22 +682,41 @@ export default function RootPage() {
 
           {/* Centered Background Parallax Logo behind the text */}
           <div
-            className="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none transition-all duration-300 ease-out preserve-3d"
+            className="hero-brand-stage absolute inset-0 -z-10 flex items-center justify-center pointer-events-none transition-all duration-300 ease-out preserve-3d"
             style={{
               transform: `translate3d(var(--bmx, 0px), calc(var(--bmy, 0px) + ${scrollY * 0.1}px), 0) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))`,
             }}
           >
-            {/* Floating Logo wrapper with slow breathing/floating animation */}
-            <div className="animate-float opacity-[0.10] w-full max-w-[280px] md:max-w-[360px] px-4">
-              <img
+            <div className="hero-logo-halo"></div>
+            <div className="hero-logo-mark animate-float">
+              <Image
+                unoptimized
                 src="/brand/main-logo-wide.png"
                 alt=""
-                className="w-full h-auto select-none"
+                className="select-none"
+                width={610}
+                height={340}
               />
+            </div>
+            <div className="hero-insurer-orbit" aria-hidden="true">
+              {heroInsurerLogos.map((logo, index) => (
+                <span
+                  className={`hero-insurer-logo hero-insurer-logo-${index + 1} ${logo.className || ""}`.trim()}
+                  key={`hero-${logo.src}`}
+                >
+                  <Image
+                    unoptimized
+                    src={logo.src}
+                    alt=""
+                    width={132}
+                    height={54}
+                  />
+                </span>
+              ))}
             </div>
           </div>
 
-          <div className="max-w-4xl mx-auto px-margin-mobile md:px-margin-desktop text-center flex flex-col items-center justify-center relative z-10">
+          <div className="hero-content max-w-4xl mx-auto px-margin-mobile md:px-margin-desktop text-center flex flex-col items-center justify-center relative z-10">
             <div className="entry-anim flex flex-col items-center">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[12px] mb-6">
                 <span
