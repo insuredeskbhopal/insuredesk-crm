@@ -424,10 +424,82 @@ export default function CustomerProfilingPage() {
           setAlert({ type: "error", message: "This phone number is already claimed by another user in Customer Profiling." });
           return;
         }
+
+        let updatedForm = { ...form };
+
+        if (selectedExistingId) {
+          // Format LOB details into a text remark
+          const metadataLines = [];
+          form.selectedLOBs.forEach((lob) => {
+            if (LOB_FIELDS[lob]) {
+              const details = [];
+              LOB_FIELDS[lob].forEach(([key, label, type]) => {
+                const val = form.lobDetails?.[lob]?.[key];
+                if (val !== undefined && val !== null && String(val).trim() !== "") {
+                  let displayVal = val;
+                  if (type === "date") {
+                    displayVal = formatDate(val);
+                  }
+                  details.push(`${label}: ${displayVal}`);
+                }
+              });
+              if (details.length > 0) {
+                metadataLines.push(`${lob} Details: ${details.join(" | ")}`);
+              }
+            }
+          });
+
+          // Use the entered followUpRemark or a default if none is provided
+          const userRemark = (form.followUpRemark || "").trim();
+          
+          if (metadataLines.length > 0 || userRemark) {
+            let finalRemark = "";
+            if (metadataLines.length > 0) {
+              finalRemark += metadataLines.join("\n");
+            }
+            if (userRemark) {
+              // If the user remark already contains the metadata or starts with it, don't double append
+              if (!userRemark.includes(metadataLines[0] || "___NON_EXISTENT___")) {
+                finalRemark += (finalRemark ? "\n\n" : "") + `Remark: ${userRemark}`;
+              } else {
+                finalRemark = userRemark;
+              }
+            }
+
+            const lastEntry = form.lobDetails?.followUps?.[form.lobDetails.followUps.length - 1];
+            const isDuplicate = lastEntry && lastEntry.remark === finalRemark;
+
+            if (!isDuplicate) {
+              const entry = {
+                id: `${Date.now()}`,
+                remark: finalRemark,
+                rawRemark: userRemark || finalRemark,
+                outcome: form.followUpOutcome || "Call Back Later",
+                mode: "Other",
+                priority: "Normal",
+                nextFollowUpDate: form.nextFollowUpDate,
+                policyInterest: form.selectedLOBs?.[0] || "",
+                status: form.status || "Follow-up Required",
+                createdAt: new Date().toISOString(),
+                createdBy: form.assignedTo || "Agent"
+              };
+
+              updatedForm = {
+                ...form,
+                followUpRemark: finalRemark,
+                lobDetails: {
+                  ...(form.lobDetails || {}),
+                  followUps: [...(Array.isArray(form.lobDetails?.followUps) ? form.lobDetails.followUps : []), entry]
+                }
+              };
+            }
+          }
+        }
+
         const response = await fetch(selectedExistingId ? `/api/customer-profiles/${selectedExistingId}` : "/api/customer-profiles", {
           method: selectedExistingId ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form)
+          body: JSON.stringify(updatedForm)
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
