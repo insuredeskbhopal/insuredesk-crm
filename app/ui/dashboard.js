@@ -948,87 +948,8 @@ export default function Dashboard({
   async function handleExportSubmit() {
     setIsExporting(true);
     try {
-      let list = records;
-
-      if (exportCategory !== "all") {
-        list = list.filter(record => {
-          const isMotor = isMotorPolicyData(record);
-          if (exportCategory === "motor") {
-            return isMotor;
-          }
-          if (exportCategory === "non-motor") {
-            return !isMotor;
-          }
-          
-          const policyType = (record.policyType || "").toLowerCase();
-          const remark = (record.remark || "").toLowerCase();
-          const riskLocation = (record.riskLocation || "").toLowerCase();
-          const description = (record.description || "").toLowerCase();
-          const insuredName = (record.insuredName || "").toLowerCase();
-
-          if (exportCategory === "fire") {
-            return policyType.includes("fire") || policyType.includes("sfsp") || policyType.includes("burglary");
-          }
-          if (exportCategory === "warehouse") {
-            return policyType.includes("warehouse") || 
-                   remark.includes("warehouse") || 
-                   riskLocation.includes("warehouse") || 
-                   description.includes("warehouse") ||
-                   insuredName.includes("warehouse");
-          }
-          return true;
-        });
-      }
-
-      if (exportDuration !== "all") {
-        const now = new Date();
-        list = list.filter(record => {
-          const dateVal = record.savedAt ? new Date(record.savedAt) : (record.createdAt ? new Date(record.createdAt) : null);
-          if (!dateVal || Number.isNaN(dateVal.getTime())) return false;
-          
-          const diffMs = now.getTime() - dateVal.getTime();
-          const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-          if (exportDuration === "today") {
-            const today = new Date();
-            return dateVal.getDate() === today.getDate() &&
-                   dateVal.getMonth() === today.getMonth() &&
-                   dateVal.getFullYear() === today.getFullYear();
-          }
-          if (exportDuration === "past-3-days") {
-            return diffDays <= 3;
-          }
-          if (exportDuration === "past-week") {
-            return diffDays <= 7;
-          }
-          if (exportDuration === "past-month") {
-            return diffDays <= 30;
-          }
-          if (exportDuration === "past-3-months") {
-            return diffDays <= 90;
-          }
-          if (exportDuration === "past-6-months") {
-            return diffDays <= 180;
-          }
-          if (exportDuration === "past-year") {
-            return diffDays <= 365;
-          }
-          if (exportDuration === "custom") {
-            if (exportCustomStart) {
-              const start = new Date(exportCustomStart);
-              start.setHours(0, 0, 0, 0);
-              if (dateVal < start) return false;
-            }
-            if (exportCustomEnd) {
-              const end = new Date(exportCustomEnd);
-              end.setHours(23, 59, 59, 999);
-              if (dateVal > end) return false;
-            }
-            return true;
-          }
-          return true;
-        });
-      }
+      const exportSource = activePage === "records" ? await fetchAllPolicyRecordsForExport() : records;
+      let list = applyExportFilters(exportSource);
 
       if (!list.length) {
         setAlert({ type: "error", title: "No records", message: "No records found matching the selected export filters." });
@@ -1153,6 +1074,135 @@ export default function Dashboard({
     } finally {
       setIsExporting(false);
     }
+  }
+
+  async function fetchAllPolicyRecordsForExport() {
+    const pageSize = 500;
+    const firstParams = buildPolicyRecordExportParams(1, pageSize);
+    const firstResponse = await fetch(`/api/policy-records?${firstParams.toString()}`, { cache: "no-store" });
+    if (!firstResponse.ok) {
+      const payload = await firstResponse.json().catch(() => ({}));
+      throw new Error(payload.error || "Could not load policy records for export.");
+    }
+
+    const firstPayload = await firstResponse.json();
+    const allRecords = Array.isArray(firstPayload.records) ? [...firstPayload.records] : [];
+    const pages = Number(firstPayload.totalPages || 1);
+
+    for (let page = 2; page <= pages; page += 1) {
+      const params = buildPolicyRecordExportParams(page, pageSize);
+      const response = await fetch(`/api/policy-records?${params.toString()}`, { cache: "no-store" });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || `Could not load export page ${page}.`);
+      }
+      const payload = await response.json();
+      if (Array.isArray(payload.records)) allRecords.push(...payload.records);
+    }
+
+    return allRecords;
+  }
+
+  function buildPolicyRecordExportParams(page, pageSize) {
+    const params = new window.URLSearchParams();
+    params.set("page", String(page));
+    params.set("limit", String(pageSize));
+    if (query.trim()) params.set("q", query.trim());
+    if (recordFilterField) params.set("filterField", recordFilterField);
+    if (recordFilterValue.trim()) params.set("filterValue", recordFilterValue.trim());
+    if (recordPdfFilter && recordPdfFilter !== "all") params.set("pdfFilter", recordPdfFilter);
+    if (recordViewCategory && recordViewCategory !== "all") params.set("viewCategory", recordViewCategory);
+    return params;
+  }
+
+  function applyExportFilters(sourceRecords) {
+    let list = Array.isArray(sourceRecords) ? sourceRecords : [];
+
+    if (exportCategory !== "all") {
+      list = list.filter(record => {
+        const isMotor = isMotorPolicyData(record);
+        if (exportCategory === "motor") return isMotor;
+        if (exportCategory === "non-motor") return !isMotor;
+
+        const policyType = (record.policyType || "").toLowerCase();
+        const remark = (record.remark || "").toLowerCase();
+        const riskLocation = (record.riskLocation || "").toLowerCase();
+        const description = (record.description || "").toLowerCase();
+        const insuredName = (record.insuredName || "").toLowerCase();
+
+        if (exportCategory === "fire") {
+          return policyType.includes("fire") || policyType.includes("sfsp") || policyType.includes("burglary");
+        }
+        if (exportCategory === "warehouse") {
+          return policyType.includes("warehouse") ||
+                 remark.includes("warehouse") ||
+                 riskLocation.includes("warehouse") ||
+                 description.includes("warehouse") ||
+                 insuredName.includes("warehouse");
+        }
+        return true;
+      });
+    }
+
+    if (exportDuration !== "all") {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      list = list.filter(record => {
+        const dateVal = getExportRecordDate(record);
+        if (!dateVal) return false;
+
+        if (exportDuration === "today") {
+          return dateVal >= today && dateVal < addDays(today, 1);
+        }
+        if (exportDuration === "custom") {
+          const start = parseDateInputStart(exportCustomStart);
+          const end = parseDateInputEnd(exportCustomEnd);
+          if (start && dateVal < start) return false;
+          if (end && dateVal > end) return false;
+          return true;
+        }
+
+        const durationDays = {
+          "past-3-days": 3,
+          "past-week": 7,
+          "past-month": 30,
+          "past-3-months": 90,
+          "past-6-months": 180,
+          "past-year": 365
+        }[exportDuration];
+        if (!durationDays) return true;
+
+        const cutoff = addDays(now, -durationDays);
+        return dateVal >= cutoff && dateVal <= now;
+      });
+    }
+
+    return list;
+  }
+
+  function getExportRecordDate(record) {
+    const value = record?.savedAt || record?.uploadedAt || record?.createdAt;
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function parseDateInputStart(value) {
+    if (!value) return null;
+    const date = new Date(`${value}T00:00:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function parseDateInputEnd(value) {
+    if (!value) return null;
+    const date = new Date(`${value}T23:59:59.999`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function addDays(date, days) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
   }
 
   return (

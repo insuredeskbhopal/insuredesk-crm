@@ -38,6 +38,10 @@ export async function GET(request) {
     const company = searchParams.get("company") || "";
     const policyType = searchParams.get("policyType") || "";
     const assignedTo = searchParams.get("assignedTo") || "";
+    const filterField = searchParams.get("filterField") || "";
+    const filterValue = searchParams.get("filterValue") || "";
+    const pdfFilter = searchParams.get("pdfFilter") || "all";
+    const viewCategory = searchParams.get("viewCategory") || "all";
 
     // Fetch tenant-scoped and RBAC-authorized filter
     const tenantFilter = getTenantFilter(user, "read");
@@ -104,6 +108,49 @@ export async function GET(request) {
       });
     }
 
+    if (filterField && filterValue.trim()) {
+      const val = filterValue.trim().toLowerCase();
+      andFilters.push({
+        OR: [
+          { reviewedData: { path: [filterField], string_contains: val, mode: 'insensitive' } },
+          { data: { path: [filterField], string_contains: val, mode: 'insensitive' } }
+        ]
+      });
+    }
+
+    if (pdfFilter === "with") {
+      andFilters.push({
+        OR: [
+          { pdfFileName: { not: null } },
+          { pdfBytes: { not: null } }
+        ]
+      });
+    } else if (pdfFilter === "missing") {
+      andFilters.push({ pdfFileName: null, pdfBytes: null });
+    }
+
+    if (viewCategory !== "all" && viewCategory !== "duplicates") {
+      const group = viewCategory.toLowerCase();
+      const categoryTerms = {
+        motor: ['motor', 'vehicle', 'car', 'two wheeler', 'bike', 'scooter', 'commercial vehicle', 'taxi', 'cab', 'bus'],
+        health: ['health', 'mediclaim', 'hospital', 'family floater'],
+        fire: ['fire', 'sfsp', 'burglary', 'msme', 'warehouse', 'stock', 'property'],
+        life: ['life assured', 'life policy', 'term life', 'endowment'],
+        home: ['home building', 'home contents', 'home policy'],
+        cyber: ['cyber', 'ransomware', 'data breach']
+      };
+      const terms = categoryTerms[group] || [];
+      if (terms.length > 0) {
+        andFilters.push({
+          OR: terms.flatMap((term) => [
+            { selectedPolicyType: { contains: term, mode: 'insensitive' } },
+            { reviewedData: { path: ['policyType'], string_contains: term, mode: 'insensitive' } },
+            { data: { path: ['policyType'], string_contains: term, mode: 'insensitive' } }
+          ])
+        });
+      }
+    }
+
     if (andFilters.length > 0) {
       where.AND = andFilters;
     }
@@ -111,6 +158,7 @@ export async function GET(request) {
     const selectOptions = {
       id: true,
       savedAt: true,
+      createdAt: true,
       data: true,
       reviewedData: true,
       extractedData: true,
