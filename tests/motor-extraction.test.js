@@ -446,6 +446,53 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("extracts New India standalone own damage two wheeler enhanced-cover details", async () => {
+    const sourceFile = "tests/fixtures/DHRUP KUMAR SHARMA_MP04YK9686_2026-27 POLICY.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "NEW_INDIA_MOTOR_V1",
+      insuranceCompany: "The New India Assurance Company Limited",
+      insuredName: "DHRUP KUMAR SHARMA",
+      policyNumber: "45140031261800002300",
+      policyType: "Standalone Motor Own Damage Policy for Two Wheelers",
+      vehicleNumber: "MP-04-YK-9686",
+      registrationNumber: "MP-04-YK-9686",
+      makeModel: "HONDA/SP125",
+      vehicleMake: "HONDA",
+      vehicleModel: "SP125",
+      variant: "DRUM",
+      manufacturingYear: "2025",
+      engineNumber: "JC94EG3186699",
+      chassisNumber: "ME4JC94CCSG047117",
+      fuelType: "Petrol",
+      cubicCapacity: "124",
+      seatingCapacity: "2",
+      idv: "75140.00",
+      premium: "719.00",
+      totalPremium: "719.00",
+      netPremium: "609.00",
+      odPremium: "609.00",
+      tpDriverOwner: "0.00",
+      gstAmount: "110.00",
+      startDate: "08/06/2026",
+      expiryDate: "07/06/2027",
+      policyCoverType: "Own Damage",
+      basicOwnDamage: "523.00",
+      zeroDepreciationCover: "165.31",
+      roadsideAssistance: "25.00",
+      ncb: "20%",
+      rtoLocation: "BHOPAL",
+      financerName: "SHRIRAM FINANCE LIMITED"
+    });
+    expect(result.enhancedCovers).toMatchObject({
+      nilDepreciation: true,
+      engineProtection: false,
+      roadsideAssistance: true
+    });
+  });
+
   it("extracts New India private car liability policy details", async () => {
     const sourceFile = "tests/fixtures/RAKESH ASAI_CG074035_2026-27.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
