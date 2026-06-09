@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource, getTenantFilter } from "@/lib/auth/rbac";
+import { canAccessSharedResource, getTenantFilter } from "@/lib/auth/rbac";
 
 export async function requireClaimSession(request, write = false) {
   const token = request.cookies.get("token")?.value;
@@ -23,11 +23,11 @@ export function getClaimWhere(session, action = "read") {
 }
 
 export function canWriteClaim(session, claim) {
-  return canAccessResource(session, "write", claim.createdById, claim.organizationId);
+  return canAccessSharedResource(session, "write", claim.organizationId);
 }
 
 export function canDeleteClaim(session, claim) {
-  return canAccessResource(session, "delete", claim.createdById, claim.organizationId);
+  return canAccessSharedResource(session, "delete", claim.organizationId);
 }
 
 export function sanitizeClaimPayload(payload = {}) {

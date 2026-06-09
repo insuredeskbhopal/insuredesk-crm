@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource, getTenantFilter, getCustomerProfileScopedFilter, getCustomerProfileOwnerFilter } from "@/lib/auth/rbac";
+import { canAccessCustomerProfile, getCustomerProfileScopedFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { sanitizeCustomerProfilePayload, serializeCustomerProfile } from "@/lib/customer-profiles/utils";
 
@@ -59,7 +59,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Customer profile not found." }, { status: 404 });
     }
 
-    if (!canAccessResource(session, "write", existing.createdById, existing.organizationId)) {
+    if (!canAccessCustomerProfile(session, "write", existing)) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 

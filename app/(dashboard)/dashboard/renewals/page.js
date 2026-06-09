@@ -342,7 +342,10 @@ export default function RenewalsPage() {
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [assignPolicy, setAssignPolicy] = useState(null);
   const [assignUserId, setAssignUserId] = useState("");
+  const [assignNote, setAssignNote] = useState("");
   const [teamMembers, setTeamMembers] = useState([]);
+  const [teamLoading, setTeamLoading] = useState(false);
+  const [teamError, setTeamError] = useState("");
   const [savingAssign, setSavingAssign] = useState(false);
 
   const handlePrint = (record) => {
@@ -664,20 +667,46 @@ export default function RenewalsPage() {
     fetchCompaniesList(selectedPolicyType);
   }, [selectedPolicyType]);
 
-  useEffect(() => {
-    async function fetchTeamMembers() {
-      try {
-        const res = await fetch("/api/renewals/team");
-        const data = await res.json();
-        if (res.ok && Array.isArray(data.users)) {
-          setTeamMembers(data.users);
-        }
-      } catch {
-        // Team list is optional; reassign stays disabled when empty.
+  const loadTeamMembers = async () => {
+    setTeamLoading(true);
+    setTeamError("");
+    try {
+      const res = await fetch("/api/renewals/team", { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.users)) {
+        setTeamMembers(data.users);
+        return data.users;
       }
+      setTeamError(data.error || "Failed to load team members.");
+      return [];
+    } catch {
+      setTeamError("Network error loading team members.");
+      return [];
+    } finally {
+      setTeamLoading(false);
     }
-    fetchTeamMembers();
-  }, []);
+  };
+
+  const resolveAssigneeId = (policy, members = teamMembers) => {
+    if (!policy) return "";
+    if (policy.assignedToId) {
+      const byId = members.find((member) => member.id === policy.assignedToId);
+      if (byId) return byId.id;
+    }
+    const assignedText = String(policy.assignedTo || "").trim().toLowerCase();
+    if (!assignedText) return "";
+    const byLabel = members.find(
+      (member) =>
+        String(member.name || "").trim().toLowerCase() === assignedText ||
+        String(member.email || "").trim().toLowerCase() === assignedText
+    );
+    return byLabel?.id || "";
+  };
+
+  const patchPolicyRecord = (policyId, patch) => {
+    setPolicies((current) => current.map((item) => (item.id === policyId ? { ...item, ...patch } : item)));
+    setSelectedRecord((current) => (current?.id === policyId ? { ...current, ...patch } : current));
+  };
 
   // Reset page when tab, company, policyType, or search term changes
   useEffect(() => {
@@ -794,13 +823,12 @@ export default function RenewalsPage() {
     setRemarkPolicy(policy);
     setRemarkForm({
       remark: "",
-      nextFollowUpDate: "",
-      followUpStatus: "Follow-up Scheduled",
-      followUpMode: "Phone Call",
-      priority: "Normal",
-      nextAction: ""
+      nextFollowUpDate: policy.nextFollowUpDate || "",
+      followUpStatus: policy.followUpStatus || "Pending",
+      followUpMode: policy.followUpMode || "Call",
+      priority: policy.priority || "Normal",
+      nextAction: policy.nextAction || ""
     });
-    setSelectedRecord(null);
     setRemarkModalOpen(true);
   };
 
@@ -813,20 +841,43 @@ export default function RenewalsPage() {
     }));
   };
 
-  const handleReassign = (policy) => {
+  const handleReassign = async (policy) => {
+    if (!policy?.id) return;
     setAssignPolicy(policy);
-    const currentAssignee = teamMembers.find(
-      (member) =>
-        member.name === policy.assignedTo ||
-        member.email === policy.assignedTo
-    );
-    setAssignUserId(currentAssignee?.id || "");
+    setAssignNote("");
     setAssignModalOpen(true);
+    const members = teamMembers.length ? teamMembers : await loadTeamMembers();
+    setAssignUserId(resolveAssigneeId(policy, members));
+  };
+
+  const closeAssignModal = () => {
+    setAssignModalOpen(false);
+    setAssignPolicy(null);
+    setAssignUserId("");
+    setAssignNote("");
+    setTeamError("");
+  };
+
+  const isSameAssigneeSelection = () => {
+    if (!assignPolicy || !assignUserId) return false;
+    if (assignPolicy.assignedToId && assignUserId === assignPolicy.assignedToId) return true;
+    const selected = teamMembers.find((member) => member.id === assignUserId);
+    const assignedText = String(assignPolicy.assignedTo || "").trim().toLowerCase();
+    if (!selected || !assignedText) return false;
+    return (
+      String(selected.name || "").trim().toLowerCase() === assignedText ||
+      String(selected.email || "").trim().toLowerCase() === assignedText
+    );
   };
 
   const submitReassign = async () => {
-    if (!assignPolicy?.id || !assignUserId) {
+    if (!assignPolicy?.id) return;
+    if (!assignUserId) {
       showToastMsg("Please select a user to assign.");
+      return;
+    }
+    if (isSameAssigneeSelection()) {
+      showToastMsg("This policy is already assigned to the selected user.");
       return;
     }
     setSavingAssign(true);
@@ -836,7 +887,8 @@ export default function RenewalsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           policyId: assignPolicy.id,
-          assignedToUserId: assignUserId
+          assignedToUserId: assignUserId,
+          note: assignNote.trim()
         })
       });
       const data = await res.json();
@@ -847,13 +899,17 @@ export default function RenewalsPage() {
       const nextRecord = {
         ...assignPolicy,
         assignedTo: data.assignedTo,
+        assignedToId: data.assignedToId,
         assignedDate: data.assignedDate,
+        updatedBy: data.updatedBy || assignPolicy.updatedBy,
+        updatedAt: data.updatedAt || assignPolicy.updatedAt,
+        latestRemark: data.latestRemark || data.remark?.text,
+        latestRemarkBy: data.latestRemarkBy || data.updatedBy,
+        latestRemarkAt: data.latestRemarkAt || data.assignedDate,
         renewalRemarks: [data.remark, ...(Array.isArray(assignPolicy.renewalRemarks) ? assignPolicy.renewalRemarks : [])]
       };
-      setPolicies((current) => current.map((item) => item.id === assignPolicy.id ? nextRecord : item));
-      setSelectedRecord((current) => current?.id === assignPolicy.id ? { ...current, ...nextRecord } : current);
-      setAssignModalOpen(false);
-      setAssignPolicy(null);
+      patchPolicyRecord(assignPolicy.id, nextRecord);
+      closeAssignModal();
       showToastMsg(`Assigned to ${data.assignedTo}.`);
     } catch {
       showToastMsg("Network error reassigning policy.");
@@ -890,7 +946,7 @@ export default function RenewalsPage() {
         renewalFollowUp: data.followUp,
         renewalRemarks: [data.remark, ...(Array.isArray(policy.renewalRemarks) ? policy.renewalRemarks : [])]
       };
-      setPolicies((current) => current.map((item) => item.id === policy.id ? nextRecord : item));
+      patchPolicyRecord(policy.id, nextRecord);
       showToastMsg("Renewal updated.");
     } catch {
       showToastMsg("Network error saving quick update.");
@@ -958,8 +1014,7 @@ export default function RenewalsPage() {
           renewalFollowUp: data.followUp,
           renewalRemarks: [data.remark, ...(Array.isArray(remarkPolicy.renewalRemarks) ? remarkPolicy.renewalRemarks : [])]
         };
-        setPolicies((current) => current.map((policy) => policy.id === remarkPolicy.id ? nextRecord : policy));
-        setSelectedRecord((current) => current?.id === remarkPolicy.id ? { ...current, ...nextRecord } : current);
+        patchPolicyRecord(remarkPolicy.id, nextRecord);
         setRemarkModalOpen(false);
         setRemarkPolicy(null);
         setRemarkForm({
@@ -1232,11 +1287,9 @@ export default function RenewalsPage() {
         <button type="button" onClick={() => handleAddRemark(record)} role="menuitem">
           <FileText size={14} /> Add Remark
         </button>
-        {teamMembers.length > 0 ? (
-          <button type="button" onClick={() => handleReassign(record)} role="menuitem">
-            <UserPlus size={14} /> Reassign User
-          </button>
-        ) : null}
+        <button type="button" onClick={() => handleReassign(record)} role="menuitem">
+          <UserPlus size={14} /> Reassign User
+        </button>
         {record.renewalStatus === "ACTIVE" ? (
           <>
             <button type="button" onClick={() => submitQuickRemark(record, "Call completed.", { followUpStatus: "Completed" })} role="menuitem">
@@ -1610,59 +1663,108 @@ export default function RenewalsPage() {
       </section>
 
       {/* MODAL: Reassign User */}
-      {assignModalOpen && assignPolicy && (
-        <div className="tb-modal-backdrop" onClick={() => setAssignModalOpen(false)}>
-          <div className="tb-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
-            <div className="tb-modal-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
-              <h3 className="tb-status-title tb-modal-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <UserPlus size={20} /> Reassign Renewal
-              </h3>
-            </div>
-            <div className="tb-modal-body" style={{ marginTop: "12px" }}>
-              <p style={{ color: "var(--text-secondary)", fontSize: "13px", margin: "0 0 16px" }}>
-                Policy: <strong>{assignPolicy.policyNumber || "-"}</strong><br />
-                Customer: <strong>{assignPolicy.insuredName || "-"}</strong><br />
-                Currently assigned: <strong>{assignPolicy.assignedTo || "-"}</strong>
-              </p>
-              <label style={{ display: "block" }}>
-                <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Assign To *</span>
-                <select
-                  value={assignUserId}
-                  onChange={(e) => setAssignUserId(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--border)",
-                    backgroundColor: "var(--surface)",
-                    color: "var(--text-primary)",
-                    fontSize: "14px"
-                  }}
-                >
-                  <option value="">Select team member</option>
-                  {teamMembers.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.name}{member.email && member.name !== member.email ? ` (${member.email})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px", marginTop: "16px", borderTop: "1px solid var(--border)" }}>
+      {typeof window !== "undefined" && assignModalOpen && assignPolicy && createPortal(
+        <div className="tb-modal-backdrop renewal-assign-backdrop" onClick={closeAssignModal}>
+          <div className="tb-modal-card renewal-assign-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="renewal-assign-title">
+            <div className="renewal-remark-header">
+              <div className="renewal-remark-title">
+                <span className="renewal-remark-icon"><UserPlus size={18} /></span>
+                <div>
+                  <p>Ownership update</p>
+                  <h3 id="renewal-assign-title">Reassign Renewal</h3>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => setAssignModalOpen(false)}
-                className="tb-modal-done-btn"
-                style={{ background: "var(--surface-variant)", color: "var(--text-secondary)" }}
+                className="renewal-remark-close"
+                onClick={closeAssignModal}
+                aria-label="Close reassign modal"
               >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="renewal-remark-body">
+              <div className="renewal-remark-summary">
+                <div>
+                  <span>Customer</span>
+                  <strong>{assignPolicy.insuredName?.trim() ? assignPolicy.insuredName : "-"}</strong>
+                </div>
+                <div>
+                  <span>Policy Number</span>
+                  <strong>{assignPolicy.policyNumber || "-"}</strong>
+                </div>
+                <div>
+                  <span>Expiry Date</span>
+                  <strong>{getExpiryDisplay(assignPolicy)}</strong>
+                </div>
+                <div>
+                  <span>Renewal Status</span>
+                  <strong>{assignPolicy.renewalStatus || "ACTIVE"}</strong>
+                </div>
+              </div>
+
+              <div className="renewal-assign-current">
+                <UserPlus size={16} />
+                <span>
+                  Currently assigned to <strong>{assignPolicy.assignedTo?.trim() ? assignPolicy.assignedTo : "Unassigned"}</strong>
+                  {assignPolicy.assignedDate ? ` · since ${formatDate(assignPolicy.assignedDate)}` : ""}
+                </span>
+              </div>
+
+              {teamError ? (
+                <div className="renewal-assign-error">
+                  {teamError}
+                  <button type="button" onClick={loadTeamMembers} style={{ marginLeft: "8px", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", color: "inherit", fontWeight: 700 }}>
+                    Retry
+                  </button>
+                </div>
+              ) : null}
+
+              <label className="renewal-remark-field renewal-remark-wide">
+                <span>Assign To *</span>
+                {teamLoading ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 0", color: "#64748b", fontSize: "13px" }}>
+                    <Loader2 className="spin" size={16} />
+                    Loading team members...
+                  </div>
+                ) : (
+                  <select
+                    value={assignUserId}
+                    onChange={(event) => setAssignUserId(event.target.value)}
+                    disabled={!teamMembers.length}
+                  >
+                    <option value="">{teamMembers.length ? "Select team member" : "No team members available"}</option>
+                    {teamMembers.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.name}{member.email && member.name !== member.email ? ` (${member.email})` : ""}
+                        {member.role ? ` · ${member.role.replace(/_/g, " ")}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </label>
+
+              <label className="renewal-remark-field renewal-remark-wide">
+                <span>Assignment Note (optional)</span>
+                <textarea
+                  value={assignNote}
+                  onChange={(event) => setAssignNote(event.target.value)}
+                  placeholder="Example: Handover to motor desk, client prefers Hindi calls..."
+                  rows={3}
+                />
+              </label>
+            </div>
+
+            <div className="renewal-remark-footer">
+              <button type="button" onClick={closeAssignModal} className="renewal-remark-secondary">
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={submitReassign}
-                disabled={savingAssign}
-                className="tb-modal-done-btn"
-                style={{ background: "var(--accent)", color: "white", display: "flex", alignItems: "center", gap: "8px" }}
+                disabled={savingAssign || teamLoading || !assignUserId || isSameAssigneeSelection()}
+                className="renewal-remark-primary"
               >
                 {savingAssign && <Loader2 className="spin" size={16} />}
                 Save Assignment
@@ -1670,7 +1772,7 @@ export default function RenewalsPage() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
 
       {/* MODAL: Mark Policy as Lost */}
       {lostModalOpen && lostPolicy && (
@@ -1754,7 +1856,7 @@ export default function RenewalsPage() {
 
       {/* MODAL: Add Renewal Remark */}
       {typeof window !== "undefined" && remarkModalOpen && remarkPolicy && createPortal(
-        <div className="tb-modal-backdrop renewal-remark-backdrop" onClick={() => setRemarkModalOpen(false)}>
+        <div className="tb-modal-backdrop renewal-remark-backdrop renewal-remark-backdrop--sheet" onClick={() => setRemarkModalOpen(false)}>
           <div className="tb-modal-card renewal-remark-modal" onClick={(e) => e.stopPropagation()}>
             <div className="renewal-remark-header">
               <div className="renewal-remark-title">
@@ -2235,6 +2337,9 @@ export default function RenewalsPage() {
               <DetailSection title="General Information">
                 <DetailField label="Customer ID" value={selectedRecord.customerId} />
                 <DetailField label="Insured Name" value={selectedRecord.insuredName} wide />
+                <DetailField label="Assigned To" value={selectedRecord.assignedTo} />
+                <DetailField label="Assigned Date" value={selectedRecord.assignedDate ? formatDateTime(selectedRecord.assignedDate) : ""} />
+                <DetailField label="Renewal Status" value={selectedRecord.renewalStatus || "ACTIVE"} />
                 <DetailField label="Contact Person" value={selectedRecord.contactPerson} />
                 <DetailField label="Phone Number" value={selectedRecord.contactNumber} />
                 <DetailField label="WhatsApp Group Name" value={selectedRecord.whatsappGroupName} />
@@ -2324,9 +2429,28 @@ export default function RenewalsPage() {
                 backgroundColor: "#ffffff"
               }}
             >
-              {teamMembers.length > 0 ? (
+              <button
+                onClick={() => handleReassign(selectedRecord)}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "12px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: "#ffffff",
+                  color: "#0f172a",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}
+              >
+                <UserPlus size={16} />
+                Reassign
+              </button>
+              {selectedRecord.contactNumber?.trim() ? (
                 <button
-                  onClick={() => handleReassign(selectedRecord)}
+                  onClick={() => handleWhatsApp(selectedRecord)}
                   style={{
                     padding: "10px 24px",
                     borderRadius: "12px",
@@ -2341,8 +2465,8 @@ export default function RenewalsPage() {
                     gap: "8px"
                   }}
                 >
-                  <UserPlus size={16} />
-                  Reassign
+                  <MessageSquare size={16} />
+                  WhatsApp
                 </button>
               ) : null}
               <button

@@ -29,7 +29,7 @@ export async function POST(request) {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { policyId, assignedToUserId } = await request.json();
+    const { policyId, assignedToUserId, note } = await request.json();
     if (!policyId) {
       return Response.json({ error: "Missing policyId parameter" }, { status: 400 });
     }
@@ -63,17 +63,27 @@ export async function POST(request) {
       return Response.json({ error: "Selected user not found in your organization." }, { status: 404 });
     }
 
-    const assigneeLabel = assignee.name || assignee.email || "User";
     const previousPayload = policy.reviewedData || policy.data || {};
+    if (previousPayload.assignedToId === assignedToUserId) {
+      return Response.json({ error: "Policy is already assigned to this user." }, { status: 400 });
+    }
+
+    const assigneeLabel = assignee.name || assignee.email || "User";
     const previousAssignee = previousPayload.assignedTo || "";
     const assignedDate = new Date().toISOString();
     const actorName = user.name || user.email || "User";
 
+    const noteText = String(note || "").trim();
+    let remarkText = previousAssignee
+      ? `Reassigned from ${previousAssignee} to ${assigneeLabel}.`
+      : `Assigned to ${assigneeLabel}.`;
+    if (noteText) {
+      remarkText = `${remarkText} ${noteText}`;
+    }
+
     const assignmentRemark = {
       id: randomUUID(),
-      text: previousAssignee
-        ? `Reassigned from ${previousAssignee} to ${assigneeLabel}.`
-        : `Assigned to ${assigneeLabel}.`,
+      text: remarkText,
       createdAt: assignedDate,
       createdBy: actorName,
       createdById: actorId,
@@ -121,6 +131,11 @@ export async function POST(request) {
       assignedTo: assigneeLabel,
       assignedToId: assignee.id,
       assignedDate,
+      updatedBy: actorName,
+      updatedAt: assignedDate,
+      latestRemark: remarkText,
+      latestRemarkBy: actorName,
+      latestRemarkAt: assignedDate,
       remark: assignmentRemark
     });
   } catch (error) {

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/records/validation";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource, getTenantFilter, UserRole, applyLOBRestriction } from "@/lib/auth/rbac";
+import { canAccessSharedResource, getTenantFilter, UserRole, applyLOBRestriction } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
@@ -18,7 +18,7 @@ export async function PUT(request, { params }) {
     }
 
     const session = await verifyJWT(token);
-    if (!session || ![UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER].includes(session.role)) {
+    if (!session || session.role === UserRole.VIEWER) {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -28,7 +28,7 @@ export async function PUT(request, { params }) {
     const existing = await prisma.policyRecord.findFirst({
       where: applyLOBRestriction({
         id,
-        ...getTenantFilter(session, "write")
+        ...getTenantFilter(session, "read")
       }, session)
     });
 
@@ -37,10 +37,9 @@ export async function PUT(request, { params }) {
     }
 
     // Verify tenant and role permissions
-    const isAuthorized = canAccessResource(
+    const isAuthorized = canAccessSharedResource(
       session,
       "write",
-      existing.createdById,
       existing.organizationId
     );
 
@@ -170,10 +169,9 @@ export async function DELETE(request, { params }) {
     }
 
     // Verify tenant and role permissions
-    const isAuthorized = canAccessResource(
+    const isAuthorized = canAccessSharedResource(
       session,
       "delete",
-      existing.createdById,
       existing.organizationId
     );
 

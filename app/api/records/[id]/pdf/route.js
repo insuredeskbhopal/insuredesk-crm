@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { securityHeaders } from "@/lib/auth/security";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessResource, getTenantFilter } from "@/lib/auth/rbac";
+import { canAccessSharedResource, getTenantFilter } from "@/lib/auth/rbac";
 import { getLocalPhysicalPath, getSignedUrl } from "@/lib/storage";
 import { downloadGoogleDriveFile } from "@/lib/storage/google-drive-storage";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
@@ -39,10 +39,9 @@ export async function GET(_request, { params }) {
   }
 
   // Validate tenant context and RBAC permissions
-  const isAuthorized = canAccessResource(
+  const isAuthorized = canAccessSharedResource(
     session,
     "read",
-    record.createdById,
     record.organizationId
   );
 
