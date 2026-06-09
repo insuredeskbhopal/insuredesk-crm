@@ -11,6 +11,7 @@ import {
   Paperclip,
   Pencil,
   Plus,
+  Printer,
   RotateCcw,
   Search,
   ShieldCheck,
@@ -91,6 +92,210 @@ export default function ClaimsManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const handlePrint = (record) => {
+    if (!record) return;
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      window.alert("Please allow popups to print claim details.");
+      return;
+    }
+
+    const formatDateLocal = (val) => {
+      if (!val) return "-";
+      const date = new Date(val);
+      if (Number.isNaN(date.getTime())) return String(val);
+      return date.toLocaleDateString("en-IN");
+    };
+
+    const renderPrintSection = (title, fields) => {
+      const validFields = fields.filter(([_, val]) => val !== undefined && val !== null && String(val).trim() !== "");
+      if (validFields.length === 0) return "";
+      return `
+        <div class="section">
+          <h3>${title}</h3>
+          <div class="grid">
+            ${validFields.map(([lbl, val]) => `
+              <div class="field">
+                <span class="label">${lbl}</span>
+                <span class="value">${val}</span>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    };
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Claim Details - ${record.claimNo || "Record"}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              color: #0f172a;
+              padding: 16px;
+              line-height: 1.3;
+              margin: 0;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2px solid #0f172a;
+              padding-bottom: 6px;
+              margin-bottom: 12px;
+            }
+            .header-info h1 {
+              margin: 0;
+              font-size: 18px;
+              font-weight: 800;
+            }
+            .header-info p {
+              margin: 0 0 2px;
+              color: #64748b;
+              font-size: 9px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
+            .print-logo {
+              height: 94px;
+              width: auto;
+              object-fit: contain;
+            }
+            .section {
+              margin-bottom: 12px;
+              page-break-inside: avoid;
+            }
+            .section h3 {
+              margin: 0 0 6px;
+              font-size: 12px;
+              font-weight: 700;
+              color: #1e3a8a;
+              border-bottom: 2px solid #f1f5f9;
+              padding-bottom: 4px;
+            }
+            .grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 6px;
+            }
+            .field {
+              padding: 5px 8px;
+              background: #f8fafc;
+              border: 1px solid #f1f5f9;
+              border-radius: 4px;
+            }
+            .label {
+              font-size: 8px;
+              font-weight: 600;
+              color: #64748b;
+              text-transform: uppercase;
+              display: block;
+              margin-bottom: 1px;
+              letter-spacing: 0.5px;
+            }
+            .value {
+              font-size: 11px;
+              font-weight: 600;
+              color: #0f172a;
+              word-break: break-all;
+            }
+            @media print {
+              @page {
+                size: A4;
+                margin: 8mm;
+              }
+              body {
+                zoom: 82%;
+              }
+              .field {
+                background: #f8fafc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="header-info">
+              <p>Claim Record Details</p>
+              <h1>${record.claimNo || "No Claim Number"}</h1>
+            </div>
+            <img src="${window.location.origin}/brand/main-logo-wide.png" alt="Bima Headquarter" class="print-logo" />
+          </div>
+          
+          ${renderPrintSection("General Information", [
+            ["Insured Name", record.insuredName],
+            ["Mobile No.", record.mobileNo],
+            ["Contact Person", record.contactPerson],
+            ["Policy No.", record.policyNo],
+            ["Claim No.", record.claimNo],
+            ["Group Name", record.groupName]
+          ])}
+
+          ${renderPrintSection("Dates & Status", [
+            ["Claim Date", formatDateLocal(record.claimDate)],
+            ["Claim Type", record.claimType],
+            ["Claim Status", record.claimStatus],
+            ["Follow-up Date", formatDateLocal(record.followUpDate)]
+          ])}
+
+          ${renderPrintSection("Description & Remarks", [
+            ["Claim Description", record.claimDescription],
+            ["Current Remark", record.currentRemark]
+          ])}
+          
+          ${record.remarks && record.remarks.length ? `
+            <div class="section">
+              <h3>Remarks History</h3>
+              <div style="display: grid; gap: 6px;">
+                ${record.remarks.map(rem => `
+                  <div style="padding: 6px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 4px; font-size: 10px;">
+                    <strong>${rem.text}</strong>
+                    <div style="color: #64748b; margin-top: 2px;">
+                      ${formatDateLocal(rem.createdAt)} ${rem.followUpDate ? `| Follow-up: ${formatDateLocal(rem.followUpDate)}` : ""}
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          ` : ""}
+
+          <script>
+            window.onload = function() {
+              const img = document.querySelector('.print-logo');
+              if (img) {
+                if (img.complete) {
+                  window.print();
+                  setTimeout(function() { window.close(); }, 500);
+                } else {
+                  img.onload = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 500);
+                  };
+                  img.onerror = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 500);
+                  };
+                  setTimeout(function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 500);
+                  }, 1500);
+                }
+              } else {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   useEffect(() => {
     loadClaims();
@@ -445,7 +650,7 @@ export default function ClaimsManagementPage() {
                   <td className="claims-empty-row" colSpan={12}>Loading claims from database...</td>
                 </tr>
               ) : filteredClaims.length ? filteredClaims.map((item, index) => (
-                <tr key={item.id}>
+                <tr key={item.id} className={openMenuId === item.id ? "row-has-open-menu" : ""}>
                   <td>{index + 1}</td>
                   <td>{item.insuredName || "-"}</td>
                   <td>{item.mobileNo || "-"}</td>
@@ -495,48 +700,227 @@ export default function ClaimsManagementPage() {
       </section>
 
       {selectedClaim ? (
-        <div className="claims-modal-backdrop" role="dialog" aria-modal="true">
-          <section className="claims-register-panel claims-detail-panel">
-            <div className="claims-register-head">
-            <div>
-              <span><Eye size={18} /> Claim Details</span>
-              <strong>{selectedClaim.claimNo || selectedClaim.insuredName || "Claim record"}</strong>
+        <div
+          className="tb-modal-backdrop"
+          onClick={() => setSelectedClaimId("")}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.25)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            zIndex: 2000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px"
+          }}
+        >
+          <div
+            className="tb-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#ffffff",
+              borderRadius: "24px",
+              boxShadow: "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
+              width: "100%",
+              maxWidth: "1040px",
+              maxHeight: "85vh",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              border: "none",
+              animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both"
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "20px 24px",
+                borderBottom: "1px solid #f1f5f9",
+                backgroundColor: "#ffffff",
+                color: "#0f172a"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <img
+                  src="/brand/main-logo-wide.png"
+                  alt="Bima Headquarter"
+                  style={{ height: "74px", width: "auto", objectFit: "contain" }}
+                />
+                <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Claim Details</span>
+                  <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "800", color: "#0f172a" }}>
+                    {selectedClaim.claimNo || "No Claim Number"}
+                  </h2>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedClaimId("")}
+                aria-label="Close details"
+                style={{
+                  background: "rgba(15, 23, 42, 0.05)",
+                  border: "none",
+                  color: "#64748b",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  transition: "background-color 0.2s, color 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.1)";
+                  e.currentTarget.style.color = "#0f172a";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.05)";
+                  e.currentTarget.style.color = "#64748b";
+                }}
+              >
+                <X size={24} />
+              </button>
             </div>
-            <div className="claims-row-actions">
-              <button type="button" onClick={() => openEditForm(selectedClaim)} aria-label="Edit selected claim">
+
+            {/* Modal Body */}
+            <div
+              style={{
+                padding: "24px",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "24px",
+                backgroundColor: "#ffffff"
+              }}
+            >
+              <div className="claims-detail-grid">
+                {DETAIL_FIELDS.map(([label, key]) => (
+                  <div key={key}>
+                    <span>{label}</span>
+                    <strong>{key === "claimDate" || key === "followUpDate" ? formatDate(selectedClaim[key]) : selectedClaim[key] || "-"}</strong>
+                  </div>
+                ))}
+              </div>
+
+              <div className="claims-document-uploader view-only">
+                <div>
+                  <span><Paperclip size={17} /> Uploaded Documents</span>
+                  <strong>{(selectedClaim.documents || []).length.toLocaleString("en-IN")} files available for download.</strong>
+                </div>
+                <DocumentList documents={selectedClaim.documents || []} />
+              </div>
+
+              <div className="claims-document-uploader view-only">
+                <div>
+                  <span><MessageSquarePlus size={17} /> Remarks & Follow-up</span>
+                  <strong>{(selectedClaim.remarks || []).length.toLocaleString("en-IN")} saved remarks.</strong>
+                </div>
+                <RemarkList remarks={selectedClaim.remarks || []} />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                gap: "12px",
+                padding: "16px 24px",
+                borderTop: "1px solid #f1f5f9",
+                backgroundColor: "#ffffff"
+              }}
+            >
+              <button
+                onClick={() => openEditForm(selectedClaim)}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "12px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: "#ffffff",
+                  color: "#0f172a",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  transition: "background-color 0.2s, border-color 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#0f172a";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                }}
+              >
                 <Pencil size={15} />
+                Edit Claim
               </button>
-              <button type="button" onClick={() => setSelectedClaimId("")} aria-label="Close claim details">
-                <X size={16} />
+              <button
+                onClick={() => handlePrint(selectedClaim)}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "12px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: "#ffffff",
+                  color: "#0f172a",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  transition: "background-color 0.2s, border-color 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#0f172a";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                }}
+              >
+                <Printer size={16} />
+                Print Details
+              </button>
+              <button
+                onClick={() => setSelectedClaimId("")}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "12px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: "#ffffff",
+                  color: "#475569",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  transition: "background-color 0.2s, border-color 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#94a3b8";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                }}
+              >
+                Close
               </button>
             </div>
-            </div>
-
-            <div className="claims-detail-grid">
-            {DETAIL_FIELDS.map(([label, key]) => (
-              <div key={key}>
-                <span>{label}</span>
-                <strong>{key === "claimDate" || key === "followUpDate" ? formatDate(selectedClaim[key]) : selectedClaim[key] || "-"}</strong>
-              </div>
-            ))}
-            </div>
-
-            <div className="claims-document-uploader view-only">
-            <div>
-              <span><Paperclip size={17} /> Uploaded Documents</span>
-              <strong>{(selectedClaim.documents || []).length.toLocaleString("en-IN")} files available for download.</strong>
-            </div>
-            <DocumentList documents={selectedClaim.documents || []} />
-            </div>
-
-            <div className="claims-document-uploader view-only">
-              <div>
-                <span><MessageSquarePlus size={17} /> Remarks & Follow-up</span>
-                <strong>{(selectedClaim.remarks || []).length.toLocaleString("en-IN")} saved remarks.</strong>
-              </div>
-              <RemarkList remarks={selectedClaim.remarks || []} />
-            </div>
-          </section>
+          </div>
         </div>
       ) : null}
 
