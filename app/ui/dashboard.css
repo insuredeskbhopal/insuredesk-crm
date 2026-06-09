@@ -7057,6 +7057,93 @@ label.is-disabled textarea {
   opacity: 0.65;
 }
 
+.renewal-today-report-modal {
+  width: min(980px, calc(100vw - 32px));
+  max-height: min(90vh, 860px);
+}
+
+.renewal-today-report-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.renewal-today-report-meta > div {
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.renewal-today-report-meta span {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.renewal-today-report-meta strong {
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.renewal-today-report-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.renewal-today-report-chips span {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #dbe3ee;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.renewal-today-report-table-wrap {
+  max-height: min(48vh, 420px);
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.renewal-today-report-table th,
+.renewal-today-report-table td {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.renewal-today-report-table td:last-child {
+  white-space: normal;
+  min-width: 180px;
+  max-width: 280px;
+}
+
+.renewal-today-report-modal .renewal-remark-footer {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.renewal-report-btn {
+  border-color: #0f766e !important;
+  color: #0f766e !important;
+  font-weight: 700;
+}
+
+.renewal-report-btn:hover {
+  background: rgba(15, 118, 110, 0.06) !important;
+}
+
 .tb-status-block {
   display: flex;
   align-items: center;

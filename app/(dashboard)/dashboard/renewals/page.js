@@ -17,7 +17,8 @@ import {
   Search,
   Eye,
   Printer,
-  UserPlus
+  UserPlus,
+  ClipboardList
 } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 import EmptyState from "@/app/components/shared/EmptyState";
@@ -310,8 +311,18 @@ export default function RenewalsPage() {
     renewed: 0,
     lost: 0,
     missingExpiry: 0,
-    invalidExpiry: 0
+    invalidExpiry: 0,
+    todayWork: 0
   });
+
+  const [todayWorkReport, setTodayWorkReport] = useState({
+    reportDate: "",
+    user: { name: "", email: "" },
+    summary: { total: 0, remarks: 0, renewed: 0, lost: 0, reassigned: 0, whatsapp: 0, uniquePolicies: 0 },
+    activities: []
+  });
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -748,6 +759,96 @@ export default function RenewalsPage() {
     }
   };
 
+  const fetchTodayWorkReport = async () => {
+    setReportLoading(true);
+    try {
+      const res = await fetch("/api/renewals/today-work", { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok) {
+        setTodayWorkReport({
+          reportDate: data.reportDate || "",
+          user: data.user || { name: "", email: "" },
+          summary: data.summary || { total: 0, remarks: 0, renewed: 0, lost: 0, reassigned: 0, whatsapp: 0, uniquePolicies: 0 },
+          activities: Array.isArray(data.activities) ? data.activities : []
+        });
+      }
+    } catch {
+      // Report is optional; list view still works.
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTodayWorkReport();
+  }, []);
+
+  const openTodayWorkReport = async () => {
+    setReportModalOpen(true);
+    await fetchTodayWorkReport();
+  };
+
+  const handlePrintTodayReport = () => {
+    const rows = todayWorkReport.activities || [];
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      showToastMsg("Please allow popups to print the report.");
+      return;
+    }
+
+    const userLabel = todayWorkReport.user?.name || todayWorkReport.user?.email || "User";
+    const summary = todayWorkReport.summary || {};
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Renewal Today's Work - ${userLabel}</title>
+          <style>
+            body { font-family: Arial, sans-serif; color: #0f172a; padding: 20px; }
+            h1 { margin: 0 0 4px; font-size: 20px; }
+            p { margin: 0 0 16px; color: #64748b; font-size: 12px; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; vertical-align: top; }
+            th { background: #f8fafc; }
+          </style>
+        </head>
+        <body>
+          <h1>Renewal Today's Work Report</h1>
+          <p>${userLabel} · ${todayWorkReport.reportDate || new Date().toLocaleDateString("en-IN")} · ${summary.total || 0} activities · ${summary.uniquePolicies || 0} policies touched</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Action</th>
+                <th>Customer</th>
+                <th>Policy No.</th>
+                <th>Mobile</th>
+                <th>Company</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.length ? rows.map((row) => `
+                <tr>
+                  <td>${formatDateTime(row.time)}</td>
+                  <td>${row.actionLabel || row.action || "-"}</td>
+                  <td>${row.customerName || "-"}</td>
+                  <td>${row.policyNumber || "-"}</td>
+                  <td>${row.mobile || "-"}</td>
+                  <td>${row.company || "-"}</td>
+                  <td>${row.detail || "-"}</td>
+                </tr>
+              `).join("") : `<tr><td colspan="7">No renewal activity recorded today.</td></tr>`}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
   const fetchPoliciesList = async (signal) => {
     setLoading(true);
     setError("");
@@ -804,6 +905,7 @@ export default function RenewalsPage() {
       if (res.ok && data.url) {
         window.open(data.url, "_blank");
         showToastMsg("WhatsApp reminder link generated.");
+        fetchTodayWorkReport();
       } else {
         showToastMsg(data.error || "Failed to generate WhatsApp reminder.");
       }
@@ -910,6 +1012,7 @@ export default function RenewalsPage() {
       };
       patchPolicyRecord(assignPolicy.id, nextRecord);
       closeAssignModal();
+      fetchTodayWorkReport();
       showToastMsg(`Assigned to ${data.assignedTo}.`);
     } catch {
       showToastMsg("Network error reassigning policy.");
@@ -947,6 +1050,7 @@ export default function RenewalsPage() {
         renewalRemarks: [data.remark, ...(Array.isArray(policy.renewalRemarks) ? policy.renewalRemarks : [])]
       };
       patchPolicyRecord(policy.id, nextRecord);
+      fetchTodayWorkReport();
       showToastMsg("Renewal updated.");
     } catch {
       showToastMsg("Network error saving quick update.");
@@ -970,8 +1074,9 @@ export default function RenewalsPage() {
         showToastMsg(data.error || "Failed to update renewal status.");
         return;
       }
-      showToastMsg(`Marked as ${reason}.`);
-      fetchPoliciesList();
+        showToastMsg(`Marked as ${reason}.`);
+        fetchPoliciesList();
+        fetchTodayWorkReport();
     } catch {
       showToastMsg("Network error updating renewal status.");
     }
@@ -1015,6 +1120,7 @@ export default function RenewalsPage() {
           renewalRemarks: [data.remark, ...(Array.isArray(remarkPolicy.renewalRemarks) ? remarkPolicy.renewalRemarks : [])]
         };
         patchPolicyRecord(remarkPolicy.id, nextRecord);
+        fetchTodayWorkReport();
         setRemarkModalOpen(false);
         setRemarkPolicy(null);
         setRemarkForm({
@@ -1057,6 +1163,7 @@ export default function RenewalsPage() {
         showToastMsg("Policy marked as Lost.");
         setLostModalOpen(false);
         fetchPoliciesList();
+        fetchTodayWorkReport();
       } else {
         showToastMsg(data.error || "Failed to mark policy as lost.");
       }
@@ -1190,6 +1297,7 @@ export default function RenewalsPage() {
           showToastMsg("Policy successfully renewed!");
           setRenewModalOpen(false);
           fetchPoliciesList();
+          fetchTodayWorkReport();
         } else {
           showToastMsg(data.error || "Failed to renew policy.");
         }
@@ -1392,6 +1500,7 @@ export default function RenewalsPage() {
           { label: "Due in 15 Days", value: summaryCounts.due15, color: "#d97706", tab: "due_15", days: "" },
           { label: "Due in 30 Days", value: summaryCounts.due30, color: "var(--accent)", tab: "due_30", days: "" },
           { label: "Overdue", value: summaryCounts.overdue, color: "#dc2626", tab: "overdue", days: "" },
+          { label: "Today's Work", value: summaryCounts.todayWork, color: "#0f766e", tab: "today_work", days: "", onClickExtra: openTodayWorkReport },
           { label: "Follow-up Today", value: summaryCounts.followUpToday, color: "#2563eb", tab: "followup_today", days: "" },
           { label: "Missed Follow-ups", value: summaryCounts.missedFollowUps, color: "#dc2626", tab: "missed_followup", days: "" },
           { label: "Renewed", value: summaryCounts.renewed, color: "#10b981", tab: "renewed", days: "" },
@@ -1407,6 +1516,7 @@ export default function RenewalsPage() {
               } else {
                 setDaysFilter("");
               }
+              setPage(1);
             }}
             style={{
               padding: "20px",
@@ -1442,6 +1552,28 @@ export default function RenewalsPage() {
               fontWeight: "700",
               color: "var(--text-primary)"
             }}>{item.label}</p>
+            {item.onClickExtra ? (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  item.onClickExtra();
+                }}
+                style={{
+                  marginTop: "10px",
+                  padding: "6px 10px",
+                  borderRadius: "8px",
+                  border: "1px solid #99f6e4",
+                  background: "rgba(15, 118, 110, 0.08)",
+                  color: "#0f766e",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer"
+                }}
+              >
+                View Report
+              </button>
+            ) : null}
           </article>
         ))}
       </section>
@@ -1502,6 +1634,7 @@ export default function RenewalsPage() {
             >
               <option value="all">All Status</option>
               <option value="due_today">Due Today</option>
+              <option value="today_work">Today&apos;s Work</option>
               <option value="upcoming">Due Soon</option>
               <option value="due_7">Due in 7 Days</option>
               <option value="due_15">Due in 15 Days</option>
@@ -1536,6 +1669,16 @@ export default function RenewalsPage() {
           <button className="renewal-clear-btn" type="button" onClick={clearRenewalFilters}>
             Clear Filters
           </button>
+
+          <button
+            className="renewal-clear-btn renewal-report-btn"
+            type="button"
+            onClick={openTodayWorkReport}
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+          >
+            <ClipboardList size={16} />
+            Today&apos;s Report
+          </button>
         </div>
       </section>
 
@@ -1548,6 +1691,7 @@ export default function RenewalsPage() {
             { key: "all", label: "All Policies" },
             { key: "upcoming", label: "Upcoming (10 Days)" },
             { key: "due_today", label: "Due Today" },
+            { key: "today_work", label: "Today's Work" },
             { key: "overdue", label: "Overdue" },
             { key: "followup_today", label: "Follow-up Today" },
             { key: "missed_followup", label: "Missed Follow-up" },
@@ -1661,6 +1805,115 @@ export default function RenewalsPage() {
           <EmptyState>No policies found matching filters.</EmptyState>
         )}
       </section>
+
+      {/* MODAL: Today's Work Report */}
+      {typeof window !== "undefined" && reportModalOpen && createPortal(
+        <div className="tb-modal-backdrop renewal-assign-backdrop" onClick={() => setReportModalOpen(false)}>
+          <div className="tb-modal-card renewal-assign-modal renewal-today-report-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="renewal-remark-header">
+              <div className="renewal-remark-title">
+                <span className="renewal-remark-icon"><ClipboardList size={18} /></span>
+                <div>
+                  <p>Daily activity</p>
+                  <h3>Today&apos;s Renewal Work</h3>
+                </div>
+              </div>
+              <button type="button" className="renewal-remark-close" onClick={() => setReportModalOpen(false)} aria-label="Close report">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="renewal-remark-body">
+              <div className="renewal-today-report-meta">
+                <div>
+                  <span>User</span>
+                  <strong>{todayWorkReport.user?.name || todayWorkReport.user?.email || "You"}</strong>
+                </div>
+                <div>
+                  <span>Date</span>
+                  <strong>{todayWorkReport.reportDate ? formatDate(todayWorkReport.reportDate) : formatDate(new Date())}</strong>
+                </div>
+                <div>
+                  <span>Activities</span>
+                  <strong>{todayWorkReport.summary?.total || 0}</strong>
+                </div>
+                <div>
+                  <span>Policies Touched</span>
+                  <strong>{todayWorkReport.summary?.uniquePolicies || 0}</strong>
+                </div>
+              </div>
+
+              <div className="renewal-today-report-chips">
+                <span>Remarks {todayWorkReport.summary?.remarks || 0}</span>
+                <span>Renewed {todayWorkReport.summary?.renewed || 0}</span>
+                <span>Lost {todayWorkReport.summary?.lost || 0}</span>
+                <span>Reassigned {todayWorkReport.summary?.reassigned || 0}</span>
+                <span>WhatsApp {todayWorkReport.summary?.whatsapp || 0}</span>
+              </div>
+
+              {reportLoading ? (
+                <div style={{ display: "flex", justifyContent: "center", padding: "32px 0" }}>
+                  <Loader2 className="spin" size={28} style={{ color: "var(--accent)" }} />
+                </div>
+              ) : (
+                <div className="table-wrap renewal-today-report-table-wrap">
+                  <table className="records-table renewal-today-report-table">
+                    <thead>
+                      <tr>
+                        <th>Time</th>
+                        <th>Action</th>
+                        <th>Customer</th>
+                        <th>Policy No.</th>
+                        <th>Mobile</th>
+                        <th>Company</th>
+                        <th>Details</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(todayWorkReport.activities || []).length ? todayWorkReport.activities.map((row) => (
+                        <tr key={row.id}>
+                          <td>{formatDateTime(row.time)}</td>
+                          <td>{row.actionLabel || "-"}</td>
+                          <td>{row.customerName || "-"}</td>
+                          <td>{row.policyNumber || "-"}</td>
+                          <td>{row.mobile || "-"}</td>
+                          <td>{row.company || "-"}</td>
+                          <td title={row.detail || ""}>{row.detail && row.detail.length > 80 ? `${row.detail.slice(0, 80)}...` : (row.detail || "-")}</td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan={7}>No renewal activity recorded for you today yet.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="renewal-remark-footer">
+              <button type="button" className="renewal-remark-secondary" onClick={() => setReportModalOpen(false)}>
+                Close
+              </button>
+              <button
+                type="button"
+                className="renewal-remark-secondary"
+                onClick={() => {
+                  setActiveTab("today_work");
+                  setPage(1);
+                  setReportModalOpen(false);
+                }}
+              >
+                Open in List
+              </button>
+              <button type="button" className="renewal-remark-primary" onClick={handlePrintTodayReport} disabled={reportLoading}>
+                <Printer size={16} />
+                Print Report
+              </button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
 
       {/* MODAL: Reassign User */}
       {typeof window !== "undefined" && assignModalOpen && assignPolicy && createPortal(

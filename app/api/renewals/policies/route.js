@@ -187,6 +187,19 @@ export async function GET(request) {
             OR ($4 = 'assigned_to_me' AND (created_by_id = $10::uuid OR LOWER(assigned_to) = LOWER((SELECT COALESCE(name, email, '') FROM users WHERE id = $10::uuid))))
             OR ($4 = 'updated_by_me' AND updated_by_id = $10::uuid)
             OR ($4 = 'created_by_me' AND created_by_id = $10::uuid)
+            OR ($4 = 'today_work' AND (
+              (updated_by_id = $10::uuid AND updated_at >= $3::date::timestamp AND updated_at < ($3::date + INTERVAL '1 day'))
+              OR id IN (
+                SELECT entity_id::uuid
+                FROM audit_logs
+                WHERE user_id = $10::uuid
+                  AND entity_type = 'PolicyRecord'
+                  AND action IN ('RENEWAL_REMARK_ADDED', 'POLICY_RENEWED', 'POLICY_MARK_LOST', 'RENEWAL_REASSIGNED', 'WHATSAPP_REMINDER_SENT')
+                  AND created_at >= $3::date::timestamp
+                  AND created_at < ($3::date + INTERVAL '1 day')
+                  AND ($1::boolean OR organization_id = $2::uuid)
+              )
+            ))
             OR ($4 = 'priority_high' AND LOWER(priority) IN ('high', 'urgent'))
             OR ($4 = 'priority_medium' AND LOWER(priority) IN ('medium', 'normal'))
             OR ($4 = 'priority_low' AND LOWER(priority) = 'low')
@@ -229,7 +242,22 @@ export async function GET(request) {
         COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END)::integer AS renewed,
         COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END)::integer AS lost,
         COUNT(CASE WHEN expiry_state = 'missing' THEN 1 END)::integer AS missing_expiry,
-        COUNT(CASE WHEN expiry_state = 'invalid' THEN 1 END)::integer AS invalid_expiry
+        COUNT(CASE WHEN expiry_state = 'invalid' THEN 1 END)::integer AS invalid_expiry,
+        COUNT(DISTINCT CASE
+          WHEN (
+            (updated_by_id = $10::uuid AND updated_at >= $3::date::timestamp AND updated_at < ($3::date + INTERVAL '1 day'))
+            OR id IN (
+              SELECT entity_id::uuid
+              FROM audit_logs
+              WHERE user_id = $10::uuid
+                AND entity_type = 'PolicyRecord'
+                AND action IN ('RENEWAL_REMARK_ADDED', 'POLICY_RENEWED', 'POLICY_MARK_LOST', 'RENEWAL_REASSIGNED', 'WHATSAPP_REMINDER_SENT')
+                AND created_at >= $3::date::timestamp
+                AND created_at < ($3::date + INTERVAL '1 day')
+                AND ($1::boolean OR organization_id = $2::uuid)
+            )
+          ) THEN id
+        END)::integer AS today_work
       FROM parsed_policies
       WHERE
         (
@@ -341,6 +369,7 @@ function normalizeSummaryCounts(row = {}) {
     renewed: Number(row.renewed) || 0,
     lost: Number(row.lost) || 0,
     missingExpiry: Number(row.missing_expiry) || 0,
-    invalidExpiry: Number(row.invalid_expiry) || 0
+    invalidExpiry: Number(row.invalid_expiry) || 0,
+    todayWork: Number(row.today_work) || 0
   };
 }
