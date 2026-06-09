@@ -18,12 +18,16 @@ export async function POST(request) {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { policyId, lostReason, remarks } = await request.json();
+    const { policyId, lostReason, remarks, renewalStatus } = await request.json();
     if (!policyId) {
       return Response.json({ error: "Missing policyId parameter" }, { status: 400 });
     }
+    if (!lostReason && !renewalStatus) {
+      return Response.json({ error: "Lost reason is required." }, { status: 400 });
+    }
 
     const tenantFilter = getTenantFilter(user, "write");
+    const actorId = user.userId || user.id || null;
 
     const policy = await prisma.policyRecord.findFirst({
       where: {
@@ -38,17 +42,23 @@ export async function POST(request) {
 
     const existingReviewedData = policy.reviewedData || {};
     const existingData = policy.data || {};
-    if (remarks) {
+    const previousStatus = policy.renewalStatus || "ACTIVE";
+    const status = normalizeLostRenewalStatus(renewalStatus || lostReason);
+    const remarkText = String(remarks || lostReason || "").trim();
+    if (remarkText) {
       const renewalRemark = {
         id: randomUUID(),
-        text: String(remarks).trim(),
+        text: remarkText,
         createdAt: new Date().toISOString(),
         createdBy: user.name || user.email || "User",
-        createdById: user.userId || user.id || null,
-        type: "LOST"
+        createdById: actorId,
+        type: status,
+        oldStatus: previousStatus,
+        newStatus: status,
+        lostReason: lostReason || ""
       };
-      existingReviewedData.remark = remarks;
-      existingData.remark = remarks;
+      existingReviewedData.remark = remarkText;
+      existingData.remark = remarkText;
       existingReviewedData.renewalRemarks = [renewalRemark, ...(Array.isArray(existingReviewedData.renewalRemarks) ? existingReviewedData.renewalRemarks : [])];
       existingData.renewalRemarks = [renewalRemark, ...(Array.isArray(existingData.renewalRemarks) ? existingData.renewalRemarks : [])];
     }
@@ -56,12 +66,13 @@ export async function POST(request) {
     const updatedPolicy = await prisma.policyRecord.update({
       where: { id: policyId },
       data: {
-        renewalStatus: "LOST",
+        renewalStatus: status,
         isActivePolicy: false,
         lostReason: lostReason || "",
         renewalDate: new Date(),
         reviewedData: existingReviewedData,
-        data: existingData
+        data: existingData,
+        updatedById: actorId
       }
     });
 
@@ -74,9 +85,9 @@ export async function POST(request) {
       source: "API",
       ipAddress,
       userAgent,
-      userId: user.userId || user.id,
+      userId: actorId,
       organizationId: user.organizationId,
-      metadata: { lostReason, remarks }
+      metadata: { lostReason, remarks, renewalStatus: status }
     });
 
     return Response.json({ success: true, policy: updatedPolicy });
@@ -84,4 +95,12 @@ export async function POST(request) {
     console.error("Mark policy lost failed:", error);
     return Response.json({ error: "Failed to mark policy as lost." }, { status: 500 });
   }
+}
+
+function normalizeLostRenewalStatus(value = "") {
+  const text = String(value || "").toLowerCase();
+  if (/wrong\s*number/.test(text)) return "WRONG_NUMBER";
+  if (/renewed\s*elsewhere|direct/.test(text)) return "RENEWED_ELSEWHERE";
+  if (/not\s*interested/.test(text)) return "NOT_INTERESTED";
+  return "LOST";
 }

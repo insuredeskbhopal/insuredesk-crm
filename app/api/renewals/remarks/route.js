@@ -44,8 +44,12 @@ export async function POST(request) {
     if (!text) {
       return Response.json({ error: "Remark is required." }, { status: 400 });
     }
+    if (nextFollowUpDate && Number.isNaN(new Date(nextFollowUpDate).getTime())) {
+      return Response.json({ error: "Next follow-up date is invalid." }, { status: 400 });
+    }
 
     const tenantFilter = getTenantFilter(user, "write");
+    const actorId = user.userId || user.id || null;
     const policy = await prisma.policyRecord.findFirst({
       where: {
         id: policyId,
@@ -58,13 +62,16 @@ export async function POST(request) {
     }
 
     const actorName = user.name || user.email || "User";
+    const currentStatus = policy.renewalStatus || "ACTIVE";
     const renewalRemark = {
       id: randomUUID(),
       text,
       createdAt: new Date().toISOString(),
       createdBy: actorName,
-      createdById: user.userId || user.id || null,
+      createdById: actorId,
       type: "FOLLOW_UP",
+      oldStatus: currentStatus,
+      newStatus: currentStatus,
       nextFollowUpDate: String(nextFollowUpDate || "").trim(),
       followUpStatus: String(followUpStatus || "Follow-up Scheduled").trim(),
       followUpMode: String(followUpMode || "Phone Call").trim(),
@@ -79,7 +86,8 @@ export async function POST(request) {
       where: { id: policyId },
       data: {
         reviewedData,
-        data
+        data,
+        updatedById: actorId
       }
     });
 
@@ -92,7 +100,7 @@ export async function POST(request) {
       source: "API",
       ipAddress,
       userAgent,
-      userId: user.userId || user.id,
+      userId: actorId,
       organizationId: user.organizationId,
       metadata: { remarkId: renewalRemark.id, nextFollowUpDate, followUpStatus, followUpMode, priority, nextAction }
     });

@@ -62,6 +62,9 @@ BimaHeadquarter`;
     if (phone.length === 10) {
       phone = "91" + phone;
     }
+    if (!/^\d{12}$/.test(phone)) {
+      return Response.json({ error: "A valid 10 digit mobile number is required for WhatsApp reminders." }, { status: 400 });
+    }
     const url = `https://wa.me/${phone}?text=${message}`;
 
     const { ipAddress, userAgent } = getAuditMetadata(request);

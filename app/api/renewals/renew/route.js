@@ -25,6 +25,20 @@ export async function POST(request) {
     if (!previousPolicyId || !renewedData) {
       return Response.json({ error: "Missing previousPolicyId or renewedData" }, { status: 400 });
     }
+    if (!String(renewedData.policyNumber || "").trim()) {
+      return Response.json({ error: "New policy number is required." }, { status: 400 });
+    }
+    const startDate = parseInputDate(renewedData.startDate || renewedData.policyStartDate);
+    const expiryDate = parseInputDate(renewedData.expiryDate || renewedData.policyEndDate);
+    if (!startDate || !expiryDate) {
+      return Response.json({ error: "Valid start date and expiry date are required." }, { status: 400 });
+    }
+    if (expiryDate <= startDate) {
+      return Response.json({ error: "Expiry date must be after start date." }, { status: 400 });
+    }
+    if (!String(renewedData.premium || renewedData.totalPremium || "").trim()) {
+      return Response.json({ error: "Premium is required." }, { status: 400 });
+    }
 
     const tenantFilter = getTenantFilter(user, "write");
 
@@ -107,6 +121,7 @@ export async function POST(request) {
           uploadedFileId: uploadedFileId,
           organizationId: user.organizationId,
           createdById: actorId,
+          updatedById: actorId,
           
           // Renewal fields
           renewalStatus: "ACTIVE",
@@ -119,7 +134,12 @@ export async function POST(request) {
       const oldPolicyData = oldPolicy.data || {};
       const oldPolicyReviewedData = oldPolicy.reviewedData || {};
       if (renewedData.remark) {
-        const renewedRemark = standardizedRenewedData.renewalRemarks[0];
+        const renewedRemark = {
+          ...standardizedRenewedData.renewalRemarks[0],
+          oldStatus: oldPolicy.renewalStatus || "ACTIVE",
+          newStatus: "RENEWED"
+        };
+        standardizedRenewedData.renewalRemarks[0] = renewedRemark;
         oldPolicyData.remark = renewedRemark.text;
         oldPolicyReviewedData.remark = renewedRemark.text;
         oldPolicyData.renewalRemarks = [renewedRemark, ...(Array.isArray(oldPolicyData.renewalRemarks) ? oldPolicyData.renewalRemarks : [])];
@@ -134,7 +154,8 @@ export async function POST(request) {
           renewedPolicyId: newPolicyId,
           renewalDate: new Date(),
           data: oldPolicyData,
-          reviewedData: oldPolicyReviewedData
+          reviewedData: oldPolicyReviewedData,
+          updatedById: actorId
         }
       });
 
@@ -161,4 +182,11 @@ export async function POST(request) {
     console.error("Policy renewal failed:", error);
     return Response.json({ error: "Policy renewal failed. Please try again." }, { status: 500 });
   }
+}
+
+function parseInputDate(value) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? null : date;
 }

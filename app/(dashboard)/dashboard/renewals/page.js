@@ -16,7 +16,8 @@ import {
   FileText,
   Search,
   Eye,
-  Printer
+  Printer,
+  UserPlus
 } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 import EmptyState from "@/app/components/shared/EmptyState";
@@ -53,6 +54,12 @@ const PAYMENT_MODE_OPTIONS = [
 
 const LOST_REASON_OPTIONS = [
   { value: "", label: "Select reason for loss" },
+  { value: "Not Interested", label: "Not Interested" },
+  { value: "Renewed Elsewhere", label: "Renewed Elsewhere" },
+  { value: "Price Issue", label: "Price Issue" },
+  { value: "Wrong Number", label: "Wrong Number" },
+  { value: "Customer Not Reachable", label: "Customer Not Reachable" },
+  { value: "Policy Cancelled", label: "Policy Cancelled" },
   { value: "Competitor offered lower premium", label: "Competitor offered lower premium" },
   { value: "Sold vehicle / property", label: "Sold vehicle / property" },
   { value: "Client not reachable", label: "Client not reachable" },
@@ -62,6 +69,10 @@ const LOST_REASON_OPTIONS = [
 ];
 
 const FOLLOW_UP_STATUS_OPTIONS = [
+  { value: "Pending", label: "Pending" },
+  { value: "Completed", label: "Completed" },
+  { value: "Missed", label: "Missed" },
+  { value: "Rescheduled", label: "Rescheduled" },
   { value: "Follow-up Scheduled", label: "Follow-up Scheduled" },
   { value: "Client Interested", label: "Client Interested" },
   { value: "Client Not Reachable", label: "Client Not Reachable" },
@@ -72,6 +83,7 @@ const FOLLOW_UP_STATUS_OPTIONS = [
 ];
 
 const FOLLOW_UP_MODE_OPTIONS = [
+  { value: "Call", label: "Call" },
   { value: "Phone Call", label: "Phone Call" },
   { value: "WhatsApp", label: "WhatsApp" },
   { value: "Email", label: "Email" },
@@ -98,7 +110,25 @@ const POLICY_TYPE_OPTIONS = [
   { label: "Other", value: "Other Policy" }
 ];
 
-const POLICY_TYPE_TABLE_COLUMNS = {
+const RENEWAL_WORKDESK_COLUMNS = [
+  { key: "customer", label: "Customer Name", className: "col-insured" },
+  { key: "contactNumber", label: "Mobile Number", className: "col-contact" },
+  { key: "policyNumber", label: "Policy Number", className: "col-type" },
+  { key: "assetDetails", label: "Vehicle / Asset", className: "col-vehicle" },
+  { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
+  { key: "policyType", label: "Policy Type", className: "col-type" },
+  { key: "expiryDate", label: "Expiry Date", className: "col-date" },
+  { key: "daysRemaining", label: "Days Left / Overdue", className: "col-duration" },
+  { key: "renewalStatus", label: "Renewal Status", className: "col-status" },
+  { key: "assignedTo", label: "Assigned To", className: "col-company" },
+  { key: "updatedBy", label: "Updated By", className: "col-company" },
+  { key: "latestRemark", label: "Latest Remark", className: "col-description" },
+  { key: "nextFollowUpDate", label: "Next Follow-up", className: "col-date" },
+  { key: "priority", label: "Priority", className: "col-status" },
+  { key: "actions", label: "Actions", className: "col-action" }
+];
+
+const _POLICY_TYPE_TABLE_COLUMNS = {
   all: [
     { key: "customer", label: "Customer Name / Contact Person", className: "col-insured" },
     { key: "policyType", label: "Policy Type", className: "col-type" },
@@ -268,6 +298,20 @@ export default function RenewalsPage() {
   const [policies, setPolicies] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [summaryCounts, setSummaryCounts] = useState({
+    total: 0,
+    dueToday: 0,
+    due7: 0,
+    due15: 0,
+    due30: 0,
+    overdue: 0,
+    followUpToday: 0,
+    missedFollowUps: 0,
+    renewed: 0,
+    lost: 0,
+    missingExpiry: 0,
+    invalidExpiry: 0
+  });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -294,6 +338,12 @@ export default function RenewalsPage() {
     nextAction: ""
   });
   const [savingRemark, setSavingRemark] = useState(false);
+
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [assignPolicy, setAssignPolicy] = useState(null);
+  const [assignUserId, setAssignUserId] = useState("");
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [savingAssign, setSavingAssign] = useState(false);
 
   const handlePrint = (record) => {
     if (!record) return;
@@ -561,7 +611,7 @@ export default function RenewalsPage() {
 
   const [isSaving, startSaving] = useTransition();
 
-  const [renewalCounts, setRenewalCounts] = useState({
+  const [, setRenewalCounts] = useState({
     eodPremium: 0,
     eodCount: 0,
     mtdPremium: 0,
@@ -613,6 +663,21 @@ export default function RenewalsPage() {
   useEffect(() => {
     fetchCompaniesList(selectedPolicyType);
   }, [selectedPolicyType]);
+
+  useEffect(() => {
+    async function fetchTeamMembers() {
+      try {
+        const res = await fetch("/api/renewals/team");
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.users)) {
+          setTeamMembers(data.users);
+        }
+      } catch {
+        // Team list is optional; reassign stays disabled when empty.
+      }
+    }
+    fetchTeamMembers();
+  }, []);
 
   // Reset page when tab, company, policyType, or search term changes
   useEffect(() => {
@@ -668,6 +733,7 @@ export default function RenewalsPage() {
         setPolicies(data.policies || []);
         setTotalCount(data.totalCount || 0);
         setTotalPages(data.pages || 1);
+        if (data.summaryCounts) setSummaryCounts(data.summaryCounts);
       } else {
         setError(data.error || "Failed to load policies.");
       }
@@ -738,6 +804,123 @@ export default function RenewalsPage() {
     setRemarkModalOpen(true);
   };
 
+  const handleFollowUpLater = (policy) => {
+    handleAddRemark(policy);
+    setRemarkForm((current) => ({
+      ...current,
+      followUpStatus: "Pending",
+      nextAction: "Follow up later"
+    }));
+  };
+
+  const handleReassign = (policy) => {
+    setAssignPolicy(policy);
+    const currentAssignee = teamMembers.find(
+      (member) =>
+        member.name === policy.assignedTo ||
+        member.email === policy.assignedTo
+    );
+    setAssignUserId(currentAssignee?.id || "");
+    setAssignModalOpen(true);
+  };
+
+  const submitReassign = async () => {
+    if (!assignPolicy?.id || !assignUserId) {
+      showToastMsg("Please select a user to assign.");
+      return;
+    }
+    setSavingAssign(true);
+    try {
+      const res = await fetch("/api/renewals/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          policyId: assignPolicy.id,
+          assignedToUserId: assignUserId
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToastMsg(data.error || "Failed to reassign policy.");
+        return;
+      }
+      const nextRecord = {
+        ...assignPolicy,
+        assignedTo: data.assignedTo,
+        assignedDate: data.assignedDate,
+        renewalRemarks: [data.remark, ...(Array.isArray(assignPolicy.renewalRemarks) ? assignPolicy.renewalRemarks : [])]
+      };
+      setPolicies((current) => current.map((item) => item.id === assignPolicy.id ? nextRecord : item));
+      setSelectedRecord((current) => current?.id === assignPolicy.id ? { ...current, ...nextRecord } : current);
+      setAssignModalOpen(false);
+      setAssignPolicy(null);
+      showToastMsg(`Assigned to ${data.assignedTo}.`);
+    } catch {
+      showToastMsg("Network error reassigning policy.");
+    } finally {
+      setSavingAssign(false);
+    }
+  };
+
+  const submitQuickRemark = async (policy, remark, extra = {}) => {
+    if (!policy?.id) return;
+    try {
+      const res = await fetch("/api/renewals/remarks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          policyId: policy.id,
+          remark,
+          followUpStatus: extra.followUpStatus || "Completed",
+          followUpMode: extra.followUpMode || "Phone Call",
+          priority: extra.priority || policy.priority || "Normal",
+          nextAction: extra.nextAction || ""
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToastMsg(data.error || "Failed to save quick update.");
+        return;
+      }
+      const nextRecord = {
+        ...policy,
+        latestRemark: data.remark?.text || remark,
+        latestRemarkBy: data.remark?.createdBy || policy.latestRemarkBy,
+        latestRemarkAt: data.remark?.createdAt || policy.latestRemarkAt,
+        renewalFollowUp: data.followUp,
+        renewalRemarks: [data.remark, ...(Array.isArray(policy.renewalRemarks) ? policy.renewalRemarks : [])]
+      };
+      setPolicies((current) => current.map((item) => item.id === policy.id ? nextRecord : item));
+      showToastMsg("Renewal updated.");
+    } catch {
+      showToastMsg("Network error saving quick update.");
+    }
+  };
+
+  const submitQuickLostStatus = async (policy, reason) => {
+    if (!policy?.id) return;
+    try {
+      const res = await fetch("/api/renewals/lost", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          policyId: policy.id,
+          lostReason: reason,
+          remarks: reason
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToastMsg(data.error || "Failed to update renewal status.");
+        return;
+      }
+      showToastMsg(`Marked as ${reason}.`);
+      fetchPoliciesList();
+    } catch {
+      showToastMsg("Network error updating renewal status.");
+    }
+  };
+
   const submitRemark = async () => {
     const remark = remarkForm.remark.trim();
     if (!remarkPolicy || !remark) {
@@ -764,6 +947,14 @@ export default function RenewalsPage() {
         const nextRecord = {
           ...remarkPolicy,
           remark,
+          latestRemark: data.remark?.text || remark,
+          latestRemarkBy: data.remark?.createdBy || remarkPolicy.latestRemarkBy,
+          latestRemarkAt: data.remark?.createdAt || remarkPolicy.latestRemarkAt,
+          nextFollowUpDate: data.followUp?.nextFollowUpDate || remarkForm.nextFollowUpDate,
+          followUpStatus: data.followUp?.followUpStatus || remarkForm.followUpStatus,
+          followUpMode: data.followUp?.followUpMode || remarkForm.followUpMode,
+          priority: data.followUp?.priority || remarkForm.priority,
+          nextAction: data.followUp?.nextAction || remarkForm.nextAction,
           renewalFollowUp: data.followUp,
           renewalRemarks: [data.remark, ...(Array.isArray(remarkPolicy.renewalRemarks) ? remarkPolicy.renewalRemarks : [])]
         };
@@ -906,6 +1097,10 @@ export default function RenewalsPage() {
     
     const start = new Date(renewForm.startDate);
     const expiry = new Date(renewForm.expiryDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(expiry.getTime())) {
+      showToastMsg("Start Date and Expiry Date must be valid dates.");
+      return;
+    }
     if (expiry <= start) {
       showToastMsg("Expiry Date must be after Start Date.");
       return;
@@ -949,9 +1144,14 @@ export default function RenewalsPage() {
     });
   };
 
-  // Client-side Days Remaining Text Calculation
-  const getDaysRemainingText = (expiryDateStr) => {
-    if (!expiryDateStr) return "-";
+  const getDaysRemainingText = (record = {}) => {
+    if (record.daysStatus) return record.daysStatus;
+    const expiryDateStr = record.expiryDate;
+    if (record.expiryState === "missing" || !String(expiryDateStr || "").trim()) {
+      return "Missing Expiry Date";
+    }
+    if (record.expiryState === "invalid") return "Invalid Expiry Date";
+
     let expiry = null;
     const text = String(expiryDateStr).trim();
     const match = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
@@ -962,27 +1162,34 @@ export default function RenewalsPage() {
     } else {
       expiry = new Date(text);
     }
-    
-    if (Number.isNaN(expiry.getTime())) return "-";
-    
+
+    if (Number.isNaN(expiry.getTime())) return "Invalid Expiry Date";
+
     const today = new Date();
     const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const startOfExpiry = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
-    
-    const diffMs = startOfExpiry.getTime() - startOfToday.getTime();
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 0) return "Expired";
+    const diffDays = Math.ceil((startOfExpiry.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return `Overdue ${Math.abs(diffDays)} Day${Math.abs(diffDays) === 1 ? "" : "s"}`;
+    }
     if (diffDays === 0) return "Due Today";
-    return `${diffDays} Days`;
+    if (diffDays <= 7) return `Due Soon (${diffDays} Day${diffDays === 1 ? "" : "s"})`;
+    return `${diffDays} Day${diffDays === 1 ? "" : "s"} Left`;
   };
 
   const activeTableKey = getPolicyTableKey(selectedPolicyType);
-  const tableColumns = POLICY_TYPE_TABLE_COLUMNS[activeTableKey] || POLICY_TYPE_TABLE_COLUMNS.all;
+  const tableColumns = RENEWAL_WORKDESK_COLUMNS;
+
+  const getExpiryDisplay = (record) => {
+    if (record.expiryState === "missing" || !String(record.expiryDate || "").trim()) return "Missing Expiry Date";
+    if (record.expiryState === "invalid") return "Invalid Date";
+    return firstPresent(record.expiryDate);
+  };
 
   const renderCustomerCell = (record, showContactPerson = true) => (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <strong className="record-primary">{record.insuredName || "Unnamed"}</strong>
+      <strong className="record-primary">{record.insuredName?.trim() ? record.insuredName : "-"}</strong>
       {showContactPerson && record.contactPerson && record.contactPerson !== record.insuredName && (
         <small style={{ color: "var(--text-secondary)", fontSize: "11px" }}>Contact Person: {record.contactPerson}</small>
       )}
@@ -995,8 +1202,8 @@ export default function RenewalsPage() {
       borderRadius: "12px",
       fontSize: "11px",
       fontWeight: "600",
-      backgroundColor: record.renewalStatus === "LOST" ? "rgba(220,38,38,0.1)" : record.renewalStatus === "RENEWED" ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
-      color: record.renewalStatus === "LOST" ? "#dc2626" : record.renewalStatus === "RENEWED" ? "#10b981" : "#f59e0b"
+      backgroundColor: /LOST|NOT_INTERESTED|WRONG_NUMBER|RENEWED_ELSEWHERE/.test(record.renewalStatus || "") ? "rgba(220,38,38,0.1)" : record.renewalStatus === "RENEWED" ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
+      color: /LOST|NOT_INTERESTED|WRONG_NUMBER|RENEWED_ELSEWHERE/.test(record.renewalStatus || "") ? "#dc2626" : record.renewalStatus === "RENEWED" ? "#10b981" : "#f59e0b"
     }}>
       {record.renewalStatus || "ACTIVE"}
     </span>
@@ -1023,15 +1230,35 @@ export default function RenewalsPage() {
           </button>
         ) : null}
         <button type="button" onClick={() => handleAddRemark(record)} role="menuitem">
-          <FileText size={14} /> Remark
+          <FileText size={14} /> Add Remark
         </button>
+        {teamMembers.length > 0 ? (
+          <button type="button" onClick={() => handleReassign(record)} role="menuitem">
+            <UserPlus size={14} /> Reassign User
+          </button>
+        ) : null}
         {record.renewalStatus === "ACTIVE" ? (
           <>
+            <button type="button" onClick={() => submitQuickRemark(record, "Call completed.", { followUpStatus: "Completed" })} role="menuitem">
+              <CheckCircle size={14} /> Call Done
+            </button>
+            <button type="button" onClick={() => handleFollowUpLater(record)} role="menuitem">
+              <RefreshCw size={14} /> Follow-up Later
+            </button>
             <button type="button" onClick={() => handleRenew(record)} role="menuitem">
               <RefreshCw size={14} /> Renew
             </button>
             <button type="button" onClick={() => handleMarkLost(record)} className="danger" role="menuitem">
               <Trash2 size={14} /> Lost
+            </button>
+            <button type="button" onClick={() => submitQuickLostStatus(record, "Not Interested")} className="danger" role="menuitem">
+              <Trash2 size={14} /> Not Interested
+            </button>
+            <button type="button" onClick={() => submitQuickLostStatus(record, "Wrong Number")} className="danger" role="menuitem">
+              <Trash2 size={14} /> Wrong Number
+            </button>
+            <button type="button" onClick={() => submitQuickLostStatus(record, "Renewed Elsewhere")} className="danger" role="menuitem">
+              <Trash2 size={14} /> Renewed Elsewhere
             </button>
           </>
         ) : (
@@ -1044,29 +1271,39 @@ export default function RenewalsPage() {
   );
 
   const renderRenewalCell = (record, column) => {
-    const daysText = getDaysRemainingText(record.expiryDate);
-    const isExpired = daysText === "Expired";
+    const daysText = getDaysRemainingText(record);
+    const isOverdue = String(daysText).startsWith("Overdue");
     const isDueToday = daysText === "Due Today";
 
     if (column.key === "customer") {
       return renderCustomerCell(record, activeTableKey === "all");
     }
+    if (column.key === "policyNumber") return <span className="record-code">{firstPresent(record.policyNumber)}</span>;
+    if (column.key === "assetDetails") return firstPresent(getRenewalVehicleNumber(record), record.makeModel, record.riskLocation, record.description);
     if (column.key === "policyType") return firstPresent(record.displayPolicyType, record.policyType);
     if (column.key === "insuranceCompany") return firstPresent(record.insuranceCompany);
     if (column.key === "vehicleNumber") return <span className="record-code">{firstPresent(getRenewalVehicleNumber(record))}</span>;
     if (column.key === "contactNumber") return <span className="record-code">{firstPresent(record.contactNumber)}</span>;
-    if (column.key === "expiryDate") return firstPresent(record.expiryDate);
+    if (column.key === "expiryDate") return getExpiryDisplay(record);
     if (column.key === "daysRemaining") {
       return (
         <span style={{
-          color: isExpired ? "#dc2626" : isDueToday ? "#f59e0b" : "var(--text-primary)",
-          fontWeight: (isExpired || isDueToday) ? "600" : "normal"
+          color: isOverdue ? "#dc2626" : isDueToday ? "#f59e0b" : "var(--text-primary)",
+          fontWeight: (isOverdue || isDueToday) ? "600" : "normal"
         }}>
           {daysText}
         </span>
       );
     }
     if (column.key === "renewalStatus") return renderStatusBadge(record);
+    if (column.key === "assignedTo") return firstPresent(record.assignedTo);
+    if (column.key === "updatedBy") return firstPresent(record.updatedBy, record.latestRemarkBy, record.createdBy);
+    if (column.key === "latestRemark") {
+      const value = firstPresent(record.latestRemark, record.remark);
+      return <span title={value === "-" ? "" : value}>{value.length > 70 ? `${value.slice(0, 70)}...` : value}</span>;
+    }
+    if (column.key === "nextFollowUpDate") return firstPresent(record.nextFollowUpDate);
+    if (column.key === "priority") return firstPresent(record.priority);
     if (column.key === "actions") return renderActionMenu(record);
     if (column.key === "planName") return firstPresent(record.planName, record.policyCoverType, record.description, record.displayPolicyType, record.policyType);
     if (column.key === "sumInsured") return firstPresent(record.sumInsured);
@@ -1096,12 +1333,17 @@ export default function RenewalsPage() {
         marginBottom: "20px"
       }}>
         {[
-          { label: "Due in 10 Days", value: renewalCounts.due10, color: "#f59e0b", tab: "upcoming", days: "10" },
-          { label: "Due in 20 Days", value: renewalCounts.due20, color: "#d97706", tab: "upcoming", days: "20" },
-          { label: "Due in 30 Days", value: renewalCounts.due30, color: "var(--accent)", tab: "upcoming", days: "30" },
-          { label: "Expired Renewals", value: renewalCounts.expired, color: "#dc2626", tab: "expired", days: "" },
-          { label: "Renewed Policies", value: renewalCounts.renewed, color: "#10b981", tab: "renewed", days: "" },
-          { label: "Lost Renewals", value: renewalCounts.lost, color: "#6b7280", tab: "lost", days: "" }
+          { label: "Total Renewals", value: summaryCounts.total, color: "var(--accent)", tab: "all", days: "" },
+          { label: "Due Today", value: summaryCounts.dueToday, color: "#f59e0b", tab: "due_today", days: "" },
+          { label: "Due in 7 Days", value: summaryCounts.due7, color: "#d97706", tab: "due_7", days: "" },
+          { label: "Due in 15 Days", value: summaryCounts.due15, color: "#d97706", tab: "due_15", days: "" },
+          { label: "Due in 30 Days", value: summaryCounts.due30, color: "var(--accent)", tab: "due_30", days: "" },
+          { label: "Overdue", value: summaryCounts.overdue, color: "#dc2626", tab: "overdue", days: "" },
+          { label: "Follow-up Today", value: summaryCounts.followUpToday, color: "#2563eb", tab: "followup_today", days: "" },
+          { label: "Missed Follow-ups", value: summaryCounts.missedFollowUps, color: "#dc2626", tab: "missed_followup", days: "" },
+          { label: "Renewed", value: summaryCounts.renewed, color: "#10b981", tab: "renewed", days: "" },
+          { label: "Lost / Not Interested", value: summaryCounts.lost, color: "#6b7280", tab: "lost", days: "" },
+          { label: "Missing Expiry Date", value: summaryCounts.missingExpiry + summaryCounts.invalidExpiry, color: "#7c3aed", tab: "bad_expiry", days: "" }
         ].map((item) => (
           <article
             key={item.label}
@@ -1206,10 +1448,25 @@ export default function RenewalsPage() {
               onChange={(event) => handleStatusChange(event.target.value)}
             >
               <option value="all">All Status</option>
-              <option value="upcoming">Upcoming (10 Days)</option>
-              <option value="expired">Expired Policies</option>
+              <option value="due_today">Due Today</option>
+              <option value="upcoming">Due Soon</option>
+              <option value="due_7">Due in 7 Days</option>
+              <option value="due_15">Due in 15 Days</option>
+              <option value="due_30">Due in 30 Days</option>
+              <option value="overdue">Overdue</option>
+              <option value="bad_expiry">Missing / Invalid Expiry</option>
+              <option value="missing_expiry">Missing Expiry</option>
+              <option value="invalid_expiry">Invalid Expiry</option>
+              <option value="followup_today">Follow-up Today</option>
+              <option value="missed_followup">Missed Follow-up</option>
               <option value="renewed">Renewed Policies</option>
               <option value="lost">Lost Policies</option>
+              <option value="assigned_to_me">Assigned To Me</option>
+              <option value="updated_by_me">Updated By Me</option>
+              <option value="created_by_me">Created By Me</option>
+              <option value="priority_high">Priority High</option>
+              <option value="priority_medium">Priority Medium</option>
+              <option value="priority_low">Priority Low</option>
             </select>
           </label>
 
@@ -1218,7 +1475,7 @@ export default function RenewalsPage() {
             <input
               type="text"
               value={q}
-              placeholder="Search by Insured Name, Policy No., or Vehicle No..."
+              placeholder="Search name, mobile, policy no., vehicle, company, assigned user..."
               onChange={(event) => setQ(event.target.value)}
             />
           </div>
@@ -1237,7 +1494,10 @@ export default function RenewalsPage() {
           {[
             { key: "all", label: "All Policies" },
             { key: "upcoming", label: "Upcoming (10 Days)" },
-            { key: "expired", label: "Expired Policies" },
+            { key: "due_today", label: "Due Today" },
+            { key: "overdue", label: "Overdue" },
+            { key: "followup_today", label: "Follow-up Today" },
+            { key: "missed_followup", label: "Missed Follow-up" },
             { key: "renewed", label: "Renewed Policies" },
             { key: "lost", label: "Lost Policies" }
           ].map((tab) => (
@@ -1255,8 +1515,11 @@ export default function RenewalsPage() {
         </div>
 
         {loading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
-            <Loader2 className="spin" size={36} style={{ color: "var(--accent)" }} />
+          <div className="skeleton-panel" style={{ padding: "12px" }}>
+            <div className="skeleton table-head-line" style={{ marginBottom: "12px" }} />
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="skeleton table-row-line" style={{ marginBottom: "8px" }} />
+            ))}
           </div>
         ) : policies.length ? (
           <>
@@ -1345,6 +1608,69 @@ export default function RenewalsPage() {
           <EmptyState>No policies found matching filters.</EmptyState>
         )}
       </section>
+
+      {/* MODAL: Reassign User */}
+      {assignModalOpen && assignPolicy && (
+        <div className="tb-modal-backdrop" onClick={() => setAssignModalOpen(false)}>
+          <div className="tb-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
+            <div className="tb-modal-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
+              <h3 className="tb-status-title tb-modal-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <UserPlus size={20} /> Reassign Renewal
+              </h3>
+            </div>
+            <div className="tb-modal-body" style={{ marginTop: "12px" }}>
+              <p style={{ color: "var(--text-secondary)", fontSize: "13px", margin: "0 0 16px" }}>
+                Policy: <strong>{assignPolicy.policyNumber || "-"}</strong><br />
+                Customer: <strong>{assignPolicy.insuredName || "-"}</strong><br />
+                Currently assigned: <strong>{assignPolicy.assignedTo || "-"}</strong>
+              </p>
+              <label style={{ display: "block" }}>
+                <span style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "6px" }}>Assign To *</span>
+                <select
+                  value={assignUserId}
+                  onChange={(e) => setAssignUserId(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--surface)",
+                    color: "var(--text-primary)",
+                    fontSize: "14px"
+                  }}
+                >
+                  <option value="">Select team member</option>
+                  {teamMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}{member.email && member.name !== member.email ? ` (${member.email})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px", marginTop: "16px", borderTop: "1px solid var(--border)" }}>
+              <button
+                type="button"
+                onClick={() => setAssignModalOpen(false)}
+                className="tb-modal-done-btn"
+                style={{ background: "var(--surface-variant)", color: "var(--text-secondary)" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitReassign}
+                disabled={savingAssign}
+                className="tb-modal-done-btn"
+                style={{ background: "var(--accent)", color: "white", display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                {savingAssign && <Loader2 className="spin" size={16} />}
+                Save Assignment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: Mark Policy as Lost */}
       {lostModalOpen && lostPolicy && (
@@ -1974,11 +2300,15 @@ export default function RenewalsPage() {
                 <RenewalRemarkHistory remarks={selectedRecord.renewalRemarks} />
               </DetailSection>
 
-              <DetailSection title="Metadata">
+              <DetailSection title="Ownership & Tracking">
+                <DetailField label="Assigned To" value={selectedRecord.assignedTo} />
+                <DetailField label="Assigned Date" value={selectedRecord.assignedDate ? formatDateTime(selectedRecord.assignedDate) : ""} />
+                <DetailField label="Created By" value={selectedRecord.createdBy || selectedRecord.uploadedByEmail || selectedRecord.uploadedBy} />
+                <DetailField label="Created At" value={selectedRecord.createdAt ? formatDateTime(selectedRecord.createdAt) : selectedRecord.savedAt ? formatDateTime(selectedRecord.savedAt) : ""} />
+                <DetailField label="Updated By" value={selectedRecord.updatedBy || selectedRecord.latestRemarkBy} />
+                <DetailField label="Updated At" value={selectedRecord.updatedAt ? formatDateTime(selectedRecord.updatedAt) : ""} />
+                <DetailField label="Renewal Status" value={selectedRecord.renewalStatus || "ACTIVE"} />
                 <DetailField label="Source PDF File" value={selectedRecord.sourceFile} wide />
-                <DetailField label="Created By" value={selectedRecord.uploadedByEmail || selectedRecord.uploadedBy} />
-                <DetailField label="Saved Date" value={selectedRecord.savedAt ? formatDateTime(selectedRecord.savedAt) : ""} />
-                <DetailField label="Renewal Status" value={selectedRecord.renewalStatus} />
               </DetailSection>
             </div>
 
@@ -1994,6 +2324,27 @@ export default function RenewalsPage() {
                 backgroundColor: "#ffffff"
               }}
             >
+              {teamMembers.length > 0 ? (
+                <button
+                  onClick={() => handleReassign(selectedRecord)}
+                  style={{
+                    padding: "10px 24px",
+                    borderRadius: "12px",
+                    border: "1px solid #cbd5e1",
+                    backgroundColor: "#ffffff",
+                    color: "#0f172a",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px"
+                  }}
+                >
+                  <UserPlus size={16} />
+                  Reassign
+                </button>
+              ) : null}
               <button
                 onClick={() => handleAddRemark(selectedRecord)}
                 style={{
@@ -2122,6 +2473,12 @@ function RenewalRemarkHistory({ remarks }) {
                 {remark.type ? `${remark.type} · ` : ""}{remark.createdAt ? formatDateTime(remark.createdAt) : ""}
               </span>
             </div>
+            {remark.oldStatus && remark.newStatus && remark.oldStatus !== remark.newStatus ? (
+              <p style={{ margin: "0 0 8px", fontSize: "11px", color: "#475569" }}>
+                Status: <strong>{remark.oldStatus}</strong> → <strong>{remark.newStatus}</strong>
+                {remark.lostReason ? ` · ${remark.lostReason}` : ""}
+              </p>
+            ) : null}
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
               {remark.followUpStatus ? <FollowUpPill label={remark.followUpStatus} /> : null}
               {remark.nextFollowUpDate ? <FollowUpPill label={`Next: ${formatDate(remark.nextFollowUpDate)}`} /> : null}
