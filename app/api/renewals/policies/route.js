@@ -59,6 +59,7 @@ export async function GET(request) {
         SELECT 
           id,
           saved_at,
+          updated_at,
           is_active_policy,
           COALESCE(renewal_status, 'ACTIVE') AS renewal_status,
           created_by_id,
@@ -110,6 +111,7 @@ export async function GET(request) {
         SELECT 
           id,
           saved_at,
+          updated_at,
           is_active_policy,
           renewal_status,
           created_by_id,
@@ -189,8 +191,8 @@ export async function GET(request) {
             OR ($4 = 'created_by_me' AND created_by_id = $10::uuid)
             OR ($4 = 'today_work' AND (
               (updated_by_id = $10::uuid AND updated_at >= $3::date::timestamp AND updated_at < ($3::date + INTERVAL '1 day'))
-              OR id IN (
-                SELECT entity_id::uuid
+              OR id::text IN (
+                SELECT entity_id
                 FROM audit_logs
                 WHERE user_id = $10::uuid
                   AND entity_type = 'PolicyRecord'
@@ -246,8 +248,8 @@ export async function GET(request) {
         COUNT(DISTINCT CASE
           WHEN (
             (updated_by_id = $10::uuid AND updated_at >= $3::date::timestamp AND updated_at < ($3::date + INTERVAL '1 day'))
-            OR id IN (
-              SELECT entity_id::uuid
+            OR id::text IN (
+              SELECT entity_id
               FROM audit_logs
               WHERE user_id = $10::uuid
                 AND entity_type = 'PolicyRecord'
