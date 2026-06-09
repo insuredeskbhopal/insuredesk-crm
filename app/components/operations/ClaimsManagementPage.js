@@ -85,6 +85,7 @@ export default function ClaimsManagementPage() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [openMenuId, setOpenMenuId] = useState("");
   const [deleteCandidate, setDeleteCandidate] = useState(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [remarkTarget, setRemarkTarget] = useState(null);
   const [remarkDraft, setRemarkDraft] = useState("");
   const [followUpDraft, setFollowUpDraft] = useState("");
@@ -471,6 +472,7 @@ export default function ClaimsManagementPage() {
       setClaims((current) => current.filter((item) => item.id !== id));
       if (selectedClaimId === id) setSelectedClaimId("");
       setDeleteCandidate(null);
+      setDeleteConfirmText("");
       setOpenMenuId("");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Claim could not be deleted from database.");
@@ -1140,7 +1142,7 @@ export default function ClaimsManagementPage() {
       {typeof window !== "undefined" && deleteCandidate && createPortal(
         <div
           className="tb-modal-backdrop"
-          onClick={() => setDeleteCandidate(null)}
+          onClick={() => { setDeleteCandidate(null); setDeleteConfirmText(""); }}
           style={{
             position: "fixed",
             top: 0,
@@ -1197,7 +1199,7 @@ export default function ClaimsManagementPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setDeleteCandidate(null)}
+                onClick={() => { setDeleteCandidate(null); setDeleteConfirmText(""); }}
                 aria-label="Close details"
                 style={{
                   background: "rgba(15, 23, 42, 0.05)",
@@ -1225,10 +1227,59 @@ export default function ClaimsManagementPage() {
               </button>
             </div>
 
-            <div style={{ padding: "24px", backgroundColor: "#ffffff" }}>
+            <div style={{ padding: "24px", backgroundColor: "#ffffff", display: "flex", flexDirection: "column", gap: "16px" }}>
               <p style={{ margin: 0, color: "#475569", fontSize: "14px", lineHeight: "1.6" }}>
                 This will remove claim <strong>{deleteCandidate.claimNo || deleteCandidate.insuredName || "record"}</strong> from the database.
               </p>
+
+              {((deleteCandidate.documents && deleteCandidate.documents.length > 0) || 
+                (deleteCandidate.remarks && deleteCandidate.remarks.length > 0)) && (
+                <div style={{
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#fff1f2",
+                  border: "1px solid #ffe4e6",
+                  color: "#991b1b",
+                  fontSize: "13px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px"
+                }}>
+                  <strong style={{ fontWeight: "700" }}>Warning: This claim contains associated items that will also be deleted:</strong>
+                  <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                    {deleteCandidate.documents && deleteCandidate.documents.length > 0 && (
+                      <li>{deleteCandidate.documents.length} Supporting Document(s)</li>
+                    )}
+                    {deleteCandidate.remarks && deleteCandidate.remarks.length > 0 && (
+                      <li>{deleteCandidate.remarks.length} Remark & Follow-up History Record(s)</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
+                <p style={{ margin: "0 0 8px", fontSize: "13px", fontWeight: "600", color: "#475569" }}>
+                  To confirm deletion, type <strong style={{ color: "#dc2626" }}>DELETE</strong> in the box below:
+                </p>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="Type DELETE"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "12px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    outline: "none",
+                    transition: "border-color 0.2s"
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = "#94a3b8"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "#cbd5e1"; }}
+                />
+              </div>
             </div>
 
             {/* Modal Footer */}
@@ -1245,7 +1296,7 @@ export default function ClaimsManagementPage() {
             >
               <button
                 type="button"
-                onClick={() => setDeleteCandidate(null)}
+                onClick={() => { setDeleteCandidate(null); setDeleteConfirmText(""); }}
                 style={{
                   padding: "10px 24px",
                   borderRadius: "12px",
@@ -1270,24 +1321,28 @@ export default function ClaimsManagementPage() {
               </button>
               <button
                 type="button"
-                disabled={isSaving}
+                disabled={isSaving || deleteConfirmText !== "DELETE"}
                 onClick={() => deleteClaim(deleteCandidate.id)}
                 style={{
                   padding: "10px 24px",
                   borderRadius: "12px",
-                  border: "1px solid #fecaca",
-                  backgroundColor: "#dc2626",
-                  color: "#ffffff",
-                  cursor: "pointer",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: deleteConfirmText === "DELETE" ? "#dc2626" : "#f1f5f9",
+                  color: deleteConfirmText === "DELETE" ? "#ffffff" : "#94a3b8",
+                  cursor: deleteConfirmText === "DELETE" ? "pointer" : "not-allowed",
                   fontWeight: "600",
                   fontSize: "14px",
-                  transition: "background-color 0.2s"
+                  transition: "background-color 0.2s, color 0.2s"
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#b91c1c";
+                  if (deleteConfirmText === "DELETE") {
+                    e.currentTarget.style.backgroundColor = "#b91c1c";
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#dc2626";
+                  if (deleteConfirmText === "DELETE") {
+                    e.currentTarget.style.backgroundColor = "#dc2626";
+                  }
                 }}
               >
                 {isSaving ? "Deleting..." : "Yes, Delete"}
