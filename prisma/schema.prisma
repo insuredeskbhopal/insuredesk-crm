@@ -51,6 +51,7 @@ model Organization {
   auditLogs     AuditLog[]
   customerProfiles CustomerProfile[]
   claims        Claim[]
+  endorsements  Endorsement[]
 
   @@map("organizations")
 }
@@ -117,6 +118,7 @@ model CustomerProfile {
   createdBy           User?        @relation("CustomerProfileCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedById         String?      @map("updated_by_id") @db.Uuid
   updatedBy           User?        @relation("CustomerProfileUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  endorsements        Endorsement[]
 
   @@index([phone])
   @@index([sourcePolicyNumber])
@@ -181,6 +183,7 @@ model PolicyRecord {
   renewalDate             DateTime?          @map("renewal_date") @db.Timestamptz(6)
   lostReason              String?            @map("lost_reason")
   isActivePolicy          Boolean            @default(true) @map("is_active_policy")
+  endorsements            Endorsement[]
 
   @@index([savedAt])
   @@index([uploadedFileId])
@@ -327,6 +330,7 @@ model UploadedFile {
   detectedServiceCategory    ServiceCategory?   @relation("DetectedCategory", fields: [detectedServiceCategoryId], references: [id])
   detectedPolicyType         PolicyType?        @relation("DetectedPolicyType", fields: [detectedPolicyTypeId], references: [id])
   policyRecords              PolicyRecord[]
+  endorsements               Endorsement[]
   
   organizationId             String?            @map("organization_id") @db.Uuid
   organization               Organization?      @relation(fields: [organizationId], references: [id], onDelete: SetNull)
@@ -386,11 +390,103 @@ model User {
   deletedClaims Claim[] @relation("ClaimDeletedBy")
   claimRemarks ClaimRemark[] @relation("ClaimRemarkCreatedBy")
   claimDocuments ClaimDocument[] @relation("ClaimDocumentUploadedBy")
+  createdEndorsements Endorsement[] @relation("EndorsementCreatedBy")
+  updatedEndorsements Endorsement[] @relation("EndorsementUpdatedBy")
+  deletedEndorsements Endorsement[] @relation("EndorsementDeletedBy")
+  endorsementDocuments EndorsementDocument[] @relation("EndorsementDocumentUploadedBy")
 
   @@index([organizationId])
   @@index([role])
   @@index([deletedAt])
   @@map("users")
+}
+
+model Endorsement {
+  id                            String      @id @default(uuid()) @db.Uuid
+  endorsementNo                 String      @map("endorsement_no")
+  policyNo                      String?     @map("policy_no")
+  insuredName                   String      @map("insured_name")
+  customerName                  String?     @map("customer_name")
+  mailingAddress                String?     @map("mailing_address") @db.Text
+  insuranceCompany              String?     @map("insurance_company")
+  policyType                    String?     @map("policy_type")
+  endorsementType               String      @map("endorsement_type")
+  endorsementDate               DateTime    @map("endorsement_date") @db.Timestamptz(6)
+  effectiveDate                 DateTime?   @map("effective_date") @db.Timestamptz(6)
+  effectiveFrom                 DateTime?   @map("effective_from") @db.Timestamptz(6)
+  effectiveTo                   DateTime?   @map("effective_to") @db.Timestamptz(6)
+  customerRequestDate           DateTime?   @map("customer_request_date") @db.Timestamptz(6)
+  dateOfIssue                   DateTime?   @map("date_of_issue") @db.Timestamptz(6)
+  issuedOffice                  String?     @map("issued_office")
+  financerDetails               String?     @map("financer_details") @db.Text
+  premium                       String?
+  policyStartDate               DateTime?   @map("policy_start_date") @db.Timestamptz(6)
+  policyExpiryDate              DateTime?   @map("policy_expiry_date") @db.Timestamptz(6)
+  sumInsured                    String?     @map("sum_insured")
+  address                       String?
+  warehouseDetails              String?     @map("warehouse_details") @db.Text
+  oldValues                     Json        @default("{}") @map("old_values")
+  newValues                     Json        @default("{}") @map("new_values")
+  extractedPolicyData           Json        @default("{}") @map("extracted_policy_data")
+  finalReviewedData             Json        @default("{}") @map("final_reviewed_data")
+  rawExtractedData              Json        @default("{}") @map("raw_extracted_data")
+  description                   String?     @db.Text
+  internalRemark                String?     @map("internal_remark") @db.Text
+  customerRemark                String?     @map("customer_remark") @db.Text
+  remark                        String?     @db.Text
+  generatedLetterPdfUrl         String?     @map("generated_letter_pdf_url") @db.Text
+  generatedLetterFileName       String?     @map("generated_letter_file_name")
+  insuranceCompanyLetterPdfUrl  String?     @map("insurance_company_letter_pdf_url") @db.Text
+  insuranceCompanyLetterFileName String?    @map("insurance_company_letter_file_name")
+  status                        String      @default("Draft")
+  createdAt                     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                     DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt                     DateTime?   @map("deleted_at") @db.Timestamptz(6)
+
+  policyId                      String?     @map("policy_id") @db.Uuid
+  policy                        PolicyRecord? @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  customerId                    String?     @map("customer_id") @db.Uuid
+  customer                      CustomerProfile? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  uploadedPolicyFileId          String?     @map("uploaded_policy_file_id") @db.Uuid
+  uploadedPolicyFile            UploadedFile? @relation(fields: [uploadedPolicyFileId], references: [id], onDelete: SetNull)
+  organizationId                String?     @map("organization_id") @db.Uuid
+  organization                  Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdById                   String?     @map("created_by_id") @db.Uuid
+  createdBy                     User?       @relation("EndorsementCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById                   String?     @map("updated_by_id") @db.Uuid
+  updatedBy                     User?       @relation("EndorsementUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  deletedById                   String?     @map("deleted_by_id") @db.Uuid
+  deletedBy                     User?       @relation("EndorsementDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  documents                     EndorsementDocument[]
+
+  @@unique([organizationId, endorsementNo])
+  @@index([organizationId, deletedAt, createdAt])
+  @@index([organizationId, status])
+  @@index([policyNo])
+  @@index([endorsementNo])
+  @@index([insuranceCompany])
+  @@index([policyId])
+  @@index([customerId])
+  @@map("endorsements")
+}
+
+model EndorsementDocument {
+  id             String      @id @default(uuid()) @db.Uuid
+  endorsementId  String      @map("endorsement_id") @db.Uuid
+  endorsement    Endorsement @relation(fields: [endorsementId], references: [id], onDelete: Cascade)
+  documentType   String      @map("document_type")
+  fileName       String      @map("file_name")
+  fileType       String?     @map("file_type")
+  size           Int?
+  dataUrl        String      @map("data_url") @db.Text
+  remark         String?     @db.Text
+  uploadedAt     DateTime    @default(now()) @map("uploaded_at") @db.Timestamptz(6)
+  uploadedById   String?     @map("uploaded_by_id") @db.Uuid
+  uploadedBy     User?       @relation("EndorsementDocumentUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([endorsementId, documentType])
+  @@index([uploadedById])
+  @@map("endorsement_documents")
 }
 
 model Claim {

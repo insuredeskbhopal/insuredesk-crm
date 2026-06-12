@@ -5,8 +5,7 @@
    ▲ Next.js 15.5.18
    - Local:        http://127.0.0.1:3000
    - Network:      http://127.0.0.1:3000
-   - Environments: .env.local, .env
+   - Environments: .env
 
  ✓ Starting...
- ✓ Ready in 2.4s
- ✓ Compiled /middleware in 293ms (169 modules)
+ ✓ Ready in 2.2s

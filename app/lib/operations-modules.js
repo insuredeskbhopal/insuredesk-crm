@@ -66,7 +66,7 @@ export const OPERATIONS_MODULES = [
     id: "endorsements",
     name: "Endorsements",
     description: "Manage policy modifications and endorsements.",
-    route: "/operations/endorsements",
+    route: "/dashboard/endorsements",
     buttonLabel: "Open Endorsements",
     accent: "amber",
     functions: [
