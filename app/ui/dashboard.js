@@ -468,7 +468,7 @@ export default function Dashboard({
     : null;
 
   const analytics = useMemo(() => buildAnalytics(filteredRecords), [filteredRecords]);
-  const canEditPolicyRecords = ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(currentUserRole);
+  const canEditPolicyRecords = ["SUPER_ADMIN", "ADMIN", "MANAGER", "AGENT"].includes(currentUserRole);
   const canDeletePolicyRecords = currentUserRole === "SUPER_ADMIN";
   const editValidation = useMemo(() => getReviewValidation({
     sourceFile: editingRecord?.sourceFile || "",
@@ -669,7 +669,7 @@ export default function Dashboard({
 
   function startEditRecord(record) {
     if (!canEditPolicyRecords) {
-      setAlert({ type: "error", title: "Edit unavailable", message: "Only admin, super admin, and manager roles can edit policy records." });
+      setAlert({ type: "error", title: "Edit unavailable", message: "Viewer role cannot edit policy records." });
       return;
     }
     const nextForm = FIELD_SETUP.reduce((payload, [, key]) => ({

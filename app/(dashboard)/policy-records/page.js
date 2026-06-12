@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { normalizeRecord } from "@/lib/records";
 import Dashboard from "@/app/ui/dashboard";
 import { loadScopedPolicyRecords, getCurrentSessionFromCookies } from "@/lib/records/scoped-data";
-import { getTenantFilter, applyLOBRestriction, getLOBFilterSQL } from "@/lib/auth/rbac";
+import { getTenantFilter } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/db/prisma";
 
 export default async function PolicyRecordsPage(props) {
@@ -24,9 +24,6 @@ export default async function PolicyRecordsPage(props) {
     ...tenantFilter,
     deletedAt: null
   };
-
-  applyLOBRestriction(basePolicyWhere, session);
-
   const dataPayload = await loadScopedPolicyRecords({
     includeInactive: true,
     page,
@@ -84,18 +81,16 @@ export default async function PolicyRecordsPage(props) {
 
 async function loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId, session }) {
   try {
-    const lobSql = isSuperAdmin ? "" : getLOBFilterSQL(session?.assignedLOBs);
+    void session;
     const duplicateCountQuery = `
       SELECT COUNT(*)::integer as count FROM pdf_records
       WHERE deleted_at IS NULL
         AND ($1::boolean OR organization_id = $2::uuid)
-        ${lobSql}
         AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (
           SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
           FROM pdf_records
           WHERE deleted_at IS NULL
             AND ($1::boolean OR organization_id = $2::uuid)
-            ${lobSql}
             AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
           GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
           HAVING COUNT(*) > 1

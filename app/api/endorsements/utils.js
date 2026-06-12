@@ -53,7 +53,7 @@ export function canWriteEndorsement(session, endorsement) {
 }
 
 export function canDeleteEndorsement(session, endorsement) {
-  return endorsement.status === "Draft" && canAccessSharedResource(session, "delete", endorsement.organizationId);
+  return canAccessSharedResource(session, "delete", endorsement.organizationId);
 }
 
 export const endorsementInclude = {

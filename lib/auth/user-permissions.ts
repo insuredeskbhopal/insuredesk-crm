@@ -1,6 +1,6 @@
 import { UserRole } from "@prisma/client";
 
-export const USER_MANAGEMENT_ROLES: UserRole[] = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER];
+export const USER_MANAGEMENT_ROLES: UserRole[] = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
 
 const ROLE_RANK: Record<string, number> = {
   SUPER_ADMIN: 5,
@@ -23,7 +23,6 @@ export function canManageRole(actorRole?: string | null, targetRole?: string | n
 export function getAssignableRoles(actorRole?: string | null) {
   if (actorRole === UserRole.SUPER_ADMIN) return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER, UserRole.AGENT, UserRole.VIEWER];
   if (actorRole === UserRole.ADMIN) return [UserRole.MANAGER, UserRole.AGENT, UserRole.VIEWER];
-  if (actorRole === UserRole.MANAGER) return [UserRole.AGENT, UserRole.VIEWER];
   return [];
 }
 

@@ -3,7 +3,6 @@ import { verifyJWT } from "@/lib/auth";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
 import { startOfDay } from "@/app/lib/reporting/filters";
-import { getLOBFilterSQL } from "@/lib/auth/rbac";
 import { getDaysStatus, getExpiryState } from "@/lib/renewals/dates";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +38,6 @@ export async function GET(request) {
     const isSuperAdmin = user.role === "SUPER_ADMIN";
     const orgId = user.organizationId || null;
     const actorId = user.userId || user.id || null;
-    const lobSql = isSuperAdmin ? "" : getLOBFilterSQL(user.assignedLOBs);
 
     const queryParams = [
       isSuperAdmin,
@@ -105,7 +103,6 @@ export async function GET(request) {
         FROM pdf_records
         WHERE deleted_at IS NULL
           AND ($1::boolean OR organization_id = $2::uuid)
-          ${lobSql}
       ),
       parsed_policies AS (
         SELECT 

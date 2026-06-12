@@ -48,14 +48,9 @@ export async function GET(request) {
     const actorId = user.userId || user.id || null;
     const { searchParams } = new URL(request.url);
     const requestedUserId = searchParams.get("userId") || actorId;
-    const canViewOthers = ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(user.role || "");
 
     if (!requestedUserId) {
       return Response.json({ error: "User session is invalid." }, { status: 400 });
-    }
-
-    if (requestedUserId !== actorId && !canViewOthers) {
-      return Response.json({ error: "You can only view your own today's work." }, { status: 403 });
     }
 
     const start = startOfDay(new Date());
@@ -66,7 +61,7 @@ export async function GET(request) {
       ? {}
       : { organizationId: user.organizationId };
 
-    if (requestedUserId !== actorId && canViewOthers) {
+    if (requestedUserId !== actorId) {
       const targetUser = await prisma.user.findFirst({
         where: {
           id: requestedUserId,

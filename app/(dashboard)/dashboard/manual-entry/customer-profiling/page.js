@@ -1777,7 +1777,6 @@ function formatDateTime(value) {
 
 function canCurrentUserHandleProfile(profile, user) {
   if (!user) return false;
-  if (user.role === "SUPER_ADMIN") return true;
   const userTokens = [user.name, user.email].filter(Boolean).map((value) => value.toLowerCase());
   const ownerTokens = [profile.assignedTo, profile.createdBy].filter(Boolean).map((value) => value.toLowerCase());
   return ownerTokens.some((owner) => userTokens.includes(owner));

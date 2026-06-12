@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/records/validation";
 import { verifyJWT } from "@/lib/auth";
-import { canAccessSharedResource, getTenantFilter, UserRole, applyLOBRestriction } from "@/lib/auth/rbac";
+import { canAccessSharedResource, getTenantFilter, UserRole } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
@@ -26,10 +26,10 @@ export async function PUT(request, { params }) {
     const payload = await request.json();
     const actorId = session.userId || session.id || null;
     const existing = await prisma.policyRecord.findFirst({
-      where: applyLOBRestriction({
+      where: {
         id,
         ...getTenantFilter(session, "read")
-      }, session)
+      }
     });
 
     if (!existing || existing.deletedAt) {
@@ -158,10 +158,10 @@ export async function DELETE(request, { params }) {
     const { id } = await params;
     const actorId = session.userId || session.id || null;
     const existing = await prisma.policyRecord.findFirst({
-      where: applyLOBRestriction({
+      where: {
         id,
         ...getTenantFilter(session, "read")
-      }, session)
+      }
     });
 
     if (!existing || existing.deletedAt) {
