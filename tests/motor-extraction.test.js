@@ -1002,6 +1002,51 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("locks the Tata AIG standalone own-damage private car extraction contract", async () => {
+    const sourceFile = "tests/fixtures/Siddharth Agrawal_MP04ZY9981_2026-27 POLICY.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "TATA_AIG_MOTOR_V1",
+      insuranceCompany: "Tata AIG General Insurance Company Limited",
+      policyType: "Auto Secure - Standalone Own Damage Private Car Policy",
+      policyCoverType: "Own Damage",
+      insuredName: "Siddharth Agrawal",
+      contactPerson: "Siddharth Agrawal",
+      contactNumber: "+9197**44**29",
+      policyNumber: "6206396043 00 00",
+      gstin: "NA",
+      vehicleNumber: "MP04ZY9981",
+      registrationNumber: "MP04ZY9981",
+      makeModel: "TOYOTA INNOVA HYCROSS",
+      variant: "ZX HYBRID 7STR",
+      fuelType: "HYBRID",
+      engineNumber: "M20ANC40836",
+      chassisNumber: "MBJABBAA601451776",
+      bodyType: "MUV",
+      cubicCapacity: "1987",
+      manufacturingYear: "2024",
+      registrationDate: "13/06/2024",
+      seatingCapacity: "7",
+      rtoLocation: "BHOPAL",
+      geographicalArea: "India",
+      idv: "2500706.00",
+      sumInsured: "2500706.00",
+      premium: "36132.00",
+      totalPremium: "36132.00",
+      netPremium: "30620.00",
+      odPremium: "6687.89",
+      tpDriverOwner: "",
+      modeOfPayment: "paymentLinkCustomer",
+      receiptNumber: "PD300022540198",
+      receiptDate: "11/06/2026",
+      payerName: "Siddharth Agrawal",
+      previousInsurer: "ICICI",
+      previousPolicyNumber: "3001/O/394161003/00/000"
+    });
+  });
+
   it("extracts the renamed Bajaj General private car package schedule", async () => {
     const sourceFile = "tests/fixtures/SHREENATH DAS TANK_MP39C3588_2026-27 (1).pdf";
     const parsed = await pdf(readFileSync(sourceFile));

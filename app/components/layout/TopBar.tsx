@@ -3,7 +3,6 @@
 import { Bell, CalendarDays, Loader2, Settings, Activity, LogOut, FileText, FileCheck, FileX, FileWarning, Clock, Menu } from "lucide-react";
 import SearchBox from "@/app/components/shared/SearchBox";
 import BrandLogo from "@/app/components/brand/BrandLogo";
-import InsurerLogo from "@/app/components/brand/InsurerLogo";
 import { cachedJson } from "@/app/lib/client-api";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -18,8 +17,9 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [hasNotifications, setHasNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
-  const [renewals, setRenewals] = useState([]);
+  const [calendarTasks, setCalendarTasks] = useState([]);
   
   const [showDiagnosticsModal, setShowDiagnosticsModal] = useState(false);
   const [diagnosticsData, setDiagnosticsData] = useState(null);
@@ -30,19 +30,24 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
 
   const fetchHeaderData = async () => {
     try {
-      const data = await cachedJson("/api/dashboard/header-data", {
-        ttlMs: 5000,
-        fetchOptions: { cache: "no-store" }
-      });
-      if (data.success) {
-        setRenewals(data.renewals || []);
-        setNotifications(data.notifications || []);
-        // Show notification badge if there are any notifications in the list
-        if (data.notifications && data.notifications.length > 0) {
-          setHasNotifications(true);
-        } else {
-          setHasNotifications(false);
-        }
+      const [workData, notificationData] = await Promise.all([
+        cachedJson("/api/work-center", {
+          ttlMs: 5000,
+          fetchOptions: { cache: "no-store" }
+        }),
+        cachedJson("/api/notifications?limit=10", {
+          ttlMs: 5000,
+          fetchOptions: { cache: "no-store" }
+        })
+      ]);
+      if (workData.success) {
+        const tasks = workData.tasks || [];
+        setCalendarTasks(tasks.slice(0, 10));
+      }
+      if (notificationData.success) {
+        setNotifications(notificationData.notifications || []);
+        setUnreadCount(notificationData.unreadCount || 0);
+        setHasNotifications((notificationData.unreadCount || 0) > 0);
       }
     } catch (err) {
       console.error("Failed to fetch header data:", err);
@@ -92,7 +97,6 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
     setShowNotifications(!showNotifications);
     setShowCalendar(false);
     setShowProfile(false);
-    setHasNotifications(false);
     if (!showNotifications) {
       fetchHeaderData();
     }
@@ -121,30 +125,49 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
     }
   };
 
-  const getRenewalSubtitle = (r) => {
-    if (r.isExpired) {
-      const days = Math.abs(r.daysRemaining);
-      return `Expired ${days} day${days > 1 ? "s" : ""} ago (${r.formattedExpiry})`;
-    } else {
-      const days = r.daysRemaining;
-      if (days === 0) return `Expires today! (${r.formattedExpiry})`;
-      return `Renewal on ${r.formattedExpiry} (in ${days} day${days > 1 ? "s" : ""})`;
-    }
+  const getTaskSubtitle = (task) => {
+    if (!task.dueAt) return task.module;
+    const due = new Date(task.dueAt);
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const dueStart = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+    const days = Math.round((dueStart.getTime() - todayStart.getTime()) / 86400000);
+    if (days < 0) return `Overdue by ${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"}`;
+    if (days === 0) return `Due today at ${due.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
+    return `Due in ${days} day${days === 1 ? "" : "s"}`;
   };
 
   const getNotificationIcon = (type) => {
     const iconSize = 16;
     switch (type) {
       case "success":
+      case "SUCCESS":
         return <FileCheck size={iconSize} className="icon-success" />;
       case "error":
+      case "CRITICAL":
         return <FileX size={iconSize} className="icon-error" />;
       case "warning":
+      case "WARNING":
         return <FileWarning size={iconSize} className="icon-warning" />;
       case "progress":
         return <Loader2 size={iconSize} className="spin icon-progress" />;
       default:
         return <FileText size={iconSize} className="icon-default" />;
+    }
+  };
+
+  const markAllRead = async () => {
+    try {
+      await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
+      });
+      setNotifications((items) => items.map((item) => ({ ...item, read: true })));
+      setUnreadCount(0);
+      setHasNotifications(false);
+    } catch (err) {
+      console.error("Failed to mark notifications read:", err);
     }
   };
 
@@ -186,42 +209,41 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
           </button>
           {showCalendar && (
             <div className="tb-dropdown">
-              <h4 className="tb-dropdown-title">Upcoming Renewals</h4>
+              <div className="tb-item-header tb-notif-header">
+                <h4 className="tb-dropdown-title tb-m-0">Today's Work</h4>
+                <Link href="/work-center" onClick={() => setShowCalendar(false)} className="tb-clear-btn">
+                  View all
+                </Link>
+              </div>
               <div className="tb-dropdown-list">
-                {renewals.length ? (
-                  renewals.map((r) => (
+                {calendarTasks.length ? (
+                  calendarTasks.map((task) => (
                     <Link 
-                      key={r.id} 
-                      href={`/customer-management/${encodeURIComponent(r.insuredName)}/policy/${r.id}`}
+                      key={task.id} 
+                      href={task.metadata?.actionUrl || "/work-center"}
                       onClick={() => setShowCalendar(false)}
-                      className={`tb-renewal-item ${
-                        r.isExpired 
-                          ? "border-expired" 
-                          : r.daysRemaining === 0 
-                            ? "border-today" 
-                            : r.daysRemaining <= 30 
-                              ? "border-soon" 
-                              : "border-active"
-                      }`}
+                      className={`tb-renewal-item ${task.priority === "CRITICAL" || task.priority === "EMERGENCY" ? "border-expired" : task.priority === "HIGH" ? "border-soon" : "border-active"}`}
                     >
                       <div className="tb-item-header">
-                        <strong className="tb-item-strong"><InsurerLogo company={r.company} /></strong>
-                        <span 
-                          className={`tb-item-badge ${r.isExpired ? "badge-expired" : "badge-active"}`}
-                        >
-                          {r.policyType}
+                        <strong className="tb-item-strong">{task.title}</strong>
+                        <span className={`tb-item-badge ${task.priority === "CRITICAL" || task.priority === "EMERGENCY" ? "badge-expired" : "badge-active"}`}>
+                          {task.type.replaceAll("_", " ")}
                         </span>
                       </div>
                       <p className="tb-item-text">
                         <Clock size={12} className="icon-default" />
-                        <span>{getRenewalSubtitle(r)}</span>
+                        <span>{getTaskSubtitle(task)}</span>
                       </p>
-                      <small className="tb-item-small">Client: {r.insuredName}</small>
+                      <small className="tb-item-small">{task.customerName || task.module}</small>
                     </Link>
                   ))
                 ) : (
-                  <p className="tb-empty-text">No renewal records found.</p>
+                  <p className="tb-empty-text">No open tasks found.</p>
                 )}
+              </div>
+              <div className="tb-dropdown-actions">
+                <Link href="/work-center" onClick={() => setShowCalendar(false)}>Add Task</Link>
+                <Link href="/work-center" onClick={() => setShowCalendar(false)}>Open Calendar</Link>
               </div>
             </div>
           )}
@@ -238,33 +260,29 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                 <h4 className="tb-dropdown-title tb-m-0">Recent Activity</h4>
                 <button 
                   type="button" 
-                  onClick={() => {
-                    setNotifications([]);
-                    setHasNotifications(false);
-                    setToast("Cleared recent activity log");
-                  }} 
+                  onClick={markAllRead} 
                   className="tb-clear-btn"
                 >
-                  Clear all
+                  Mark all read
                 </button>
               </div>
+              {unreadCount > 0 ? <p className="tb-unread-count">{unreadCount} unread notification{unreadCount === 1 ? "" : "s"}</p> : null}
               <div className="tb-dropdown-list">
                 {notifications.length ? (
                   notifications.map((n) => {
-                    const href = n.recordId && n.clientName 
-                      ? `/customer-management/${encodeURIComponent(n.clientName)}/policy/${n.recordId}`
-                      : "/upload-history";
+                    const href = n.actionUrl || "/work-center";
                     
                     return (
                       <Link 
                         key={n.id} 
                         href={href}
                         onClick={() => setShowNotifications(false)}
-                        className="tb-notif-item"
+                        className={n.read ? "tb-notif-item" : "tb-notif-item unread"}
                       >
-                        <span className="tb-notif-icon-wrap">{getNotificationIcon(n.type)}</span>
+                        <span className="tb-notif-icon-wrap">{getNotificationIcon(n.severity)}</span>
                         <div>
-                          <p className="tb-notif-text">{n.text}</p>
+                          <p className="tb-notif-text">{n.title}</p>
+                          <small className="tb-item-small">{n.message}</small>
                           <small className="tb-notif-time">{n.time}</small>
                         </div>
                       </Link>
@@ -273,6 +291,10 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                 ) : (
                   <p className="tb-empty-text">No new activity logs.</p>
                 )}
+              </div>
+              <div className="tb-dropdown-actions">
+                <Link href="/work-center" onClick={() => setShowNotifications(false)}>Filter Notifications</Link>
+                <Link href="/work-center" onClick={() => setShowNotifications(false)}>View All</Link>
               </div>
             </div>
           )}

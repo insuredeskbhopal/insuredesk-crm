@@ -40,6 +40,77 @@ enum AuditSource {
   AUTH
 }
 
+enum NotificationCategory {
+  POLICY
+  RENEWAL
+  CUSTOMER
+  CLAIM
+  ENDORSEMENT
+  SERVICE_REQUEST
+  TASK
+  USER_MANAGEMENT
+  SYSTEM
+  APPROVAL
+  ESCALATION
+}
+
+enum NotificationSeverity {
+  INFO
+  SUCCESS
+  WARNING
+  CRITICAL
+}
+
+enum TaskType {
+  CALL
+  MEETING
+  FOLLOW_UP
+  RENEWAL
+  COLLECTION
+  CLAIM
+  ENDORSEMENT
+  SERVICE_REQUEST
+  TEAM
+  CUSTOM
+}
+
+enum TaskStatus {
+  DRAFT
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  WAITING_CUSTOMER
+  WAITING_INSURANCE_COMPANY
+  WAITING_DOCUMENTS
+  ESCALATED
+  COMPLETED
+  CANCELLED
+  CLOSED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+  EMERGENCY
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SENT_BACK
+  CANCELLED
+}
+
+enum EscalationStatus {
+  OPEN
+  NOTIFIED
+  RESOLVED
+  CANCELLED
+}
+
 model Organization {
   id            String         @id @default(uuid()) @db.Uuid
   name          String
@@ -76,6 +147,249 @@ model AuditLog {
   @@index([createdAt])
   @@index([userId])
   @@map("audit_logs")
+}
+
+model Notification {
+  id             String               @id @default(uuid()) @db.Uuid
+  organizationId String?              @map("organization_id") @db.Uuid
+  userId         String?              @map("user_id") @db.Uuid
+  createdById    String?              @map("created_by_id") @db.Uuid
+  updatedById    String?              @map("updated_by_id") @db.Uuid
+  category       NotificationCategory
+  severity       NotificationSeverity @default(INFO)
+  title          String
+  message        String               @db.Text
+  module         String
+  recordId       String?              @map("record_id")
+  recordLabel    String?              @map("record_label")
+  actionUrl      String?              @map("action_url") @db.Text
+  sourceKey      String               @unique @map("source_key")
+  metadata       Json                 @default("{}")
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  reads          NotificationRead[]
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, category, createdAt])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model NotificationRead {
+  id             String       @id @default(uuid()) @db.Uuid
+  notificationId String       @map("notification_id") @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  readAt         DateTime     @default(now()) @map("read_at") @db.Timestamptz(6)
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, userId])
+  @@index([userId, readAt])
+  @@map("notification_reads")
+}
+
+model NotificationPreference {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @map("organization_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  category       String
+  inApp          Boolean  @default(true) @map("in_app")
+  email          Boolean  @default(false)
+  whatsapp       Boolean  @default(false)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([userId, category])
+  @@index([organizationId, userId])
+  @@map("notification_preferences")
+}
+
+model Task {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String?      @map("organization_id") @db.Uuid
+  userId         String?      @map("user_id") @db.Uuid
+  createdById    String?      @map("created_by_id") @db.Uuid
+  updatedById    String?      @map("updated_by_id") @db.Uuid
+  title          String
+  description    String?      @db.Text
+  type           TaskType
+  status         TaskStatus   @default(OPEN)
+  priority       TaskPriority @default(MEDIUM)
+  module         String
+  recordId       String?      @map("record_id")
+  recordLabel    String?      @map("record_label")
+  customerName   String?      @map("customer_name")
+  customerMobile String?      @map("customer_mobile")
+  policyNumber   String?      @map("policy_number")
+  amount         Decimal?     @db.Decimal(14, 2)
+  dueAt          DateTime?    @map("due_at") @db.Timestamptz(6)
+  completedAt    DateTime?    @map("completed_at") @db.Timestamptz(6)
+  archivedAt     DateTime?    @map("archived_at") @db.Timestamptz(6)
+  sourceKey      String?      @unique @map("source_key")
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  assignments    TaskAssignment[]
+  comments       TaskComment[]
+  attachments    TaskAttachment[]
+  reminders      Reminder[]
+
+  @@index([organizationId, status, dueAt])
+  @@index([organizationId, type, dueAt])
+  @@index([userId, status, dueAt])
+  @@index([module, recordId])
+  @@map("tasks")
+}
+
+model TaskAssignment {
+  id         String    @id @default(uuid()) @db.Uuid
+  taskId     String    @map("task_id") @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  assignedBy String?   @map("assigned_by") @db.Uuid
+  assignedAt DateTime  @default(now()) @map("assigned_at") @db.Timestamptz(6)
+  task       Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@index([userId, assignedAt])
+  @@map("task_assignments")
+}
+
+model TaskComment {
+  id        String   @id @default(uuid()) @db.Uuid
+  taskId    String   @map("task_id") @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  comment   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+  @@map("task_comments")
+}
+
+model TaskAttachment {
+  id        String   @id @default(uuid()) @db.Uuid
+  taskId    String   @map("task_id") @db.Uuid
+  fileName  String   @map("file_name")
+  fileUrl   String   @map("file_url") @db.Text
+  fileType  String?  @map("file_type")
+  uploadedBy String? @map("uploaded_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+  @@map("task_attachments")
+}
+
+model Reminder {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @map("organization_id") @db.Uuid
+  userId         String?  @map("user_id") @db.Uuid
+  taskId         String?  @map("task_id") @db.Uuid
+  module         String
+  recordId       String?  @map("record_id")
+  title          String
+  remindAt       DateTime @map("remind_at") @db.Timestamptz(6)
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz(6)
+  sourceKey      String?  @unique @map("source_key")
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  task           Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, remindAt])
+  @@index([userId, remindAt])
+  @@map("reminders")
+}
+
+model CalendarEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @map("organization_id") @db.Uuid
+  userId         String?  @map("user_id") @db.Uuid
+  createdById    String?  @map("created_by_id") @db.Uuid
+  updatedById    String?  @map("updated_by_id") @db.Uuid
+  title          String
+  description    String?  @db.Text
+  eventType      String   @default("TASK") @map("event_type")
+  module         String
+  recordId       String?  @map("record_id")
+  startsAt       DateTime @map("starts_at") @db.Timestamptz(6)
+  endsAt         DateTime? @map("ends_at") @db.Timestamptz(6)
+  location       String?
+  sourceKey      String?  @unique @map("source_key")
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([organizationId, startsAt])
+  @@index([userId, startsAt])
+  @@map("calendar_events")
+}
+
+model Approval {
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String?        @map("organization_id") @db.Uuid
+  requestedById  String?        @map("requested_by_id") @db.Uuid
+  approverId     String?        @map("approver_id") @db.Uuid
+  approvalType   String         @map("approval_type")
+  module         String
+  recordId       String?        @map("record_id")
+  title          String
+  status         ApprovalStatus @default(PENDING)
+  decisionNote   String?        @map("decision_note") @db.Text
+  decidedAt      DateTime?      @map("decided_at") @db.Timestamptz(6)
+  sourceKey      String?        @unique @map("source_key")
+  metadata       Json           @default("{}")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([organizationId, status, createdAt])
+  @@index([approverId, status])
+  @@map("approvals")
+}
+
+model Escalation {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String?          @map("organization_id") @db.Uuid
+  taskId         String?          @map("task_id") @db.Uuid
+  assignedUserId String?          @map("assigned_user_id") @db.Uuid
+  managerUserId  String?          @map("manager_user_id") @db.Uuid
+  module         String
+  recordId       String?          @map("record_id")
+  reason         String           @db.Text
+  status         EscalationStatus @default(OPEN)
+  escalatedAt    DateTime         @default(now()) @map("escalated_at") @db.Timestamptz(6)
+  resolvedAt     DateTime?        @map("resolved_at") @db.Timestamptz(6)
+  sourceKey      String?          @unique @map("source_key")
+  metadata       Json             @default("{}")
+
+  @@index([organizationId, status, escalatedAt])
+  @@index([assignedUserId, status])
+  @@map("escalations")
+}
+
+model ActivityLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String?  @map("organization_id") @db.Uuid
+  userId         String?  @map("user_id") @db.Uuid
+  userRole       String?  @map("user_role")
+  module         String
+  recordId       String?  @map("record_id")
+  recordLabel    String?  @map("record_label")
+  action         String
+  description    String?  @db.Text
+  oldValue       Json?    @map("old_value")
+  newValue       Json?    @map("new_value")
+  ipAddress      String?  @map("ip_address")
+  browser        String?
+  device         String?
+  sourceKey      String?  @unique @map("source_key")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([organizationId, createdAt])
+  @@index([module, recordId])
+  @@index([userId, createdAt])
+  @@map("activity_logs")
 }
 
 model CustomerProfile {

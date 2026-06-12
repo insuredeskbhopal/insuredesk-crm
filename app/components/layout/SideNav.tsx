@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 const ROUTE_MAP = {
   "dashboard": "/dashboard",
   "bulk-entry": "/bulk-upload",
+  "work-center": "/work-center",
   "operations": "/operations",
   "manual-entry": "/manual-policy-entry",
   "customer-profiling": "/dashboard/manual-entry/customer-profiling",
@@ -53,6 +54,7 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
     if (propActivePage) return propActivePage;
     if (pathname === "/dashboard") return "dashboard";
     if (pathname === "/bulk-upload") return "bulk-entry";
+    if (pathname === "/work-center") return "work-center";
     if (pathname.startsWith("/operations")) return "operations";
     if (pathname === "/manual-policy-entry") return "manual-entry";
     if (pathname === "/dashboard/manual-entry/customer-profiling") return "customer-profiling";

@@ -2,6 +2,7 @@
 import {
   BarChart3,
   BriefcaseBusiness,
+  CalendarDays,
   FileCog,
   FileEdit,
   FileText,
@@ -13,6 +14,7 @@ import {
 
 export const NAV_ITEMS = [
   { id: "bulk-entry", label: "Bulk PDF Upload", icon: Upload },
+  { id: "work-center", label: "Work Center", icon: CalendarDays },
   { id: "operations", label: "Operations Hub", icon: BriefcaseBusiness },
   { id: "records", label: "Policy Records", icon: FileText },
   { id: "customers", label: "Customer Management", icon: Users },
