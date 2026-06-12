@@ -54,14 +54,13 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
     if (propActivePage) return propActivePage;
     if (pathname === "/dashboard") return "dashboard";
     if (pathname === "/bulk-upload") return "bulk-entry";
-    if (pathname === "/work-center") return "work-center";
-    if (pathname.startsWith("/operations")) return "operations";
+    if (pathname === "/work-center" || pathname.startsWith("/operations")) return "operations";
     if (pathname === "/manual-policy-entry") return "manual-entry";
     if (pathname === "/dashboard/manual-entry/customer-profiling") return "customer-profiling";
     if (pathname === "/policy-records") return "records";
     if (pathname.startsWith("/customer-management")) return "customers";
     if (pathname.startsWith("/dashboard/renewals")) return "renewals";
-    if (pathname.startsWith("/dashboard/endorsements")) return "endorsements";
+    if (pathname.startsWith("/dashboard/endorsements")) return "operations";
     if (pathname === "/analytics-reports" || pathname.startsWith("/dashboard/reports")) return "analytics";
     if (pathname === "/field-setup") return "field-setup";
     if (pathname === "/settings") return "settings";

@@ -1,5 +1,21 @@
 export const OPERATIONS_MODULES = [
   {
+    id: "work-center",
+    name: "Work Center",
+    description: "Plan tasks, reminders, approvals, escalations, and team workload.",
+    route: "/work-center",
+    buttonLabel: "Open Work Center",
+    accent: "blue",
+    functions: [
+      "Task management",
+      "Follow-up planner",
+      "Renewal reminders",
+      "Approvals",
+      "Escalations",
+      "Activity feed"
+    ]
+  },
+  {
     id: "customer-profiling",
     name: "Customer Profiling",
     description: "Capture customer requirements before policy recommendation.",

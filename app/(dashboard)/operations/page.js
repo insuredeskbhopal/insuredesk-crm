@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   BadgeCheck,
+  CalendarDays,
   ClipboardCheck,
   ClipboardList,
   FileEdit,
@@ -21,6 +22,7 @@ import PageHeader from "@/app/components/layout/PageHeader";
 import { OPERATIONS_MODULES, FUTURE_OPERATIONS_MODULES } from "@/app/lib/operations-modules";
 
 const ICONS = {
+  "work-center": CalendarDays,
   "customer-profiling": Users,
   "manual-policy-entry": FilePenLine,
   "claims-management": ShieldCheck,
@@ -236,6 +238,7 @@ function OperationsCard({ module, metrics }) {
 }
 
 function getModuleCount(id, metrics) {
+  if (id === "work-center") return metrics.openActivities || 0;
   if (id === "customer-profiling" || id === "lead-management") return metrics.customerProfiles || 0;
   if (id === "manual-policy-entry") return metrics.policyRecords || 0;
   return 0;
@@ -248,6 +251,7 @@ function getLastActivityText(id, count, metrics) {
   if (id === "manual-policy-entry") {
     return count > 0 && metrics.latestPolicyActivity ? `Last policy ${metrics.latestPolicyActivity}` : "No recent activity";
   }
+  if (id === "work-center") return count > 0 ? `${count} open activities` : "No open activities";
   if (count > 0) return "Last activity available";
   if (["claims-management", "declarations", "endorsements", "service-requests"].includes(id)) return "Ready for setup";
   return "No recent activity";
