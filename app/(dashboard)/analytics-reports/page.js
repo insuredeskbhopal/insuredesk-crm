@@ -1,10 +1,5 @@
-export const dynamic = "force-dynamic";
+import { redirect } from "next/navigation";
 
-import { normalizeRecord } from "@/lib/records";
-import Dashboard from "@/app/ui/dashboard";
-import { loadScopedPolicyRecords } from "@/lib/records/scoped-data";
-
-export default async function AnalyticsReportsPage() {
-  const records = await loadScopedPolicyRecords();
-  return <Dashboard initialRecords={records.map(normalizeRecord)} activePage="analytics" />;
+export default function AnalyticsReportsRedirectPage() {
+  redirect("/dashboard/reports");
 }

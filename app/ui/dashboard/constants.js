@@ -18,7 +18,7 @@ export const NAV_ITEMS = [
   { id: "customers", label: "Customer Management", icon: Users },
   { id: "renewals", label: "Renewals", icon: RefreshCw },
   { id: "endorsements", label: "Endorsements", icon: FileEdit },
-  { id: "analytics", label: "Analytics & Reports", icon: BarChart3 },
+  { id: "analytics", label: "Business Intelligence & Reporting Center", icon: BarChart3 },
   { id: "field-setup", label: "Field Setup", icon: FileCog },
   { id: "user-management", label: "User Management", icon: Users, roles: ["SUPER_ADMIN", "ADMIN"] },
   { id: "settings", label: "Settings", icon: Settings },

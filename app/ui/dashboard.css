@@ -9446,3 +9446,312 @@ th {
     max-width: calc(100vw - 16px);
   }
 }
+
+/* Business Intelligence & Reporting Center */
+.bi-page {
+  display: grid;
+  gap: 18px;
+}
+
+.bi-hero,
+.bi-action-strip {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid rgba(25, 28, 29, 0.1);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.bi-hero h1,
+.bi-action-strip h2 {
+  margin: 0;
+  color: var(--primary);
+  font-size: var(--font-size-2xl);
+  line-height: 1.2;
+}
+
+.bi-hero p,
+.bi-module-card p {
+  margin: 7px 0 0;
+  color: var(--on-surface-variant);
+  line-height: 1.55;
+}
+
+.bi-hero > span {
+  flex: 0 0 auto;
+  color: var(--on-surface-variant);
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+}
+
+.bi-module-grid,
+.bi-kpi-grid,
+.bi-health-grid,
+.bi-action-grid,
+.bi-chart-grid,
+.bi-table-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.bi-module-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.bi-module-card {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(25, 28, 29, 0.1);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.bi-module-head,
+.bi-module-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.bi-module-head > span {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(25, 28, 29, 0.06);
+  color: var(--primary);
+}
+
+.bi-module-head small,
+.bi-module-meta span {
+  color: var(--on-surface-variant);
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+}
+
+.bi-module-card h2 {
+  margin: 0;
+  color: var(--on-surface);
+  font-size: var(--font-size-lg);
+}
+
+.bi-module-meta strong {
+  color: var(--primary);
+  font-size: var(--font-size-base);
+}
+
+.bi-filter-bar {
+  position: sticky;
+  top: 56px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(233, 236, 239, 0.94);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.bi-filter-bar label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.bi-filter-bar span {
+  color: var(--on-surface-variant);
+  font-size: var(--font-size-xs);
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.bi-filter-bar input,
+.bi-filter-bar select {
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid rgba(25, 28, 29, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--on-surface);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  padding: 8px 10px;
+}
+
+.bi-filter-bar button {
+  align-self: end;
+}
+
+.bi-kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+}
+
+.bi-health-panel,
+.bi-action-center,
+.bi-chart-card,
+.bi-table-card {
+  padding: 18px;
+}
+
+.bi-health-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+}
+
+.bi-health-card,
+.bi-action-item {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(25, 28, 29, 0.1);
+  border-radius: 8px;
+  background: #fbfcfc;
+}
+
+.bi-health-card span,
+.bi-action-item span {
+  color: var(--on-surface-variant);
+  font-size: var(--font-size-xs);
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.bi-health-card strong,
+.bi-action-item strong {
+  color: var(--on-surface);
+  font-size: var(--font-size-2xl);
+  line-height: 1;
+}
+
+.bi-health-card div {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(25, 28, 29, 0.08);
+}
+
+.bi-health-card i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #2e7d32;
+}
+
+.bi-health-card.warn i {
+  background: #ef6c00;
+}
+
+.bi-health-card.risk i {
+  background: #c62828;
+}
+
+.bi-action-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+}
+
+.bi-action-item.active {
+  border-color: rgba(239, 108, 0, 0.2);
+  background: rgba(239, 108, 0, 0.08);
+}
+
+.bi-chart-grid,
+.bi-table-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+}
+
+.bi-chart-card {
+  display: grid;
+  gap: 14px;
+}
+
+.bi-chart-card h2,
+.bi-table-card h2 {
+  margin: 0;
+  color: var(--on-surface);
+  font-size: var(--font-size-lg);
+}
+
+.bi-bars {
+  display: grid;
+  gap: 10px;
+}
+
+.bi-bar-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.8fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.bi-bar-row span,
+.bi-bar-row strong {
+  min-width: 0;
+  color: var(--on-surface);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.bi-bar-row div {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(25, 28, 29, 0.08);
+}
+
+.bi-bar-row i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+}
+
+.bi-empty {
+  margin: 0;
+  color: var(--on-surface-variant);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.bi-table-card table {
+  min-width: 640px;
+}
+
+@media (max-width: 760px) {
+  .bi-hero,
+  .bi-action-strip {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .bi-hero h1,
+  .bi-action-strip h2 {
+    font-size: var(--font-size-xl);
+  }
+
+  .bi-filter-bar {
+    position: static;
+    grid-template-columns: 1fr;
+  }
+
+  .bi-chart-grid,
+  .bi-table-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bi-bar-row {
+    grid-template-columns: 1fr;
+  }
+}

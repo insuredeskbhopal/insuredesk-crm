@@ -16,7 +16,7 @@ const ROUTE_MAP = {
   "customers": "/customer-management",
   "renewals": "/dashboard/renewals",
   "endorsements": "/dashboard/endorsements",
-  "analytics": "/analytics-reports",
+  "analytics": "/dashboard/reports",
   "field-setup": "/field-setup",
   "user-management": "/admin/users",
   "settings": "/settings",
@@ -60,7 +60,7 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
     if (pathname.startsWith("/customer-management")) return "customers";
     if (pathname.startsWith("/dashboard/renewals")) return "renewals";
     if (pathname.startsWith("/dashboard/endorsements")) return "endorsements";
-    if (pathname === "/analytics-reports") return "analytics";
+    if (pathname === "/analytics-reports" || pathname.startsWith("/dashboard/reports")) return "analytics";
     if (pathname === "/field-setup") return "field-setup";
     if (pathname === "/settings") return "settings";
     if (pathname === "/admin/users") return "user-management";

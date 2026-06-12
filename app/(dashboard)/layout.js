@@ -20,6 +20,7 @@ const SEARCHABLE_CURRENT_PATHS = new Set([
   "/dashboard/manual-entry/customer-profiling",
   "/dashboard/renewals",
   "/dashboard/endorsements",
+  "/dashboard/reports",
   "/admin/users",
   "/upload-history"
 ]);
@@ -52,7 +53,7 @@ export default function DashboardLayout({ children }) {
     }
 
     const queryString = params.toString();
-    const targetPath = SEARCHABLE_CURRENT_PATHS.has(pathname) ? pathname : "/policy-records";
+    const targetPath = SEARCHABLE_CURRENT_PATHS.has(pathname) || pathname.startsWith("/dashboard/reports") ? pathname : "/policy-records";
     router.push(queryString ? `${targetPath}?${queryString}` : targetPath);
   };
 

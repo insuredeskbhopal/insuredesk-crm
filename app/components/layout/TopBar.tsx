@@ -12,7 +12,7 @@ import { useState, useEffect } from "react";
 export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSidebar }) {
   const pathname = usePathname();
   const isBulkActive = pathname === "/bulk-upload";
-  const isReportsActive = pathname.startsWith("/analytics-reports");
+  const isReportsActive = pathname.startsWith("/analytics-reports") || pathname.startsWith("/dashboard/reports");
 
   const [showCalendar, setShowCalendar] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -167,7 +167,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
         </button>
         <BrandLogo href="/dashboard" />
         <nav>
-          <Link className={isReportsActive ? "active" : ""} href="/analytics-reports">
+          <Link className={isReportsActive ? "active" : ""} href="/dashboard/reports">
             Reports
           </Link>
           <Link className={isBulkActive ? "active" : ""} href="/bulk-upload">
