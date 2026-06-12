@@ -9513,6 +9513,23 @@ th {
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
+.bi-module-card .primary-action,
+.bi-page .primary-action,
+.state-card .primary-action {
+  border: 1px solid rgba(25, 28, 29, 0.18) !important;
+  background: #f7f9fb !important;
+  color: var(--primary) !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06) !important;
+}
+
+.bi-module-card .primary-action:hover,
+.bi-page .primary-action:hover,
+.state-card .primary-action:hover {
+  border-color: rgba(25, 28, 29, 0.28) !important;
+  background: #eef4fa !important;
+  color: var(--primary) !important;
+}
+
 .bi-module-head,
 .bi-module-meta {
   display: flex;
