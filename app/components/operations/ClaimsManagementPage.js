@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { useSearchParams } from "next/navigation";
 import {
   ClipboardList,
   Download,
@@ -76,9 +77,11 @@ const FILTERS = [
 ];
 
 export default function ClaimsManagementPage() {
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") || "";
   const [claim, setClaim] = useState(EMPTY_CLAIM);
   const [claims, setClaims] = useState([]);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(urlQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState("");
   const [selectedClaimId, setSelectedClaimId] = useState("");
@@ -302,6 +305,10 @@ export default function ClaimsManagementPage() {
   useEffect(() => {
     loadClaims();
   }, []);
+
+  useEffect(() => {
+    setQuery(urlQuery);
+  }, [urlQuery]);
 
   const filteredClaims = useMemo(() => {
     const normalized = query.trim().toLowerCase();

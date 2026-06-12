@@ -9,6 +9,21 @@ import TopBar from "@/app/components/layout/TopBar";
 import { NAV_ITEMS } from "@/app/ui/dashboard/constants";
 import "@/app/ui/dashboard.css";
 
+const SEARCHABLE_CURRENT_PATHS = new Set([
+  "/dashboard",
+  "/bulk-upload",
+  "/policy-records",
+  "/customer-management",
+  "/operations",
+  "/operations/claims-management",
+  "/operations/customer-profiling",
+  "/dashboard/manual-entry/customer-profiling",
+  "/dashboard/renewals",
+  "/dashboard/endorsements",
+  "/admin/users",
+  "/upload-history"
+]);
+
 export default function DashboardLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -36,11 +51,9 @@ export default function DashboardLayout({ children }) {
       params.delete("q");
     }
 
-    if (["/policy-records", "/customer-management", "/dashboard", "/bulk-upload", "/operations"].includes(pathname)) {
-      router.push(`${pathname}?${params.toString()}`);
-    } else {
-      router.push(`/policy-records?${params.toString()}`);
-    }
+    const queryString = params.toString();
+    const targetPath = SEARCHABLE_CURRENT_PATHS.has(pathname) ? pathname : "/policy-records";
+    router.push(queryString ? `${targetPath}?${queryString}` : targetPath);
   };
 
   return (

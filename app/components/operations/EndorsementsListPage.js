@@ -3,6 +3,7 @@
 /* global URLSearchParams */
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Download, Edit, Eye, FilePlus2, Search, Trash2, Upload, XCircle } from "lucide-react";
 
@@ -10,16 +11,18 @@ const STATUSES = ["All", "Draft", "Letter Generated", "Sent to Customer", "Pendi
 const TYPES = ["All", "Change in Address", "Increase in Sum Insured", "Decrease in Sum Insured", "Change in Situation / Location", "Addition of Warehouse / Property", "Deletion of Warehouse / Property", "Change in Occupancy", "Change in Stock Description", "Change in Hypothecation / Bank Details", "Correction in Insured Name", "Correction in Policy Details", "Other Endorsement"];
 
 export default function EndorsementsListPage() {
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") || "";
   const [records, setRecords] = useState([]);
   const [summary, setSummary] = useState({ total: 0, draft: 0, generated: 0, approved: 0, rejectedCancelled: 0 });
-  const [filters, setFilters] = useState({ q: "", status: "All", type: "All", from: "", to: "" });
+  const [filters, setFilters] = useState({ q: urlQuery, status: "All", type: "All", from: "", to: "" });
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    loadRecords();
-  }, []);
+    setFilters((current) => current.q === urlQuery ? current : { ...current, q: urlQuery });
+  }, [urlQuery]);
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
@@ -29,6 +32,13 @@ export default function EndorsementsListPage() {
     params.set("limit", "500");
     return params.toString();
   }, [filters]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      loadRecords(queryString);
+    }, filters.q ? 250 : 0);
+    return () => window.clearTimeout(timeout);
+  }, [queryString, filters.q]);
 
   async function loadRecords(nextQuery = queryString) {
     setLoading(true);

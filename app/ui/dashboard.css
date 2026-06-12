@@ -8949,3 +8949,500 @@ th {
     grid-template-columns: 84px minmax(0, 1fr);
   }
 }
+
+/* responsive fix: final CRM-wide overflow and zoom hardening */
+.app-shell,
+.top-bar,
+.content-canvas,
+.page-inner,
+.glass-panel,
+.records-panel,
+.table-panel,
+.report-panel,
+.report-detail-card,
+.report-detail-table,
+.user-management-header,
+.user-form-panel,
+.user-table-panel,
+.operations-main,
+.operations-side-panel,
+.operations-module-detail,
+.claims-register-panel,
+.claims-document-uploader,
+.customer-profile-card,
+.customer-profile-workspace,
+.customer-profile-editor-panel,
+.customer-profile-list-panel,
+.followup-chat-card,
+.endorsement-page,
+.endorsement-table-panel,
+.endorsement-form-panel,
+.endorsement-workflow,
+.renewal-panel,
+.auth-card {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* responsive fix: keep data-heavy tables contained instead of creating page scroll */
+.table-wrap,
+.records-table-shell,
+.records-table-wrap,
+.user-table-wrap,
+.schema-table-wrap,
+.claims-table-wrap,
+.existing-customer-table,
+.renewal-today-report-table-wrap,
+.endorsement-table-scroll,
+.compact-table {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+/* responsive fix: long policy/customer data wraps inside cells and cards */
+.records-table th,
+.records-table td,
+.claims-register-table th,
+.claims-register-table td,
+.claims-generic-table th,
+.claims-generic-table td,
+.existing-customer-table th,
+.existing-customer-table td,
+.renewal-today-report-table th,
+.renewal-today-report-table td,
+.endorsement-table th,
+.endorsement-table td,
+.customer-row,
+.customer-row span,
+.customer-name-cell,
+.record-card,
+.metric-card,
+.report-kpi-card,
+.operations-summary-card,
+.operations-module-card,
+.claims-filter-card,
+.profile-counter-card,
+.lob-detail-card,
+.followup-message,
+.tb-dropdown,
+.tb-modal-card {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* responsive fix: toolbars, filters, legends and actions reflow under zoom */
+.top-actions,
+.title-actions,
+.actions,
+.records-panel .actions,
+.manual-actions,
+.preview-actions,
+.claims-form-actions,
+.claims-register-head,
+.claims-document-controls,
+.claims-document-item,
+.customer-profile-section-head,
+.customer-profile-actions,
+.profile-table-actions,
+.operations-module-detail-head,
+.operations-search,
+.renewal-filter-row,
+.renewal-row-actions,
+.endorsement-head-actions,
+.endorsement-actions-row,
+.endorsement-sticky-actions,
+.analytics-tabs,
+.donut-legend,
+.bar-list,
+.table-pagination,
+.table-page-list {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* responsive fix: cards and KPI groups shrink from desktop to small screens */
+.metric-grid,
+.settings-grid,
+.card-grid,
+.setup-metrics,
+.report-kpi-grid,
+.report-summary-grid,
+.analytics-chart-grid,
+.operations-summary-grid,
+.operations-card-grid,
+.claims-filter-grid,
+.profile-counter-grid,
+.customer-profile-grid,
+.followup-meta-grid,
+.endorsement-summary-grid,
+.endorsement-field-grid {
+  max-width: 100%;
+}
+
+/* responsive fix: form controls never exceed their column */
+.preview-form label,
+.setup-form label,
+.claims-form-grid label,
+.claims-wide-field,
+.customer-profile-grid label,
+.compact-profile-form label,
+.followup-meta-grid label,
+.user-form label,
+.record-filter-panel label,
+.renewal-filter-row label,
+.endorsement-field-grid label,
+.endorsement-filter-bar label,
+.manual-selectors label {
+  min-width: 0;
+}
+
+.preview-form input,
+.preview-form select,
+.preview-form textarea,
+.setup-form input,
+.setup-form select,
+.setup-form textarea,
+.claims-form-grid input,
+.claims-form-grid select,
+.claims-wide-field input,
+.claims-wide-field textarea,
+.customer-profile-grid input,
+.customer-profile-grid select,
+.customer-profile-grid textarea,
+.customer-profile-actions select,
+.followup-meta-grid input,
+.followup-meta-grid select,
+.followup-compose textarea,
+.user-form input,
+.user-form select,
+.user-form textarea,
+.record-filter-panel input,
+.record-filter-panel select,
+.renewal-filter-row select,
+.renewal-search-box,
+.renewal-search-box input,
+.endorsement-field-grid input,
+.endorsement-field-grid select,
+.endorsement-field-grid textarea,
+.endorsement-filter-bar input,
+.endorsement-filter-bar select,
+.manual-selectors input,
+.manual-selectors select,
+.global-search input,
+.search-box input {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* responsive fix: dashboard and report graphics stay fluid */
+.analytics-chart-grid > *,
+.report-grid > *,
+.report-summary-grid > *,
+.chart-card,
+.chart-panel,
+.donut-report,
+.bar-chart,
+.bar-list,
+.report-kpi-card,
+.metric-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (min-width: 1440px) {
+  /* responsive fix */
+  .page-inner {
+    width: min(100% - 48px, 1600px);
+  }
+}
+
+@media (max-width: 1439px) {
+  /* responsive fix */
+  .page-inner {
+    width: min(100% - 32px, 1400px);
+  }
+
+  .metric-grid,
+  .card-grid,
+  .settings-grid,
+  .report-summary-grid,
+  .operations-summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  }
+}
+
+@media (max-width: 1279px) {
+  /* responsive fix */
+  .side-nav {
+    width: 216px;
+  }
+
+  .content-canvas {
+    margin-left: 216px;
+  }
+
+  .top-bar {
+    left: 216px;
+    width: calc(100% - 216px);
+  }
+
+  .portal-title .brand-logo-image {
+    width: 168px;
+  }
+}
+
+@media (max-width: 1023px) {
+  /* responsive fix */
+  .bento-grid,
+  .manual-grid,
+  .report-grid,
+  .customer-profile-workspace,
+  .linked-policy-grid,
+  .operations-layout,
+  .endorsement-workflow {
+    grid-template-columns: 1fr !important;
+  }
+
+  .preview-form,
+  .setup-form,
+  .claims-form-grid,
+  .customer-profile-grid,
+  .compact-profile-form .customer-profile-grid,
+  .followup-meta-grid,
+  .user-form,
+  .endorsement-field-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .claims-filter-grid,
+  .profile-counter-grid,
+  .endorsement-summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)) !important;
+  }
+
+  .customer-profile-editor-panel,
+  .customer-profile-list-panel.followup-active {
+    max-height: none;
+    height: auto;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 767px) {
+  /* responsive fix */
+  .content-canvas {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+
+  .top-bar {
+    left: 0 !important;
+    width: 100% !important;
+  }
+
+  .page-inner {
+    width: 100% !important;
+    padding: clamp(0.75rem, 2vw, 1rem) clamp(0.75rem, 3vw, 1rem) 1.5rem !important;
+  }
+
+  .preview-form,
+  .setup-form,
+  .claims-form-grid,
+  .customer-profile-grid,
+  .compact-profile-form .customer-profile-grid,
+  .customer-profile-filters,
+  .followup-meta-grid,
+  .lob-checklist,
+  .user-form,
+  .record-filter-panel,
+  .renewal-filter-row,
+  .endorsement-filter-bar,
+  .endorsement-field-grid,
+  .manual-selectors {
+    grid-template-columns: 1fr !important;
+  }
+
+  .metric-grid,
+  .card-grid,
+  .settings-grid,
+  .report-kpi-grid,
+  .report-summary-grid,
+  .analytics-chart-grid,
+  .operations-summary-grid,
+  .operations-card-grid,
+  .claims-filter-grid,
+  .profile-counter-grid,
+  .endorsement-summary-grid {
+    grid-template-columns: 1fr !important;
+    gap: clamp(0.75rem, 2vw, 1rem);
+  }
+
+  .claims-register-head,
+  .claims-document-controls,
+  .claims-document-item,
+  .customer-profile-section-head,
+  .operations-module-detail-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .claims-document-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .claims-form-actions,
+  .customer-profile-actions,
+  .record-edit-actions,
+  .renewal-remark-footer,
+  .tb-profile-actions,
+  .endorsement-actions-row,
+  .endorsement-sticky-actions {
+    justify-content: stretch;
+  }
+
+  .claims-form-actions button,
+  .customer-profile-actions button,
+  .customer-profile-actions select,
+  .record-edit-actions button,
+  .renewal-remark-footer button,
+  .tb-profile-actions a,
+  .tb-profile-actions button,
+  .endorsement-actions-row button,
+  .endorsement-sticky-actions button {
+    width: 100%;
+  }
+
+  .tb-modal-backdrop,
+  .claims-modal-backdrop,
+  .record-edit-modal {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: clamp(0.75rem, 4vw, 1.25rem);
+  }
+
+  .tb-modal-card,
+  .renewal-remark-modal,
+  .renewal-assign-modal,
+  .renewal-today-report-modal,
+  .claims-remark-card,
+  .claims-delete-card {
+    width: min(90vw, 400px);
+    max-width: calc(100vw - 24px);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  /* responsive fix */
+  .top-bar {
+    gap: 8px;
+  }
+
+  .top-brand,
+  .top-actions {
+    min-width: 0;
+  }
+
+  .top-brand .brand-logo-image {
+    width: min(34vw, 124px);
+  }
+
+  .page-inner {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .glass-panel,
+  .records-panel,
+  .report-panel,
+  .report-detail-card,
+  .report-detail-table,
+  .user-management-header,
+  .user-form-panel,
+  .user-table-panel,
+  .operations-main,
+  .operations-side-panel,
+  .operations-module-detail,
+  .claims-register-panel,
+  .customer-profile-card,
+  .compact-profile-form {
+    padding: clamp(0.75rem, 3vw, 0.9rem);
+  }
+
+  .title-actions,
+  .actions,
+  .records-panel .actions,
+  .manual-actions,
+  .preview-actions,
+  .claims-form-actions,
+  .customer-profile-actions,
+  .endorsement-actions-row,
+  .endorsement-sticky-actions {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .title-actions button,
+  .actions button,
+  .records-panel .actions button,
+  .manual-actions button,
+  .preview-actions button,
+  .claims-form-actions button,
+  .customer-profile-actions button,
+  .endorsement-actions-row button,
+  .endorsement-sticky-actions button {
+    width: 100% !important;
+  }
+
+  .table-wrap,
+  .records-table-wrap,
+  .claims-table-wrap,
+  .existing-customer-table,
+  .endorsement-table-scroll {
+    max-width: calc(100vw - 20px);
+  }
+
+  .claims-table-wrap {
+    min-height: 360px;
+    max-height: 70vh;
+  }
+}
+
+@media (max-width: 319px) {
+  /* responsive fix */
+  .page-inner {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .top-bar {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .icon-button {
+    width: 30px;
+    min-height: 30px;
+  }
+
+  .avatar {
+    width: 26px;
+    height: 26px;
+  }
+
+  .tb-modal-card,
+  .renewal-remark-modal,
+  .renewal-assign-modal,
+  .renewal-today-report-modal,
+  .claims-remark-card,
+  .claims-delete-card {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+  }
+}

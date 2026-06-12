@@ -3,6 +3,7 @@
 /* global AbortController, clearTimeout */
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import { useSearchParams } from "next/navigation";
 import { AlertTriangle, CheckCircle, Search, UserPlus, X } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 
@@ -174,6 +175,8 @@ const LOB_FIELDS = {
 };
 
 export default function CustomerProfilingPage() {
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") || "";
   const [form, setForm] = useState(EMPTY_FORM);
   const [selectedExistingId, setSelectedExistingId] = useState("");
   const [convertType, setConvertType] = useState("");
@@ -196,7 +199,7 @@ export default function CustomerProfilingPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
   const [filters, setFilters] = useState({
-    q: "",
+    q: urlQuery,
     status: "",
     assignedTo: "",
     lob: "",
@@ -220,6 +223,10 @@ export default function CustomerProfilingPage() {
       ...searchResults.profiles.map((item) => item.assignedTo || item.createdBy)
     ].filter(Boolean);
   }, [searchResults]);
+
+  useEffect(() => {
+    setFilters((current) => current.q === urlQuery ? current : { ...current, q: urlQuery });
+  }, [urlQuery]);
 
   useEffect(() => {
     const controller = new AbortController();

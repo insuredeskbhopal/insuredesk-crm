@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+/* global URLSearchParams */
 import PageHeader from "@/app/components/layout/PageHeader";
 import { loadScopedUploads } from "@/lib/records/scoped-data";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
@@ -68,10 +69,12 @@ export default async function UploadHistoryPage(props) {
   const searchParams = await props.searchParams;
   const page = parseInt(searchParams.page || "1", 10);
   const limit = parseInt(searchParams.limit || "20", 10);
+  const q = searchParams.q || "";
 
   const { uploads, totalCount, totalPages } = await loadScopedUploads({
     page,
     limit,
+    q,
     select: {
       id: true,
       sourceFile: true,
@@ -81,6 +84,14 @@ export default async function UploadHistoryPage(props) {
       errorMessage: true
     }
   });
+  const pageHref = (targetPage) => {
+    const params = new URLSearchParams();
+    if (targetPage > 1) params.set("page", String(targetPage));
+    if (limit !== 20) params.set("limit", String(limit));
+    if (q) params.set("q", q);
+    const query = params.toString();
+    return query ? `?${query}` : "?";
+  };
 
   return (
     <>
@@ -150,7 +161,7 @@ export default async function UploadHistoryPage(props) {
             <span style={{ fontSize: "14px", color: "var(--text-secondary, #64748b)" }}>Showing page {page} of {totalPages} ({totalCount} uploads found)</span>
             <div className="table-page-list" style={{ display: "flex", gap: "6px", alignItems: "center" }}>
               {page > 1 ? (
-                <a href={`?page=${page - 1}&limit=${limit}`} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", textDecoration: "none", color: "var(--text-primary)", fontSize: "14px" }}>
+                <a href={pageHref(page - 1)} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", textDecoration: "none", color: "var(--text-primary)", fontSize: "14px" }}>
                   Prev
                 </a>
               ) : (
@@ -162,7 +173,7 @@ export default async function UploadHistoryPage(props) {
                 ) : (
                   <a
                     key={pNum}
-                    href={`?page=${pNum}&limit=${limit}`}
+                    href={pageHref(pNum)}
                     style={{
                       padding: "6px 12px",
                       borderRadius: "6px",
@@ -179,7 +190,7 @@ export default async function UploadHistoryPage(props) {
                 )
               ))}
               {page < totalPages ? (
-                <a href={`?page=${page + 1}&limit=${limit}`} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", textDecoration: "none", color: "var(--text-primary)", fontSize: "14px" }}>
+                <a href={pageHref(page + 1)} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", textDecoration: "none", color: "var(--text-primary)", fontSize: "14px" }}>
                   Next
                 </a>
               ) : (

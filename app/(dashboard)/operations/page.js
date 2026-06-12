@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
@@ -39,9 +40,15 @@ const DEFAULT_METRICS = {
 };
 
 export default function OperationsHubPage() {
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") || "";
+  const [query, setQuery] = useState(urlQuery);
   const [metrics, setMetrics] = useState(DEFAULT_METRICS);
   const [recentActivity, setRecentActivity] = useState([]);
+
+  useEffect(() => {
+    setQuery(urlQuery);
+  }, [urlQuery]);
 
   useEffect(() => {
     let cancelled = false;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Check, Edit3, Plus, RefreshCcw, Search, Trash2, X, Eye, EyeOff } from "lucide-react";
 
 const ROLES = ["SUPER_ADMIN", "ADMIN", "MANAGER", "AGENT", "VIEWER"];
@@ -42,10 +43,12 @@ function formatDate(value) {
 }
 
 export default function UserManagement() {
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") || "";
   const [users, setUsers] = useState([]);
   const [meta, setMeta] = useState({ total: 0, page: 1, pageSize: 10 });
   const [page, setPage] = useState(1);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(urlQuery);
   const [roleFilter, setRoleFilter] = useState("all");
   const [lobFilter, setLobFilter] = useState("all");
   const [form, setForm] = useState(EMPTY_FORM);
@@ -59,6 +62,11 @@ export default function UserManagement() {
 
   const pageCount = Math.max(1, Math.ceil(meta.total / meta.pageSize));
   const assignableRoles = meta.assignableRoles?.length ? meta.assignableRoles : ["AGENT", "VIEWER"];
+
+  useEffect(() => {
+    setQuery(urlQuery);
+  }, [urlQuery]);
+
   const filteredUsers = useMemo(() => {
     let result = users;
 

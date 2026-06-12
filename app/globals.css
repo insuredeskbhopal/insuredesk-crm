@@ -1,6 +1,8 @@
 @import "./styles/tokens.css";
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -35,6 +37,11 @@ svg,
 video,
 canvas {
   max-width: 100%;
+}
+
+img,
+video {
+  height: auto;
 }
 
 main,

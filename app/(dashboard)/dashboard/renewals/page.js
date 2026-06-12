@@ -282,6 +282,7 @@ export default function RenewalsPage() {
   // Load defaults from URL search params (if clicked from dashboard counters)
   const urlTab = searchParams.get("tab") || "all";
   const urlDays = searchParams.get("days") || "";
+  const urlQ = searchParams.get("q") || "";
 
   // Dropdown states
   const [companies, setCompanies] = useState([]);
@@ -291,7 +292,7 @@ export default function RenewalsPage() {
   // Tab & search states
   const [activeTab, setActiveTab] = useState(urlTab);
   const [daysFilter, setDaysFilter] = useState(urlDays);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(urlQ);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
@@ -661,9 +662,11 @@ export default function RenewalsPage() {
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     const daysParam = searchParams.get("days");
+    const qParam = searchParams.get("q") || "";
     if (tabParam) {
       setActiveTab(tabParam);
     }
+    setQ(qParam);
     if (daysParam) {
       setDaysFilter(daysParam);
     } else if ((tabParam || urlTab) !== "upcoming") {
