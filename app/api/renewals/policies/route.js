@@ -155,6 +155,14 @@ export async function GET(request) {
            END) AS expiry_state
         FROM normalized_policies
       ),
+      active_policies AS (
+        SELECT *
+        FROM parsed_policies
+        WHERE 
+          (expiry_date IS NOT NULL AND (expiry_date - $3::date) >= -30 AND (expiry_date - $3::date) <= 30)
+          OR (is_active_policy = true AND expiry_date IS NOT NULL AND (expiry_date - $3::date) < -30 AND LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval'))
+          OR (expiry_state IN ('missing', 'invalid'))
+      ),
       filtered_policies AS (
         SELECT 
           id,
@@ -163,7 +171,7 @@ export async function GET(request) {
           expiry_state,
           follow_up_date,
           (expiry_date - $3::date) AS days_remaining
-        FROM parsed_policies
+        FROM active_policies
         WHERE 
           -- Tab Filter
           (
@@ -266,7 +274,7 @@ export async function GET(request) {
             )
           ) THEN id
         END)::integer AS today_work
-      FROM parsed_policies
+      FROM active_policies
       WHERE
         (
           $6 = 'All'

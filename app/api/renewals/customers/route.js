@@ -83,9 +83,9 @@ export async function GET(request) {
           -- Standard Expiry window: -30 days to +30 days
           (expiry_date IS NOT NULL AND (expiry_date - $3::date) >= -30 AND (expiry_date - $3::date) <= 30)
           -- Exception list: Keep visible if status is Follow-up, Interested, Quote Sent, Negotiation, Pending Approval
-          OR (is_active_policy = true AND LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval'))
-          -- Also include recently renewed/lost policies for correct group aggregation
-          OR (renewal_status IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE'))
+          OR (is_active_policy = true AND expiry_date IS NOT NULL AND (expiry_date - $3::date) < -30 AND LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval'))
+          -- Bad/Missing expiry dates (so they can be corrected)
+          OR (expiry_date IS NULL)
       ),
       customer_groups AS (
         SELECT 
