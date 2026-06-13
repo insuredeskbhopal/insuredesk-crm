@@ -297,9 +297,8 @@ export async function GET(request) {
       ${baseCTE} 
       SELECT id, days_remaining FROM filtered_policies
       ORDER BY 
-        CASE WHEN $4 IN ('upcoming', 'due_7', 'due_in_7', 'due_15', 'due_in_15', 'due_30', 'due_in_30') THEN days_remaining END ASC,
-        CASE WHEN $4 IN ('expired', 'overdue') THEN days_remaining END DESC,
-        CASE WHEN $4 NOT IN ('upcoming', 'expired') THEN saved_at END DESC,
+        CASE WHEN days_remaining IS NOT NULL THEN 0 ELSE 1 END,
+        days_remaining ASC,
         saved_at DESC
       LIMIT $11::integer OFFSET $12::integer
     `;
