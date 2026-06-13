@@ -3,8 +3,10 @@
 import Link from "next/link";
 import {
   Activity,
+  ArrowLeft,
   BarChart3,
   BriefcaseBusiness,
+  ChevronRight,
   ClipboardList,
   Download,
   FileBarChart,
@@ -68,8 +70,9 @@ export function ReportIndexPage({ modules, lastUpdated }) {
                 <strong>{module.kpi}</strong>
                 <span>Updated {formatRelative(module.lastUpdated)}</span>
               </div>
-              <Link className="primary-action" href={module.href}>
-                Open Report
+              <Link className="bi-report-link" href={module.href}>
+                <span>Open Report</span>
+                <ChevronRight size={17} aria-hidden="true" />
               </Link>
             </article>
           );
@@ -106,6 +109,9 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
           <h2>Report actions</h2>
         </div>
         <div className="title-actions">
+          <Link className="secondary-action bi-back-link" href="/dashboard/reports">
+            <ArrowLeft size={16} /> Back to Reports
+          </Link>
           <button type="button" className="secondary-action" onClick={() => window.print()}>
             <Printer size={16} /> Print Report
           </button>

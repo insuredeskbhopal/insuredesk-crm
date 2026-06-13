@@ -9514,20 +9514,79 @@ th {
 }
 
 .bi-module-card .primary-action,
+.bi-module-card .bi-report-link,
 .bi-page .primary-action,
 .state-card .primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 14px;
   border: 1px solid rgba(25, 28, 29, 0.18) !important;
+  border-radius: 8px;
+  background: #111827 !important;
+  color: #ffffff !important;
+  font-size: var(--font-size-sm);
+  font-weight: 850;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 10px 22px rgba(17, 24, 39, 0.12) !important;
+  transition: background-color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
+}
+
+.bi-page .primary-action,
+.state-card .primary-action {
+  width: auto;
   background: #f7f9fb !important;
   color: var(--primary) !important;
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06) !important;
 }
 
 .bi-module-card .primary-action:hover,
+.bi-module-card .bi-report-link:hover,
 .bi-page .primary-action:hover,
 .state-card .primary-action:hover {
   border-color: rgba(25, 28, 29, 0.28) !important;
+  background: #020617 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+.bi-page .primary-action:hover,
+.state-card .primary-action:hover {
   background: #eef4fa !important;
   color: var(--primary) !important;
+  transform: none;
+}
+
+.bi-module-card .bi-report-link:focus-visible,
+.bi-back-link:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.22);
+  outline-offset: 2px;
+}
+
+.bi-module-card .bi-report-link svg {
+  flex: 0 0 auto;
+  transition: transform var(--motion-fast);
+}
+
+.bi-module-card .bi-report-link:hover svg {
+  transform: translateX(2px);
+}
+
+.bi-action-strip .bi-back-link {
+  border-color: rgba(25, 28, 29, 0.22) !important;
+  background: #111827;
+  color: #ffffff;
+}
+
+.bi-action-strip .bi-back-link:hover:not(:disabled) {
+  border-color: #111827 !important;
+  background: #020617;
+  color: #ffffff;
 }
 
 .bi-module-head,
