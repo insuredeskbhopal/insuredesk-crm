@@ -1,17 +1,15 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { 
   Search, 
   Phone, 
   MessageSquare, 
-  ChevronRight, 
   AlertCircle
 } from "lucide-react";
 
 function PolicyRenewalsContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Filters from URL/State
@@ -74,7 +72,7 @@ function PolicyRenewalsContent() {
     if (phoneNum) {
       window.open(`tel:${phoneNum}`);
     } else {
-      alert("No contact number available.");
+      window.alert("No contact number available.");
     }
   };
 
@@ -84,7 +82,7 @@ function PolicyRenewalsContent() {
       const message = `Hello ${policy.insuredName}, your policy ${policy.policyNumber} is expiring on ${policy.expiryDate}. Please contact us for renewals.`;
       window.open(`https://wa.me/91${phoneNum.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`, "_blank");
     } else {
-      alert("No contact number available.");
+      window.alert("No contact number available.");
     }
   };
 
@@ -114,10 +112,10 @@ function PolicyRenewalsContent() {
         await fetchPolicies();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to submit remark.");
+        window.alert(err.error || "Failed to submit remark.");
       }
     } catch {
-      alert("Failed to submit remark.");
+      window.alert("Failed to submit remark.");
     } finally {
       setActionLoading(false);
     }
@@ -127,7 +125,7 @@ function PolicyRenewalsContent() {
   const submitRenew = async (e) => {
     e.preventDefault();
     if (!renewForm.policyNumber || !renewForm.startDate || !renewForm.expiryDate || !renewForm.premium) {
-      alert("All fields are required.");
+      window.alert("All fields are required.");
       return;
     }
 
@@ -153,10 +151,10 @@ function PolicyRenewalsContent() {
         await fetchPolicies();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to renew policy.");
+        window.alert(err.error || "Failed to renew policy.");
       }
     } catch {
-      alert("Failed to renew policy.");
+      window.alert("Failed to renew policy.");
     } finally {
       setActionLoading(false);
     }
@@ -183,10 +181,10 @@ function PolicyRenewalsContent() {
         await fetchPolicies();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to mark policy as lost.");
+        window.alert(err.error || "Failed to mark policy as lost.");
       }
     } catch {
-      alert("Failed to mark policy as lost.");
+      window.alert("Failed to mark policy as lost.");
     } finally {
       setActionLoading(false);
     }

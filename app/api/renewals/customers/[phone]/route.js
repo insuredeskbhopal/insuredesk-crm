@@ -2,7 +2,6 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
-import { startOfDay } from "@/app/lib/reporting/filters";
 
 export const dynamic = "force-dynamic";
 

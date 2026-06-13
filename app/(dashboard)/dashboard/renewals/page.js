@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Users, 
@@ -13,10 +13,8 @@ import {
   Building2, 
   FolderOpen, 
   BarChart3,
-  Calendar,
-  Sparkles
+  Calendar
 } from "lucide-react";
-import { cachedJson } from "@/app/lib/client-api";
 
 export default function RenewalsDashboard() {
   const router = useRouter();

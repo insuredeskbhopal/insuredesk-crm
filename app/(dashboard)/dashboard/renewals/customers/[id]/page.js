@@ -1,17 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Phone, 
   MessageSquare, 
-  ArrowLeft, 
-  FileText, 
-  Clock, 
-  HelpCircle,
-  Activity,
-  Calendar,
-  DollarSign
+  ArrowLeft
 } from "lucide-react";
 
 export default function CustomerProfilePage(props) {
@@ -64,7 +58,7 @@ export default function CustomerProfilePage(props) {
     if (profile && profile.phone && !profile.phone.startsWith("NO-MOBILE-")) {
       window.open(`tel:${profile.phone}`);
     } else {
-      alert("No contact number available.");
+      window.alert("No contact number available.");
     }
   };
 
@@ -72,7 +66,7 @@ export default function CustomerProfilePage(props) {
     if (profile && profile.phone && !profile.phone.startsWith("NO-MOBILE-")) {
       window.open(`https://wa.me/91${profile.phone.replace(/[^0-9]/g, "")}`, "_blank");
     } else {
-      alert("No contact number available.");
+      window.alert("No contact number available.");
     }
   };
 
@@ -102,10 +96,10 @@ export default function CustomerProfilePage(props) {
         await fetchCustomerProfile();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to submit remark.");
+        window.alert(err.error || "Failed to submit remark.");
       }
     } catch {
-      alert("Failed to submit remark.");
+      window.alert("Failed to submit remark.");
     } finally {
       setActionLoading(false);
     }
@@ -115,7 +109,7 @@ export default function CustomerProfilePage(props) {
   const submitRenew = async (e) => {
     e.preventDefault();
     if (!renewForm.policyNumber || !renewForm.startDate || !renewForm.expiryDate || !renewForm.premium) {
-      alert("All fields are required.");
+      window.alert("All fields are required.");
       return;
     }
 
@@ -141,10 +135,10 @@ export default function CustomerProfilePage(props) {
         await fetchCustomerProfile();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to renew policy.");
+        window.alert(err.error || "Failed to renew policy.");
       }
     } catch {
-      alert("Failed to renew policy.");
+      window.alert("Failed to renew policy.");
     } finally {
       setActionLoading(false);
     }
@@ -171,10 +165,10 @@ export default function CustomerProfilePage(props) {
         await fetchCustomerProfile();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to mark policy as lost.");
+        window.alert(err.error || "Failed to mark policy as lost.");
       }
     } catch {
-      alert("Failed to mark policy as lost.");
+      window.alert("Failed to mark policy as lost.");
     } finally {
       setActionLoading(false);
     }

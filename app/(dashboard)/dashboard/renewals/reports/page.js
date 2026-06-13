@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { 
-  BarChart3, 
   Printer, 
   Download, 
   ShieldAlert,
@@ -37,7 +36,7 @@ export default function ReportsPage() {
       } else {
         setError(data.error || "Failed to load reports.");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to generate report statistics.");
     } finally {
       setLoading(false);
@@ -54,7 +53,7 @@ export default function ReportsPage() {
   // Print function
   const handlePrint = () => {
     if (!canExport) {
-      alert("You do not have permission to print this report.");
+      window.alert("You do not have permission to print this report.");
       return;
     }
     window.print();
@@ -63,7 +62,7 @@ export default function ReportsPage() {
   // CSV Export helper
   const handleExport = () => {
     if (!canExport) {
-      alert("You do not have permission to export this report.");
+      window.alert("You do not have permission to export this report.");
       return;
     }
     if (!reportData) return;

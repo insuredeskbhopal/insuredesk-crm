@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -19,23 +18,6 @@ import "@/app/ui/renewals-redesign.css";
 
 export default function RenewalsLayout({ children }) {
   const pathname = usePathname();
-  const [role, setRole] = useState("");
-
-  useEffect(() => {
-    // Load current user profile for role checks
-    const loadUser = async () => {
-      try {
-        const res = await fetch("/api/auth/me");
-        const data = await res.json();
-        if (data?.success) {
-          setRole(data.user?.role || "");
-        }
-      } catch (err) {
-        console.error("Layout failed to load user role:", err);
-      }
-    };
-    loadUser();
-  }, []);
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard/renewals", icon: LayoutDashboard },

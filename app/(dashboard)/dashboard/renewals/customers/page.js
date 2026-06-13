@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Search, 
   Phone, 
   MessageSquare, 
   User, 
-  ArrowRight,
   ChevronRight,
   AlertCircle
 } from "lucide-react";
@@ -56,7 +55,7 @@ export default function CustomerRenewalsPage() {
     if (cust.mobile && !cust.mobile.startsWith("NO-MOBILE-")) {
       window.open(`tel:${cust.mobile}`);
     } else {
-      alert("No phone number associated with this customer portfolio.");
+      window.alert("No phone number associated with this customer portfolio.");
     }
   };
 
@@ -64,7 +63,7 @@ export default function CustomerRenewalsPage() {
     if (cust.mobile && !cust.mobile.startsWith("NO-MOBILE-")) {
       window.open(`https://wa.me/91${cust.mobile.replace(/[^0-9]/g, "")}`, "_blank");
     } else {
-      alert("No phone number associated with this customer portfolio.");
+      window.alert("No phone number associated with this customer portfolio.");
     }
   };
 

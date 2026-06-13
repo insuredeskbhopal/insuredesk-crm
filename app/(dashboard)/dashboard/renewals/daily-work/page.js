@@ -1,24 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { 
   Phone, 
   MessageSquare, 
-  Eye, 
-  MessageCircle, 
-  CheckCircle2, 
-  XOctagon, 
-  Plus, 
-  Loader2,
-  Calendar,
   AlertCircle
 } from "lucide-react";
-import { createPortal } from "react-dom";
-import PageHeader from "@/app/components/layout/PageHeader";
 
 export default function DailyWorkPage() {
-  const router = useRouter();
   
   // Data State
   const [policies, setPolicies] = useState([]);
@@ -152,7 +141,7 @@ export default function DailyWorkPage() {
     if (phone) {
       window.open(`tel:${phone}`);
     } else {
-      alert("No phone number associated with this policy.");
+      window.alert("No phone number associated with this policy.");
     }
   };
 
@@ -162,7 +151,7 @@ export default function DailyWorkPage() {
       const message = `Hello ${policy.insuredName}, your policy ${policy.policyNumber} is expiring on ${policy.expiryDate}. Please contact us for renewals.`;
       window.open(`https://wa.me/91${phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`, "_blank");
     } else {
-      alert("No phone number associated with this policy.");
+      window.alert("No phone number associated with this policy.");
     }
   };
 
@@ -192,10 +181,10 @@ export default function DailyWorkPage() {
         await fetchDailyWork();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to submit remark.");
+        window.alert(err.error || "Failed to submit remark.");
       }
     } catch {
-      alert("Failed to submit remark.");
+      window.alert("Failed to submit remark.");
     } finally {
       setActionLoading(false);
     }
@@ -205,7 +194,7 @@ export default function DailyWorkPage() {
   const submitRenew = async (e) => {
     e.preventDefault();
     if (!renewForm.policyNumber || !renewForm.startDate || !renewForm.expiryDate || !renewForm.premium) {
-      alert("All fields are required.");
+      window.alert("All fields are required.");
       return;
     }
 
@@ -231,10 +220,10 @@ export default function DailyWorkPage() {
         await fetchDailyWork();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to renew policy.");
+        window.alert(err.error || "Failed to renew policy.");
       }
     } catch {
-      alert("Failed to renew policy.");
+      window.alert("Failed to renew policy.");
     } finally {
       setActionLoading(false);
     }
@@ -261,10 +250,10 @@ export default function DailyWorkPage() {
         await fetchDailyWork();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to mark policy as lost.");
+        window.alert(err.error || "Failed to mark policy as lost.");
       }
     } catch {
-      alert("Failed to mark policy as lost.");
+      window.alert("Failed to mark policy as lost.");
     } finally {
       setActionLoading(false);
     }

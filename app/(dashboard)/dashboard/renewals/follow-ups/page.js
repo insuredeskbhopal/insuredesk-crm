@@ -1,17 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { 
   Phone, 
   MessageSquare, 
-  CheckSquare, 
-  Calendar,
   AlertCircle
 } from "lucide-react";
 
 export default function FollowUpsPage() {
-  const router = useRouter();
 
   // Data state
   const [policies, setPolicies] = useState([]);
@@ -85,7 +81,7 @@ export default function FollowUpsPage() {
     if (phone) {
       window.open(`tel:${phone}`);
     } else {
-      alert("No contact number available.");
+      window.alert("No contact number available.");
     }
   };
 
@@ -95,13 +91,13 @@ export default function FollowUpsPage() {
       const message = `Hello ${policy.insuredName}, following up regarding your policy ${policy.policyNumber} renewal. Let us know if you need assistance.`;
       window.open(`https://wa.me/91${phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`, "_blank");
     } else {
-      alert("No contact number available.");
+      window.alert("No contact number available.");
     }
   };
 
   // Complete Follow-up (Set status to Completed)
   const handleCompleteFollowUp = async (policy) => {
-    if (!confirm("Are you sure you want to complete this follow-up task?")) return;
+    if (!window.confirm("Are you sure you want to complete this follow-up task?")) return;
     
     try {
       setLoading(true);
@@ -122,10 +118,10 @@ export default function FollowUpsPage() {
         await fetchFollowUps();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to update follow-up.");
+        window.alert(err.error || "Failed to update follow-up.");
       }
     } catch {
-      alert("Failed to update follow-up.");
+      window.alert("Failed to update follow-up.");
     } finally {
       setLoading(false);
     }
@@ -134,7 +130,7 @@ export default function FollowUpsPage() {
   const submitReschedule = async (e) => {
     e.preventDefault();
     if (!remarkForm.text.trim() || !remarkForm.nextFollowUpDate) {
-      alert("Remarks and next follow-up date are required to reschedule.");
+      window.alert("Remarks and next follow-up date are required to reschedule.");
       return;
     }
 
@@ -159,10 +155,10 @@ export default function FollowUpsPage() {
         await fetchFollowUps();
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to reschedule follow-up.");
+        window.alert(err.error || "Failed to reschedule follow-up.");
       }
     } catch {
-      alert("Failed to reschedule follow-up.");
+      window.alert("Failed to reschedule follow-up.");
     } finally {
       setActionLoading(false);
     }
