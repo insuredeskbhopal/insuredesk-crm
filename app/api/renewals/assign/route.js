@@ -29,9 +29,11 @@ export async function POST(request) {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { policyId, assignedToUserId, note } = await request.json();
-    if (!policyId) {
-      return Response.json({ error: "Missing policyId parameter" }, { status: 400 });
+    const body = await request.json();
+    const { policyId, phone, assignedToUserId, note } = body;
+    
+    if (!policyId && !phone) {
+      return Response.json({ error: "Missing policyId or phone parameter" }, { status: 400 });
     }
     if (!assignedToUserId) {
       return Response.json({ error: "Please select a user to assign." }, { status: 400 });
@@ -39,19 +41,42 @@ export async function POST(request) {
 
     const tenantFilter = getTenantFilter(user, "write");
     const actorId = user.userId || user.id || null;
+    const isSuperAdmin = user.role === "SUPER_ADMIN";
+    const orgId = user.organizationId || null;
 
-    const policy = await prisma.policyRecord.findFirst({
-      where: {
-        id: policyId,
-        ...tenantFilter
+    // 1. Fetch matching policies (either single policy or customer policies by phone)
+    let targetPolicies = [];
+    if (phone) {
+      targetPolicies = await prisma.policyRecord.findMany({
+        where: {
+          deletedAt: null,
+          ...(isSuperAdmin ? {} : { organizationId: orgId }),
+          OR: [
+            { reviewedData: { path: ['contactNumber'], string_contains: phone } },
+            { reviewedData: { path: ['customerMobile'], string_contains: phone } },
+            { data: { path: ['contactNumber'], string_contains: phone } },
+            { data: { path: ['customerMobile'], string_contains: phone } },
+            phone.startsWith("NO-MOBILE-") ? { id: phone.replace("NO-MOBILE-", "") } : {}
+          ]
+        }
+      });
+    } else {
+      const singlePolicy = await prisma.policyRecord.findFirst({
+        where: {
+          id: policyId,
+          ...tenantFilter
+        }
+      });
+      if (singlePolicy) {
+        targetPolicies = [singlePolicy];
       }
-    });
-
-    if (!policy) {
-      return Response.json({ error: "Policy not found or access denied" }, { status: 404 });
     }
 
-    const isSuperAdmin = user.role === "SUPER_ADMIN";
+    if (targetPolicies.length === 0) {
+      return Response.json({ error: "No policies found or access denied" }, { status: 404 });
+    }
+
+    // 2. Fetch the target assignee user
     const assignee = await prisma.user.findFirst({
       where: isSuperAdmin
         ? { id: assignedToUserId, role: { not: "VIEWER" } }
@@ -63,83 +88,79 @@ export async function POST(request) {
       return Response.json({ error: "Selected user not found in your organization." }, { status: 404 });
     }
 
-    const previousPayload = policy.reviewedData || policy.data || {};
-    if (previousPayload.assignedToId === assignedToUserId) {
-      return Response.json({ error: "Policy is already assigned to this user." }, { status: 400 });
-    }
-
     const assigneeLabel = assignee.name || assignee.email || "User";
-    const previousAssignee = previousPayload.assignedTo || "";
     const assignedDate = new Date().toISOString();
     const actorName = user.name || user.email || "User";
-
     const noteText = String(note || "").trim();
-    let remarkText = previousAssignee
-      ? `Reassigned from ${previousAssignee} to ${assigneeLabel}.`
-      : `Assigned to ${assigneeLabel}.`;
-    if (noteText) {
-      remarkText = `${remarkText} ${noteText}`;
-    }
 
-    const assignmentRemark = {
-      id: randomUUID(),
-      text: remarkText,
-      createdAt: assignedDate,
-      createdBy: actorName,
-      createdById: actorId,
-      type: "REASSIGNED",
-      oldStatus: policy.renewalStatus || "ACTIVE",
-      newStatus: policy.renewalStatus || "ACTIVE",
-      assignedTo: assigneeLabel,
-      assignedToId: assignee.id
-    };
-
-    const reviewedData = appendAssignmentRemark(policy.reviewedData || {}, {
-      ...assignmentRemark,
-      assignedDate
-    });
-    const data = appendAssignmentRemark(policy.data || {}, {
-      ...assignmentRemark,
-      assignedDate
-    });
-
-    await prisma.policyRecord.update({
-      where: { id: policyId },
-      data: {
-        reviewedData,
-        data,
-        updatedById: actorId
+    // 3. Process reassignments
+    const updates = targetPolicies.map(async (policy) => {
+      const previousPayload = policy.reviewedData || policy.data || {};
+      const previousAssignee = previousPayload.assignedTo || "";
+      
+      let remarkText = previousAssignee
+        ? `Reassigned from ${previousAssignee} to ${assigneeLabel}.`
+        : `Assigned to ${assigneeLabel}.`;
+      if (noteText) {
+        remarkText = `${remarkText} ${noteText}`;
       }
+
+      const assignmentRemark = {
+        id: randomUUID(),
+        text: remarkText,
+        createdAt: assignedDate,
+        createdBy: actorName,
+        createdById: actorId,
+        type: "REASSIGNED",
+        oldStatus: policy.renewalStatus || "ACTIVE",
+        newStatus: policy.renewalStatus || "ACTIVE",
+        assignedTo: assigneeLabel,
+        assignedToId: assignee.id
+      };
+
+      const reviewedData = appendAssignmentRemark(policy.reviewedData || {}, {
+        ...assignmentRemark,
+        assignedDate
+      });
+      const data = appendAssignmentRemark(policy.data || {}, {
+        ...assignmentRemark,
+        assignedDate
+      });
+
+      await prisma.policyRecord.update({
+        where: { id: policy.id },
+        data: {
+          reviewedData,
+          data,
+          updatedById: actorId
+        }
+      });
+
+      const { ipAddress, userAgent } = getAuditMetadata(request);
+      await logAudit({
+        action: "RENEWAL_REASSIGNED",
+        entityType: "PolicyRecord",
+        entityId: policy.id,
+        severity: "INFO",
+        source: "API",
+        ipAddress,
+        userAgent,
+        userId: actorId,
+        organizationId: user.organizationId,
+        metadata: { assignedToUserId: assignee.id, assignedTo: assigneeLabel }
+      });
     });
 
-    const { ipAddress, userAgent } = getAuditMetadata(request);
-    await logAudit({
-      action: "RENEWAL_REASSIGNED",
-      entityType: "PolicyRecord",
-      entityId: policyId,
-      severity: "INFO",
-      source: "API",
-      ipAddress,
-      userAgent,
-      userId: actorId,
-      organizationId: user.organizationId,
-      metadata: { assignedToUserId: assignee.id, assignedTo: assigneeLabel }
-    });
+    await Promise.all(updates);
 
     return Response.json({
       success: true,
       assignedTo: assigneeLabel,
       assignedToId: assignee.id,
-      assignedDate,
-      updatedBy: actorName,
-      updatedAt: assignedDate,
-      latestRemark: remarkText,
-      latestRemarkBy: actorName,
-      latestRemarkAt: assignedDate,
-      remark: assignmentRemark
+      assignedDate
     });
   } catch (error) {
     console.error("Renewal assign failed:", error);
-    return Response.json({ error: "Failed to reassign policy." }, { status: 500 });
+    return Response.json({ error: "Failed to reassign." }, { status: 500 });
   }
 }

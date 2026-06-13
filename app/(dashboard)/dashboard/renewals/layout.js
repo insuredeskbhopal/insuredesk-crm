@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   CalendarCheck,
   Users,
-  FileText,
   Building2,
   FolderOpen,
   PhoneCall,
@@ -23,7 +22,6 @@ export default function RenewalsLayout({ children }) {
     { label: "Dashboard", href: "/dashboard/renewals", icon: LayoutDashboard },
     { label: "Daily Work", href: "/dashboard/renewals/daily-work", icon: CalendarCheck },
     { label: "Customer Renewals", href: "/dashboard/renewals/customers", icon: Users },
-    { label: "Policy Renewals", href: "/dashboard/renewals/policies", icon: FileText },
     { label: "Companies", href: "/dashboard/renewals/companies", icon: Building2 },
     { label: "Policy Types", href: "/dashboard/renewals/policy-types", icon: FolderOpen },
     { label: "Follow-Ups", href: "/dashboard/renewals/follow-ups", icon: PhoneCall },
@@ -39,9 +37,6 @@ export default function RenewalsLayout({ children }) {
     }
     if (pathname.startsWith("/dashboard/renewals/daily-work")) {
       return "/dashboard/renewals/daily-work";
-    }
-    if (pathname.startsWith("/dashboard/renewals/policies")) {
-      return "/dashboard/renewals/policies";
     }
     if (pathname.startsWith("/dashboard/renewals/companies")) {
       return "/dashboard/renewals/companies";

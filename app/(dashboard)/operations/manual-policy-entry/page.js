@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
 import ManualPolicyEntryPage from "@/app/(dashboard)/manual-policy-entry/page";
 

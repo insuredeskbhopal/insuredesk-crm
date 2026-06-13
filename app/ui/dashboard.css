@@ -3489,7 +3489,8 @@ label span em {
   top: calc(100% + 6px);
   right: 0;
   z-index: 30;
-  min-width: 132px;
+  min-width: 230px;
+  max-width: 280px;
   display: none;
   border: 1px solid rgba(25, 28, 29, 0.12);
   border-radius: 8px;
@@ -3506,10 +3507,13 @@ label span em {
 }
 
 .renewal-action-menu button {
+  display: grid !important;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
   width: 100%;
   min-height: 34px;
-  justify-content: flex-start;
-  gap: 8px;
+  justify-content: initial;
   border: 0 !important;
   border-radius: 6px !important;
   background: transparent !important;
@@ -3518,7 +3522,20 @@ label span em {
   cursor: pointer;
   font-size: var(--font-size-sm);
   font-weight: 800;
-  padding: 0 10px;
+  line-height: 1.25;
+  padding: 8px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.renewal-action-menu button svg {
+  grid-column: 1;
+  width: 15px;
+  height: 15px;
+  justify-self: center;
+  flex: 0 0 15px;
+  color: currentColor;
+  stroke-width: 2;
 }
 
 .renewal-action-menu button:hover:not(:disabled),
