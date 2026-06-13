@@ -87,6 +87,7 @@ export async function POST(request) {
       data: {
         reviewedData,
         data,
+        renewalStatus: followUpStatus || undefined,
         updatedById: actorId
       }
     });

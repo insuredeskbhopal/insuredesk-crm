@@ -167,17 +167,26 @@ export async function GET(request) {
         WHERE 
           -- Tab Filter
           (
-            ($4 = 'upcoming' AND is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND (expiry_date - $3::date) >= 0 AND (expiry_date - $3::date) <= $5::integer)
-            OR ($4 IN ('due_7', 'due_in_7') AND is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 7)
-            OR ($4 IN ('due_15', 'due_in_15') AND is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 15)
-            OR ($4 IN ('due_30', 'due_in_30') AND is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 30)
-            OR ($4 IN ('due_today', 'today') AND is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date = $3::date)
-            OR ($4 IN ('expired', 'overdue') AND is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND (expiry_date - $3::date) < 0)
+            ($4 = 'upcoming' AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND (
+              ((expiry_date - $3::date) >= -30 AND (expiry_date - $3::date) <= 30)
+              OR (
+                (expiry_date - $3::date) < -30
+                AND LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval')
+              )
+            ))
+            OR ($4 IN ('due_7', 'due_in_7') AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 7)
+            OR ($4 IN ('due_15', 'due_in_15') AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 15)
+            OR ($4 IN ('due_30', 'due_in_30') AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 30)
+            OR ($4 IN ('due_today', 'today') AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date = $3::date)
+            OR ($4 IN ('expired', 'overdue') AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND (expiry_date - $3::date) < 0 AND (
+              ((expiry_date - $3::date) >= -30)
+              OR LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval')
+            ))
             OR ($4 = 'bad_expiry' AND expiry_state IN ('missing', 'invalid'))
             OR ($4 = 'missing_expiry' AND expiry_state = 'missing')
             OR ($4 = 'invalid_expiry' AND expiry_state = 'invalid')
             OR ($4 = 'followup_today' AND follow_up_date = $3::date)
-            OR ($4 = 'missed_followup' AND follow_up_date IS NOT NULL AND follow_up_date < $3::date AND renewal_status = 'ACTIVE')
+            OR ($4 = 'missed_followup' AND follow_up_date IS NOT NULL AND follow_up_date < $3::date AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE'))
             OR ($4 = 'renewed' AND renewal_status = 'RENEWED')
             OR ($4 = 'lost' AND renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE'))
             OR ($4 = 'not_interested' AND renewal_status = 'NOT_INTERESTED')
@@ -231,13 +240,13 @@ export async function GET(request) {
       ${baseCTE}
       SELECT
         COUNT(*)::integer AS total,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date = $3::date THEN 1 END)::integer AS due_today,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 7 THEN 1 END)::integer AS due7,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 15 THEN 1 END)::integer AS due15,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 30 THEN 1 END)::integer AS due30,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date < $3::date THEN 1 END)::integer AS overdue,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date = $3::date THEN 1 END)::integer AS due_today,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 7 THEN 1 END)::integer AS due7,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 15 THEN 1 END)::integer AS due15,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 30 THEN 1 END)::integer AS due30,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date < $3::date AND (((expiry_date - $3::date) >= -30) OR LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval')) THEN 1 END)::integer AS overdue,
         COUNT(CASE WHEN follow_up_date = $3::date THEN 1 END)::integer AS follow_up_today,
-        COUNT(CASE WHEN follow_up_date IS NOT NULL AND follow_up_date < $3::date AND renewal_status = 'ACTIVE' THEN 1 END)::integer AS missed_followups,
+        COUNT(CASE WHEN follow_up_date IS NOT NULL AND follow_up_date < $3::date AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END)::integer AS missed_followups,
         COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END)::integer AS renewed,
         COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END)::integer AS lost,
         COUNT(CASE WHEN expiry_state = 'missing' THEN 1 END)::integer AS missing_expiry,
@@ -332,12 +341,29 @@ export async function GET(request) {
         recordMap[record.id] = record;
       });
 
+      // Look up new policy numbers for renewed entries
+      const renewedPolicyIds = rawRecords.map(r => r.renewedPolicyId).filter(Boolean);
+      const renewedPolicyMap = {};
+      if (renewedPolicyIds.length > 0) {
+        const renewedPolicies = await prisma.policyRecord.findMany({
+          where: { id: { in: renewedPolicyIds } },
+          select: { id: true, data: true, reviewedData: true }
+        });
+        renewedPolicies.forEach(p => {
+          const payload = p.reviewedData || p.data || {};
+          renewedPolicyMap[p.id] = payload.policyNumber || "";
+        });
+      }
+
       const orderedRecords = ids.map((id) => recordMap[id]).filter(Boolean);
       policies = orderedRecords.map((record) => {
         const normalized = withRenewalPolicyDisplay(normalizeRecord(record));
         normalized.daysRemaining = daysRemainingMap[record.id];
         normalized.expiryState = getExpiryState(normalized.expiryDate);
         normalized.daysStatus = getDaysStatus(normalized.expiryDate);
+        if (record.renewedPolicyId && renewedPolicyMap[record.renewedPolicyId]) {
+          normalized.newPolicyNumber = renewedPolicyMap[record.renewedPolicyId];
+        }
         return normalized;
       });
     }
