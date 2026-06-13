@@ -66,14 +66,16 @@ export function ReportIndexPage({ modules, lastUpdated }) {
               </div>
               <h2>{module.title}</h2>
               <p>{module.description}</p>
-              <div className="bi-module-meta">
-                <strong>{module.kpi}</strong>
-                <span>Updated {formatRelative(module.lastUpdated)}</span>
+              <div className="bi-module-footer">
+                <div className="bi-module-meta">
+                  <strong>{module.kpi}</strong>
+                  <span>Updated {formatRelative(module.lastUpdated)}</span>
+                </div>
+                <Link className="bi-report-link" href={module.href}>
+                  <span>Open Report</span>
+                  <ChevronRight size={17} aria-hidden="true" />
+                </Link>
               </div>
-              <Link className="bi-report-link" href={module.href}>
-                <span>Open Report</span>
-                <ChevronRight size={17} aria-hidden="true" />
-              </Link>
             </article>
           );
         })}
@@ -101,6 +103,11 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
   return (
     <main className="bi-page">
       <ReportHero title={report.title} subtitle={report.description} lastUpdated={lastUpdated} />
+      <div className="bi-report-nav">
+        <Link className="bi-back-link" href="/dashboard/reports">
+          <ArrowLeft size={16} /> Back to Reports
+        </Link>
+      </div>
       <ReportFilters filters={filters} users={users} />
 
       <section className="bi-action-strip">
@@ -109,9 +116,6 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
           <h2>Report actions</h2>
         </div>
         <div className="title-actions">
-          <Link className="secondary-action bi-back-link" href="/dashboard/reports">
-            <ArrowLeft size={16} /> Back to Reports
-          </Link>
           <button type="button" className="secondary-action" onClick={() => window.print()}>
             <Printer size={16} /> Print Report
           </button>
