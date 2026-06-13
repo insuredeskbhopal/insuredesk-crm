@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  Users, 
   FileText, 
   Clock, 
   AlertTriangle, 
@@ -30,7 +29,6 @@ export default function RenewalsDashboard() {
     renewed: 0,
     lost: 0
   });
-  const [customerCount, setCustomerCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,15 +39,8 @@ export default function RenewalsDashboard() {
         const policiesRes = await fetch("/api/renewals/policies?tab=upcoming&limit=1");
         const policiesData = await policiesRes.json();
         
-        // Fetch customers to get total customer counts
-        const customersRes = await fetch("/api/renewals/customers?limit=1");
-        const customersData = await customersRes.json();
-        
         if (policiesData.summaryCounts) {
           setStats(policiesData.summaryCounts);
-        }
-        if (customersData.totalCount !== undefined) {
-          setCustomerCount(customersData.totalCount);
         }
       } catch (error) {
         console.error("Failed to load renewals dashboard stats:", error);
@@ -61,15 +52,6 @@ export default function RenewalsDashboard() {
   }, []);
 
   const kpis = [
-    {
-      title: "Customers With Renewals",
-      value: customerCount,
-      desc: "Total client portfolios active",
-      icon: Users,
-      color: "var(--rn-primary)",
-      bgColor: "var(--rn-primary-light)",
-      href: "/dashboard/renewals/customers"
-    },
     {
       title: "Total Policies In Window",
       value: stats.total,
