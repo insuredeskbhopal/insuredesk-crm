@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { 
@@ -83,6 +83,7 @@ export default function CustomerProfilePage(props) {
   const [stats, setStats] = useState({ totalPremium: 0, totalSumInsured: 0, totalPolicies: 0, policiesDue: 0, totalCompanies: 0 });
   const [timeline, setTimeline] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [timelineFilters, setTimelineFilters] = useState({ q: "", status: "", policy: "", date: "" });
 
   // Modals state
   const [selectedPolicy, setSelectedPolicy] = useState(null);
@@ -230,6 +231,43 @@ export default function CustomerProfilePage(props) {
     };
     fetchTeam();
   }, []);
+
+  const toInputDate = (dateStr) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "";
+      return d.toISOString().split("T")[0];
+    } catch { return ""; }
+  };
+
+  const timelinePolicyOptions = useMemo(() => {
+    const types = timeline.map(item => item.policyType).filter(Boolean);
+    return Array.from(new Set(types));
+  }, [timeline]);
+
+  const filteredTimeline = useMemo(() => {
+    return timeline.filter((item) => {
+      const searchText = [
+        item.createdBy,
+        item.text,
+        item.policyType,
+        item.policyNumber,
+        item.oldStatus,
+        item.newStatus,
+        item.type
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      const matchesQuery = !timelineFilters.q || searchText.includes(timelineFilters.q.toLowerCase());
+      const matchesStatus = !timelineFilters.status || getRenewalToneClass(item.newStatus || item.type) === timelineFilters.status;
+      const matchesPolicy = !timelineFilters.policy || item.policyType === timelineFilters.policy;
+      
+      const itemDateStr = toInputDate(item.createdAt);
+      const matchesDate = !timelineFilters.date || itemDateStr === timelineFilters.date;
+
+      return matchesQuery && matchesStatus && matchesPolicy && matchesDate;
+    });
+  }, [timeline, timelineFilters]);
 
   const handleCall = () => {
     if (profile && profile.phone && !profile.phone.startsWith("NO-MOBILE-")) {
@@ -818,38 +856,84 @@ export default function CustomerProfilePage(props) {
             {timeline.length === 0 ? (
               <p style={{ color: "var(--rn-text-secondary)", fontSize: "14px", margin: 0 }}>No comments or timeline logs recorded.</p>
             ) : (
-              <div className="rn-timeline">
-                {timeline.map((item) => (
-                  <div key={item.id} className="rn-timeline-item">
-                    <div className={`rn-timeline-dot ${
-                      item.type === "RENEWED" ? "renewed" : 
-                      item.type === "LOST" || item.type === "NOT_INTERESTED" ? "lost" : ""
-                    }`} />
-                    <div className="rn-timeline-content">
-                      <div className="rn-timeline-header">
-                        <span className="rn-timeline-author">{item.createdBy}</span>
-                        <span>{new Date(item.createdAt).toLocaleString("en-IN")}</span>
-                      </div>
-                      <div className="rn-timeline-body">
-                        <div style={{ marginBottom: "4px" }}>
-                          <span style={{ fontSize: "11px", fontWeight: "600", color: "var(--rn-text-muted)" }}>POLICY: {item.policyType} ({item.policyNumber})</span>
-                        </div>
-                        <p style={{ margin: "4px 0 8px 0" }}>{item.text}</p>
-                        {item.nextFollowUpDate && (
-                          <div style={{ fontSize: "11px", color: "var(--rn-primary)", fontWeight: "500" }}>
-                            Next Follow-Up scheduled for: {formatDate(item.nextFollowUpDate)} via {item.followUpMode || "Call"}
+              <>
+                <div className="rn-timeline-filters">
+                  <input 
+                    type="text"
+                    className="rn-input"
+                    placeholder="Search remarks"
+                    value={timelineFilters.q}
+                    onChange={(e) => setTimelineFilters(prev => ({ ...prev, q: e.target.value }))}
+                  />
+                  <select 
+                    className="rn-input"
+                    value={timelineFilters.status}
+                    onChange={(e) => setTimelineFilters(prev => ({ ...prev, status: e.target.value }))}
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="tone-info">New / Info</option>
+                    <option value="tone-warning">Follow-up</option>
+                    <option value="tone-success">Renewed / Active</option>
+                    <option value="tone-danger">Lost / Expired</option>
+                    <option value="tone-neutral">Neutral</option>
+                  </select>
+                  <select 
+                    className="rn-input"
+                    value={timelineFilters.policy}
+                    onChange={(e) => setTimelineFilters(prev => ({ ...prev, policy: e.target.value }))}
+                  >
+                    <option value="">All Policy Types</option>
+                    {timelinePolicyOptions.map(policy => (
+                      <option key={policy} value={policy}>{policy}</option>
+                    ))}
+                  </select>
+                  <input 
+                    type="date"
+                    className="rn-input"
+                    value={timelineFilters.date}
+                    onChange={(e) => setTimelineFilters(prev => ({ ...prev, date: e.target.value }))}
+                  />
+                </div>
+
+                {filteredTimeline.length === 0 ? (
+                  <p style={{ color: "var(--rn-text-secondary)", fontSize: "14px", margin: 0, padding: "16px", textAlign: "center" }}>No remarks match the selected filters.</p>
+                ) : (
+                  <div className="rn-timeline-scroll">
+                    <div className="rn-timeline">
+                      {filteredTimeline.map((item) => (
+                        <div key={item.id} className="rn-timeline-item">
+                          <div className={`rn-timeline-dot ${
+                            item.type === "RENEWED" ? "renewed" : 
+                            item.type === "LOST" || item.type === "NOT_INTERESTED" ? "lost" : ""
+                          }`} />
+                          <div className="rn-timeline-content">
+                            <div className="rn-timeline-header">
+                              <span className="rn-timeline-author">{item.createdBy}</span>
+                              <span>{new Date(item.createdAt).toLocaleString("en-IN")}</span>
+                            </div>
+                            <div className="rn-timeline-body">
+                              <div style={{ marginBottom: "4px" }}>
+                                <span style={{ fontSize: "11px", fontWeight: "600", color: "var(--rn-text-muted)" }}>POLICY: {item.policyType} ({item.policyNumber})</span>
+                              </div>
+                              <p style={{ margin: "4px 0 8px 0" }}>{item.text}</p>
+                              {item.nextFollowUpDate && (
+                                <div style={{ fontSize: "11px", color: "var(--rn-primary)", fontWeight: "500" }}>
+                                  Next Follow-Up scheduled for: {formatDate(item.nextFollowUpDate)} via {item.followUpMode || "Call"}
+                                </div>
+                              )}
+                              <div style={{ marginTop: "6px" }}>
+                                <span className={`rn-timeline-badge ${getRenewalToneClass(item.newStatus || item.type)}`}>
+                                  {item.oldStatus} &rarr; {item.newStatus}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                        )}
-                        <div style={{ marginTop: "6px" }}>
-                          <span className={`rn-timeline-badge ${getRenewalToneClass(item.newStatus || item.type)}`}>
-                            {item.oldStatus} &rarr; {item.newStatus}
-                          </span>
                         </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         </div>

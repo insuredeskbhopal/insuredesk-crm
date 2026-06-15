@@ -375,6 +375,55 @@
 }
 
 /* Timeline/Remarks History */
+.rn-timeline-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: var(--rn-border-light);
+  border-radius: var(--rn-radius);
+  border: 1px solid var(--rn-border);
+}
+
+.rn-timeline-filters .rn-input {
+  flex: 1;
+  min-width: 150px;
+  min-height: 38px;
+  padding: 6px 12px !important;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--rn-border);
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: var(--rn-text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.rn-timeline-filters .rn-input:focus {
+  border-color: var(--rn-primary);
+}
+
+.rn-timeline-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.rn-timeline-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.rn-timeline-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rn-timeline-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
 .rn-timeline {
   position: relative;
   padding-left: 20px;

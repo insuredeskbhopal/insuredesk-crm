@@ -35,6 +35,7 @@ export default function CustomerProfileDetailPage({ params }) {
     policyDetails: {},
     remark: ""
   });
+  const [timelineFilters, setTimelineFilters] = useState({ q: "", status: "", policy: "", date: "" });
   const [alert, setAlert] = useState(null);
   const [isPending, startTransition] = useTransition();
 
@@ -56,6 +57,17 @@ export default function CustomerProfileDetailPage({ params }) {
   }, [profileId]);
 
   const viewModel = useMemo(() => buildProfileView(profile), [profile]);
+  const timelinePolicyOptions = useMemo(() => unique(viewModel.timeline.map((item) => item.policyInterest)), [viewModel.timeline]);
+  const filteredTimeline = useMemo(() => (
+    viewModel.timeline.filter((item) => {
+      const searchText = [item.createdBy, item.title, item.remark, item.policyInterest, item.policyLabel, item.statusBadge].filter(Boolean).join(" ").toLowerCase();
+      const matchesQuery = !timelineFilters.q || searchText.includes(timelineFilters.q.toLowerCase());
+      const matchesStatus = !timelineFilters.status || item.tone === timelineFilters.status;
+      const matchesPolicy = !timelineFilters.policy || item.policyInterest === timelineFilters.policy;
+      const matchesDate = !timelineFilters.date || toInputDate(item.createdAt) === timelineFilters.date;
+      return matchesQuery && matchesStatus && matchesPolicy && matchesDate;
+    })
+  ), [viewModel.timeline, timelineFilters]);
 
   function callCustomer() {
     if (!profile?.phone) {
@@ -310,25 +322,49 @@ export default function CustomerProfileDetailPage({ params }) {
           <section className="customer-portfolio-card">
             <h2>Follow-up Timeline & Remarks</h2>
             {viewModel.timeline.length ? (
-              <div className="customer-portfolio-timeline">
-                {viewModel.timeline.map((item) => (
-                  <div key={item.id} className="customer-portfolio-timeline-item">
-                    <div className="customer-portfolio-timeline-dot" />
-                    <div className="customer-portfolio-timeline-content">
-                      <div className="customer-portfolio-timeline-head">
-                        <strong>{item.createdBy || item.title}</strong>
-                        <span>{formatDateTime(item.createdAt)}</span>
-                      </div>
-                      <div className="customer-portfolio-timeline-body">
-                        {item.policyLabel ? <small>{item.policyLabel}</small> : null}
-                        <p>{item.remark}</p>
-                        {item.nextFollowUpDate ? <em>Next Follow-Up scheduled for: {formatDate(item.nextFollowUpDate)} via {item.mode || "Call"}</em> : null}
-                        {item.statusBadge ? <b className={`tone-${item.tone}`}>{item.statusBadge}</b> : null}
-                      </div>
+              <>
+                <div className="customer-portfolio-timeline-filters">
+                  <input value={timelineFilters.q} placeholder="Search remarks" onChange={(event) => setTimelineFilters((current) => ({ ...current, q: event.target.value }))} />
+                  <select value={timelineFilters.status} onChange={(event) => setTimelineFilters((current) => ({ ...current, status: event.target.value }))}>
+                    <option value="">All Status</option>
+                    <option value="info">New / Interested</option>
+                    <option value="warning">Follow-up</option>
+                    <option value="success">Converted / Active</option>
+                    <option value="danger">Lost / Not Interested</option>
+                    <option value="neutral">General</option>
+                  </select>
+                  <select value={timelineFilters.policy} onChange={(event) => setTimelineFilters((current) => ({ ...current, policy: event.target.value }))}>
+                    <option value="">All Policy Types</option>
+                    {timelinePolicyOptions.map((policy) => <option key={policy} value={policy}>{policy}</option>)}
+                  </select>
+                  <input type="date" value={timelineFilters.date} onChange={(event) => setTimelineFilters((current) => ({ ...current, date: event.target.value }))} />
+                </div>
+                {filteredTimeline.length ? (
+                  <div className="customer-portfolio-timeline-scroll">
+                    <div className="customer-portfolio-timeline">
+                      {filteredTimeline.map((item) => (
+                        <div key={item.id} className="customer-portfolio-timeline-item">
+                          <div className="customer-portfolio-timeline-dot" />
+                          <div className="customer-portfolio-timeline-content">
+                            <div className="customer-portfolio-timeline-head">
+                              <strong>{item.createdBy || item.title}</strong>
+                              <span>{formatDateTime(item.createdAt)}</span>
+                            </div>
+                            <div className="customer-portfolio-timeline-body">
+                              {item.policyLabel ? <small>{item.policyLabel}</small> : null}
+                              <p>{item.remark}</p>
+                              {item.nextFollowUpDate ? <em>Next Follow-Up scheduled for: {formatDate(item.nextFollowUpDate)} via {item.mode || "Call"}</em> : null}
+                              {item.statusBadge ? <b className={`tone-${item.tone}`}>{item.statusBadge}</b> : null}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <p className="customer-portfolio-empty timeline-filter-empty">No timeline records match selected filters.</p>
+                )}
+              </>
             ) : (
               <p className="customer-portfolio-empty">No comments or timeline logs recorded.</p>
             )}
@@ -590,4 +626,15 @@ function formatDaysLeft(value) {
   if (days < 0) return `${days} days`;
   if (days === 0) return "Today";
   return `${days} days`;
+}
+
+function toInputDate(value) {
+  if (!value) return "";
+  try {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().split("T")[0];
+  } catch {
+    return "";
+  }
 }
