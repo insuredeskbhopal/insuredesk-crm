@@ -56,13 +56,16 @@ export async function GET(request) {
           renewal_status,
           (CASE
             WHEN policy_haystack ~ '\\m(motor|vehicle|private\\s+car|two\\s+wheeler|commercial\\s+vehicle|goods\\s+carrying|auto\\s+secure|registration|chassis|engine)\\M' THEN 'Motor'
-            WHEN policy_haystack ~ '\\m(fire|sfsp|standard\\s+fire|msme\\s+suraksha|burglary|warehouse|stock|contents|property|industrial\\s+all\\s+risk)\\M' THEN 'Fire'
             WHEN policy_haystack ~ '\\m(health|mediclaim|medical|family\\s+floater|critical\\s+illness|hospital|personal\\s+accident|pa policy)\\M' THEN 'Health'
             WHEN policy_haystack ~ '\\m(life|term\\s+life|endowment|ulip|whole\\s+life|annuity|pension)\\M' THEN 'Life'
-            WHEN policy_haystack ~ '\\m(travel|journey|overseas|student\\s+travel)\\M' THEN 'Travel'
+            WHEN policy_haystack ~ '\\m(fire|sfsp|standard\\s+fire|msme\\s+suraksha|burglary|warehouse|stock|contents|property|industrial\\s+all\\s+risk)\\M' THEN 'Fire'
             WHEN policy_haystack ~ '\\m(marine|transit|cargo|inland\\s+transit)\\M' THEN 'Marine'
-            WHEN policy_haystack ~ '\\m(commercial|business|shop|office|sme|package)\\M' THEN 'Commercial'
-            ELSE 'Other'
+            WHEN policy_haystack ~ '\\m(shop|merchant|store|retail|shopkeeper)\\M' THEN 'Shop'
+            WHEN policy_haystack ~ '\\m(office|workspace|workplace|business\\s+package)\\M' THEN 'Office'
+            WHEN policy_haystack ~ '\\m(cyber|data\\s+breach|online\\s+secure|hack)\\M' THEN 'Cyber'
+            WHEN policy_haystack ~ '\\m(liability|professional\\s+indemnity|wc|workmen|workman|employer\\s+liability)\\M' THEN 'Liability'
+            WHEN policy_haystack ~ '\\m(engineering|contractor|plant|machinery|erection|car|ear)\\M' THEN 'Engineering'
+            ELSE 'Others'
            END) AS policy_family,
           (CASE
             WHEN COALESCE(TRIM(raw_expiry), '') = '' THEN NULL

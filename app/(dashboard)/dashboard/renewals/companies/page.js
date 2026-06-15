@@ -56,7 +56,54 @@ export default function CompaniesViewPage() {
   }, []);
 
   const handleCardClick = (companyName) => {
-    router.push(`/dashboard/renewals/policies?company=${encodeURIComponent(companyName)}`);
+    router.push(`/dashboard/renewals/customers?company=${encodeURIComponent(companyName)}`);
+  };
+
+  const renderCompanyLogo = (name) => {
+    const logos = {
+      "ICICI Lombard": "/logo/icici-lombard-general-insurance.svg",
+      "TATA AIG": "/logo/tata-aig-general-insurance.png",
+      "New India": "/logo/new-india-assurance.svg",
+      "IFFCO Tokio": "/logo/iffco-tokio-general-insurance.svg",
+      "HDFC ERGO": "/logo/hdfc-ergo-general-insurance.svg",
+      "Bajaj Allianz": "/logo/bajaj-allianz-general-insurance.svg",
+      "Royal Sundaram": "/logo/royal-sundaram-general-insurance.png",
+      "Future Generali": "/logo/future-generali-logo.png",
+      "SBI General": "/logo/sbi-general-insurance.png"
+    };
+
+    const src = logos[name];
+    if (src) {
+      return (
+        <div style={{ width: "36px", height: "36px", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc", borderRadius: "8px", border: "1px solid rgba(25,28,29,0.06)", overflow: "hidden", padding: "2px", flexShrink: 0 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt={name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+        </div>
+      );
+    }
+
+    if (name === "Digit") {
+      return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", backgroundColor: "#3a3a3c", color: "#ff8c00", borderRadius: "8px", fontWeight: "900", fontSize: "11px", letterSpacing: "-0.5px", flexShrink: 0 }}>
+          digit
+        </div>
+      );
+    }
+
+    if (name === "Universal Sompo") {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", backgroundColor: "#1e3a8a", color: "#ffffff", borderRadius: "8px", fontWeight: "900", fontSize: "8px", textAlign: "center", lineHeight: "1.0", border: "1px solid #3b82f6", padding: "1px", flexShrink: 0 }}>
+          <span>UNI</span>
+          <span>SOMPO</span>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ padding: "8px", borderRadius: "8px", backgroundColor: "var(--rn-border-light)", color: "var(--rn-text-secondary)", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <Building2 size={18} />
+      </div>
+    );
   };
 
   if (loading) {
@@ -78,9 +125,7 @@ export default function CompaniesViewPage() {
           >
             <div>
               <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "16px" }}>
-                <div style={{ padding: "8px", borderRadius: "6px", backgroundColor: "var(--rn-border-light)", color: "var(--rn-text-secondary)" }}>
-                  <Building2 size={18} />
-                </div>
+                {renderCompanyLogo(company.name)}
                 <h4 style={{ fontSize: "16px", fontWeight: "600", margin: 0, color: "var(--rn-text-primary)" }}>
                   {company.name}
                 </h4>

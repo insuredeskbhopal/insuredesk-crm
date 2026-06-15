@@ -34,6 +34,8 @@ export async function GET(request) {
     const q = searchParams.get("q") || "";
     const status = searchParams.get("status") || "All"; // Active, Due Soon, Overdue, Fully Renewed, Lost, All
     const assignedTo = searchParams.get("assignedTo") || "All";
+    const companyFilter = searchParams.get("company") || "All";
+    const policyTypeFilter = searchParams.get("policyType") || "All";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10", 10) || 10));
     const offset = (page - 1) * limit;
@@ -51,7 +53,9 @@ export async function GET(request) {
       status,
       q.trim(),
       `%${q.trim().toLowerCase()}%`,
-      assignedTo
+      assignedTo,
+      companyFilter,
+      policyTypeFilter
     ];
 
     const baseCTE = `
@@ -84,7 +88,20 @@ export async function GET(request) {
             data->>'phone',
             ''
           ) AS contact_number,
-          COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry
+          COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry,
+          COALESCE(reviewed_data->>'insuranceCompany', reviewed_data->>'Insurance Company', data->>'insuranceCompany', data->>'Insurance Company', '') AS raw_company,
+          COALESCE(reviewed_data->>'policyType', reviewed_data->>'Policy Type', data->>'policyType', data->>'Policy Type', '') AS raw_policy_type,
+          COALESCE(selected_company, '') AS selected_company,
+          COALESCE(selected_policy_type, '') AS selected_policy_type,
+          LOWER(
+            COALESCE(selected_policy_type, '') || ' ' ||
+            COALESCE(reviewed_data->>'policyType', reviewed_data->>'Policy Type', data->>'policyType', data->>'Policy Type', '') || ' ' ||
+            COALESCE(reviewed_data->>'documentCategory', data->>'documentCategory', '') || ' ' ||
+            COALESCE(reviewed_data->>'policyCoverType', data->>'policyCoverType', '') || ' ' ||
+            COALESCE(reviewed_data->>'insuranceCompany', reviewed_data->>'Insurance Company', data->>'insuranceCompany', data->>'Insurance Company', '') || ' ' ||
+            COALESCE(reviewed_data->>'sourceFile', data->>'sourceFile', '') || ' ' ||
+            COALESCE(reviewed_data->>'description', data->>'description', '')
+          ) AS policy_haystack
         FROM pdf_records
         WHERE deleted_at IS NULL
           AND ($1::boolean OR organization_id = $2::uuid)
@@ -99,6 +116,21 @@ export async function GET(request) {
           assigned_to,
           insured_name,
           contact_person,
+          raw_company,
+          raw_policy_type,
+          selected_company,
+          selected_policy_type,
+          (CASE
+            WHEN policy_haystack ~ '\\m(motor|vehicle|private\\s+car|two\\s+wheeler|commercial\\s+vehicle|goods\\s+carrying|auto\\s+secure|registration|chassis|engine)\\M'
+              OR policy_haystack ~ '\\m[a-z]{2}[-\\s]?\\d{1,2}[-\\s]?[a-z]{1,3}[-\\s]?\\d{4}\\M' THEN 'Motor'
+            WHEN policy_haystack ~ '\\m(fire|sfsp|standard\\s+fire|msme\\s+suraksha|burglary|warehouse|stock|contents|property|industrial\\s+all\\s+risk)\\M' THEN 'Fire'
+            WHEN policy_haystack ~ '\\m(health|mediclaim|medical|family\\s+floater|critical\\s+illness|hospital|personal\\s+accident|pa policy)\\M' THEN 'Health'
+            WHEN policy_haystack ~ '\\m(life|term\\s+life|endowment|ulip|whole\\s+life|annuity|pension)\\M' THEN 'Life'
+            WHEN policy_haystack ~ '\\m(travel|journey|overseas|student\\s+travel)\\M' THEN 'Travel'
+            WHEN policy_haystack ~ '\\m(marine|transit|cargo|inland\\s+transit)\\M' THEN 'Marine'
+            WHEN policy_haystack ~ '\\m(commercial|business|shop|office|sme|package)\\M' THEN 'Commercial'
+            ELSE 'Other'
+           END) AS policy_family,
           CASE
             WHEN LENGTH(regexp_replace(contact_number, '[^0-9]', '', 'g')) >= 10
               THEN RIGHT(regexp_replace(contact_number, '[^0-9]', '', 'g'), 10)
@@ -148,6 +180,22 @@ export async function GET(request) {
             days_left BETWEEN -30 AND 30
             OR renewal_status IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE')
             OR $5 <> ''
+          )
+          -- Company Filter
+          AND (
+            $8 = 'All'
+            OR LOWER(raw_company) LIKE LOWER('%' || $8 || '%')
+            OR LOWER(selected_company) LIKE LOWER('%' || $8 || '%')
+          )
+          -- Policy Type Filter
+          AND (
+            $9 = 'All'
+            OR LOWER(policy_family) = LOWER($9)
+            OR LOWER(raw_policy_type) LIKE LOWER('%' || $9 || '%')
+            OR LOWER(selected_policy_type) LIKE LOWER('%' || $9 || '%')
+            OR ($9 = 'Commercial' AND LOWER(raw_policy_type) IN ('shop', 'office', 'commercial'))
+            OR ($9 = 'Shop' AND (LOWER(raw_policy_type) LIKE '%shop%' OR LOWER(policy_family) = 'commercial'))
+            OR ($9 = 'Office' AND (LOWER(raw_policy_type) LIKE '%office%' OR LOWER(policy_family) = 'commercial'))
           )
       ),
       customer_groups AS (
@@ -245,7 +293,7 @@ export async function GET(request) {
         CASE WHEN nearest_expiry IS NOT NULL THEN 0 ELSE 1 END,
         nearest_days_left ASC,
         contact_person_name ASC
-      LIMIT $8::integer OFFSET $9::integer
+      LIMIT $10::integer OFFSET $11::integer
     `;
 
     const [countResult, dataResult] = await Promise.all([

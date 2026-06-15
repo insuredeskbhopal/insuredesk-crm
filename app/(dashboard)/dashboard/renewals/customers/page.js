@@ -50,9 +50,21 @@ export default function CustomerRenewalsPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [activeCompanyFilter, setActiveCompanyFilter] = useState("All");
+  const [activePolicyTypeFilter, setActivePolicyTypeFilter] = useState("All");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new window.URLSearchParams(window.location.search);
+      const comp = params.get("company") || "All";
+      const pol = params.get("policyType") || "All";
+      setActiveCompanyFilter(comp);
+      setActivePolicyTypeFilter(pol);
+    }
+  }, []);
   
   // Interactive UI states
   const [activeDropdownRowId, setActiveDropdownRowId] = useState(null);
@@ -171,7 +183,7 @@ export default function CustomerRenewalsPage() {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const url = `/api/renewals/customers?q=${encodeURIComponent(q)}&status=${statusFilter}&page=${page}&limit=10`;
+      const url = `/api/renewals/customers?q=${encodeURIComponent(q)}&status=${statusFilter}&page=${page}&limit=10&company=${encodeURIComponent(activeCompanyFilter)}&policyType=${encodeURIComponent(activePolicyTypeFilter)}`;
       const res = await fetch(url, { cache: "no-store" });
       const data = await res.json();
       if (res.ok && data.customers) {
@@ -188,7 +200,7 @@ export default function CustomerRenewalsPage() {
 
   useEffect(() => {
     fetchCustomers();
-  }, [page, statusFilter]);
+  }, [page, statusFilter, activeCompanyFilter, activePolicyTypeFilter]);
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -643,6 +655,54 @@ export default function CustomerRenewalsPage() {
 
         <button type="submit" className="rn-btn">Search</button>
       </form>
+
+      {/* Active filters display */}
+      {(activeCompanyFilter !== "All" || activePolicyTypeFilter !== "All") && (
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", padding: "4px 8px", background: "#f8fafc", borderRadius: "8px", border: "1px solid var(--rn-border)" }}>
+          <span style={{ fontSize: "12px", color: "var(--rn-text-secondary)", fontWeight: "600" }}>Active Filters:</span>
+          {activeCompanyFilter !== "All" && (
+            <span 
+              className="rn-badge tone-info" 
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 10px", fontSize: "12px", fontWeight: "600", cursor: "pointer", borderRadius: "6px" }}
+              onClick={() => {
+                setActiveCompanyFilter("All");
+                const params = new window.URLSearchParams(window.location.search);
+                params.delete("company");
+                router.replace(`${window.location.pathname}?${params.toString()}`);
+              }}
+            >
+              Company: {activeCompanyFilter}
+              <span style={{ fontSize: "14px", fontWeight: "700", marginLeft: "4px" }}>&times;</span>
+            </span>
+          )}
+          {activePolicyTypeFilter !== "All" && (
+            <span 
+              className="rn-badge tone-info" 
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 10px", fontSize: "12px", fontWeight: "600", cursor: "pointer", borderRadius: "6px" }}
+              onClick={() => {
+                setActivePolicyTypeFilter("All");
+                const params = new window.URLSearchParams(window.location.search);
+                params.delete("policyType");
+                router.replace(`${window.location.pathname}?${params.toString()}`);
+              }}
+            >
+              Policy Type: {activePolicyTypeFilter}
+              <span style={{ fontSize: "14px", fontWeight: "700", marginLeft: "4px" }}>&times;</span>
+            </span>
+          )}
+          <button 
+            type="button" 
+            style={{ fontSize: "11px", color: "var(--rn-danger)", border: "none", background: "none", cursor: "pointer", fontWeight: "700", textTransform: "uppercase", padding: "4px" }}
+            onClick={() => {
+              setActiveCompanyFilter("All");
+              setActivePolicyTypeFilter("All");
+              router.replace(window.location.pathname);
+            }}
+          >
+            Clear All
+          </button>
+        </div>
+      )}
 
       {/* Main Grid Table */}
       <div className="rn-table-container">
