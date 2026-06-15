@@ -1,19 +1,43 @@
 .scrollbar-hidden {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.28) transparent;
 }
 
 .scrollbar-hidden::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-hidden::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-hidden::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.24);
 }
 
 * {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.24) transparent;
 }
 
 *::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.22);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.34);
 }
 
 .app-shell {
