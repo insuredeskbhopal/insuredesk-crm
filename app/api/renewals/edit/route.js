@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 
 export const runtime = "nodejs";
 
@@ -58,13 +59,14 @@ export async function POST(request) {
       return Response.json({ error: "Premium must be a valid number." }, { status: 400 });
     }
 
-    // Phone validation
-    const cleanPhone = String(contactNumber || "").trim();
+    // Phone validation & normalization
+    let cleanPhone = String(contactNumber || "").trim();
     if (cleanPhone) {
-      const digits = cleanPhone.replace(/\D/g, "");
-      if (digits.length !== 10) {
-        return Response.json({ error: "Customer Phone must be exactly 10 digits." }, { status: 400 });
+      const normalized = normalizeIndianPhone(cleanPhone);
+      if (!normalized) {
+        return Response.json({ error: "Customer Phone must be a valid 10-digit Indian mobile number." }, { status: 400 });
       }
+      cleanPhone = normalized;
     }
 
     const tenantFilter = getTenantFilter(user, "write");

@@ -1039,12 +1039,17 @@ export default function CustomerProfilePage(props) {
                       {/* 10. Renewal Status */}
                       <td style={{ width: colWidths[9] + "px" }}>
                         <span className={`rn-badge ${
-                          p.renewalStatus === "RENEWED" ? "rn-badge-success" :
-                          ["LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(p.renewalStatus) ? "rn-badge-danger" :
-                          p.renewalStatus === "Follow-Up" ? "rn-badge-warning" :
-                          p.renewalStatus === "EXPIRED" ? "rn-badge-danger" : "rn-badge-active"
+                          p.renewalStatus === "RENEWED" || p.renewalStatus === "renewed" ? "rn-badge-success" :
+                          ["LOST", "lost", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(p.renewalStatus) ? "rn-badge-danger" :
+                          p.renewalStatus === "Follow-Up" || p.renewalStatus === "expiry_soon" ? "rn-badge-warning" :
+                          p.renewalStatus === "EXPIRED" || p.renewalStatus === "expired" ? "rn-badge-danger" : "rn-badge-active"
                         }`}>
-                          {p.renewalStatus || "ACTIVE"}
+                          {p.renewalStatus === "expiry_soon" ? "Expiry Soon" :
+                           p.renewalStatus === "expired" ? "Expired" :
+                           p.renewalStatus === "renewed" ? "Renewed" :
+                           p.renewalStatus === "lost" ? "Lost" :
+                           p.renewalStatus === "active" ? "Active" :
+                           p.renewalStatus || "ACTIVE"}
                         </span>
                       </td>
 

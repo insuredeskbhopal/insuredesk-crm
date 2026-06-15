@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, CheckCircle, Search, UserPlus, X } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
+import { normalizeIndianPhone, formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
 
 const EMPTY_FORM = {
   name: "",
@@ -198,7 +199,7 @@ export default function CustomerProfilingPage() {
   const [isPending, startTransition] = useTransition();
   const [conversionModalData, setConversionModalData] = useState(null);
 
-  const phone = form.phone.replace(/\D/g, "").slice(0, 10);
+  const phone = normalizeIndianPhone(form.phone);
   const isValidProfilePhone = phone.length === 10;
   const hasMatches = searchResults.profiles.length > 0 || searchResults.policyMatches.length > 0;
   const isClaimedByAnotherUser = Boolean(searchResults.claimedByAnotherUser);
@@ -265,7 +266,15 @@ export default function CustomerProfilingPage() {
 
   function updateField(key, value) {
     if (key === "phone" || key === "alternatePhone") {
-      setForm((current) => ({ ...current, [key]: value.replace(/\D/g, "").slice(0, 10) }));
+      const digitsOnly = value.replace(/\D/g, "");
+      if (digitsOnly.length > 10 || value.startsWith("+") || value.startsWith("0")) {
+        const normalized = normalizeIndianPhone(value);
+        if (normalized) {
+          setForm((current) => ({ ...current, [key]: normalized }));
+          return;
+        }
+      }
+      setForm((current) => ({ ...current, [key]: digitsOnly.slice(0, 10) }));
       return;
     }
     setForm((current) => ({ ...current, [key]: value }));
@@ -458,9 +467,12 @@ export default function CustomerProfilingPage() {
     startTransition(async () => {
       setAlert(null);
       try {
-        if (form.phone && form.phone.replace(/\D/g, "").length !== 10) {
-          setAlert({ type: "error", message: "Phone number must be exactly 10 digits." });
-          return;
+        if (form.phone) {
+          const normalized = normalizeIndianPhone(form.phone);
+          if (!normalized) {
+            setAlert({ type: "error", message: "Please enter a valid 10-digit Indian mobile number (starting with 6-9)." });
+            return;
+          }
         }
         if (!selectedExistingId && searchResults.claimedByAnotherUser) {
           setAlert({ type: "error", message: "This phone number is already claimed by another user in Customer Profiling." });
@@ -1401,7 +1413,12 @@ export default function CustomerProfilingPage() {
                       type="button"
                       onClick={() => {
                         const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark);
-                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                        const whatsappPhone = formatPhoneForWhatsapp(conversionModalData.profile?.phone);
+                        if (whatsappPhone) {
+                          window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`, "_blank");
+                        } else {
+                          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                        }
                       }}
                       style={{
                         padding: "12px",

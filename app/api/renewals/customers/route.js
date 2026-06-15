@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { startOfDay } from "@/app/lib/reporting/filters";
 import { normalizeRecord } from "@/lib/records";
+import { calculateRenewalStatus, calculateDaysLeft } from "@/lib/renewals/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -236,15 +237,15 @@ export async function GET(request) {
             WHEN COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND days_left BETWEEN -30 AND 30 THEN 1 END) > 0 THEN
               -- There are due policies
               CASE 
-                WHEN MIN(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND days_left BETWEEN -30 AND 30 THEN days_left END) < 0 THEN 'Expired'
-                ELSE 'Due Soon'
+                WHEN MIN(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND days_left BETWEEN -30 AND 30 THEN days_left END) < 0 THEN 'expired'
+                ELSE 'expiry_soon'
               END
             ELSE
               -- No due policies in window
               CASE
-                WHEN COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END) > 0 THEN 'Renewed'
-                WHEN COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END) > 0 THEN 'Lost'
-                ELSE 'Active'
+                WHEN COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END) > 0 THEN 'renewed'
+                WHEN COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END) > 0 THEN 'lost'
+                ELSE 'active'
               END
           END) AS customer_status
         FROM active_renewals
@@ -258,11 +259,11 @@ export async function GET(request) {
         WHERE
           -- Status Filter
           (
-            ($4 = 'All' AND customer_status IN ('Due Soon', 'Expired'))
-            OR ($4 = 'Due Soon' AND customer_status = 'Due Soon')
-            OR ($4 = 'Expired' AND customer_status = 'Expired')
-            OR ($4 = 'Renewed' AND customer_status = 'Renewed')
-            OR ($4 = 'Lost' AND customer_status = 'Lost')
+            ($4 = 'All' AND customer_status IN ('expiry_soon', 'expired'))
+            OR ($4 = 'Due Soon' AND customer_status = 'expiry_soon')
+            OR ($4 = 'Expired' AND customer_status = 'expired')
+            OR ($4 = 'Renewed' AND customer_status = 'renewed')
+            OR ($4 = 'Lost' AND customer_status = 'lost')
           )
           -- Text Search
           AND (
@@ -291,17 +292,17 @@ export async function GET(request) {
       FROM filtered_groups
       ORDER BY 
         CASE 
-          WHEN customer_status = 'Due Soon' THEN 0
-          WHEN customer_status = 'Expired' THEN 1
-          WHEN customer_status = 'Renewed' THEN 2
-          WHEN customer_status = 'Lost' THEN 3
+          WHEN customer_status = 'expiry_soon' THEN 0
+          WHEN customer_status = 'expired' THEN 1
+          WHEN customer_status = 'renewed' THEN 2
+          WHEN customer_status = 'lost' THEN 3
           ELSE 4
         END ASC,
         CASE 
-          WHEN customer_status = 'Due Soon' THEN nearest_days_left 
+          WHEN customer_status = 'expiry_soon' THEN nearest_days_left 
         END ASC,
         CASE 
-          WHEN customer_status = 'Expired' THEN nearest_days_left 
+          WHEN customer_status = 'expired' THEN nearest_days_left 
         END DESC,
         nearest_expiry ASC NULLS LAST,
         contact_person_name ASC
@@ -365,8 +366,13 @@ export async function GET(request) {
           ? row.contact_person
           : policyContact || "";
 
+      const nearestDaysLeft = calculateDaysLeft(row.nearest_expiry);
+      const computedStatus = calculateRenewalStatus(row.nearest_expiry, row.customer_status);
+
       return {
         ...row,
+        nearest_days_left: nearestDaysLeft,
+        customer_status: computedStatus,
         contact_person_name: resolvedContact || "",
         contact_person: resolvedContact || row.contact_person || ""
       };

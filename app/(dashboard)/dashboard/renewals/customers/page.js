@@ -19,6 +19,7 @@ import {
   Send,
   Clipboard
 } from "lucide-react";
+import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 
 const COL_HEADERS = [
   "Contact Person Name", 
@@ -386,11 +387,12 @@ export default function CustomerRenewalsPage() {
       return;
     }
     if (editForm.contactNumber) {
-      const digits = editForm.contactNumber.replace(/\D/g, "");
-      if (digits.length !== 10) {
-        window.alert("Please enter a valid 10-digit mobile number.");
+      const normalized = normalizeIndianPhone(editForm.contactNumber);
+      if (!normalized) {
+        window.alert("Please enter a valid 10-digit Indian mobile number (starting with 6-9).");
         return;
       }
+      editForm.contactNumber = normalized;
     }
     if (editForm.premium && (isNaN(parseFloat(editForm.premium)) || parseFloat(editForm.premium) < 0)) {
       window.alert("Premium must be a positive number.");
@@ -802,12 +804,17 @@ export default function CustomerRenewalsPage() {
                     {/* 8. Customer Status */}
                     <td style={{ width: colWidths[7] + "px" }}>
                       <span className={`rn-badge ${
-                        cust.customer_status === "Renewed" ? "rn-badge-success" :
-                        cust.customer_status === "Lost" ? "rn-badge-danger" :
-                        cust.customer_status === "Due Soon" ? "rn-badge-warning" : 
-                        ["Overdue", "Expired"].includes(cust.customer_status) ? "rn-badge-danger" : "rn-badge-active"
+                        cust.customer_status === "renewed" || cust.customer_status === "Renewed" ? "rn-badge-success" :
+                        cust.customer_status === "lost" || cust.customer_status === "Lost" ? "rn-badge-danger" :
+                        cust.customer_status === "expiry_soon" || cust.customer_status === "Due Soon" ? "rn-badge-warning" : 
+                        ["Overdue", "Expired", "expired"].includes(cust.customer_status) ? "rn-badge-danger" : "rn-badge-active"
                       }`}>
-                        {cust.customer_status}
+                        {cust.customer_status === "expiry_soon" ? "Expiry Soon" :
+                         cust.customer_status === "expired" ? "Expired" :
+                         cust.customer_status === "renewed" ? "Renewed" :
+                         cust.customer_status === "lost" ? "Lost" :
+                         cust.customer_status === "active" ? "Active" :
+                         cust.customer_status}
                       </span>
                     </td>
 
@@ -905,7 +912,14 @@ export default function CustomerRenewalsPage() {
             </div>
             <div className="rn-hover-item">
               <span className="rn-hover-label">Status</span>
-              <span className="rn-hover-value">{hoverCard.customer.customer_status || "Active"}</span>
+              <span className="rn-hover-value">
+                {hoverCard.customer.customer_status === "expiry_soon" ? "Expiry Soon" :
+                 hoverCard.customer.customer_status === "expired" ? "Expired" :
+                 hoverCard.customer.customer_status === "renewed" ? "Renewed" :
+                 hoverCard.customer.customer_status === "lost" ? "Lost" :
+                 hoverCard.customer.customer_status === "active" ? "Active" :
+                 hoverCard.customer.customer_status || "Active"}
+              </span>
             </div>
             <div className="rn-hover-item">
               <span className="rn-hover-label">Companies</span>

@@ -4,6 +4,7 @@ import { getTenantFilter } from "@/lib/auth/rbac";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
 
 export const runtime = "nodejs";
 
@@ -136,10 +137,7 @@ export async function POST(request) {
     }
     const count = targetList.length;
 
-    let phoneParam = cleanContact;
-    if (phoneParam.length === 10) {
-      phoneParam = "91" + phoneParam;
-    }
+    const phoneParam = formatPhoneForWhatsapp(targetPhone) || cleanContact;
 
     // Handle Audit logging
     if (shouldLog) {

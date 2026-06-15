@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { AlertTriangle, ArrowLeft, CheckCircle, MessageSquare, Phone, UserRound, X, LayoutGrid, User, MapPin, Shield } from "lucide-react";
+import { formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
 
 const PROFILE_STATUS = ["New Lead", "Follow-up Required", "Interested", "Not Interested", "Converted", "Lost"];
 const FOLLOW_UP_OUTCOMES = ["Interested", "Call Back Later", "Not Interested", "Converted", "Wrong Number", "Not Reachable"];
@@ -92,8 +93,13 @@ export default function CustomerProfileDetailPage({ params }) {
       window.alert("No mobile number available.");
       return;
     }
+    const whatsappPhone = formatPhoneForWhatsapp(profile.phone);
+    if (!whatsappPhone) {
+      window.alert("Invalid mobile number format.");
+      return;
+    }
     const message = `Hello ${profile.name || "Customer"}, following up regarding your insurance requirement.`;
-    window.open(`https://wa.me/91${profile.phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`, "_blank");
+    window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`, "_blank");
   }
 
   function openRemarkModal(policy) {

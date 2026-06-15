@@ -6,6 +6,7 @@ import {
   MessageSquare, 
   AlertCircle
 } from "lucide-react";
+import { formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
 
 export default function FollowUpsPage() {
 
@@ -88,8 +89,13 @@ export default function FollowUpsPage() {
   const handleWhatsApp = (policy) => {
     const phone = policy.contactNumber || "";
     if (phone) {
+      const whatsappPhone = formatPhoneForWhatsapp(phone);
+      if (!whatsappPhone) {
+        window.alert("Invalid mobile number format.");
+        return;
+      }
       const message = `Hello ${policy.insuredName}, following up regarding your policy ${policy.policyNumber} renewal. Let us know if you need assistance.`;
-      window.open(`https://wa.me/91${phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`, "_blank");
+      window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`, "_blank");
     } else {
       window.alert("No contact number available.");
     }

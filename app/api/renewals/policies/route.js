@@ -3,7 +3,7 @@ import { verifyJWT } from "@/lib/auth";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
 import { startOfDay } from "@/app/lib/reporting/filters";
-import { getDaysStatus, getExpiryState } from "@/lib/renewals/dates";
+import { getDaysStatus, getExpiryState, calculateDaysLeft, calculateRenewalStatus } from "@/lib/renewals/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -365,7 +365,8 @@ export async function GET(request) {
       const orderedRecords = ids.map((id) => recordMap[id]).filter(Boolean);
       policies = orderedRecords.map((record) => {
         const normalized = withRenewalPolicyDisplay(normalizeRecord(record));
-        normalized.daysRemaining = daysRemainingMap[record.id];
+        normalized.daysRemaining = calculateDaysLeft(normalized.expiryDate);
+        normalized.renewalStatus = calculateRenewalStatus(normalized.expiryDate, record.renewalStatus);
         normalized.expiryState = getExpiryState(normalized.expiryDate);
         normalized.daysStatus = getDaysStatus(normalized.expiryDate);
         if (record.renewedPolicyId && renewedPolicyMap[record.renewedPolicyId]) {
