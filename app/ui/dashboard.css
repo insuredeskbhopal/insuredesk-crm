@@ -6893,6 +6893,17 @@ label.is-disabled textarea {
   grid-column: 1 / -1;
 }
 
+.customer-portfolio-policy-fields {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(25, 28, 29, 0.1);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
 .customer-portfolio-update-grid span {
   color: var(--on-surface-variant);
   font-size: 11px;
@@ -6921,7 +6932,111 @@ label.is-disabled textarea {
 .customer-portfolio-save-row {
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
   padding: 0 18px 16px;
+}
+
+.customer-portfolio-save-row button.secondary {
+  border-color: rgba(25, 28, 29, 0.14);
+  background: #ffffff;
+  color: var(--on-surface);
+}
+
+.customer-portfolio-convert-modal {
+  width: min(620px, calc(100vw - 32px));
+  max-width: 620px;
+}
+
+.customer-portfolio-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(25, 28, 29, 0.1);
+}
+
+.customer-portfolio-modal-head h3 {
+  margin: 0;
+  color: var(--on-surface);
+  font-size: 18px;
+}
+
+.customer-portfolio-modal-head button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #111827;
+  cursor: pointer;
+}
+
+.customer-portfolio-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+}
+
+.customer-portfolio-modal-body p {
+  margin: 0;
+  color: var(--on-surface-variant);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.customer-portfolio-modal-body textarea {
+  width: 100%;
+  min-height: 150px;
+  border: 1px solid rgba(25, 28, 29, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--on-surface);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 11px 12px;
+  resize: vertical;
+}
+
+.customer-portfolio-modal-error {
+  color: #b43c17 !important;
+  font-weight: 800;
+}
+
+.customer-portfolio-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 20px 18px;
+}
+
+.customer-portfolio-modal-actions.split {
+  justify-content: space-between;
+}
+
+.customer-portfolio-modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid rgba(25, 28, 29, 0.14);
+  border-radius: 7px;
+  background: #ffffff;
+  color: var(--on-surface);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.customer-portfolio-modal-actions button.primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #ffffff;
 }
 
 @media (max-width: 1100px) {
@@ -6936,6 +7051,10 @@ label.is-disabled textarea {
   }
 
   .customer-portfolio-update-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-portfolio-policy-fields {
     grid-template-columns: 1fr;
   }
 
