@@ -1,0 +1,128 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import BrandLogo from "@/app/components/brand/BrandLogo";
+import { BUSINESS_DETAILS } from "@/lib/seo/site";
+
+export default function PublicHeader() {
+  const [scrolled, setScrolled] = useState(false);
+  const [user, setUser] = useState(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Check if user is logged in
+    fetch("/api/auth/me")
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error("Not logged in");
+      })
+      .then((data) => {
+        if (data.success && data.user) {
+          setUser(data.user);
+        }
+      })
+      .catch(() => {
+        // No-op (remain as guest)
+      });
+
+    // Handle scroll events for navbar shadow
+    const handleScroll = () => {
+      if (window.scrollY > 40) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  const getLinkClass = (path) => {
+    const isActive = pathname === path || (path !== "/" && pathname.startsWith(path));
+    const baseClass = "font-body-md text-body-md transition-colors entry-anim p-0 text-[16px] font-medium";
+    return isActive
+      ? `${baseClass} text-secondary border-b-2 border-secondary font-semibold pb-1`
+      : `${baseClass} text-on-surface-variant hover:text-primary`;
+  };
+
+  return (
+    <nav
+      className={`bg-surface-container-lowest/0 backdrop-blur-0 sticky top-0 z-50 border-b border-transparent transition-all duration-300 h-20 flex items-center ${
+        scrolled ? "scrolled" : ""
+      }`}
+      id="mainNav"
+    >
+      <div className="landing-nav-inner max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center h-full">
+        {/* Brand Logo */}
+        <div className="landing-brand entry-anim" style={{ animationDelay: "0.1s" }}>
+          <BrandLogo href="/" />
+        </div>
+
+        {/* Desktop Nav Links */}
+        <div className="landing-nav-links hidden md:flex gap-6">
+          <Link href="/" className={getLinkClass("/")} style={{ animationDelay: "0.2s" }}>
+            Home
+          </Link>
+          <Link href="/services" className={getLinkClass("/services")} style={{ animationDelay: "0.3s" }}>
+            Services
+          </Link>
+          <Link href="/services/claims-assistance" className={getLinkClass("/services/claims-assistance")} style={{ animationDelay: "0.4s" }}>
+            Claims
+          </Link>
+          <Link href="/services/policy-renewals" className={getLinkClass("/services/policy-renewals")} style={{ animationDelay: "0.45s" }}>
+            Renewals
+          </Link>
+          <Link href="/about" className={getLinkClass("/about")} style={{ animationDelay: "0.5s" }}>
+            About
+          </Link>
+          <Link href="/contact" className={getLinkClass("/contact")} style={{ animationDelay: "0.55s" }}>
+            Contact
+          </Link>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="landing-nav-actions flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4 mr-4">
+            <Link
+              href="/contact"
+              className="p-2 rounded-full hover:bg-surface-container-low transition-all entry-anim text-primary flex items-center justify-center"
+              style={{ animationDelay: "0.6s" }}
+            >
+              <span className="material-symbols-outlined text-primary">call</span>
+            </Link>
+          </div>
+
+          {user ? (
+            <Link
+              className="hidden md:block font-label-md text-label-md px-6 py-3 rounded-lg border border-secondary text-secondary hover:bg-secondary/5 transition-all entry-anim flex items-center justify-center text-[14px]"
+              style={{ animationDelay: "0.7s" }}
+              href="/dashboard"
+            >
+              Go to CRM Dashboard
+            </Link>
+          ) : (
+            <Link
+              className="hidden md:block font-label-md text-label-md px-6 py-3 rounded-lg border border-secondary text-secondary hover:bg-secondary/5 transition-all entry-anim flex items-center justify-center text-[14px]"
+              style={{ animationDelay: "0.7s" }}
+              href="/crm/admin/login"
+            >
+              Client Login
+            </Link>
+          )}
+
+          <Link
+            href="/contact"
+            className="font-label-md text-label-md px-6 py-3 rounded-lg bg-primary text-on-primary hover:shadow-lg active:scale-95 transition-all entry-anim flex items-center justify-center text-[14px] font-bold"
+            style={{ animationDelay: "0.8s" }}
+          >
+            Free Consultation
+          </Link>
+        </div>
+      </div>
+    </nav>
+  );
+}

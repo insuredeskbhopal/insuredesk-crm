@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Script from "next/script";
-import BrandLogo from "@/app/components/brand/BrandLogo";
+import PublicHeader from "@/app/components/public/PublicHeader";
+import PublicFooter from "@/app/components/public/PublicFooter";
+import Breadcrumbs from "@/app/components/public/Breadcrumbs";
 import {
   BUSINESS_DETAILS,
   SITE_DESCRIPTION,
@@ -385,103 +387,8 @@ export default function AboutPage() {
       ` }} />
 
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
-        {/* TopNavBar */}
-        <nav
-          className={`bg-surface-container-lowest/0 backdrop-blur-0 sticky top-0 z-50 border-b border-transparent transition-all duration-300 h-20 flex items-center ${
-            scrolled ? "scrolled" : ""
-          }`}
-          id="mainNav"
-        >
-          <div className="landing-nav-inner max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center h-full">
-            <div className="landing-brand entry-anim" style={{ animationDelay: "0.1s" }}>
-              <BrandLogo href="/" />
-            </div>
-            
-            {/* Desktop Navigation Links */}
-            <div className="landing-nav-links hidden md:flex gap-6">
-              <Link
-                href="/#solutions"
-                className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim p-0 text-[16px] font-medium"
-                style={{ animationDelay: "0.2s" }}
-              >
-                Services
-              </Link>
-              <Link
-                href="/#process"
-                className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim p-0 text-[16px] font-medium"
-                style={{ animationDelay: "0.3s" }}
-              >
-                Claims
-              </Link>
-              <Link
-                href="/#solutions"
-                className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim p-0 text-[16px] font-medium"
-                style={{ animationDelay: "0.4s" }}
-              >
-                Plans
-              </Link>
-              <Link
-                href="/#partners"
-                className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors entry-anim p-0 text-[16px] font-medium"
-                style={{ animationDelay: "0.5s" }}
-              >
-                Partners
-              </Link>
-              <Link
-                href="/about"
-                className="font-body-md text-body-md text-secondary border-b-2 border-secondary pb-1 entry-anim p-0 text-[16px] font-semibold"
-                style={{ animationDelay: "0.6s" }}
-              >
-                About
-              </Link>
-            </div>
-
-            <div className="landing-nav-actions flex items-center gap-4">
-              <div className="hidden lg:flex items-center gap-4 mr-4">
-                <Link
-                  href="/#cta-banner"
-                  className="p-2 rounded-full hover:bg-surface-container-low transition-all entry-anim text-primary flex items-center justify-center"
-                  style={{ animationDelay: "0.7s" }}
-                >
-                  <span className="material-symbols-outlined text-primary">call</span>
-                </Link>
-                <Link
-                  href="/#cta-banner"
-                  className="p-2 rounded-full hover:bg-surface-container-low transition-all entry-anim text-primary flex items-center justify-center"
-                  style={{ animationDelay: "0.8s" }}
-                >
-                  <span className="material-symbols-outlined text-primary">chat</span>
-                </Link>
-              </div>
-
-              {user ? (
-                <Link
-                  className="hidden md:block font-label-md text-label-md px-6 py-3 rounded-lg border border-secondary text-secondary hover:bg-secondary/5 transition-all entry-anim flex items-center justify-center text-[14px]"
-                  style={{ animationDelay: "0.9s" }}
-                  href="/dashboard"
-                >
-                  Go to CRM Dashboard
-                </Link>
-              ) : (
-                <Link
-                  className="hidden md:block font-label-md text-label-md px-6 py-3 rounded-lg border border-secondary text-secondary hover:bg-secondary/5 transition-all entry-anim flex items-center justify-center text-[14px]"
-                  style={{ animationDelay: "0.9s" }}
-                  href="/crm/admin/login"
-                >
-                  Client Login
-                </Link>
-              )}
-
-              <Link
-                href="/#cta-banner"
-                className="font-label-md text-label-md px-6 py-3 rounded-lg bg-primary text-on-primary hover:shadow-lg active:scale-95 transition-all entry-anim flex items-center justify-center text-[14px] font-bold"
-                style={{ animationDelay: "1s" }}
-              >
-                Free Consultation
-              </Link>
-            </div>
-          </div>
-        </nav>
+        <PublicHeader />
+        <Breadcrumbs />
 
         {/* Hero Section */}
         <header className="relative pt-24 pb-32 overflow-hidden flex items-center justify-center min-h-[500px] bg-gradient-to-b from-surface-container/30 to-background">
@@ -679,136 +586,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="bg-primary text-on-primary pt-16 pb-12 border-t border-white/10">
-          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-16">
-              <div className="col-span-1 md:col-span-1">
-                <div className="footer-brand mb-6">
-                  <BrandLogo href="/" />
-                </div>
-                <p className="font-body-md text-on-primary/70 mb-8 text-[16px] text-white/70">
-                  Institutional insurance consultancy by InsureDesk IMF Pvt Ltd.
-                  Expert advocacy for your protection.
-                </p>
-                <div className="flex gap-4">
-                  <a
-                    className="w-10 h-10 rounded-full border border-on-primary/20 flex items-center justify-center hover:bg-secondary transition-all"
-                    href="#"
-                  >
-                    <span className="material-symbols-outlined text-[20px] text-white/60 hover:text-white">
-                      public
-                    </span>
-                  </a>
-                  <a
-                    className="w-10 h-10 rounded-full border border-on-primary/20 flex items-center justify-center hover:bg-secondary transition-all"
-                    href="#"
-                  >
-                    <span className="material-symbols-outlined text-[20px] text-white/60 hover:text-white">
-                      share
-                    </span>
-                  </a>
-                </div>
-              </div>
-              <div>
-                <h5 className="font-headline-md text-[18px] text-white mb-6 font-semibold">
-                  Explore
-                </h5>
-                <ul className="space-y-4 font-body-md text-on-primary/60 text-white/60">
-                  <li>
-                    <Link href="/#solutions" className="hover:text-white transition-colors block text-left">
-                      Insurance Solutions
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/#process" className="hover:text-white transition-colors block text-left">
-                      Claim Assistance
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/#partners" className="hover:text-white transition-colors block text-left">
-                      Partner Network
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/#faq" className="hover:text-white transition-colors block text-left">
-                      Client Testimonials
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h5 className="font-headline-md text-[18px] text-white mb-6 font-semibold">
-                  Company
-                </h5>
-                <ul className="space-y-4 font-body-md text-on-primary/60 text-white/60">
-                  <li>
-                    <Link href="/about" className="hover:text-white transition-colors block text-left">
-                      About Us
-                    </Link>
-                  </li>
-                  <li>
-                    <a className="hover:text-white transition-colors block" href="#">
-                      Careers
-                    </a>
-                  </li>
-                  <li>
-                    <a className="hover:text-white transition-colors block" href="#">
-                      Press &amp; Media
-                    </a>
-                  </li>
-                  <li>
-                    <Link href="/#cta-banner" className="hover:text-white transition-colors block text-left">
-                      Contact Us
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h5 className="font-headline-md text-[18px] text-white mb-6 font-semibold">
-                  Legal &amp; Support
-                </h5>
-                <ul className="space-y-4 font-body-md text-on-primary/60 text-white/60 font-medium">
-                  <li>
-                    <Link href="/privacy-policy" className="hover:text-white transition-colors block">
-                      Privacy Policy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/terms-and-conditions" className="hover:text-white transition-colors block">
-                      Terms of Service
-                    </Link>
-                  </li>
-                  <li>
-                    <a className="hover:text-white transition-colors block" href="#">
-                      Disclaimer
-                    </a>
-                  </li>
-                  <li>
-                    <Link href="/#faq" className="hover:text-white transition-colors block text-left">
-                      Support Center
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
-            <div className="pt-8 border-t border-on-primary/10 flex flex-col md:flex-row justify-between gap-6">
-              <p className="font-body-md text-sm text-on-primary/60 text-white/50 text-[14px]">
-                © {new Date().getFullYear()} BIMAHEADQUARTER. All rights reserved. Bhopal Office: {BUSINESS_DETAILS.address.streetAddress}, {BUSINESS_DETAILS.address.addressLocality}.
-              </p>
-              <div className="flex gap-8 text-sm text-on-primary/60 text-white/50 text-[14px]">
-                <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">mail</span>{" "}
-                  {BUSINESS_DETAILS.email}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">call</span>{" "}
-                  {BUSINESS_DETAILS.phone}
-                </span>
-              </div>
-            </div>
-          </div>
-        </footer>
+        <PublicFooter />
       </div>
     </>
   );
