@@ -436,10 +436,38 @@
 }
 
 .rn-timeline-badge {
+  display: inline-flex;
+  border: 1px solid var(--rn-border-light);
   font-size: 10px;
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 600;
+  background-color: var(--rn-border-light);
+  color: var(--rn-text-secondary);
+}
+
+.rn-timeline-badge.tone-success {
+  border-color: #bbf7d0;
+  background-color: var(--rn-success-light);
+  color: var(--rn-success);
+}
+
+.rn-timeline-badge.tone-danger {
+  border-color: #fecaca;
+  background-color: var(--rn-danger-light);
+  color: var(--rn-danger);
+}
+
+.rn-timeline-badge.tone-warning {
+  border-color: #fde68a;
+  background-color: var(--rn-warning-light);
+  color: #92400e;
+}
+
+.rn-timeline-badge.tone-info {
+  border-color: #bfdbfe;
+  background-color: var(--rn-primary-light);
+  color: var(--rn-primary);
 }
 
 /* Status Badges */
@@ -475,6 +503,13 @@
 .rn-badge-muted {
   background-color: var(--rn-border-light);
   color: var(--rn-text-secondary);
+}
+
+.rn-company-badge {
+  border: 1px solid #bae6fd;
+  background: linear-gradient(135deg, #ecfeff 0%, #eff6ff 100%);
+  box-shadow: inset 3px 0 0 #0ea5e9;
+  color: #075985;
 }
 
 /* Pagination container */

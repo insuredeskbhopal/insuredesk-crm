@@ -6672,22 +6672,45 @@ label.is-disabled textarea {
   width: fit-content;
   min-height: 24px;
   padding: 4px 10px;
+  border: 1px solid #bfdbfe;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #1e3a8a;
+  background: #eff6ff;
+  color: #1d4ed8;
   font-size: 11px;
   font-weight: 850;
   text-transform: uppercase;
 }
 
-.customer-portfolio-pill.success {
+.customer-portfolio-pill.success,
+.customer-portfolio-pill.tone-success {
+  border-color: #bbf7d0;
   background: #dcfce7;
   color: #166534;
 }
 
-.customer-portfolio-pill.danger {
+.customer-portfolio-pill.danger,
+.customer-portfolio-pill.tone-danger {
+  border-color: #fecaca;
   background: #fee2e2;
-  color: #991b1b;
+  color: #b91c1c;
+}
+
+.customer-portfolio-pill.tone-warning {
+  border-color: #fde68a;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.customer-portfolio-pill.tone-info {
+  border-color: #bfdbfe;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.customer-portfolio-pill.tone-neutral {
+  border-color: #d8dde4;
+  background: #f8fafc;
+  color: #475569;
 }
 
 .customer-portfolio-actions {
@@ -6789,11 +6812,16 @@ label.is-disabled textarea {
   min-height: 26px;
   align-items: center;
   padding: 5px 10px;
+  border: 1px solid #bae6fd;
   border-radius: 999px;
-  background: #eef2f7;
-  color: #111827;
+  background: linear-gradient(135deg, #ecfeff 0%, #eff6ff 100%);
+  color: #075985;
   font-size: 12px;
   font-weight: 800;
+}
+
+.customer-portfolio-chip-row span.company-theme-chip {
+  box-shadow: inset 3px 0 0 #0ea5e9;
 }
 
 .customer-portfolio-table-wrap {
@@ -6922,11 +6950,36 @@ label.is-disabled textarea {
   display: inline-flex;
   margin-top: 6px;
   padding: 2px 6px;
+  border: 1px solid #d8dde4;
   border-radius: 4px;
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #475569;
   font-size: 10px;
   font-weight: 700;
+}
+
+.customer-portfolio-timeline-body b.tone-success {
+  border-color: #bbf7d0;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.customer-portfolio-timeline-body b.tone-danger {
+  border-color: #fecaca;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.customer-portfolio-timeline-body b.tone-warning {
+  border-color: #fde68a;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.customer-portfolio-timeline-body b.tone-info {
+  border-color: #bfdbfe;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .customer-portfolio-table-action {

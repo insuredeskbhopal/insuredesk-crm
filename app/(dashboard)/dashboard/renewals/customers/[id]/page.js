@@ -62,6 +62,15 @@ const getDaysText = (days) => {
   return `${Number(days)} day${Math.abs(Number(days)) === 1 ? "" : "s"}`;
 };
 
+const getRenewalToneClass = (value = "") => {
+  const status = String(value).toLowerCase();
+  if (status.includes("renew") || status.includes("active")) return "tone-success";
+  if (status.includes("lost") || status.includes("wrong") || status.includes("not_interested") || status.includes("not interested") || status.includes("expired") || status.includes("overdue")) return "tone-danger";
+  if (status.includes("follow") || status.includes("due") || status.includes("call")) return "tone-warning";
+  if (status.includes("new") || status.includes("interest")) return "tone-info";
+  return "tone-neutral";
+};
+
 export default function CustomerProfilePage(props) {
   const params = use(props.params);
   const router = useRouter();
@@ -668,7 +677,7 @@ export default function CustomerProfilePage(props) {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "16px" }}>
               {(companies.length ? companies : ["No company linked"]).map((company) => (
-                <span key={company} className="rn-badge rn-badge-active" style={{ whiteSpace: "normal", textAlign: "left" }}>
+                <span key={company} className="rn-badge rn-company-badge" style={{ whiteSpace: "normal", textAlign: "left" }}>
                   {company}
                 </span>
               ))}
@@ -832,7 +841,7 @@ export default function CustomerProfilePage(props) {
                           </div>
                         )}
                         <div style={{ marginTop: "6px" }}>
-                          <span className="rn-timeline-badge" style={{ backgroundColor: "var(--rn-border-light)", color: "var(--rn-text-secondary)" }}>
+                          <span className={`rn-timeline-badge ${getRenewalToneClass(item.newStatus || item.type)}`}>
                             {item.oldStatus} &rarr; {item.newStatus}
                           </span>
                         </div>

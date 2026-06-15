@@ -230,7 +230,7 @@ export default function CustomerProfileDetailPage({ params }) {
             <div className="customer-portfolio-avatar"><UserRound size={22} /></div>
             <div>
               <h1>{profile.name || "Unnamed Customer"}</h1>
-              <span className={`customer-portfolio-pill ${profile.status === "Converted" ? "success" : profile.status === "Lost" ? "danger" : ""}`}>
+              <span className={`customer-portfolio-pill ${getStatusTone(profile.status)}`}>
                 {profile.status || "New Lead"}
               </span>
             </div>
@@ -262,7 +262,7 @@ export default function CustomerProfileDetailPage({ params }) {
             <h2>Associated Companies</h2>
             <div className="customer-portfolio-chip-row">
               {viewModel.companies.length ? viewModel.companies.map((company) => (
-                <span key={company}>{company}</span>
+                <span key={company} className="company-theme-chip">{company}</span>
               )) : <p className="customer-portfolio-empty">No associated company captured.</p>}
             </div>
           </section>
@@ -294,7 +294,7 @@ export default function CustomerProfileDetailPage({ params }) {
                       <td>{formatMoney(policy.sumInsured)}</td>
                       <td>{formatDate(policy.renewalDate || profile.nextFollowUpDate)}</td>
                       <td>{formatDaysLeft(policy.renewalDate || profile.nextFollowUpDate)}</td>
-                      <td><span className={`customer-portfolio-pill ${profile.status === "Converted" ? "success" : profile.status === "Lost" ? "danger" : ""}`}>{profile.status || "-"}</span></td>
+                      <td><span className={`customer-portfolio-pill ${getStatusTone(profile.status)}`}>{profile.status || "-"}</span></td>
                       <td><button type="button" className="customer-portfolio-table-action" onClick={() => openRemarkModal(policy)}>Add Remark</button></td>
                     </tr>
                   )) : (
@@ -323,7 +323,7 @@ export default function CustomerProfileDetailPage({ params }) {
                         {item.policyLabel ? <small>{item.policyLabel}</small> : null}
                         <p>{item.remark}</p>
                         {item.nextFollowUpDate ? <em>Next Follow-Up scheduled for: {formatDate(item.nextFollowUpDate)} via {item.mode || "Call"}</em> : null}
-                        {item.statusBadge ? <b>{item.statusBadge}</b> : null}
+                        {item.statusBadge ? <b className={`tone-${item.tone}`}>{item.statusBadge}</b> : null}
                       </div>
                     </div>
                   </div>
@@ -471,7 +471,8 @@ function buildProfileView(profile) {
       mode: item.mode,
       nextFollowUpDate: item.nextFollowUpDate,
       policyLabel: item.policyInterest ? `POLICY: ${item.policyInterest}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}` : "",
-      statusBadge: item.status ? `${profile.status || item.status} -> ${item.status}` : ""
+      statusBadge: item.status ? `${profile.status || item.status} -> ${item.status}` : "",
+      tone: getStatusTone(item.status || item.outcome)
     })),
     profile.followUpRemark && !hasLatestFollowUpLog ? {
       id: "latest-followup",
@@ -480,7 +481,8 @@ function buildProfileView(profile) {
       createdAt: profile.lastFollowUpDate || profile.updatedAt,
       createdBy: profile.assignedTo || profile.createdBy || "Agent",
       policyLabel: profile.sourcePolicyType ? `POLICY: ${profile.sourcePolicyType}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}` : "",
-      statusBadge: profile.status ? `${profile.status} -> ${profile.status}` : ""
+      statusBadge: profile.status ? `${profile.status} -> ${profile.status}` : "",
+      tone: getStatusTone(profile.status)
     } : null,
     profile.remarks ? {
       id: "general-remarks",
@@ -488,7 +490,8 @@ function buildProfileView(profile) {
       remark: profile.remarks,
       createdAt: profile.updatedAt,
       createdBy: profile.assignedTo || profile.createdBy || "Agent",
-      policyLabel: profile.sourcePolicyType ? `POLICY: ${profile.sourcePolicyType}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}` : ""
+      policyLabel: profile.sourcePolicyType ? `POLICY: ${profile.sourcePolicyType}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}` : "",
+      tone: "neutral"
     } : null
   ].filter(Boolean);
 
@@ -537,6 +540,15 @@ function normalizePolicyInterest(value = "") {
   if (direct) return direct;
   const loose = LOB_OPTIONS.find((lob) => lob.toLowerCase().includes(String(value).toLowerCase()));
   return loose || value;
+}
+
+function getStatusTone(value = "") {
+  const status = String(value).toLowerCase();
+  if (status.includes("renew") || status.includes("convert") || status.includes("active")) return "success";
+  if (status.includes("lost") || status.includes("wrong") || status.includes("not interested") || status.includes("expired") || status.includes("overdue")) return "danger";
+  if (status.includes("follow") || status.includes("call") || status.includes("due")) return "warning";
+  if (status.includes("new") || status.includes("interest")) return "info";
+  return "neutral";
 }
 
 function unique(values) {
