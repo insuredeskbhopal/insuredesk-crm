@@ -6811,17 +6811,17 @@ label.is-disabled textarea {
   display: inline-flex;
   min-height: 26px;
   align-items: center;
-  padding: 5px 10px;
-  border: 1px solid #bae6fd;
+  padding: 5px 11px;
+  border: 1px solid #e2e8f0;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ecfeff 0%, #eff6ff 100%);
-  color: #075985;
+  background: #f8fafc;
+  color: #0f172a;
   font-size: 12px;
   font-weight: 800;
 }
 
 .customer-portfolio-chip-row span.company-theme-chip {
-  box-shadow: inset 3px 0 0 #0ea5e9;
+  box-shadow: inset 3px 0 0 #2563eb;
 }
 
 .customer-portfolio-table-wrap {

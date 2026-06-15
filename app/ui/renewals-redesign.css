@@ -506,10 +506,10 @@
 }
 
 .rn-company-badge {
-  border: 1px solid #bae6fd;
-  background: linear-gradient(135deg, #ecfeff 0%, #eff6ff 100%);
-  box-shadow: inset 3px 0 0 #0ea5e9;
-  color: #075985;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  box-shadow: inset 3px 0 0 #2563eb;
+  color: #0f172a;
 }
 
 /* Pagination container */
