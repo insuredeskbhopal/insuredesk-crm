@@ -1,18 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import { 
   Phone, 
   MessageSquare, 
-  AlertCircle
+  AlertCircle,
+  MoreVertical,
+  Eye,
+  CheckCircle,
+  XCircle,
+  Send
 } from "lucide-react";
 
 export default function DailyWorkPage() {
+  const router = useRouter();
   
   // Data State
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCardFilter, setActiveCardFilter] = useState("all_work"); // all_work, due_today, followup_today, overdue_followup, completed_today
+  const [activeDropdownRowId, setActiveDropdownRowId] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState(null);
   
   // Counters
   const [counts, setCounts] = useState({
@@ -105,6 +115,34 @@ export default function DailyWorkPage() {
     fetchDailyWork();
   }, []);
 
+  const openActionMenu = (rowId, event) => {
+    event.stopPropagation();
+
+    if (activeDropdownRowId === rowId) {
+      setActiveDropdownRowId(null);
+      setDropdownPosition(null);
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const menuWidth = 230;
+    const menuHeight = 224;
+    const gap = 6;
+    const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    const preferredLeft = rect.left + rect.width - menuWidth;
+    const left = Math.min(viewportWidth - menuWidth - 12, Math.max(12, preferredLeft));
+    const opensUp = window.innerHeight - rect.bottom < menuHeight + 16;
+    const top = opensUp ? Math.max(12, rect.top - menuHeight - gap) : rect.bottom + gap;
+
+    setDropdownPosition({ top, left, width: menuWidth });
+    setActiveDropdownRowId(rowId);
+  };
+
+  const closeActionMenu = () => {
+    setActiveDropdownRowId(null);
+    setDropdownPosition(null);
+  };
+
   // Filter policies based on active card selection
   const getFilteredPolicies = () => {
     const todayStr = new Date().toISOString().split("T")[0];
@@ -136,6 +174,15 @@ export default function DailyWorkPage() {
   };
 
   // Actions
+  const handleViewProfile = (policy) => {
+    const phone = policy.contactNumber || "";
+    if (!phone) {
+      window.alert("No phone number associated with this policy.");
+      return;
+    }
+    router.push(`/dashboard/renewals/customers/${encodeURIComponent(phone)}`);
+  };
+
   const handleCall = (policy) => {
     const phone = policy.contactNumber || "";
     if (phone) {
@@ -143,6 +190,19 @@ export default function DailyWorkPage() {
     } else {
       window.alert("No phone number associated with this policy.");
     }
+  };
+
+  const openRemarkModal = (policy) => {
+    setSelectedPolicy(policy);
+    setRemarkForm({
+      text: "",
+      nextFollowUpDate: policy.nextFollowUpDate || "",
+      status: policy.renewalStatus && policy.renewalStatus !== "ACTIVE" ? policy.renewalStatus : "Follow-Up",
+      mode: policy.followUpMode || policy.renewalFollowUp?.followUpMode || "Call",
+      priority: policy.priority || policy.renewalFollowUp?.priority || "Normal",
+      nextAction: policy.nextAction || policy.renewalFollowUp?.nextAction || ""
+    });
+    setRemarkModalOpen(true);
   };
 
   const handleWhatsApp = (policy) => {
@@ -363,11 +423,45 @@ export default function DailyWorkPage() {
                     </td>
                     <td style={{ textAlign: "right" }}>
                       <div className="rn-table-actions" style={{ justifyContent: "flex-end" }}>
-                        <button className="rn-btn" onClick={() => handleCall(policy)} title="Call Client"><Phone size={14} /></button>
-                        <button className="rn-btn" onClick={() => handleWhatsApp(policy)} title="WhatsApp Reminder"><MessageSquare size={14} /></button>
-                        <button className="rn-btn" onClick={() => { setSelectedPolicy(policy); setRemarkModalOpen(true); }} title="Log Follow-Up / Remark">F/Up</button>
-                        <button className="rn-btn rn-btn-primary" onClick={() => { setSelectedPolicy(policy); setRenewModalOpen(true); }} title="Renew Policy">Renew</button>
-                        <button className="rn-btn rn-btn-danger" onClick={() => { setSelectedPolicy(policy); setLostModalOpen(true); }} title="Mark as Lost">Lost</button>
+                        <div className="rn-dropdown">
+                          <button
+                            className="rn-dropdown-btn"
+                            onClick={(e) => openActionMenu(policy.id, e)}
+                            title="Actions"
+                            aria-label={`Actions for ${policy.insuredName || "policy"}`}
+                            aria-expanded={activeDropdownRowId === policy.id}
+                          >
+                            <MoreVertical size={16} />
+                          </button>
+                          {activeDropdownRowId === policy.id && typeof document !== "undefined" && createPortal(
+                            <>
+                              <div
+                                style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}
+                                onClick={(e) => { e.stopPropagation(); closeActionMenu(); }}
+                              />
+                              <div
+                                className="rn-dropdown-menu"
+                                style={{
+                                  position: "fixed",
+                                  zIndex: 10000,
+                                  top: `${dropdownPosition?.top || 0}px`,
+                                  left: `${dropdownPosition?.left || 0}px`,
+                                  right: "auto",
+                                  width: `${dropdownPosition?.width || 230}px`
+                                }}
+                              >
+                                <button className="rn-dropdown-item" onClick={() => { closeActionMenu(); handleViewProfile(policy); }}><Eye size={14} /> View Profile</button>
+                                <button className="rn-dropdown-item" onClick={() => { closeActionMenu(); handleCall(policy); }}><Phone size={14} /> Call Customer</button>
+                                <button className="rn-dropdown-item" onClick={() => { closeActionMenu(); handleWhatsApp(policy); }}><Send size={14} style={{ color: "#25d366" }} /> Send WhatsApp</button>
+                                <button className="rn-dropdown-item" onClick={() => { closeActionMenu(); openRemarkModal(policy); }}><MessageSquare size={14} /> Add / Update Remark</button>
+                                <div className="rn-dropdown-divider" />
+                                <button className="rn-dropdown-item" onClick={() => { closeActionMenu(); setSelectedPolicy(policy); setRenewModalOpen(true); }}><CheckCircle size={14} style={{ color: "var(--rn-success)" }} /> Mark Renewed</button>
+                                <button className="rn-dropdown-item rn-dropdown-item-danger" onClick={() => { closeActionMenu(); setSelectedPolicy(policy); setLostModalOpen(true); }}><XCircle size={14} /> Mark Lost</button>
+                              </div>
+                            </>,
+                            document.body
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
