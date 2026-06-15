@@ -3,7 +3,7 @@
 /* global AbortController, clearTimeout */
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, CheckCircle, Search, UserPlus, X } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 
@@ -175,6 +175,7 @@ const LOB_FIELDS = {
 };
 
 export default function CustomerProfilingPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
   const [form, setForm] = useState(EMPTY_FORM);
@@ -1227,7 +1228,7 @@ export default function CustomerProfilingPage() {
               </div>
               <ProfileListingTable
                 profiles={profiles}
-                onEdit={openProfile}
+                onEdit={(profile) => router.push(`/dashboard/manual-entry/customer-profiling/${profile.id}`)}
               />
 
               {/* Pagination Controls */}
