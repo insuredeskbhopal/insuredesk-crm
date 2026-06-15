@@ -130,7 +130,14 @@ export async function GET(request) {
           saved_at,
           is_active_policy,
           renewal_status,
-          CAST(COALESCE(NULLIF(regexp_replace(COALESCE(reviewed_data->>'netPremium', data->>'netPremium', reviewed_data->>'totalPremium', reviewed_data->>'premium', data->>'totalPremium', data->>'premium'), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium,
+          CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
+            NULLIF(reviewed_data->>'netPremium', ''),
+            NULLIF(data->>'netPremium', ''),
+            NULLIF(reviewed_data->>'totalPremium', ''),
+            NULLIF(reviewed_data->>'premium', ''),
+            NULLIF(data->>'totalPremium', ''),
+            NULLIF(data->>'premium', '')
+          ), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium,
           COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry
         FROM pdf_records
         WHERE deleted_at IS NULL
@@ -165,15 +172,15 @@ export async function GET(request) {
         COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END)::integer as renewed_count,
         SUM(CASE WHEN renewal_status = 'RENEWED' THEN premium ELSE 0 END)::numeric as renewed_premium,
         -- Lost
-        COUNT(CASE WHEN renewal_status = 'LOST' THEN 1 END)::integer as lost_count,
-        SUM(CASE WHEN renewal_status = 'LOST' THEN premium ELSE 0 END)::numeric as lost_premium,
+        COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END)::integer as lost_count,
+        SUM(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN premium ELSE 0 END)::numeric as lost_premium,
         -- Expired
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date < $3::date THEN 1 END)::integer as expired_count,
-        SUM(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date < $3::date THEN premium ELSE 0 END)::numeric as expired_premium,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date < $3::date AND expiry_date >= $3::date - 30 THEN 1 END)::integer as expired_count,
+        SUM(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date < $3::date AND expiry_date >= $3::date - 30 THEN premium ELSE 0 END)::numeric as expired_premium,
         -- Upcoming Dues
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 10 THEN 1 END)::integer as due10,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 20 THEN 1 END)::integer as due20,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status = 'ACTIVE' AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 30 THEN 1 END)::integer as due30
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 10 THEN 1 END)::integer as due10,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 20 THEN 1 END)::integer as due20,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 30 THEN 1 END)::integer as due30
       FROM dated
     `;
 

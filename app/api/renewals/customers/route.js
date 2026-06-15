@@ -233,17 +233,17 @@ export async function GET(request) {
           ) AS nearest_due_policy_id,
           -- Customer status aggregation
           (CASE
-            WHEN COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END) > 0 THEN
+            WHEN COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND days_left BETWEEN -30 AND 30 THEN 1 END) > 0 THEN
               -- There are due policies
               CASE 
-                WHEN MIN(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN days_left END) < 0 THEN 'Expired'
+                WHEN MIN(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND days_left BETWEEN -30 AND 30 THEN days_left END) < 0 THEN 'Expired'
                 ELSE 'Due Soon'
               END
             ELSE
               -- No due policies in window
               CASE
-                WHEN COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END) > 0 AND COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END) = 0 THEN 'Renewed'
-                WHEN COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END) > 0 AND COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END) = 0 THEN 'Lost'
+                WHEN COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END) > 0 THEN 'Renewed'
+                WHEN COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END) > 0 THEN 'Lost'
                 ELSE 'Active'
               END
           END) AS customer_status
@@ -257,12 +257,12 @@ export async function GET(request) {
         FROM customer_groups
         WHERE
           -- Status Filter
-          ($4 = 'All' 
-           OR LOWER(customer_status) = LOWER($4) 
-           OR ($4 = 'Overdue' AND LOWER(customer_status) = 'expired')
-           OR ($4 = 'Expired' AND LOWER(customer_status) = 'expired')
-           OR ($4 = 'Fully Renewed' AND LOWER(customer_status) = 'renewed')
-           OR ($4 = 'Renewed' AND LOWER(customer_status) = 'renewed')
+          (
+            ($4 = 'All' AND customer_status IN ('Due Soon', 'Expired'))
+            OR ($4 = 'Due Soon' AND customer_status = 'Due Soon')
+            OR ($4 = 'Expired' AND customer_status = 'Expired')
+            OR ($4 = 'Renewed' AND customer_status = 'Renewed')
+            OR ($4 = 'Lost' AND customer_status = 'Lost')
           )
           -- Text Search
           AND (
@@ -279,19 +279,31 @@ export async function GET(request) {
           )
       )
     `;
-
+ 
     const countQuery = `
       ${baseCTE}
       SELECT COUNT(*)::integer as count FROM filtered_groups
     `;
-
+ 
     const dataQuery = `
       ${baseCTE}
       SELECT *
       FROM filtered_groups
       ORDER BY 
-        CASE WHEN nearest_expiry IS NOT NULL THEN 0 ELSE 1 END,
-        nearest_days_left ASC,
+        CASE 
+          WHEN customer_status = 'Due Soon' THEN 0
+          WHEN customer_status = 'Expired' THEN 1
+          WHEN customer_status = 'Renewed' THEN 2
+          WHEN customer_status = 'Lost' THEN 3
+          ELSE 4
+        END ASC,
+        CASE 
+          WHEN customer_status = 'Due Soon' THEN nearest_days_left 
+        END ASC,
+        CASE 
+          WHEN customer_status = 'Expired' THEN nearest_days_left 
+        END DESC,
+        nearest_expiry ASC NULLS LAST,
         contact_person_name ASC
       LIMIT $10::integer OFFSET $11::integer
     `;

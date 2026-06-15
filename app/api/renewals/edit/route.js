@@ -22,6 +22,7 @@ export async function POST(request) {
     const {
       policyId,
       insuredName,
+      contactPersonName,
       contactNumber,
       policyNumber,
       insuranceCompany,
@@ -229,6 +230,8 @@ export async function POST(request) {
     const updatedPayload = {
       ...oldData,
       insuredName,
+      contactPerson: contactPersonName || "",
+      contactPersonName: contactPersonName || "",
       contactNumber: cleanPhone,
       customerMobile: cleanPhone,
       policyNumber,
@@ -257,6 +260,48 @@ export async function POST(request) {
     let isActivePolicy = policy.isActivePolicy;
     if (["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(finalStatus)) {
       isActivePolicy = false;
+    }
+
+    // Update or create CustomerProfile if phone number is provided
+    if (cleanPhone) {
+      const cleanPhoneDigits = cleanPhone.replace(/\D/g, "");
+      const last10 = cleanPhoneDigits.slice(-10);
+      
+      const isSuperAdmin = user.role === "SUPER_ADMIN";
+      const orgId = user.organizationId || null;
+
+      // Find profile by comparing the last 10 digits
+      const profile = await prisma.customerProfile.findFirst({
+        where: {
+          phone: { contains: last10 },
+          deletedAt: null,
+          ...(isSuperAdmin ? {} : { organizationId: orgId })
+        }
+      });
+
+      if (profile) {
+        // Update contact person name
+        await prisma.customerProfile.update({
+          where: { id: profile.id },
+          data: {
+            contactPersonName: contactPersonName || null,
+            updatedById: actorId
+          }
+        });
+      } else {
+        // Create new customer profile
+        await prisma.customerProfile.create({
+          data: {
+            name: insuredName || "Unnamed Customer",
+            phone: cleanPhone,
+            contactPersonName: contactPersonName || null,
+            organizationId: user.organizationId,
+            createdById: actorId,
+            updatedById: actorId,
+            assignedTo: newAssignedTo || actorName
+          }
+        });
+      }
     }
 
     // Save changes to database

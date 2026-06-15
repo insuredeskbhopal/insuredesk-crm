@@ -127,12 +127,12 @@ export async function GET(request, props) {
     } else if (policies.length > 0) {
       const renewedCount = policies.filter(p => p.renewalStatus === "RENEWED").length;
       const lostCount = policies.filter(p => ["LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(p.renewalStatus)).length;
-      if (renewedCount > 0 && lostCount === 0) {
+      if (renewedCount > 0) {
         customerStatus = "Renewed";
-      } else if (lostCount > 0 && renewedCount === 0) {
+      } else if (lostCount > 0) {
         customerStatus = "Lost";
-      } else if (renewedCount > 0 && lostCount > 0) {
-        customerStatus = "Partially Renewed";
+      } else {
+        customerStatus = "Active";
       }
     }
 

@@ -113,7 +113,27 @@ export async function POST(request) {
       return Response.json({ error: "No policies found to generate message" }, { status: 404 });
     }
 
-    const customerName = String(targetList[0].contactPerson || targetList[0].insuredName || "Valued Customer").trim();
+    let customerName = "Valued Customer";
+    if (cleanContact) {
+      const last10 = cleanContact.slice(-10);
+      const profile = await prisma.customerProfile.findFirst({
+        where: {
+          phone: { contains: last10 },
+          deletedAt: null,
+          ...(isSuperAdmin ? {} : { organizationId: orgId })
+        },
+        select: {
+          contactPersonName: true
+        }
+      });
+      if (profile?.contactPersonName) {
+        customerName = profile.contactPersonName;
+      }
+    }
+
+    if (customerName === "Valued Customer") {
+      customerName = String(targetList[0].contactPerson || targetList[0].insuredName || "Valued Customer").trim();
+    }
     const count = targetList.length;
 
     let phoneParam = cleanContact;

@@ -89,7 +89,7 @@ export default function CustomerRenewalsPage() {
 
   // Forms states
   const [remarkForm, setRemarkForm] = useState({ text: "", nextFollowUpDate: "", status: "Follow-Up", mode: "Call", priority: "Normal", nextAction: "" });
-  const [editForm, setEditForm] = useState({ insuredName: "", contactNumber: "", policyNumber: "", insuranceCompany: "", policyType: "", premium: "", expiryDate: "", assignedToUserId: "", renewalStatus: "ACTIVE", remark: "", nextFollowUpDate: "" });
+  const [editForm, setEditForm] = useState({ insuredName: "", contactPersonName: "", contactNumber: "", policyNumber: "", insuranceCompany: "", policyType: "", premium: "", expiryDate: "", assignedToUserId: "", renewalStatus: "ACTIVE", remark: "", nextFollowUpDate: "" });
   const [renewForm, setRenewForm] = useState({ policyNumber: "", startDate: "", expiryDate: "", premium: "", remark: "" });
   const [lostForm, setLostForm] = useState({ lostReason: "Premium High", remarks: "" });
   const [reassignForm, setReassignForm] = useState({ assignedToUserId: "", note: "" });
@@ -363,6 +363,7 @@ export default function CustomerRenewalsPage() {
 
       setEditForm({
         insuredName: policy.insuredName || "",
+        contactPersonName: cust.contact_person_name === "Contact not available" || cust.contact_person_name === "Unknown Contact" ? "" : (cust.contact_person_name || ""),
         contactNumber: policy.contactNumber || "",
         policyNumber: policy.policyNumber || "",
         insuranceCompany: policy.insuranceCompany || "",
@@ -645,9 +646,7 @@ export default function CustomerRenewalsPage() {
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
         >
           <option value="All">All Customer Statuses</option>
-          <option value="Active">Active</option>
-          <option value="Due Soon">Due Soon</option>
-          <option value="Overdue">Overdue</option>
+          <option value="Due Soon">Expiry Soon / Due Soon</option>
           <option value="Expired">Expired</option>
           <option value="Renewed">Renewed</option>
           <option value="Lost">Lost</option>
@@ -1195,6 +1194,17 @@ export default function CustomerRenewalsPage() {
                   />
                 </div>
                 <div>
+                  <label className="customer-meta-label">Contact Person Name</label>
+                  <input 
+                    type="text" 
+                    className="rn-input" 
+                    style={{ width: "100%", marginTop: "4px" }}
+                    placeholder="Enter contact person name"
+                    value={editForm.contactPersonName}
+                    onChange={(e) => setEditForm({...editForm, contactPersonName: e.target.value})}
+                  />
+                </div>
+                <div>
                   <label className="customer-meta-label">Mobile Number</label>
                   <input 
                     type="text" 
@@ -1271,6 +1281,19 @@ export default function CustomerRenewalsPage() {
                     {teamMembers.map(u => (
                       <option key={u.id} value={u.id}>{u.name || u.email}</option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="customer-meta-label">Customer Status</label>
+                  <select 
+                    className="rn-input" 
+                    style={{ width: "100%", marginTop: "4px" }}
+                    value={editForm.renewalStatus}
+                    onChange={(e) => setEditForm({...editForm, renewalStatus: e.target.value})}
+                  >
+                    <option value="ACTIVE">Active (Auto-Calculate)</option>
+                    <option value="RENEWED">Renewed</option>
+                    <option value="LOST">Lost</option>
                   </select>
                 </div>
               </div>
