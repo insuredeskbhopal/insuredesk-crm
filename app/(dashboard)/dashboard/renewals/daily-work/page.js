@@ -11,7 +11,8 @@ import {
   Eye,
   CheckCircle,
   XCircle,
-  Send
+  Send,
+  PlusCircle
 } from "lucide-react";
 
 export default function DailyWorkPage() {
@@ -323,6 +324,17 @@ export default function DailyWorkPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+        <button
+          type="button"
+          className="rn-btn rn-btn-primary"
+          onClick={() => router.push("/manual-policy-entry")}
+          style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+        >
+          <PlusCircle size={15} /> Manual Renewal
+        </button>
+      </div>
+
       {/* Cards Row */}
       <div className="renewals-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}>
         {[
@@ -371,6 +383,14 @@ export default function DailyWorkPage() {
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 0", gap: "8px" }}>
             <AlertCircle size={24} style={{ color: "var(--rn-text-muted)" }} />
             <p style={{ color: "var(--rn-text-secondary)", fontSize: "14px" }}>No tasks found for this category today.</p>
+            <button
+              type="button"
+              className="rn-btn rn-btn-primary"
+              onClick={() => router.push("/manual-policy-entry")}
+              style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginTop: "8px" }}
+            >
+              <PlusCircle size={15} /> Manual Renewal
+            </button>
           </div>
         ) : (
           <table className="rn-table">
