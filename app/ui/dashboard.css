@@ -6841,14 +6841,29 @@ label.is-disabled textarea {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px 18px;
+  margin: 16px 18px 24px;
+  padding-left: 20px;
+  border-left: 2px solid #e2e8f0;
 }
 
 .customer-portfolio-timeline-item {
+  position: relative;
   border: 1px solid rgba(25, 28, 29, 0.1);
   border-radius: 8px;
   background: #f8fafc;
-  padding: 12px 14px;
+  padding: 14px 16px;
+}
+
+.customer-portfolio-timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -27px;
+  top: 12px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid #2563eb;
+  border-radius: 999px;
+  background: #ffffff;
 }
 
 .customer-portfolio-timeline-item div {
@@ -7123,6 +7138,179 @@ label.is-disabled textarea {
   min-height: 30px;
   padding: 6px 10px;
   border-radius: 7px;
+}
+
+.profile-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.customer-profile-remark-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(10px);
+}
+
+.customer-profile-remark-card {
+  width: min(1120px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(25, 28, 29, 0.14);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18);
+}
+
+.customer-profile-remark-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 48px;
+  border-bottom: 1px solid rgba(25, 28, 29, 0.1);
+}
+
+.customer-profile-remark-head h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.customer-profile-remark-head button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #111827;
+  cursor: pointer;
+}
+
+.customer-profile-remark-body {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 48px 24px;
+}
+
+.customer-profile-remark-grid,
+.customer-profile-remark-policy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.customer-profile-remark-grid label,
+.customer-profile-remark-policy-grid label,
+.customer-profile-remark-textarea {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.customer-profile-remark-grid span,
+.customer-profile-remark-policy-grid span,
+.customer-profile-remark-textarea span {
+  color: #0f172a;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.customer-profile-remark-grid input,
+.customer-profile-remark-grid select,
+.customer-profile-remark-policy-grid input,
+.customer-profile-remark-policy-grid select,
+.customer-profile-remark-textarea textarea {
+  min-height: 40px;
+  width: 100%;
+  border: 1px solid #d8dde4;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 9px 12px;
+}
+
+.customer-profile-remark-textarea textarea {
+  min-height: 170px;
+  resize: vertical;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.customer-profile-remark-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 48px 28px;
+  border-top: 1px solid rgba(25, 28, 29, 0.1);
+}
+
+.customer-profile-remark-footer button {
+  min-height: 38px;
+  padding: 8px 16px;
+  border: 1px solid #d8dde4;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.customer-profile-remark-footer button.primary {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.customer-profile-remark-footer button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (max-width: 760px) {
+  .customer-profile-remark-backdrop {
+    padding: 12px;
+  }
+
+  .customer-profile-remark-card {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    border-radius: 12px;
+  }
+
+  .customer-profile-remark-head,
+  .customer-profile-remark-body,
+  .customer-profile-remark-footer {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .customer-profile-remark-grid,
+  .customer-profile-remark-policy-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-profile-remark-footer {
+    flex-wrap: wrap;
+  }
 }
 
 .customer-profile-filters {

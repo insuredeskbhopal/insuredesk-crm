@@ -2,12 +2,8 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createPortal } from "react-dom";
-import { AlertTriangle, ArrowLeft, CheckCircle, MessageSquare, Phone, Printer, Send, UserRound, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle, MessageSquare, Phone, UserRound } from "lucide-react";
 
-const PROFILE_STATUS = ["New Lead", "Follow-up Required", "Interested", "Not Interested", "Converted", "Lost"];
-const FOLLOW_UP_OUTCOMES = ["", "Interested", "Call Back Later", "Not Interested", "Converted", "Wrong Number", "Not Reachable"];
-const LOB_OPTIONS = ["Motor Insurance", "Health Insurance", "Life Insurance", "Warehouse Insurance", "Fire Insurance", "Marine Insurance", "Travel Insurance", "Cyber Insurance", "Shop / Office Insurance", "Business Insurance", "Other"];
 const LOB_FIELDS = {
   "Motor Insurance": [["vehicleType", "Vehicle Type"], ["vehicleNumber", "Vehicle Number"], ["existingPolicyAvailable", "Existing Policy Available?"], ["renewalDate", "Renewal Date", "date"]],
   "Warehouse Insurance": [["warehouseLocation", "Warehouse Location"], ["stockValue", "Stock Value"], ["existingInsuranceAvailable", "Existing Insurance Available?"], ["renewalDate", "Renewal Date", "date"]],
@@ -26,10 +22,8 @@ export default function CustomerProfileDetailPage({ params }) {
   const router = useRouter();
   const [profileId, setProfileId] = useState("");
   const [profile, setProfile] = useState(null);
-  const [followUpForm, setFollowUpForm] = useState({ status: "Follow-up Required", outcome: "", nextFollowUpDate: "", policyInterest: "", policyDetails: {}, remark: "" });
-  const [conversionModal, setConversionModal] = useState(null);
   const [alert, setAlert] = useState(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     Promise.resolve(params).then((resolved) => setProfileId(resolved.id));
@@ -45,15 +39,6 @@ export default function CustomerProfileDetailPage({ params }) {
         return;
       }
       setProfile(payload);
-      const policyInterest = payload.selectedLOBs?.[0] || "";
-      setFollowUpForm({
-        status: payload.status || "Follow-up Required",
-        outcome: payload.followUpOutcome || "",
-        nextFollowUpDate: toInputDate(payload.nextFollowUpDate || payload.followUpDate),
-        policyInterest,
-        policyDetails: policyInterest ? (payload.lobDetails?.[policyInterest] || {}) : {},
-        remark: ""
-      });
     });
   }, [profileId]);
 
@@ -74,209 +59,6 @@ export default function CustomerProfileDetailPage({ params }) {
     }
     const message = `Hello ${profile.name || "Customer"}, following up regarding your insurance requirement.`;
     window.open(`https://wa.me/91${profile.phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`, "_blank");
-  }
-
-  function saveFollowUp() {
-    if (!profile) return;
-    if (!followUpForm.policyInterest) {
-      setAlert({ type: "error", message: "Select interested policy type before updating follow-up." });
-      return;
-    }
-    const now = new Date().toISOString();
-    const existingFollowUps = Array.isArray(profile.lobDetails?.followUps) ? profile.lobDetails.followUps : [];
-    const policyDetails = followUpForm.policyDetails || {};
-    const nextFollowUps = followUpForm.remark.trim()
-      ? [
-          {
-            id: `${Date.now()}`,
-            createdAt: now,
-            createdBy: profile.updatedBy || profile.assignedTo || "User",
-            rawRemark: followUpForm.remark.trim(),
-            remark: followUpForm.remark.trim(),
-            status: followUpForm.status,
-            outcome: followUpForm.outcome,
-            nextFollowUpDate: followUpForm.nextFollowUpDate,
-            policyInterest: followUpForm.policyInterest,
-            policyDetails
-          },
-          ...existingFollowUps
-        ]
-      : existingFollowUps;
-    const selectedLOBs = unique([...(profile.selectedLOBs || []), followUpForm.policyInterest]);
-
-    const payload = {
-      ...profile,
-      selectedLOBs,
-      status: followUpForm.status,
-      followUpOutcome: followUpForm.outcome,
-      followUpRemark: followUpForm.remark.trim() || profile.followUpRemark || "",
-      lastFollowUpDate: now,
-      nextFollowUpDate: followUpForm.nextFollowUpDate || null,
-      lobDetails: {
-        ...(profile.lobDetails || {}),
-        [followUpForm.policyInterest]: policyDetails,
-        followUps: nextFollowUps
-      }
-    };
-
-    startTransition(async () => {
-      setAlert(null);
-      const response = await fetch(`/api/customer-profiles/${profileId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const updated = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setAlert({ type: "error", message: updated.error || "Customer profile could not be updated." });
-        return;
-      }
-      setProfile(updated);
-      setFollowUpForm((current) => ({ ...current, remark: "" }));
-      setAlert({ type: "success", message: "Customer profile updated." });
-    });
-  }
-
-  function updatePolicyInterest(value) {
-    setFollowUpForm((current) => ({
-      ...current,
-      policyInterest: value,
-      policyDetails: value ? (profile?.lobDetails?.[value] || {}) : {}
-    }));
-  }
-
-  function updatePolicyDetail(key, value) {
-    setFollowUpForm((current) => ({
-      ...current,
-      policyDetails: {
-        ...(current.policyDetails || {}),
-        [key]: value
-      }
-    }));
-  }
-
-  function openConvertModal() {
-    if (!followUpForm.policyInterest) {
-      setAlert({ type: "error", message: "Select interested policy type before converting." });
-      return;
-    }
-    setConversionModal({ step: "remark", agentRemark: "", error: "", converted: false });
-  }
-
-  async function submitConversion() {
-    if (!conversionModal?.agentRemark?.trim()) {
-      setConversionModal((current) => ({ ...current, error: "Agent remark is required before converting." }));
-      return;
-    }
-
-    const remark = conversionModal.agentRemark.trim();
-    const now = new Date().toISOString();
-    const nextFollowUps = [
-      {
-        id: `convert-${Date.now()}`,
-        createdAt: now,
-        createdBy: profile.updatedBy || profile.assignedTo || "User",
-        rawRemark: remark,
-        remark,
-        status: "Converted",
-        outcome: "Converted",
-        policyInterest: followUpForm.policyInterest,
-        policyDetails: followUpForm.policyDetails || {}
-      },
-      ...(Array.isArray(profile.lobDetails?.followUps) ? profile.lobDetails.followUps : [])
-    ];
-
-    const savePayload = {
-      ...profile,
-      status: "Converted",
-      followUpOutcome: "Converted",
-      followUpRemark: remark,
-      lastFollowUpDate: now,
-      selectedLOBs: unique([...(profile.selectedLOBs || []), followUpForm.policyInterest]),
-      lobDetails: {
-        ...(profile.lobDetails || {}),
-        [followUpForm.policyInterest]: followUpForm.policyDetails || {},
-        followUps: nextFollowUps
-      }
-    };
-
-    startTransition(async () => {
-      const saveResponse = await fetch(`/api/customer-profiles/${profileId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(savePayload)
-      });
-      const saved = await saveResponse.json().catch(() => ({}));
-      if (!saveResponse.ok) {
-        setConversionModal((current) => ({ ...current, error: saved.error || "Agent remark could not be saved." }));
-        return;
-      }
-
-      const convertResponse = await fetch(`/api/customer-profiles/${profileId}/convert`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ insuranceType: followUpForm.policyInterest })
-      });
-      const converted = await convertResponse.json().catch(() => ({}));
-      if (!convertResponse.ok) {
-        setConversionModal((current) => ({ ...current, error: converted.error || "Customer could not be converted." }));
-        return;
-      }
-
-      setProfile({ ...saved, status: "Converted", convertedToCustomer: true });
-      setFollowUpForm((current) => ({ ...current, status: "Converted", outcome: "Converted", remark: "" }));
-      setConversionModal({ step: "options", agentRemark: remark, error: "", redirectUrl: converted.redirectUrl });
-      setAlert({ type: "success", message: "Customer converted. Share or print the handoff message." });
-    });
-  }
-
-  function conversionMessage() {
-    if (!profile) return "";
-    const fields = formatPolicyDetails(followUpForm.policyInterest, followUpForm.policyDetails || {});
-    return [
-      `Customer Profiling Handoff`,
-      ``,
-      `Policy Needed: ${followUpForm.policyInterest || "-"}`,
-      `Agent Remark: ${conversionModal?.agentRemark || "-"}`,
-      ``,
-      `Customer: ${profile.name || "-"}`,
-      `Mobile: ${profile.phone || "-"}`,
-      `Address: ${[profile.address, profile.city, profile.state].filter(Boolean).join(", ") || "-"}`,
-      `Assigned Agent: ${profile.assignedTo || profile.createdBy || "-"}`,
-      ``,
-      `Policy Fields:`,
-      fields || "-"
-    ].join("\n");
-  }
-
-  function sendConversionWhatsApp() {
-    window.open(`https://wa.me/?text=${encodeURIComponent(conversionMessage())}`, "_blank");
-  }
-
-  function printConversion() {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      window.alert("Please allow popups to print handoff details.");
-      return;
-    }
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Customer Profiling Handoff</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 28px; color: #111827; }
-            h1 { font-size: 22px; margin: 0 0 16px; }
-            pre { white-space: pre-wrap; font-size: 13px; line-height: 1.6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
-          </style>
-        </head>
-        <body>
-          <h1>Customer Profiling Handoff</h1>
-          <pre>${escapeHtml(conversionMessage())}</pre>
-          <script>window.onload = function(){ window.print(); setTimeout(function(){ window.close(); }, 500); };</script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
   }
 
   if (!profile && !alert) {
@@ -396,57 +178,6 @@ export default function CustomerProfileDetailPage({ params }) {
           </section>
 
           <section className="customer-portfolio-card">
-            <h2>Update Follow-up</h2>
-            <div className="customer-portfolio-update-grid">
-              <label>
-                <span>Status</span>
-                <select value={followUpForm.status} onChange={(event) => setFollowUpForm((current) => ({ ...current, status: event.target.value }))}>
-                  {PROFILE_STATUS.map((status) => <option key={status} value={status}>{status}</option>)}
-                </select>
-              </label>
-              <label>
-                <span>Outcome</span>
-                <select value={followUpForm.outcome} onChange={(event) => setFollowUpForm((current) => ({ ...current, outcome: event.target.value }))}>
-                  {FOLLOW_UP_OUTCOMES.map((outcome) => <option key={outcome} value={outcome}>{outcome || "Select outcome"}</option>)}
-                </select>
-              </label>
-              <label>
-                <span>Next Follow-up Date</span>
-                <input type="date" value={followUpForm.nextFollowUpDate} onChange={(event) => setFollowUpForm((current) => ({ ...current, nextFollowUpDate: event.target.value }))} />
-              </label>
-              <label>
-                <span>Interested Policy Type</span>
-                <select value={followUpForm.policyInterest} onChange={(event) => updatePolicyInterest(event.target.value)}>
-                  <option value="">Select policy type</option>
-                  {LOB_OPTIONS.map((lob) => <option key={lob} value={lob}>{lob}</option>)}
-                </select>
-              </label>
-              {followUpForm.policyInterest ? (
-                <div className="customer-portfolio-policy-fields">
-                  {(LOB_FIELDS[followUpForm.policyInterest] || LOB_FIELDS.Other).map(([key, label, type]) => (
-                    <label key={key}>
-                      <span>{label}</span>
-                      <input
-                        type={type || "text"}
-                        value={followUpForm.policyDetails?.[key] || ""}
-                        onChange={(event) => updatePolicyDetail(key, event.target.value)}
-                      />
-                    </label>
-                  ))}
-                </div>
-              ) : null}
-              <label className="wide">
-                <span>Remark</span>
-                <textarea value={followUpForm.remark} onChange={(event) => setFollowUpForm((current) => ({ ...current, remark: event.target.value }))} placeholder="Add latest conversation note..." />
-              </label>
-            </div>
-            <div className="customer-portfolio-save-row">
-              <button type="button" className="secondary" onClick={openConvertModal} disabled={isPending}>Convert Lead</button>
-              <button type="button" onClick={saveFollowUp} disabled={isPending}>{isPending ? "Saving..." : "Save Follow-up"}</button>
-            </div>
-          </section>
-
-          <section className="customer-portfolio-card">
             <h2>Follow-up Timeline & Remarks</h2>
             {viewModel.timeline.length ? (
               <div className="customer-portfolio-timeline">
@@ -467,45 +198,6 @@ export default function CustomerProfileDetailPage({ params }) {
         </main>
       </div>
 
-      {typeof document !== "undefined" && conversionModal && createPortal(
-        <div className="tb-modal-backdrop" onClick={() => setConversionModal(null)}>
-          <div className="tb-modal-card customer-portfolio-convert-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="customer-portfolio-modal-head">
-              <h3>{conversionModal.step === "remark" ? "Convert Lead" : "Share Converted Lead"}</h3>
-              <button type="button" onClick={() => setConversionModal(null)} aria-label="Close"><X size={18} /></button>
-            </div>
-            {conversionModal.step === "remark" ? (
-              <>
-                <div className="customer-portfolio-modal-body">
-                  <p>Enter the agent handoff remark before converting this customer for <strong>{followUpForm.policyInterest}</strong>.</p>
-                  <textarea
-                    value={conversionModal.agentRemark}
-                    onChange={(event) => setConversionModal((current) => ({ ...current, agentRemark: event.target.value, error: "" }))}
-                    placeholder="Mention what the agent needs to do next..."
-                  />
-                  {conversionModal.error ? <p className="customer-portfolio-modal-error">{conversionModal.error}</p> : null}
-                </div>
-                <div className="customer-portfolio-modal-actions">
-                  <button type="button" onClick={() => setConversionModal(null)}>Cancel</button>
-                  <button type="button" className="primary" onClick={submitConversion} disabled={isPending}>{isPending ? "Converting..." : "Convert"}</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="customer-portfolio-modal-body">
-                  <textarea readOnly value={conversionMessage()} />
-                </div>
-                <div className="customer-portfolio-modal-actions split">
-                  <button type="button" onClick={printConversion}><Printer size={15} /> Print</button>
-                  <button type="button" onClick={sendConversionWhatsApp}><Send size={15} /> Send Message</button>
-                  <button type="button" className="primary" onClick={() => setConversionModal(null)}>Done</button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   );
 }
@@ -558,6 +250,10 @@ function buildProfileView(profile) {
   }
 
   const followUps = Array.isArray(lobDetails.followUps) ? lobDetails.followUps : [];
+  const hasLatestFollowUpLog = followUps.some((item) => (
+    (item.rawRemark || item.remark || "") === profile.followUpRemark
+    && (!profile.lastFollowUpDate || item.createdAt === profile.lastFollowUpDate)
+  ));
   const timeline = [
     ...followUps.map((item, index) => ({
       id: item.id || `followup-${index}`,
@@ -565,7 +261,7 @@ function buildProfileView(profile) {
       remark: formatTimelineRemark(item),
       createdAt: item.createdAt
     })),
-    profile.followUpRemark ? {
+    profile.followUpRemark && !hasLatestFollowUpLog ? {
       id: "latest-followup",
       title: profile.followUpOutcome || "Latest Follow-up",
       remark: profile.followUpRemark,
@@ -618,15 +314,6 @@ function formatPolicyDetails(policyType, details = {}) {
     .join("\n");
 }
 
-function escapeHtml(value = "") {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
 function unique(values) {
   return Array.from(new Set(values.filter(Boolean).map((item) => String(item).trim()).filter(Boolean)));
 }
@@ -634,13 +321,6 @@ function unique(values) {
 function numberFrom(value) {
   const num = Number(String(value || "").replace(/[^0-9.-]/g, ""));
   return Number.isFinite(num) ? num : 0;
-}
-
-function toInputDate(value) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
 }
 
 function formatDate(value) {
