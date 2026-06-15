@@ -6931,7 +6931,7 @@ label.is-disabled textarea {
 
 .customer-portfolio-table-action {
   min-height: 30px;
-  border: 1px solid #d8dde4;
+  border: none;
   border-radius: 7px;
   background: #ffffff;
   color: #111827;
