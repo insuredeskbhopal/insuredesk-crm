@@ -1122,3 +1122,111 @@
 .rn-audit-change-line {
   color: var(--rn-text-secondary);
 }
+
+/* Premium Sidebar Section Cards */
+.sidebar-section-card {
+  border: 1px solid rgba(25, 28, 29, 0.1);
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(25, 28, 29, 0.1);
+  background: #fdfdfd;
+}
+
+.sidebar-section-header svg {
+  color: #0f172a;
+  width: 15px;
+  height: 15px;
+}
+
+.sidebar-section-header span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #475569;
+}
+
+.sidebar-grid-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid rgba(25, 28, 29, 0.06);
+}
+
+.sidebar-grid-row:last-child {
+  border-bottom: none;
+}
+
+.sidebar-grid-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.sidebar-grid-cell:first-child:not(:last-child) {
+  border-right: 1px solid rgba(25, 28, 29, 0.06);
+}
+
+.sidebar-full-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #0f172a;
+  border-bottom: 1px solid rgba(25, 28, 29, 0.06);
+}
+
+.sidebar-full-cell:last-child {
+  border-bottom: none;
+}
+
+.sidebar-cell-label {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-cell-value {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 13.5px;
+}
+
+.sidebar-action-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1px solid rgba(25, 28, 29, 0.1);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sidebar-action-btn:hover {
+  background: #f8fafc;
+  border-color: rgba(25, 28, 29, 0.15);
+}
+

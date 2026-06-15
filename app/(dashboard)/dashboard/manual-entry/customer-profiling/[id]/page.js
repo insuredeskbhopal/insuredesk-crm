@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { AlertTriangle, ArrowLeft, CheckCircle, MessageSquare, Phone, UserRound, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle, MessageSquare, Phone, UserRound, X, LayoutGrid, User, MapPin, Shield } from "lucide-react";
 
 const PROFILE_STATUS = ["New Lead", "Follow-up Required", "Interested", "Not Interested", "Converted", "Lost"];
 const FOLLOW_UP_OUTCOMES = ["Interested", "Call Back Later", "Not Interested", "Converted", "Wrong Number", "Not Reachable"];
@@ -31,7 +31,7 @@ export default function CustomerProfileDetailPage({ params }) {
     status: "New Lead",
     outcome: "Call Back Later",
     nextFollowUpDate: "",
-    policyInterest: "",
+    policyInterests: [],
     policyDetails: {},
     remark: ""
   });
@@ -57,13 +57,23 @@ export default function CustomerProfileDetailPage({ params }) {
   }, [profileId]);
 
   const viewModel = useMemo(() => buildProfileView(profile), [profile]);
-  const timelinePolicyOptions = useMemo(() => unique(viewModel.timeline.map((item) => item.policyInterest)), [viewModel.timeline]);
+  const timelinePolicyOptions = useMemo(() => {
+    const list = viewModel.timeline.flatMap((item) => {
+      if (!item.policyInterest) return [];
+      return String(item.policyInterest).split(",").map((t) => t.trim());
+    });
+    return unique(list);
+  }, [viewModel.timeline]);
+
   const filteredTimeline = useMemo(() => (
     viewModel.timeline.filter((item) => {
       const searchText = [item.createdBy, item.title, item.remark, item.policyInterest, item.policyLabel, item.statusBadge].filter(Boolean).join(" ").toLowerCase();
       const matchesQuery = !timelineFilters.q || searchText.includes(timelineFilters.q.toLowerCase());
       const matchesStatus = !timelineFilters.status || item.tone === timelineFilters.status;
-      const matchesPolicy = !timelineFilters.policy || item.policyInterest === timelineFilters.policy;
+      
+      const itemPolicies = item.policyInterest ? String(item.policyInterest).split(",").map((t) => t.trim()) : [];
+      const matchesPolicy = !timelineFilters.policy || itemPolicies.includes(timelineFilters.policy);
+      
       const matchesDate = !timelineFilters.date || toInputDate(item.createdAt) === timelineFilters.date;
       return matchesQuery && matchesStatus && matchesPolicy && matchesDate;
     })
@@ -92,27 +102,41 @@ export default function CustomerProfileDetailPage({ params }) {
       status: profile.status || "New Lead",
       outcome: profile.followUpOutcome || "Call Back Later",
       nextFollowUpDate: profile.nextFollowUpDate ? new Date(profile.nextFollowUpDate).toISOString().slice(0, 10) : "",
-      policyInterest,
-      policyDetails: policyInterest ? (profile.lobDetails?.[policyInterest] || {}) : {},
+      policyInterests: policyInterest ? [policyInterest] : [],
+      policyDetails: policyInterest ? { [policyInterest]: (profile.lobDetails?.[policyInterest] || {}) } : {},
       remark: ""
     });
     setRemarkModalOpen(true);
   }
 
-  function updateRemarkPolicyInterest(value) {
-    setRemarkForm((current) => ({
-      ...current,
-      policyInterest: value,
-      policyDetails: value ? (profile?.lobDetails?.[value] || {}) : {}
-    }));
+  function toggleRemarkPolicyInterest(lob) {
+    setRemarkForm((current) => {
+      const interests = current.policyInterests.includes(lob)
+        ? current.policyInterests.filter((t) => t !== lob)
+        : [...current.policyInterests, lob];
+      
+      const details = { ...(current.policyDetails || {}) };
+      if (!details[lob]) {
+        details[lob] = profile?.lobDetails?.[lob] || {};
+      }
+      
+      return {
+        ...current,
+        policyInterests: interests,
+        policyDetails: details
+      };
+    });
   }
 
-  function updateRemarkPolicyDetail(key, value) {
+  function updateRemarkPolicyDetail(lob, key, value) {
     setRemarkForm((current) => ({
       ...current,
       policyDetails: {
         ...(current.policyDetails || {}),
-        [key]: value
+        [lob]: {
+          ...(current.policyDetails?.[lob] || {}),
+          [key]: value
+        }
       }
     }));
   }
@@ -123,13 +147,13 @@ export default function CustomerProfileDetailPage({ params }) {
       setAlert({ type: "error", message: "Remark is required." });
       return null;
     }
-    if (!remarkForm.policyInterest) {
+    if (!remarkForm.policyInterests || remarkForm.policyInterests.length === 0) {
       setAlert({ type: "error", message: "Select interested policy type." });
       return null;
     }
 
     const now = new Date().toISOString();
-    const selectedLOBs = unique([...(profile.selectedLOBs || []), remarkForm.policyInterest]);
+    const selectedLOBs = unique([...(profile.selectedLOBs || []), ...remarkForm.policyInterests]);
     const entry = {
       id: `${Date.now()}`,
       remark: text,
@@ -138,12 +162,18 @@ export default function CustomerProfileDetailPage({ params }) {
       mode: "Customer Profiling",
       priority: "Normal",
       nextFollowUpDate: remarkForm.nextFollowUpDate,
-      policyInterest: remarkForm.policyInterest,
+      policyInterest: remarkForm.policyInterests.join(", "),
       policyDetails: remarkForm.policyDetails || {},
       status: convert ? "Converted" : remarkForm.status,
       createdAt: now,
       createdBy: profile.assignedTo || profile.createdBy || "Agent"
     };
+    
+    const updatedLobDetails = { ...(profile.lobDetails || {}) };
+    remarkForm.policyInterests.forEach((type) => {
+      updatedLobDetails[type] = remarkForm.policyDetails[type] || {};
+    });
+
     const payload = {
       ...profile,
       selectedLOBs,
@@ -153,8 +183,7 @@ export default function CustomerProfileDetailPage({ params }) {
       lastFollowUpDate: now,
       nextFollowUpDate: remarkForm.nextFollowUpDate || null,
       lobDetails: {
-        ...(profile.lobDetails || {}),
-        [remarkForm.policyInterest]: remarkForm.policyDetails || {},
+        ...updatedLobDetails,
         followUps: [entry, ...(Array.isArray(profile.lobDetails?.followUps) ? profile.lobDetails.followUps : [])]
       }
     };
@@ -189,7 +218,7 @@ export default function CustomerProfileDetailPage({ params }) {
       const response = await fetch(`/api/customer-profiles/${profile.id}/convert`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ insuranceType: remarkForm.policyInterest })
+        body: JSON.stringify({ insuranceType: remarkForm.policyInterests[0] || "General Insurance" })
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -203,8 +232,202 @@ export default function CustomerProfileDetailPage({ params }) {
 
   if (!profile && !alert) {
     return (
-      <div className="customer-profiling-page">
-        <p style={{ margin: 0, color: "#64748b" }}>Loading customer profile...</p>
+      <div className="customer-profiling-page customer-portfolio-page loading-skeleton">
+        {/* Back Link Placeholder */}
+        <button className="customer-portfolio-back" type="button" disabled style={{ opacity: 0.6 }}>
+          <ArrowLeft size={15} /> Back to Profiles
+        </button>
+
+        <div className="customer-portfolio-layout">
+          {/* Left Panel Sidebar Skeleton */}
+          <aside className="customer-portfolio-sidebar" style={{ border: "none", background: "transparent", boxShadow: "none", padding: 0 }}>
+            {/* Header section with avatar, name, and badge */}
+            <div style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "8px" }}>
+              <div className="skeleton" style={{ width: "56px", height: "56px", borderRadius: "50%", flexShrink: 0 }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1 }}>
+                <div className="skeleton" style={{ width: "70%", height: "20px", borderRadius: "4px" }} />
+                <div className="skeleton" style={{ width: "40%", height: "14px", borderRadius: "4px" }} />
+              </div>
+            </div>
+
+            {/* Action buttons Call & WhatsApp */}
+            <div style={{ display: "flex", gap: "12px", marginBottom: "8px", marginTop: "8px" }}>
+              <div className="skeleton" style={{ flex: 1, height: "44px", borderRadius: "8px" }} />
+              <div className="skeleton" style={{ flex: 1, height: "44px", borderRadius: "8px" }} />
+            </div>
+
+            {/* 1. CATEGORY CARD */}
+            <div className="sidebar-section-card">
+              <div className="sidebar-section-header">
+                <div className="skeleton" style={{ width: "15px", height: "15px", borderRadius: "3px" }} />
+                <div className="skeleton" style={{ width: "60px", height: "11px", borderRadius: "2px" }} />
+              </div>
+              <div className="sidebar-grid-row">
+                <div className="sidebar-grid-cell">
+                  <div className="skeleton" style={{ width: "80px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                  <div className="skeleton" style={{ width: "50px", height: "12px", borderRadius: "3px" }} />
+                </div>
+                <div className="sidebar-grid-cell">
+                  <div className="skeleton" style={{ width: "90px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                  <div className="skeleton" style={{ width: "60px", height: "12px", borderRadius: "3px" }} />
+                </div>
+              </div>
+            </div>
+
+            {/* 2. CONTACT INFORMATION CARD */}
+            <div className="sidebar-section-card">
+              <div className="sidebar-section-header">
+                <div className="skeleton" style={{ width: "15px", height: "15px", borderRadius: "3px" }} />
+                <div className="skeleton" style={{ width: "110px", height: "11px", borderRadius: "2px" }} />
+              </div>
+              <div className="sidebar-full-cell">
+                <div className="skeleton" style={{ width: "80px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                <div className="skeleton" style={{ width: "110px", height: "12px", borderRadius: "3px" }} />
+              </div>
+              <div className="sidebar-full-cell">
+                <div className="skeleton" style={{ width: "110px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                <div className="skeleton" style={{ width: "130px", height: "12px", borderRadius: "3px" }} />
+              </div>
+              <div className="sidebar-full-cell">
+                <div className="skeleton" style={{ width: "80px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                <div className="skeleton" style={{ width: "150px", height: "12px", borderRadius: "3px" }} />
+              </div>
+            </div>
+
+            {/* 3. ADDRESS CARD */}
+            <div className="sidebar-section-card">
+              <div className="sidebar-section-header">
+                <div className="skeleton" style={{ width: "15px", height: "15px", borderRadius: "3px" }} />
+                <div className="skeleton" style={{ width: "50px", height: "11px", borderRadius: "2px" }} />
+              </div>
+              <div className="sidebar-full-cell">
+                <div className="skeleton" style={{ width: "60px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                <div className="skeleton" style={{ width: "85%", height: "12px", borderRadius: "3px" }} />
+              </div>
+            </div>
+
+            {/* 4. POLICY CARD */}
+            <div className="sidebar-section-card">
+              <div className="sidebar-section-header">
+                <div className="skeleton" style={{ width: "15px", height: "15px", borderRadius: "3px" }} />
+                <div className="skeleton" style={{ width: "40px", height: "11px", borderRadius: "2px" }} />
+              </div>
+              <div className="sidebar-grid-row">
+                <div className="sidebar-grid-cell">
+                  <div className="skeleton" style={{ width: "85px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                  <div className="skeleton" style={{ width: "30px", height: "12px", borderRadius: "3px" }} />
+                </div>
+                <div className="sidebar-grid-cell">
+                  <div className="skeleton" style={{ width: "110px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                  <div className="skeleton" style={{ width: "60px", height: "12px", borderRadius: "3px" }} />
+                </div>
+              </div>
+              <div className="sidebar-grid-row">
+                <div className="sidebar-grid-cell">
+                  <div className="skeleton" style={{ width: "90px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                  <div className="skeleton" style={{ width: "70px", height: "12px", borderRadius: "3px" }} />
+                </div>
+                <div className="sidebar-grid-cell">
+                  <div className="skeleton" style={{ width: "105px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                  <div className="skeleton" style={{ width: "50px", height: "12px", borderRadius: "3px" }} />
+                </div>
+              </div>
+            </div>
+
+            {/* 5. ASSIGNMENT CARD */}
+            <div className="sidebar-section-card">
+              <div className="sidebar-section-header">
+                <div className="skeleton" style={{ width: "15px", height: "15px", borderRadius: "3px" }} />
+                <div className="skeleton" style={{ width: "70px", height: "11px", borderRadius: "2px" }} />
+              </div>
+              <div className="sidebar-full-cell">
+                <div className="skeleton" style={{ width: "80px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                <div className="skeleton" style={{ width: "100px", height: "12px", borderRadius: "3px" }} />
+              </div>
+            </div>
+          </aside>
+
+          {/* Right Panel Main Area Skeleton */}
+          <main className="customer-portfolio-main">
+            {/* Associated Companies Card */}
+            <section className="customer-portfolio-card">
+              <h2>Associated Companies</h2>
+              <div className="customer-portfolio-chip-row">
+                <div className="skeleton" style={{ width: "100px", height: "26px", borderRadius: "14px" }} />
+                <div className="skeleton" style={{ width: "120px", height: "26px", borderRadius: "14px" }} />
+              </div>
+            </section>
+
+            {/* Associated Policy Interests Card */}
+            <section className="customer-portfolio-card">
+              <h2>Associated Policy Interests</h2>
+              <div className="customer-portfolio-table-wrap">
+                <table className="customer-portfolio-table">
+                  <thead>
+                    <tr>
+                      <th><div className="skeleton" style={{ width: "80px", height: "12px", borderRadius: "2px" }} /></th>
+                      <th><div className="skeleton" style={{ width: "90px", height: "12px", borderRadius: "2px" }} /></th>
+                      <th><div className="skeleton" style={{ width: "90px", height: "12px", borderRadius: "2px" }} /></th>
+                      <th><div className="skeleton" style={{ width: "60px", height: "12px", borderRadius: "2px" }} /></th>
+                      <th><div className="skeleton" style={{ width: "70px", height: "12px", borderRadius: "2px" }} /></th>
+                      <th><div className="skeleton" style={{ width: "110px", height: "12px", borderRadius: "2px" }} /></th>
+                      <th><div className="skeleton" style={{ width: "60px", height: "12px", borderRadius: "2px" }} /></th>
+                      <th><div className="skeleton" style={{ width: "50px", height: "12px", borderRadius: "2px" }} /></th>
+                      <th><div className="skeleton" style={{ width: "70px", height: "12px", borderRadius: "2px" }} /></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: 2 }).map((_, index) => (
+                      <tr key={index}>
+                        <td><div className="skeleton" style={{ width: "70px", height: "14px", borderRadius: "3px" }} /></td>
+                        <td><div className="skeleton" style={{ width: "110px", height: "14px", borderRadius: "3px" }} /></td>
+                        <td><div className="skeleton" style={{ width: "80px", height: "14px", borderRadius: "3px" }} /></td>
+                        <td><div className="skeleton" style={{ width: "50px", height: "14px", borderRadius: "3px" }} /></td>
+                        <td><div className="skeleton" style={{ width: "60px", height: "14px", borderRadius: "3px" }} /></td>
+                        <td><div className="skeleton" style={{ width: "80px", height: "14px", borderRadius: "3px" }} /></td>
+                        <td><div className="skeleton" style={{ width: "40px", height: "14px", borderRadius: "3px" }} /></td>
+                        <td><div className="skeleton" style={{ width: "50px", height: "14px", borderRadius: "3px" }} /></td>
+                        <td><div className="skeleton" style={{ width: "60px", height: "14px", borderRadius: "3px" }} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Timeline & Remarks Card */}
+            <section className="customer-portfolio-card">
+              <h2>Follow-up Timeline & Remarks</h2>
+              <div className="customer-portfolio-timeline-filters" style={{ pointerEvents: "none", opacity: 0.85 }}>
+                <div className="skeleton" style={{ flex: 1, minHeight: "38px", borderRadius: "6px" }} />
+                <div className="skeleton" style={{ width: "120px", minHeight: "38px", borderRadius: "6px" }} />
+                <div className="skeleton" style={{ width: "140px", minHeight: "38px", borderRadius: "6px" }} />
+                <div className="skeleton" style={{ width: "130px", minHeight: "38px", borderRadius: "6px" }} />
+              </div>
+
+              <div className="customer-portfolio-timeline-scroll">
+                <div className="customer-portfolio-timeline">
+                  {Array.from({ length: 2 }).map((_, index) => (
+                    <div key={index} className="customer-portfolio-timeline-item">
+                      <div className="skeleton" style={{ width: "12px", height: "12px", borderRadius: "50%", border: "2px solid #fff", left: "-6px", top: "4px", position: "absolute", zIndex: 2 }} />
+                      <div className="customer-portfolio-timeline-content">
+                        <div className="customer-portfolio-timeline-head">
+                          <div className="skeleton" style={{ width: "90px", height: "14px", borderRadius: "3px" }} />
+                          <div className="skeleton" style={{ width: "110px", height: "12px", borderRadius: "3px" }} />
+                        </div>
+                        <div className="customer-portfolio-timeline-body" style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
+                          <div className="skeleton" style={{ width: "140px", height: "11px", borderRadius: "2px" }} />
+                          <div className="skeleton" style={{ width: "90%", height: "13px", borderRadius: "3px" }} />
+                          <div className="skeleton" style={{ width: "70%", height: "13px", borderRadius: "3px" }} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </main>
+        </div>
       </div>
     );
   }
@@ -237,36 +460,131 @@ export default function CustomerProfileDetailPage({ params }) {
       ) : null}
 
       <div className="customer-portfolio-layout">
-        <aside className="customer-portfolio-sidebar">
-          <div className="customer-portfolio-title-row">
-            <div className="customer-portfolio-avatar"><UserRound size={22} /></div>
-            <div>
-              <h1>{profile.name || "Unnamed Customer"}</h1>
-              <span className={`customer-portfolio-pill ${getStatusTone(profile.status)}`}>
+        <aside className="customer-portfolio-sidebar" style={{ border: "none", background: "transparent", boxShadow: "none", padding: 0 }}>
+          {/* Header section with avatar, name, and badge */}
+          <div style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "8px" }}>
+            <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#f1f5f9", border: "1px solid rgba(25, 28, 29, 0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
+              <UserRound size={28} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <h1 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a", margin: 0, lineHeight: "1.2" }}>
+                {profile.name || "Unnamed Customer"}
+              </h1>
+              <span className={`customer-portfolio-pill ${getStatusTone(profile.status)}`} style={{ textTransform: "uppercase", fontSize: "11px", fontWeight: "800", marginTop: "2px", width: "fit-content" }}>
                 {profile.status || "New Lead"}
               </span>
             </div>
           </div>
 
-          <div className="customer-portfolio-actions">
-            <button type="button" onClick={callCustomer}><Phone size={15} /> Call</button>
-            <button type="button" onClick={whatsappCustomer}><MessageSquare size={15} /> WhatsApp</button>
+          {/* Action buttons Call & WhatsApp */}
+          <div style={{ display: "flex", gap: "12px", marginBottom: "8px", marginTop: "8px" }}>
+            <button 
+              type="button" 
+              className="sidebar-action-btn"
+              onClick={callCustomer}
+            >
+              <Phone size={16} /> Call
+            </button>
+            <button 
+              type="button" 
+              className="sidebar-action-btn"
+              onClick={whatsappCustomer}
+            >
+              <MessageSquare size={16} /> WhatsApp
+            </button>
           </div>
 
-          <ProfileMeta label="Mobile Number" value={profile.phone} />
-          <ProfileMeta label="Contact Person Name" value={profile.contactPersonName || profile.name} />
-          <ProfileMeta label="Email Address" value={profile.email} />
-          <ProfileMeta label="Address" value={[profile.address, profile.city, profile.state].filter(Boolean).join(", ")} />
-          <ProfileMeta label="Assigned Agent" value={profile.assignedTo || profile.createdBy} />
-          <ProfileMeta label="Customer Type" value={profile.customerType} />
-          <ProfileMeta label="Reference Source" value={profile.referenceSource} />
+          {/* 1. CATEGORY */}
+          <div className="sidebar-section-card">
+            <div className="sidebar-section-header">
+              <LayoutGrid size={15} />
+              <span>Category</span>
+            </div>
+            <div className="sidebar-grid-row">
+              <div className="sidebar-grid-cell">
+                <span className="sidebar-cell-label">Customer Type</span>
+                <span className="sidebar-cell-value">{profile.customerType || "-"}</span>
+              </div>
+              <div className="sidebar-grid-cell">
+                <span className="sidebar-cell-label">Reference Source</span>
+                <span className="sidebar-cell-value">{profile.referenceSource || "-"}</span>
+              </div>
+            </div>
+          </div>
 
-          <div className="customer-portfolio-divider" />
+          {/* 2. CONTACT INFORMATION */}
+          <div className="sidebar-section-card">
+            <div className="sidebar-section-header">
+              <User size={15} />
+              <span>Contact Information</span>
+            </div>
+            <div className="sidebar-full-cell">
+              <span className="sidebar-cell-label">Mobile Number</span>
+              <span className="sidebar-cell-value">{profile.phone || "-"}</span>
+            </div>
+            <div className="sidebar-full-cell">
+              <span className="sidebar-cell-label">Contact Person Name</span>
+              <span className="sidebar-cell-value">{profile.contactPersonName || profile.name || "-"}</span>
+            </div>
+            <div className="sidebar-full-cell">
+              <span className="sidebar-cell-label">Email Address</span>
+              <span className="sidebar-cell-value">{profile.email || "-"}</span>
+            </div>
+          </div>
 
-          <ProfileMeta label="Total Companies" value={viewModel.companies.length} strong />
-          <ProfileMeta label="Total Premium Potential" value={formatMoney(viewModel.totalPremium)} strong />
-          <ProfileMeta label="Total Sum Insured" value={formatMoney(viewModel.totalSumInsured)} strong />
-          <ProfileMeta label="Total Policy Interests" value={`${viewModel.policies.length} (${viewModel.dueCount} due)`} />
+          {/* 3. ADDRESS */}
+          <div className="sidebar-section-card">
+            <div className="sidebar-section-header">
+              <MapPin size={15} />
+              <span>Address</span>
+            </div>
+            <div className="sidebar-full-cell">
+              <span className="sidebar-cell-label">Address</span>
+              <span className="sidebar-cell-value">
+                {[profile.address, profile.city, profile.state].filter(Boolean).join(", ") || "-"}
+              </span>
+            </div>
+          </div>
+
+          {/* 4. POLICY */}
+          <div className="sidebar-section-card">
+            <div className="sidebar-section-header">
+              <Shield size={15} />
+              <span>Policy</span>
+            </div>
+            <div className="sidebar-grid-row">
+              <div className="sidebar-grid-cell">
+                <span className="sidebar-cell-label">Total Companies</span>
+                <span className="sidebar-cell-value">{viewModel.companies.length}</span>
+              </div>
+              <div className="sidebar-grid-cell">
+                <span className="sidebar-cell-label">Total Premium Potential</span>
+                <span className="sidebar-cell-value">{formatMoney(viewModel.totalPremium)}</span>
+              </div>
+            </div>
+            <div className="sidebar-grid-row">
+              <div className="sidebar-grid-cell">
+                <span className="sidebar-cell-label">Total Sum Insured</span>
+                <span className="sidebar-cell-value">{formatMoney(viewModel.totalSumInsured)}</span>
+              </div>
+              <div className="sidebar-grid-cell">
+                <span className="sidebar-cell-label">Total Policy Interests</span>
+                <span className="sidebar-cell-value">{viewModel.policies.length} ({viewModel.dueCount} due)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 5. ASSIGNMENT */}
+          <div className="sidebar-section-card">
+            <div className="sidebar-section-header">
+              <User size={15} />
+              <span>Assignment</span>
+            </div>
+            <div className="sidebar-full-cell">
+              <span className="sidebar-cell-label">Assigned Agent</span>
+              <span className="sidebar-cell-value">{profile.assignedTo || profile.createdBy || "-"}</span>
+            </div>
+          </div>
         </aside>
 
         <main className="customer-portfolio-main">
@@ -400,29 +718,53 @@ export default function CustomerProfileDetailPage({ params }) {
                   <span>Next Follow-up Date</span>
                   <input type="date" value={remarkForm.nextFollowUpDate} onChange={(event) => setRemarkForm((current) => ({ ...current, nextFollowUpDate: event.target.value }))} />
                 </label>
-                <label>
-                  <span>Interested Policy Type</span>
-                  <select value={remarkForm.policyInterest} onChange={(event) => updateRemarkPolicyInterest(event.target.value)}>
-                    <option value="">Select policy type</option>
-                    {LOB_OPTIONS.map((lob) => <option key={lob} value={lob}>{lob}</option>)}
-                  </select>
-                </label>
               </div>
 
-              {remarkForm.policyInterest ? (
-                <div className="customer-profile-remark-policy-grid">
-                  {(LOB_FIELDS[remarkForm.policyInterest] || LOB_FIELDS.Other).map(([key, label, type]) => (
-                    <label key={key}>
-                      <span>{label}</span>
-                      <input
-                        type={type || "text"}
-                        value={remarkForm.policyDetails?.[key] || ""}
-                        onChange={(event) => updateRemarkPolicyDetail(key, event.target.value)}
-                      />
-                    </label>
-                  ))}
+              {/* Interested Policy Types Multi-Select Checkboxes */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "12px" }}>
+                <span style={{ fontSize: "11px", fontWeight: "900", color: "#0f172a", textTransform: "uppercase" }}>Interested Policy Types *</span>
+                <div className="remark-checkbox-container">
+                  {LOB_OPTIONS.map((lob) => {
+                    const isChecked = remarkForm.policyInterests.includes(lob);
+                    return (
+                      <label 
+                        key={lob} 
+                        className={`remark-checkbox-label ${isChecked ? "checked" : ""}`}
+                      >
+                        <input 
+                          type="checkbox" 
+                          checked={isChecked} 
+                          onChange={() => toggleRemarkPolicyInterest(lob)} 
+                          style={{ width: "16px", height: "16px", minHeight: "16px", margin: 0, cursor: "pointer", flexShrink: 0 }}
+                        />
+                        {lob}
+                      </label>
+                    );
+                  })}
                 </div>
-              ) : null}
+              </div>
+
+              {/* Dynamic Policy Details Fields for each selected type */}
+              {remarkForm.policyInterests.map((lob) => {
+                const fields = LOB_FIELDS[lob] || LOB_FIELDS.Other;
+                return (
+                  <div key={lob} style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "16px", background: "#fafbfc", marginTop: "12px" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", fontWeight: "800", color: "#2563eb" }}>{lob} Details</h4>
+                    <div className="customer-profile-remark-policy-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "12px" }}>
+                      {fields.map(([key, label, type]) => (
+                        <label key={key} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <span style={{ fontSize: "11px", fontWeight: "900", color: "#0f172a", textTransform: "uppercase" }}>{label}</span>
+                          <input
+                            type={type || "text"}
+                            value={remarkForm.policyDetails?.[lob]?.[key] || ""}
+                            onChange={(event) => updateRemarkPolicyDetail(lob, key, event.target.value)}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
 
               <label className="customer-profile-remark-textarea">
                 <span>Remark Text *</span>
@@ -440,15 +782,6 @@ export default function CustomerProfileDetailPage({ params }) {
         document.body
       )}
 
-    </div>
-  );
-}
-
-function ProfileMeta({ label, value, strong = false }) {
-  return (
-    <div className="customer-portfolio-meta">
-      <span>{label}</span>
-      <strong className={strong ? "strong" : ""}>{value || "-"}</strong>
     </div>
   );
 }
@@ -559,15 +892,28 @@ function formatTimelineRemark(item = {}) {
 
 function formatPolicyDetails(policyType, details = {}) {
   if (!policyType || !details) return "";
-  const fields = LOB_FIELDS[policyType] || LOB_FIELDS.Other;
-  return fields
-    .map(([key, label, type]) => {
-      const value = details[key];
-      if (!value) return "";
-      return `${label}: ${type === "date" ? formatDate(value) : value}`;
-    })
-    .filter(Boolean)
-    .join("\n");
+  const types = typeof policyType === "string" 
+    ? policyType.split(",").map(t => t.trim()) 
+    : (Array.isArray(policyType) ? policyType : [policyType]);
+
+  const allFields = [];
+  types.forEach((type) => {
+    const fields = LOB_FIELDS[type] || LOB_FIELDS.Other;
+    const typeDetails = details[type] && typeof details[type] === "object" ? details[type] : details;
+    const formatted = fields
+      .map(([key, label, fieldType]) => {
+        const value = typeDetails[key];
+        if (!value) return "";
+        return `${label}: ${fieldType === "date" ? formatDate(value) : value}`;
+      })
+      .filter(Boolean)
+      .join(", ");
+    if (formatted) {
+      allFields.push(`[${type}] ${formatted}`);
+    }
+  });
+  
+  return allFields.join(" | ");
 }
 
 function normalizePolicyInterest(value = "") {

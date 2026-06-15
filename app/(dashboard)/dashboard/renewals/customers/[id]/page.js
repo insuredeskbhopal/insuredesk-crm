@@ -15,7 +15,10 @@ import {
   UserPlus,
   Send,
   Clipboard,
-  User
+  User,
+  LayoutGrid,
+  MapPin,
+  Shield
 } from "lucide-react";
 
 const COL_HEADERS = [
@@ -592,8 +595,206 @@ export default function CustomerProfilePage(props) {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
-        <p>Loading customer profile details...</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }} className="loading-skeleton">
+        {/* Back link */}
+        <div>
+          <button 
+            className="rn-btn" 
+            type="button"
+            disabled
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px", opacity: 0.6 }}
+          >
+            <ArrowLeft size={14} /> Back to Portfolios
+          </button>
+        </div>
+
+        <div className="customer-profile-layout">
+          {/* Left Panel: Customer summary & KPIs */}
+          <div className="customer-summary-panel" style={{ border: "none", background: "transparent", boxShadow: "none", padding: 0 }}>
+            {/* Header section with avatar, name, and badge */}
+            <div style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "8px" }}>
+              <div className="skeleton" style={{ width: "56px", height: "56px", borderRadius: "50%", flexShrink: 0 }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1 }}>
+                <div className="skeleton" style={{ width: "70%", height: "20px", borderRadius: "4px" }} />
+                <div className="skeleton" style={{ width: "40%", height: "14px", borderRadius: "4px" }} />
+              </div>
+            </div>
+
+            {/* Action buttons Call & WhatsApp */}
+            <div style={{ display: "flex", gap: "12px", marginBottom: "8px", marginTop: "8px" }}>
+              <div className="skeleton" style={{ flex: 1, height: "44px", borderRadius: "8px" }} />
+              <div className="skeleton" style={{ flex: 1, height: "44px", borderRadius: "8px" }} />
+            </div>
+
+            {/* 1. CATEGORY */}
+            <div className="sidebar-section-card">
+              <div className="sidebar-section-header">
+                <div className="skeleton" style={{ width: "15px", height: "15px", borderRadius: "3px" }} />
+                <div className="skeleton" style={{ width: "60px", height: "11px", borderRadius: "2px" }} />
+              </div>
+              <div className="sidebar-full-cell">
+                <div className="skeleton" style={{ width: "80px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                <div className="skeleton" style={{ width: "50px", height: "12px", borderRadius: "3px" }} />
+              </div>
+            </div>
+
+            {/* 2. CONTACT INFORMATION */}
+            <div className="sidebar-section-card">
+              <div className="sidebar-section-header">
+                <div className="skeleton" style={{ width: "15px", height: "15px", borderRadius: "3px" }} />
+                <div className="skeleton" style={{ width: "110px", height: "11px", borderRadius: "2px" }} />
+              </div>
+              <div className="sidebar-full-cell">
+                <div className="skeleton" style={{ width: "80px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                <div className="skeleton" style={{ width: "110px", height: "12px", borderRadius: "3px" }} />
+              </div>
+              <div className="sidebar-full-cell">
+                <div className="skeleton" style={{ width: "110px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                <div className="skeleton" style={{ width: "130px", height: "12px", borderRadius: "3px" }} />
+              </div>
+              <div className="sidebar-full-cell">
+                <div className="skeleton" style={{ width: "80px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                <div className="skeleton" style={{ width: "150px", height: "12px", borderRadius: "3px" }} />
+              </div>
+            </div>
+
+            {/* 3. ADDRESS */}
+            <div className="sidebar-section-card">
+              <div className="sidebar-section-header">
+                <div className="skeleton" style={{ width: "15px", height: "15px", borderRadius: "3px" }} />
+                <div className="skeleton" style={{ width: "50px", height: "11px", borderRadius: "2px" }} />
+              </div>
+              <div className="sidebar-full-cell">
+                <div className="skeleton" style={{ width: "60px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                <div className="skeleton" style={{ width: "85%", height: "12px", borderRadius: "3px" }} />
+              </div>
+            </div>
+
+            {/* 4. POLICY */}
+            <div className="sidebar-section-card">
+              <div className="sidebar-section-header">
+                <div className="skeleton" style={{ width: "15px", height: "15px", borderRadius: "3px" }} />
+                <div className="skeleton" style={{ width: "40px", height: "11px", borderRadius: "2px" }} />
+              </div>
+              <div className="sidebar-grid-row">
+                <div className="sidebar-grid-cell">
+                  <div className="skeleton" style={{ width: "85px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                  <div className="skeleton" style={{ width: "30px", height: "12px", borderRadius: "3px" }} />
+                </div>
+                <div className="sidebar-grid-cell">
+                  <div className="skeleton" style={{ width: "110px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                  <div className="skeleton" style={{ width: "60px", height: "12px", borderRadius: "3px" }} />
+                </div>
+              </div>
+              <div className="sidebar-grid-row">
+                <div className="sidebar-grid-cell">
+                  <div className="skeleton" style={{ width: "90px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                  <div className="skeleton" style={{ width: "70px", height: "12px", borderRadius: "3px" }} />
+                </div>
+                <div className="sidebar-grid-cell">
+                  <div className="skeleton" style={{ width: "105px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                  <div className="skeleton" style={{ width: "50px", height: "12px", borderRadius: "3px" }} />
+                </div>
+              </div>
+            </div>
+
+            {/* 5. ASSIGNMENT */}
+            <div className="sidebar-section-card">
+              <div className="sidebar-section-header">
+                <div className="skeleton" style={{ width: "15px", height: "15px", borderRadius: "3px" }} />
+                <div className="skeleton" style={{ width: "70px", height: "11px", borderRadius: "2px" }} />
+              </div>
+              <div className="sidebar-full-cell">
+                <div className="skeleton" style={{ width: "80px", height: "9px", marginBottom: "6px", borderRadius: "2px" }} />
+                <div className="skeleton" style={{ width: "100px", height: "12px", borderRadius: "3px" }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel: Associated Policies list and timeline */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+            {/* Associated Companies */}
+            <div className="rn-table-container">
+              <div style={{ padding: "16px", borderBottom: "1px solid var(--rn-border)" }}>
+                <h3 style={{ fontSize: "15px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>Associated Companies</h3>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "16px" }}>
+                <div className="skeleton" style={{ width: "100px", height: "26px", borderRadius: "14px" }} />
+                <div className="skeleton" style={{ width: "120px", height: "26px", borderRadius: "14px" }} />
+              </div>
+            </div>
+            
+            {/* Associated Policies Table */}
+            <div className="rn-table-container">
+              <div style={{ padding: "16px", borderBottom: "1px solid var(--rn-border)" }}>
+                <h3 style={{ fontSize: "15px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>Associated Policies</h3>
+              </div>
+              
+              <table 
+                className="rn-table"
+                style={{ 
+                  width: "100%", 
+                  minWidth: colWidths.reduce((sum, w) => sum + w, 0) + "px",
+                  tableLayout: "fixed"
+                }}
+              >
+                <thead>
+                  <tr>
+                    {COL_HEADERS.map((header) => (
+                      <th key={header}>
+                        <div className="skeleton" style={{ width: "70%", height: "12px", borderRadius: "2px" }} />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 2 }).map((_, index) => (
+                    <tr key={index}>
+                      {COL_HEADERS.map((_, colIdx) => (
+                        <td key={colIdx}>
+                          <div className="skeleton" style={{ width: "80%", height: "14px", borderRadius: "3px" }} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Timeline Feed Panel */}
+            <div className="rn-table-container" style={{ padding: "24px" }}>
+              <h3 style={{ fontSize: "15px", fontWeight: "600", color: "var(--rn-text-primary)", margin: "0 0 20px 0" }}>Renewal Timeline & Remarks</h3>
+              
+              <div className="rn-timeline-filters" style={{ pointerEvents: "none", opacity: 0.85 }}>
+                <div className="skeleton" style={{ flex: 1, minHeight: "38px", borderRadius: "6px" }} />
+                <div className="skeleton" style={{ width: "120px", minHeight: "38px", borderRadius: "6px" }} />
+                <div className="skeleton" style={{ width: "140px", minHeight: "38px", borderRadius: "6px" }} />
+                <div className="skeleton" style={{ width: "130px", minHeight: "38px", borderRadius: "6px" }} />
+              </div>
+
+              <div className="rn-timeline-scroll">
+                <div className="rn-timeline">
+                  {Array.from({ length: 2 }).map((_, index) => (
+                    <div key={index} className="rn-timeline-item">
+                      <div className="skeleton" style={{ width: "12px", height: "12px", borderRadius: "50%", border: "2px solid #fff", left: "-6px", top: "4px", position: "absolute", zIndex: 2 }} />
+                      <div className="rn-timeline-content">
+                        <div className="rn-timeline-header">
+                          <div className="skeleton" style={{ width: "90px", height: "14px", borderRadius: "3px" }} />
+                          <div className="skeleton" style={{ width: "110px", height: "12px", borderRadius: "3px" }} />
+                        </div>
+                        <div className="rn-timeline-body" style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
+                          <div className="skeleton" style={{ width: "140px", height: "11px", borderRadius: "2px" }} />
+                          <div className="skeleton" style={{ width: "90%", height: "13px", borderRadius: "3px" }} />
+                          <div className="skeleton" style={{ width: "70%", height: "13px", borderRadius: "3px" }} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -628,81 +829,128 @@ export default function CustomerProfilePage(props) {
 
       <div className="customer-profile-layout">
         {/* Left Panel: Customer summary & KPIs */}
-        <div className="customer-summary-panel">
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "var(--rn-border-light)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--rn-text-secondary)" }}>
-              <User size={20} />
+        {/* Left Panel: Customer summary & KPIs */}
+        <div className="customer-summary-panel" style={{ border: "none", background: "transparent", boxShadow: "none", padding: 0 }}>
+          {/* Header section with avatar, name, and badge */}
+          <div style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "8px" }}>
+            <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#f1f5f9", border: "1px solid rgba(25, 28, 29, 0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
+              <User size={28} />
             </div>
-            <div>
-              <h3 className="customer-profile-title" style={{ fontSize: "18px" }}>{profile.contactPerson || profile.name || "Contact Details"}</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <h1 style={{ fontSize: "20px", fontWeight: "700", color: "#0f172a", margin: 0, lineHeight: "1.2" }}>
+                {profile.contactPerson || profile.name || "Contact Details"}
+              </h1>
               <span className={`rn-badge ${
                 profile.customerStatus === "Renewed" ? "rn-badge-success" :
                 profile.customerStatus === "Lost" ? "rn-badge-danger" :
                 profile.customerStatus === "Due Soon" ? "rn-badge-warning" : 
                 ["Overdue", "Expired"].includes(profile.customerStatus) ? "rn-badge-danger" : "rn-badge-active"
-              }`} style={{ marginTop: "4px" }}>
+              }`} style={{ textTransform: "uppercase", fontSize: "11px", fontWeight: "800", marginTop: "2px", width: "fit-content" }}>
                 {profile.customerStatus}
               </span>
             </div>
           </div>
-          
-          <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-            <button className="rn-btn" style={{ flex: 1 }} onClick={handleCall} disabled={isNoMobile}><Phone size={14} /> Call</button>
-            <button className="rn-btn" style={{ flex: 1 }} onClick={() => handleWhatsApp()} disabled={isNoMobile}><MessageSquare size={14} /> WhatsApp</button>
+
+          {/* Action buttons Call & WhatsApp */}
+          <div style={{ display: "flex", gap: "12px", marginBottom: "8px", marginTop: "8px" }}>
+            <button 
+              className="sidebar-action-btn"
+              onClick={handleCall} 
+              disabled={isNoMobile}
+            >
+              <Phone size={16} /> Call
+            </button>
+            <button 
+              className="sidebar-action-btn"
+              onClick={() => handleWhatsApp()} 
+              disabled={isNoMobile}
+            >
+              <MessageSquare size={16} /> WhatsApp
+            </button>
           </div>
 
-          <div style={{ borderTop: "1px solid var(--rn-border-light)", paddingTop: "16px" }} />
-          
-          <div className="customer-meta-item">
-            <span className="customer-meta-label">Mobile Number</span>
-            <span className="customer-meta-value">{isNoMobile ? "Not Available" : profile.phone}</span>
+          {/* 1. CATEGORY */}
+          <div className="sidebar-section-card">
+            <div className="sidebar-section-header">
+              <LayoutGrid size={15} />
+              <span>Category</span>
+            </div>
+            <div className="sidebar-full-cell">
+              <span className="sidebar-cell-label">Renewal Status</span>
+              <span className="sidebar-cell-value">{profile.customerStatus || "Active"}</span>
+            </div>
           </div>
 
-          <div className="customer-meta-item">
-            <span className="customer-meta-label">Contact Person Name</span>
-            <span className="customer-meta-value">{profile.contactPerson || "-"}</span>
+          {/* 2. CONTACT INFORMATION */}
+          <div className="sidebar-section-card">
+            <div className="sidebar-section-header">
+              <User size={15} />
+              <span>Contact Information</span>
+            </div>
+            <div className="sidebar-full-cell">
+              <span className="sidebar-cell-label">Mobile Number</span>
+              <span className="sidebar-cell-value">{isNoMobile ? "Not Available" : profile.phone}</span>
+            </div>
+            <div className="sidebar-full-cell">
+              <span className="sidebar-cell-label">Contact Person Name</span>
+              <span className="sidebar-cell-value">{profile.contactPerson || "-"}</span>
+            </div>
+            <div className="sidebar-full-cell">
+              <span className="sidebar-cell-label">Email Address</span>
+              <span className="sidebar-cell-value">{profile.email || "-"}</span>
+            </div>
           </div>
 
-          <div className="customer-meta-item">
-            <span className="customer-meta-label">Email Address</span>
-            <span className="customer-meta-value">{profile.email || "-"}</span>
+          {/* 3. ADDRESS */}
+          <div className="sidebar-section-card">
+            <div className="sidebar-section-header">
+              <MapPin size={15} />
+              <span>Address</span>
+            </div>
+            <div className="sidebar-full-cell">
+              <span className="sidebar-cell-label">Address</span>
+              <span className="sidebar-cell-value">{profile.address || "-"}</span>
+            </div>
           </div>
 
-          <div className="customer-meta-item">
-            <span className="customer-meta-label">Address</span>
-            <span className="customer-meta-value">{profile.address || "-"}</span>
+          {/* 4. POLICY */}
+          <div className="sidebar-section-card">
+            <div className="sidebar-section-header">
+              <Shield size={15} />
+              <span>Policy</span>
+            </div>
+            <div className="sidebar-grid-row">
+              <div className="sidebar-grid-cell">
+                <span className="sidebar-cell-label">Total Companies</span>
+                <span className="sidebar-cell-value">{stats.totalCompanies || companies.length}</span>
+              </div>
+              <div className="sidebar-grid-cell">
+                <span className="sidebar-cell-label">Total Premium (Booked)</span>
+                <span className="sidebar-cell-value" style={{ fontWeight: "700" }}>₹{stats.totalPremium.toLocaleString("en-IN")}</span>
+              </div>
+            </div>
+            <div className="sidebar-grid-row">
+              <div className="sidebar-grid-cell">
+                <span className="sidebar-cell-label">Total Sum Insured</span>
+                <span className="sidebar-cell-value">₹{stats.totalSumInsured.toLocaleString("en-IN")}</span>
+              </div>
+              <div className="sidebar-grid-cell">
+                <span className="sidebar-cell-label">Total Policies</span>
+                <span className="sidebar-cell-value">{stats.totalPolicies} ({stats.policiesDue} due)</span>
+              </div>
+            </div>
           </div>
 
-          <div className="customer-meta-item">
-            <span className="customer-meta-label">Assigned Agent</span>
-            <span className="customer-meta-value">{profile.assignedTo || "Unassigned"}</span>
-          </div>
-
-          <div className="customer-meta-item">
-            <span className="customer-meta-label">Renewal Status</span>
-            <span className="customer-meta-value">{profile.customerStatus || "Active"}</span>
-          </div>
-
-          <div style={{ borderTop: "1px solid var(--rn-border-light)", paddingTop: "16px" }} />
-
-          <div className="customer-meta-item">
-            <span className="customer-meta-label">Total Companies</span>
-            <span className="customer-meta-value">{stats.totalCompanies || companies.length}</span>
-          </div>
-
-          <div className="customer-meta-item">
-            <span className="customer-meta-label">Total Premium (Booked)</span>
-            <span className="customer-meta-value" style={{ fontWeight: "700" }}>₹{stats.totalPremium.toLocaleString("en-IN")}</span>
-          </div>
-
-          <div className="customer-meta-item">
-            <span className="customer-meta-label">Total Sum Insured</span>
-            <span className="customer-meta-value">₹{stats.totalSumInsured.toLocaleString("en-IN")}</span>
-          </div>
-
-          <div className="customer-meta-item">
-            <span className="customer-meta-label">Total policies</span>
-            <span className="customer-meta-value">{stats.totalPolicies} ({stats.policiesDue} due)</span>
+          {/* 5. ASSIGNMENT */}
+          <div className="sidebar-section-card">
+            <div className="sidebar-section-header">
+              <User size={15} />
+              <span>Assignment</span>
+            </div>
+            <div className="sidebar-full-cell">
+              <span className="sidebar-cell-label">Assigned Agent</span>
+              <span className="sidebar-cell-value">{profile.assignedTo || "Unassigned"}</span>
+            </div>
           </div>
         </div>
 
