@@ -4,14 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { 
-  Phone, 
-  MessageSquare, 
   AlertCircle,
   MoreVertical,
   Eye,
   CheckCircle,
   XCircle,
-  Send,
   PlusCircle
 } from "lucide-react";
 
@@ -182,38 +179,6 @@ export default function DailyWorkPage() {
       return;
     }
     router.push(`/dashboard/renewals/customers/${encodeURIComponent(phone)}`);
-  };
-
-  const handleCall = (policy) => {
-    const phone = policy.contactNumber || "";
-    if (phone) {
-      window.open(`tel:${phone}`);
-    } else {
-      window.alert("No phone number associated with this policy.");
-    }
-  };
-
-  const openRemarkModal = (policy) => {
-    setSelectedPolicy(policy);
-    setRemarkForm({
-      text: "",
-      nextFollowUpDate: policy.nextFollowUpDate || "",
-      status: policy.renewalStatus && policy.renewalStatus !== "ACTIVE" ? policy.renewalStatus : "Follow-Up",
-      mode: policy.followUpMode || policy.renewalFollowUp?.followUpMode || "Call",
-      priority: policy.priority || policy.renewalFollowUp?.priority || "Normal",
-      nextAction: policy.nextAction || policy.renewalFollowUp?.nextAction || ""
-    });
-    setRemarkModalOpen(true);
-  };
-
-  const handleWhatsApp = (policy) => {
-    const phone = policy.contactNumber || "";
-    if (phone) {
-      const message = `Hello ${policy.insuredName}, your policy ${policy.policyNumber} is expiring on ${policy.expiryDate}. Please contact us for renewals.`;
-      window.open(`https://wa.me/91${phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`, "_blank");
-    } else {
-      window.alert("No phone number associated with this policy.");
-    }
   };
 
   // Log remark / Schedule follow-up
@@ -471,10 +436,6 @@ export default function DailyWorkPage() {
                                 }}
                               >
                                 <button className="rn-dropdown-item" onClick={() => { closeActionMenu(); handleViewProfile(policy); }}><Eye size={14} /> View Profile</button>
-                                <button className="rn-dropdown-item" onClick={() => { closeActionMenu(); handleCall(policy); }}><Phone size={14} /> Call Customer</button>
-                                <button className="rn-dropdown-item" onClick={() => { closeActionMenu(); handleWhatsApp(policy); }}><Send size={14} style={{ color: "#25d366" }} /> Send WhatsApp</button>
-                                <button className="rn-dropdown-item" onClick={() => { closeActionMenu(); openRemarkModal(policy); }}><MessageSquare size={14} /> Add / Update Remark</button>
-                                <div className="rn-dropdown-divider" />
                                 <button className="rn-dropdown-item" onClick={() => { closeActionMenu(); setSelectedPolicy(policy); setRenewModalOpen(true); }}><CheckCircle size={14} style={{ color: "var(--rn-success)" }} /> Mark Renewed</button>
                                 <button className="rn-dropdown-item rn-dropdown-item-danger" onClick={() => { closeActionMenu(); setSelectedPolicy(policy); setLostModalOpen(true); }}><XCircle size={14} /> Mark Lost</button>
                               </div>
