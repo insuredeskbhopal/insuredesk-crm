@@ -38,7 +38,6 @@ const EMPTY_FORM = {
 
 const PROFILE_STATUS = ["New Lead", "Follow-up Required", "Interested", "Not Interested", "Converted", "Lost"];
 const CUSTOMER_TYPES = ["New", "Existing"];
-const FOLLOW_UP_OUTCOMES = ["", "Interested", "Call Back Later", "Not Interested", "Converted", "Wrong Number", "Not Reachable"];
 const EMPTY_COUNTERS = {
   totalProfiles: 0,
   newLeads: 0,
@@ -198,16 +197,6 @@ export default function CustomerProfilingPage() {
   const [alert, setAlert] = useState(null);
   const [isPending, startTransition] = useTransition();
   const [conversionModalData, setConversionModalData] = useState(null);
-  const [remarkModalOpen, setRemarkModalOpen] = useState(false);
-  const [remarkProfile, setRemarkProfile] = useState(null);
-  const [remarkForm, setRemarkForm] = useState({
-    status: "New Lead",
-    outcome: "Call Back Later",
-    nextFollowUpDate: "",
-    policyInterest: "",
-    policyDetails: {},
-    remark: ""
-  });
 
   const phone = form.phone.replace(/\D/g, "").slice(0, 10);
   const isValidProfilePhone = phone.length === 10;
@@ -306,132 +295,6 @@ export default function CustomerProfilingPage() {
         }
       }
     }));
-  }
-
-  function openRemarkModal(profile) {
-    const policyInterest = profile.selectedLOBs?.[0] || "";
-    setRemarkProfile(profile);
-    setRemarkForm({
-      status: profile.status || "New Lead",
-      outcome: profile.followUpOutcome || "Call Back Later",
-      nextFollowUpDate: profile.nextFollowUpDate ? new Date(profile.nextFollowUpDate).toISOString().slice(0, 10) : "",
-      policyInterest,
-      policyDetails: policyInterest ? (profile.lobDetails?.[policyInterest] || {}) : {},
-      remark: ""
-    });
-    setRemarkModalOpen(true);
-  }
-
-  function updateRemarkPolicyInterest(value) {
-    setRemarkForm((current) => ({
-      ...current,
-      policyInterest: value,
-      policyDetails: value ? (remarkProfile?.lobDetails?.[value] || {}) : {}
-    }));
-  }
-
-  function updateRemarkPolicyDetail(key, value) {
-    setRemarkForm((current) => ({
-      ...current,
-      policyDetails: {
-        ...(current.policyDetails || {}),
-        [key]: value
-      }
-    }));
-  }
-
-  async function saveTableRemark({ convert = false } = {}) {
-    if (!remarkProfile) return null;
-    const text = remarkForm.remark.trim();
-    if (!text) {
-      setAlert({ type: "error", message: "Remark is required." });
-      return null;
-    }
-    if (!remarkForm.policyInterest) {
-      setAlert({ type: "error", message: "Select interested policy type." });
-      return null;
-    }
-
-    const now = new Date().toISOString();
-    const selectedLOBs = [...new Set([...(remarkProfile.selectedLOBs || []), remarkForm.policyInterest])];
-    const entry = {
-      id: `${Date.now()}`,
-      remark: text,
-      rawRemark: text,
-      outcome: convert ? "Converted" : remarkForm.outcome,
-      mode: "Customer Profiling",
-      priority: "Normal",
-      nextFollowUpDate: remarkForm.nextFollowUpDate,
-      policyInterest: remarkForm.policyInterest,
-      policyDetails: remarkForm.policyDetails || {},
-      status: convert ? "Converted" : remarkForm.status,
-      createdAt: now,
-      createdBy: currentUser?.name || currentUser?.email || remarkProfile.assignedTo || "Agent"
-    };
-    const payload = {
-      ...remarkProfile,
-      selectedLOBs,
-      status: convert ? "Converted" : remarkForm.status,
-      followUpOutcome: convert ? "Converted" : remarkForm.outcome,
-      followUpRemark: text,
-      lastFollowUpDate: now,
-      nextFollowUpDate: remarkForm.nextFollowUpDate || null,
-      lobDetails: {
-        ...(remarkProfile.lobDetails || {}),
-        [remarkForm.policyInterest]: remarkForm.policyDetails || {},
-        followUps: [entry, ...(Array.isArray(remarkProfile.lobDetails?.followUps) ? remarkProfile.lobDetails.followUps : [])]
-      }
-    };
-
-    const response = await fetch(`/api/customer-profiles/${remarkProfile.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const updated = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      setAlert({ type: "error", message: updated.error || "Customer profile remark could not be saved." });
-      return null;
-    }
-
-    return updated;
-  }
-
-  function submitTableRemark() {
-    startTransition(async () => {
-      const updated = await saveTableRemark();
-      if (!updated) return;
-      setRemarkModalOpen(false);
-      setRemarkProfile(null);
-      setAlert({ type: "success", message: "Follow-up remark saved." });
-      await loadProfiles();
-    });
-  }
-
-  function convertFromRemarkModal() {
-    startTransition(async () => {
-      const updated = await saveTableRemark({ convert: true });
-      if (!updated) return;
-      const response = await fetch(`/api/customer-profiles/${remarkProfile.id}/convert`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ insuranceType: remarkForm.policyInterest })
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setAlert({ type: "error", message: payload.error || "Customer profile could not be converted." });
-        return;
-      }
-      setRemarkModalOpen(false);
-      setConversionModalData({
-        step: "options",
-        profile: updated,
-        conversionType: remarkForm.policyInterest,
-        handoffRemark: remarkForm.remark.trim(),
-        redirectUrl: payload.redirectUrl
-      });
-      await loadProfiles();
-    });
   }
 
   function openProfile(profile) {
@@ -1130,7 +993,6 @@ export default function CustomerProfilingPage() {
               <ProfileListingTable
                 profiles={profiles}
                 onEdit={(profile) => router.push(`/dashboard/manual-entry/customer-profiling/${profile.id}`)}
-                onAddRemark={openRemarkModal}
               />
 
               {/* Pagination Controls */}
@@ -1285,74 +1147,6 @@ export default function CustomerProfilingPage() {
           )}
         </aside>
       </div>
-
-      {typeof window !== "undefined" && remarkModalOpen && remarkProfile && createPortal(
-        <div className="tb-modal-backdrop customer-profile-remark-backdrop" onClick={() => setRemarkModalOpen(false)}>
-          <div className="customer-profile-remark-card" onClick={(event) => event.stopPropagation()}>
-            <div className="customer-profile-remark-head">
-              <h3>Add Follow-up Remark</h3>
-              <button type="button" onClick={() => setRemarkModalOpen(false)} aria-label="Close">
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="customer-profile-remark-body">
-              <div className="customer-profile-remark-grid">
-                <label>
-                  <span>Status</span>
-                  <select value={remarkForm.status} onChange={(event) => setRemarkForm((current) => ({ ...current, status: event.target.value }))}>
-                    {PROFILE_STATUS.map((status) => <option key={status} value={status}>{status}</option>)}
-                  </select>
-                </label>
-                <label>
-                  <span>Outcome</span>
-                  <select value={remarkForm.outcome} onChange={(event) => setRemarkForm((current) => ({ ...current, outcome: event.target.value }))}>
-                    {FOLLOW_UP_OUTCOMES.filter(Boolean).map((outcome) => <option key={outcome} value={outcome}>{outcome}</option>)}
-                  </select>
-                </label>
-                <label>
-                  <span>Next Follow-up Date</span>
-                  <input type="date" value={remarkForm.nextFollowUpDate} onChange={(event) => setRemarkForm((current) => ({ ...current, nextFollowUpDate: event.target.value }))} />
-                </label>
-                <label>
-                  <span>Interested Policy Type</span>
-                  <select value={remarkForm.policyInterest} onChange={(event) => updateRemarkPolicyInterest(event.target.value)}>
-                    <option value="">Select policy type</option>
-                    {LOB_OPTIONS.map((lob) => <option key={lob} value={lob}>{lob}</option>)}
-                  </select>
-                </label>
-              </div>
-
-              {remarkForm.policyInterest ? (
-                <div className="customer-profile-remark-policy-grid">
-                  {(LOB_FIELDS[remarkForm.policyInterest] || LOB_FIELDS.Other).map(([key, label, type]) => (
-                    <label key={key}>
-                      <span>{label}</span>
-                      <input
-                        type={type || "text"}
-                        value={remarkForm.policyDetails?.[key] || ""}
-                        onChange={(event) => updateRemarkPolicyDetail(key, event.target.value)}
-                      />
-                    </label>
-                  ))}
-                </div>
-              ) : null}
-
-              <label className="customer-profile-remark-textarea">
-                <span>Remark Text *</span>
-                <textarea value={remarkForm.remark} onChange={(event) => setRemarkForm((current) => ({ ...current, remark: event.target.value }))} placeholder="Enter details of conversation..." />
-              </label>
-            </div>
-
-            <div className="customer-profile-remark-footer">
-              <button type="button" onClick={() => setRemarkModalOpen(false)}>Cancel</button>
-              <button type="button" onClick={convertFromRemarkModal} disabled={isPending}>Convert Lead</button>
-              <button type="button" className="primary" onClick={submitTableRemark} disabled={isPending}>{isPending ? "Saving..." : "Save Remark"}</button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
 
       {typeof window !== "undefined" && conversionModalData && createPortal(
         <div
@@ -1690,7 +1484,7 @@ function CounterCard({ label, value }) {
   );
 }
 
-function ProfileListingTable({ profiles, onEdit, onAddRemark }) {
+function ProfileListingTable({ profiles, onEdit }) {
   return (
     <div className="existing-customer-table">
       <table>
@@ -1720,7 +1514,6 @@ function ProfileListingTable({ profiles, onEdit, onAddRemark }) {
               <td>{profile.convertedToCustomer ? "Yes" : "No"}</td>
               <td>
                 <div className="profile-table-actions">
-                  <button type="button" onClick={() => onAddRemark(profile)}>Add Remark</button>
                   <button type="button" onClick={() => onEdit(profile)}>View More</button>
                 </div>
               </td>

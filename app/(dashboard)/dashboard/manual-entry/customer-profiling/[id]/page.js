@@ -2,8 +2,12 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowLeft, CheckCircle, MessageSquare, Phone, UserRound } from "lucide-react";
+import { createPortal } from "react-dom";
+import { AlertTriangle, ArrowLeft, CheckCircle, MessageSquare, Phone, UserRound, X } from "lucide-react";
 
+const PROFILE_STATUS = ["New Lead", "Follow-up Required", "Interested", "Not Interested", "Converted", "Lost"];
+const FOLLOW_UP_OUTCOMES = ["Interested", "Call Back Later", "Not Interested", "Converted", "Wrong Number", "Not Reachable"];
+const LOB_OPTIONS = ["Motor Insurance", "Health Insurance", "Life Insurance", "Warehouse Insurance", "Fire Insurance", "Marine Insurance", "Travel Insurance", "Cyber Insurance", "Shop / Office Insurance", "Business Insurance", "Other"];
 const LOB_FIELDS = {
   "Motor Insurance": [["vehicleType", "Vehicle Type"], ["vehicleNumber", "Vehicle Number"], ["existingPolicyAvailable", "Existing Policy Available?"], ["renewalDate", "Renewal Date", "date"]],
   "Warehouse Insurance": [["warehouseLocation", "Warehouse Location"], ["stockValue", "Stock Value"], ["existingInsuranceAvailable", "Existing Insurance Available?"], ["renewalDate", "Renewal Date", "date"]],
@@ -22,8 +26,17 @@ export default function CustomerProfileDetailPage({ params }) {
   const router = useRouter();
   const [profileId, setProfileId] = useState("");
   const [profile, setProfile] = useState(null);
+  const [remarkModalOpen, setRemarkModalOpen] = useState(false);
+  const [remarkForm, setRemarkForm] = useState({
+    status: "New Lead",
+    outcome: "Call Back Later",
+    nextFollowUpDate: "",
+    policyInterest: "",
+    policyDetails: {},
+    remark: ""
+  });
   const [alert, setAlert] = useState(null);
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     Promise.resolve(params).then((resolved) => setProfileId(resolved.id));
@@ -59,6 +72,121 @@ export default function CustomerProfileDetailPage({ params }) {
     }
     const message = `Hello ${profile.name || "Customer"}, following up regarding your insurance requirement.`;
     window.open(`https://wa.me/91${profile.phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`, "_blank");
+  }
+
+  function openRemarkModal(policy) {
+    const policyInterest = normalizePolicyInterest(policy?.lob || policy?.policyType || profile.selectedLOBs?.[0] || profile.sourcePolicyType);
+    setRemarkForm({
+      status: profile.status || "New Lead",
+      outcome: profile.followUpOutcome || "Call Back Later",
+      nextFollowUpDate: profile.nextFollowUpDate ? new Date(profile.nextFollowUpDate).toISOString().slice(0, 10) : "",
+      policyInterest,
+      policyDetails: policyInterest ? (profile.lobDetails?.[policyInterest] || {}) : {},
+      remark: ""
+    });
+    setRemarkModalOpen(true);
+  }
+
+  function updateRemarkPolicyInterest(value) {
+    setRemarkForm((current) => ({
+      ...current,
+      policyInterest: value,
+      policyDetails: value ? (profile?.lobDetails?.[value] || {}) : {}
+    }));
+  }
+
+  function updateRemarkPolicyDetail(key, value) {
+    setRemarkForm((current) => ({
+      ...current,
+      policyDetails: {
+        ...(current.policyDetails || {}),
+        [key]: value
+      }
+    }));
+  }
+
+  async function saveRemark({ convert = false } = {}) {
+    const text = remarkForm.remark.trim();
+    if (!text) {
+      setAlert({ type: "error", message: "Remark is required." });
+      return null;
+    }
+    if (!remarkForm.policyInterest) {
+      setAlert({ type: "error", message: "Select interested policy type." });
+      return null;
+    }
+
+    const now = new Date().toISOString();
+    const selectedLOBs = unique([...(profile.selectedLOBs || []), remarkForm.policyInterest]);
+    const entry = {
+      id: `${Date.now()}`,
+      remark: text,
+      rawRemark: text,
+      outcome: convert ? "Converted" : remarkForm.outcome,
+      mode: "Customer Profiling",
+      priority: "Normal",
+      nextFollowUpDate: remarkForm.nextFollowUpDate,
+      policyInterest: remarkForm.policyInterest,
+      policyDetails: remarkForm.policyDetails || {},
+      status: convert ? "Converted" : remarkForm.status,
+      createdAt: now,
+      createdBy: profile.assignedTo || profile.createdBy || "Agent"
+    };
+    const payload = {
+      ...profile,
+      selectedLOBs,
+      status: convert ? "Converted" : remarkForm.status,
+      followUpOutcome: convert ? "Converted" : remarkForm.outcome,
+      followUpRemark: text,
+      lastFollowUpDate: now,
+      nextFollowUpDate: remarkForm.nextFollowUpDate || null,
+      lobDetails: {
+        ...(profile.lobDetails || {}),
+        [remarkForm.policyInterest]: remarkForm.policyDetails || {},
+        followUps: [entry, ...(Array.isArray(profile.lobDetails?.followUps) ? profile.lobDetails.followUps : [])]
+      }
+    };
+
+    const response = await fetch(`/api/customer-profiles/${profile.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const updated = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setAlert({ type: "error", message: updated.error || "Customer profile remark could not be saved." });
+      return null;
+    }
+    setProfile(updated);
+    return updated;
+  }
+
+  function submitRemark() {
+    startTransition(async () => {
+      const updated = await saveRemark();
+      if (!updated) return;
+      setRemarkModalOpen(false);
+      setAlert({ type: "success", message: "Follow-up remark saved." });
+    });
+  }
+
+  function convertFromRemarkModal() {
+    startTransition(async () => {
+      const updated = await saveRemark({ convert: true });
+      if (!updated) return;
+      const response = await fetch(`/api/customer-profiles/${profile.id}/convert`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ insuranceType: remarkForm.policyInterest })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setAlert({ type: "error", message: payload.error || "Customer profile could not be converted." });
+        return;
+      }
+      setRemarkModalOpen(false);
+      setAlert({ type: "success", message: "Customer converted. You can share or print from the converted customer workflow." });
+    });
   }
 
   if (!profile && !alert) {
@@ -153,6 +281,7 @@ export default function CustomerProfileDetailPage({ params }) {
                     <th>Renewal / Follow-up</th>
                     <th>Days Left</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -166,10 +295,11 @@ export default function CustomerProfileDetailPage({ params }) {
                       <td>{formatDate(policy.renewalDate || profile.nextFollowUpDate)}</td>
                       <td>{formatDaysLeft(policy.renewalDate || profile.nextFollowUpDate)}</td>
                       <td><span className={`customer-portfolio-pill ${profile.status === "Converted" ? "success" : profile.status === "Lost" ? "danger" : ""}`}>{profile.status || "-"}</span></td>
+                      <td><button type="button" className="customer-portfolio-table-action" onClick={() => openRemarkModal(policy)}>Add Remark</button></td>
                     </tr>
                   )) : (
                     <tr>
-                      <td colSpan={8} className="customer-portfolio-empty-cell">No policy interests captured.</td>
+                      <td colSpan={9} className="customer-portfolio-empty-cell">No policy interests captured.</td>
                     </tr>
                   )}
                 </tbody>
@@ -183,11 +313,19 @@ export default function CustomerProfileDetailPage({ params }) {
               <div className="customer-portfolio-timeline">
                 {viewModel.timeline.map((item) => (
                   <div key={item.id} className="customer-portfolio-timeline-item">
-                    <div>
-                      <strong>{item.title}</strong>
-                      <span>{formatDateTime(item.createdAt)}</span>
+                    <div className="customer-portfolio-timeline-dot" />
+                    <div className="customer-portfolio-timeline-content">
+                      <div className="customer-portfolio-timeline-head">
+                        <strong>{item.createdBy || item.title}</strong>
+                        <span>{formatDateTime(item.createdAt)}</span>
+                      </div>
+                      <div className="customer-portfolio-timeline-body">
+                        {item.policyLabel ? <small>{item.policyLabel}</small> : null}
+                        <p>{item.remark}</p>
+                        {item.nextFollowUpDate ? <em>Next Follow-Up scheduled for: {formatDate(item.nextFollowUpDate)} via {item.mode || "Call"}</em> : null}
+                        {item.statusBadge ? <b>{item.statusBadge}</b> : null}
+                      </div>
                     </div>
-                    <p>{item.remark}</p>
                   </div>
                 ))}
               </div>
@@ -197,6 +335,74 @@ export default function CustomerProfileDetailPage({ params }) {
           </section>
         </main>
       </div>
+
+      {typeof window !== "undefined" && remarkModalOpen && createPortal(
+        <div className="tb-modal-backdrop customer-profile-remark-backdrop" onClick={() => setRemarkModalOpen(false)}>
+          <div className="customer-profile-remark-card" onClick={(event) => event.stopPropagation()}>
+            <div className="customer-profile-remark-head">
+              <h3>Add Follow-up Remark</h3>
+              <button type="button" onClick={() => setRemarkModalOpen(false)} aria-label="Close">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="customer-profile-remark-body">
+              <div className="customer-profile-remark-grid">
+                <label>
+                  <span>Status</span>
+                  <select value={remarkForm.status} onChange={(event) => setRemarkForm((current) => ({ ...current, status: event.target.value }))}>
+                    {PROFILE_STATUS.map((status) => <option key={status} value={status}>{status}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span>Outcome</span>
+                  <select value={remarkForm.outcome} onChange={(event) => setRemarkForm((current) => ({ ...current, outcome: event.target.value }))}>
+                    {FOLLOW_UP_OUTCOMES.map((outcome) => <option key={outcome} value={outcome}>{outcome}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span>Next Follow-up Date</span>
+                  <input type="date" value={remarkForm.nextFollowUpDate} onChange={(event) => setRemarkForm((current) => ({ ...current, nextFollowUpDate: event.target.value }))} />
+                </label>
+                <label>
+                  <span>Interested Policy Type</span>
+                  <select value={remarkForm.policyInterest} onChange={(event) => updateRemarkPolicyInterest(event.target.value)}>
+                    <option value="">Select policy type</option>
+                    {LOB_OPTIONS.map((lob) => <option key={lob} value={lob}>{lob}</option>)}
+                  </select>
+                </label>
+              </div>
+
+              {remarkForm.policyInterest ? (
+                <div className="customer-profile-remark-policy-grid">
+                  {(LOB_FIELDS[remarkForm.policyInterest] || LOB_FIELDS.Other).map(([key, label, type]) => (
+                    <label key={key}>
+                      <span>{label}</span>
+                      <input
+                        type={type || "text"}
+                        value={remarkForm.policyDetails?.[key] || ""}
+                        onChange={(event) => updateRemarkPolicyDetail(key, event.target.value)}
+                      />
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+
+              <label className="customer-profile-remark-textarea">
+                <span>Remark Text *</span>
+                <textarea value={remarkForm.remark} onChange={(event) => setRemarkForm((current) => ({ ...current, remark: event.target.value }))} placeholder="Enter details of conversation..." />
+              </label>
+            </div>
+
+            <div className="customer-profile-remark-footer">
+              <button type="button" onClick={() => setRemarkModalOpen(false)}>Cancel</button>
+              <button type="button" onClick={convertFromRemarkModal} disabled={isPending}>Convert Lead</button>
+              <button type="button" className="primary" onClick={submitRemark} disabled={isPending}>{isPending ? "Saving..." : "Save Remark"}</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
     </div>
   );
@@ -228,6 +434,7 @@ function buildProfileView(profile) {
     const sumInsured = numberFrom(details.sumInsured || details.sumInsuredNeed || details.stockValue || details.propertyValue || details.assetValue);
     return {
       id: `${lob}-${index}`,
+      lob,
       policyNumber: profile.sourcePolicyNumber || details.policyNumber || `Lead-${index + 1}`,
       company: profile.sourceCompany || details.companyName || details.insuranceCompany || profile.name,
       policyType: profile.sourcePolicyType || lob,
@@ -259,19 +466,29 @@ function buildProfileView(profile) {
       id: item.id || `followup-${index}`,
       title: item.status || item.outcome || "Follow-up",
       remark: formatTimelineRemark(item),
-      createdAt: item.createdAt
+      createdAt: item.createdAt,
+      createdBy: item.createdBy,
+      mode: item.mode,
+      nextFollowUpDate: item.nextFollowUpDate,
+      policyLabel: item.policyInterest ? `POLICY: ${item.policyInterest}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}` : "",
+      statusBadge: item.status ? `${profile.status || item.status} -> ${item.status}` : ""
     })),
     profile.followUpRemark && !hasLatestFollowUpLog ? {
       id: "latest-followup",
       title: profile.followUpOutcome || "Latest Follow-up",
       remark: profile.followUpRemark,
-      createdAt: profile.lastFollowUpDate || profile.updatedAt
+      createdAt: profile.lastFollowUpDate || profile.updatedAt,
+      createdBy: profile.assignedTo || profile.createdBy || "Agent",
+      policyLabel: profile.sourcePolicyType ? `POLICY: ${profile.sourcePolicyType}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}` : "",
+      statusBadge: profile.status ? `${profile.status} -> ${profile.status}` : ""
     } : null,
     profile.remarks ? {
       id: "general-remarks",
       title: "General Remark",
       remark: profile.remarks,
-      createdAt: profile.updatedAt
+      createdAt: profile.updatedAt,
+      createdBy: profile.assignedTo || profile.createdBy || "Agent",
+      policyLabel: profile.sourcePolicyType ? `POLICY: ${profile.sourcePolicyType}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}` : ""
     } : null
   ].filter(Boolean);
 
@@ -312,6 +529,14 @@ function formatPolicyDetails(policyType, details = {}) {
     })
     .filter(Boolean)
     .join("\n");
+}
+
+function normalizePolicyInterest(value = "") {
+  if (!value) return "";
+  const direct = LOB_OPTIONS.find((lob) => lob.toLowerCase() === String(value).toLowerCase());
+  if (direct) return direct;
+  const loose = LOB_OPTIONS.find((lob) => lob.toLowerCase().includes(String(value).toLowerCase()));
+  return loose || value;
 }
 
 function unique(values) {
