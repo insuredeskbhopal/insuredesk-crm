@@ -2464,7 +2464,7 @@ body:has(.seo-page) {
   background:
     radial-gradient(circle at 72% 28%, rgba(207, 231, 255, 0.72) 0%, rgba(207, 231, 255, 0) 34%),
     linear-gradient(115deg, #ffffff 0%, #f6faf8 46%, #edf7f1 100%),
-    url("/brand/service-bg.png") right center / auto 116% no-repeat,
+    url("/brand/contact-bg.png") right center / auto 116% no-repeat,
     #f6faf8;
 }
 
@@ -2827,7 +2827,7 @@ body:has(.seo-page) {
 }
 
 .landing-shell .contact-bottom-grid span {
-  color: rgba(255, 255, 255, 0.68);
+  color: rgba(255, 255, 255, 0.68) !important;
   font-size: 13px;
   font-weight: 900;
   text-transform: uppercase;
