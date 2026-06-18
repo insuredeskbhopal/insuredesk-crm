@@ -2713,10 +2713,23 @@ body:has(.seo-page) {
   border-radius: 8px;
   background: #fbfdfc;
   color: #061a3d;
-  padding: 13px 14px;
   font-size: 15px;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.landing-shell .contact-form-card input {
+  height: 48px;
+  padding: 0 14px;
+}
+
+.landing-shell .contact-form-card select {
+  height: 48px;
+  padding: 0 40px 0 14px;
+}
+
+.landing-shell .contact-form-card textarea {
+  padding: 13px 14px;
 }
 
 .landing-shell .contact-form-card textarea {
