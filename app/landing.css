@@ -2826,7 +2826,7 @@ body:has(.seo-page) {
   color: #ffffff;
 }
 
-.landing-shell .contact-bottom-grid span {
+.landing-shell .contact-bottom-grid > div > span {
   color: rgba(255, 255, 255, 0.68) !important;
   font-size: 13px;
   font-weight: 900;
