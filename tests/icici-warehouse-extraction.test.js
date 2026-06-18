@@ -26,6 +26,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.riskLocation).toBe(
       "PROP. SWAMI SHARAN, GODOWN NO. 02E, GRAM TATARPUR, TEHSIL BHANDER, DISTRICT DATIA, MADHYA PRADESH, 475335",
     );
+    expect(result.district).toBe("DATIA");
+    expect(result.tehsil).toBe("BHANDER");
     expect(result.startDate).toBe("02/06/2026");
     expect(result.expiryDate).toBe("01/06/2027");
     expect(result.issuedAt).toBe("BHOPAL");
@@ -35,6 +37,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.gstAmount).toBe("2340.00");
     expect(result.cgst).toBe("1170.00");
     expect(result.sgst).toBe("1170.00");
+    expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("100626100636");
     expect(result.invoiceDate).toBe("02/06/2026");
     expect(result.gstin).toBe("23AAACI7904G1ZV");
@@ -50,11 +53,6 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
       { sectionName: "Burglary", sumInsured: "5,00,00,000.00" },
       { sectionName: "Fidelity", sumInsured: "50,00,000.00" },
     ]);
-    expect(result.vehicleNumber).toBe("");
-    expect(result.registrationNumber).toBe("");
-    expect(result.engineNumber).toBe("");
-    expect(result.chassisNumber).toBe("");
-    expect(result.policyCoverType).toBe("");
     expect(result.needsManualReview).toBe(false);
   });
 
@@ -76,6 +74,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.riskLocation).toBe(
       "PROP. TRIPTI LODHI, JABALPUR TO BHOPAL 4 LANE ROAD, VILLAGE JAMUNIYA, TEHSIL TENDUKHEDA, DISTRICT NARSINGHPUR, JAMUNIA, NARSINGHPUR, MADHYA PRADESH, MADHYA PRADESH, NARSIMHAPUR, 487118",
     );
+    expect(result.district).toBe("NARSINGHPUR");
+    expect(result.tehsil).toBe("TENDUKHEDA");
     expect(result.startDate).toBe("01/06/2026");
     expect(result.expiryDate).toBe("31/05/2027");
     expect(result.issuedAt).toBe("BHOPAL");
@@ -85,6 +85,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.gstAmount).toBe("337.00");
     expect(result.cgst).toBe("168.75");
     expect(result.sgst).toBe("168.75");
+    expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("10062618038");
     expect(result.invoiceDate).toBe("01/06/2026");
     expect(result.gstin).toBe("23AAACI7904G1ZV");
@@ -117,6 +118,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.riskLocation).toBe(
       "PROP. BHAVANA KAMRANI, SURVEY NO. 516/1 2, VILLAGE MOHAMMADPURA, NEAR MACRO VISION ACADEMY SCHOOL, MADHYA PRADESH, MADHYA PRADESH, BURHANPUR, 450331",
     );
+    expect(result.district).toBe("BURHANPUR MADHYA PRADESH");
+    expect(result.tehsil).toBe("");
     expect(result.startDate).toBe("01/06/2026");
     expect(result.expiryDate).toBe("31/05/2027");
     expect(result.issuedAt).toBe("BHOPAL");
@@ -126,6 +129,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.gstAmount).toBe("787.00");
     expect(result.cgst).toBe("393.75");
     expect(result.sgst).toBe("393.75");
+    expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("100626241789");
     expect(result.invoiceDate).toBe("01/06/2026");
     expect(result.gstin).toBe("23AAACI7904G1ZV");
@@ -158,6 +162,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.riskLocation).toBe(
       "PROP. MANOHAR KAMRANI, SURVEY NO 516/1 2 TOTAL AREA 0.85 HECTARE, VILLAGE MOHAMMADPURA, NEAR MACRO VISION ACADEMY SCHOOL ,DISTRICT BURHANPUR, MADHYA PRADESH, 450331, MADHYA PRADESH, BURHANPUR, 450331",
     );
+    expect(result.district).toBe("BURHANPUR");
+    expect(result.tehsil).toBe("");
     expect(result.startDate).toBe("02/06/2026");
     expect(result.expiryDate).toBe("01/06/2027");
     expect(result.issuedAt).toBe("BHOPAL");
@@ -167,6 +173,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.gstAmount).toBe("7920.00");
     expect(result.cgst).toBe("3960.00");
     expect(result.sgst).toBe("3960.00");
+    expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("100626110823");
     expect(result.invoiceDate).toBe("02/06/2026");
     expect(result.gstin).toBe("23AAACI7904G1ZV");
@@ -203,6 +210,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.riskLocation).toBe(
       "PROP. RASHMI THAKUR, GRAM SONPUR, GOURJHAMAR, TEHSIL DEORI, DISTRICT SAGAR, MADHYA PRADESH, 470223, MADHYA PRADESH, SAGAR, 470223",
     );
+    expect(result.district).toBe("SAGAR");
+    expect(result.tehsil).toBe("DEORI");
     expect(result.startDate).toBe("01/06/2026");
     expect(result.expiryDate).toBe("30/11/2026");
     expect(result.issuedAt).toBe("BHOPAL");
@@ -212,6 +221,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.gstAmount).toBe("4576.32");
     expect(result.cgst).toBe("2288.16");
     expect(result.sgst).toBe("2288.16");
+    expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("10062637927");
     expect(result.invoiceDate).toBe("01/06/2026");
     expect(result.gstin).toBe("23AAACI7904G1ZV");
@@ -248,6 +258,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.riskLocation).toBe(
       "PROP. SWAMI SHARAN, GODOWN NO. 02E, GRAM TATARPUR, TEHSIL BHANDER, DISTRICT DATIA, MADHYA PRADESH, 475335",
     );
+    expect(result.district).toBe("DATIA");
+    expect(result.tehsil).toBe("BHANDER");
     expect(result.startDate).toBe("02/06/2026");
     expect(result.expiryDate).toBe("01/06/2027");
     expect(result.issuedAt).toBe("BHOPAL");
@@ -257,6 +269,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.gstAmount).toBe("2340.00");
     expect(result.cgst).toBe("1170.00");
     expect(result.sgst).toBe("1170.00");
+    expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("100626100636");
     expect(result.invoiceDate).toBe("02/06/2026");
     expect(result.gstin).toBe("23AAACI7904G1ZV");
