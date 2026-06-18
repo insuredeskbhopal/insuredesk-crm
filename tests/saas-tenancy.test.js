@@ -102,12 +102,14 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(canAccessCustomerProfile(session, "write", otherProfile)).toBe(false);
     });
 
-    it("allows manager, admin, and super admin to access all profiling records in scope", () => {
+    it("restricts manager, admin, and super admin to access only their own profiling records", () => {
       for (const role of [UserRole.MANAGER, UserRole.ADMIN, UserRole.SUPER_ADMIN]) {
         const session = { id: user1, role, organizationId: orgA };
 
-        expect(canAccessCustomerProfile(session, "read", otherProfile)).toBe(true);
-        expect(canAccessCustomerProfile(session, "write", otherProfile)).toBe(true);
+        expect(canAccessCustomerProfile(session, "read", ownProfile)).toBe(true);
+        expect(canAccessCustomerProfile(session, "write", ownProfile)).toBe(true);
+        expect(canAccessCustomerProfile(session, "read", otherProfile)).toBe(false);
+        expect(canAccessCustomerProfile(session, "write", otherProfile)).toBe(false);
       }
     });
 
@@ -188,13 +190,28 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       });
     });
 
-    it("allows managers and admins to view all customer profiles in their organization", () => {
+    it("scopes managers, admins, and viewers to their own customer profiling records", () => {
       for (const role of [UserRole.MANAGER, UserRole.ADMIN, UserRole.VIEWER]) {
         const session = { userId: user1, role, organizationId: orgA };
         const filter = getCustomerProfileScopedFilter(session);
 
-        expect(filter).toEqual({ organizationId: orgA, deletedAt: null });
+        expect(filter).toEqual({
+          organizationId: orgA,
+          deletedAt: null,
+          createdById: user1
+        });
       }
+    });
+
+    it("scopes super admin to their own customer profiling records", () => {
+      const session = { userId: user1, role: UserRole.SUPER_ADMIN, organizationId: orgA };
+      const filter = getCustomerProfileScopedFilter(session);
+
+      expect(filter).toEqual({
+        organizationId: orgA,
+        deletedAt: null,
+        createdById: user1
+      });
     });
   });
 
