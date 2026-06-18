@@ -118,6 +118,14 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
 
       expect(canAccessCustomerProfile(session, "read", { organizationId: orgB, createdById: user1 })).toBe(false);
     });
+
+    it("allows access for users with no organization if they are the owner", () => {
+      const session = { id: user1, role: UserRole.AGENT, organizationId: null };
+
+      expect(canAccessCustomerProfile(session, "read", { organizationId: null, createdById: user1 })).toBe(true);
+      expect(canAccessCustomerProfile(session, "read", { organizationId: orgA, createdById: user1 })).toBe(false);
+      expect(canAccessCustomerProfile(session, "read", { organizationId: null, createdById: user2 })).toBe(false);
+    });
   });
 
   describe("getTenantFilter Query Generator", () => {
@@ -209,6 +217,17 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
 
       expect(filter).toEqual({
         organizationId: orgA,
+        deletedAt: null,
+        createdById: user1
+      });
+    });
+
+    it("scopes users with no organization to their own profiling records with organizationId: null", () => {
+      const session = { userId: user1, role: UserRole.AGENT, organizationId: null };
+      const filter = getCustomerProfileScopedFilter(session);
+
+      expect(filter).toEqual({
+        organizationId: null,
         deletedAt: null,
         createdById: user1
       });
