@@ -206,8 +206,10 @@ body:has(.seo-page) {
 
 @media (min-width: 901px) {
   .landing-shell nav#mainNav .landing-nav-inner {
-    max-width: 1600px !important;
-    width: min(100% - 64px, 1600px) !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 32px !important;
+    padding-right: 32px !important;
   }
 }
 
