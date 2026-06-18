@@ -77,7 +77,7 @@ export const BLOG_POSTS = [
     category: "Claims",
     readTime: "7 min read",
     date: "June 01, 2026",
-    author: { name: "Shweta Hariyali", role: "Claims Settlement Specialist" },
+    author: { name: "Shweta Hariyale", role: "Claims Settlement Specialist" },
     coverImage: "/brand/blog-health.png",
     sections: [
       { type: "paragraph", text: "Cashless hospitalization is one of the most convenient features of modern health insurance. It allows you to receive medical treatment at network hospitals without paying the hospital bills directly from your pocket. However, navigating the approvals between the hospital's TPA desk and the insurance company requires a clear understanding of the pre-authorization process." },
@@ -238,7 +238,7 @@ export const BLOG_POSTS = [
     category: "Business Risk",
     readTime: "8 min read",
     date: "May 01, 2026",
-    author: { name: "Siya Thaku", role: "Transit & Warehouse Risk Consultant" },
+    author: { name: "Siya Thakur", role: "Transit & Warehouse Risk Consultant" },
     coverImage: "/brand/blog-business.png",
     sections: [
       { type: "paragraph", text: "Goods in transit face a multitude of hazards, including road accidents, train derailments, sea vessel capsizing, cargo handling damage, and theft. For manufacturers, traders, and logistics companies, securing transit values with Marine Cargo Insurance is a vital step to avoid supply chain disruptions and balance sheet shocks." },
@@ -445,7 +445,7 @@ export const BLOG_POSTS = [
     category: "Claims",
     readTime: "7 min read",
     date: "March 20, 2026",
-    author: { name: "Shweta Hariyali", role: "Claims Operations Lead" },
+    author: { name: "Shweta Hariyale", role: "Claims Operations Lead" },
     coverImage: "/brand/blog-claims.png",
     sections: [
       { type: "paragraph", text: "Delayed claims are usually caused by incomplete or incorrect paperwork. Having your documentation ready before filing is the single most effective way to speed up insurer approvals, prevent queries from surveyors, and secure a clean claim settlement. Below is the master checklist of essential documents required for motor, health, and commercial claims." },
@@ -514,7 +514,7 @@ export const BLOG_POSTS = [
     category: "Business Risk",
     readTime: "8 min read",
     date: "March 05, 2026",
-    author: { name: "Siya Thaku", role: "Transit & Warehouse Risk Consultant" },
+    author: { name: "Siya Thakur", role: "Transit & Warehouse Risk Consultant" },
     coverImage: "/brand/blog-business.png",
     sections: [
       { type: "paragraph", text: "For companies engaged in manufacturing, trading, or importing/exporting, goods transit is a highly vulnerable phase. Marine cargo policies protect transit values, but coverage boundaries are defined by standard international clauses. Knowing the difference between Clause A, B, and C is the key to correct risk management." },
