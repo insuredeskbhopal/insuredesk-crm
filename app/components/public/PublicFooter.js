@@ -3,6 +3,7 @@ import BrandLogo from "@/app/components/brand/BrandLogo";
 import { BUSINESS_DETAILS } from "@/lib/seo/site";
 
 const serviceLinks = [
+  ["General Insurance", "/services/general-insurance"],
   ["Motor Insurance", "/services/motor-insurance"],
   ["Health Insurance", "/services/health-insurance"],
   ["Life Insurance", "/services/life-insurance"],
@@ -10,7 +11,8 @@ const serviceLinks = [
   ["Warehouse Insurance", "/services/warehouse-insurance"],
   ["Marine Insurance", "/services/marine-insurance"],
   ["Claims Assistance", "/services/claims-assistance"],
-  ["Policy Renewals", "/services/policy-renewals"]
+  ["Policy Renewals", "/services/policy-renewals"],
+  ["Risk Advisory", "/services/risk-advisory"]
 ];
 
 const quickLinks = [
@@ -57,7 +59,7 @@ export default function PublicFooter() {
 
         <div className="public-footer-main">
           <section className="public-footer-contact" aria-labelledby="footer-contact-heading">
-            <span className="public-footer-eyebrow">Bhopal Office</span>
+            <span className="public-footer-eyebrow">Corporate Office</span>
             <h5 id="footer-contact-heading">{BUSINESS_DETAILS.legalName}</h5>
             <a
               href={BUSINESS_DETAILS.mapsUrl}
@@ -66,12 +68,21 @@ export default function PublicFooter() {
               className="public-footer-address"
             >
               <span className="material-symbols-outlined">location_on</span>
-              <span>{BUSINESS_DETAILS.fullAddress}</span>
+              <span>{BUSINESS_DETAILS.shortAddress}</span>
             </a>
             <div className="public-footer-meta">
               <span className="material-symbols-outlined">schedule</span>
               <span>{BUSINESS_DETAILS.hours}</span>
             </div>
+            <a
+              href={BUSINESS_DETAILS.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="public-footer-direction"
+            >
+              <span className="material-symbols-outlined">directions</span>
+              Directions
+            </a>
           </section>
 
           <nav className="public-footer-nav" aria-label="Footer navigation">

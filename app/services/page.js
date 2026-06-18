@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
-import Breadcrumbs from "@/app/components/public/Breadcrumbs";
 import { BUSINESS_DETAILS, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
 const SERVICES_LIST = [
@@ -13,49 +13,71 @@ const SERVICES_LIST = [
     title: "General Insurance",
     slug: "general-insurance",
     icon: "shield",
-    desc: "Protect your personal assets, property, households, and miscellaneous exposures with curated insurance consulting."
+    desc: "Protect your personal assets, property, households, and miscellaneous exposures with curated insurance consulting.",
+    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=80"
   },
   {
     title: "Health Insurance",
     slug: "health-insurance",
     icon: "medical_services",
-    desc: "Secure cashless hospitalization, critical illness support, and family health protection plans with expert guidance."
+    desc: "Secure cashless hospitalization, critical illness support, and family health protection plans with expert guidance.",
+    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=900&q=80"
   },
   {
     title: "Motor Insurance",
     slug: "motor-insurance",
     icon: "directions_car",
-    desc: "Comprehensive coverage and claims support for personal cars, two-wheelers, and commercial logistics fleets."
+    desc: "Comprehensive coverage and claims support for personal cars, two-wheelers, and commercial logistics fleets.",
+    image: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=900&q=80"
   },
   {
     title: "Life Insurance",
     slug: "life-insurance",
     icon: "family_restroom",
-    desc: "Ensure your family's financial security with term life plans, savings strategies, and Keyman business protection."
+    desc: "Ensure your family's financial security with term life plans, savings strategies, and Keyman business protection.",
+    image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=900&q=80"
   },
   {
     title: "Commercial Insurance",
     slug: "commercial-insurance",
     icon: "apartment",
-    desc: "Cover warehouses, factory assets, cyber liabilities, marine transits, and fire risks with compliant packages."
+    desc: "Cover warehouses, factory assets, cyber liabilities, marine transits, and fire risks with compliant packages.",
+    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=80"
+  },
+  {
+    title: "Warehouse Insurance",
+    slug: "warehouse-insurance",
+    icon: "inventory_2",
+    desc: "Protect warehouse stock, inventory, burglary risks, and storage liabilities from fire and hazards.",
+    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=900&q=80"
+  },
+  {
+    title: "Marine Insurance",
+    slug: "marine-insurance",
+    icon: "directions_boat",
+    desc: "Insure goods in transit via road, rail, air, or sea cargo policies and annual movement exposure.",
+    image: "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=900&q=80"
   },
   {
     title: "Policy Renewals",
     slug: "policy-renewals",
     icon: "sync",
-    desc: "Track and renew your active policies across leading insurers in Bhopal seamlessly without any coverage lapses."
+    desc: "Track and renew your active policies across leading insurers in India seamlessly without any coverage lapses.",
+    image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=900&q=80"
   },
   {
     title: "Claims Assistance",
     slug: "claims-assistance",
     icon: "gavel",
-    desc: "Get independent, professional representation, documentation reviews, and coordination support for claim approvals."
+    desc: "Get independent, professional representation, documentation reviews, and coordination support for claim approvals.",
+    image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=900&q=80"
   },
   {
     title: "Risk Advisory Services",
     slug: "risk-advisory",
     icon: "analytics",
-    desc: "Identify coverage gaps, audit asset values, and implement risk control strategies to mitigate corporate exposures."
+    desc: "Identify coverage gaps, audit asset values, and implement risk control strategies to mitigate corporate exposures.",
+    image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=900&q=80"
   }
 ];
 
@@ -66,8 +88,8 @@ const servicesSchema = {
       "@type": "WebPage",
       "@id": `${SITE_URL}/services#webpage`,
       "url": `${SITE_URL}/services`,
-      "name": `Insurance Services in Bhopal | BimaHeadquarter`,
-      "description": `Explore insurance services in Bhopal by BimaHeadquarter. We offer general, health, motor, life, commercial insurance, claims assistance, and risk advisory.`,
+      "name": `Insurance Services Across India | BimaHeadquarter`,
+      "description": `Explore insurance services across India with BimaHeadquarter. We offer general, health, motor, life, commercial insurance, claims assistance, and risk advisory.`,
       "isPartOf": {
         "@id": `${SITE_URL}/#website`
       }
@@ -83,8 +105,8 @@ const servicesSchema = {
         "url": SITE_URL
       },
       "areaServed": {
-        "@type": "State",
-        "name": BUSINESS_DETAILS.address.addressRegion
+        "@type": "Country",
+        "name": BUSINESS_DETAILS.serviceArea
       },
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
@@ -217,12 +239,11 @@ export default function ServicesPage() {
 
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
-        <Breadcrumbs />
 
         {/* Hero Section */}
-        <header className="relative pt-16 pb-20 bg-gradient-to-b from-surface-container/30 to-background text-center">
-          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex flex-col items-center">
-            <div className="entry-anim flex flex-col items-center">
+        <header className="service-page-hero relative pt-16 pb-20">
+          <div className="service-page-hero-inner max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+            <div className="service-hero-copy entry-anim">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[12px] mb-6">
                 <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                   verified
@@ -232,44 +253,65 @@ export default function ServicesPage() {
               <h1 className="font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold max-w-3xl">
                 BimaHeadquarter <span className="text-secondary">Services Hub</span>
               </h1>
-              <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto text-[18px]">
-                Providing independent coverage engineering, claim settlement advocacy, and corporate risk engineering services backed by {BUSINESS_DETAILS.legalName} in Bhopal.
+              <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl text-[18px]">
+                Providing independent coverage engineering, claim settlement advocacy, and corporate risk engineering services backed by {BUSINESS_DETAILS.legalName} across India.
               </p>
+            </div>
+
+            <div className="service-hero-media entry-anim" aria-hidden="true">
+              <Image
+                src="/brand/service-bg.png"
+                alt=""
+                width={720}
+                height={520}
+                priority
+              />
             </div>
           </div>
         </header>
 
-        {/* Services Directory Grid */}
-        <section className="py-20 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop bg-background">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* Services Directory */}
+        <section className="services-directory-section">
+          <div className="services-directory-inner max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+            <div className="services-directory-heading reveal">
+              <span>Insurance Services</span>
+              <h2>Choose the coverage path that fits your risk.</h2>
+              <p>
+                Every service includes guidance on policy structure, insurer coordination,
+                documentation, and claim-readiness from the BimaHeadquarter team.
+              </p>
+            </div>
+
+            <div className="services-directory-grid">
             {SERVICES_LIST.map((service, index) => (
               <Link
                 key={service.slug}
                 href={`/services/${service.slug}`}
-                className="glass-card p-8 rounded-2xl flex flex-col items-start transition-all group reveal border border-outline-variant/20"
+                className="service-directory-card reveal"
                 style={{ transitionDelay: `${index * 0.05}s` }}
               >
-                <div className="w-14 h-14 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                  <span className="material-symbols-outlined text-[28px]">
-                    {service.icon}
+                <div
+                  className="service-directory-media"
+                  style={{ backgroundImage: `url(${service.image})` }}
+                  aria-hidden="true"
+                />
+                <div className="service-directory-copy">
+                  <div className="service-directory-topline">
+                    <span className="service-directory-index">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="service-directory-icon material-symbols-outlined">
+                      {service.icon}
+                    </span>
+                  </div>
+                  <h3>{service.title}</h3>
+                  <p>{service.desc}</p>
+                  <span className="service-directory-link">
+                    View service
+                    <span className="material-symbols-outlined">arrow_forward</span>
                   </span>
                 </div>
-                <h3 className="font-headline-md text-[20px] text-primary mb-3 font-bold">
-                  {service.title}
-                </h3>
-                <p className="text-body-md text-on-surface-variant mb-6 text-sm leading-relaxed">
-                  {service.desc}
-                </p>
-                <span
-                  className="mt-auto font-label-md text-secondary hover:underline flex items-center gap-1 text-[14px] font-semibold"
-                >
-                  Learn More
-                  <span className="material-symbols-outlined text-sm">
-                    arrow_forward
-                  </span>
-                </span>
               </Link>
             ))}
+            </div>
           </div>
         </section>
 
@@ -281,7 +323,7 @@ export default function ServicesPage() {
                 Professional Insurance Support
               </h2>
               <p className="text-on-surface-variant text-[16px] leading-relaxed mb-8">
-                As a licensed Insurance Marketing Firm under the IRDAI, {BUSINESS_DETAILS.legalName} offers structured compliance and risk expertise. We help individuals secure coverage gaps and support commercial structures in Bhopal and throughout Madhya Pradesh with complete auditing and claim representation.
+                As a licensed Insurance Marketing Firm under the IRDAI, {BUSINESS_DETAILS.legalName} offers structured compliance and risk expertise. We help individuals secure coverage gaps and support commercial structures across India with complete auditing and claim representation.
               </p>
               <Link
                 href="/contact"

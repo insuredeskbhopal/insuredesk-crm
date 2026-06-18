@@ -668,6 +668,30 @@ export default function RootPage() {
                   image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80",
                   route: "/services/general-insurance",
                   delay: "0.6s"
+                },
+                {
+                  title: "Health Insurance",
+                  icon: "medical_services",
+                  desc: "Secure cashless hospitalization, critical illness support, and family health protection plans with expert guidance.",
+                  image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80",
+                  route: "/services/health-insurance",
+                  delay: "0.7s"
+                },
+                {
+                  title: "Policy Renewals",
+                  icon: "sync",
+                  desc: "Track and renew active policies across leading insurers without missing renewal dates or coverage continuity.",
+                  image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=600&q=80",
+                  route: "/services/policy-renewals",
+                  delay: "0.8s"
+                },
+                {
+                  title: "Claims Assistance",
+                  icon: "gavel",
+                  desc: "Get independent claim documentation reviews, insurer coordination, and settlement follow-up support.",
+                  image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80",
+                  route: "/services/claims-assistance",
+                  delay: "0.9s"
                 }
               ].map((service, index) => (
                 <Link
