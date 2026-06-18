@@ -2,4 +2,3 @@
 export default function StatusPill({ children, className = "status-pill" }) {
   return <span className={className}>{children}</span>;
 }
-

@@ -9,7 +9,7 @@ export default function PageHeader({
   showRecordSaveActions,
   isSaving,
   isUploading,
-  onSaveRecord
+  onSaveRecord,
 }) {
   const router = useRouter();
 
@@ -21,9 +21,22 @@ export default function PageHeader({
       </div>
       {showRecordSaveActions ? (
         <div className="title-actions">
-          <button type="button" onClick={() => router.push("/upload-history")}><History size={18} /> View Upload History</button>
-          <button className="secondary-action" type="button" onClick={onSaveRecord} disabled={isSaving || isUploading}>
-            {isUploading ? <LoaderCircle size={18} className="spin" /> : isSaving ? <LoaderCircle size={18} className="spin" /> : <Upload size={18} />}
+          <button type="button" onClick={() => router.push("/upload-history")}>
+            <History size={18} /> View Upload History
+          </button>
+          <button
+            className="secondary-action"
+            type="button"
+            onClick={onSaveRecord}
+            disabled={isSaving || isUploading}
+          >
+            {isUploading ? (
+              <LoaderCircle size={18} className="spin" />
+            ) : isSaving ? (
+              <LoaderCircle size={18} className="spin" />
+            ) : (
+              <Upload size={18} />
+            )}
             {isUploading ? "Extracting PDFs" : "Save Record"}
           </button>
         </div>
@@ -31,4 +44,3 @@ export default function PageHeader({
     </section>
   );
 }
-

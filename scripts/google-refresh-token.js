@@ -15,11 +15,7 @@ if (!clientId || !clientSecret) {
   process.exit(1);
 }
 
-const oauth2Client = new google.auth.OAuth2(
-  clientId,
-  clientSecret,
-  redirectUri
-);
+const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 
 const authUrl = oauth2Client.generateAuthUrl({
   access_type: "offline",
@@ -62,7 +58,10 @@ function loadEnvFile(filename) {
     if (separatorIndex === -1) continue;
 
     const key = trimmed.slice(0, separatorIndex).trim();
-    const value = trimmed.slice(separatorIndex + 1).trim().replace(/^["']|["']$/g, "");
+    const value = trimmed
+      .slice(separatorIndex + 1)
+      .trim()
+      .replace(/^["']|["']$/g, "");
     if (key && process.env[key] === undefined) {
       process.env[key] = value;
     }

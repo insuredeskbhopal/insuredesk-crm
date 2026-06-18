@@ -2,4 +2,3 @@
 export default function DateValue({ value }) {
   return <>{value}</>;
 }
-

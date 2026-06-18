@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   applyAiSuggestionToReviewField,
-  getEligibleAiSuggestion
+  getEligibleAiSuggestion,
 } from "../app/components/upload/aiSuggestionHelpers";
 
 function buildUpload() {
@@ -16,20 +16,20 @@ function buildUpload() {
               currentValue: "",
               suggestedValue: "K15CN998877",
               evidenceText: "Engine No: K15CN998877",
-              reason: "Current value is blank"
-            }
+              reason: "Current value is blank",
+            },
           },
           blockedUpdates: {
             policyNumber: {
               currentValue: "POL12345",
               suggestedValue: "POL123",
-              reason: "Current rule value is valid and should not be overwritten"
-            }
+              reason: "Current rule value is valid and should not be overwritten",
+            },
           },
-          reasons: {}
-        }
-      }
-    }
+          reasons: {},
+        },
+      },
+    },
   };
 }
 
@@ -37,7 +37,7 @@ describe("AI suggestion UI helpers", () => {
   it("returns eligible suggestions beside review fields", () => {
     expect(getEligibleAiSuggestion(buildUpload(), "engineNumber")).toMatchObject({
       suggestedValue: "K15CN998877",
-      evidenceText: "Engine No: K15CN998877"
+      evidenceText: "Engine No: K15CN998877",
     });
   });
 
@@ -51,7 +51,7 @@ describe("AI suggestion UI helpers", () => {
     const applied = applyAiSuggestionToReviewField({
       fieldKey: "engineNumber",
       suggestion: getEligibleAiSuggestion(buildUpload(), "engineNumber"),
-      onFieldChange
+      onFieldChange,
     });
 
     expect(applied).toBe(true);

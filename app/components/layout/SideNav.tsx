@@ -7,24 +7,30 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const ROUTE_MAP = {
-  "dashboard": "/dashboard",
+  dashboard: "/dashboard",
   "bulk-entry": "/bulk-upload",
   "work-center": "/work-center",
-  "operations": "/operations",
+  operations: "/operations",
   "manual-entry": "/manual-policy-entry",
   "customer-profiling": "/dashboard/manual-entry/customer-profiling",
-  "records": "/policy-records",
-  "customers": "/customer-management",
-  "renewals": "/dashboard/renewals",
-  "endorsements": "/dashboard/endorsements",
-  "analytics": "/dashboard/reports",
+  records: "/policy-records",
+  customers: "/customer-management",
+  renewals: "/dashboard/renewals",
+  endorsements: "/dashboard/endorsements",
+  analytics: "/dashboard/reports",
   "field-setup": "/field-setup",
   "user-management": "/admin/users",
-  "settings": "/settings",
-  "upload-history": "/upload-history"
+  settings: "/settings",
+  "upload-history": "/upload-history",
 };
 
-export default function SideNav({ activePage: propActivePage, navItems, onPageChange, isSidebarOpen, onCloseSidebar }) {
+export default function SideNav({
+  activePage: propActivePage,
+  navItems,
+  onPageChange,
+  isSidebarOpen,
+  onCloseSidebar,
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -94,39 +100,59 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
         </div>
 
         <nav>
-          <button className={activePage === "dashboard" ? "active" : ""} type="button" onClick={() => handleNavigate("dashboard")}>
+          <button
+            className={activePage === "dashboard" ? "active" : ""}
+            type="button"
+            onClick={() => handleNavigate("dashboard")}
+          >
             <LayoutDashboard size={20} /> Dashboard
           </button>
-          {navItems.filter((item) => {
-            if (item.roles) return item.roles.includes(userRole);
-            if (item.role) return item.role === userRole;
-            return true;
-          }).map((item) => {
-            const Icon = item.icon;
-            const isParentActive = activePage === item.id || item.children?.some((child) => child.id === activePage);
-            return (
-              <div className="side-nav-group" key={item.id}>
-                <button className={isParentActive ? "active" : ""} type="button" onClick={() => handleNavigate(item.id)}>
-                  <Icon size={20} /> {item.label}
-                  {item.children?.length ? <ChevronDown className="side-nav-chevron" size={14} /> : null}
-                </button>
-                {item.children?.length && isParentActive ? (
-                  <div className="side-nav-submenu">
-                    {item.children.map((child) => (
-                      <button className={activePage === child.id ? "active" : ""} type="button" key={child.id} onClick={() => handleNavigate(child.id)}>
-                        {child.label}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
+          {navItems
+            .filter((item) => {
+              if (item.roles) return item.roles.includes(userRole);
+              if (item.role) return item.role === userRole;
+              return true;
+            })
+            .map((item) => {
+              const Icon = item.icon;
+              const isParentActive =
+                activePage === item.id || item.children?.some((child) => child.id === activePage);
+              return (
+                <div className="side-nav-group" key={item.id}>
+                  <button
+                    className={isParentActive ? "active" : ""}
+                    type="button"
+                    onClick={() => handleNavigate(item.id)}
+                  >
+                    <Icon size={20} /> {item.label}
+                    {item.children?.length ? <ChevronDown className="side-nav-chevron" size={14} /> : null}
+                  </button>
+                  {item.children?.length && isParentActive ? (
+                    <div className="side-nav-submenu">
+                      {item.children.map((child) => (
+                        <button
+                          className={activePage === child.id ? "active" : ""}
+                          type="button"
+                          key={child.id}
+                          onClick={() => handleNavigate(child.id)}
+                        >
+                          {child.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
         </nav>
 
         <div className="side-footer">
-          <button type="button"><CircleHelp size={20} /> Help Center</button>
-          <button type="button" onClick={handleLogout}><LogOut size={20} /> Logout</button>
+          <button type="button">
+            <CircleHelp size={20} /> Help Center
+          </button>
+          <button type="button" onClick={handleLogout}>
+            <LogOut size={20} /> Logout
+          </button>
         </div>
       </aside>
 
@@ -138,19 +164,21 @@ export default function SideNav({ activePage: propActivePage, navItems, onPageCh
               <h3 className="tb-status-title tb-modal-title">Confirm Logout</h3>
             </div>
             <div className="tb-modal-body">
-              <p className="tb-status-desc">Are you sure you want to log out of your BIMAHEADQUARTER account?</p>
+              <p className="tb-status-desc">
+                Are you sure you want to log out of your BIMAHEADQUARTER account?
+              </p>
             </div>
             <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px" }}>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowLogoutModal(false)}
                 className="tb-modal-done-btn"
                 style={{ background: "#f0f0f0", color: "#333" }}
               >
                 Cancel
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={async () => {
                   setShowLogoutModal(false);
                   if (onCloseSidebar) onCloseSidebar();

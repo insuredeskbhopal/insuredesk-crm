@@ -4,7 +4,15 @@ export function ICICIEndorsementTemplate({ data, previewRef }) {
   return (
     <div ref={previewRef} className="icici-schedule-page">
       <div className="icici-logo-wrap">
-        <Image className="icici-logo" src="/icici.png" alt="ICICI Lombard Logo" width={272} height={82} priority unoptimized />
+        <Image
+          className="icici-logo"
+          src="/icici.png"
+          alt="ICICI Lombard Logo"
+          width={272}
+          height={82}
+          priority
+          unoptimized
+        />
       </div>
 
       <div className="icici-top-line" />
@@ -19,8 +27,8 @@ export function ICICIEndorsementTemplate({ data, previewRef }) {
         <h1>{valueOrDash(data.policyTitle)} Endorsement Schedule</h1>
 
         <p>
-          We value your relationship with ICICI Lombard General Insurance Company Limited and thank you for choosing us as
-          your preferred service provider.
+          We value your relationship with ICICI Lombard General Insurance Company Limited and thank you for
+          choosing us as your preferred service provider.
         </p>
 
         <p>Based on your request, your policy has been endorsed. Refer table below for updated details:</p>
@@ -99,22 +107,32 @@ export function ICICIEndorsementTemplate({ data, previewRef }) {
               <td>GSTIN Reg no : 23AAACI7904G1ZV</td>
             </tr>
             <tr>
-              <td>IL GIC GSTIN Address : Second and Third Floor, Nungambakkam High Road, Chottabhai Centre, Chennai, Tamil Nadu 600034</td>
+              <td>
+                IL GIC GSTIN Address : Second and Third Floor, Nungambakkam High Road, Chottabhai Centre,
+                Chennai, Tamil Nadu 600034
+              </td>
             </tr>
             <tr>
               <td>HSN/SAC Code : 997137/ GENERAL INSURANCE SERVICES</td>
             </tr>
             <tr>
               <td>
-                Subject otherwise to the terms, conditions, exclusions, limitations and warranties attached to the within
-                mentioned policy.
+                Subject otherwise to the terms, conditions, exclusions, limitations and warranties attached to
+                the within mentioned policy.
               </td>
             </tr>
           </tbody>
         </table>
       </main>
 
-      <Image className="icici-digital-sign" src="/icici-digital-signature.png" alt="Signature Not Verified" width={180} height={80} unoptimized />
+      <Image
+        className="icici-digital-sign"
+        src="/icici-digital-signature.png"
+        alt="Signature Not Verified"
+        width={180}
+        height={80}
+        unoptimized
+      />
 
       <ICICIFooter policyTitle={data.policyTitle} />
     </div>

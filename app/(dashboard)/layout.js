@@ -22,7 +22,7 @@ const SEARCHABLE_CURRENT_PATHS = new Set([
   "/dashboard/endorsements",
   "/dashboard/reports",
   "/admin/users",
-  "/upload-history"
+  "/upload-history",
 ]);
 
 export default function DashboardLayout({ children }) {
@@ -53,27 +53,30 @@ export default function DashboardLayout({ children }) {
     }
 
     const queryString = params.toString();
-    const targetPath = SEARCHABLE_CURRENT_PATHS.has(pathname) || pathname.startsWith("/dashboard/reports") ? pathname : "/policy-records";
+    const targetPath =
+      SEARCHABLE_CURRENT_PATHS.has(pathname) || pathname.startsWith("/dashboard/reports")
+        ? pathname
+        : "/policy-records";
     router.push(queryString ? `${targetPath}?${queryString}` : targetPath);
   };
 
   return (
     <AppShell>
-      <TopBar 
-        query={query} 
-        onQueryChange={handleQueryChange} 
-        isSidebarOpen={isSidebarOpen} 
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
+      <TopBar
+        query={query}
+        onQueryChange={handleQueryChange}
+        isSidebarOpen={isSidebarOpen}
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
-      <SideNav 
-        navItems={NAV_ITEMS} 
-        isSidebarOpen={isSidebarOpen} 
-        onCloseSidebar={() => setIsSidebarOpen(false)} 
+      <SideNav
+        navItems={NAV_ITEMS}
+        isSidebarOpen={isSidebarOpen}
+        onCloseSidebar={() => setIsSidebarOpen(false)}
       />
-      
+
       {isSidebarOpen && (
-        <div 
-          className="sidebar-backdrop" 
+        <div
+          className="sidebar-backdrop"
           onClick={() => setIsSidebarOpen(false)}
           style={{
             position: "fixed",
@@ -84,15 +87,13 @@ export default function DashboardLayout({ children }) {
             backgroundColor: "rgba(25, 28, 29, 0.4)",
             backdropFilter: "blur(4px)",
             zIndex: 45,
-            transition: "opacity 0.25s ease"
+            transition: "opacity 0.25s ease",
           }}
         />
       )}
-      
+
       <section className="content-canvas">
-        <div className="page-inner">
-          {children}
-        </div>
+        <div className="page-inner">{children}</div>
       </section>
     </AppShell>
   );

@@ -7,51 +7,73 @@ import { Download, Pencil, Eye, X, Printer, Trash2, CheckSquare, Square, MinusSq
 function DetailField({ label, value, wide }) {
   if (value === undefined || value === null || String(value).trim() === "") return null;
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      gap: "4px",
-      padding: "8px 12px",
-      background: "#f8fafc",
-      borderRadius: "8px",
-      border: "1px solid #f1f5f9",
-      gridColumn: wide ? "span 2" : undefined
-    }}>
-      <span style={{ fontSize: "10px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</span>
-      <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a", wordBreak: "break-all" }}>{String(value)}</span>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
+        padding: "8px 12px",
+        background: "#f8fafc",
+        borderRadius: "8px",
+        border: "1px solid #f1f5f9",
+        gridColumn: wide ? "span 2" : undefined,
+      }}
+    >
+      <span
+        style={{
+          fontSize: "10px",
+          fontWeight: "600",
+          color: "#64748b",
+          textTransform: "uppercase",
+          letterSpacing: "0.5px",
+        }}
+      >
+        {label}
+      </span>
+      <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a", wordBreak: "break-all" }}>
+        {String(value)}
+      </span>
     </div>
   );
 }
 
 function DetailSection({ title, children }) {
-  const validChildren = React.Children.toArray(children).filter(child => child !== null);
+  const validChildren = React.Children.toArray(children).filter((child) => child !== null);
   if (validChildren.length === 0) return null;
 
   return (
-    <div style={{
-      background: "#ffffff",
-      borderRadius: "16px",
-      border: "1px solid #e2e8f0",
-      padding: "20px",
-      display: "flex",
-      flexDirection: "column",
-      gap: "16px"
-    }}>
-      <h3 style={{
-        margin: 0,
-        fontSize: "14px",
-        fontWeight: "700",
-        color: "#1e3a8a",
-        borderBottom: "2px solid #f1f5f9",
-        paddingBottom: "8px",
+    <div
+      style={{
+        background: "#ffffff",
+        borderRadius: "16px",
+        border: "1px solid #e2e8f0",
+        padding: "20px",
         display: "flex",
-        alignItems: "center"
-      }}>{title}</h3>
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-        gap: "12px"
-      }}>
+        flexDirection: "column",
+        gap: "16px",
+      }}
+    >
+      <h3
+        style={{
+          margin: 0,
+          fontSize: "14px",
+          fontWeight: "700",
+          color: "#1e3a8a",
+          borderBottom: "2px solid #f1f5f9",
+          paddingBottom: "8px",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        {title}
+      </h3>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+          gap: "12px",
+        }}
+      >
         {children}
       </div>
     </div>
@@ -65,9 +87,15 @@ const DEFAULT_RECORD_COLUMNS = [
   { key: "contactPerson", label: "Contact Person Name", className: "col-contact-person" },
   { key: "contactNumber", label: "Phone Number", className: "col-contact" },
   { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
-  { key: "vehicleNumber", label: "Vehicle No.", className: "col-vehicle", code: true, fallbackKey: "registrationNumber" },
+  {
+    key: "vehicleNumber",
+    label: "Vehicle No.",
+    className: "col-vehicle",
+    code: true,
+    fallbackKey: "registrationNumber",
+  },
   { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
-  { key: "whatsappGroupName", label: "WP Group Name", className: "col-group" }
+  { key: "whatsappGroupName", label: "WP Group Name", className: "col-group" },
 ];
 
 function formatDate(value) {
@@ -86,17 +114,18 @@ function formatDateTime(value) {
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   });
 }
 
 function renderCell(record, column) {
   const rawValue = record[column.key] || (column.fallbackKey ? record[column.fallbackKey] : "");
-  const value = column.format === "dateTime"
-    ? formatDateTime(rawValue)
-    : column.format === "date"
-      ? formatDate(rawValue)
-      : rawValue || "";
+  const value =
+    column.format === "dateTime"
+      ? formatDateTime(rawValue)
+      : column.format === "date"
+        ? formatDate(rawValue)
+        : rawValue || "";
   if (column.primary) return <strong className="record-primary">{value}</strong>;
   if (column.code) return <span className="record-code">{value}</span>;
   return value;
@@ -131,7 +160,15 @@ const COLUMN_WIDTHS = {
   "col-default": 150,
 };
 
-export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS, canEdit = false, onEdit, canDelete = false, onDelete, paginate = true }) {
+export default function RecordsTable({
+  records,
+  columns = DEFAULT_RECORD_COLUMNS,
+  canEdit = false,
+  onEdit,
+  canDelete = false,
+  onDelete,
+  paginate = true,
+}) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -184,23 +221,29 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
         month: "2-digit",
         year: "numeric",
         hour: "2-digit",
-        minute: "2-digit"
+        minute: "2-digit",
       });
     };
 
     const renderPrintSection = (title, fields) => {
-      const validFields = fields.filter(([_, val]) => val !== undefined && val !== null && String(val).trim() !== "");
+      const validFields = fields.filter(
+        ([_, val]) => val !== undefined && val !== null && String(val).trim() !== "",
+      );
       if (validFields.length === 0) return "";
       return `
         <div class="section">
           <h3>${title}</h3>
           <div class="grid">
-            ${validFields.map(([lbl, val]) => `
+            ${validFields
+              .map(
+                ([lbl, val]) => `
               <div class="field">
                 <span class="label">${lbl}</span>
                 <span class="value">${val}</span>
               </div>
-            `).join("")}
+            `,
+              )
+              .join("")}
           </div>
         </div>
       `;
@@ -308,69 +351,69 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
           </div>
           
           ${renderPrintSection("General Information", [
-      ["Customer ID", record.customerId],
-      ["Insured Name", record.insuredName],
-      ["Contact Person", record.contactPerson],
-      ["Phone Number", record.contactNumber],
-      ["WhatsApp Group Name", record.whatsappGroupName],
-      ["Group Name", record.groupName],
-      ["Insurance Company", record.insuranceCompany],
-      ["Policy Type", record.policyType]
-    ])}
+            ["Customer ID", record.customerId],
+            ["Insured Name", record.insuredName],
+            ["Contact Person", record.contactPerson],
+            ["Phone Number", record.contactNumber],
+            ["WhatsApp Group Name", record.whatsappGroupName],
+            ["Group Name", record.groupName],
+            ["Insurance Company", record.insuranceCompany],
+            ["Policy Type", record.policyType],
+          ])}
 
           ${renderPrintSection("Dates & Coverage", [
-      ["Start Date", formatDateLocal(record.startDate)],
-      ["Expiry Date", formatDateLocal(record.expiryDate)],
-      ["Duration", record.duration],
-      ["Sum Insured", record.sumInsured]
-    ])}
+            ["Start Date", formatDateLocal(record.startDate)],
+            ["Expiry Date", formatDateLocal(record.expiryDate)],
+            ["Duration", record.duration],
+            ["Sum Insured", record.sumInsured],
+          ])}
 
           ${renderPrintSection("Financial Details", [
-      ["Net Premium", record.netPremium],
-      ["OD Premium", record.odPremium],
-      ["TP + Driver + Owner", record.tpDriverOwner],
-      ["Total Premium", record.totalPremium],
-      ["Mode of Payment", record.modeOfPayment],
-      ["Collected Amount", record.collectedAmount],
-      ["Due Collection", record.dueCollection]
-    ])}
+            ["Net Premium", record.netPremium],
+            ["OD Premium", record.odPremium],
+            ["TP + Driver + Owner", record.tpDriverOwner],
+            ["Total Premium", record.totalPremium],
+            ["Mode of Payment", record.modeOfPayment],
+            ["Collected Amount", record.collectedAmount],
+            ["Due Collection", record.dueCollection],
+          ])}
 
           ${renderPrintSection("Vehicle Details", [
-      ["Vehicle Number", record.vehicleNumber],
-      ["Make & Model", record.makeModel],
-      ["Variant", record.variant],
-      ["Registration Number", record.registrationNumber],
-      ["Registration Date", formatDateLocal(record.registrationDate)],
-      ["Manufacturing Year", record.manufacturingYear],
-      ["Fuel Type", record.fuelType],
-      ["Engine Number", record.engineNumber],
-      ["Chassis Number", record.chassisNumber],
-      ["Seating Capacity", record.seatingCapacity],
-      ["Cubic Capacity", record.cubicCapacity],
-      ["IDV", record.idv],
-      ["NCB", record.ncb],
-      ["Cover Type", record.policyCoverType],
-      ["RTO Location", record.rtoLocation]
-    ])}
+            ["Vehicle Number", record.vehicleNumber],
+            ["Make & Model", record.makeModel],
+            ["Variant", record.variant],
+            ["Registration Number", record.registrationNumber],
+            ["Registration Date", formatDateLocal(record.registrationDate)],
+            ["Manufacturing Year", record.manufacturingYear],
+            ["Fuel Type", record.fuelType],
+            ["Engine Number", record.engineNumber],
+            ["Chassis Number", record.chassisNumber],
+            ["Seating Capacity", record.seatingCapacity],
+            ["Cubic Capacity", record.cubicCapacity],
+            ["IDV", record.idv],
+            ["NCB", record.ncb],
+            ["Cover Type", record.policyCoverType],
+            ["RTO Location", record.rtoLocation],
+          ])}
 
           ${renderPrintSection("Additional & Risk Details", [
-      ["Nominee Name", record.nomineeName],
-      ["Hypothecation / Financer", record.financerName],
-      ["Risk Location", record.riskLocation],
-      ["Occupancy", record.occupancy],
-      ["Tehsil", record.tehsil],
-      ["District", record.district],
-      ["PPT / MPWLC", record.pptMpwlc],
-      ["Valid In", record.validIn],
-      ["Remarks", record.remark]
-    ])}
+            ["Nominee Name", record.nomineeName],
+            ["Hypothecation / Financer", record.financerName],
+            ["Risk Location", record.riskLocation],
+            ["Occupancy", record.occupancy],
+            ["Tehsil", record.tehsil],
+            ["District", record.district],
+            ["PPT / MPWLC", record.pptMpwlc],
+            ["Valid In", record.validIn],
+            ["Remarks", record.remark],
+          ])}
 
           ${renderPrintSection("Metadata", [
-      ["Source PDF File", record.sourceFile],
-      ["Created By", record.uploadedByEmail || record.uploadedBy],
-      ["Saved Date", formatDateTimeLocal(record.savedAt)],
-      ["Renewal Status", record.renewalStatus]
-    ])}
+            ["Source PDF File", record.sourceFile],
+            ["Created By", record.uploadedByEmail || record.uploadedBy],
+            ["Saved Date", formatDateTimeLocal(record.savedAt)],
+            ["Renewal Status", record.renewalStatus],
+          ])}
 
           <script>
             window.onload = function() {
@@ -408,8 +451,8 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
   const pageCount = paginate ? Math.max(1, Math.ceil(records.length / PAGE_SIZE)) : 1;
   const startIndex = paginate ? (currentPage - 1) * PAGE_SIZE : 0;
   const visibleRecords = useMemo(
-    () => paginate ? records.slice(startIndex, startIndex + PAGE_SIZE) : records,
-    [paginate, records, startIndex]
+    () => (paginate ? records.slice(startIndex, startIndex + PAGE_SIZE) : records),
+    [paginate, records, startIndex],
   );
   const visiblePageNumbers = useMemo(() => {
     const pages = [];
@@ -437,9 +480,10 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
     }
     return pages;
   }, [currentPage, pageCount]);
-  const tableMinWidth = columns.length < DEFAULT_RECORD_COLUMNS.length
-    ? Math.max(980, (columns.length * 132) + (canEdit ? 88 : 0) + (canDelete ? 48 : 0) + 64)
-    : undefined;
+  const tableMinWidth =
+    columns.length < DEFAULT_RECORD_COLUMNS.length
+      ? Math.max(980, columns.length * 132 + (canEdit ? 88 : 0) + (canDelete ? 48 : 0) + 64)
+      : undefined;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -512,7 +556,9 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
                     className="record-mark-toggle"
                     type="button"
                     title={allVisibleSelected ? "Unmark all" : "Mark all"}
-                    aria-label={allVisibleSelected ? "Unmark all records on this page" : "Mark all records on this page"}
+                    aria-label={
+                      allVisibleSelected ? "Unmark all records on this page" : "Mark all records on this page"
+                    }
                     onClick={toggleSelectAll}
                   >
                     {allVisibleSelected ? (
@@ -526,7 +572,9 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
                 </th>
               ) : null}
               {columns.map((column, index) => (
-                <th key={column.key} className={getStickyClassName(index)} style={getStickyStyle(index)}>{column.label}</th>
+                <th key={column.key} className={getStickyClassName(index)} style={getStickyStyle(index)}>
+                  {column.label}
+                </th>
               ))}
               <th>View</th>
               {canEdit ? <th>Edit</th> : null}
@@ -534,68 +582,92 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
             </tr>
           </thead>
           <tbody>
-            {records.length ? visibleRecords.map((record) => {
-              const isMarked = selectedIds.has(record.id);
-              return (
-                <tr key={record.id} className={isMarked ? "row-marked" : ""}>
-                  {canDelete ? (
-                    <td className="sticky-col" style={{ left: 0 }}>
-                      <button
-                        className={`record-mark-toggle ${isMarked ? "marked" : ""}`}
-                        type="button"
-                        title={isMarked ? "Unmark" : "Mark"}
-                        aria-label={isMarked ? `Unmark ${record.policyNumber || record.insuredName || "record"}` : `Mark ${record.policyNumber || record.insuredName || "record"}`}
-                        onClick={() => toggleSelectId(record.id)}
+            {records.length ? (
+              visibleRecords.map((record) => {
+                const isMarked = selectedIds.has(record.id);
+                return (
+                  <tr key={record.id} className={isMarked ? "row-marked" : ""}>
+                    {canDelete ? (
+                      <td className="sticky-col" style={{ left: 0 }}>
+                        <button
+                          className={`record-mark-toggle ${isMarked ? "marked" : ""}`}
+                          type="button"
+                          title={isMarked ? "Unmark" : "Mark"}
+                          aria-label={
+                            isMarked
+                              ? `Unmark ${record.policyNumber || record.insuredName || "record"}`
+                              : `Mark ${record.policyNumber || record.insuredName || "record"}`
+                          }
+                          onClick={() => toggleSelectId(record.id)}
+                        >
+                          {isMarked ? (
+                            <CheckSquare size={18} strokeWidth={1.6} />
+                          ) : (
+                            <Square size={18} strokeWidth={1.6} />
+                          )}
+                        </button>
+                      </td>
+                    ) : null}
+                    {columns.map((column, index) => (
+                      <td
+                        key={column.key}
+                        className={getStickyClassName(index)}
+                        style={getStickyStyle(index)}
                       >
-                        {isMarked ? (
-                          <CheckSquare size={18} strokeWidth={1.6} />
-                        ) : (
-                          <Square size={18} strokeWidth={1.6} />
-                        )}
-                      </button>
-                    </td>
-                  ) : null}
-                  {columns.map((column, index) => (
-                    <td key={column.key} className={getStickyClassName(index)} style={getStickyStyle(index)}>{renderCell(record, column)}</td>
-                  ))}
-                  <td>
-                    <button
-                      aria-label={`View details of ${record.policyNumber || record.insuredName || "policy record"}`}
-                      className="record-icon-action"
-                      title="View policy details"
-                      type="button"
-                      onClick={() => setSelectedRecord(record)}
-                    >
-                      <Eye size={20} strokeWidth={2.5} />
-                    </button>
-                  </td>
-                  {canEdit ? (
+                        {renderCell(record, column)}
+                      </td>
+                    ))}
                     <td>
                       <button
-                        aria-label={`Edit ${record.policyNumber || record.insuredName || "policy record"}`}
+                        aria-label={`View details of ${record.policyNumber || record.insuredName || "policy record"}`}
                         className="record-icon-action"
-                        title="Edit policy record"
+                        title="View policy details"
                         type="button"
-                        onClick={() => onEdit?.(record)}
+                        onClick={() => setSelectedRecord(record)}
                       >
-                        <Pencil size={24} strokeWidth={2.7} />
+                        <Eye size={20} strokeWidth={2.5} />
                       </button>
                     </td>
-                  ) : null}
-                  <td>
-                    {record.hasPdf ? (
-                      <a className="pdf-icon-link" href={`/api/records/${record.id}/pdf`} title="Download PDF" aria-label="Download PDF">
-                        <Download size={14} />
-                      </a>
-                    ) : (
-                      <span className="missing-pdf compact" style={{ color: "#d93025", fontWeight: "700", fontSize: "11px" }}>Missing</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            }) : (
+                    {canEdit ? (
+                      <td>
+                        <button
+                          aria-label={`Edit ${record.policyNumber || record.insuredName || "policy record"}`}
+                          className="record-icon-action"
+                          title="Edit policy record"
+                          type="button"
+                          onClick={() => onEdit?.(record)}
+                        >
+                          <Pencil size={24} strokeWidth={2.7} />
+                        </button>
+                      </td>
+                    ) : null}
+                    <td>
+                      {record.hasPdf ? (
+                        <a
+                          className="pdf-icon-link"
+                          href={`/api/records/${record.id}/pdf`}
+                          title="Download PDF"
+                          aria-label="Download PDF"
+                        >
+                          <Download size={14} />
+                        </a>
+                      ) : (
+                        <span
+                          className="missing-pdf compact"
+                          style={{ color: "#d93025", fontWeight: "700", fontSize: "11px" }}
+                        >
+                          Missing
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
               <tr>
-                <td className="empty" colSpan={columns.length + 2 + (canEdit ? 1 : 0) + (canDelete ? 1 : 0)}>No database records yet.</td>
+                <td className="empty" colSpan={columns.length + 2 + (canEdit ? 1 : 0) + (canDelete ? 1 : 0)}>
+                  No database records yet.
+                </td>
               </tr>
             )}
           </tbody>
@@ -611,7 +683,7 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
             <button type="button" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
               Prev
             </button>
-            {visiblePageNumbers.map((page, index) => (
+            {visiblePageNumbers.map((page, index) =>
               page === "..." ? (
                 <span
                   key={`ellipsis-${index}`}
@@ -624,7 +696,7 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
                     color: "#64748b",
                     fontSize: "14px",
                     fontWeight: "700",
-                    userSelect: "none"
+                    userSelect: "none",
                   }}
                 >
                   ...
@@ -639,280 +711,311 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
                 >
                   {page}
                 </button>
-              )
-            ))}
-            <button type="button" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === pageCount}>
+              ),
+            )}
+            <button
+              type="button"
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === pageCount}
+            >
               Next
             </button>
           </div>
         </div>
       ) : null}
 
-      {typeof window !== "undefined" && selectedRecord && createPortal(
-        <div
-          className="tb-modal-backdrop"
-          onClick={() => setSelectedRecord(null)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(15, 23, 42, 0.25)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            zIndex: 2000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "24px"
-          }}
-        >
+      {typeof window !== "undefined" &&
+        selectedRecord &&
+        createPortal(
           <div
-            className="tb-modal-card"
-            onClick={(e) => e.stopPropagation()}
+            className="tb-modal-backdrop"
+            onClick={() => setSelectedRecord(null)}
             style={{
-              background: "#ffffff",
-              borderRadius: "24px",
-              boxShadow: "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
-              width: "100%",
-              maxWidth: "800px",
-              maxHeight: "85vh",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(15, 23, 42, 0.25)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              zIndex: 2000,
               display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              border: "none",
-              animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both"
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "24px",
             }}
           >
-            {/* Modal Header */}
             <div
+              className="tb-modal-card"
+              onClick={(e) => e.stopPropagation()}
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "20px 24px",
-                borderBottom: "1px solid #f1f5f9",
-                backgroundColor: "#ffffff",
-                color: "#0f172a"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                <img
-                  src="/brand/main-logo-wide.webp"
-                  alt="Bima Headquarter"
-                  style={{ height: "74px", width: "auto", objectFit: "contain" }}
-                />
-                <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
-                  <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Policy Record Details</span>
-                  <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "800", color: "#0f172a" }}>
-                    {selectedRecord.policyNumber || "No Policy Number"}
-                  </h2>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedRecord(null)}
-                aria-label="Close details"
-                style={{
-                  background: "rgba(15, 23, 42, 0.05)",
-                  border: "none",
-                  color: "#64748b",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "44px",
-                  height: "44px",
-                  borderRadius: "50%",
-                  transition: "background-color 0.2s, color 0.2s"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.1)";
-                  e.currentTarget.style.color = "#0f172a";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.05)";
-                  e.currentTarget.style.color = "#64748b";
-                }}
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div
-              style={{
-                padding: "24px",
-                overflowY: "auto",
+                background: "#ffffff",
+                borderRadius: "24px",
+                boxShadow:
+                  "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
+                width: "100%",
+                maxWidth: "800px",
+                maxHeight: "85vh",
                 display: "flex",
                 flexDirection: "column",
-                gap: "24px",
-                backgroundColor: "#ffffff"
+                overflow: "hidden",
+                border: "none",
+                animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both",
               }}
             >
-              <DetailSection title="General Information">
-                <DetailField label="Customer ID" value={selectedRecord.customerId} />
-                <DetailField label="Insured Name" value={selectedRecord.insuredName} wide />
-                <DetailField label="Contact Person" value={selectedRecord.contactPerson} />
-                <DetailField label="Phone Number" value={selectedRecord.contactNumber} />
-                <DetailField label="WhatsApp Group Name" value={selectedRecord.whatsappGroupName} />
-                <DetailField label="Group Name" value={selectedRecord.groupName} />
-                <DetailField label="Insurance Company" value={selectedRecord.insuranceCompany} wide />
-                <DetailField label="Policy Type" value={selectedRecord.policyType} />
-              </DetailSection>
-
-              <DetailSection title="Dates & Coverage">
-                <DetailField label="Start Date" value={selectedRecord.startDate ? formatDate(selectedRecord.startDate) : ""} />
-                <DetailField label="Expiry Date" value={selectedRecord.expiryDate ? formatDate(selectedRecord.expiryDate) : ""} />
-                <DetailField label="Duration" value={selectedRecord.duration} />
-                <DetailField label="Sum Insured" value={selectedRecord.sumInsured} />
-              </DetailSection>
-
-              <DetailSection title="Financial Details">
-                <DetailField label="Net Premium" value={selectedRecord.netPremium} />
-                <DetailField label="OD Premium" value={selectedRecord.odPremium} />
-                <DetailField label="TP + Driver + Owner" value={selectedRecord.tpDriverOwner} />
-                <DetailField label="Total Premium" value={selectedRecord.totalPremium} />
-                <DetailField label="Mode of Payment" value={selectedRecord.modeOfPayment} />
-                <DetailField label="Collected Amount" value={selectedRecord.collectedAmount} />
-                <DetailField label="Due Collection" value={selectedRecord.dueCollection} />
-              </DetailSection>
-
-              <DetailSection title="Vehicle Details">
-                <DetailField label="Vehicle Number" value={selectedRecord.vehicleNumber} />
-                <DetailField label="Make & Model" value={selectedRecord.makeModel} wide />
-                <DetailField label="Variant" value={selectedRecord.variant} />
-                <DetailField label="Registration Number" value={selectedRecord.registrationNumber} />
-                <DetailField label="Registration Date" value={selectedRecord.registrationDate ? formatDate(selectedRecord.registrationDate) : ""} />
-                <DetailField label="Manufacturing Year" value={selectedRecord.manufacturingYear} />
-                <DetailField label="Fuel Type" value={selectedRecord.fuelType} />
-                <DetailField label="Engine Number" value={selectedRecord.engineNumber} />
-                <DetailField label="Chassis Number" value={selectedRecord.chassisNumber} />
-                <DetailField label="Seating Capacity" value={selectedRecord.seatingCapacity} />
-                <DetailField label="Cubic Capacity" value={selectedRecord.cubicCapacity} />
-                <DetailField label="IDV" value={selectedRecord.idv} />
-                <DetailField label="NCB" value={selectedRecord.ncb} />
-                <DetailField label="Cover Type" value={selectedRecord.policyCoverType} />
-                <DetailField label="RTO Location" value={selectedRecord.rtoLocation} />
-              </DetailSection>
-
-              <DetailSection title="Additional & Risk Details">
-                <DetailField label="Nominee Name" value={selectedRecord.nomineeName} />
-                <DetailField label="Hypothecation / Financer" value={selectedRecord.financerName} />
-                <DetailField label="Risk Location" value={selectedRecord.riskLocation} wide />
-                <DetailField label="Occupancy" value={selectedRecord.occupancy} />
-                <DetailField label="Tehsil" value={selectedRecord.tehsil} />
-                <DetailField label="District" value={selectedRecord.district} />
-                <DetailField label="PPT / MPWLC" value={selectedRecord.pptMpwlc} />
-                <DetailField label="Valid In" value={selectedRecord.validIn} />
-                <DetailField label="Remarks" value={selectedRecord.remark} wide />
-              </DetailSection>
-
-              <DetailSection title="Metadata">
-                <DetailField label="Source PDF File" value={selectedRecord.sourceFile} wide />
-                <DetailField label="Created By" value={selectedRecord.uploadedByEmail || selectedRecord.uploadedBy} />
-                <DetailField label="Saved Date" value={selectedRecord.savedAt ? formatDateTime(selectedRecord.savedAt) : ""} />
-                <DetailField label="Renewal Status" value={selectedRecord.renewalStatus} />
-              </DetailSection>
-            </div>
-
-            {/* Modal Footer */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-                gap: "12px",
-                padding: "16px 24px",
-                borderTop: "1px solid #f1f5f9",
-                backgroundColor: "#ffffff"
-              }}
-            >
-              <button
-                onClick={() => handlePrint(selectedRecord)}
+              {/* Modal Header */}
+              <div
                 style={{
-                  padding: "10px 24px",
-                  borderRadius: "12px",
-                  border: "1px solid #cbd5e1",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "20px 24px",
+                  borderBottom: "1px solid #f1f5f9",
                   backgroundColor: "#ffffff",
                   color: "#0f172a",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  transition: "background-color 0.2s, border-color 0.2s"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#0f172a";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#ffffff";
-                  e.currentTarget.style.borderColor = "#cbd5e1";
                 }}
               >
-                <Printer size={16} />
-                Print Details
-              </button>
-              <button
-                onClick={() => setSelectedRecord(null)}
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <img
+                    src="/brand/main-logo-wide.webp"
+                    alt="Bima Headquarter"
+                    style={{ height: "74px", width: "auto", objectFit: "contain" }}
+                  />
+                  <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        textTransform: "uppercase",
+                        letterSpacing: "1px",
+                        color: "#64748b",
+                      }}
+                    >
+                      Policy Record Details
+                    </span>
+                    <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "800", color: "#0f172a" }}>
+                      {selectedRecord.policyNumber || "No Policy Number"}
+                    </h2>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedRecord(null)}
+                  aria-label="Close details"
+                  style={{
+                    background: "rgba(15, 23, 42, 0.05)",
+                    border: "none",
+                    color: "#64748b",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "50%",
+                    transition: "background-color 0.2s, color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.1)";
+                    e.currentTarget.style.color = "#0f172a";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.05)";
+                    e.currentTarget.style.color = "#64748b";
+                  }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div
                 style={{
-                  padding: "10px 24px",
-                  borderRadius: "12px",
-                  border: "1px solid #cbd5e1",
+                  padding: "24px",
+                  overflowY: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "24px",
                   backgroundColor: "#ffffff",
-                  color: "#475569",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  transition: "background-color 0.2s, border-color 0.2s"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#94a3b8";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#ffffff";
-                  e.currentTarget.style.borderColor = "#cbd5e1";
                 }}
               >
-                Close
-              </button>
+                <DetailSection title="General Information">
+                  <DetailField label="Customer ID" value={selectedRecord.customerId} />
+                  <DetailField label="Insured Name" value={selectedRecord.insuredName} wide />
+                  <DetailField label="Contact Person" value={selectedRecord.contactPerson} />
+                  <DetailField label="Phone Number" value={selectedRecord.contactNumber} />
+                  <DetailField label="WhatsApp Group Name" value={selectedRecord.whatsappGroupName} />
+                  <DetailField label="Group Name" value={selectedRecord.groupName} />
+                  <DetailField label="Insurance Company" value={selectedRecord.insuranceCompany} wide />
+                  <DetailField label="Policy Type" value={selectedRecord.policyType} />
+                </DetailSection>
+
+                <DetailSection title="Dates & Coverage">
+                  <DetailField
+                    label="Start Date"
+                    value={selectedRecord.startDate ? formatDate(selectedRecord.startDate) : ""}
+                  />
+                  <DetailField
+                    label="Expiry Date"
+                    value={selectedRecord.expiryDate ? formatDate(selectedRecord.expiryDate) : ""}
+                  />
+                  <DetailField label="Duration" value={selectedRecord.duration} />
+                  <DetailField label="Sum Insured" value={selectedRecord.sumInsured} />
+                </DetailSection>
+
+                <DetailSection title="Financial Details">
+                  <DetailField label="Net Premium" value={selectedRecord.netPremium} />
+                  <DetailField label="OD Premium" value={selectedRecord.odPremium} />
+                  <DetailField label="TP + Driver + Owner" value={selectedRecord.tpDriverOwner} />
+                  <DetailField label="Total Premium" value={selectedRecord.totalPremium} />
+                  <DetailField label="Mode of Payment" value={selectedRecord.modeOfPayment} />
+                  <DetailField label="Collected Amount" value={selectedRecord.collectedAmount} />
+                  <DetailField label="Due Collection" value={selectedRecord.dueCollection} />
+                </DetailSection>
+
+                <DetailSection title="Vehicle Details">
+                  <DetailField label="Vehicle Number" value={selectedRecord.vehicleNumber} />
+                  <DetailField label="Make & Model" value={selectedRecord.makeModel} wide />
+                  <DetailField label="Variant" value={selectedRecord.variant} />
+                  <DetailField label="Registration Number" value={selectedRecord.registrationNumber} />
+                  <DetailField
+                    label="Registration Date"
+                    value={selectedRecord.registrationDate ? formatDate(selectedRecord.registrationDate) : ""}
+                  />
+                  <DetailField label="Manufacturing Year" value={selectedRecord.manufacturingYear} />
+                  <DetailField label="Fuel Type" value={selectedRecord.fuelType} />
+                  <DetailField label="Engine Number" value={selectedRecord.engineNumber} />
+                  <DetailField label="Chassis Number" value={selectedRecord.chassisNumber} />
+                  <DetailField label="Seating Capacity" value={selectedRecord.seatingCapacity} />
+                  <DetailField label="Cubic Capacity" value={selectedRecord.cubicCapacity} />
+                  <DetailField label="IDV" value={selectedRecord.idv} />
+                  <DetailField label="NCB" value={selectedRecord.ncb} />
+                  <DetailField label="Cover Type" value={selectedRecord.policyCoverType} />
+                  <DetailField label="RTO Location" value={selectedRecord.rtoLocation} />
+                </DetailSection>
+
+                <DetailSection title="Additional & Risk Details">
+                  <DetailField label="Nominee Name" value={selectedRecord.nomineeName} />
+                  <DetailField label="Hypothecation / Financer" value={selectedRecord.financerName} />
+                  <DetailField label="Risk Location" value={selectedRecord.riskLocation} wide />
+                  <DetailField label="Occupancy" value={selectedRecord.occupancy} />
+                  <DetailField label="Tehsil" value={selectedRecord.tehsil} />
+                  <DetailField label="District" value={selectedRecord.district} />
+                  <DetailField label="PPT / MPWLC" value={selectedRecord.pptMpwlc} />
+                  <DetailField label="Valid In" value={selectedRecord.validIn} />
+                  <DetailField label="Remarks" value={selectedRecord.remark} wide />
+                </DetailSection>
+
+                <DetailSection title="Metadata">
+                  <DetailField label="Source PDF File" value={selectedRecord.sourceFile} wide />
+                  <DetailField
+                    label="Created By"
+                    value={selectedRecord.uploadedByEmail || selectedRecord.uploadedBy}
+                  />
+                  <DetailField
+                    label="Saved Date"
+                    value={selectedRecord.savedAt ? formatDateTime(selectedRecord.savedAt) : ""}
+                  />
+                  <DetailField label="Renewal Status" value={selectedRecord.renewalStatus} />
+                </DetailSection>
+              </div>
+
+              {/* Modal Footer */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "16px 24px",
+                  borderTop: "1px solid #f1f5f9",
+                  backgroundColor: "#ffffff",
+                }}
+              >
+                <button
+                  onClick={() => handlePrint(selectedRecord)}
+                  style={{
+                    padding: "10px 24px",
+                    borderRadius: "12px",
+                    border: "1px solid #cbd5e1",
+                    backgroundColor: "#ffffff",
+                    color: "#0f172a",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    transition: "background-color 0.2s, border-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f8fafc";
+                    e.currentTarget.style.borderColor = "#0f172a";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#ffffff";
+                    e.currentTarget.style.borderColor = "#cbd5e1";
+                  }}
+                >
+                  <Printer size={16} />
+                  Print Details
+                </button>
+                <button
+                  onClick={() => setSelectedRecord(null)}
+                  style={{
+                    padding: "10px 24px",
+                    borderRadius: "12px",
+                    border: "1px solid #cbd5e1",
+                    backgroundColor: "#ffffff",
+                    color: "#475569",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    transition: "background-color 0.2s, border-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f8fafc";
+                    e.currentTarget.style.borderColor = "#94a3b8";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#ffffff";
+                    e.currentTarget.style.borderColor = "#cbd5e1";
+                  }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-        , document.body)}
+          </div>,
+          document.body,
+        )}
 
       {/* Floating action bar when records are marked */}
-      {canDelete && selectedIds.size > 0 && typeof window !== "undefined" && createPortal(
-        <div className="mark-action-bar">
-          <div className="mark-action-bar-inner">
-            <div className="mark-action-info">
-              <CheckSquare size={18} strokeWidth={1.6} />
-              <span><strong>{selectedIds.size}</strong> record{selectedIds.size === 1 ? "" : "s"} marked</span>
+      {canDelete &&
+        selectedIds.size > 0 &&
+        typeof window !== "undefined" &&
+        createPortal(
+          <div className="mark-action-bar">
+            <div className="mark-action-bar-inner">
+              <div className="mark-action-info">
+                <CheckSquare size={18} strokeWidth={1.6} />
+                <span>
+                  <strong>{selectedIds.size}</strong> record{selectedIds.size === 1 ? "" : "s"} marked
+                </span>
+              </div>
+              <div className="mark-action-buttons">
+                <button className="mark-action-clear" type="button" onClick={() => setSelectedIds(new Set())}>
+                  Clear
+                </button>
+                <button className="mark-action-delete" type="button" onClick={handleDeleteSelected}>
+                  <Trash2 size={16} strokeWidth={2.5} />
+                  Delete Selected
+                </button>
+              </div>
             </div>
-            <div className="mark-action-buttons">
-              <button
-                className="mark-action-clear"
-                type="button"
-                onClick={() => setSelectedIds(new Set())}
-              >
-                Clear
-              </button>
-              <button
-                className="mark-action-delete"
-                type="button"
-                onClick={handleDeleteSelected}
-              >
-                <Trash2 size={16} strokeWidth={2.5} />
-                Delete Selected
-              </button>
-            </div>
-          </div>
-        </div>
-      , document.body)}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import {
   PhoneCall,
   CheckCircle2,
   XOctagon,
-  BarChart3
+  BarChart3,
 } from "lucide-react";
 import "@/app/ui/renewals-redesign.css";
 
@@ -27,7 +27,7 @@ export default function RenewalsLayout({ children }) {
     { label: "Follow-Ups", href: "/dashboard/renewals/follow-ups", icon: PhoneCall },
     { label: "Renewed", href: "/dashboard/renewals/renewed", icon: CheckCircle2 },
     { label: "Lost", href: "/dashboard/renewals/lost", icon: XOctagon },
-    { label: "Reports", href: "/dashboard/renewals/reports", icon: BarChart3 }
+    { label: "Reports", href: "/dashboard/renewals/reports", icon: BarChart3 },
   ];
 
   const getActiveHref = () => {
@@ -76,7 +76,7 @@ export default function RenewalsLayout({ children }) {
         {navItems.map((item) => {
           const IconComponent = item.icon;
           const isActive = item.href === activeHref;
-          
+
           return (
             <Link
               key={item.href}
@@ -91,9 +91,7 @@ export default function RenewalsLayout({ children }) {
       </nav>
 
       {/* Main page content area */}
-      <div className="renewals-content-pane">
-        {children}
-      </div>
+      <div className="renewals-content-pane">{children}</div>
     </div>
   );
 }

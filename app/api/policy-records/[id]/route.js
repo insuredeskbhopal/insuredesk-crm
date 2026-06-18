@@ -28,8 +28,8 @@ export async function PUT(request, { params }) {
     const existing = await prisma.policyRecord.findFirst({
       where: {
         id,
-        ...getTenantFilter(session, "read")
-      }
+        ...getTenantFilter(session, "read"),
+      },
     });
 
     if (!existing || existing.deletedAt) {
@@ -37,11 +37,7 @@ export async function PUT(request, { params }) {
     }
 
     // Verify tenant and role permissions
-    const isAuthorized = canAccessSharedResource(
-      session,
-      "write",
-      existing.organizationId
-    );
+    const isAuthorized = canAccessSharedResource(session, "write", existing.organizationId);
 
     if (!isAuthorized) {
       return Response.json({ error: "Access denied" }, { status: 403 });
@@ -51,31 +47,36 @@ export async function PUT(request, { params }) {
     if (!Object.keys(incomingReviewedData).length) {
       return Response.json({ error: "No policy edits were provided." }, { status: 400 });
     }
-    const sourceFile = payload.sourceFile || existing.sourceFile || existing.pdfFileName || existing.data?.sourceFile || "Untitled.pdf";
+    const sourceFile =
+      payload.sourceFile ||
+      existing.sourceFile ||
+      existing.pdfFileName ||
+      existing.data?.sourceFile ||
+      "Untitled.pdf";
     const reviewedData = sanitizeRecordPayload({
       ...(existing.reviewedData || existing.extractedData || existing.data || {}),
       ...incomingReviewedData,
-      sourceFile
+      sourceFile,
     });
     const mergedData = sanitizeRecordPayload({
       ...(existing.data || {}),
       ...reviewedData,
-      sourceFile
+      sourceFile,
     });
     const extractedData = payload.extractedData
       ? sanitizeRecordPayload({
           ...(existing.extractedData || {}),
           ...payload.extractedData,
-          sourceFile
+          sourceFile,
         })
       : existing.extractedData;
     const selectedCompany = normalizeInsuranceCompanyName(
       payload.selectedCompany ?? reviewedData.insuranceCompany ?? existing.selectedCompany,
-      existing.rawText || ""
+      existing.rawText || "",
     );
     const validation = getReviewValidation({
       sourceFile,
-      extractedData: mergedData
+      extractedData: mergedData,
     });
 
     if (validation.contactErrors.length) {
@@ -83,10 +84,13 @@ export async function PUT(request, { params }) {
     }
 
     if (!validation.valid) {
-      return Response.json({
-        error: formatReviewValidationError(validation.missingRequired, validation.contactErrors),
-        missingRequired: validation.missingRequired
-      }, { status: 422 });
+      return Response.json(
+        {
+          error: formatReviewValidationError(validation.missingRequired, validation.contactErrors),
+          missingRequired: validation.missingRequired,
+        },
+        { status: 422 },
+      );
     }
 
     const record = await prisma.policyRecord.update({
@@ -99,14 +103,14 @@ export async function PUT(request, { params }) {
         selectedServiceCategory: payload.selectedServiceCategory ?? existing.selectedServiceCategory,
         selectedPolicyType: payload.selectedPolicyType ?? existing.selectedPolicyType,
         data: mergedData,
-        updatedById: actorId
+        updatedById: actorId,
       },
       include: {
         createdBy: {
           select: {
             name: true,
-            email: true
-          }
+            email: true,
+          },
         },
         uploadedFile: {
           select: {
@@ -114,12 +118,12 @@ export async function PUT(request, { params }) {
             createdBy: {
               select: {
                 name: true,
-                email: true
-              }
-            }
-          }
-        }
-      }
+                email: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     // Audit log update event
@@ -134,12 +138,15 @@ export async function PUT(request, { params }) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { sourceFile: record.sourceFile }
+      metadata: { sourceFile: record.sourceFile },
     });
 
     return Response.json(normalizeRecord(record));
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "Policy record could not be updated." }, { status: 400 });
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Policy record could not be updated." },
+      { status: 400 },
+    );
   }
 }
 
@@ -160,8 +167,8 @@ export async function DELETE(request, { params }) {
     const existing = await prisma.policyRecord.findFirst({
       where: {
         id,
-        ...getTenantFilter(session, "read")
-      }
+        ...getTenantFilter(session, "read"),
+      },
     });
 
     if (!existing || existing.deletedAt) {
@@ -169,11 +176,7 @@ export async function DELETE(request, { params }) {
     }
 
     // Verify tenant and role permissions
-    const isAuthorized = canAccessSharedResource(
-      session,
-      "delete",
-      existing.organizationId
-    );
+    const isAuthorized = canAccessSharedResource(session, "delete", existing.organizationId);
 
     if (!isAuthorized) {
       return Response.json({ error: "Access denied" }, { status: 403 });
@@ -183,15 +186,22 @@ export async function DELETE(request, { params }) {
     try {
       payload = await request.json();
     } catch {}
-    const policyNumber = existing.reviewedData?.policyNumber || existing.data?.policyNumber || existing.extractedData?.policyNumber || "";
+    const policyNumber =
+      existing.reviewedData?.policyNumber ||
+      existing.data?.policyNumber ||
+      existing.extractedData?.policyNumber ||
+      "";
     const deleteLabel = policyNumber || id;
     const expectedConfirmation = `DELETE ${deleteLabel}`;
 
     if (String(payload.confirmation || "").trim() !== expectedConfirmation) {
-      return Response.json({
-        error: `Type "${expectedConfirmation}" to delete this policy record.`,
-        expectedConfirmation
-      }, { status: 428 });
+      return Response.json(
+        {
+          error: `Type "${expectedConfirmation}" to delete this policy record.`,
+          expectedConfirmation,
+        },
+        { status: 428 },
+      );
     }
 
     // Perform enterprise Soft Delete
@@ -199,8 +209,8 @@ export async function DELETE(request, { params }) {
       where: { id },
       data: {
         deletedAt: new Date(),
-        deletedById: actorId
-      }
+        deletedById: actorId,
+      },
     });
 
     // Audit log delete event
@@ -215,7 +225,7 @@ export async function DELETE(request, { params }) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { sourceFile: existing.sourceFile, policyNumber }
+      metadata: { sourceFile: existing.sourceFile, policyNumber },
     });
 
     return new Response(null, { status: 204 });

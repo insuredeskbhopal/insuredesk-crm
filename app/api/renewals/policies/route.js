@@ -3,7 +3,12 @@ import { verifyJWT } from "@/lib/auth";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
 import { startOfDay } from "@/app/lib/reporting/filters";
-import { getDaysStatus, getExpiryState, calculateDaysLeft, calculateRenewalStatus } from "@/lib/renewals/dates";
+import {
+  getDaysStatus,
+  getExpiryState,
+  calculateDaysLeft,
+  calculateRenewalStatus,
+} from "@/lib/renewals/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +54,7 @@ export async function GET(request) {
       policyType,
       q.trim(),
       `%${q.trim().toLowerCase()}%`,
-      actorId
+      actorId,
     ];
 
     const baseCTE = `
@@ -306,7 +311,7 @@ export async function GET(request) {
     const [countResult, dataResult, summaryResult] = await Promise.all([
       prisma.$queryRawUnsafe(countQuery, ...queryParams),
       prisma.$queryRawUnsafe(dataQuery, ...queryParams, limit, offset),
-      prisma.$queryRawUnsafe(summaryQuery, ...queryParams)
+      prisma.$queryRawUnsafe(summaryQuery, ...queryParams),
     ]);
 
     const totalCount = countResult[0]?.count || 0;
@@ -339,8 +344,8 @@ export async function GET(request) {
           createdById: true,
           updatedById: true,
           createdBy: { select: { name: true, email: true } },
-          updatedBy: { select: { name: true, email: true } }
-        }
+          updatedBy: { select: { name: true, email: true } },
+        },
       });
 
       const recordMap = {};
@@ -349,14 +354,14 @@ export async function GET(request) {
       });
 
       // Look up new policy numbers for renewed entries
-      const renewedPolicyIds = rawRecords.map(r => r.renewedPolicyId).filter(Boolean);
+      const renewedPolicyIds = rawRecords.map((r) => r.renewedPolicyId).filter(Boolean);
       const renewedPolicyMap = {};
       if (renewedPolicyIds.length > 0) {
         const renewedPolicies = await prisma.policyRecord.findMany({
           where: { id: { in: renewedPolicyIds } },
-          select: { id: true, data: true, reviewedData: true }
+          select: { id: true, data: true, reviewedData: true },
         });
-        renewedPolicies.forEach(p => {
+        renewedPolicies.forEach((p) => {
           const payload = p.reviewedData || p.data || {};
           renewedPolicyMap[p.id] = payload.policyNumber || "";
         });
@@ -381,7 +386,7 @@ export async function GET(request) {
       totalCount,
       pages: Math.ceil(totalCount / limit) || 1,
       currentPage: page,
-      summaryCounts: normalizeSummaryCounts(summaryResult[0] || {})
+      summaryCounts: normalizeSummaryCounts(summaryResult[0] || {}),
     });
   } catch (error) {
     console.error("Renewals policies fetch failed:", error);
@@ -403,6 +408,6 @@ function normalizeSummaryCounts(row = {}) {
     lost: Number(row.lost) || 0,
     missingExpiry: Number(row.missing_expiry) || 0,
     invalidExpiry: Number(row.invalid_expiry) || 0,
-    todayWork: Number(row.today_work) || 0
+    todayWork: Number(row.today_work) || 0,
   };
 }

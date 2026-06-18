@@ -5,9 +5,7 @@ export default function AlertCard({ alert, onDismiss }) {
 
   return (
     <section className={`alert-card ${alert.type || "info"}`} role={isError ? "alert" : "status"}>
-      <div className="alert-icon">
-        {isError ? <AlertTriangle size={18} /> : <CheckCircle size={18} />}
-      </div>
+      <div className="alert-icon">{isError ? <AlertTriangle size={18} /> : <CheckCircle size={18} />}</div>
       <div>
         <strong>{alert.title}</strong>
         <p>{alert.message}</p>
@@ -18,4 +16,3 @@ export default function AlertCard({ alert, onDismiss }) {
     </section>
   );
 }
-

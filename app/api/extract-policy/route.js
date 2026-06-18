@@ -27,8 +27,8 @@ export async function POST(request) {
       ? await prisma.uploadedFile.findFirst({
           where: {
             id: uploadedFileId,
-            ...getTenantFilter(user, "write")
-          }
+            ...getTenantFilter(user, "write"),
+          },
         })
       : null;
 
@@ -46,11 +46,14 @@ export async function POST(request) {
       bankSourceId: payload.bankSourceId || undefined,
       companyId: payload.companyId || undefined,
       categoryId: payload.categoryId || undefined,
-      policyTypeId: payload.policyTypeId || undefined
+      policyTypeId: payload.policyTypeId || undefined,
     });
 
     if (!schema) {
-      return Response.json({ error: "No active schema found for the selected policy type." }, { status: 404 });
+      return Response.json(
+        { error: "No active schema found for the selected policy type." },
+        { status: 404 },
+      );
     }
 
     const extractedData = extractFieldsForSchema(text, schema);
@@ -66,17 +69,19 @@ export async function POST(request) {
           extractedData,
           schemaVersion: schema.version,
           schemaFallbackLevel: schema.fallbackLevel,
-          status: UPLOAD_STATUS.REVIEW_REQUIRED
-        }
+          status: UPLOAD_STATUS.REVIEW_REQUIRED,
+        },
       });
     }
 
-    return Response.json({ schema, extractedData, fallbackLevel: schema.fallbackLevel, fallbackUsed: schema.fallbackUsed });
+    return Response.json({
+      schema,
+      extractedData,
+      fallbackLevel: schema.fallbackLevel,
+      fallbackUsed: schema.fallbackUsed,
+    });
   } catch (error) {
     console.error("Extract-policy failed:", error);
-    return Response.json(
-      { error: "Policy extraction failed. Please try again." },
-      { status: 500 }
-    );
+    return Response.json({ error: "Policy extraction failed. Please try again." }, { status: 500 });
   }
 }

@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
@@ -104,7 +103,9 @@ export default function ServiceDetailPage({ service }) {
               <div className="service-detail-side-card service-detail-side-cta">
                 <span className="material-symbols-outlined">{service.icon}</span>
                 <h3>Speak to an Advisor</h3>
-                <p>Get policy guidance from a licensed insurance marketing firm serving clients across India.</p>
+                <p>
+                  Get policy guidance from a licensed insurance marketing firm serving clients across India.
+                </p>
                 <a href={`tel:${BUSINESS_DETAILS.phoneHref}`}>Call {BUSINESS_DETAILS.phone}</a>
                 <Link href="/contact">Request Callback</Link>
               </div>

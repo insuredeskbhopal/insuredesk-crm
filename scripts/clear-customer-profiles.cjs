@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log("Cleaning customer profiles...");
-  
+
   const deletedProfiles = await prisma.customerProfile.deleteMany();
   console.log(`Deleted ${deletedProfiles.count} customer profile records.`);
 

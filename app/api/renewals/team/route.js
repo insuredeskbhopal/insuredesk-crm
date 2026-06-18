@@ -28,8 +28,8 @@ export async function GET(request) {
         id: true,
         name: true,
         email: true,
-        role: true
-      }
+        role: true,
+      },
     });
 
     return Response.json({
@@ -37,8 +37,8 @@ export async function GET(request) {
         id: member.id,
         name: member.name || member.email,
         email: member.email,
-        role: member.role
-      }))
+        role: member.role,
+      })),
     });
   } catch (error) {
     console.error("Renewals team fetch failed:", error);

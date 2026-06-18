@@ -2,18 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { 
+import {
   Users,
-  FileText, 
-  Clock, 
-  AlertTriangle, 
-  PhoneCall, 
-  CheckCircle, 
-  XCircle, 
-  Building2, 
-  FolderOpen, 
+  FileText,
+  Clock,
+  AlertTriangle,
+  PhoneCall,
+  CheckCircle,
+  XCircle,
+  Building2,
+  FolderOpen,
   BarChart3,
-  Calendar
+  Calendar,
 } from "lucide-react";
 
 export default function RenewalsDashboard() {
@@ -28,7 +28,7 @@ export default function RenewalsDashboard() {
     followUpToday: 0,
     missedFollowUps: 0,
     renewed: 0,
-    lost: 0
+    lost: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -39,7 +39,7 @@ export default function RenewalsDashboard() {
         // Fetch stats from main policies route
         const policiesRes = await fetch("/api/renewals/policies?tab=upcoming&limit=1");
         const policiesData = await policiesRes.json();
-        
+
         if (policiesData.summaryCounts) {
           setStats(policiesData.summaryCounts);
         }
@@ -60,7 +60,7 @@ export default function RenewalsDashboard() {
       icon: FileText,
       color: "#4f46e5",
       bgColor: "#e0e7ff",
-      href: "/dashboard/renewals/policies"
+      href: "/dashboard/renewals/policies",
     },
     {
       title: "Due In 7 Days",
@@ -69,7 +69,7 @@ export default function RenewalsDashboard() {
       icon: Clock,
       color: varColor("warning"),
       bgColor: varBg("warning"),
-      href: "/dashboard/renewals/policies?tab=due_7"
+      href: "/dashboard/renewals/policies?tab=due_7",
     },
     {
       title: "Due In 15 Days",
@@ -78,7 +78,7 @@ export default function RenewalsDashboard() {
       icon: Calendar,
       color: "#f59e0b",
       bgColor: "#fef3c7",
-      href: "/dashboard/renewals/policies?tab=due_15"
+      href: "/dashboard/renewals/policies?tab=due_15",
     },
     {
       title: "Due In 30 Days",
@@ -87,7 +87,7 @@ export default function RenewalsDashboard() {
       icon: Calendar,
       color: "#d97706",
       bgColor: "#fef3c7",
-      href: "/dashboard/renewals/policies?tab=due_30"
+      href: "/dashboard/renewals/policies?tab=due_30",
     },
     {
       title: "Overdue Policies",
@@ -96,7 +96,7 @@ export default function RenewalsDashboard() {
       icon: AlertTriangle,
       color: varColor("danger"),
       bgColor: varBg("danger"),
-      href: "/dashboard/renewals/policies?tab=overdue"
+      href: "/dashboard/renewals/policies?tab=overdue",
     },
     {
       title: "Follow-Ups Pending",
@@ -105,7 +105,7 @@ export default function RenewalsDashboard() {
       icon: PhoneCall,
       color: "#0891b2",
       bgColor: "#ecfeff",
-      href: "/dashboard/renewals/follow-ups"
+      href: "/dashboard/renewals/follow-ups",
     },
     {
       title: "Renewed This Month",
@@ -114,7 +114,7 @@ export default function RenewalsDashboard() {
       icon: CheckCircle,
       color: varColor("success"),
       bgColor: varBg("success"),
-      href: "/dashboard/renewals/renewed"
+      href: "/dashboard/renewals/renewed",
     },
     {
       title: "Lost Policies",
@@ -123,8 +123,8 @@ export default function RenewalsDashboard() {
       icon: XCircle,
       color: "#6b7280",
       bgColor: "#f3f4f6",
-      href: "/dashboard/renewals/lost"
-    }
+      href: "/dashboard/renewals/lost",
+    },
   ];
 
   const summaries = [
@@ -132,32 +132,32 @@ export default function RenewalsDashboard() {
       title: "Insurance Companies",
       desc: "Manage renewals grouped by underwriters",
       icon: Building2,
-      href: "/dashboard/renewals/companies"
+      href: "/dashboard/renewals/companies",
     },
     {
       title: "Policy Types",
       desc: "Filter and view by insurance product line",
       icon: FolderOpen,
-      href: "/dashboard/renewals/policy-types"
+      href: "/dashboard/renewals/policy-types",
     },
     {
       title: "Active Customer Renewals",
       desc: "Manage customer-level portfolios",
       icon: Users,
-      href: "/dashboard/renewals/customers"
+      href: "/dashboard/renewals/customers",
     },
     {
       title: "Active Policy Renewals",
       desc: "Manage individual policy-level details",
       icon: FileText,
-      href: "/dashboard/renewals/policies"
+      href: "/dashboard/renewals/policies",
     },
     {
       title: "Renewal Reports",
       desc: "Access management statistics & metrics",
       icon: BarChart3,
-      href: "/dashboard/renewals/reports"
-    }
+      href: "/dashboard/renewals/reports",
+    },
   ];
 
   function varColor(type) {
@@ -180,22 +180,42 @@ export default function RenewalsDashboard() {
     <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       {/* Top KPI Cards Grid */}
       <div>
-        <h3 style={{ fontSize: "16px", fontWeight: "600", color: "var(--rn-text-primary)", marginBottom: "16px" }}>
+        <h3
+          style={{
+            fontSize: "16px",
+            fontWeight: "600",
+            color: "var(--rn-text-primary)",
+            marginBottom: "16px",
+          }}
+        >
           Key Performance Indicators
         </h3>
         <div className="renewals-grid">
           {kpis.map((kpi) => {
             const Icon = kpi.icon;
             return (
-              <div 
-                key={kpi.title} 
-                className="renewals-card"
-                onClick={() => router.push(kpi.href)}
-              >
+              <div key={kpi.title} className="renewals-card" onClick={() => router.push(kpi.href)}>
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "12px",
+                    }}
+                  >
                     <h4 className="renewals-card-title">{kpi.title}</h4>
-                    <div style={{ padding: "8px", borderRadius: "8px", backgroundColor: kpi.bgColor, color: kpi.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div
+                      style={{
+                        padding: "8px",
+                        borderRadius: "8px",
+                        backgroundColor: kpi.bgColor,
+                        color: kpi.color,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
                       <Icon size={18} />
                     </div>
                   </div>
@@ -210,26 +230,57 @@ export default function RenewalsDashboard() {
 
       {/* Additional Summary Cards Grid */}
       <div>
-        <h3 style={{ fontSize: "16px", fontWeight: "600", color: "var(--rn-text-primary)", marginBottom: "16px" }}>
+        <h3
+          style={{
+            fontSize: "16px",
+            fontWeight: "600",
+            color: "var(--rn-text-primary)",
+            marginBottom: "16px",
+          }}
+        >
           Operational Sections
         </h3>
-        <div className="renewals-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+        <div
+          className="renewals-grid"
+          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}
+        >
           {summaries.map((sum) => {
             const Icon = sum.icon;
             return (
-              <div 
-                key={sum.title} 
+              <div
+                key={sum.title}
                 className="renewals-card"
                 onClick={() => router.push(sum.href)}
                 style={{ minHeight: "130px" }}
               >
                 <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-                  <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "var(--rn-border-light)", color: "var(--rn-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div
+                    style={{
+                      padding: "12px",
+                      borderRadius: "8px",
+                      backgroundColor: "var(--rn-border-light)",
+                      color: "var(--rn-text-secondary)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
                     <Icon size={22} />
                   </div>
                   <div>
-                    <h4 style={{ fontSize: "15px", fontWeight: "600", margin: "0 0 4px 0", color: "var(--rn-text-primary)" }}>{sum.title}</h4>
-                    <p style={{ fontSize: "13px", color: "var(--rn-text-secondary)", margin: 0 }}>{sum.desc}</p>
+                    <h4
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: "600",
+                        margin: "0 0 4px 0",
+                        color: "var(--rn-text-primary)",
+                      }}
+                    >
+                      {sum.title}
+                    </h4>
+                    <p style={{ fontSize: "13px", color: "var(--rn-text-secondary)", margin: 0 }}>
+                      {sum.desc}
+                    </p>
                   </div>
                 </div>
               </div>

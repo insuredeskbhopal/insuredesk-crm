@@ -34,11 +34,11 @@ async function main() {
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
     const dataToUpdate = {};
-    
+
     if (!user.organizationId) {
       dataToUpdate.organizationId = org.id;
     }
-    
+
     // Assign ADMIN role to first user, others AGENT
     if (!user.role) {
       dataToUpdate.role = i === 0 ? "ADMIN" : "AGENT";
@@ -72,7 +72,7 @@ async function main() {
     where: { pdfBytes: { not: null } },
   });
   console.log(`Found ${filesWithBytes.length} files with inline binary PDF bytes to extract.`);
-  
+
   for (const file of filesWithBytes) {
     const buffer = file.pdfBytes;
     const fileHash = crypto.createHash("sha256").update(buffer).digest("hex");
@@ -83,9 +83,9 @@ async function main() {
     const fileDate = file.createdAt || new Date();
     const dateSubdir = path.join(
       fileDate.getFullYear().toString(),
-      (fileDate.getMonth() + 1).toString().padStart(2, "0")
+      (fileDate.getMonth() + 1).toString().padStart(2, "0"),
     );
-    
+
     const targetDir = path.join(localStorageDir, dateSubdir);
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
@@ -93,7 +93,7 @@ async function main() {
 
     const relativePath = path.join(dateSubdir, uniqueName).replace(/\\/g, "/");
     const fullPath = path.join(localStorageDir, relativePath);
-    
+
     // Write binary file to storage
     fs.writeFileSync(fullPath, buffer);
 
@@ -126,7 +126,7 @@ async function main() {
     const policyDate = policy.createdAt || new Date();
     const dateSubdir = path.join(
       policyDate.getFullYear().toString(),
-      (policyDate.getMonth() + 1).toString().padStart(2, "0")
+      (policyDate.getMonth() + 1).toString().padStart(2, "0"),
     );
 
     const targetDir = path.join(localStorageDir, dateSubdir);
@@ -136,7 +136,7 @@ async function main() {
 
     const relativePath = path.join(dateSubdir, uniqueName).replace(/\\/g, "/");
     const fullPath = path.join(localStorageDir, relativePath);
-    
+
     // Write binary file to storage
     fs.writeFileSync(fullPath, buffer);
 
@@ -179,7 +179,9 @@ async function main() {
         pdfBytes: null, // Reclaim space
       },
     });
-    console.log(`Successfully migrated PolicyRecord ${policy.id} to storage path: ${relativePath} (Linked File ID: ${fileId})`);
+    console.log(
+      `Successfully migrated PolicyRecord ${policy.id} to storage path: ${relativePath} (Linked File ID: ${fileId})`,
+    );
   }
 
   console.log("Database migration and file extraction completed successfully!");

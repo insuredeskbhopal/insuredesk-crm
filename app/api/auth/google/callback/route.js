@@ -8,8 +8,8 @@ export async function GET(request) {
     return new Response(renderOAuthCodePage(code), {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "no-store"
-      }
+        "Cache-Control": "no-store",
+      },
     });
   }
 

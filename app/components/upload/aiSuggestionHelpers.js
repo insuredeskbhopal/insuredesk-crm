@@ -1,5 +1,8 @@
 export function getEligibleAiSuggestion(upload, fieldKey) {
-  const aiMergePreview = upload?.extractedData?.extractionQuality?.aiMergePreview || upload?.extractionQuality?.aiMergePreview || {};
+  const aiMergePreview =
+    upload?.extractedData?.extractionQuality?.aiMergePreview ||
+    upload?.extractionQuality?.aiMergePreview ||
+    {};
   return aiMergePreview.eligibleUpdates?.[fieldKey] || null;
 }
 

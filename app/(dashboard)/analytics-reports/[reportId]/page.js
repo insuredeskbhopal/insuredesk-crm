@@ -13,7 +13,8 @@ export default async function AnalyticsReportPage({ params }) {
   const records = await loadScopedPolicyRecords();
 
   const normalizedRecords = records.map(normalizeRecord);
-  const report = findReportById(normalizedRecords, normalizedReportId) || findReportById(normalizedRecords, reportId);
+  const report =
+    findReportById(normalizedRecords, normalizedReportId) || findReportById(normalizedRecords, reportId);
 
   if (!report) {
     return (
@@ -23,7 +24,9 @@ export default async function AnalyticsReportPage({ params }) {
           <p className="eyebrow">Report not found</p>
           <h1>Unknown analytics report</h1>
           <p>The requested report ID does not match any available dashboard report.</p>
-          <Link className="primary-action" href="/analytics-reports">Back to Analytics</Link>
+          <Link className="primary-action" href="/analytics-reports">
+            Back to Analytics
+          </Link>
         </section>
       </main>
     );
@@ -31,8 +34,14 @@ export default async function AnalyticsReportPage({ params }) {
 
   const reportFilter = report.report || report;
   const matchingRecords = getReportRecords(normalizedRecords, reportFilter);
-  const totalPremium = matchingRecords.reduce((sum, record) => sum + parseMoneyValue(getPremiumValue(record)), 0);
-  const totalSumInsured = matchingRecords.reduce((sum, record) => sum + parseMoneyValue(record.sumInsured), 0);
+  const totalPremium = matchingRecords.reduce(
+    (sum, record) => sum + parseMoneyValue(getPremiumValue(record)),
+    0,
+  );
+  const totalSumInsured = matchingRecords.reduce(
+    (sum, record) => sum + parseMoneyValue(record.sumInsured),
+    0,
+  );
   const pdfCount = matchingRecords.filter((record) => record.hasPdf).length;
   const latestRecord = matchingRecords
     .slice()
@@ -52,7 +61,10 @@ export default async function AnalyticsReportPage({ params }) {
           </div>
           <div className="title-actions">
             {reportFilter.type === "customerName" ? (
-              <Link className="secondary-action" href={`/customer-management/${encodeURIComponent(reportFilter.value)}`}>
+              <Link
+                className="secondary-action"
+                href={`/customer-management/${encodeURIComponent(reportFilter.value)}`}
+              >
                 Open Customer
               </Link>
             ) : null}
@@ -129,7 +141,8 @@ function getPremiumValue(record = {}) {
 }
 
 function buildContextItems(report, records, latestRecord) {
-  const filterValue = report.value === undefined || report.value === null ? "All records" : String(report.value);
+  const filterValue =
+    report.value === undefined || report.value === null ? "All records" : String(report.value);
   const latestSavedAt = latestRecord?.savedAt ? new Date(latestRecord.savedAt) : null;
 
   return [
@@ -138,10 +151,11 @@ function buildContextItems(report, records, latestRecord) {
     { label: "Records returned", value: records.length },
     {
       label: "Latest saved",
-      value: latestSavedAt && !Number.isNaN(latestSavedAt.getTime())
-        ? latestSavedAt.toLocaleDateString("en-IN")
-        : "-"
-    }
+      value:
+        latestSavedAt && !Number.isNaN(latestSavedAt.getTime())
+          ? latestSavedAt.toLocaleDateString("en-IN")
+          : "-",
+    },
   ];
 }
 
@@ -160,7 +174,7 @@ function getReportTypeLabel(type) {
     vehicleType: "Vehicle type",
     ncbBracket: "NCB bracket",
     tehsil: "Tehsil",
-    renewal: "Renewal bucket"
+    renewal: "Renewal bucket",
   };
 
   return labels[type] || "Custom report";

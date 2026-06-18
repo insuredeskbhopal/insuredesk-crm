@@ -3,4 +3,3 @@ export function exportReportAsJson(report) {
   const records = Array.isArray(report) ? report : report?.records || [];
   return JSON.stringify(records, null, 2);
 }
-

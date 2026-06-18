@@ -1,4 +1,16 @@
-export default function PreviewField({ label, meta, value, onChange, type = "text", wide, options, error, disabled, suggestion, onApplySuggestion }) {
+export default function PreviewField({
+  label,
+  meta,
+  value,
+  onChange,
+  type = "text",
+  wide,
+  options,
+  error,
+  disabled,
+  suggestion,
+  onApplySuggestion,
+}) {
   const metaClass = meta ? `meta-${meta.toLowerCase().replace(" ", "-")}` : "";
   const hasSuggestion = Boolean(suggestion?.suggestedValue);
   const labelEl = (
@@ -11,20 +23,33 @@ export default function PreviewField({ label, meta, value, onChange, type = "tex
 
   let inputEl;
   if (wide) {
-    inputEl = <textarea value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} />;
+    inputEl = (
+      <textarea value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} />
+    );
   } else if (options?.length) {
     inputEl = (
       <select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled}>
         {options.map((option) => (
-          <option key={option.value} value={option.value}>{option.label}</option>
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
         ))}
       </select>
     );
   } else {
-    inputEl = <input type={type} value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} />;
+    inputEl = (
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+      />
+    );
   }
 
-  const classes = [wide ? "wide" : "", error ? "has-error" : "", disabled ? "is-disabled" : ""].filter(Boolean).join(" ");
+  const classes = [wide ? "wide" : "", error ? "has-error" : "", disabled ? "is-disabled" : ""]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <label className={classes}>
@@ -40,10 +65,14 @@ export default function PreviewField({ label, meta, value, onChange, type = "tex
             <strong>Current value</strong>
             <span>{value || "-"}</span>
           </div>
-          {suggestion.evidenceText ? (
-            <blockquote>{suggestion.evidenceText}</blockquote>
-          ) : null}
-          <button type="button" onClick={() => onApplySuggestion ? onApplySuggestion(suggestion) : onChange(suggestion.suggestedValue)} disabled={disabled}>
+          {suggestion.evidenceText ? <blockquote>{suggestion.evidenceText}</blockquote> : null}
+          <button
+            type="button"
+            onClick={() =>
+              onApplySuggestion ? onApplySuggestion(suggestion) : onChange(suggestion.suggestedValue)
+            }
+            disabled={disabled}
+          >
             Apply Suggestion
           </button>
         </div>

@@ -46,8 +46,8 @@ export async function POST(request) {
     const oldPolicy = await prisma.policyRecord.findFirst({
       where: {
         id: previousPolicyId,
-        ...tenantFilter
-      }
+        ...tenantFilter,
+      },
     });
 
     if (!oldPolicy) {
@@ -73,8 +73,8 @@ export async function POST(request) {
             storagePath: pdfInfo.storageResult.storagePath,
             fileHash: pdfInfo.storageResult.fileHash,
             fileSize: pdfInfo.storageResult.fileSize,
-            storageMetadata: pdfInfo.storageResult.storageMetadata || {}
-          }
+            storageMetadata: pdfInfo.storageResult.storageMetadata || {},
+          },
         });
         uploadedFileId = uploadedFile.id;
       }
@@ -92,9 +92,9 @@ export async function POST(request) {
             createdAt: new Date().toISOString(),
             createdBy: user.name || user.email || "User",
             createdById: actorId || null,
-            type: "RENEWED"
+            type: "RENEWED",
           },
-          ...previousRemarks
+          ...previousRemarks,
         ];
       } else if (previousRemarks.length) {
         standardizedRenewedData.renewalRemarks = previousRemarks;
@@ -122,12 +122,12 @@ export async function POST(request) {
           organizationId: user.organizationId,
           createdById: actorId,
           updatedById: actorId,
-          
+
           // Renewal fields
           renewalStatus: "ACTIVE",
           previousPolicyId: previousPolicyId,
-          isActivePolicy: true
-        }
+          isActivePolicy: true,
+        },
       });
 
       // 3. Update the old PolicyRecord
@@ -137,13 +137,21 @@ export async function POST(request) {
         const renewedRemark = {
           ...standardizedRenewedData.renewalRemarks[0],
           oldStatus: oldPolicy.renewalStatus || "ACTIVE",
-          newStatus: "RENEWED"
+          newStatus: "RENEWED",
         };
         standardizedRenewedData.renewalRemarks[0] = renewedRemark;
         oldPolicyData.remark = renewedRemark.text;
         oldPolicyReviewedData.remark = renewedRemark.text;
-        oldPolicyData.renewalRemarks = [renewedRemark, ...(Array.isArray(oldPolicyData.renewalRemarks) ? oldPolicyData.renewalRemarks : [])];
-        oldPolicyReviewedData.renewalRemarks = [renewedRemark, ...(Array.isArray(oldPolicyReviewedData.renewalRemarks) ? oldPolicyReviewedData.renewalRemarks : [])];
+        oldPolicyData.renewalRemarks = [
+          renewedRemark,
+          ...(Array.isArray(oldPolicyData.renewalRemarks) ? oldPolicyData.renewalRemarks : []),
+        ];
+        oldPolicyReviewedData.renewalRemarks = [
+          renewedRemark,
+          ...(Array.isArray(oldPolicyReviewedData.renewalRemarks)
+            ? oldPolicyReviewedData.renewalRemarks
+            : []),
+        ];
       }
 
       await tx.policyRecord.update({
@@ -155,8 +163,8 @@ export async function POST(request) {
           renewalDate: new Date(),
           data: oldPolicyData,
           reviewedData: oldPolicyReviewedData,
-          updatedById: actorId
-        }
+          updatedById: actorId,
+        },
       });
 
       return newPolicy;
@@ -174,7 +182,7 @@ export async function POST(request) {
       userAgent,
       userId: actorId,
       organizationId: user.organizationId,
-      metadata: { newPolicyId: result.id }
+      metadata: { newPolicyId: result.id },
     });
 
     return Response.json(normalizeRecord(result), { status: 201 });

@@ -35,22 +35,34 @@ export async function GET(request) {
 
     const where = {
       ...tenantFilter,
-      deletedAt: null
+      deletedAt: null,
     };
     const andFilters = [];
 
     if (q.trim()) {
       const searchTerms = q.trim().toLowerCase();
       const searchKeys = [
-        'insuredName', 'policyNumber', 'contactNumber', 'contactPerson', 
-        'whatsappGroupName', 'groupName', 'policyType', 'vehicleNumber', 
-        'registrationNumber', 'engineNumber', 'chassisNumber', 'makeModel', 
-        'rtoLocation', 'district', 'tehsil', 'insuranceCompany'
+        "insuredName",
+        "policyNumber",
+        "contactNumber",
+        "contactPerson",
+        "whatsappGroupName",
+        "groupName",
+        "policyType",
+        "vehicleNumber",
+        "registrationNumber",
+        "engineNumber",
+        "chassisNumber",
+        "makeModel",
+        "rtoLocation",
+        "district",
+        "tehsil",
+        "insuranceCompany",
       ];
       const searchOrs = [];
       for (const key of searchKeys) {
-        searchOrs.push({ reviewedData: { path: [key], string_contains: searchTerms, mode: 'insensitive' } });
-        searchOrs.push({ data: { path: [key], string_contains: searchTerms, mode: 'insensitive' } });
+        searchOrs.push({ reviewedData: { path: [key], string_contains: searchTerms, mode: "insensitive" } });
+        searchOrs.push({ data: { path: [key], string_contains: searchTerms, mode: "insensitive" } });
       }
       andFilters.push({ OR: searchOrs });
     }
@@ -58,38 +70,38 @@ export async function GET(request) {
     if (status) {
       andFilters.push({
         OR: [
-          { reviewedData: { path: ['status'], equals: status, mode: 'insensitive' } },
-          { data: { path: ['status'], equals: status, mode: 'insensitive' } }
-        ]
+          { reviewedData: { path: ["status"], equals: status, mode: "insensitive" } },
+          { data: { path: ["status"], equals: status, mode: "insensitive" } },
+        ],
       });
     }
 
     if (company) {
       andFilters.push({
         OR: [
-          { selectedCompany: { equals: company, mode: 'insensitive' } },
-          { reviewedData: { path: ['insuranceCompany'], equals: company, mode: 'insensitive' } },
-          { data: { path: ['insuranceCompany'], equals: company, mode: 'insensitive' } }
-        ]
+          { selectedCompany: { equals: company, mode: "insensitive" } },
+          { reviewedData: { path: ["insuranceCompany"], equals: company, mode: "insensitive" } },
+          { data: { path: ["insuranceCompany"], equals: company, mode: "insensitive" } },
+        ],
       });
     }
 
     if (policyType) {
       andFilters.push({
         OR: [
-          { selectedPolicyType: { equals: policyType, mode: 'insensitive' } },
-          { reviewedData: { path: ['policyType'], equals: policyType, mode: 'insensitive' } },
-          { data: { path: ['policyType'], equals: policyType, mode: 'insensitive' } }
-        ]
+          { selectedPolicyType: { equals: policyType, mode: "insensitive" } },
+          { reviewedData: { path: ["policyType"], equals: policyType, mode: "insensitive" } },
+          { data: { path: ["policyType"], equals: policyType, mode: "insensitive" } },
+        ],
       });
     }
 
     if (assignedTo) {
       andFilters.push({
         OR: [
-          { createdBy: { name: { contains: assignedTo, mode: 'insensitive' } } },
-          { createdBy: { email: { contains: assignedTo, mode: 'insensitive' } } }
-        ]
+          { createdBy: { name: { contains: assignedTo, mode: "insensitive" } } },
+          { createdBy: { email: { contains: assignedTo, mode: "insensitive" } } },
+        ],
       });
     }
 
@@ -114,8 +126,8 @@ export async function GET(request) {
       createdBy: {
         select: {
           name: true,
-          email: true
-        }
+          email: true,
+        },
       },
       uploadedFile: {
         select: {
@@ -123,11 +135,11 @@ export async function GET(request) {
           createdBy: {
             select: {
               name: true,
-              email: true
-            }
-          }
-        }
-      }
+              email: true,
+            },
+          },
+        },
+      },
     };
 
     const [records, totalCount] = await Promise.all([
@@ -136,9 +148,9 @@ export async function GET(request) {
         orderBy: { savedAt: "desc" },
         select: selectOptions,
         skip,
-        take: limit
+        take: limit,
       }),
-      prisma.policyRecord.count({ where })
+      prisma.policyRecord.count({ where }),
     ]);
 
     const normalized = records.map(normalizeRecord);
@@ -148,12 +160,12 @@ export async function GET(request) {
       total: totalCount,
       page,
       limit,
-      totalPages: Math.ceil(totalCount / limit) || 1
+      totalPages: Math.ceil(totalCount / limit) || 1,
     });
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "Failed to retrieve records." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -175,7 +187,7 @@ export async function POST(request) {
     const data = sanitizeRecordPayload(payload);
     const validation = getReviewValidation({
       sourceFile: data.sourceFile,
-      extractedData: data
+      extractedData: data,
     });
 
     if (validation.contactErrors.length) {
@@ -183,19 +195,22 @@ export async function POST(request) {
     }
 
     if (!validation.valid) {
-      return Response.json({
-        error: formatReviewValidationError(validation.missingRequired, validation.contactErrors),
-        missingRequired: validation.missingRequired,
-        schema: validation.resolvedSchema
-          ? {
-              groupId: validation.resolvedSchema.groupId,
-              policyId: validation.resolvedSchema.policyId,
-              policyName: validation.resolvedSchema.policyName
-            }
-          : null
-      }, { status: 422 });
+      return Response.json(
+        {
+          error: formatReviewValidationError(validation.missingRequired, validation.contactErrors),
+          missingRequired: validation.missingRequired,
+          schema: validation.resolvedSchema
+            ? {
+                groupId: validation.resolvedSchema.groupId,
+                policyId: validation.resolvedSchema.policyId,
+                policyName: validation.resolvedSchema.policyName,
+              }
+            : null,
+        },
+        { status: 422 },
+      );
     }
-    
+
     const record = await prisma.policyRecord.create({
       data: {
         id: randomUUID(),
@@ -207,10 +222,9 @@ export async function POST(request) {
         reviewedData: data,
         extractedData: data,
         organizationId: user.organizationId,
-        createdById: actorId
-      }
+        createdById: actorId,
+      },
     });
-
 
     // Record creation audit
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -224,17 +238,20 @@ export async function POST(request) {
       userAgent,
       userId: actorId,
       organizationId: user.organizationId,
-      metadata: { sourceFile: record.sourceFile }
+      metadata: { sourceFile: record.sourceFile },
     });
 
-    return Response.json(normalizeRecord({
-      ...record,
-      createdBy: { name: user.name, email: user.email }
-    }), { status: 201 });
+    return Response.json(
+      normalizeRecord({
+        ...record,
+        createdBy: { name: user.name, email: user.email },
+      }),
+      { status: 201 },
+    );
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "Failed to create policy record" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -242,6 +259,6 @@ export async function POST(request) {
 export async function DELETE() {
   return Response.json(
     { error: "Bulk delete is disabled. Delete policy records one at a time as super admin." },
-    { status: 405 }
+    { status: 405 },
   );
 }

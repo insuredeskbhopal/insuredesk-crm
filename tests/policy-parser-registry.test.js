@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createParserRegistry,
   runParserRegistry,
-  toParserContract
+  toParserContract,
 } from "../lib/policies/parser-registry.cjs";
 
 describe("policy parser registry", () => {
@@ -12,15 +12,15 @@ describe("policy parser registry", () => {
         id: "generic",
         priority: 2,
         detect: () => true,
-        extract: () => ({ documentDetected: true, companyName: "Generic", policyNumber: "GEN-1" })
+        extract: () => ({ documentDetected: true, companyName: "Generic", policyNumber: "GEN-1" }),
       },
       {
         id: "verified-company",
         priority: 1,
         companyName: "Verified Company",
         detect: (document) => /Verified Insurance/i.test(document.text),
-        extract: () => ({ documentDetected: true, policyType: "Motor", policyNumber: "POL-123" })
-      }
+        extract: () => ({ documentDetected: true, policyType: "Motor", policyNumber: "POL-123" }),
+      },
     ]);
 
     const selected = runParserRegistry(registry, { text: "Verified Insurance policy" });
@@ -32,10 +32,10 @@ describe("policy parser registry", () => {
       policyType: "Motor",
       fields: {
         policyType: "Motor",
-        policyNumber: "POL-123"
+        policyNumber: "POL-123",
       },
       evidence: {},
-      confidence: {}
+      confidence: {},
     });
   });
 
@@ -44,8 +44,8 @@ describe("policy parser registry", () => {
       {
         id: "tata-aig",
         detect: (document) => /TATA AIG/i.test(document.text),
-        extract: () => ({ documentDetected: true, companyName: "TATA AIG" })
-      }
+        extract: () => ({ documentDetected: true, companyName: "TATA AIG" }),
+      },
     ]);
 
     const selected = runParserRegistry(registry, { text: "Private Car Package Policy" });
@@ -60,15 +60,15 @@ describe("policy parser registry", () => {
       {
         documentDetected: true,
         policyNumber: "N7470840",
-        engineNumber: "K15CN998877"
-      }
+        engineNumber: "K15CN998877",
+      },
     );
 
     expect(contract.documentDetected).toBe(true);
     expect(contract.companyName).toBe("IFFCO-TOKIO GENERAL INSURANCE CO.LTD");
     expect(contract.fields).toMatchObject({
       policyNumber: "N7470840",
-      engineNumber: "K15CN998877"
+      engineNumber: "K15CN998877",
     });
   });
 });

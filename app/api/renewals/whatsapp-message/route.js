@@ -13,9 +13,11 @@ const formatDate = (dateStr) => {
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    return `${String(d.getDate()).padStart(2,"0")}-${months[d.getMonth()]}-${d.getFullYear()}`;
-  } catch { return dateStr; }
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${String(d.getDate()).padStart(2, "0")}-${months[d.getMonth()]}-${d.getFullYear()}`;
+  } catch {
+    return dateStr;
+  }
 };
 
 export async function POST(request) {
@@ -45,7 +47,7 @@ export async function POST(request) {
     if (orgId) {
       const org = await prisma.organization.findUnique({
         where: { id: orgId },
-        select: { name: true }
+        select: { name: true },
       });
       if (org?.name) {
         orgName = org.name;
@@ -57,7 +59,7 @@ export async function POST(request) {
     let mainPolicy = null;
     if (policyId) {
       mainPolicy = await prisma.policyRecord.findFirst({
-        where: { id: policyId, ...tenantFilter }
+        where: { id: policyId, ...tenantFilter },
       });
       if (mainPolicy) {
         const norm = normalizeRecord(mainPolicy);
@@ -75,18 +77,18 @@ export async function POST(request) {
           deletedAt: null,
           ...(isSuperAdmin ? {} : { organizationId: orgId }),
           OR: [
-            { reviewedData: { path: ['contactNumber'], string_contains: cleanContact } },
-            { reviewedData: { path: ['customerMobile'], string_contains: cleanContact } },
-            { data: { path: ['contactNumber'], string_contains: cleanContact } },
-            { data: { path: ['customerMobile'], string_contains: cleanContact } }
-          ]
-        }
+            { reviewedData: { path: ["contactNumber"], string_contains: cleanContact } },
+            { reviewedData: { path: ["customerMobile"], string_contains: cleanContact } },
+            { data: { path: ["contactNumber"], string_contains: cleanContact } },
+            { data: { path: ["customerMobile"], string_contains: cleanContact } },
+          ],
+        },
       });
     } else if (mainPolicy) {
       activePolicies = [mainPolicy];
     }
 
-    const normalized = activePolicies.map(p => withRenewalPolicyDisplay(normalizeRecord(p)));
+    const normalized = activePolicies.map((p) => withRenewalPolicyDisplay(normalizeRecord(p)));
 
     // 3. Filter to active due policies in the 30-day window
     const today = new Date();
@@ -96,19 +98,24 @@ export async function POST(request) {
     const windowEnd = new Date(today);
     windowEnd.setDate(today.getDate() + 30);
 
-    const duePolicies = normalized.filter(p => {
+    const duePolicies = normalized.filter((p) => {
       if (!p.expiryDate) return false;
       const exp = new Date(p.expiryDate);
-      const isClosed = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(p.renewalStatus);
+      const isClosed = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(
+        p.renewalStatus,
+      );
       return p.isActivePolicy && !isClosed && exp >= windowStart && exp <= windowEnd;
     });
 
     // Fallback: If no policies are strictly "due in window", use all normalized matching policies
-    const targetList = duePolicies.length > 0 
-      ? duePolicies 
-      : (normalized.length > 0 
-          ? normalized 
-          : (mainPolicy ? [withRenewalPolicyDisplay(normalizeRecord(mainPolicy))] : []));
+    const targetList =
+      duePolicies.length > 0
+        ? duePolicies
+        : normalized.length > 0
+          ? normalized
+          : mainPolicy
+            ? [withRenewalPolicyDisplay(normalizeRecord(mainPolicy))]
+            : [];
 
     if (targetList.length === 0) {
       return Response.json({ error: "No policies found to generate message" }, { status: 404 });
@@ -121,11 +128,11 @@ export async function POST(request) {
         where: {
           phone: { contains: last10 },
           deletedAt: null,
-          ...(isSuperAdmin ? {} : { organizationId: orgId })
+          ...(isSuperAdmin ? {} : { organizationId: orgId }),
         },
         select: {
-          contactPersonName: true
-        }
+          contactPersonName: true,
+        },
       });
       if (profile?.contactPersonName) {
         customerName = profile.contactPersonName;
@@ -133,7 +140,9 @@ export async function POST(request) {
     }
 
     if (customerName === "Valued Customer") {
-      customerName = String(targetList[0].contactPerson || targetList[0].insuredName || "Valued Customer").trim();
+      customerName = String(
+        targetList[0].contactPerson || targetList[0].insuredName || "Valued Customer",
+      ).trim();
     }
     const count = targetList.length;
 
@@ -142,7 +151,7 @@ export async function POST(request) {
     // Handle Audit logging
     if (shouldLog) {
       const { ipAddress, userAgent } = getAuditMetadata(request);
-      const logPromises = targetList.map(p => 
+      const logPromises = targetList.map((p) =>
         logAudit({
           action: "WHATSAPP_REMINDER_SENT",
           entityType: "PolicyRecord",
@@ -153,8 +162,8 @@ export async function POST(request) {
           userAgent,
           userId: user.userId || user.id,
           organizationId: orgId,
-          metadata: { contactNumber: p.contactNumber }
-        })
+          metadata: { contactNumber: p.contactNumber },
+        }),
       );
       await Promise.all(logPromises);
       return Response.json({ success: true });
@@ -172,7 +181,12 @@ export async function POST(request) {
         const pNumber = String(p.policyNumber || "N/A").trim();
         const pExpiry = formatDate(p.expiryDate);
         const companyName = String(p.insuredName || "your company").trim();
-        const daysLeft = p.daysRemaining === undefined || p.daysRemaining === null ? "N/A" : p.daysRemaining < 0 ? `Overdue ${Math.abs(p.daysRemaining)} days` : `${p.daysRemaining} days left`;
+        const daysLeft =
+          p.daysRemaining === undefined || p.daysRemaining === null
+            ? "N/A"
+            : p.daysRemaining < 0
+              ? `Overdue ${Math.abs(p.daysRemaining)} days`
+              : `${p.daysRemaining} days left`;
         return `${idx + 1}. ${pType} for ${companyName} with ${pCompany} - Policy Number: ${pNumber} - Expiry: ${pExpiry} - ${daysLeft}`;
       });
 
@@ -191,7 +205,7 @@ ${orgName} Team`;
         due_soon: combinedText,
         today: combinedText,
         expired: combinedText,
-        follow_up: combinedText
+        follow_up: combinedText,
       };
     } else {
       // Single policy message templates
@@ -211,7 +225,12 @@ ${orgName} Team`;
         daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       }
 
-      const daysText = daysRemaining < 0 ? `overdue by ${Math.abs(daysRemaining)} days` : daysRemaining === 0 ? "due today" : `${daysRemaining} days left`;
+      const daysText =
+        daysRemaining < 0
+          ? `overdue by ${Math.abs(daysRemaining)} days`
+          : daysRemaining === 0
+            ? "due today"
+            : `${daysRemaining} days left`;
 
       const dueSoonText = `Dear ${customerName},
 
@@ -266,7 +285,7 @@ ${orgName} Team`;
         due_soon: dueSoonText,
         today: expiringTodayText,
         expired: alreadyExpiredText,
-        follow_up: followUpText
+        follow_up: followUpText,
       };
 
       if (daysRemaining < 0) {
@@ -284,7 +303,7 @@ ${orgName} Team`;
       success: true,
       phone: phoneParam,
       defaultTemplate,
-      templates
+      templates,
     });
   } catch (error) {
     console.error("WhatsApp message generation failed:", error);

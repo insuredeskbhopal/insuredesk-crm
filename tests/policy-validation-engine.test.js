@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   validateExtractionNonDestructive,
   validatePolicyCrossFields,
-  validatePolicyFields
+  validatePolicyFields,
 } from "../lib/policies/validation-engine.cjs";
 
 describe("policy validation engine", () => {
@@ -16,13 +16,13 @@ describe("policy validation engine", () => {
       expiryDate: "02/05/2027",
       netPremium: "4679",
       gstAmount: "842",
-      totalPremium: "5521"
+      totalPremium: "5521",
     };
 
     expect(validateExtractionNonDestructive(data)).toEqual({
       status: "passed",
       fieldIssues: [],
-      crossFieldIssues: []
+      crossFieldIssues: [],
     });
     expect(data.engineNumber).toBe("14GVYP29539");
   });
@@ -33,17 +33,19 @@ describe("policy validation engine", () => {
       registrationNumber: "BAD",
       engineNumber: "MP04TA6636",
       chassisNumber: "CHASSIS",
-      premium: "five thousand"
+      premium: "five thousand",
     };
 
     const issues = validatePolicyFields(data);
 
-    expect(issues.map((item) => item.code)).toEqual(expect.arrayContaining([
-      "registration_format",
-      "chassis_format",
-      "policy_number_format",
-      "premium_amount_format"
-    ]));
+    expect(issues.map((item) => item.code)).toEqual(
+      expect.arrayContaining([
+        "registration_format",
+        "chassis_format",
+        "policy_number_format",
+        "premium_amount_format",
+      ]),
+    );
     expect(data.premium).toBe("five thousand");
   });
 
@@ -58,15 +60,17 @@ describe("policy validation engine", () => {
       gstAmount: "800",
       totalPremium: "5521",
       policyType: "Two Wheeler Package Policy",
-      seatingCapacity: "7"
+      seatingCapacity: "7",
     });
 
-    expect(issues.map((item) => item.code)).toEqual(expect.arrayContaining([
-      "date_chronology",
-      "registration_equals_engine",
-      "chassis_equals_engine",
-      "premium_total_mismatch",
-      "two_wheeler_seating"
-    ]));
+    expect(issues.map((item) => item.code)).toEqual(
+      expect.arrayContaining([
+        "date_chronology",
+        "registration_equals_engine",
+        "chassis_equals_engine",
+        "premium_total_mismatch",
+        "two_wheeler_seating",
+      ]),
+    );
   });
 });

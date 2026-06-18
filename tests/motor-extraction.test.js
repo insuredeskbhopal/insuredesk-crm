@@ -24,9 +24,13 @@ describe("generic motor policy extraction", () => {
       expect(result.policyNumber, fileName).not.toBe("");
       const registrationNumber = result.registrationNumber || result.vehicleNumber || "";
       const compactRegistration = registrationNumber.replace(/[^A-Z0-9]/gi, "").toUpperCase();
-      const compactEngine = String(result.engineNumber || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+      const compactEngine = String(result.engineNumber || "")
+        .replace(/[^A-Z0-9]/gi, "")
+        .toUpperCase();
 
-      expect(registrationNumber, fileName).toMatch(/(?:[A-Z]{2}[-\s]?\d{1,2}[-\s]?[A-Z]{1,3}[-\s]?\d{4}|[A-Z]{2}[-\s]\d{1,2}[-\s]\d{4}|[A-Z]{2}[-\s]\d{1,2})/i);
+      expect(registrationNumber, fileName).toMatch(
+        /(?:[A-Z]{2}[-\s]?\d{1,2}[-\s]?[A-Z]{1,3}[-\s]?\d{4}|[A-Z]{2}[-\s]\d{1,2}[-\s]\d{4}|[A-Z]{2}[-\s]\d{1,2})/i,
+      );
       expect(compactEngine, fileName).not.toBe(compactRegistration);
       expect(compactEngine, fileName).not.toContain(compactRegistration);
       expect(result.engineNumber, fileName).not.toMatch(/^(?:ENGINE|MOTOR|SEATING|CHASSIS)$/i);
@@ -145,7 +149,7 @@ describe("generic motor policy extraction", () => {
       riskLocation: "",
       validIn: "",
       nomineeName: "",
-      financerName: ""
+      financerName: "",
     });
   });
 
@@ -184,7 +188,8 @@ describe("generic motor policy extraction", () => {
   });
 
   it("locks the IFFCO Tokio private car dense table contract", async () => {
-    const sourceFile = "tests/fixtures/SHRIDHAR RENEWABLE ENERGY PRIVATE LIMITED_MP04ZJ1165_2026-27 - Copy.pdf";
+    const sourceFile =
+      "tests/fixtures/SHRIDHAR RENEWABLE ENERGY PRIVATE LIMITED_MP04ZJ1165_2026-27 - Copy.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
 
@@ -214,7 +219,7 @@ describe("generic motor policy extraction", () => {
       netPremium: "28544.00",
       odPremium: "4321.00",
       tpDriverOwner: "7947.00",
-      policyCoverType: "Comprehensive"
+      policyCoverType: "Comprehensive",
     });
   });
 
@@ -246,7 +251,7 @@ describe("generic motor policy extraction", () => {
       odPremium: "4135.00",
       tpDriverOwner: "7317.00",
       ncb: "20%",
-      policyCoverType: "Package"
+      policyCoverType: "Package",
     });
   });
 
@@ -278,7 +283,7 @@ describe("generic motor policy extraction", () => {
       odPremium: "1422.00",
       tpDriverOwner: "3746.00",
       ncb: "45%",
-      policyCoverType: "Comprehensive"
+      policyCoverType: "Comprehensive",
     });
   });
 
@@ -319,7 +324,7 @@ describe("generic motor policy extraction", () => {
       gstAmount: "1,925.82",
       ncbPercentage: "20%",
       policyCoverType: "Own Damage",
-      financerName: "PRATHAMA UP GRAMIN BANK"
+      financerName: "PRATHAMA UP GRAMIN BANK",
     });
   });
 
@@ -367,7 +372,7 @@ describe("generic motor policy extraction", () => {
       totalPackagePremium: "15,124.00",
       zeroDepreciationCover: "4087.22",
       ncb: "20%",
-      ncbPercentage: "20%"
+      ncbPercentage: "20%",
     });
   });
 
@@ -405,7 +410,7 @@ describe("generic motor policy extraction", () => {
       duration: "12 months",
       policyCoverType: "Package",
       ncb: "50%",
-      rtoLocation: "BHOPAL"
+      rtoLocation: "BHOPAL",
     });
   });
 
@@ -442,7 +447,7 @@ describe("generic motor policy extraction", () => {
       expiryDate: "31/05/2027",
       policyCoverType: "Package",
       ncb: "45%",
-      rtoLocation: "BHOPAL"
+      rtoLocation: "BHOPAL",
     });
   });
 
@@ -484,12 +489,12 @@ describe("generic motor policy extraction", () => {
       roadsideAssistance: "25.00",
       ncb: "20%",
       rtoLocation: "BHOPAL",
-      financerName: "SHRIRAM FINANCE LIMITED"
+      financerName: "SHRIRAM FINANCE LIMITED",
     });
     expect(result.enhancedCovers).toMatchObject({
       nilDepreciation: true,
       engineProtection: false,
-      roadsideAssistance: true
+      roadsideAssistance: true,
     });
   });
 
@@ -525,7 +530,7 @@ describe("generic motor policy extraction", () => {
       startDate: "15/05/2026",
       expiryDate: "14/05/2027",
       policyCoverType: "Third Party",
-      rtoLocation: "DURG"
+      rtoLocation: "DURG",
     });
   });
 
@@ -554,7 +559,7 @@ describe("generic motor policy extraction", () => {
       netPremium: "15,124.00",
       tpDriverOwner: "3,691.00",
       odPremium: "11,433.00",
-      gstAmount: "2,722.00"
+      gstAmount: "2,722.00",
     });
   });
 
@@ -581,7 +586,7 @@ describe("generic motor policy extraction", () => {
       registrationNumber: "MP-04-CX-1283",
       idv: "6,28,803.00",
       totalIdv: "6,28,803.00",
-      sumInsured: "6,28,803.00"
+      sumInsured: "6,28,803.00",
     });
   });
 
@@ -611,11 +616,10 @@ describe("generic motor policy extraction", () => {
       chassisNumber: "MAT567014T3B06261",
       engineNumber: "7B62300D03162B64556307",
       idv: "13647700.00",
-      totalIdv: "13647700.00"
+      totalIdv: "13647700.00",
     });
   });
 
-  
   it("locks the ICICI Lombard motor extraction contract for the private car format", async () => {
     const sourceFile = "tests/fixtures/ICICI LOMBARD.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
@@ -684,7 +688,8 @@ describe("generic motor policy extraction", () => {
       cscCode: "IMF240706",
       cscContactNumber: "8818889660",
       servicingBranchName: "Bhopal",
-      servicingBranchAddress: "Maple High Street, 5Th Floor, Opposite Aashima Mall, Hoshangabad Road, Bhopal, Madhya Pradesh-462026",
+      servicingBranchAddress:
+        "Maple High Street, 5Th Floor, Opposite Aashima Mall, Hoshangabad Road, Bhopal, Madhya Pradesh-462026",
       geographicalArea: "India",
       compulsoryDeductible: "1000.00",
       voluntaryDeductible: "0.00",
@@ -694,7 +699,7 @@ describe("generic motor policy extraction", () => {
       nomineeName: "",
       financerName: "",
       riskLocation: "",
-      validIn: ""
+      validIn: "",
     });
   });
 
@@ -719,7 +724,7 @@ describe("generic motor policy extraction", () => {
       netPremium: "15124.00",
       tpDriverOwner: "3691.00",
       odPremium: "11,433.00",
-      gstAmount: "2722.00"
+      gstAmount: "2722.00",
     });
   });
 
@@ -834,7 +839,7 @@ describe("generic motor policy extraction", () => {
       riskLocation: "",
       validIn: "",
       nomineeName: "",
-      financerName: ""
+      financerName: "",
     });
   });
 
@@ -950,7 +955,7 @@ describe("generic motor policy extraction", () => {
       netPremium: "44,050.00",
       tpDriverOwner: "44,050.00",
       odPremium: "",
-      policyCoverType: "Third Party"
+      policyCoverType: "Third Party",
     });
   });
 
@@ -998,7 +1003,7 @@ describe("generic motor policy extraction", () => {
       payerName: "CHANCHAL ANAND SONI",
       nomineeName: "anand soni",
       nomineeAge: "38",
-      nomineeRelationship: "Spouse"
+      nomineeRelationship: "Spouse",
     });
   });
 
@@ -1043,7 +1048,7 @@ describe("generic motor policy extraction", () => {
       receiptDate: "11/06/2026",
       payerName: "Siddharth Agrawal",
       previousInsurer: "ICICI",
-      previousPolicyNumber: "3001/O/394161003/00/000"
+      previousPolicyNumber: "3001/O/394161003/00/000",
     });
   });
 
@@ -1078,7 +1083,7 @@ describe("generic motor policy extraction", () => {
       tpDriverOwner: "2,475.00",
       ncb: "50%",
       previousInsurer: "Tata AIG General Insurance Company Limited.",
-      previousPolicyNumber: "62047193400000"
+      previousPolicyNumber: "62047193400000",
     });
   });
 
@@ -1253,28 +1258,28 @@ describe("generic motor policy extraction", () => {
       {
         text: "Private Car Policy\nPolicy No. ABC12345\nPeriod of cover 11/05/2026 to 10/05/2027",
         startDate: "11/05/2026",
-        expiryDate: "10/05/2027"
+        expiryDate: "10/05/2027",
       },
       {
         text: "Private Car Policy\nPolicy No. ABC12345\nPeriod of Insurance From: 00:00 hours of 18/05/2026 To Midnight of 17/05/2027",
         startDate: "18/05/2026",
-        expiryDate: "17/05/2027"
+        expiryDate: "17/05/2027",
       },
       {
         text: "Private Car Policy\nPolicy No. ABC12345\nFrom: 00:00 Hours of 26/05/2026 To: Midnight On 25/05/2027",
         startDate: "26/05/2026",
-        expiryDate: "25/05/2027"
+        expiryDate: "25/05/2027",
       },
       {
         text: "Private Car Policy\nPolicy No. ABC12345\nPolicy effective from 0001 hrs 21/05/2026\nTo MidNight 20/05/2027",
         startDate: "21/05/2026",
-        expiryDate: "20/05/2027"
+        expiryDate: "20/05/2027",
       },
       {
         text: "Private Car Policy\nPolicy No. ABC12345\nStart Date: 09/05/2026\nEnd Date: 08/05/2027",
         startDate: "09/05/2026",
-        expiryDate: "08/05/2027"
-      }
+        expiryDate: "08/05/2027",
+      },
     ];
 
     for (const item of cases) {

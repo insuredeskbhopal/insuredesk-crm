@@ -7,7 +7,8 @@ export async function requireClaimSession(request, write = false) {
   if (!token) return { response: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) };
 
   const session = await verifyJWT(token);
-  if (!session) return { response: NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }) };
+  if (!session)
+    return { response: NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }) };
   if (write && session.role === "VIEWER") {
     return { response: NextResponse.json({ error: "Unauthorized" }, { status: 403 }) };
   }
@@ -18,7 +19,7 @@ export async function requireClaimSession(request, write = false) {
 export function getClaimWhere(session, action = "read") {
   return {
     ...getTenantFilter(session, action),
-    deletedAt: null
+    deletedAt: null,
   };
 }
 
@@ -43,7 +44,7 @@ export function sanitizeClaimPayload(payload = {}) {
     claimType: stringValue(payload.claimType) || "Motor",
     claimStatus: stringValue(payload.claimStatus) || "Open",
     followUpDate: dateValue(payload.followUpDate),
-    currentRemark: stringValue(payload.currentRemark)
+    currentRemark: stringValue(payload.currentRemark),
   };
 }
 
@@ -58,7 +59,7 @@ export function sanitizeClaimDocuments(documents = [], actorId = null) {
       size: Number.isFinite(Number(document.size)) ? Number(document.size) : null,
       dataUrl: String(document.dataUrl),
       uploadedAt: dateValue(document.uploadedAt) || new Date(),
-      uploadedById: actorId
+      uploadedById: actorId,
     }));
 }
 
@@ -85,7 +86,7 @@ export function serializeClaim(claim) {
       id: remark.id,
       text: remark.text,
       followUpDate: formatDateInput(remark.followUpDate),
-      createdAt: remark.createdAt?.toISOString?.() || remark.createdAt
+      createdAt: remark.createdAt?.toISOString?.() || remark.createdAt,
     })),
     documents: (claim.documents || []).map((document) => ({
       id: document.id,
@@ -94,8 +95,8 @@ export function serializeClaim(claim) {
       fileType: document.fileType || "application/octet-stream",
       size: document.size || 0,
       dataUrl: document.dataUrl,
-      uploadedAt: document.uploadedAt?.toISOString?.() || document.uploadedAt
-    }))
+      uploadedAt: document.uploadedAt?.toISOString?.() || document.uploadedAt,
+    })),
   };
 }
 
@@ -103,7 +104,7 @@ export const claimInclude = {
   createdBy: { select: { name: true, email: true } },
   updatedBy: { select: { name: true, email: true } },
   remarks: { orderBy: { createdAt: "desc" } },
-  documents: { orderBy: { uploadedAt: "desc" } }
+  documents: { orderBy: { uploadedAt: "desc" } },
 };
 
 function stringValue(value, required = false) {

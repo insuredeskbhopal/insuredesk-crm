@@ -171,8 +171,7 @@ body:has(.seo-page) {
   align-items: center;
   border: 0;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.72), rgba(238, 246, 255, 0.62)),
-    rgba(255, 255, 255, 0.54);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.72), rgba(238, 246, 255, 0.62)), rgba(255, 255, 255, 0.54);
   box-shadow: none;
   backdrop-filter: blur(22px) saturate(1.25);
   -webkit-backdrop-filter: blur(22px) saturate(1.25);
@@ -182,8 +181,7 @@ body:has(.seo-page) {
   height: 86px !important;
   border: 0 !important;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.82), rgba(238, 246, 255, 0.72)),
-    rgba(255, 255, 255, 0.68) !important;
+    linear-gradient(90deg, rgba(255, 255, 255, 0.82), rgba(238, 246, 255, 0.72)), rgba(255, 255, 255, 0.68) !important;
   box-shadow: none !important;
   backdrop-filter: blur(24px) saturate(1.35) !important;
   -webkit-backdrop-filter: blur(24px) saturate(1.35) !important;
@@ -1006,10 +1004,18 @@ body:has(.seo-page) {
 }
 
 .landing-shell .transition-all {
-  transition: opacity 180ms ease, transform 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 .landing-shell .transition-colors {
-  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
 }
 .landing-shell .transition-transform {
   transition: transform 180ms ease;
@@ -1282,10 +1288,24 @@ body:has(.seo-page) {
   min-height: 640px;
   isolation: isolate;
   background:
-    linear-gradient(90deg, rgba(248, 251, 255, 0.96) 0%, rgba(248, 251, 255, 0.9) 32%, rgba(248, 251, 255, 0.48) 58%, rgba(248, 251, 255, 0.1) 100%),
-    linear-gradient(180deg, rgba(237, 245, 255, 0.9) 0%, rgba(248, 251, 255, 0.28) 58%, rgba(255, 255, 255, 0.78) 100%),
+    linear-gradient(
+      90deg,
+      rgba(248, 251, 255, 0.96) 0%,
+      rgba(248, 251, 255, 0.9) 32%,
+      rgba(248, 251, 255, 0.48) 58%,
+      rgba(248, 251, 255, 0.1) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(237, 245, 255, 0.9) 0%,
+      rgba(248, 251, 255, 0.28) 58%,
+      rgba(255, 255, 255, 0.78) 100%
+    ),
     url("/brand/hero-bg.webp");
-  background-position: center, center, right center;
+  background-position:
+    center,
+    center,
+    right center;
   background-repeat: no-repeat;
   background-size: cover;
 }
@@ -1313,8 +1333,13 @@ body:has(.seo-page) {
   width: min(64vw, 680px);
   aspect-ratio: 1;
   border-radius: 999px;
-  background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.78) 0 28%, rgba(227, 246, 233, 0.48) 36%, rgba(214, 230, 255, 0.24) 54%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.78) 0 28%,
+    rgba(227, 246, 233, 0.48) 36%,
+    rgba(214, 230, 255, 0.24) 54%,
+    transparent 70%
+  );
   filter: blur(2px);
   animation: hero-halo-pulse 7s ease-in-out infinite;
 }
@@ -1670,17 +1695,24 @@ body:has(.seo-page) {
 }
 
 .landing-shell .services-section {
-  background:
-    linear-gradient(180deg, #ffffff 0%, #eef5ff 52%, #ffffff 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #eef5ff 52%, #ffffff 100%);
 }
 
 .landing-shell .service-page-hero {
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(248, 251, 255, 0.98) 0%, rgba(248, 251, 255, 0.88) 48%, rgba(248, 251, 255, 0.46) 100%),
+    linear-gradient(
+      90deg,
+      rgba(248, 251, 255, 0.98) 0%,
+      rgba(248, 251, 255, 0.88) 48%,
+      rgba(248, 251, 255, 0.46) 100%
+    ),
     linear-gradient(180deg, rgba(237, 245, 255, 0.88) 0%, rgba(255, 255, 255, 0.96) 100%),
     url("/brand/service-bg.webp");
-  background-position: center, center, right center;
+  background-position:
+    center,
+    center,
+    right center;
   background-repeat: no-repeat;
   background-size: cover;
 }
@@ -1720,8 +1752,20 @@ body:has(.seo-page) {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(248, 251, 255, 0.96) 0%, transparent 24%, transparent 72%, rgba(248, 251, 255, 0.92) 100%),
-    linear-gradient(180deg, rgba(248, 251, 255, 0.9) 0%, transparent 22%, transparent 74%, rgba(248, 251, 255, 0.92) 100%),
+    linear-gradient(
+      90deg,
+      rgba(248, 251, 255, 0.96) 0%,
+      transparent 24%,
+      transparent 72%,
+      rgba(248, 251, 255, 0.92) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(248, 251, 255, 0.9) 0%,
+      transparent 22%,
+      transparent 74%,
+      rgba(248, 251, 255, 0.92) 100%
+    ),
     linear-gradient(90deg, rgba(248, 251, 255, 0.94) 0%, rgba(248, 251, 255, 0.48) 34%, transparent 62%),
     linear-gradient(180deg, transparent 62%, rgba(248, 251, 255, 0.86));
   pointer-events: none;
@@ -1939,8 +1983,7 @@ body:has(.seo-page) {
 
 .landing-shell .services-directory-section {
   padding: 88px 0;
-  background:
-    linear-gradient(180deg, #ffffff 0%, #f3f7ff 44%, #ffffff 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f3f7ff 44%, #ffffff 100%);
 }
 
 .landing-shell .services-directory-inner {
@@ -1992,7 +2035,10 @@ body:has(.seo-page) {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 18px 44px rgba(3, 22, 56, 0.08);
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
 }
 
 .landing-shell .service-directory-card:hover {
@@ -2082,7 +2128,12 @@ body:has(.seo-page) {
   overflow: hidden;
   padding: 92px 0 76px;
   background:
-    linear-gradient(90deg, rgba(248, 251, 255, 0.98) 0%, rgba(248, 251, 255, 0.88) 46%, rgba(248, 251, 255, 0.48) 100%),
+    linear-gradient(
+      90deg,
+      rgba(248, 251, 255, 0.98) 0%,
+      rgba(248, 251, 255, 0.88) 46%,
+      rgba(248, 251, 255, 0.48) 100%
+    ),
     linear-gradient(180deg, #eef6ff 0%, #ffffff 100%);
 }
 
@@ -2182,8 +2233,7 @@ body:has(.seo-page) {
 
 .landing-shell .service-detail-main {
   padding: 76px 0;
-  background:
-    linear-gradient(180deg, #ffffff 0%, #f4f8ff 52%, #ffffff 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 52%, #ffffff 100%);
 }
 
 .landing-shell .service-detail-main-inner {
@@ -2561,7 +2611,10 @@ body:has(.seo-page) {
   padding: 18px;
   color: #061a3d !important;
   box-shadow: 0 20px 48px rgba(18, 49, 74, 0.08);
-  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .landing-shell .contact-action-panel a:hover {
@@ -2731,7 +2784,10 @@ body:has(.seo-page) {
   color: #061a3d;
   font-size: 15px;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .landing-shell .contact-form-card input {
@@ -2778,7 +2834,9 @@ body:has(.seo-page) {
   font-size: 15px;
   font-weight: 900;
   cursor: pointer;
-  transition: transform 0.22s ease, background 0.22s ease;
+  transition:
+    transform 0.22s ease,
+    background 0.22s ease;
 }
 
 .landing-shell .contact-submit-button {
@@ -3258,10 +3316,23 @@ body:has(.seo-page) {
   .landing-shell #hero {
     min-height: 560px;
     background:
-      linear-gradient(180deg, rgba(248, 251, 255, 0.96) 0%, rgba(248, 251, 255, 0.82) 44%, rgba(255, 255, 255, 0.86) 100%),
-      linear-gradient(90deg, rgba(248, 251, 255, 0.94) 0%, rgba(248, 251, 255, 0.78) 52%, rgba(248, 251, 255, 0.3) 100%),
+      linear-gradient(
+        180deg,
+        rgba(248, 251, 255, 0.96) 0%,
+        rgba(248, 251, 255, 0.82) 44%,
+        rgba(255, 255, 255, 0.86) 100%
+      ),
+      linear-gradient(
+        90deg,
+        rgba(248, 251, 255, 0.94) 0%,
+        rgba(248, 251, 255, 0.78) 52%,
+        rgba(248, 251, 255, 0.3) 100%
+      ),
       url("/brand/hero-bg.webp");
-    background-position: center, center, 68% center;
+    background-position:
+      center,
+      center,
+      68% center;
     background-repeat: no-repeat;
     background-size: cover;
   }
@@ -3303,7 +3374,10 @@ body:has(.seo-page) {
   }
 
   .landing-shell .service-page-hero {
-    background-position: center, center, 68% center;
+    background-position:
+      center,
+      center,
+      68% center;
   }
 
   .landing-shell .service-page-hero-inner {
@@ -3389,7 +3463,12 @@ body:has(.seo-page) {
   .landing-shell .contact-hero {
     padding: 70px 0 62px;
     background:
-      linear-gradient(180deg, rgba(248, 251, 255, 0.98) 0%, rgba(248, 251, 255, 0.9) 58%, rgba(248, 251, 255, 0.82) 100%),
+      linear-gradient(
+        180deg,
+        rgba(248, 251, 255, 0.98) 0%,
+        rgba(248, 251, 255, 0.9) 58%,
+        rgba(248, 251, 255, 0.82) 100%
+      ),
       url("/brand/service-bg.webp") 70% center / auto 105% no-repeat,
       #f8fbff;
   }
@@ -3511,7 +3590,10 @@ body:has(.seo-page) {
 
   .landing-shell #hero {
     min-height: 620px;
-    background-position: center, center, 72% center;
+    background-position:
+      center,
+      center,
+      72% center;
   }
 
   .landing-shell .landing-nav-inner {
@@ -3553,7 +3635,10 @@ body:has(.seo-page) {
   }
 
   .landing-shell .service-page-hero {
-    background-position: center, center, 72% center;
+    background-position:
+      center,
+      center,
+      72% center;
   }
 
   .landing-shell .service-hero-media {
@@ -3879,7 +3964,10 @@ body:has(.seo-page) {
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .landing-shell .blog-category-tab:hover {
@@ -4040,7 +4128,9 @@ body:has(.seo-page) {
   background: rgba(255, 255, 255, 0.98);
   overflow: hidden;
   box-shadow: 0 18px 44px rgba(18, 49, 74, 0.06);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .landing-shell .blog-card:hover {
@@ -4120,8 +4210,9 @@ body:has(.seo-page) {
   gap: 44px;
   align-items: center;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(10, 43, 92, 0.98) 0%, rgba(5, 25, 62, 1) 54%, rgba(13, 82, 53, 0.96) 100%),
-              url("/brand/contact-bg.webp") center center / cover no-repeat;
+  background:
+    linear-gradient(135deg, rgba(10, 43, 92, 0.98) 0%, rgba(5, 25, 62, 1) 54%, rgba(13, 82, 53, 0.96) 100%),
+    url("/brand/contact-bg.webp") center center / cover no-repeat;
   padding: 44px;
   color: #ffffff;
 }
@@ -4185,7 +4276,10 @@ body:has(.seo-page) {
   font-weight: 900;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.22s ease, color 0.22s ease, transform 0.22s ease;
+  transition:
+    background-color 0.22s ease,
+    color 0.22s ease,
+    transform 0.22s ease;
 }
 
 .landing-shell .blog-subscribe-form button:hover {
@@ -4373,7 +4467,9 @@ body:has(.seo-page) {
   font-weight: 800;
   text-decoration: none;
   font-size: 14px;
-  transition: background-color 0.22s ease, transform 0.22s ease;
+  transition:
+    background-color 0.22s ease,
+    transform 0.22s ease;
 }
 
 .landing-shell .blog-back-button:hover {
@@ -4437,7 +4533,10 @@ body:has(.seo-page) {
   padding: 10px 12px;
   font-size: 14px;
   outline: none;
-  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .landing-shell .blog-sidebar-cta input:focus,
@@ -4460,7 +4559,9 @@ body:has(.seo-page) {
   font-size: 14px;
   font-weight: 900;
   cursor: pointer;
-  transition: background-color 0.22s ease, transform 0.22s ease;
+  transition:
+    background-color 0.22s ease,
+    transform 0.22s ease;
 }
 
 .landing-shell .blog-sidebar-cta button:hover {
@@ -4544,7 +4645,9 @@ body:has(.seo-page) {
   font-size: 13px;
   font-weight: 900;
   text-decoration: none;
-  transition: background-color 0.22s ease, transform 0.22s ease;
+  transition:
+    background-color 0.22s ease,
+    transform 0.22s ease;
 }
 
 .landing-shell .blog-sidebar-info a:hover {
@@ -4652,7 +4755,7 @@ body:has(.seo-page) {
   .landing-shell .blog-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .landing-shell .blog-detail-content {
     padding: 24px;
   }

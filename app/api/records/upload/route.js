@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/records/validation";
-import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploadList } from "@/lib/uploads/validation";
+import {
+  MAX_UPLOAD_BYTES,
+  UploadValidationError,
+  validatePdfFile,
+  validateUploadList,
+} from "@/lib/uploads/validation";
 import { extractTextFromPdf } from "@/lib/policies/pdf/text";
 import { extractPolicyDataFromTextResult } from "@/lib/policies/extraction-pipeline";
 import { verifyJWT } from "@/lib/auth";
@@ -38,26 +43,26 @@ export async function POST(request) {
 
       try {
         buffer = await validatePdfFile(file);
-        storageResult = await uploadFile(
-          buffer,
-          file.type || "application/pdf",
-          file.name || "Untitled.pdf"
-        );
+        storageResult = await uploadFile(buffer, file.type || "application/pdf", file.name || "Untitled.pdf");
 
         const textResult = await extractTextFromPdf(buffer);
         const rawText = textResult.rawText;
         if (!rawText) {
-          throw new Error(textResult.ocrAttempted ? "No text could be extracted." : "PDF text extraction returned no content.");
+          throw new Error(
+            textResult.ocrAttempted
+              ? "No text could be extracted."
+              : "PDF text extraction returned no content.",
+          );
         }
 
         const extraction = await extractPolicyDataFromTextResult({
           textResult,
-          sourceFile: file.name || ""
+          sourceFile: file.name || "",
         });
         const data = sanitizeRecordPayload(extraction.data);
         const validation = getReviewValidation({
           sourceFile: file.name || data.sourceFile,
-          extractedData: data
+          extractedData: data,
         });
 
         if (!validation.valid) {
@@ -86,8 +91,8 @@ export async function POST(request) {
             storagePath: storageResult.storagePath,
             fileHash: storageResult.fileHash,
             fileSize: storageResult.fileSize,
-            storageMetadata: storageResult.storageMetadata || {}
-          }
+            storageMetadata: storageResult.storageMetadata || {},
+          },
         });
 
         const record = await prisma.policyRecord.create({
@@ -114,14 +119,16 @@ export async function POST(request) {
             schemaVersion: Number(data.schemaExtraction?.schemaVersion || 1),
             uploadedFileId: uploadedFile.id,
             organizationId: user.organizationId,
-            createdById: user.userId || user.id
-          }
+            createdById: user.userId || user.id,
+          },
         });
 
-        created.push(normalizeRecord({
-          ...record,
-          createdBy: { name: user.name, email: user.email }
-        }));
+        created.push(
+          normalizeRecord({
+            ...record,
+            createdBy: { name: user.name, email: user.email },
+          }),
+        );
       } catch (error) {
         const failedUpload = await persistFailedUploadedFile({
           file,
@@ -129,7 +136,7 @@ export async function POST(request) {
           user,
           actorId: user.userId || user.id,
           buffer,
-          storageResult
+          storageResult,
         });
         const errorMessage = failedUpload?.errorMessage || getUploadFailureMessage(error);
 
@@ -139,7 +146,7 @@ export async function POST(request) {
           sourceFile: file.name || "Untitled.pdf",
           status: UPLOAD_STATUS.FAILED,
           error: errorMessage,
-          errorMessage
+          errorMessage,
         });
       }
     }
@@ -152,10 +159,10 @@ export async function POST(request) {
           summary: {
             total: files.length,
             saved: 0,
-            failed: failed.length
-          }
+            failed: failed.length,
+          },
         },
-        { status: 422 }
+        { status: 422 },
       );
     }
 
@@ -166,10 +173,10 @@ export async function POST(request) {
         summary: {
           total: files.length,
           saved: created.length,
-          failed: failed.length
-        }
+          failed: failed.length,
+        },
       },
-      { status: failed.length ? 207 : 201 }
+      { status: failed.length ? 207 : 201 },
     );
   } catch (error) {
     if (error instanceof UploadValidationError) {
@@ -179,7 +186,7 @@ export async function POST(request) {
     console.error("PDF upload extraction failed:", error);
     return Response.json(
       { error: error instanceof Error ? error.message : "Unknown upload error." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

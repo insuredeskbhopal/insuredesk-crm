@@ -1,16 +1,10 @@
-
 import Link from "next/link";
 import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import LandingEffects from "@/app/components/LandingEffects";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import Breadcrumbs from "@/app/components/public/Breadcrumbs";
-import {
-  BUSINESS_DETAILS,
-  SITE_DESCRIPTION,
-  SITE_NAME,
-  SITE_URL
-} from "@/lib/seo/site";
+import { BUSINESS_DETAILS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -23,12 +17,12 @@ const structuredData = {
       headline: `About BIMAHEADQUARTER`,
       description: `Learn about BIMAHEADQUARTER, an insurance and claim consulting brand by InsureDesk IMF Pvt Ltd serving individuals and businesses in India.`,
       isPartOf: {
-        "@id": `${SITE_URL}/#website`
+        "@id": `${SITE_URL}/#website`,
       },
       about: {
-        "@id": `${SITE_URL}/#organization`
+        "@id": `${SITE_URL}/#organization`,
       },
-      inLanguage: "en-IN"
+      inLanguage: "en-IN",
     },
     {
       "@type": "Organization",
@@ -41,9 +35,9 @@ const structuredData = {
       email: BUSINESS_DETAILS.email,
       telephone: BUSINESS_DETAILS.phoneHref,
       description: SITE_DESCRIPTION,
-      areaServed: BUSINESS_DETAILS.serviceArea
-    }
-  ]
+      areaServed: BUSINESS_DETAILS.serviceArea,
+    },
+  ],
 };
 
 export default function AboutPage() {
@@ -57,8 +51,9 @@ export default function AboutPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
             vertical-align: middle;
@@ -208,209 +203,246 @@ export default function AboutPage() {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             50% { transform: translateY(-15px) rotate(1deg); }
         }
-      ` }} />
+      `,
+        }}
+      />
 
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
-      <main>
-        <Breadcrumbs />
+        <main>
+          <Breadcrumbs />
 
-        {/* Hero Section */}
-        <header className="relative pt-24 pb-32 overflow-hidden flex items-center justify-center min-h-[500px] bg-gradient-to-b from-surface-container/30 to-background">
-          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center flex flex-col items-center justify-center relative z-10">
-            <div className="entry-anim flex flex-col items-center">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[12px] mb-6">
-                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  verified
-                </span>
-                BY INSUREDESK IMF PVT LTD
-              </div>
-              <h1 className="font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold max-w-4xl">
-                About <span className="text-secondary">BIMAHEADQUARTER</span>
-              </h1>
-              <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-3xl mx-auto text-[18px] leading-relaxed">
-                An institutional consulting and claim assistance brand by{" "}
-                <strong className="text-primary font-semibold">InsureDesk IMF Pvt Ltd</strong>.
-                We bridge the gap between policyholders and insurance providers across India with absolute integrity, regulatory precision, and claim settlement advocacy.
-              </p>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <Link
-                  href="/#cta-banner"
-                  className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all flex items-center justify-center text-[14px] font-bold"
-                >
-                  Schedule Consultation
-                </Link>
-                <Link
-                  href="/#solutions"
-                  className="px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all flex items-center justify-center bg-transparent text-[14px] font-semibold"
-                >
-                  Explore Consulting Solutions
-                </Link>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Brand Pillars / Mission Vision Values */}
-        <section className="py-24 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop bg-background">
-          <div className="text-center mb-16 reveal">
-            <h2 className="font-headline-lg text-headline-lg text-primary mb-4 text-[32px] font-bold">
-              Our Core Principles
-            </h2>
-            <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto text-[18px]">
-              Every client interaction is driven by our commitment to simplify the insurance lifecycle and deliver positive outcomes.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="glass-card p-10 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20">
-              <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                <span className="material-symbols-outlined text-[32px]">explore</span>
-              </div>
-              <h3 className="font-headline-md text-[22px] text-primary mb-4 font-bold">
-                Our Mission
-              </h3>
-              <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
-                To simplify corporate and individual insurance through transparent assessment, identifying coverage gaps, and championing policyholder rights in complex claim situations.
-              </p>
-            </div>
-
-            <div className="glass-card p-10 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20" style={{ transitionDelay: "0.15s" }}>
-              <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                <span className="material-symbols-outlined text-[32px]">visibility</span>
-              </div>
-              <h3 className="font-headline-md text-[22px] text-primary mb-4 font-bold">
-                Our Vision
-              </h3>
-              <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
-                To be India's premier consulting brand for institutional risk advisory and professional claims advocacy, delivering unbiased advice and prompt settlements.
-              </p>
-            </div>
-
-            <div className="glass-card p-10 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20" style={{ transitionDelay: "0.3s" }}>
-              <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                <span className="material-symbols-outlined text-[32px]">gavel</span>
-              </div>
-              <h3 className="font-headline-md text-[22px] text-primary mb-4 font-bold">
-                Core Values
-              </h3>
-              <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
-                Integrity, client advocacy, and complete regulatory alignment. We stand firmly with policyholders to verify that legitimate claims are settled fairly and transparently.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Corporate Background Section */}
-        <section className="py-24 bg-surface-container-low border-t border-b border-outline-variant/20">
-          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <div className="reveal">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[11px] mb-4">
-                  COMPLIANCE & AUTHORITY
+          {/* Hero Section */}
+          <header className="relative pt-24 pb-32 overflow-hidden flex items-center justify-center min-h-[500px] bg-gradient-to-b from-surface-container/30 to-background">
+            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center flex flex-col items-center justify-center relative z-10">
+              <div className="entry-anim flex flex-col items-center">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[12px] mb-6">
+                  <span
+                    className="material-symbols-outlined text-[16px]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    verified
+                  </span>
+                  BY INSUREDESK IMF PVT LTD
                 </div>
-                <h2 className="font-headline-lg text-headline-lg text-primary mb-6 text-[32px] font-bold leading-tight">
-                  Licensed Expertise by InsureDesk IMF Pvt Ltd
-                </h2>
-                <div className="space-y-6 text-on-surface-variant text-[16px] leading-relaxed">
-                  <p>
-                    BIMAHEADQUARTER operates as an exclusive consulting and services brand under the corporate umbrella of <strong>InsureDesk IMF Pvt Ltd</strong>. As a licensed Insurance Marketing Firm registered under the regulations of the Insurance Regulatory and Development Authority of India (IRDAI), we carry out professional activities with robust compliance.
-                  </p>
-                  <p>
-                    Unlike traditional agents who solely focus on selling policy packages, we offer comprehensive risk management consulting, policy review to detect exclusions, and expert assistance in filing or representing claims after losses occur.
-                  </p>
-                  <p>
-                    Whether protecting industrial assets, warehouse inventory, employee corporate health, or commercial transits, BIMAHEADQUARTER combines local presence with corporate standards to safeguard your business.
-                  </p>
-                </div>
-                <div className="mt-8 flex gap-8">
-                  <div className="flex flex-col">
-                    <span className="font-headline-md text-primary font-bold text-[24px]">10+</span>
-                    <span className="text-sm font-medium uppercase tracking-wider text-on-surface-variant/70 text-[11px]">National Partners</span>
-                  </div>
-                  <div className="w-px h-10 bg-outline-variant"></div>
-                  <div className="flex flex-col">
-                    <span className="font-headline-md text-primary font-bold text-[24px]">100%</span>
-                    <span className="text-sm font-medium uppercase tracking-wider text-on-surface-variant/70 text-[11px]">Unbiased Consulting</span>
-                  </div>
+                <h1 className="font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold max-w-4xl">
+                  About <span className="text-secondary">BIMAHEADQUARTER</span>
+                </h1>
+                <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-3xl mx-auto text-[18px] leading-relaxed">
+                  An institutional consulting and claim assistance brand by{" "}
+                  <strong className="text-primary font-semibold">InsureDesk IMF Pvt Ltd</strong>. We bridge
+                  the gap between policyholders and insurance providers across India with absolute integrity,
+                  regulatory precision, and claim settlement advocacy.
+                </p>
+                <div className="flex flex-wrap gap-4 justify-center">
+                  <Link
+                    href="/#cta-banner"
+                    className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all flex items-center justify-center text-[14px] font-bold"
+                  >
+                    Schedule Consultation
+                  </Link>
+                  <Link
+                    href="/#solutions"
+                    className="px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all flex items-center justify-center bg-transparent text-[14px] font-semibold"
+                  >
+                    Explore Consulting Solutions
+                  </Link>
                 </div>
               </div>
+            </div>
+          </header>
 
-              {/* Graphic Card */}
-              <div className="relative rounded-3xl p-12 overflow-hidden bg-primary text-white shadow-2xl border border-primary/20 reveal">
-                <div className="absolute inset-0 -z-10 opacity-10">
-                  <div className="absolute top-0 left-0 w-48 h-48 bg-secondary rounded-full blur-[80px]"></div>
-                  <div className="absolute bottom-0 right-0 w-48 h-48 bg-secondary rounded-full blur-[80px]"></div>
+          {/* Brand Pillars / Mission Vision Values */}
+          <section className="py-24 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop bg-background">
+            <div className="text-center mb-16 reveal">
+              <h2 className="font-headline-lg text-headline-lg text-primary mb-4 text-[32px] font-bold">
+                Our Core Principles
+              </h2>
+              <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto text-[18px]">
+                Every client interaction is driven by our commitment to simplify the insurance lifecycle and
+                deliver positive outcomes.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="glass-card p-10 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20">
+                <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                  <span className="material-symbols-outlined text-[32px]">explore</span>
                 </div>
-                <h3 className="font-headline-md text-[24px] mb-6 font-bold text-white">
-                  Our Consulting Philosophy
-                </h3>
-                <ul className="space-y-6">
-                  <li className="flex gap-4 items-start">
-                    <span className="material-symbols-outlined text-secondary text-[24px] mt-1">check_circle</span>
-                    <div>
-                      <h4 className="font-semibold text-[16px] text-white">Detailed Gap Analysis</h4>
-                      <p className="text-white/70 text-sm mt-1">We inspect existing policies for loopholes, hidden deductibles, and under-insurance risks.</p>
-                    </div>
-                  </li>
-                  <li className="flex gap-4 items-start">
-                    <span className="material-symbols-outlined text-secondary text-[24px] mt-1">check_circle</span>
-                    <div>
-                      <h4 className="font-semibold text-[16px] text-white">Independent Claim Advocacy</h4>
-                      <p className="text-white/70 text-sm mt-1">We assist in coordinating loss documentation, surveyor meetings, and legal representation if required.</p>
-                    </div>
-                  </li>
-                  <li className="flex gap-4 items-start">
-                    <span className="material-symbols-outlined text-secondary text-[24px] mt-1">check_circle</span>
-                    <div>
-                      <h4 className="font-semibold text-[16px] text-white">Carrier Agnostic Reviews</h4>
-                      <p className="text-white/70 text-sm mt-1">We work with multiple top-rated insurers, helping you compare based on premium and claim settlement speed.</p>
-                    </div>
-                  </li>
-                </ul>
+                <h3 className="font-headline-md text-[22px] text-primary mb-4 font-bold">Our Mission</h3>
+                <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
+                  To simplify corporate and individual insurance through transparent assessment, identifying
+                  coverage gaps, and championing policyholder rights in complex claim situations.
+                </p>
               </div>
-            </div>
-          </div>
-        </section>
 
-        {/* CTA Banner */}
-        <section
-          className="py-20 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-margin-desktop mt-12"
-          id="cta-banner"
-        >
-          <div className="relative bg-primary rounded-3xl p-12 lg:p-20 overflow-hidden text-center text-on-primary shadow-2xl reveal border border-primary/20">
-            <div className="absolute inset-0 -z-10 opacity-10">
-              <div className="absolute top-0 left-0 w-64 h-64 bg-secondary rounded-full blur-[100px]"></div>
-              <div className="absolute bottom-0 right-0 w-64 h-64 bg-secondary rounded-full blur-[100px]"></div>
-            </div>
-            <h2 className="font-display-lg text-display-lg mb-6 entry-anim text-white text-[48px] font-bold">
-              Discuss Your Policy with Certified Advisors
-            </h2>
-            <p
-              className="font-body-lg text-body-lg mb-10 opacity-80 max-w-2xl mx-auto entry-anim text-white/80 text-[18px]"
-              style={{ animationDelay: "0.2s" }}
-            >
-              Get a thorough check on your commercial policies or health coverage gaps. Connect with BIMAHEADQUARTER today.
-            </p>
-            <div
-              className="flex flex-wrap justify-center gap-6 entry-anim"
-              style={{ animationDelay: "0.4s" }}
-            >
-              <a
-                href={`tel:${BUSINESS_DETAILS.phoneHref}`}
-                className="px-10 py-5 bg-secondary text-white rounded-xl font-label-md text-label-md flex items-center gap-3 hover:scale-105 transition-all text-[14px]"
+              <div
+                className="glass-card p-10 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20"
+                style={{ transitionDelay: "0.15s" }}
               >
-                <span className="material-symbols-outlined">call</span> Call Now: {BUSINESS_DETAILS.phone}
-              </a>
-              <a
-                href={`mailto:${BUSINESS_DETAILS.email}`}
-                className="px-10 py-5 bg-white text-primary rounded-xl font-label-md text-label-md flex items-center gap-3 hover:scale-105 transition-all border-0 min-h-0 text-[14px] font-bold"
-              >
-                <span className="material-symbols-outlined">mail</span> Email Us
-              </a>
-            </div>
-          </div>
-        </section>
+                <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                  <span className="material-symbols-outlined text-[32px]">visibility</span>
+                </div>
+                <h3 className="font-headline-md text-[22px] text-primary mb-4 font-bold">Our Vision</h3>
+                <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
+                  To be India's premier consulting brand for institutional risk advisory and professional
+                  claims advocacy, delivering unbiased advice and prompt settlements.
+                </p>
+              </div>
 
+              <div
+                className="glass-card p-10 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20"
+                style={{ transitionDelay: "0.3s" }}
+              >
+                <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                  <span className="material-symbols-outlined text-[32px]">gavel</span>
+                </div>
+                <h3 className="font-headline-md text-[22px] text-primary mb-4 font-bold">Core Values</h3>
+                <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
+                  Integrity, client advocacy, and complete regulatory alignment. We stand firmly with
+                  policyholders to verify that legitimate claims are settled fairly and transparently.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Corporate Background Section */}
+          <section className="py-24 bg-surface-container-low border-t border-b border-outline-variant/20">
+            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div className="reveal">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[11px] mb-4">
+                    COMPLIANCE & AUTHORITY
+                  </div>
+                  <h2 className="font-headline-lg text-headline-lg text-primary mb-6 text-[32px] font-bold leading-tight">
+                    Licensed Expertise by InsureDesk IMF Pvt Ltd
+                  </h2>
+                  <div className="space-y-6 text-on-surface-variant text-[16px] leading-relaxed">
+                    <p>
+                      BIMAHEADQUARTER operates as an exclusive consulting and services brand under the
+                      corporate umbrella of <strong>InsureDesk IMF Pvt Ltd</strong>. As a licensed Insurance
+                      Marketing Firm registered under the regulations of the Insurance Regulatory and
+                      Development Authority of India (IRDAI), we carry out professional activities with robust
+                      compliance.
+                    </p>
+                    <p>
+                      Unlike traditional agents who solely focus on selling policy packages, we offer
+                      comprehensive risk management consulting, policy review to detect exclusions, and expert
+                      assistance in filing or representing claims after losses occur.
+                    </p>
+                    <p>
+                      Whether protecting industrial assets, warehouse inventory, employee corporate health, or
+                      commercial transits, BIMAHEADQUARTER combines local presence with corporate standards to
+                      safeguard your business.
+                    </p>
+                  </div>
+                  <div className="mt-8 flex gap-8">
+                    <div className="flex flex-col">
+                      <span className="font-headline-md text-primary font-bold text-[24px]">10+</span>
+                      <span className="text-sm font-medium uppercase tracking-wider text-on-surface-variant/70 text-[11px]">
+                        National Partners
+                      </span>
+                    </div>
+                    <div className="w-px h-10 bg-outline-variant"></div>
+                    <div className="flex flex-col">
+                      <span className="font-headline-md text-primary font-bold text-[24px]">100%</span>
+                      <span className="text-sm font-medium uppercase tracking-wider text-on-surface-variant/70 text-[11px]">
+                        Unbiased Consulting
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Graphic Card */}
+                <div className="relative rounded-3xl p-12 overflow-hidden bg-primary text-white shadow-2xl border border-primary/20 reveal">
+                  <div className="absolute inset-0 -z-10 opacity-10">
+                    <div className="absolute top-0 left-0 w-48 h-48 bg-secondary rounded-full blur-[80px]"></div>
+                    <div className="absolute bottom-0 right-0 w-48 h-48 bg-secondary rounded-full blur-[80px]"></div>
+                  </div>
+                  <h3 className="font-headline-md text-[24px] mb-6 font-bold text-white">
+                    Our Consulting Philosophy
+                  </h3>
+                  <ul className="space-y-6">
+                    <li className="flex gap-4 items-start">
+                      <span className="material-symbols-outlined text-secondary text-[24px] mt-1">
+                        check_circle
+                      </span>
+                      <div>
+                        <h4 className="font-semibold text-[16px] text-white">Detailed Gap Analysis</h4>
+                        <p className="text-white/70 text-sm mt-1">
+                          We inspect existing policies for loopholes, hidden deductibles, and under-insurance
+                          risks.
+                        </p>
+                      </div>
+                    </li>
+                    <li className="flex gap-4 items-start">
+                      <span className="material-symbols-outlined text-secondary text-[24px] mt-1">
+                        check_circle
+                      </span>
+                      <div>
+                        <h4 className="font-semibold text-[16px] text-white">Independent Claim Advocacy</h4>
+                        <p className="text-white/70 text-sm mt-1">
+                          We assist in coordinating loss documentation, surveyor meetings, and legal
+                          representation if required.
+                        </p>
+                      </div>
+                    </li>
+                    <li className="flex gap-4 items-start">
+                      <span className="material-symbols-outlined text-secondary text-[24px] mt-1">
+                        check_circle
+                      </span>
+                      <div>
+                        <h4 className="font-semibold text-[16px] text-white">Carrier Agnostic Reviews</h4>
+                        <p className="text-white/70 text-sm mt-1">
+                          We work with multiple top-rated insurers, helping you compare based on premium and
+                          claim settlement speed.
+                        </p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* CTA Banner */}
+          <section
+            className="py-20 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-margin-desktop mt-12"
+            id="cta-banner"
+          >
+            <div className="relative bg-primary rounded-3xl p-12 lg:p-20 overflow-hidden text-center text-on-primary shadow-2xl reveal border border-primary/20">
+              <div className="absolute inset-0 -z-10 opacity-10">
+                <div className="absolute top-0 left-0 w-64 h-64 bg-secondary rounded-full blur-[100px]"></div>
+                <div className="absolute bottom-0 right-0 w-64 h-64 bg-secondary rounded-full blur-[100px]"></div>
+              </div>
+              <h2 className="font-display-lg text-display-lg mb-6 entry-anim text-white text-[48px] font-bold">
+                Discuss Your Policy with Certified Advisors
+              </h2>
+              <p
+                className="font-body-lg text-body-lg mb-10 opacity-80 max-w-2xl mx-auto entry-anim text-white/80 text-[18px]"
+                style={{ animationDelay: "0.2s" }}
+              >
+                Get a thorough check on your commercial policies or health coverage gaps. Connect with
+                BIMAHEADQUARTER today.
+              </p>
+              <div
+                className="flex flex-wrap justify-center gap-6 entry-anim"
+                style={{ animationDelay: "0.4s" }}
+              >
+                <a
+                  href={`tel:${BUSINESS_DETAILS.phoneHref}`}
+                  className="px-10 py-5 bg-secondary text-white rounded-xl font-label-md text-label-md flex items-center gap-3 hover:scale-105 transition-all text-[14px]"
+                >
+                  <span className="material-symbols-outlined">call</span> Call Now: {BUSINESS_DETAILS.phone}
+                </a>
+                <a
+                  href={`mailto:${BUSINESS_DETAILS.email}`}
+                  className="px-10 py-5 bg-white text-primary rounded-xl font-label-md text-label-md flex items-center gap-3 hover:scale-105 transition-all border-0 min-h-0 text-[14px] font-bold"
+                >
+                  <span className="material-symbols-outlined">mail</span> Email Us
+                </a>
+              </div>
+            </div>
+          </section>
         </main>
         <PublicFooter />
       </div>

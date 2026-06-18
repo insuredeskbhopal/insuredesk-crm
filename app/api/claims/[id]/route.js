@@ -9,7 +9,7 @@ import {
   requireClaimSession,
   sanitizeClaimDocuments,
   sanitizeClaimPayload,
-  serializeClaim
+  serializeClaim,
 } from "../utils";
 
 export const runtime = "nodejs";
@@ -23,13 +23,16 @@ export async function GET(request, { params }) {
 
     const claim = await prisma.claim.findFirst({
       where: { id, ...getClaimWhere(session, "read") },
-      include: claimInclude
+      include: claimInclude,
     });
 
     if (!claim) return NextResponse.json({ error: "Claim not found." }, { status: 404 });
     return NextResponse.json(serializeClaim(claim));
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Claim could not be loaded." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Claim could not be loaded." },
+      { status: 500 },
+    );
   }
 }
 
@@ -41,10 +44,11 @@ export async function PUT(request, { params }) {
     const { id } = await params;
 
     const existing = await prisma.claim.findFirst({
-      where: { id, ...getClaimWhere(session, "read") }
+      where: { id, ...getClaimWhere(session, "read") },
     });
     if (!existing) return NextResponse.json({ error: "Claim not found." }, { status: 404 });
-    if (!canWriteClaim(session, existing)) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    if (!canWriteClaim(session, existing))
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
 
     const payload = await request.json();
     const data = sanitizeClaimPayload(payload);
@@ -58,22 +62,22 @@ export async function PUT(request, { params }) {
         where: { id },
         data: {
           ...data,
-          updatedById: actorId
-        }
+          updatedById: actorId,
+        },
       });
 
       await tx.claimDocument.deleteMany({ where: { claimId: id } });
       const documents = sanitizeClaimDocuments(payload.documents, actorId);
       if (documents.length) {
         await tx.claimDocument.createMany({
-          data: documents.map((document) => ({ ...document, claimId: id }))
+          data: documents.map((document) => ({ ...document, claimId: id })),
         });
       }
     });
 
     const claim = await prisma.claim.findUnique({
       where: { id },
-      include: claimInclude
+      include: claimInclude,
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -87,12 +91,15 @@ export async function PUT(request, { params }) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { claimNo: claim.claimNo, insuredName: claim.insuredName }
+      metadata: { claimNo: claim.claimNo, insuredName: claim.insuredName },
     });
 
     return NextResponse.json(serializeClaim(claim));
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Claim could not be updated." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Claim could not be updated." },
+      { status: 500 },
+    );
   }
 }
 
@@ -104,18 +111,19 @@ export async function DELETE(request, { params }) {
     const { id } = await params;
 
     const existing = await prisma.claim.findFirst({
-      where: { id, ...getClaimWhere(session, "read") }
+      where: { id, ...getClaimWhere(session, "read") },
     });
     if (!existing) return NextResponse.json({ error: "Claim not found." }, { status: 404 });
-    if (!canDeleteClaim(session, existing)) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    if (!canDeleteClaim(session, existing))
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
 
     const actorId = session.userId || session.id || null;
     await prisma.claim.update({
       where: { id },
       data: {
         deletedAt: new Date(),
-        deletedById: actorId
-      }
+        deletedById: actorId,
+      },
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -129,11 +137,14 @@ export async function DELETE(request, { params }) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { claimNo: existing.claimNo, insuredName: existing.insuredName }
+      metadata: { claimNo: existing.claimNo, insuredName: existing.insuredName },
     });
 
     return new Response(null, { status: 204 });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Claim could not be deleted." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Claim could not be deleted." },
+      { status: 500 },
+    );
   }
 }

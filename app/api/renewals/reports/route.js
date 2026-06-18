@@ -23,11 +23,7 @@ export async function GET(request) {
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     // Base query inputs
-    const queryParams = [
-      isSuperAdmin,
-      orgId,
-      todayStr
-    ];
+    const queryParams = [isSuperAdmin, orgId, todayStr];
 
     // CTE to extract and normalize all policy records for analytics
     const baseCTE = `
@@ -173,7 +169,7 @@ export async function GET(request) {
       prisma.$queryRawUnsafe(typeQuery, ...queryParams),
       prisma.$queryRawUnsafe(lostQuery, ...queryParams),
       prisma.$queryRawUnsafe(trendQuery, ...queryParams),
-      prisma.$queryRawUnsafe(followUpQuery, ...queryParams)
+      prisma.$queryRawUnsafe(followUpQuery, ...queryParams),
     ]);
 
     return Response.json({
@@ -183,7 +179,7 @@ export async function GET(request) {
       types,
       lostReasons,
       monthlyTrends,
-      followUps
+      followUps,
     });
   } catch (error) {
     console.error("Reports API failed:", error);

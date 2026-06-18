@@ -12,7 +12,7 @@ const serviceLinks = [
   ["Marine Insurance", "/services/marine-insurance"],
   ["Claims Assistance", "/services/claims-assistance"],
   ["Policy Renewals", "/services/policy-renewals"],
-  ["Risk Advisory", "/services/risk-advisory"]
+  ["Risk Advisory", "/services/risk-advisory"],
 ];
 
 const quickLinks = [
@@ -20,7 +20,7 @@ const quickLinks = [
   ["Services", "/services"],
   ["About", "/about"],
   ["Blog", "/blog"],
-  ["Contact", "/contact"]
+  ["Contact", "/contact"],
 ];
 
 export default function PublicFooter() {
@@ -32,10 +32,7 @@ export default function PublicFooter() {
             <div className="footer-brand">
               <BrandLogo href="/" />
             </div>
-            <p>
-              Institutional insurance consultancy and claim assistance by{" "}
-              {BUSINESS_DETAILS.legalName}.
-            </p>
+            <p>Institutional insurance consultancy and claim assistance by {BUSINESS_DETAILS.legalName}.</p>
           </div>
 
           <div className="public-footer-actions" aria-label="Contact actions">
@@ -47,11 +44,7 @@ export default function PublicFooter() {
               <span className="material-symbols-outlined">mail</span>
               {BUSINESS_DETAILS.email}
             </a>
-            <a
-              href={BUSINESS_DETAILS.mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href={BUSINESS_DETAILS.mapsUrl} target="_blank" rel="noopener noreferrer">
               <span className="material-symbols-outlined">directions</span>
               Directions
             </a>
@@ -112,9 +105,7 @@ export default function PublicFooter() {
         </div>
 
         <div className="public-footer-bottom">
-          <p>
-            © {new Date().getFullYear()} BIMAHEADQUARTER. All rights reserved.
-          </p>
+          <p>© {new Date().getFullYear()} BIMAHEADQUARTER. All rights reserved.</p>
           <div>
             <Link href="/privacy-policy">Privacy</Link>
             <Link href="/terms-and-conditions">Terms</Link>

@@ -1,599 +1,207 @@
 {
   "Andhra Pradesh": {
-    "": [
-      "AP18"
-    ],
-    "Ananthapuramu": [
-      "AP02"
-    ],
-    "Chittoor": [
-      "AP03"
-    ],
-    "East Godavari": [
-      "AP05"
-    ],
-    "Guntur": [
-      "AP07"
-    ],
-    "Krishna": [
-      "AP16"
-    ],
-    "Kurnool": [
-      "AP21"
-    ],
-    "Nellore": [
-      "AP26"
-    ],
-    "Prakasam": [
-      "AP27"
-    ],
-    "Srikakulam": [
-      "AP30"
-    ],
-    "Tirupati": [
-      "AP39",
-      "AP40"
-    ],
-    "Vishakhapatnam": [
-      "AP31"
-    ],
-    "Vizianagaram": [
-      "AP35"
-    ],
-    "West Godavari": [
-      "AP37"
-    ],
-    "YSR Kadapa": [
-      "AP04"
-    ]
+    "": ["AP18"],
+    "Ananthapuramu": ["AP02"],
+    "Chittoor": ["AP03"],
+    "East Godavari": ["AP05"],
+    "Guntur": ["AP07"],
+    "Krishna": ["AP16"],
+    "Kurnool": ["AP21"],
+    "Nellore": ["AP26"],
+    "Prakasam": ["AP27"],
+    "Srikakulam": ["AP30"],
+    "Tirupati": ["AP39", "AP40"],
+    "Vishakhapatnam": ["AP31"],
+    "Vizianagaram": ["AP35"],
+    "West Godavari": ["AP37"],
+    "YSR Kadapa": ["AP04"]
   },
   "Arunachal Pradesh": {
-    "Anjaw": [
-      "AR17"
-    ],
-    "Changlang": [
-      "AR12"
-    ],
-    "Dibang Valley": [
-      "AR10",
-      "AR16"
-    ],
-    "East Kameng": [
-      "AR05"
-    ],
-    "East Siang": [
-      "AR09"
-    ],
-    "Kra Daadi": [
-      "AR19"
-    ],
-    "Kurung Kumey": [
-      "AR15"
-    ],
-    "Lohit": [
-      "AR11"
-    ],
-    "Lower Siang": [
-      "AR22"
-    ],
-    "Lower Subansiri": [
-      "AR06"
-    ],
-    "Namsai": [
-      "AR20"
-    ],
-    "Papum Pare": [
-      "AR01",
-      "AR02"
-    ],
-    "Tawang": [
-      "AR03"
-    ],
-    "Tirap": [
-      "AR13"
-    ],
-    "Upper Siang": [
-      "AR14"
-    ],
-    "Upper Subansiri": [
-      "AR07"
-    ],
-    "West Kameng": [
-      "AR04"
-    ],
-    "West Siang": [
-      "AR08"
-    ]
+    "Anjaw": ["AR17"],
+    "Changlang": ["AR12"],
+    "Dibang Valley": ["AR10", "AR16"],
+    "East Kameng": ["AR05"],
+    "East Siang": ["AR09"],
+    "Kra Daadi": ["AR19"],
+    "Kurung Kumey": ["AR15"],
+    "Lohit": ["AR11"],
+    "Lower Siang": ["AR22"],
+    "Lower Subansiri": ["AR06"],
+    "Namsai": ["AR20"],
+    "Papum Pare": ["AR01", "AR02"],
+    "Tawang": ["AR03"],
+    "Tirap": ["AR13"],
+    "Upper Siang": ["AR14"],
+    "Upper Subansiri": ["AR07"],
+    "West Kameng": ["AR04"],
+    "West Siang": ["AR08"]
   },
   "Assam": {
-    "": [
-      "AS20",
-      "AS30"
-    ],
-    "Barpeta": [
-      "AS15"
-    ],
-    "Biswanath": [
-      "AS32"
-    ],
-    "Bongaigaon": [
-      "AS19"
-    ],
-    "Cachar": [
-      "AS11"
-    ],
-    "Charaideo": [
-      "AS33"
-    ],
-    "Chirang": [
-      "AS26"
-    ],
-    "Darrang": [
-      "AS13"
-    ],
-    "Dhemaji": [
-      "AS22"
-    ],
-    "Dhubri": [
-      "AS17"
-    ],
-    "Dibrugarh": [
-      "AS06"
-    ],
-    "Dima Hasao": [
-      "AS08"
-    ],
-    "Goalpara": [
-      "AS18"
-    ],
-    "Golaghat": [
-      "AS05"
-    ],
-    "Hailakandi": [
-      "AS24"
-    ],
-    "Hojai": [
-      "AS31"
-    ],
-    "Jorhat": [
-      "AS03"
-    ],
-    "Kamrup": [
-      "AS01"
-    ],
-    "Kamrup Metropolitan": [
-      "AS25"
-    ],
-    "Karbi Anglong": [
-      "AS09"
-    ],
-    "Karimganj": [
-      "AS10"
-    ],
-    "Kokrajhar": [
-      "AS16"
-    ],
-    "Lakhimpur": [
-      "AS07"
-    ],
-    "Majuli": [
-      "AS29"
-    ],
-    "Morigaon": [
-      "AS21"
-    ],
-    "Nagaon": [
-      "AS02"
-    ],
-    "Nalbari": [
-      "AS14"
-    ],
-    "Sivasagar": [
-      "AS04"
-    ],
-    "Sonitpur": [
-      "AS12"
-    ],
-    "South Salmara-Mankachar": [
-      "AS34"
-    ],
-    "Tinsukia": [
-      "AS23"
-    ],
-    "Udalguri": [
-      "AS27"
-    ]
+    "": ["AS20", "AS30"],
+    "Barpeta": ["AS15"],
+    "Biswanath": ["AS32"],
+    "Bongaigaon": ["AS19"],
+    "Cachar": ["AS11"],
+    "Charaideo": ["AS33"],
+    "Chirang": ["AS26"],
+    "Darrang": ["AS13"],
+    "Dhemaji": ["AS22"],
+    "Dhubri": ["AS17"],
+    "Dibrugarh": ["AS06"],
+    "Dima Hasao": ["AS08"],
+    "Goalpara": ["AS18"],
+    "Golaghat": ["AS05"],
+    "Hailakandi": ["AS24"],
+    "Hojai": ["AS31"],
+    "Jorhat": ["AS03"],
+    "Kamrup": ["AS01"],
+    "Kamrup Metropolitan": ["AS25"],
+    "Karbi Anglong": ["AS09"],
+    "Karimganj": ["AS10"],
+    "Kokrajhar": ["AS16"],
+    "Lakhimpur": ["AS07"],
+    "Majuli": ["AS29"],
+    "Morigaon": ["AS21"],
+    "Nagaon": ["AS02"],
+    "Nalbari": ["AS14"],
+    "Sivasagar": ["AS04"],
+    "Sonitpur": ["AS12"],
+    "South Salmara-Mankachar": ["AS34"],
+    "Tinsukia": ["AS23"],
+    "Udalguri": ["AS27"]
   },
   "Bihar": {
-    "Araria": [
-      "BR38"
-    ],
-    "Arwal": [
-      "BR56"
-    ],
-    "Aurangabad": [
-      "BR26"
-    ],
-    "Banka": [
-      "BR51"
-    ],
-    "Begusarai": [
-      "BR09"
-    ],
-    "Bhagalpur": [
-      "BR10"
-    ],
-    "Bhojpur": [
-      "BR03"
-    ],
-    "Buxar": [
-      "BR44"
-    ],
-    "Darbhanga": [
-      "BR07"
-    ],
-    "East Champaran": [
-      "BR05"
-    ],
-    "Gaya": [
-      "BR02"
-    ],
-    "Gopalganj": [
-      "BR28"
-    ],
-    "Jamui": [
-      "BR46"
-    ],
-    "Jehanabad": [
-      "BR25"
-    ],
-    "Kaimur": [
-      "BR45"
-    ],
-    "Katihar": [
-      "BR39"
-    ],
-    "Khagaria": [
-      "BR34"
-    ],
-    "Kishanganj": [
-      "BR37"
-    ],
-    "Lakhisarai": [
-      "BR53"
-    ],
-    "Madhepura": [
-      "BR43"
-    ],
-    "Madhubani": [
-      "BR32"
-    ],
-    "Munger": [
-      "BR08"
-    ],
-    "Muzaffarpur": [
-      "BR06"
-    ],
-    "Nalanda": [
-      "BR21"
-    ],
-    "Nawada": [
-      "BR27"
-    ],
-    "Patna": [
-      "BR01"
-    ],
-    "Purnia": [
-      "BR11"
-    ],
-    "Rohtas": [
-      "BR24"
-    ],
-    "Saharsa": [
-      "BR19"
-    ],
-    "Samastipur": [
-      "BR33"
-    ],
-    "Saran": [
-      "BR04"
-    ],
-    "Sheikhpura": [
-      "BR52"
-    ],
-    "Sheohar": [
-      "BR55"
-    ],
-    "Sitamarhi": [
-      "BR30"
-    ],
-    "Siwan": [
-      "BR29"
-    ],
-    "Supaul": [
-      "BR50"
-    ],
-    "Vaishali": [
-      "BR31"
-    ],
-    "West Champaran": [
-      "BR22"
-    ]
+    "Araria": ["BR38"],
+    "Arwal": ["BR56"],
+    "Aurangabad": ["BR26"],
+    "Banka": ["BR51"],
+    "Begusarai": ["BR09"],
+    "Bhagalpur": ["BR10"],
+    "Bhojpur": ["BR03"],
+    "Buxar": ["BR44"],
+    "Darbhanga": ["BR07"],
+    "East Champaran": ["BR05"],
+    "Gaya": ["BR02"],
+    "Gopalganj": ["BR28"],
+    "Jamui": ["BR46"],
+    "Jehanabad": ["BR25"],
+    "Kaimur": ["BR45"],
+    "Katihar": ["BR39"],
+    "Khagaria": ["BR34"],
+    "Kishanganj": ["BR37"],
+    "Lakhisarai": ["BR53"],
+    "Madhepura": ["BR43"],
+    "Madhubani": ["BR32"],
+    "Munger": ["BR08"],
+    "Muzaffarpur": ["BR06"],
+    "Nalanda": ["BR21"],
+    "Nawada": ["BR27"],
+    "Patna": ["BR01"],
+    "Purnia": ["BR11"],
+    "Rohtas": ["BR24"],
+    "Saharsa": ["BR19"],
+    "Samastipur": ["BR33"],
+    "Saran": ["BR04"],
+    "Sheikhpura": ["BR52"],
+    "Sheohar": ["BR55"],
+    "Sitamarhi": ["BR30"],
+    "Siwan": ["BR29"],
+    "Supaul": ["BR50"],
+    "Vaishali": ["BR31"],
+    "West Champaran": ["BR22"]
   },
   "Chandigarh": {
-    "Chandigarh": [
-      "CH01",
-      "CH02",
-      "CH03",
-      "CH04"
-    ]
+    "Chandigarh": ["CH01", "CH02", "CH03", "CH04"]
   },
   "Chhattisgarh": {
-    "": [
-      "CG01",
-      "CG02",
-      "CG03"
-    ],
-    "Balod": [
-      "CG24"
-    ],
-    "Baloda Bazar": [
-      "CG22"
-    ],
-    "Balrampur": [
-      "CG30"
-    ],
-    "Bastar": [
-      "CG17"
-    ],
-    "Bemetara": [
-      "CG25"
-    ],
-    "Bijapur": [
-      "CG20"
-    ],
-    "Bilaspur": [
-      "CG10"
-    ],
-    "Champa": [
-      "CG11"
-    ],
-    "Dantewada": [
-      "CG18"
-    ],
-    "Dhamtari": [
-      "CG05"
-    ],
-    "Durg": [
-      "CG07"
-    ],
-    "Gariaband": [
-      "CG23"
-    ],
-    "Jashpur": [
-      "CG14"
-    ],
-    "Kabirdham": [
-      "CG09"
-    ],
-    "Kanker": [
-      "CG19"
-    ],
-    "Kondagaon": [
-      "CG27"
-    ],
-    "Korba": [
-      "CG12"
-    ],
-    "Koriya": [
-      "CG16"
-    ],
-    "Mahasamund": [
-      "CG06"
-    ],
-    "Mungeli": [
-      "CG28"
-    ],
-    "Narayanpur": [
-      "CG21"
-    ],
-    "Raigarh": [
-      "CG13"
-    ],
-    "Raipur": [
-      "CG04"
-    ],
-    "Rajnandgaon": [
-      "CG08"
-    ],
-    "Sukma": [
-      "CG26"
-    ],
-    "Surajpur": [
-      "CG29"
-    ],
-    "Surguja": [
-      "CG15"
-    ]
+    "": ["CG01", "CG02", "CG03"],
+    "Balod": ["CG24"],
+    "Baloda Bazar": ["CG22"],
+    "Balrampur": ["CG30"],
+    "Bastar": ["CG17"],
+    "Bemetara": ["CG25"],
+    "Bijapur": ["CG20"],
+    "Bilaspur": ["CG10"],
+    "Champa": ["CG11"],
+    "Dantewada": ["CG18"],
+    "Dhamtari": ["CG05"],
+    "Durg": ["CG07"],
+    "Gariaband": ["CG23"],
+    "Jashpur": ["CG14"],
+    "Kabirdham": ["CG09"],
+    "Kanker": ["CG19"],
+    "Kondagaon": ["CG27"],
+    "Korba": ["CG12"],
+    "Koriya": ["CG16"],
+    "Mahasamund": ["CG06"],
+    "Mungeli": ["CG28"],
+    "Narayanpur": ["CG21"],
+    "Raigarh": ["CG13"],
+    "Raipur": ["CG04"],
+    "Rajnandgaon": ["CG08"],
+    "Sukma": ["CG26"],
+    "Surajpur": ["CG29"],
+    "Surguja": ["CG15"]
   },
   "Dadra and Nagar Haveli and Daman and Diu": {
-    "": [
-      "DD01"
-    ],
-    "Daman": [
-      "DD03"
-    ],
-    "Diu": [
-      "DD02"
-    ]
+    "": ["DD01"],
+    "Daman": ["DD03"],
+    "Diu": ["DD02"]
   },
   "Delhi": {
-    "Central Delhi": [
-      "DL06"
-    ],
-    "Delhi": [
-      "DL02"
-    ],
-    "East Delhi": [
-      "DL07",
-      "DL13"
-    ],
-    "North Delhi": [
-      "DL01"
-    ],
-    "North West Delhi": [
-      "DL08",
-      "DL11"
-    ],
-    "Shahdara": [
-      "DL05"
-    ],
-    "South Delhi": [
-      "DL03"
-    ],
-    "South West Delhi": [
-      "DL09",
-      "DL12"
-    ],
-    "West Delhi": [
-      "DL04",
-      "DL10"
-    ]
+    "Central Delhi": ["DL06"],
+    "Delhi": ["DL02"],
+    "East Delhi": ["DL07", "DL13"],
+    "North Delhi": ["DL01"],
+    "North West Delhi": ["DL08", "DL11"],
+    "Shahdara": ["DL05"],
+    "South Delhi": ["DL03"],
+    "South West Delhi": ["DL09", "DL12"],
+    "West Delhi": ["DL04", "DL10"]
   },
   "Goa": {
-    "": [
-      "GA03",
-      "GA04",
-      "GA05",
-      "GA06",
-      "GA07",
-      "GA08",
-      "GA09",
-      "GA10",
-      "GA11",
-      "GA12"
-    ],
-    "North Goa": [
-      "GA01"
-    ],
-    "South Goa": [
-      "GA02"
-    ]
+    "": ["GA03", "GA04", "GA05", "GA06", "GA07", "GA08", "GA09", "GA10", "GA11", "GA12"],
+    "North Goa": ["GA01"],
+    "South Goa": ["GA02"]
   },
   "Gujarat": {
-    "": [
-      "GJ28",
-      "GJ29"
-    ],
-    "Ahmedabad": [
-      "GJ38"
-    ],
-    "Aravalli": [
-      "GJ31"
-    ],
-    "Banaskantha": [
-      "GJ08"
-    ],
-    "Covers entire Amreli": [
-      "GJ14"
-    ],
-    "Covers entire Anand": [
-      "GJ23"
-    ],
-    "Covers entire Bharuch": [
-      "GJ16"
-    ],
-    "Covers entire Bhavnagar": [
-      "GJ04"
-    ],
-    "Covers entire Botad": [
-      "GJ33"
-    ],
-    "Covers entire Dahod": [
-      "GJ20"
-    ],
-    "Covers entire Gandhinagar": [
-      "GJ18"
-    ],
-    "Covers entire Jamnagar": [
-      "GJ10"
-    ],
-    "Covers entire Junagadh": [
-      "GJ11"
-    ],
-    "Covers entire Mehsana": [
-      "GJ02"
-    ],
-    "Covers entire Morbi": [
-      "GJ36"
-    ],
-    "Covers entire Navsari": [
-      "GJ21"
-    ],
-    "Covers entire Patan": [
-      "GJ24"
-    ],
-    "Covers entire Porbandar": [
-      "GJ25"
-    ],
-    "Covers entire Rajkot": [
-      "GJ03"
-    ],
-    "Covers entire Surendranagar": [
-      "GJ13"
-    ],
-    "Covers entire Vadodara": [
-      "GJ06"
-    ],
-    "Covers entire Valsad": [
-      "GJ15"
-    ],
-    "Dang": [
-      "GJ30"
-    ],
-    "Devbhoomi Dwarka": [
-      "GJ37"
-    ],
-    "Gir Somnath": [
-      "GJ32"
-    ],
-    "Kheda": [
-      "GJ07"
-    ],
-    "Kutch": [
-      "GJ12",
-      "GJ39"
-    ],
-    "Mahisagar": [
-      "GJ35"
-    ],
-    "Narmada": [
-      "GJ22"
-    ],
-    "Panchmahal": [
-      "GJ17"
-    ],
-    "Sabarkantha": [
-      "GJ09"
-    ],
-    "Surat": [
-      "GJ19"
-    ],
-    "Tapi": [
-      "GJ26"
-    ],
-    "entire Chhota Udaipur": [
-      "GJ34"
-    ],
-    "of Eastern Ahmedabad": [
-      "GJ27"
-    ],
-    "of Western Ahmedabad": [
-      "GJ01"
-    ],
-    "of Western Surat": [
-      "GJ05"
-    ]
+    "": ["GJ28", "GJ29"],
+    "Ahmedabad": ["GJ38"],
+    "Aravalli": ["GJ31"],
+    "Banaskantha": ["GJ08"],
+    "Covers entire Amreli": ["GJ14"],
+    "Covers entire Anand": ["GJ23"],
+    "Covers entire Bharuch": ["GJ16"],
+    "Covers entire Bhavnagar": ["GJ04"],
+    "Covers entire Botad": ["GJ33"],
+    "Covers entire Dahod": ["GJ20"],
+    "Covers entire Gandhinagar": ["GJ18"],
+    "Covers entire Jamnagar": ["GJ10"],
+    "Covers entire Junagadh": ["GJ11"],
+    "Covers entire Mehsana": ["GJ02"],
+    "Covers entire Morbi": ["GJ36"],
+    "Covers entire Navsari": ["GJ21"],
+    "Covers entire Patan": ["GJ24"],
+    "Covers entire Porbandar": ["GJ25"],
+    "Covers entire Rajkot": ["GJ03"],
+    "Covers entire Surendranagar": ["GJ13"],
+    "Covers entire Vadodara": ["GJ06"],
+    "Covers entire Valsad": ["GJ15"],
+    "Dang": ["GJ30"],
+    "Devbhoomi Dwarka": ["GJ37"],
+    "Gir Somnath": ["GJ32"],
+    "Kheda": ["GJ07"],
+    "Kutch": ["GJ12", "GJ39"],
+    "Mahisagar": ["GJ35"],
+    "Narmada": ["GJ22"],
+    "Panchmahal": ["GJ17"],
+    "Sabarkantha": ["GJ09"],
+    "Surat": ["GJ19"],
+    "Tapi": ["GJ26"],
+    "entire Chhota Udaipur": ["GJ34"],
+    "of Eastern Ahmedabad": ["GJ27"],
+    "of Western Ahmedabad": ["GJ01"],
+    "of Western Surat": ["GJ05"]
   },
   "Haryana": {
     "": [
@@ -678,63 +286,25 @@
       "HR98",
       "HR99"
     ],
-    "Bhiwani": [
-      "HR61"
-    ],
-    "Charkhi Dadri": [
-      "HR84"
-    ],
-    "Faridabad": [
-      "HR38"
-    ],
-    "Fatehabad": [
-      "HR62"
-    ],
-    "Gurugram": [
-      "HR55"
-    ],
-    "Hisar": [
-      "HR39"
-    ],
-    "Kaithal": [
-      "HR64"
-    ],
-    "Karnal": [
-      "HR45"
-    ],
-    "Kurukshetra": [
-      "HR65"
-    ],
-    "Mahendragarh": [
-      "HR66"
-    ],
-    "Nuh": [
-      "HR74"
-    ],
-    "Palwal": [
-      "HR73"
-    ],
-    "Panchkula": [
-      "HR68"
-    ],
-    "Panipat": [
-      "HR67"
-    ],
-    "Rewari": [
-      "HR47"
-    ],
-    "Rohtak": [
-      "HR46"
-    ],
-    "Sirsa": [
-      "HR57"
-    ],
-    "Sonipat": [
-      "HR69"
-    ],
-    "Yamunanagar": [
-      "HR58"
-    ]
+    "Bhiwani": ["HR61"],
+    "Charkhi Dadri": ["HR84"],
+    "Faridabad": ["HR38"],
+    "Fatehabad": ["HR62"],
+    "Gurugram": ["HR55"],
+    "Hisar": ["HR39"],
+    "Kaithal": ["HR64"],
+    "Karnal": ["HR45"],
+    "Kurukshetra": ["HR65"],
+    "Mahendragarh": ["HR66"],
+    "Nuh": ["HR74"],
+    "Palwal": ["HR73"],
+    "Panchkula": ["HR68"],
+    "Panipat": ["HR67"],
+    "Rewari": ["HR47"],
+    "Rohtak": ["HR46"],
+    "Sirsa": ["HR57"],
+    "Sonipat": ["HR69"],
+    "Yamunanagar": ["HR58"]
   },
   "Himachal Pradesh": {
     "": [
@@ -820,208 +390,69 @@
       "HP98",
       "HP99"
     ],
-    "Bilaspur": [
-      "HP69",
-      "HP70",
-      "HP89",
-      "HP91"
-    ],
-    "Chamba": [
-      "HP44"
-    ],
-    "Hamirpur": [
-      "HP21",
-      "HP74",
-      "HP84"
-    ],
-    "Kangra": [
-      "HP83",
-      "HP88",
-      "HP90",
-      "HP96"
-    ],
-    "Kullu": [
-      "HP35"
-    ],
-    "Mandi": [
-      "HP32",
-      "HP76",
-      "HP82",
-      "HP86",
-      "HP87",
-      "HP87AA"
-    ],
-    "Shimla": [
-      "HP77"
-    ],
-    "Sirmaur": [
-      "HP16AA",
-      "HP79",
-      "HP85",
-      "HP85AA"
-    ],
-    "Una": [
-      "HP19AA",
-      "HP78",
-      "HP80"
-    ]
+    "Bilaspur": ["HP69", "HP70", "HP89", "HP91"],
+    "Chamba": ["HP44"],
+    "Hamirpur": ["HP21", "HP74", "HP84"],
+    "Kangra": ["HP83", "HP88", "HP90", "HP96"],
+    "Kullu": ["HP35"],
+    "Mandi": ["HP32", "HP76", "HP82", "HP86", "HP87", "HP87AA"],
+    "Shimla": ["HP77"],
+    "Sirmaur": ["HP16AA", "HP79", "HP85", "HP85AA"],
+    "Una": ["HP19AA", "HP78", "HP80"]
   },
   "Jammu and Kashmir": {
-    "Anantnag": [
-      "JK03"
-    ],
-    "Bandipora": [
-      "JK15"
-    ],
-    "Baramulla": [
-      "JK05"
-    ],
-    "Budgam": [
-      "JK04"
-    ],
-    "Doda": [
-      "JK06"
-    ],
-    "Ganderbal": [
-      "JK16"
-    ],
-    "Jammu": [
-      "JK02"
-    ],
-    "Kathua": [
-      "JK08"
-    ],
-    "Kishtwar": [
-      "JK17"
-    ],
-    "Kulgam": [
-      "JK18"
-    ],
-    "Kupwara": [
-      "JK09"
-    ],
-    "Poonch": [
-      "JK12"
-    ],
-    "Pulwama": [
-      "JK13"
-    ],
-    "Rajouri": [
-      "JK11"
-    ],
-    "Ramban": [
-      "JK19"
-    ],
-    "Reasi": [
-      "JK20"
-    ],
-    "Samba": [
-      "JK21"
-    ],
-    "Shopian": [
-      "JK22"
-    ],
-    "Srinagar": [
-      "JK01"
-    ],
-    "Udhampur": [
-      "JK14"
-    ]
+    "Anantnag": ["JK03"],
+    "Bandipora": ["JK15"],
+    "Baramulla": ["JK05"],
+    "Budgam": ["JK04"],
+    "Doda": ["JK06"],
+    "Ganderbal": ["JK16"],
+    "Jammu": ["JK02"],
+    "Kathua": ["JK08"],
+    "Kishtwar": ["JK17"],
+    "Kulgam": ["JK18"],
+    "Kupwara": ["JK09"],
+    "Poonch": ["JK12"],
+    "Pulwama": ["JK13"],
+    "Rajouri": ["JK11"],
+    "Ramban": ["JK19"],
+    "Reasi": ["JK20"],
+    "Samba": ["JK21"],
+    "Shopian": ["JK22"],
+    "Srinagar": ["JK01"],
+    "Udhampur": ["JK14"]
   },
   "Jharkhand": {
-    "Bokaro": [
-      "JH09"
-    ],
-    "Chatra": [
-      "JH13"
-    ],
-    "Deoghar": [
-      "JH15"
-    ],
-    "Dhanbad": [
-      "JH10"
-    ],
-    "Dumka": [
-      "JH04"
-    ],
-    "East Singhbhum": [
-      "JH05"
-    ],
-    "Garhwa": [
-      "JH14"
-    ],
-    "Giridih": [
-      "JH11"
-    ],
-    "Godda": [
-      "JH17"
-    ],
-    "Gumla": [
-      "JH07"
-    ],
-    "Hazaribagh": [
-      "JH02"
-    ],
-    "Jamtara": [
-      "JH21"
-    ],
-    "Khunti": [
-      "JH23"
-    ],
-    "Koderma": [
-      "JH12"
-    ],
-    "Latehar": [
-      "JH19"
-    ],
-    "Lohardaga": [
-      "JH08"
-    ],
-    "Pakur": [
-      "JH16"
-    ],
-    "Palamu": [
-      "JH03"
-    ],
-    "Ramgarh": [
-      "JH24"
-    ],
-    "Ranchi": [
-      "JH01"
-    ],
-    "Sahebganj": [
-      "JH18"
-    ],
-    "Seraikela Kharsawan": [
-      "JH22"
-    ],
-    "Simdega": [
-      "JH20"
-    ],
-    "West Singhbhum": [
-      "JH06"
-    ]
+    "Bokaro": ["JH09"],
+    "Chatra": ["JH13"],
+    "Deoghar": ["JH15"],
+    "Dhanbad": ["JH10"],
+    "Dumka": ["JH04"],
+    "East Singhbhum": ["JH05"],
+    "Garhwa": ["JH14"],
+    "Giridih": ["JH11"],
+    "Godda": ["JH17"],
+    "Gumla": ["JH07"],
+    "Hazaribagh": ["JH02"],
+    "Jamtara": ["JH21"],
+    "Khunti": ["JH23"],
+    "Koderma": ["JH12"],
+    "Latehar": ["JH19"],
+    "Lohardaga": ["JH08"],
+    "Pakur": ["JH16"],
+    "Palamu": ["JH03"],
+    "Ramgarh": ["JH24"],
+    "Ranchi": ["JH01"],
+    "Sahebganj": ["JH18"],
+    "Seraikela Kharsawan": ["JH22"],
+    "Simdega": ["JH20"],
+    "West Singhbhum": ["JH06"]
   },
   "Karnataka": {
-    "Bagalkote": [
-      "KA29",
-      "KA48"
-    ],
-    "Ballari": [
-      "KA34"
-    ],
-    "Belagavi": [
-      "KA22",
-      "KA23",
-      "KA24",
-      "KA49",
-      "KA69",
-      "KA71"
-    ],
-    "Bengaluru Rural": [
-      "KA43",
-      "KA52"
-    ],
+    "Bagalkote": ["KA29", "KA48"],
+    "Ballari": ["KA34"],
+    "Belagavi": ["KA22", "KA23", "KA24", "KA49", "KA69", "KA71"],
+    "Bengaluru Rural": ["KA43", "KA52"],
     "Bengaluru Urban": [
       "KA01",
       "KA02",
@@ -1035,103 +466,32 @@
       "KA57",
       "KA59"
     ],
-    "Bidar": [
-      "KA38",
-      "KA39",
-      "KA56"
-    ],
-    "Chamarajanagara": [
-      "KA10"
-    ],
-    "Chikkaballapura": [
-      "KA40",
-      "KA67"
-    ],
-    "Chikkamagaluru": [
-      "KA18",
-      "KA66"
-    ],
-    "Chitradurga": [
-      "KA16"
-    ],
-    "Dakshina Kannada": [
-      "KA19",
-      "KA21",
-      "KA70"
-    ],
-    "Davanagere": [
-      "KA17"
-    ],
-    "Dharwad": [
-      "KA25",
-      "KA63"
-    ],
-    "Gadag": [
-      "KA26"
-    ],
-    "Hassan": [
-      "KA13",
-      "KA46"
-    ],
-    "Haveri": [
-      "KA27",
-      "KA68"
-    ],
-    "Kalaburagi": [
-      "KA32"
-    ],
-    "Kodagu": [
-      "KA12"
-    ],
-    "Kolar": [
-      "KA07",
-      "KA08"
-    ],
-    "Koppal": [
-      "KA37"
-    ],
-    "Mandya": [
-      "KA11",
-      "KA54"
-    ],
-    "Mysuru": [
-      "KA09",
-      "KA45",
-      "KA55"
-    ],
-    "Raichur": [
-      "KA36"
-    ],
-    "Ramanagara": [
-      "KA42"
-    ],
-    "Shivamogga": [
-      "KA14",
-      "KA15"
-    ],
-    "Tumakuru": [
-      "KA06",
-      "KA44",
-      "KA64"
-    ],
-    "Udupi": [
-      "KA20"
-    ],
-    "Uttara Kannada": [
-      "KA30",
-      "KA31",
-      "KA47",
-      "KA65"
-    ],
-    "Vijayanagara": [
-      "KA35"
-    ],
-    "Vijayapura": [
-      "KA28"
-    ],
-    "Yadgir": [
-      "KA33"
-    ]
+    "Bidar": ["KA38", "KA39", "KA56"],
+    "Chamarajanagara": ["KA10"],
+    "Chikkaballapura": ["KA40", "KA67"],
+    "Chikkamagaluru": ["KA18", "KA66"],
+    "Chitradurga": ["KA16"],
+    "Dakshina Kannada": ["KA19", "KA21", "KA70"],
+    "Davanagere": ["KA17"],
+    "Dharwad": ["KA25", "KA63"],
+    "Gadag": ["KA26"],
+    "Hassan": ["KA13", "KA46"],
+    "Haveri": ["KA27", "KA68"],
+    "Kalaburagi": ["KA32"],
+    "Kodagu": ["KA12"],
+    "Kolar": ["KA07", "KA08"],
+    "Koppal": ["KA37"],
+    "Mandya": ["KA11", "KA54"],
+    "Mysuru": ["KA09", "KA45", "KA55"],
+    "Raichur": ["KA36"],
+    "Ramanagara": ["KA42"],
+    "Shivamogga": ["KA14", "KA15"],
+    "Tumakuru": ["KA06", "KA44", "KA64"],
+    "Udupi": ["KA20"],
+    "Uttara Kannada": ["KA30", "KA31", "KA47", "KA65"],
+    "Vijayanagara": ["KA35"],
+    "Vijayapura": ["KA28"],
+    "Yadgir": ["KA33"]
   },
   "Kerala": {
     "": [
@@ -1152,299 +512,85 @@
       "KL90",
       "KL99"
     ],
-    "Alappuzha": [
-      "KL29",
-      "KL30",
-      "KL31",
-      "KL32",
-      "KL66"
-    ],
-    "Ernakulam": [
-      "KL07",
-      "KL17",
-      "KL39",
-      "KL40",
-      "KL41",
-      "KL42",
-      "KL43",
-      "KL44",
-      "KL63"
-    ],
-    "Idukki": [
-      "KL37",
-      "KL38",
-      "KL68",
-      "KL69"
-    ],
-    "Kannur": [
-      "KL58",
-      "KL59",
-      "KL78",
-      "KL86"
-    ],
-    "Kasargod": [
-      "KL60",
-      "KL79"
-    ],
-    "Kollam": [
-      "KL23",
-      "KL24",
-      "KL25",
-      "KL61",
-      "KL80",
-      "KL82"
-    ],
-    "Kottayam": [
-      "KL33",
-      "KL34",
-      "KL35",
-      "KL36",
-      "KL67"
-    ],
-    "Kozhikode": [
-      "KL18",
-      "KL56",
-      "KL57",
-      "KL76",
-      "KL77",
-      "KL85"
-    ],
-    "Malappuram": [
-      "KL53",
-      "KL54",
-      "KL55",
-      "KL65",
-      "KL71",
-      "KL84"
-    ],
-    "Palakkad": [
-      "KL49",
-      "KL50",
-      "KL51",
-      "KL52",
-      "KL70"
-    ],
-    "Pathanamthitta": [
-      "KL26",
-      "KL27",
-      "KL28",
-      "KL62",
-      "KL83"
-    ],
-    "Thiruvananthapuram": [
-      "KL16",
-      "KL19",
-      "KL20",
-      "KL21",
-      "KL74",
-      "KL81"
-    ],
-    "Thrissur": [
-      "KL45",
-      "KL46",
-      "KL47",
-      "KL48",
-      "KL64",
-      "KL75"
-    ],
-    "Wayanad": [
-      "KL12",
-      "KL72",
-      "KL73"
-    ]
+    "Alappuzha": ["KL29", "KL30", "KL31", "KL32", "KL66"],
+    "Ernakulam": ["KL07", "KL17", "KL39", "KL40", "KL41", "KL42", "KL43", "KL44", "KL63"],
+    "Idukki": ["KL37", "KL38", "KL68", "KL69"],
+    "Kannur": ["KL58", "KL59", "KL78", "KL86"],
+    "Kasargod": ["KL60", "KL79"],
+    "Kollam": ["KL23", "KL24", "KL25", "KL61", "KL80", "KL82"],
+    "Kottayam": ["KL33", "KL34", "KL35", "KL36", "KL67"],
+    "Kozhikode": ["KL18", "KL56", "KL57", "KL76", "KL77", "KL85"],
+    "Malappuram": ["KL53", "KL54", "KL55", "KL65", "KL71", "KL84"],
+    "Palakkad": ["KL49", "KL50", "KL51", "KL52", "KL70"],
+    "Pathanamthitta": ["KL26", "KL27", "KL28", "KL62", "KL83"],
+    "Thiruvananthapuram": ["KL16", "KL19", "KL20", "KL21", "KL74", "KL81"],
+    "Thrissur": ["KL45", "KL46", "KL47", "KL48", "KL64", "KL75"],
+    "Wayanad": ["KL12", "KL72", "KL73"]
   },
   "Ladakh": {
-    "Kargil": [
-      "LA01"
-    ],
-    "Leh": [
-      "LA02"
-    ]
+    "Kargil": ["LA01"],
+    "Leh": ["LA02"]
   },
   "Lakshadweep": {
-    "": [
-      "LD01",
-      "LD02",
-      "LD03",
-      "LD04",
-      "LD05",
-      "LD06",
-      "LD07",
-      "LD08",
-      "LD09"
-    ]
+    "": ["LD01", "LD02", "LD03", "LD04", "LD05", "LD06", "LD07", "LD08", "LD09"]
   },
   "Madhya Pradesh": {
-    "": [
-      "MP01",
-      "MP02",
-      "MP03"
-    ],
-    "Agar Malwa": [
-      "MP70"
-    ],
-    "Alirajpur": [
-      "MP69"
-    ],
-    "Anuppur": [
-      "MP65"
-    ],
-    "Ashoknagar": [
-      "MP67"
-    ],
-    "Balaghat": [
-      "MP50"
-    ],
-    "Barwani": [
-      "MP46"
-    ],
-    "Betul": [
-      "MP48"
-    ],
-    "Bhind": [
-      "MP30"
-    ],
-    "Bhopal": [
-      "MP04"
-    ],
-    "Burhanpur": [
-      "MP68"
-    ],
-    "Chhatarpur": [
-      "MP16"
-    ],
-    "Chhindwara": [
-      "MP28"
-    ],
-    "Damoh": [
-      "MP34"
-    ],
-    "Datia": [
-      "MP32"
-    ],
-    "Dewas": [
-      "MP41"
-    ],
-    "Dhar": [
-      "MP11"
-    ],
-    "Dindori": [
-      "MP52"
-    ],
-    "Guna": [
-      "MP08"
-    ],
-    "Gwalior": [
-      "MP07"
-    ],
-    "Harda": [
-      "MP47"
-    ],
-    "Hoshangabad": [
-      "MP05"
-    ],
-    "Indore": [
-      "MP09"
-    ],
-    "Jabalpur": [
-      "MP20"
-    ],
-    "Jhabua": [
-      "MP45"
-    ],
-    "Katni": [
-      "MP21"
-    ],
-    "Khandwa": [
-      "MP12"
-    ],
-    "Khargone": [
-      "MP10"
-    ],
-    "Maihar": [
-      "MP73"
-    ],
-    "Mandla": [
-      "MP51"
-    ],
-    "Mandsaur": [
-      "MP14"
-    ],
-    "Mauganj": [
-      "MP72"
-    ],
-    "Morena": [
-      "MP06"
-    ],
-    "Narsinghpur": [
-      "MP49"
-    ],
-    "Neemuch": [
-      "MP44"
-    ],
-    "Niwari": [
-      "MP71"
-    ],
-    "Pandhurna": [
-      "MP74"
-    ],
-    "Panna": [
-      "MP35"
-    ],
-    "Raisen": [
-      "MP38"
-    ],
-    "Rajgarh": [
-      "MP39"
-    ],
-    "Ratlam": [
-      "MP43"
-    ],
-    "Rewa": [
-      "MP17"
-    ],
-    "Sagar": [
-      "MP15"
-    ],
-    "Satna": [
-      "MP19"
-    ],
-    "Sehore": [
-      "MP37"
-    ],
-    "Seoni": [
-      "MP22"
-    ],
-    "Shahdol": [
-      "MP18"
-    ],
-    "Shajapur": [
-      "MP42"
-    ],
-    "Sheopur": [
-      "MP31"
-    ],
-    "Shivpuri": [
-      "MP33"
-    ],
-    "Sidhi": [
-      "MP53"
-    ],
-    "Singrauli": [
-      "MP66"
-    ],
-    "Tikamgarh": [
-      "MP36"
-    ],
-    "Ujjain": [
-      "MP13"
-    ],
-    "Umaria": [
-      "MP54"
-    ],
-    "Vidisha": [
-      "MP40"
-    ]
+    "": ["MP01", "MP02", "MP03"],
+    "Agar Malwa": ["MP70"],
+    "Alirajpur": ["MP69"],
+    "Anuppur": ["MP65"],
+    "Ashoknagar": ["MP67"],
+    "Balaghat": ["MP50"],
+    "Barwani": ["MP46"],
+    "Betul": ["MP48"],
+    "Bhind": ["MP30"],
+    "Bhopal": ["MP04"],
+    "Burhanpur": ["MP68"],
+    "Chhatarpur": ["MP16"],
+    "Chhindwara": ["MP28"],
+    "Damoh": ["MP34"],
+    "Datia": ["MP32"],
+    "Dewas": ["MP41"],
+    "Dhar": ["MP11"],
+    "Dindori": ["MP52"],
+    "Guna": ["MP08"],
+    "Gwalior": ["MP07"],
+    "Harda": ["MP47"],
+    "Hoshangabad": ["MP05"],
+    "Indore": ["MP09"],
+    "Jabalpur": ["MP20"],
+    "Jhabua": ["MP45"],
+    "Katni": ["MP21"],
+    "Khandwa": ["MP12"],
+    "Khargone": ["MP10"],
+    "Maihar": ["MP73"],
+    "Mandla": ["MP51"],
+    "Mandsaur": ["MP14"],
+    "Mauganj": ["MP72"],
+    "Morena": ["MP06"],
+    "Narsinghpur": ["MP49"],
+    "Neemuch": ["MP44"],
+    "Niwari": ["MP71"],
+    "Pandhurna": ["MP74"],
+    "Panna": ["MP35"],
+    "Raisen": ["MP38"],
+    "Rajgarh": ["MP39"],
+    "Ratlam": ["MP43"],
+    "Rewa": ["MP17"],
+    "Sagar": ["MP15"],
+    "Satna": ["MP19"],
+    "Sehore": ["MP37"],
+    "Seoni": ["MP22"],
+    "Shahdol": ["MP18"],
+    "Shajapur": ["MP42"],
+    "Sheopur": ["MP31"],
+    "Shivpuri": ["MP33"],
+    "Sidhi": ["MP53"],
+    "Singrauli": ["MP66"],
+    "Tikamgarh": ["MP36"],
+    "Ujjain": ["MP13"],
+    "Umaria": ["MP54"],
+    "Vidisha": ["MP40"]
   },
   "Maharashtra": {
     "": [
@@ -1481,263 +627,89 @@
       "MH58",
       "MH59"
     ],
-    "Also covered Palghar": [
-      "MH04"
-    ],
-    "Chhatrapati Sambhaji Nagar": [
-      "MH20"
-    ],
-    "Entire Akola": [
-      "MH30"
-    ],
-    "Entire Amaravati": [
-      "MH27"
-    ],
-    "Entire Bhandara": [
-      "MH36"
-    ],
-    "Entire Chandrapur": [
-      "MH34"
-    ],
-    "Entire Dharashiv": [
-      "MH25"
-    ],
-    "Entire Dhule": [
-      "MH18"
-    ],
-    "Entire Gadchiroli": [
-      "MH33"
-    ],
-    "Entire Gondia": [
-      "MH35"
-    ],
-    "Entire Hingoli": [
-      "MH38"
-    ],
-    "Entire Jalna": [
-      "MH21"
-    ],
-    "Entire Nagpur": [
-      "MH40"
-    ],
-    "Entire Nanded": [
-      "MH26"
-    ],
-    "Entire Nandurbar": [
-      "MH39"
-    ],
-    "Entire Palghar": [
-      "MH60"
-    ],
-    "Entire Parbhani": [
-      "MH22"
-    ],
-    "Entire Ratnagiri": [
-      "MH08"
-    ],
-    "Entire Sangli": [
-      "MH10"
-    ],
-    "Entire Sindhudurg": [
-      "MH07"
-    ],
-    "Entire Wardha": [
-      "MH32"
-    ],
-    "Entire Washim": [
-      "MH37"
-    ],
-    "Entire Yavatmal": [
-      "MH29"
-    ],
-    "Mumbai City": [
-      "MH01",
-      "MH03"
-    ],
-    "Mumbai Suburban": [
-      "MH02",
-      "MH47"
-    ],
-    "whole of Palghar": [
-      "MH48"
-    ]
+    "Also covered Palghar": ["MH04"],
+    "Chhatrapati Sambhaji Nagar": ["MH20"],
+    "Entire Akola": ["MH30"],
+    "Entire Amaravati": ["MH27"],
+    "Entire Bhandara": ["MH36"],
+    "Entire Chandrapur": ["MH34"],
+    "Entire Dharashiv": ["MH25"],
+    "Entire Dhule": ["MH18"],
+    "Entire Gadchiroli": ["MH33"],
+    "Entire Gondia": ["MH35"],
+    "Entire Hingoli": ["MH38"],
+    "Entire Jalna": ["MH21"],
+    "Entire Nagpur": ["MH40"],
+    "Entire Nanded": ["MH26"],
+    "Entire Nandurbar": ["MH39"],
+    "Entire Palghar": ["MH60"],
+    "Entire Parbhani": ["MH22"],
+    "Entire Ratnagiri": ["MH08"],
+    "Entire Sangli": ["MH10"],
+    "Entire Sindhudurg": ["MH07"],
+    "Entire Wardha": ["MH32"],
+    "Entire Washim": ["MH37"],
+    "Entire Yavatmal": ["MH29"],
+    "Mumbai City": ["MH01", "MH03"],
+    "Mumbai Suburban": ["MH02", "MH47"],
+    "whole of Palghar": ["MH48"]
   },
   "Manipur": {
-    "": [
-      "MN01",
-      "MN02",
-      "MN03",
-      "MN04",
-      "MN05",
-      "MN06",
-      "MN07",
-      "MN08"
-    ]
+    "": ["MN01", "MN02", "MN03", "MN04", "MN05", "MN06", "MN07", "MN08"]
   },
   "Meghalaya": {
-    "": [
-      "ML01",
-      "ML02",
-      "ML04",
-      "ML05",
-      "ML06",
-      "ML07",
-      "ML08",
-      "ML09",
-      "ML10"
-    ]
+    "": ["ML01", "ML02", "ML04", "ML05", "ML06", "ML07", "ML08", "ML09", "ML10"]
   },
   "Mizoram": {
-    "": [
-      "MZ01",
-      "MZ02",
-      "MZ03",
-      "MZ04",
-      "MZ05",
-      "MZ06",
-      "MZ07",
-      "MZ08"
-    ]
+    "": ["MZ01", "MZ02", "MZ03", "MZ04", "MZ05", "MZ06", "MZ07", "MZ08"]
   },
   "Nagaland": {
-    "": [
-      "NL09",
-      "NL10"
-    ],
-    "Kohima": [
-      "NL01"
-    ],
-    "Mokokchung": [
-      "NL02"
-    ],
-    "Mon": [
-      "NL04"
-    ],
-    "Phek": [
-      "NL08"
-    ],
-    "Tuensang": [
-      "NL03"
-    ],
-    "Wokha": [
-      "NL05"
-    ],
-    "moukedima DistrictDimapur DistrictNiuland": [
-      "NL07"
-    ],
-    "nheboto": [
-      "NL06"
-    ]
+    "": ["NL09", "NL10"],
+    "Kohima": ["NL01"],
+    "Mokokchung": ["NL02"],
+    "Mon": ["NL04"],
+    "Phek": ["NL08"],
+    "Tuensang": ["NL03"],
+    "Wokha": ["NL05"],
+    "moukedima DistrictDimapur DistrictNiuland": ["NL07"],
+    "nheboto": ["NL06"]
   },
   "Odisha": {
-    "Angul": [
-      "OD19",
-      "OD35"
-    ],
-    "Balasore": [
-      "OD01"
-    ],
-    "Bargarh": [
-      "OD17"
-    ],
-    "Bhadrak": [
-      "OD22"
-    ],
-    "Bolangir": [
-      "OD03"
-    ],
-    "Boudh": [
-      "OD27"
-    ],
-    "Cuttack": [
-      "OD05"
-    ],
-    "Debagarh": [
-      "OD28"
-    ],
-    "Dhenkanal": [
-      "OD06"
-    ],
-    "Gajapati": [
-      "OD20"
-    ],
-    "Ganjam": [
-      "OD07",
-      "OD32"
-    ],
-    "Jagatsinghpur": [
-      "OD21"
-    ],
-    "Jajpur": [
-      "OD04",
-      "OD34"
-    ],
-    "Jharsuguda": [
-      "OD23"
-    ],
-    "Kalahandi": [
-      "OD08"
-    ],
-    "Kandhamal": [
-      "OD12"
-    ],
-    "Kendrapara": [
-      "OD29"
-    ],
-    "Keonjhar": [
-      "OD09"
-    ],
-    "Khurda": [
-      "OD02",
-      "OD33"
-    ],
-    "Koraput": [
-      "OD10"
-    ],
-    "Malkangiri": [
-      "OD30"
-    ],
-    "Mayurbhanj": [
-      "OD11"
-    ],
-    "Nabarangpur": [
-      "OD24"
-    ],
-    "Nayagarh": [
-      "OD25"
-    ],
-    "Nuapada": [
-      "OD26"
-    ],
-    "Puri": [
-      "OD13"
-    ],
-    "Rayagada": [
-      "OD18"
-    ],
-    "Sambalpur": [
-      "OD15"
-    ],
-    "Subarnapur": [
-      "OD31"
-    ],
-    "Sundargarh": [
-      "OD14",
-      "OD16"
-    ]
+    "Angul": ["OD19", "OD35"],
+    "Balasore": ["OD01"],
+    "Bargarh": ["OD17"],
+    "Bhadrak": ["OD22"],
+    "Bolangir": ["OD03"],
+    "Boudh": ["OD27"],
+    "Cuttack": ["OD05"],
+    "Debagarh": ["OD28"],
+    "Dhenkanal": ["OD06"],
+    "Gajapati": ["OD20"],
+    "Ganjam": ["OD07", "OD32"],
+    "Jagatsinghpur": ["OD21"],
+    "Jajpur": ["OD04", "OD34"],
+    "Jharsuguda": ["OD23"],
+    "Kalahandi": ["OD08"],
+    "Kandhamal": ["OD12"],
+    "Kendrapara": ["OD29"],
+    "Keonjhar": ["OD09"],
+    "Khurda": ["OD02", "OD33"],
+    "Koraput": ["OD10"],
+    "Malkangiri": ["OD30"],
+    "Mayurbhanj": ["OD11"],
+    "Nabarangpur": ["OD24"],
+    "Nayagarh": ["OD25"],
+    "Nuapada": ["OD26"],
+    "Puri": ["OD13"],
+    "Rayagada": ["OD18"],
+    "Sambalpur": ["OD15"],
+    "Subarnapur": ["OD31"],
+    "Sundargarh": ["OD14", "OD16"]
   },
   "Puducherry": {
-    "": [
-      "PY02",
-      "PY03"
-    ],
-    "Puducherry": [
-      "PY01",
-      "PY05"
-    ],
-    "Yanam": [
-      "PY04"
-    ]
+    "": ["PY02", "PY03"],
+    "Puducherry": ["PY01", "PY05"],
+    "Yanam": ["PY04"]
   },
   "Punjab": {
     "": [
@@ -1838,24 +810,11 @@
     ]
   },
   "Sikkim": {
-    "": [
-      "SK01",
-      "SK03",
-      "SK08"
-    ],
-    "Gyalshing": [
-      "SK02"
-    ],
-    "Namchi": [
-      "SK04",
-      "SK05"
-    ],
-    "Pakyong": [
-      "SK07"
-    ],
-    "Soreng": [
-      "SK06"
-    ]
+    "": ["SK01", "SK03", "SK08"],
+    "Gyalshing": ["SK02"],
+    "Namchi": ["SK04", "SK05"],
+    "Pakyong": ["SK07"],
+    "Soreng": ["SK06"]
   },
   "Tamil Nadu": {
     "": [
@@ -1995,605 +954,172 @@
       "TN97Z",
       "TN99"
     ],
-    "Namakkal": [
-      "TN88Z"
-    ],
-    "Salem": [
-      "TN27",
-      "TN30",
-      "TN30W",
-      "TN54"
-    ],
-    "Sivaganga": [
-      "TN63",
-      "TN63Z"
-    ],
-    "Thiruvannamalai": [
-      "TN25"
-    ],
-    "Tirupattur": [
-      "TN83",
-      "TN83M",
-      "TN83Y"
-    ]
+    "Namakkal": ["TN88Z"],
+    "Salem": ["TN27", "TN30", "TN30W", "TN54"],
+    "Sivaganga": ["TN63", "TN63Z"],
+    "Thiruvannamalai": ["TN25"],
+    "Tirupattur": ["TN83", "TN83M", "TN83Y"]
   },
   "Telangana": {
-    "": [
-      "AP09",
-      "AP10",
-      "AP11",
-      "AP12",
-      "AP13",
-      "TG07",
-      "TG09",
-      "TG10",
-      "TG11",
-      "TG12",
-      "TG13",
-      "TG14"
-    ],
-    "Adilabad": [
-      "AP01",
-      "TG01"
-    ],
-    "Bhadradri Kothagudem": [
-      "TG28"
-    ],
-    "Hanamkonda": [
-      "TG03"
-    ],
-    "Jagtial": [
-      "TG21"
-    ],
-    "Jangaon": [
-      "TG27"
-    ],
-    "Jayashankar Bhupalpally": [
-      "TG25"
-    ],
-    "Jogulamba Gadwal": [
-      "TG33"
-    ],
-    "Kamareddy": [
-      "TG17"
-    ],
-    "Karimnagar": [
-      "AP15",
-      "TG02"
-    ],
-    "Khammam": [
-      "AP20",
-      "TG04"
-    ],
-    "Komaram Bheem": [
-      "TG20"
-    ],
-    "Mahabubabad": [
-      "TG26"
-    ],
-    "Mahabubnagar": [
-      "AP22"
-    ],
-    "Mahbubnagar": [
-      "TG06"
-    ],
-    "Mancherial": [
-      "TG19"
-    ],
-    "Medak": [
-      "AP23",
-      "TG35"
-    ],
-    "Medchal-Malkajgiri": [
-      "TG08"
-    ],
-    "Mulugu": [
-      "TG37"
-    ],
-    "Nagarkurnool": [
-      "TG31"
-    ],
-    "Nalgonda": [
-      "AP24",
-      "TG05"
-    ],
-    "Narayanpet": [
-      "TG38"
-    ],
-    "Nirmal": [
-      "TG18"
-    ],
-    "Nizamabad": [
-      "AP25",
-      "TG16"
-    ],
-    "Peddapalli": [
-      "TG22"
-    ],
-    "Rangareddy": [
-      "AP28",
-      "AP29"
-    ],
-    "Sangareddy": [
-      "TG15"
-    ],
-    "Siddipet": [
-      "TG36"
-    ],
-    "Sircilla": [
-      "TG23"
-    ],
-    "Suryapet": [
-      "TG29"
-    ],
-    "Vikarabad": [
-      "TG34"
-    ],
-    "Wanaparthy": [
-      "TG32"
-    ],
-    "Warangal": [
-      "AP36",
-      "TG24"
-    ],
-    "Yadadri Bhuvanagiri": [
-      "TG30"
-    ]
+    "": ["AP09", "AP10", "AP11", "AP12", "AP13", "TG07", "TG09", "TG10", "TG11", "TG12", "TG13", "TG14"],
+    "Adilabad": ["AP01", "TG01"],
+    "Bhadradri Kothagudem": ["TG28"],
+    "Hanamkonda": ["TG03"],
+    "Jagtial": ["TG21"],
+    "Jangaon": ["TG27"],
+    "Jayashankar Bhupalpally": ["TG25"],
+    "Jogulamba Gadwal": ["TG33"],
+    "Kamareddy": ["TG17"],
+    "Karimnagar": ["AP15", "TG02"],
+    "Khammam": ["AP20", "TG04"],
+    "Komaram Bheem": ["TG20"],
+    "Mahabubabad": ["TG26"],
+    "Mahabubnagar": ["AP22"],
+    "Mahbubnagar": ["TG06"],
+    "Mancherial": ["TG19"],
+    "Medak": ["AP23", "TG35"],
+    "Medchal-Malkajgiri": ["TG08"],
+    "Mulugu": ["TG37"],
+    "Nagarkurnool": ["TG31"],
+    "Nalgonda": ["AP24", "TG05"],
+    "Narayanpet": ["TG38"],
+    "Nirmal": ["TG18"],
+    "Nizamabad": ["AP25", "TG16"],
+    "Peddapalli": ["TG22"],
+    "Rangareddy": ["AP28", "AP29"],
+    "Sangareddy": ["TG15"],
+    "Siddipet": ["TG36"],
+    "Sircilla": ["TG23"],
+    "Suryapet": ["TG29"],
+    "Vikarabad": ["TG34"],
+    "Wanaparthy": ["TG32"],
+    "Warangal": ["AP36", "TG24"],
+    "Yadadri Bhuvanagiri": ["TG30"]
   },
   "Tripura": {
-    "Dhalai": [
-      "TR04"
-    ],
-    "Gomati": [
-      "TR03"
-    ],
-    "Khowai": [
-      "TR06"
-    ],
-    "North Tripura": [
-      "TR05"
-    ],
-    "Sipahijala": [
-      "TR07"
-    ],
-    "South Tripura": [
-      "TR08"
-    ],
-    "Unakoti": [
-      "TR02"
-    ],
-    "West Tripura": [
-      "TR01"
-    ]
+    "Dhalai": ["TR04"],
+    "Gomati": ["TR03"],
+    "Khowai": ["TR06"],
+    "North Tripura": ["TR05"],
+    "Sipahijala": ["TR07"],
+    "South Tripura": ["TR08"],
+    "Unakoti": ["TR02"],
+    "West Tripura": ["TR01"]
   },
   "Uttar Pradesh": {
-    "": [
-      "UP01",
-      "UP02",
-      "UP03",
-      "UP04",
-      "UP05",
-      "UP06",
-      "UP07",
-      "UP08",
-      "UP09",
-      "UP10",
-      "UP45",
-      "UP58"
-    ],
-    "Agra": [
-      "UP80"
-    ],
-    "Aligarh": [
-      "UP81"
-    ],
-    "Amethi": [
-      "UP36"
-    ],
-    "Amroha": [
-      "UP23"
-    ],
-    "Auraiya": [
-      "UP79"
-    ],
-    "Ayodhya": [
-      "UP42"
-    ],
-    "Azamgarh": [
-      "UP50"
-    ],
-    "Badaun": [
-      "UP24"
-    ],
-    "Bagpat": [
-      "UP17"
-    ],
-    "Bahraich": [
-      "UP40"
-    ],
-    "Ballia": [
-      "UP60"
-    ],
-    "Balrampur": [
-      "UP47"
-    ],
-    "Banda": [
-      "UP90"
-    ],
-    "Barabanki": [
-      "UP41"
-    ],
-    "Bareilly": [
-      "UP25"
-    ],
-    "Basti": [
-      "UP51"
-    ],
-    "Bhadohi": [
-      "UP66"
-    ],
-    "Bijnor": [
-      "UP20"
-    ],
-    "Bulandshahr": [
-      "UP13"
-    ],
-    "Chandauli": [
-      "UP67"
-    ],
-    "Chitrakoot": [
-      "UP96"
-    ],
-    "Deoria": [
-      "UP52"
-    ],
-    "Etah": [
-      "UP82"
-    ],
-    "Etawah": [
-      "UP75"
-    ],
-    "Farrukhabad": [
-      "UP76"
-    ],
-    "Fatehpur": [
-      "UP71"
-    ],
-    "Firozabad": [
-      "UP83"
-    ],
-    "Gautam Buddha Nagar": [
-      "UP16"
-    ],
-    "Ghaziabad": [
-      "UP14"
-    ],
-    "Ghazipur": [
-      "UP61"
-    ],
-    "Gonda": [
-      "UP43"
-    ],
-    "Gorakhpur": [
-      "UP53"
-    ],
-    "Hamirpur": [
-      "UP91"
-    ],
-    "Hapur": [
-      "UP37"
-    ],
-    "Hardoi": [
-      "UP30"
-    ],
-    "Hathras": [
-      "UP86"
-    ],
-    "Jalaun": [
-      "UP92"
-    ],
-    "Jaunpur": [
-      "UP62"
-    ],
-    "Jhansi": [
-      "UP93"
-    ],
-    "Kannauj": [
-      "UP74"
-    ],
-    "Kanpur Dehat": [
-      "UP77"
-    ],
-    "Kanpur Nagar": [
-      "UP78"
-    ],
-    "Kasganj": [
-      "UP87"
-    ],
-    "Kaushambi": [
-      "UP73"
-    ],
-    "Kushinagar": [
-      "UP57"
-    ],
-    "Lakhimpur Kheri": [
-      "UP31"
-    ],
-    "Lalitpur": [
-      "UP94"
-    ],
-    "Lucknow": [
-      "UP32"
-    ],
-    "Maharajganj": [
-      "UP56"
-    ],
-    "Mahoba": [
-      "UP95"
-    ],
-    "Mainpuri": [
-      "UP84"
-    ],
-    "Mathura": [
-      "UP85"
-    ],
-    "Mau": [
-      "UP54"
-    ],
-    "Meerut": [
-      "UP15"
-    ],
-    "Mirzapur": [
-      "UP63"
-    ],
-    "Moradabad": [
-      "UP21"
-    ],
-    "Muzaffarnagar": [
-      "UP12"
-    ],
-    "Pilibhit": [
-      "UP26"
-    ],
-    "Pratapgarh": [
-      "UP72"
-    ],
-    "Prayagraj": [
-      "UP70"
-    ],
-    "Raebareli": [
-      "UP33"
-    ],
-    "Rampur": [
-      "UP22"
-    ],
-    "Saharanpur": [
-      "UP11"
-    ],
-    "Sambhal": [
-      "UP38"
-    ],
-    "Shahjahanpur": [
-      "UP27"
-    ],
-    "Shamli": [
-      "UP19"
-    ],
-    "Shravasti": [
-      "UP46"
-    ],
-    "Siddharthnagar": [
-      "UP55"
-    ],
-    "Sitapur": [
-      "UP34"
-    ],
-    "Sonbhadra": [
-      "UP64"
-    ],
-    "Sultanpur": [
-      "UP44"
-    ],
-    "Unnao": [
-      "UP35"
-    ],
-    "Varanasi": [
-      "UP65"
-    ]
+    "": ["UP01", "UP02", "UP03", "UP04", "UP05", "UP06", "UP07", "UP08", "UP09", "UP10", "UP45", "UP58"],
+    "Agra": ["UP80"],
+    "Aligarh": ["UP81"],
+    "Amethi": ["UP36"],
+    "Amroha": ["UP23"],
+    "Auraiya": ["UP79"],
+    "Ayodhya": ["UP42"],
+    "Azamgarh": ["UP50"],
+    "Badaun": ["UP24"],
+    "Bagpat": ["UP17"],
+    "Bahraich": ["UP40"],
+    "Ballia": ["UP60"],
+    "Balrampur": ["UP47"],
+    "Banda": ["UP90"],
+    "Barabanki": ["UP41"],
+    "Bareilly": ["UP25"],
+    "Basti": ["UP51"],
+    "Bhadohi": ["UP66"],
+    "Bijnor": ["UP20"],
+    "Bulandshahr": ["UP13"],
+    "Chandauli": ["UP67"],
+    "Chitrakoot": ["UP96"],
+    "Deoria": ["UP52"],
+    "Etah": ["UP82"],
+    "Etawah": ["UP75"],
+    "Farrukhabad": ["UP76"],
+    "Fatehpur": ["UP71"],
+    "Firozabad": ["UP83"],
+    "Gautam Buddha Nagar": ["UP16"],
+    "Ghaziabad": ["UP14"],
+    "Ghazipur": ["UP61"],
+    "Gonda": ["UP43"],
+    "Gorakhpur": ["UP53"],
+    "Hamirpur": ["UP91"],
+    "Hapur": ["UP37"],
+    "Hardoi": ["UP30"],
+    "Hathras": ["UP86"],
+    "Jalaun": ["UP92"],
+    "Jaunpur": ["UP62"],
+    "Jhansi": ["UP93"],
+    "Kannauj": ["UP74"],
+    "Kanpur Dehat": ["UP77"],
+    "Kanpur Nagar": ["UP78"],
+    "Kasganj": ["UP87"],
+    "Kaushambi": ["UP73"],
+    "Kushinagar": ["UP57"],
+    "Lakhimpur Kheri": ["UP31"],
+    "Lalitpur": ["UP94"],
+    "Lucknow": ["UP32"],
+    "Maharajganj": ["UP56"],
+    "Mahoba": ["UP95"],
+    "Mainpuri": ["UP84"],
+    "Mathura": ["UP85"],
+    "Mau": ["UP54"],
+    "Meerut": ["UP15"],
+    "Mirzapur": ["UP63"],
+    "Moradabad": ["UP21"],
+    "Muzaffarnagar": ["UP12"],
+    "Pilibhit": ["UP26"],
+    "Pratapgarh": ["UP72"],
+    "Prayagraj": ["UP70"],
+    "Raebareli": ["UP33"],
+    "Rampur": ["UP22"],
+    "Saharanpur": ["UP11"],
+    "Sambhal": ["UP38"],
+    "Shahjahanpur": ["UP27"],
+    "Shamli": ["UP19"],
+    "Shravasti": ["UP46"],
+    "Siddharthnagar": ["UP55"],
+    "Sitapur": ["UP34"],
+    "Sonbhadra": ["UP64"],
+    "Sultanpur": ["UP44"],
+    "Unnao": ["UP35"],
+    "Varanasi": ["UP65"]
   },
   "Uttarakhand": {
-    "Almora": [
-      "UK01",
-      "UK20"
-    ],
-    "Bageshwar": [
-      "UK02"
-    ],
-    "Chamoli": [
-      "UK11"
-    ],
-    "Champawat": [
-      "UK03"
-    ],
-    "Dehradun": [
-      "UK07",
-      "UK14",
-      "UK16"
-    ],
-    "Haridwar": [
-      "UK08",
-      "UK17"
-    ],
-    "Nainital": [
-      "UK04",
-      "UK19"
-    ],
-    "Pauri Garhwal": [
-      "UK12",
-      "UK15"
-    ],
-    "Pithoragarh": [
-      "UK05"
-    ],
-    "Rudraprayag": [
-      "UK13"
-    ],
-    "Tehri Garhwal": [
-      "UK09"
-    ],
-    "Udham Singh Nagar": [
-      "UK06",
-      "UK18"
-    ],
-    "Uttarkashi": [
-      "UK10"
-    ]
+    "Almora": ["UK01", "UK20"],
+    "Bageshwar": ["UK02"],
+    "Chamoli": ["UK11"],
+    "Champawat": ["UK03"],
+    "Dehradun": ["UK07", "UK14", "UK16"],
+    "Haridwar": ["UK08", "UK17"],
+    "Nainital": ["UK04", "UK19"],
+    "Pauri Garhwal": ["UK12", "UK15"],
+    "Pithoragarh": ["UK05"],
+    "Rudraprayag": ["UK13"],
+    "Tehri Garhwal": ["UK09"],
+    "Udham Singh Nagar": ["UK06", "UK18"],
+    "Uttarkashi": ["UK10"]
   },
   "West Bengal": {
-    "Alipurduar": [
-      "WB69",
-      "WB70"
-    ],
-    "Bankura": [
-      "WB67",
-      "WB68",
-      "WB87",
-      "WB88"
-    ],
-    "Birbhum": [
-      "WB45",
-      "WB46",
-      "WB47",
-      "WB48",
-      "WB53",
-      "WB54"
-    ],
-    "Cooch Behar": [
-      "WB63",
-      "WB64",
-      "WB85",
-      "WB86"
-    ],
-    "Dakshin Dinajpur": [
-      "WB61",
-      "WB62"
-    ],
-    "Darjeeling": [
-      "WB73",
-      "WB74",
-      "WB76",
-      "WB77"
-    ],
-    "Hooghly": [
-      "WB15",
-      "WB16",
-      "WB17",
-      "WB18"
-    ],
-    "Howrah": [
-      "WB11",
-      "WB12",
-      "WB13",
-      "WB14"
-    ],
-    "Jalpaiguri": [
-      "WB71",
-      "WB72"
-    ],
-    "Jhargram": [
-      "WB49",
-      "WB50"
-    ],
-    "Kalimpong": [
-      "WB78",
-      "WB79"
-    ],
-    "Kolkata": [
-      "WB01",
-      "WB02",
-      "WB03",
-      "WB04",
-      "WB05",
-      "WB06",
-      "WB07",
-      "WB08",
-      "WB09",
-      "WB10"
-    ],
-    "Malda": [
-      "WB65",
-      "WB66",
-      "WB83",
-      "WB84"
-    ],
-    "Murshidabad": [
-      "WB57",
-      "WB58",
-      "WB93",
-      "WB94",
-      "WB99"
-    ],
-    "Nadia": [
-      "WB51",
-      "WB52",
-      "WB89",
-      "WB90"
-    ],
-    "North 24 Parganas": [
-      "WB21",
-      "WB22",
-      "WB23",
-      "WB24",
-      "WB25",
-      "WB26",
-      "WB27",
-      "WB28"
-    ],
-    "Paschim Bardhaman": [
-      "WB37",
-      "WB38",
-      "WB39",
-      "WB40"
-    ],
-    "Paschim Medinipur": [
-      "WB33",
-      "WB34",
-      "WB35",
-      "WB36"
-    ],
-    "Purba Bardhaman": [
-      "WB41",
-      "WB42",
-      "WB43",
-      "WB44",
-      "WB75"
-    ],
-    "Purba Medinipur": [
-      "WB29",
-      "WB30",
-      "WB31",
-      "WB32"
-    ],
-    "Purulia": [
-      "WB55",
-      "WB56",
-      "WB80",
-      "WB81",
-      "WB82"
-    ],
-    "South 24 Parganas": [
-      "WB19",
-      "WB20",
-      "WB95",
-      "WB96",
-      "WB97",
-      "WB98"
-    ],
-    "Uttar Dinajpur": [
-      "WB59",
-      "WB60",
-      "WB91",
-      "WB92"
-    ]
+    "Alipurduar": ["WB69", "WB70"],
+    "Bankura": ["WB67", "WB68", "WB87", "WB88"],
+    "Birbhum": ["WB45", "WB46", "WB47", "WB48", "WB53", "WB54"],
+    "Cooch Behar": ["WB63", "WB64", "WB85", "WB86"],
+    "Dakshin Dinajpur": ["WB61", "WB62"],
+    "Darjeeling": ["WB73", "WB74", "WB76", "WB77"],
+    "Hooghly": ["WB15", "WB16", "WB17", "WB18"],
+    "Howrah": ["WB11", "WB12", "WB13", "WB14"],
+    "Jalpaiguri": ["WB71", "WB72"],
+    "Jhargram": ["WB49", "WB50"],
+    "Kalimpong": ["WB78", "WB79"],
+    "Kolkata": ["WB01", "WB02", "WB03", "WB04", "WB05", "WB06", "WB07", "WB08", "WB09", "WB10"],
+    "Malda": ["WB65", "WB66", "WB83", "WB84"],
+    "Murshidabad": ["WB57", "WB58", "WB93", "WB94", "WB99"],
+    "Nadia": ["WB51", "WB52", "WB89", "WB90"],
+    "North 24 Parganas": ["WB21", "WB22", "WB23", "WB24", "WB25", "WB26", "WB27", "WB28"],
+    "Paschim Bardhaman": ["WB37", "WB38", "WB39", "WB40"],
+    "Paschim Medinipur": ["WB33", "WB34", "WB35", "WB36"],
+    "Purba Bardhaman": ["WB41", "WB42", "WB43", "WB44", "WB75"],
+    "Purba Medinipur": ["WB29", "WB30", "WB31", "WB32"],
+    "Purulia": ["WB55", "WB56", "WB80", "WB81", "WB82"],
+    "South 24 Parganas": ["WB19", "WB20", "WB95", "WB96", "WB97", "WB98"],
+    "Uttar Dinajpur": ["WB59", "WB60", "WB91", "WB92"]
   }
 }

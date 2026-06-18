@@ -9,14 +9,17 @@ export function formatMoney(value) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(numeric);
 }
 
 export function calculateReportTotals(records) {
   return {
     totalRecords: records.length,
-    totalPremium: records.reduce((sum, record) => sum + parseMoney(record.netPremium || record.totalPremium || record.premium), 0),
-    totalSumInsured: records.reduce((sum, record) => sum + parseMoney(record.sumInsured), 0)
+    totalPremium: records.reduce(
+      (sum, record) => sum + parseMoney(record.netPremium || record.totalPremium || record.premium),
+      0,
+    ),
+    totalSumInsured: records.reduce((sum, record) => sum + parseMoney(record.sumInsured), 0),
   };
 }

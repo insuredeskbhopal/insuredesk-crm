@@ -6,8 +6,19 @@
   "fields": [
     {
       "field": "policyNumber",
-      "aliases": ["P400 Policy #", "Policy No.", "Policy Number", "Attaching to and forming part of Policy Number"],
-      "rejectNear": ["Previous Policy", "TP Policy Number", "Unique Invoice No", "Tax Invoice No", "Policy #: 1-"],
+      "aliases": [
+        "P400 Policy #",
+        "Policy No.",
+        "Policy Number",
+        "Attaching to and forming part of Policy Number"
+      ],
+      "rejectNear": [
+        "Previous Policy",
+        "TP Policy Number",
+        "Unique Invoice No",
+        "Tax Invoice No",
+        "Policy #: 1-"
+      ],
       "section": "policy_details",
       "type": "string",
       "required": true
@@ -40,24 +51,152 @@
       "type": "date",
       "required": false
     },
-    { "field": "registrationNumber", "aliases": ["Registration No", "Registration Mark", "Registration Mark & No.", "Registration Mark and No."], "section": "vehicle_details", "type": "registration", "required": false },
-    { "field": "manufacturingYear", "aliases": ["Year of Manuf.", "Year of Manuf"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "engineNumber", "aliases": ["Engine No", "Engine Number"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "chassisNumber", "aliases": ["Chassis No", "Chassis Number"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "vehicleMake", "aliases": ["Make of Vehicle", "Vehicle Name"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "vehicleModel", "aliases": ["Make of Vehicle", "Vehicle Name"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "cubicCapacity", "aliases": ["CC", "Cubic Capacity"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "seatingCapacity", "aliases": ["Seating Capacity as per RC", "Seating Capacity"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "grossVehicleWeight", "aliases": ["GVW", "Gross Vehicle Weight"], "section": "vehicle_details", "type": "amount", "required": false },
-    { "field": "totalIdv", "aliases": ["IDV", "IDV in Rs.", "Insured Declared Value", "Total IDV", "Total Value"], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "odPremium", "aliases": ["Net (A)"], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "tpPremium", "aliases": ["Net (B)"], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "netPremium", "aliases": ["Section 1 (A + B)", "Section 1", "Taxable Value", "Gross Premium Taxable Value"], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "gstAmount", "aliases": ["Total GST", "Total Tax", "GST Amount"], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "totalPremium", "aliases": ["Premium Paid(Total Invoice Value)", "Gross Premium Payable", "Total Invoice Value", "Total Value", "Net Premium Rs."], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "ncbPercentage", "aliases": ["No Claim Discount", "No Claim Bonus Discount", "No Claim Bonus"], "section": "premium_details", "type": "string", "required": false },
-    { "field": "financerName", "aliases": ["Under Hire Purchase /Hypothecated/Lease Agreement with", "Under Hire Purchase/Hypo/ Lease Agreement with"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "previousPolicyNumber", "aliases": ["Previous Policy Number", "Previous Policy No."], "section": "policy_details", "type": "string", "required": false },
-    { "field": "previousInsurer", "aliases": ["Previous Insurer Name and Address"], "section": "policy_details", "type": "string", "required": false }
+    {
+      "field": "registrationNumber",
+      "aliases": [
+        "Registration No",
+        "Registration Mark",
+        "Registration Mark & No.",
+        "Registration Mark and No."
+      ],
+      "section": "vehicle_details",
+      "type": "registration",
+      "required": false
+    },
+    {
+      "field": "manufacturingYear",
+      "aliases": ["Year of Manuf.", "Year of Manuf"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "engineNumber",
+      "aliases": ["Engine No", "Engine Number"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "chassisNumber",
+      "aliases": ["Chassis No", "Chassis Number"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "vehicleMake",
+      "aliases": ["Make of Vehicle", "Vehicle Name"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "vehicleModel",
+      "aliases": ["Make of Vehicle", "Vehicle Name"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "cubicCapacity",
+      "aliases": ["CC", "Cubic Capacity"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "seatingCapacity",
+      "aliases": ["Seating Capacity as per RC", "Seating Capacity"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "grossVehicleWeight",
+      "aliases": ["GVW", "Gross Vehicle Weight"],
+      "section": "vehicle_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "totalIdv",
+      "aliases": ["IDV", "IDV in Rs.", "Insured Declared Value", "Total IDV", "Total Value"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "odPremium",
+      "aliases": ["Net (A)"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "tpPremium",
+      "aliases": ["Net (B)"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "netPremium",
+      "aliases": ["Section 1 (A + B)", "Section 1", "Taxable Value", "Gross Premium Taxable Value"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "gstAmount",
+      "aliases": ["Total GST", "Total Tax", "GST Amount"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "totalPremium",
+      "aliases": [
+        "Premium Paid(Total Invoice Value)",
+        "Gross Premium Payable",
+        "Total Invoice Value",
+        "Total Value",
+        "Net Premium Rs."
+      ],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "ncbPercentage",
+      "aliases": ["No Claim Discount", "No Claim Bonus Discount", "No Claim Bonus"],
+      "section": "premium_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "financerName",
+      "aliases": [
+        "Under Hire Purchase /Hypothecated/Lease Agreement with",
+        "Under Hire Purchase/Hypo/ Lease Agreement with"
+      ],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "previousPolicyNumber",
+      "aliases": ["Previous Policy Number", "Previous Policy No."],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "previousInsurer",
+      "aliases": ["Previous Insurer Name and Address"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    }
   ]
 }

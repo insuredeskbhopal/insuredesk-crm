@@ -1,11 +1,11 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminEmail = 'admin@insure.com';
-  const adminPassword = 'insure_desk_2026_9009';
+  const adminEmail = "admin@insure.com";
+  const adminPassword = "insure_desk_2026_9009";
 
   const existing = await prisma.user.findUnique({
     where: { email: adminEmail },
@@ -18,11 +18,11 @@ async function main() {
       where: { email: adminEmail },
       data: {
         password: hashed,
-        role: 'SUPER_ADMIN',
+        role: "SUPER_ADMIN",
         deletedAt: null,
       },
     });
-    console.log('Admin user already exists. Super admin credentials refreshed.');
+    console.log("Admin user already exists. Super admin credentials refreshed.");
     return;
   }
 
@@ -30,12 +30,12 @@ async function main() {
     data: {
       email: adminEmail,
       password: hashed,
-      role: 'SUPER_ADMIN',
+      role: "SUPER_ADMIN",
       // Assuming organization is optional; you can assign a default org if needed.
     },
   });
 
-  console.log('Admin user created successfully.');
+  console.log("Admin user created successfully.");
 }
 
 main()

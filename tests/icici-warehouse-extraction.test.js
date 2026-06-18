@@ -20,8 +20,12 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.policyNumber).toBe("1030/443318299/00/000");
     expect(result.policyType).toBe("Warehouse / MSME / Fire & Burglary package");
     expect(result.insuredName).toBe("PATEL WAREHOUSE A/C MPWLC");
-    expect(result.mailingAddress).toBe("PROP. SWAMI SHARAN, GODOWN NO. 01 2E, GRAM TATARPUR, TEHSIL BHANDER, DISTRICT DATIA, MADHYA PRADESH 475335");
-    expect(result.riskLocation).toBe("PROP. SWAMI SHARAN, GODOWN NO. 02E, GRAM TATARPUR, TEHSIL BHANDER, DISTRICT DATIA, MADHYA PRADESH, 475335");
+    expect(result.mailingAddress).toBe(
+      "PROP. SWAMI SHARAN, GODOWN NO. 01 2E, GRAM TATARPUR, TEHSIL BHANDER, DISTRICT DATIA, MADHYA PRADESH 475335",
+    );
+    expect(result.riskLocation).toBe(
+      "PROP. SWAMI SHARAN, GODOWN NO. 02E, GRAM TATARPUR, TEHSIL BHANDER, DISTRICT DATIA, MADHYA PRADESH, 475335",
+    );
     expect(result.startDate).toBe("02/06/2026");
     expect(result.expiryDate).toBe("01/06/2027");
     expect(result.issuedAt).toBe("BHOPAL");
@@ -44,7 +48,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.coverages).toEqual([
       { sectionName: "MSME Suraksha Kavach - Contents", sumInsured: "5,00,00,000.00" },
       { sectionName: "Burglary", sumInsured: "5,00,00,000.00" },
-      { sectionName: "Fidelity", sumInsured: "50,00,000.00" }
+      { sectionName: "Fidelity", sumInsured: "50,00,000.00" },
     ]);
     expect(result.vehicleNumber).toBe("");
     expect(result.registrationNumber).toBe("");

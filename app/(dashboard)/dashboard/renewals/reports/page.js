@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { 
-  Printer, 
-  Download, 
-  ShieldAlert,
-  TrendingUp,
-  Award,
-  AlertTriangle
-} from "lucide-react";
+import { Printer, Download, ShieldAlert, TrendingUp, Award, AlertTriangle } from "lucide-react";
 
 export default function ReportsPage() {
   const [reportData, setReportData] = useState(null);
@@ -71,7 +64,7 @@ export default function ReportsPage() {
     let csvContent = "data:text/csv;charset=utf-8,";
     csvContent += "Agent Name,Total Assigned,Due Count,Renewed Count,Lost Count,Premium Renewed\n";
 
-    reportData.agents.forEach(a => {
+    reportData.agents.forEach((a) => {
       csvContent += `"${a.agent_name}",${a.total_assigned},${a.due_count},${a.renewed_count},${a.lost_count},${a.premium_renewed}\n`;
     });
 
@@ -94,9 +87,19 @@ export default function ReportsPage() {
 
   if (error) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "60px 24px", gap: "16px" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          padding: "60px 24px",
+          gap: "16px",
+        }}
+      >
         <ShieldAlert size={48} style={{ color: "var(--rn-danger)" }} />
-        <h3 style={{ fontSize: "18px", fontWeight: "600", color: "var(--rn-text-primary)" }}>Access Restricted</h3>
+        <h3 style={{ fontSize: "18px", fontWeight: "600", color: "var(--rn-text-primary)" }}>
+          Access Restricted
+        </h3>
         <p style={{ color: "var(--rn-text-secondary)", maxWidth: "480px", textAlign: "center", margin: 0 }}>
           {error}
         </p>
@@ -112,32 +115,45 @@ export default function ReportsPage() {
   const conversionRate = totalRenewed + totalLost > 0 ? (totalRenewed / (totalRenewed + totalLost)) * 100 : 0;
 
   // Follow-up effectiveness
-  const withFup = reportData.followUps.find(f => f.has_followup === "With Follow-up") || { renewed_count: 0, lost_count: 0 };
-  const withFupRate = (withFup.renewed_count + withFup.lost_count) > 0 
-    ? (withFup.renewed_count / (withFup.renewed_count + withFup.lost_count)) * 100 : 0;
+  const withFup = reportData.followUps.find((f) => f.has_followup === "With Follow-up") || {
+    renewed_count: 0,
+    lost_count: 0,
+  };
+  const withFupRate =
+    withFup.renewed_count + withFup.lost_count > 0
+      ? (withFup.renewed_count / (withFup.renewed_count + withFup.lost_count)) * 100
+      : 0;
 
-  const noFup = reportData.followUps.find(f => f.has_followup === "No Follow-up") || { renewed_count: 0, lost_count: 0 };
-  const noFupRate = (noFup.renewed_count + noFup.lost_count) > 0 
-    ? (noFup.renewed_count / (noFup.renewed_count + noFup.lost_count)) * 100 : 0;
+  const noFup = reportData.followUps.find((f) => f.has_followup === "No Follow-up") || {
+    renewed_count: 0,
+    lost_count: 0,
+  };
+  const noFupRate =
+    noFup.renewed_count + noFup.lost_count > 0
+      ? (noFup.renewed_count / (noFup.renewed_count + noFup.lost_count)) * 100
+      : 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "32px" }} className="print-section">
       {/* Management Actions Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} className="no-print">
+      <div
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+        className="no-print"
+      >
         <h3 style={{ fontSize: "16px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>
           Executive Analytics
         </h3>
         <div style={{ display: "flex", gap: "12px" }}>
-          <button 
-            className="rn-btn" 
+          <button
+            className="rn-btn"
             onClick={handlePrint}
             disabled={!canExport}
             style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
             <Printer size={14} /> Print Report
           </button>
-          <button 
-            className="rn-btn rn-btn-primary" 
+          <button
+            className="rn-btn rn-btn-primary"
             onClick={handleExport}
             disabled={!canExport}
             style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
@@ -151,7 +167,14 @@ export default function ReportsPage() {
       <div className="renewals-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
         <div className="renewals-card">
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "12px",
+              }}
+            >
               <h4 className="renewals-card-title">Renewal Conversion Rate</h4>
               <TrendingUp size={18} style={{ color: "var(--rn-success)" }} />
             </div>
@@ -162,7 +185,14 @@ export default function ReportsPage() {
 
         <div className="renewals-card">
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "12px",
+              }}
+            >
               <h4 className="renewals-card-title">Follow-Up Effectiveness</h4>
               <Award size={18} style={{ color: "var(--rn-primary)" }} />
             </div>
@@ -180,7 +210,14 @@ export default function ReportsPage() {
 
         <div className="renewals-card">
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "12px",
+              }}
+            >
               <h4 className="renewals-card-title">Lost Reason Analysis</h4>
               <AlertTriangle size={18} style={{ color: "var(--rn-danger)" }} />
             </div>
@@ -195,7 +232,9 @@ export default function ReportsPage() {
       {/* Agent Performance Table */}
       <div className="rn-table-container">
         <div style={{ padding: "16px", borderBottom: "1px solid var(--rn-border)" }}>
-          <h4 style={{ fontSize: "15px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>Agent Performance</h4>
+          <h4 style={{ fontSize: "15px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>
+            Agent Performance
+          </h4>
         </div>
         <table className="rn-table">
           <thead>
@@ -232,7 +271,9 @@ export default function ReportsPage() {
       {/* Company Performance Table */}
       <div className="rn-table-container">
         <div style={{ padding: "16px", borderBottom: "1px solid var(--rn-border)" }}>
-          <h4 style={{ fontSize: "15px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>Company Performance</h4>
+          <h4 style={{ fontSize: "15px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>
+            Company Performance
+          </h4>
         </div>
         <table className="rn-table">
           <thead>
@@ -263,7 +304,9 @@ export default function ReportsPage() {
       {/* Monthly Trends Table */}
       <div className="rn-table-container">
         <div style={{ padding: "16px", borderBottom: "1px solid var(--rn-border)" }}>
-          <h4 style={{ fontSize: "15px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>Monthly Renewal Trend</h4>
+          <h4 style={{ fontSize: "15px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>
+            Monthly Renewal Trend
+          </h4>
         </div>
         <table className="rn-table">
           <thead>

@@ -96,4 +96,3 @@ The first shared components should be simple display wrappers:
 - `AlertCard`
 
 These are safe only if they preserve the same class names and rendered output.
-

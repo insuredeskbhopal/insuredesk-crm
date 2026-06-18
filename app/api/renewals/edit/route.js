@@ -33,7 +33,7 @@ export async function POST(request) {
       assignedToUserId,
       renewalStatus,
       remark,
-      nextFollowUpDate
+      nextFollowUpDate,
     } = body;
 
     // Required fields validation
@@ -64,7 +64,10 @@ export async function POST(request) {
     if (cleanPhone) {
       const normalized = normalizeIndianPhone(cleanPhone);
       if (!normalized) {
-        return Response.json({ error: "Customer Phone must be a valid 10-digit Indian mobile number." }, { status: 400 });
+        return Response.json(
+          { error: "Customer Phone must be a valid 10-digit Indian mobile number." },
+          { status: 400 },
+        );
       }
       cleanPhone = normalized;
     }
@@ -77,8 +80,8 @@ export async function POST(request) {
     const policy = await prisma.policyRecord.findFirst({
       where: {
         id: policyId,
-        ...tenantFilter
-      }
+        ...tenantFilter,
+      },
     });
 
     if (!policy) {
@@ -86,7 +89,7 @@ export async function POST(request) {
     }
 
     const oldData = policy.reviewedData || policy.data || {};
-    
+
     // Parse old values
     const oldInsuredName = oldData.insuredName || "";
     const oldContactNumber = oldData.contactNumber || oldData.customerMobile || "";
@@ -111,7 +114,11 @@ export async function POST(request) {
       changes.push({ field: "Policy Number", oldValue: oldPolicyNumber || "N/A", newValue: policyNumber });
     }
     if (String(insuranceCompany).trim() !== String(oldInsuranceCompany).trim()) {
-      changes.push({ field: "Insurance Company", oldValue: oldInsuranceCompany || "N/A", newValue: insuranceCompany });
+      changes.push({
+        field: "Insurance Company",
+        oldValue: oldInsuranceCompany || "N/A",
+        newValue: insuranceCompany,
+      });
     }
     if (String(policyType).trim() !== String(oldPolicyType).trim()) {
       changes.push({ field: "Policy Type", oldValue: oldPolicyType || "N/A", newValue: policyType });
@@ -119,11 +126,15 @@ export async function POST(request) {
     if (parseFloat(String(premium)) !== parseFloat(String(oldPremium))) {
       changes.push({ field: "Premium", oldValue: String(oldPremium || 0), newValue: String(premium) });
     }
-    
+
     const formattedOldExpiry = oldExpiryDate ? new Date(oldExpiryDate).toISOString().split("T")[0] : "";
     const formattedNewExpiry = new Date(expiryDate).toISOString().split("T")[0];
     if (formattedNewExpiry !== formattedOldExpiry) {
-      changes.push({ field: "Expiry Date", oldValue: formattedOldExpiry || "N/A", newValue: formattedNewExpiry });
+      changes.push({
+        field: "Expiry Date",
+        oldValue: formattedOldExpiry || "N/A",
+        newValue: formattedNewExpiry,
+      });
     }
 
     // Determine assignee
@@ -133,16 +144,21 @@ export async function POST(request) {
 
     if (assignedToUserId && assignedToUserId !== oldAssignedToId) {
       const assignee = await prisma.user.findFirst({
-        where: user.role === "SUPER_ADMIN"
-          ? { id: assignedToUserId, role: { not: "VIEWER" } }
-          : { id: assignedToUserId, organizationId: user.organizationId, role: { not: "VIEWER" } },
-        select: { id: true, name: true, email: true }
+        where:
+          user.role === "SUPER_ADMIN"
+            ? { id: assignedToUserId, role: { not: "VIEWER" } }
+            : { id: assignedToUserId, organizationId: user.organizationId, role: { not: "VIEWER" } },
+        select: { id: true, name: true, email: true },
       });
       if (assignee) {
         newAssignedTo = assignee.name || assignee.email;
         newAssignedToId = assignee.id;
         assignmentChanged = true;
-        changes.push({ field: "Assigned User", oldValue: oldAssignedTo || "Unassigned", newValue: newAssignedTo });
+        changes.push({
+          field: "Assigned User",
+          oldValue: oldAssignedTo || "Unassigned",
+          newValue: newAssignedTo,
+        });
       }
     } else if (assignedToUserId === "" && oldAssignedToId) {
       newAssignedTo = "";
@@ -153,7 +169,9 @@ export async function POST(request) {
 
     // Determine status
     let finalStatus = renewalStatus || oldStatus;
-    const isClosed = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(finalStatus);
+    const isClosed = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(
+      finalStatus,
+    );
 
     // Auto update status if expiry date changed and status is not closed
     if (formattedNewExpiry !== formattedOldExpiry && !isClosed) {
@@ -163,7 +181,7 @@ export async function POST(request) {
       newExpiry.setHours(0, 0, 0, 0);
       const diffTime = newExpiry.getTime() - today.getTime();
       const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       if (daysRemaining < 0) {
         finalStatus = "Overdue";
       } else if (daysRemaining === 0) {
@@ -194,7 +212,7 @@ export async function POST(request) {
       const reassignRemarkText = oldAssignedTo
         ? `Reassigned from ${oldAssignedTo} to ${newAssignedTo || "Unassigned"}.`
         : `Assigned to ${newAssignedTo}.`;
-      
+
       const reassignRemark = {
         id: randomUUID(),
         text: reassignRemarkText,
@@ -205,7 +223,7 @@ export async function POST(request) {
         oldStatus: oldStatus,
         newStatus: finalStatus,
         assignedTo: newAssignedTo,
-        assignedToId: newAssignedToId
+        assignedToId: newAssignedToId,
       };
       updatedRemarks.unshift(reassignRemark);
     }
@@ -222,7 +240,7 @@ export async function POST(request) {
         type: "FOLLOW_UP",
         oldStatus: oldStatus,
         newStatus: finalStatus,
-        nextFollowUpDate: String(nextFollowUpDate || "").trim()
+        nextFollowUpDate: String(nextFollowUpDate || "").trim(),
       };
       updatedRemarks.unshift(renewalRemark);
       changes.push({ field: "Remark", oldValue: "N/A", newValue: cleanRemarkText });
@@ -246,7 +264,7 @@ export async function POST(request) {
       assignedTo: newAssignedTo,
       assignedToId: newAssignedToId,
       remark: cleanRemarkText || oldData.remark || "",
-      renewalRemarks: updatedRemarks
+      renewalRemarks: updatedRemarks,
     };
 
     if (cleanRemarkText || nextFollowUpDate) {
@@ -254,7 +272,7 @@ export async function POST(request) {
         nextFollowUpDate: String(nextFollowUpDate || "").trim(),
         followUpStatus: finalStatus,
         lastRemarkAt: timestamp,
-        lastRemarkBy: actorName
+        lastRemarkBy: actorName,
       };
     }
 
@@ -268,7 +286,7 @@ export async function POST(request) {
     if (cleanPhone) {
       const cleanPhoneDigits = cleanPhone.replace(/\D/g, "");
       const last10 = cleanPhoneDigits.slice(-10);
-      
+
       const isSuperAdmin = user.role === "SUPER_ADMIN";
       const orgId = user.organizationId || null;
 
@@ -277,8 +295,8 @@ export async function POST(request) {
         where: {
           phone: { contains: last10 },
           deletedAt: null,
-          ...(isSuperAdmin ? {} : { organizationId: orgId })
-        }
+          ...(isSuperAdmin ? {} : { organizationId: orgId }),
+        },
       });
 
       if (profile) {
@@ -287,8 +305,8 @@ export async function POST(request) {
           where: { id: profile.id },
           data: {
             contactPersonName: contactPersonName || null,
-            updatedById: actorId
-          }
+            updatedById: actorId,
+          },
         });
       } else {
         // Create new customer profile
@@ -300,8 +318,8 @@ export async function POST(request) {
             organizationId: user.organizationId,
             createdById: actorId,
             updatedById: actorId,
-            assignedTo: newAssignedTo || actorName
-          }
+            assignedTo: newAssignedTo || actorName,
+          },
         });
       }
     }
@@ -317,9 +335,15 @@ export async function POST(request) {
         reviewedData: updatedPayload,
         data: updatedPayload,
         updatedById: actorId,
-        renewalDate: ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(finalStatus) ? new Date() : undefined,
-        lostReason: ["LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(finalStatus) ? (cleanRemarkText || "Marked Lost") : undefined
-      }
+        renewalDate: ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(
+          finalStatus,
+        )
+          ? new Date()
+          : undefined,
+        lostReason: ["LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(finalStatus)
+          ? cleanRemarkText || "Marked Lost"
+          : undefined,
+      },
     });
 
     // Write audit logs
@@ -334,7 +358,7 @@ export async function POST(request) {
         userAgent,
         userId: actorId,
         organizationId: user.organizationId,
-        metadata: { changes }
+        metadata: { changes },
       });
     }
 
@@ -349,7 +373,7 @@ export async function POST(request) {
         userAgent,
         userId: actorId,
         organizationId: user.organizationId,
-        metadata: { assignedToUserId: newAssignedToId, assignedTo: newAssignedTo }
+        metadata: { assignedToUserId: newAssignedToId, assignedTo: newAssignedTo },
       });
     }
 
@@ -364,7 +388,7 @@ export async function POST(request) {
         userAgent,
         userId: actorId,
         organizationId: user.organizationId,
-        metadata: { oldStatus, newStatus: finalStatus }
+        metadata: { oldStatus, newStatus: finalStatus },
       });
     }
 
@@ -379,7 +403,7 @@ export async function POST(request) {
         userAgent,
         userId: actorId,
         organizationId: user.organizationId,
-        metadata: { remark: cleanRemarkText, nextFollowUpDate }
+        metadata: { remark: cleanRemarkText, nextFollowUpDate },
       });
     }
 

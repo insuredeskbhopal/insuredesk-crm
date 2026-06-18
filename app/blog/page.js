@@ -24,7 +24,7 @@ export default function BlogFeedPage() {
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     revealElements.forEach((el) => revealObserver.observe(el));
     return () => {
@@ -35,8 +35,7 @@ export default function BlogFeedPage() {
 
   // Filter posts by category and search query
   const filteredPosts = BLOG_POSTS.filter((post) => {
-    const matchesCategory =
-      activeCategory === "All" || post.category === activeCategory;
+    const matchesCategory = activeCategory === "All" || post.category === activeCategory;
     const matchesSearch =
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
@@ -49,7 +48,6 @@ export default function BlogFeedPage() {
 
   return (
     <>
-
       <div className="landing-shell blog-feed-page bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
 
@@ -64,8 +62,8 @@ export default function BlogFeedPage() {
                 </span>
                 <h1>Knowledge Hub for Smart Insurance</h1>
                 <p>
-                  Explore professional advice, claims navigation manuals, and updates 
-                  to protect your health, vehicles, and businesses across India.
+                  Explore professional advice, claims navigation manuals, and updates to protect your health,
+                  vehicles, and businesses across India.
                 </p>
               </div>
 
@@ -92,7 +90,6 @@ export default function BlogFeedPage() {
           {/* Main Feed Section */}
           <section className="blog-workspace">
             <div className="blog-workspace-inner max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-              
               {/* Category Filter Tabs */}
               <div className="blog-category-bar reveal">
                 {categories.map((cat) => (
@@ -112,7 +109,10 @@ export default function BlogFeedPage() {
                 <div className="blog-featured-section reveal">
                   <span className="blog-section-title">Featured Article</span>
                   <div className="blog-featured-card">
-                    <div className="blog-featured-media" style={{ backgroundImage: `url(${featuredPost.coverImage})` }}></div>
+                    <div
+                      className="blog-featured-media"
+                      style={{ backgroundImage: `url(${featuredPost.coverImage})` }}
+                    ></div>
                     <div className="blog-featured-content">
                       <div className="blog-card-meta">
                         <span className="blog-card-category">{featuredPost.category}</span>
@@ -155,7 +155,10 @@ export default function BlogFeedPage() {
                     {/* Render featured post as a grid card if filtering is active */}
                     {(activeCategory !== "All" || searchQuery ? filteredPosts : standardPosts).map((post) => (
                       <article key={post.slug} className="blog-card reveal">
-                        <div className="blog-card-media" style={{ backgroundImage: `url(${post.coverImage})` }}></div>
+                        <div
+                          className="blog-card-media"
+                          style={{ backgroundImage: `url(${post.coverImage})` }}
+                        ></div>
                         <div className="blog-card-copy">
                           <div className="blog-card-meta">
                             <span className="blog-card-category">{post.category}</span>
@@ -182,7 +185,6 @@ export default function BlogFeedPage() {
                   </div>
                 )}
               </div>
-
             </div>
           </section>
 
@@ -195,7 +197,13 @@ export default function BlogFeedPage() {
                   <h2>Get monthly claim tips & renewal advisories</h2>
                   <p>We send only curated, licensed insurance consulting insights once a month.</p>
                 </div>
-                <form className="blog-subscribe-form" onSubmit={(e) => { e.preventDefault(); window.alert("Subscription successful!"); }}>
+                <form
+                  className="blog-subscribe-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    window.alert("Subscription successful!");
+                  }}
+                >
                   <input type="email" placeholder="name@example.com" required />
                   <button type="submit">
                     Subscribe

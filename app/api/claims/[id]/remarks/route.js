@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
-import {
-  canWriteClaim,
-  claimInclude,
-  getClaimWhere,
-  requireClaimSession,
-  serializeClaim
-} from "../../utils";
+import { canWriteClaim, claimInclude, getClaimWhere, requireClaimSession, serializeClaim } from "../../utils";
 
 export const runtime = "nodejs";
 
@@ -19,10 +13,11 @@ export async function POST(request, { params }) {
     const { id } = await params;
 
     const existing = await prisma.claim.findFirst({
-      where: { id, ...getClaimWhere(session, "read") }
+      where: { id, ...getClaimWhere(session, "read") },
     });
     if (!existing) return NextResponse.json({ error: "Claim not found." }, { status: 404 });
-    if (!canWriteClaim(session, existing)) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    if (!canWriteClaim(session, existing))
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
 
     const payload = await request.json();
     const text = String(payload.text || "").trim();
@@ -37,8 +32,8 @@ export async function POST(request, { params }) {
           claimId: id,
           text,
           followUpDate,
-          createdById: actorId
-        }
+          createdById: actorId,
+        },
       });
 
       await tx.claim.update({
@@ -47,14 +42,14 @@ export async function POST(request, { params }) {
           currentRemark: text,
           followUpDate,
           claimStatus: followUpDate ? "Follow Up" : existing.claimStatus,
-          updatedById: actorId
-        }
+          updatedById: actorId,
+        },
       });
     });
 
     const claim = await prisma.claim.findUnique({
       where: { id },
-      include: claimInclude
+      include: claimInclude,
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -68,12 +63,15 @@ export async function POST(request, { params }) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { claimNo: claim.claimNo, insuredName: claim.insuredName }
+      metadata: { claimNo: claim.claimNo, insuredName: claim.insuredName },
     });
 
     return NextResponse.json(serializeClaim(claim), { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Claim remark could not be saved." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Claim remark could not be saved." },
+      { status: 500 },
+    );
   }
 }
 

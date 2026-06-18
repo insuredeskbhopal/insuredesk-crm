@@ -34,10 +34,17 @@ const EMPTY_FORM = {
   nextFollowUpDate: "",
   followUpRemark: "",
   followUpOutcome: "",
-  remarks: ""
+  remarks: "",
 };
 
-const PROFILE_STATUS = ["New Lead", "Follow-up Required", "Interested", "Not Interested", "Converted", "Lost"];
+const PROFILE_STATUS = [
+  "New Lead",
+  "Follow-up Required",
+  "Interested",
+  "Not Interested",
+  "Converted",
+  "Lost",
+];
 const CUSTOMER_TYPES = ["New", "Existing"];
 const EMPTY_COUNTERS = {
   totalProfiles: 0,
@@ -45,47 +52,662 @@ const EMPTY_COUNTERS = {
   followUpRequired: 0,
   interested: 0,
   converted: 0,
-  lost: 0
+  lost: 0,
 };
 const EMPTY_SEARCH_RESULTS = { profiles: [], policyMatches: [], claimedByAnotherUser: false };
 
 const STATE_CITY_OPTIONS = {
   "Andaman and Nicobar Islands": ["Bamboo Flat", "Diglipur", "Mayabunder", "Port Blair", "Rangat"],
-  "Andhra Pradesh": ["Adoni", "Amalapuram", "Amaravati", "Anakapalle", "Anantapur", "Bhimavaram", "Chittoor", "Eluru", "Guntakal", "Guntur", "Hindupur", "Kadapa", "Kakinada", "Kurnool", "Machilipatnam", "Madanapalle", "Nandyal", "Narasaraopet", "Nellore", "Ongole", "Proddatur", "Rajahmundry", "Srikakulam", "Tadepalligudem", "Tenali", "Tirupati", "Vijayawada", "Visakhapatnam", "Vizianagaram"],
-  "Arunachal Pradesh": ["Aalo", "Bomdila", "Itanagar", "Naharlagun", "Pasighat", "Roing", "Tawang", "Tezu", "Ziro"],
-  Assam: ["Barpeta", "Bongaigaon", "Dhubri", "Dibrugarh", "Diphu", "Goalpara", "Golaghat", "Guwahati", "Haflong", "Hailakandi", "Jorhat", "Karimganj", "Kokrajhar", "Lakhimpur", "Mangaldoi", "Nagaon", "Nalbari", "Sibsagar", "Silchar", "Tezpur", "Tinsukia"],
-  Bihar: ["Ara", "Araria", "Aurangabad", "Bagaha", "Begusarai", "Bettiah", "Bhagalpur", "Bihar Sharif", "Buxar", "Chhapra", "Darbhanga", "Dehri", "Gaya", "Hajipur", "Jamalpur", "Jehanabad", "Katihar", "Kishanganj", "Madhubani", "Motihari", "Munger", "Muzaffarpur", "Patna", "Purnia", "Saharsa", "Samastipur", "Sasaram", "Sitamarhi", "Siwan"],
+  "Andhra Pradesh": [
+    "Adoni",
+    "Amalapuram",
+    "Amaravati",
+    "Anakapalle",
+    "Anantapur",
+    "Bhimavaram",
+    "Chittoor",
+    "Eluru",
+    "Guntakal",
+    "Guntur",
+    "Hindupur",
+    "Kadapa",
+    "Kakinada",
+    "Kurnool",
+    "Machilipatnam",
+    "Madanapalle",
+    "Nandyal",
+    "Narasaraopet",
+    "Nellore",
+    "Ongole",
+    "Proddatur",
+    "Rajahmundry",
+    "Srikakulam",
+    "Tadepalligudem",
+    "Tenali",
+    "Tirupati",
+    "Vijayawada",
+    "Visakhapatnam",
+    "Vizianagaram",
+  ],
+  "Arunachal Pradesh": [
+    "Aalo",
+    "Bomdila",
+    "Itanagar",
+    "Naharlagun",
+    "Pasighat",
+    "Roing",
+    "Tawang",
+    "Tezu",
+    "Ziro",
+  ],
+  Assam: [
+    "Barpeta",
+    "Bongaigaon",
+    "Dhubri",
+    "Dibrugarh",
+    "Diphu",
+    "Goalpara",
+    "Golaghat",
+    "Guwahati",
+    "Haflong",
+    "Hailakandi",
+    "Jorhat",
+    "Karimganj",
+    "Kokrajhar",
+    "Lakhimpur",
+    "Mangaldoi",
+    "Nagaon",
+    "Nalbari",
+    "Sibsagar",
+    "Silchar",
+    "Tezpur",
+    "Tinsukia",
+  ],
+  Bihar: [
+    "Ara",
+    "Araria",
+    "Aurangabad",
+    "Bagaha",
+    "Begusarai",
+    "Bettiah",
+    "Bhagalpur",
+    "Bihar Sharif",
+    "Buxar",
+    "Chhapra",
+    "Darbhanga",
+    "Dehri",
+    "Gaya",
+    "Hajipur",
+    "Jamalpur",
+    "Jehanabad",
+    "Katihar",
+    "Kishanganj",
+    "Madhubani",
+    "Motihari",
+    "Munger",
+    "Muzaffarpur",
+    "Patna",
+    "Purnia",
+    "Saharsa",
+    "Samastipur",
+    "Sasaram",
+    "Sitamarhi",
+    "Siwan",
+  ],
   Chandigarh: ["Chandigarh"],
-  Chhattisgarh: ["Ambikapur", "Balod", "Baloda Bazar", "Bastar", "Bemetara", "Bhilai", "Bijapur", "Bilaspur", "Dantewada", "Dhamtari", "Durg", "Jagdalpur", "Janjgir", "Jashpur", "Kanker", "Kawardha", "Korba", "Koriya", "Mahasamund", "Narayanpur", "Raigarh", "Raipur", "Rajnandgaon", "Sukma", "Surajpur"],
+  Chhattisgarh: [
+    "Ambikapur",
+    "Balod",
+    "Baloda Bazar",
+    "Bastar",
+    "Bemetara",
+    "Bhilai",
+    "Bijapur",
+    "Bilaspur",
+    "Dantewada",
+    "Dhamtari",
+    "Durg",
+    "Jagdalpur",
+    "Janjgir",
+    "Jashpur",
+    "Kanker",
+    "Kawardha",
+    "Korba",
+    "Koriya",
+    "Mahasamund",
+    "Narayanpur",
+    "Raigarh",
+    "Raipur",
+    "Rajnandgaon",
+    "Sukma",
+    "Surajpur",
+  ],
   "Dadra and Nagar Haveli and Daman and Diu": ["Daman", "Diu", "Silvassa"],
   Delhi: ["Delhi", "New Delhi"],
   Goa: ["Bicholim", "Mapusa", "Margao", "Panaji", "Ponda", "Vasco da Gama"],
-  Gujarat: ["Ahmedabad", "Amreli", "Anand", "Bharuch", "Bhavnagar", "Bhuj", "Botad", "Dahod", "Gandhidham", "Gandhinagar", "Godhra", "Himatnagar", "Jamnagar", "Junagadh", "Mehsana", "Morbi", "Nadiad", "Navsari", "Palanpur", "Patan", "Porbandar", "Rajkot", "Surat", "Surendranagar", "Vadodara", "Valsad", "Vapi", "Veraval"],
-  Haryana: ["Ambala", "Bahadurgarh", "Bhiwani", "Faridabad", "Fatehabad", "Gurugram", "Hisar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Narnaul", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa", "Sonipat", "Yamunanagar"],
-  "Himachal Pradesh": ["Bilaspur", "Chamba", "Dharamshala", "Hamirpur", "Kangra", "Kullu", "Mandi", "Nahan", "Shimla", "Solan", "Una"],
-  "Jammu and Kashmir": ["Anantnag", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Samba", "Shopian", "Sopore", "Srinagar", "Udhampur"],
-  Jharkhand: ["Bokaro", "Chaibasa", "Chatra", "Deoghar", "Dhanbad", "Dumka", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamshedpur", "Jamtara", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi", "Sahibganj", "Simdega"],
-  Karnataka: ["Bagalkot", "Ballari", "Bengaluru", "Belagavi", "Bidar", "Chikkamagaluru", "Chitradurga", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Hubballi", "Kalaburagi", "Karwar", "Kolar", "Koppal", "Mandya", "Mangaluru", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Vijayapura", "Yadgir"],
-  Kerala: ["Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kochi", "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad"],
+  Gujarat: [
+    "Ahmedabad",
+    "Amreli",
+    "Anand",
+    "Bharuch",
+    "Bhavnagar",
+    "Bhuj",
+    "Botad",
+    "Dahod",
+    "Gandhidham",
+    "Gandhinagar",
+    "Godhra",
+    "Himatnagar",
+    "Jamnagar",
+    "Junagadh",
+    "Mehsana",
+    "Morbi",
+    "Nadiad",
+    "Navsari",
+    "Palanpur",
+    "Patan",
+    "Porbandar",
+    "Rajkot",
+    "Surat",
+    "Surendranagar",
+    "Vadodara",
+    "Valsad",
+    "Vapi",
+    "Veraval",
+  ],
+  Haryana: [
+    "Ambala",
+    "Bahadurgarh",
+    "Bhiwani",
+    "Faridabad",
+    "Fatehabad",
+    "Gurugram",
+    "Hisar",
+    "Jind",
+    "Kaithal",
+    "Karnal",
+    "Kurukshetra",
+    "Narnaul",
+    "Palwal",
+    "Panchkula",
+    "Panipat",
+    "Rewari",
+    "Rohtak",
+    "Sirsa",
+    "Sonipat",
+    "Yamunanagar",
+  ],
+  "Himachal Pradesh": [
+    "Bilaspur",
+    "Chamba",
+    "Dharamshala",
+    "Hamirpur",
+    "Kangra",
+    "Kullu",
+    "Mandi",
+    "Nahan",
+    "Shimla",
+    "Solan",
+    "Una",
+  ],
+  "Jammu and Kashmir": [
+    "Anantnag",
+    "Baramulla",
+    "Budgam",
+    "Doda",
+    "Ganderbal",
+    "Jammu",
+    "Kathua",
+    "Kishtwar",
+    "Kulgam",
+    "Kupwara",
+    "Poonch",
+    "Pulwama",
+    "Rajouri",
+    "Ramban",
+    "Samba",
+    "Shopian",
+    "Sopore",
+    "Srinagar",
+    "Udhampur",
+  ],
+  Jharkhand: [
+    "Bokaro",
+    "Chaibasa",
+    "Chatra",
+    "Deoghar",
+    "Dhanbad",
+    "Dumka",
+    "Giridih",
+    "Godda",
+    "Gumla",
+    "Hazaribagh",
+    "Jamshedpur",
+    "Jamtara",
+    "Khunti",
+    "Koderma",
+    "Latehar",
+    "Lohardaga",
+    "Pakur",
+    "Palamu",
+    "Ramgarh",
+    "Ranchi",
+    "Sahibganj",
+    "Simdega",
+  ],
+  Karnataka: [
+    "Bagalkot",
+    "Ballari",
+    "Bengaluru",
+    "Belagavi",
+    "Bidar",
+    "Chikkamagaluru",
+    "Chitradurga",
+    "Davanagere",
+    "Dharwad",
+    "Gadag",
+    "Hassan",
+    "Haveri",
+    "Hubballi",
+    "Kalaburagi",
+    "Karwar",
+    "Kolar",
+    "Koppal",
+    "Mandya",
+    "Mangaluru",
+    "Mysuru",
+    "Raichur",
+    "Ramanagara",
+    "Shivamogga",
+    "Tumakuru",
+    "Udupi",
+    "Vijayapura",
+    "Yadgir",
+  ],
+  Kerala: [
+    "Alappuzha",
+    "Ernakulam",
+    "Idukki",
+    "Kannur",
+    "Kasaragod",
+    "Kochi",
+    "Kollam",
+    "Kottayam",
+    "Kozhikode",
+    "Malappuram",
+    "Palakkad",
+    "Pathanamthitta",
+    "Thiruvananthapuram",
+    "Thrissur",
+    "Wayanad",
+  ],
   Ladakh: ["Kargil", "Leh"],
   Lakshadweep: ["Kavaratti"],
-  "Madhya Pradesh": ["Agar Malwa", "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Itarsi", "Jabalpur", "Jhabua", "Katni", "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch", "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh", "Ujjain", "Umaria", "Vidisha"],
-  Maharashtra: ["Ahmednagar", "Akola", "Amravati", "Aurangabad", "Baramati", "Beed", "Bhandara", "Bhiwandi", "Buldhana", "Chandrapur", "Dhule", "Gondia", "Hingoli", "Ichalkaranji", "Jalgaon", "Jalna", "Kolhapur", "Latur", "Malegaon", "Mumbai", "Nagpur", "Nanded", "Nandurbar", "Nashik", "Osmanabad", "Palghar", "Parbhani", "Pune", "Ratnagiri", "Sangli", "Satara", "Solapur", "Thane", "Ulhasnagar", "Wardha", "Washim", "Yavatmal"],
+  "Madhya Pradesh": [
+    "Agar Malwa",
+    "Alirajpur",
+    "Anuppur",
+    "Ashoknagar",
+    "Balaghat",
+    "Barwani",
+    "Betul",
+    "Bhind",
+    "Bhopal",
+    "Burhanpur",
+    "Chhatarpur",
+    "Chhindwara",
+    "Damoh",
+    "Datia",
+    "Dewas",
+    "Dhar",
+    "Dindori",
+    "Guna",
+    "Gwalior",
+    "Harda",
+    "Hoshangabad",
+    "Indore",
+    "Itarsi",
+    "Jabalpur",
+    "Jhabua",
+    "Katni",
+    "Khandwa",
+    "Khargone",
+    "Mandla",
+    "Mandsaur",
+    "Morena",
+    "Narsinghpur",
+    "Neemuch",
+    "Panna",
+    "Raisen",
+    "Rajgarh",
+    "Ratlam",
+    "Rewa",
+    "Sagar",
+    "Satna",
+    "Sehore",
+    "Seoni",
+    "Shahdol",
+    "Shajapur",
+    "Sheopur",
+    "Shivpuri",
+    "Sidhi",
+    "Singrauli",
+    "Tikamgarh",
+    "Ujjain",
+    "Umaria",
+    "Vidisha",
+  ],
+  Maharashtra: [
+    "Ahmednagar",
+    "Akola",
+    "Amravati",
+    "Aurangabad",
+    "Baramati",
+    "Beed",
+    "Bhandara",
+    "Bhiwandi",
+    "Buldhana",
+    "Chandrapur",
+    "Dhule",
+    "Gondia",
+    "Hingoli",
+    "Ichalkaranji",
+    "Jalgaon",
+    "Jalna",
+    "Kolhapur",
+    "Latur",
+    "Malegaon",
+    "Mumbai",
+    "Nagpur",
+    "Nanded",
+    "Nandurbar",
+    "Nashik",
+    "Osmanabad",
+    "Palghar",
+    "Parbhani",
+    "Pune",
+    "Ratnagiri",
+    "Sangli",
+    "Satara",
+    "Solapur",
+    "Thane",
+    "Ulhasnagar",
+    "Wardha",
+    "Washim",
+    "Yavatmal",
+  ],
   Manipur: ["Bishnupur", "Chandel", "Churachandpur", "Imphal", "Senapati", "Tamenglong", "Thoubal", "Ukhrul"],
   Meghalaya: ["Jowai", "Nongstoin", "Shillong", "Tura", "Williamnagar"],
   Mizoram: ["Aizawl", "Champhai", "Kolasib", "Lawngtlai", "Lunglei", "Mamit", "Saiha", "Serchhip"],
-  Nagaland: ["Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", "Mon", "Peren", "Phek", "Tuensang", "Wokha", "Zunheboto"],
-  Odisha: ["Angul", "Balangir", "Balasore", "Baripada", "Bhadrak", "Bhubaneswar", "Boudh", "Cuttack", "Dhenkanal", "Jagatsinghpur", "Jajpur", "Jharsuguda", "Kalahandi", "Kendrapara", "Keonjhar", "Koraput", "Malkangiri", "Nabarangpur", "Nayagarh", "Nuapada", "Paradip", "Phulbani", "Puri", "Rayagada", "Rourkela", "Sambalpur", "Sonepur"],
+  Nagaland: [
+    "Dimapur",
+    "Kiphire",
+    "Kohima",
+    "Longleng",
+    "Mokokchung",
+    "Mon",
+    "Peren",
+    "Phek",
+    "Tuensang",
+    "Wokha",
+    "Zunheboto",
+  ],
+  Odisha: [
+    "Angul",
+    "Balangir",
+    "Balasore",
+    "Baripada",
+    "Bhadrak",
+    "Bhubaneswar",
+    "Boudh",
+    "Cuttack",
+    "Dhenkanal",
+    "Jagatsinghpur",
+    "Jajpur",
+    "Jharsuguda",
+    "Kalahandi",
+    "Kendrapara",
+    "Keonjhar",
+    "Koraput",
+    "Malkangiri",
+    "Nabarangpur",
+    "Nayagarh",
+    "Nuapada",
+    "Paradip",
+    "Phulbani",
+    "Puri",
+    "Rayagada",
+    "Rourkela",
+    "Sambalpur",
+    "Sonepur",
+  ],
   Puducherry: ["Karaikal", "Puducherry"],
-  Punjab: ["Abohar", "Amritsar", "Barnala", "Batala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka", "Firozpur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Khanna", "Ludhiana", "Malerkotla", "Mansa", "Moga", "Mohali", "Muktsar", "Pathankot", "Patiala", "Phagwara", "Rupnagar", "Sangrur", "Tarn Taran"],
-  Rajasthan: ["Ajmer", "Alwar", "Banswara", "Baran", "Barmer", "Beawar", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh", "Churu", "Dausa", "Dholpur", "Dungarpur", "Hanumangarh", "Jaipur", "Jaisalmer", "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Karauli", "Kota", "Nagaur", "Pali", "Pratapgarh", "Rajsamand", "Sawai Madhopur", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur"],
+  Punjab: [
+    "Abohar",
+    "Amritsar",
+    "Barnala",
+    "Batala",
+    "Bathinda",
+    "Faridkot",
+    "Fatehgarh Sahib",
+    "Fazilka",
+    "Firozpur",
+    "Gurdaspur",
+    "Hoshiarpur",
+    "Jalandhar",
+    "Kapurthala",
+    "Khanna",
+    "Ludhiana",
+    "Malerkotla",
+    "Mansa",
+    "Moga",
+    "Mohali",
+    "Muktsar",
+    "Pathankot",
+    "Patiala",
+    "Phagwara",
+    "Rupnagar",
+    "Sangrur",
+    "Tarn Taran",
+  ],
+  Rajasthan: [
+    "Ajmer",
+    "Alwar",
+    "Banswara",
+    "Baran",
+    "Barmer",
+    "Beawar",
+    "Bharatpur",
+    "Bhilwara",
+    "Bikaner",
+    "Bundi",
+    "Chittorgarh",
+    "Churu",
+    "Dausa",
+    "Dholpur",
+    "Dungarpur",
+    "Hanumangarh",
+    "Jaipur",
+    "Jaisalmer",
+    "Jalore",
+    "Jhalawar",
+    "Jhunjhunu",
+    "Jodhpur",
+    "Karauli",
+    "Kota",
+    "Nagaur",
+    "Pali",
+    "Pratapgarh",
+    "Rajsamand",
+    "Sawai Madhopur",
+    "Sikar",
+    "Sirohi",
+    "Sri Ganganagar",
+    "Tonk",
+    "Udaipur",
+  ],
   Sikkim: ["Gangtok", "Namchi"],
-  "Tamil Nadu": ["Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Hosur", "Kanchipuram", "Karur", "Krishnagiri", "Madurai", "Nagapattinam", "Nagercoil", "Namakkal", "Perambalur", "Pudukkottai", "Ramanathapuram", "Salem", "Sivaganga", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Vellore", "Viluppuram", "Virudhunagar"],
-  Telangana: ["Adilabad", "Hyderabad", "Jagtial", "Karimnagar", "Khammam", "Mahabubabad", "Mahbubnagar", "Mancherial", "Medak", "Nalgonda", "Nizamabad", "Ramagundam", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad", "Warangal"],
+  "Tamil Nadu": [
+    "Ariyalur",
+    "Chengalpattu",
+    "Chennai",
+    "Coimbatore",
+    "Cuddalore",
+    "Dharmapuri",
+    "Dindigul",
+    "Erode",
+    "Hosur",
+    "Kanchipuram",
+    "Karur",
+    "Krishnagiri",
+    "Madurai",
+    "Nagapattinam",
+    "Nagercoil",
+    "Namakkal",
+    "Perambalur",
+    "Pudukkottai",
+    "Ramanathapuram",
+    "Salem",
+    "Sivaganga",
+    "Thanjavur",
+    "Theni",
+    "Thoothukudi",
+    "Tiruchirappalli",
+    "Tirunelveli",
+    "Tiruppur",
+    "Tiruvallur",
+    "Tiruvannamalai",
+    "Vellore",
+    "Viluppuram",
+    "Virudhunagar",
+  ],
+  Telangana: [
+    "Adilabad",
+    "Hyderabad",
+    "Jagtial",
+    "Karimnagar",
+    "Khammam",
+    "Mahabubabad",
+    "Mahbubnagar",
+    "Mancherial",
+    "Medak",
+    "Nalgonda",
+    "Nizamabad",
+    "Ramagundam",
+    "Sangareddy",
+    "Siddipet",
+    "Suryapet",
+    "Vikarabad",
+    "Warangal",
+  ],
   Tripura: ["Agartala", "Ambassa", "Belonia", "Dharmanagar", "Kailashahar", "Khowai", "Udaipur"],
-  "Uttar Pradesh": ["Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Ayodhya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Budaun", "Bulandshahr", "Chandauli", "Deoria", "Etah", "Etawah", "Farrukhabad", "Fatehpur", "Firozabad", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hapur", "Hardoi", "Hathras", "Jaunpur", "Jhansi", "Kannauj", "Kanpur", "Kasganj", "Kaushambi", "Kushinagar", "Lakhimpur Kheri", "Lalitpur", "Lucknow", "Mainpuri", "Mathura", "Mau", "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Noida", "Orai", "Prayagraj", "Raebareli", "Rampur", "Saharanpur", "Sambhal", "Shahjahanpur", "Sitapur", "Sultanpur", "Unnao", "Varanasi"],
-  Uttarakhand: ["Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haldwani", "Haridwar", "Kashipur", "Kotdwar", "Nainital", "Pauri", "Pithoragarh", "Rishikesh", "Roorkee", "Rudrapur", "Tehri", "Uttarkashi"],
-  "West Bengal": ["Alipurduar", "Asansol", "Balurghat", "Bankura", "Barasat", "Bardhaman", "Berhampore", "Cooch Behar", "Darjeeling", "Durgapur", "Haldia", "Howrah", "Jalpaiguri", "Kharagpur", "Kolkata", "Krishnanagar", "Malda", "Midnapore", "Purulia", "Raiganj", "Siliguri"]
+  "Uttar Pradesh": [
+    "Agra",
+    "Aligarh",
+    "Ambedkar Nagar",
+    "Amethi",
+    "Amroha",
+    "Auraiya",
+    "Ayodhya",
+    "Azamgarh",
+    "Baghpat",
+    "Bahraich",
+    "Ballia",
+    "Balrampur",
+    "Banda",
+    "Barabanki",
+    "Bareilly",
+    "Basti",
+    "Bhadohi",
+    "Bijnor",
+    "Budaun",
+    "Bulandshahr",
+    "Chandauli",
+    "Deoria",
+    "Etah",
+    "Etawah",
+    "Farrukhabad",
+    "Fatehpur",
+    "Firozabad",
+    "Ghaziabad",
+    "Ghazipur",
+    "Gonda",
+    "Gorakhpur",
+    "Hapur",
+    "Hardoi",
+    "Hathras",
+    "Jaunpur",
+    "Jhansi",
+    "Kannauj",
+    "Kanpur",
+    "Kasganj",
+    "Kaushambi",
+    "Kushinagar",
+    "Lakhimpur Kheri",
+    "Lalitpur",
+    "Lucknow",
+    "Mainpuri",
+    "Mathura",
+    "Mau",
+    "Meerut",
+    "Mirzapur",
+    "Moradabad",
+    "Muzaffarnagar",
+    "Noida",
+    "Orai",
+    "Prayagraj",
+    "Raebareli",
+    "Rampur",
+    "Saharanpur",
+    "Sambhal",
+    "Shahjahanpur",
+    "Sitapur",
+    "Sultanpur",
+    "Unnao",
+    "Varanasi",
+  ],
+  Uttarakhand: [
+    "Almora",
+    "Bageshwar",
+    "Chamoli",
+    "Champawat",
+    "Dehradun",
+    "Haldwani",
+    "Haridwar",
+    "Kashipur",
+    "Kotdwar",
+    "Nainital",
+    "Pauri",
+    "Pithoragarh",
+    "Rishikesh",
+    "Roorkee",
+    "Rudrapur",
+    "Tehri",
+    "Uttarkashi",
+  ],
+  "West Bengal": [
+    "Alipurduar",
+    "Asansol",
+    "Balurghat",
+    "Bankura",
+    "Barasat",
+    "Bardhaman",
+    "Berhampore",
+    "Cooch Behar",
+    "Darjeeling",
+    "Durgapur",
+    "Haldia",
+    "Howrah",
+    "Jalpaiguri",
+    "Kharagpur",
+    "Kolkata",
+    "Krishnanagar",
+    "Malda",
+    "Midnapore",
+    "Purulia",
+    "Raiganj",
+    "Siliguri",
+  ],
 };
 
 const STATE_OPTIONS = ["", ...Object.keys(STATE_CITY_OPTIONS)];
@@ -101,7 +723,7 @@ const LOB_OPTIONS = [
   "Cyber Insurance",
   "Shop / Office Insurance",
   "Business Insurance",
-  "Other"
+  "Other",
 ];
 
 const LOB_FIELDS = {
@@ -109,67 +731,67 @@ const LOB_FIELDS = {
     ["vehicleType", "Vehicle Type"],
     ["vehicleNumber", "Vehicle Number"],
     ["existingPolicyAvailable", "Existing Policy Available?"],
-    ["renewalDate", "Renewal Date", "date"]
+    ["renewalDate", "Renewal Date", "date"],
   ],
   "Warehouse Insurance": [
     ["warehouseLocation", "Warehouse Location"],
     ["stockValue", "Stock Value"],
     ["existingInsuranceAvailable", "Existing Insurance Available?"],
-    ["renewalDate", "Renewal Date", "date"]
+    ["renewalDate", "Renewal Date", "date"],
   ],
   "Life Insurance": [
     ["age", "Age"],
     ["incomeRange", "Income Range"],
     ["familyMembers", "Family Members"],
-    ["existingLifeCover", "Existing Life Cover?"]
+    ["existingLifeCover", "Existing Life Cover?"],
   ],
   "Health Insurance": [
     ["familySize", "Family Size"],
     ["existingHealthCover", "Existing Health Cover?"],
     ["sumInsuredNeed", "Expected Sum Insured"],
-    ["renewalDate", "Renewal Date", "date"]
+    ["renewalDate", "Renewal Date", "date"],
   ],
   "Fire Insurance": [
     ["riskLocation", "Risk Location"],
     ["propertyValue", "Property Value"],
     ["occupancy", "Occupancy"],
-    ["renewalDate", "Renewal Date", "date"]
+    ["renewalDate", "Renewal Date", "date"],
   ],
   "Marine Insurance": [
     ["cargoType", "Cargo Type"],
     ["route", "Route"],
     ["annualTransitValue", "Annual Transit Value"],
-    ["existingInsuranceAvailable", "Existing Insurance Available?"]
+    ["existingInsuranceAvailable", "Existing Insurance Available?"],
   ],
   "Travel Insurance": [
     ["destination", "Destination"],
     ["travelDate", "Travel Date", "date"],
     ["travellers", "Travellers"],
-    ["tripDuration", "Trip Duration"]
+    ["tripDuration", "Trip Duration"],
   ],
   "Cyber Insurance": [
     ["businessWebsite", "Business Website"],
     ["dataExposure", "Customer/Data Exposure"],
     ["employeeCount", "Employee Count"],
-    ["existingInsuranceAvailable", "Existing Insurance Available?"]
+    ["existingInsuranceAvailable", "Existing Insurance Available?"],
   ],
   "Shop / Office Insurance": [
     ["shopLocation", "Shop / Office Location"],
     ["assetValue", "Asset Value"],
     ["stockValue", "Stock Value"],
-    ["renewalDate", "Renewal Date", "date"]
+    ["renewalDate", "Renewal Date", "date"],
   ],
   "Business Insurance": [
     ["businessCategory", "Business Category"],
     ["turnoverRange", "Turnover Range"],
     ["employeeCount", "Employee Count"],
-    ["keyRisk", "Key Risk"]
+    ["keyRisk", "Key Risk"],
   ],
   Other: [
     ["insuranceNeed", "Insurance Need"],
     ["estimatedValue", "Estimated Value"],
-    ["notes", "Notes"]
-  ]
+    ["notes", "Notes"],
+  ],
 };
 
 export default function CustomerProfilingPage() {
@@ -193,7 +815,7 @@ export default function CustomerProfilingPage() {
     status: "",
     assignedTo: "",
     lob: "",
-    followUpDate: ""
+    followUpDate: "",
   });
   const [alert, setAlert] = useState(null);
   const [isPending, startTransition] = useTransition();
@@ -203,25 +825,29 @@ export default function CustomerProfilingPage() {
   const isValidProfilePhone = phone.length === 10;
   const hasMatches = searchResults.profiles.length > 0 || searchResults.policyMatches.length > 0;
   const isClaimedByAnotherUser = Boolean(searchResults.claimedByAnotherUser);
-  const hasExternalMatches = isClaimedByAnotherUser || (hasMatches && searchResults.profiles.some((profile) => !canCurrentUserHandleProfile(profile, currentUser)));
+  const hasExternalMatches =
+    isClaimedByAnotherUser ||
+    (hasMatches &&
+      searchResults.profiles.some((profile) => !canCurrentUserHandleProfile(profile, currentUser)));
   const cityOptions = useMemo(() => {
     return ["", ...new Set([...(STATE_CITY_OPTIONS[form.state] || []), form.city].filter(Boolean))];
   }, [form.state, form.city]);
   const assignedNames = useMemo(() => {
-    return [
-      ...searchResults.profiles.map((item) => item.assignedTo || item.createdBy)
-    ].filter(Boolean);
+    return [...searchResults.profiles.map((item) => item.assignedTo || item.createdBy)].filter(Boolean);
   }, [searchResults]);
 
   useEffect(() => {
-    setFilters((current) => current.q === urlQuery ? current : { ...current, q: urlQuery });
+    setFilters((current) => (current.q === urlQuery ? current : { ...current, q: urlQuery }));
   }, [urlQuery]);
 
   useEffect(() => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => {
-      loadProfiles(controller.signal);
-    }, filters.q ? 250 : 0);
+    const timeout = setTimeout(
+      () => {
+        loadProfiles(controller.signal);
+      },
+      filters.q ? 250 : 0,
+    );
 
     return () => {
       clearTimeout(timeout);
@@ -247,7 +873,7 @@ export default function CustomerProfilingPage() {
     const timeout = setTimeout(async () => {
       try {
         const response = await fetch(`/api/customer-profiles?phone=${encodeURIComponent(phone)}`, {
-          signal: controller.signal
+          signal: controller.signal,
         });
         if (!response.ok) return;
         setSearchResults(await response.json());
@@ -300,9 +926,9 @@ export default function CustomerProfilingPage() {
         ...(current.lobDetails || {}),
         [lob]: {
           ...(current.lobDetails?.[lob] || {}),
-          [key]: value
-        }
-      }
+          [key]: value,
+        },
+      },
     }));
   }
 
@@ -313,17 +939,21 @@ export default function CustomerProfilingPage() {
       ...EMPTY_FORM,
       ...profile,
       followUpDate: profile.followUpDate ? new Date(profile.followUpDate).toISOString().slice(0, 10) : "",
-      lastFollowUpDate: profile.lastFollowUpDate ? new Date(profile.lastFollowUpDate).toISOString().slice(0, 10) : "",
-      nextFollowUpDate: profile.nextFollowUpDate ? new Date(profile.nextFollowUpDate).toISOString().slice(0, 10) : "",
+      lastFollowUpDate: profile.lastFollowUpDate
+        ? new Date(profile.lastFollowUpDate).toISOString().slice(0, 10)
+        : "",
+      nextFollowUpDate: profile.nextFollowUpDate
+        ? new Date(profile.nextFollowUpDate).toISOString().slice(0, 10)
+        : "",
       selectedLOBs: profile.selectedLOBs || [],
-      lobDetails: profile.lobDetails || {}
+      lobDetails: profile.lobDetails || {},
     });
   }
 
   function mapPolicyRecordToLobDetails(record, lob) {
     if (!lob) return {};
     const details = {};
-    
+
     let expiryStr = "";
     if (record.expiryDate) {
       try {
@@ -411,9 +1041,18 @@ export default function CustomerProfilingPage() {
       sourceCompany: record.insuranceCompany || "",
       selectedLOBs: inferredLob ? [inferredLob] : [],
       lobDetails: lobDetails,
-      remarks: [record.policyNumber ? `Source policy ${record.policyNumber}` : "", record.policyType, record.insuranceCompany].filter(Boolean).join(" / ")
+      remarks: [
+        record.policyNumber ? `Source policy ${record.policyNumber}` : "",
+        record.policyType,
+        record.insuranceCompany,
+      ]
+        .filter(Boolean)
+        .join(" / "),
     });
-    setAlert({ type: "success", message: "Policy customer loaded with saved details. Save Profile to add it to Customer Profiling." });
+    setAlert({
+      type: "success",
+      message: "Policy customer loaded with saved details. Save Profile to add it to Customer Profiling.",
+    });
   }
 
   function newProfile() {
@@ -421,7 +1060,7 @@ export default function CustomerProfilingPage() {
     setConvertType("");
     setForm({
       ...EMPTY_FORM,
-      assignedTo: currentUser?.name || currentUser?.email || ""
+      assignedTo: currentUser?.name || currentUser?.email || "",
     });
     setSearchResults(EMPTY_SEARCH_RESULTS);
   }
@@ -458,7 +1097,9 @@ export default function CustomerProfilingPage() {
       setCurrentUser(payload.user);
       const creatorLabel = payload.user?.name || payload.user?.email || "";
       if (creatorLabel) {
-        setForm((current) => (current.assignedTo || selectedExistingId) ? current : { ...current, assignedTo: creatorLabel });
+        setForm((current) =>
+          current.assignedTo || selectedExistingId ? current : { ...current, assignedTo: creatorLabel },
+        );
       }
     }
   }
@@ -470,12 +1111,18 @@ export default function CustomerProfilingPage() {
         if (form.phone) {
           const normalized = normalizeIndianPhone(form.phone);
           if (!normalized) {
-            setAlert({ type: "error", message: "Please enter a valid 10-digit Indian mobile number (starting with 6-9)." });
+            setAlert({
+              type: "error",
+              message: "Please enter a valid 10-digit Indian mobile number (starting with 6-9).",
+            });
             return;
           }
         }
         if (!selectedExistingId && searchResults.claimedByAnotherUser) {
-          setAlert({ type: "error", message: "This phone number is already claimed by another user in Customer Profiling." });
+          setAlert({
+            type: "error",
+            message: "This phone number is already claimed by another user in Customer Profiling.",
+          });
           return;
         }
 
@@ -505,7 +1152,7 @@ export default function CustomerProfilingPage() {
 
           // Use the entered followUpRemark or a default if none is provided
           const userRemark = (form.followUpRemark || "").trim();
-          
+
           if (metadataLines.length > 0 || userRemark) {
             let finalRemark = "";
             if (metadataLines.length > 0) {
@@ -535,7 +1182,7 @@ export default function CustomerProfilingPage() {
                 policyInterest: form.selectedLOBs?.[0] || "",
                 status: form.status || "Follow-up Required",
                 createdAt: new Date().toISOString(),
-                createdBy: form.assignedTo || "Agent"
+                createdBy: form.assignedTo || "Agent",
               };
 
               updatedForm = {
@@ -543,18 +1190,24 @@ export default function CustomerProfilingPage() {
                 followUpRemark: finalRemark,
                 lobDetails: {
                   ...(form.lobDetails || {}),
-                  followUps: [...(Array.isArray(form.lobDetails?.followUps) ? form.lobDetails.followUps : []), entry]
-                }
+                  followUps: [
+                    ...(Array.isArray(form.lobDetails?.followUps) ? form.lobDetails.followUps : []),
+                    entry,
+                  ],
+                },
               };
             }
           }
         }
 
-        const response = await fetch(selectedExistingId ? `/api/customer-profiles/${selectedExistingId}` : "/api/customer-profiles", {
-          method: selectedExistingId ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedForm)
-        });
+        const response = await fetch(
+          selectedExistingId ? `/api/customer-profiles/${selectedExistingId}` : "/api/customer-profiles",
+          {
+            method: selectedExistingId ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedForm),
+          },
+        );
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
           if (response.status === 409 && payload.profile) {
@@ -569,7 +1222,12 @@ export default function CustomerProfilingPage() {
           setForm(EMPTY_FORM);
         }
         setSearchResults(EMPTY_SEARCH_RESULTS);
-        setAlert({ type: "success", message: selectedExistingId ? "Customer profile details updated." : "Customer profile saved. Click View More to fill full details on the right." });
+        setAlert({
+          type: "success",
+          message: selectedExistingId
+            ? "Customer profile details updated."
+            : "Customer profile saved. Click View More to fill full details on the right.",
+        });
         await loadProfiles();
       } catch (error) {
         setAlert({ type: "error", message: error.message || "Customer profile could not be saved." });
@@ -580,25 +1238,26 @@ export default function CustomerProfilingPage() {
   const generateMessageText = (profile, conversionType, handoffRemark) => {
     if (!profile) return "";
     let lines = [];
-    
+
     // 1. Which policy the client asked for
     lines.push(`*We need this policy*: ${conversionType || "General Insurance"}`);
     lines.push(``);
-    
+
     // 2. Handoff Instruction
     if (handoffRemark) {
       lines.push(`*Handoff Instruction (for Agent/Team)*: ${handoffRemark}`);
       lines.push(``);
     }
-    
+
     // 3. Client details
     lines.push(`*CLIENT DETAILS*`);
     lines.push(`- *Name*: ${profile.name || "-"}`);
     lines.push(`- *Phone*: ${profile.phone || "-"}`);
     if (profile.email) lines.push(`- *Email*: ${profile.email}`);
-    if (profile.city || profile.state) lines.push(`- *Location*: ${[profile.city, profile.state].filter(Boolean).join(", ")}`);
+    if (profile.city || profile.state)
+      lines.push(`- *Location*: ${[profile.city, profile.state].filter(Boolean).join(", ")}`);
     if (profile.address) lines.push(`- *Address*: ${profile.address}`);
-    
+
     // 4. LOB Specific Details
     if (conversionType && LOB_FIELDS[conversionType]) {
       lines.push(``);
@@ -649,18 +1308,24 @@ export default function CustomerProfilingPage() {
     }
 
     const renderPrintSection = (title, fields) => {
-      const validFields = fields.filter(([_, val]) => val !== undefined && val !== null && String(val).trim() !== "");
+      const validFields = fields.filter(
+        ([_, val]) => val !== undefined && val !== null && String(val).trim() !== "",
+      );
       if (validFields.length === 0) return "";
       return `
         <div class="section">
           <h3>${title}</h3>
           <div class="grid">
-            ${validFields.map(([lbl, val]) => `
+            ${validFields
+              .map(
+                ([lbl, val]) => `
               <div class="field">
                 <span class="label">${lbl}</span>
                 <span class="value">${val}</span>
               </div>
-            `).join("")}
+            `,
+              )
+              .join("")}
           </div>
         </div>
       `;
@@ -679,7 +1344,7 @@ export default function CustomerProfilingPage() {
       ["Assigned To", profile.assignedTo],
       ["Reference Source", profile.referenceSource],
       ["Status", "Converted"],
-      ["Conversion Target LOB", conversionType]
+      ["Conversion Target LOB", conversionType],
     ];
 
     const lobFields = [];
@@ -702,17 +1367,19 @@ export default function CustomerProfilingPage() {
         <div class="section">
           <h3>Last 2 Conversations</h3>
           <div style="display: flex; flex-direction: column; gap: 10px;">
-            ${lastTwo.map((entry, idx) => {
-              const dateStr = entry.createdAt ? formatDateTime(entry.createdAt) : "-";
-              const author = entry.createdBy || "Agent";
-              const cleanRemark = entry.rawRemark || entry.remark || "-";
-              return `
+            ${lastTwo
+              .map((entry, idx) => {
+                const dateStr = entry.createdAt ? formatDateTime(entry.createdAt) : "-";
+                const author = entry.createdBy || "Agent";
+                const cleanRemark = entry.rawRemark || entry.remark || "-";
+                return `
                 <div class="field" style="background: #ffffff; border-color: #e2e8f0;">
                   <span class="label" style="font-size: 8px; font-weight: 700; color: #64748b; margin-bottom: 4px;">Conversation #${idx + 1} - ${dateStr} by ${author}</span>
                   <span class="value" style="font-size: 11px; font-weight: 500; color: #334155; display: block; white-space: pre-wrap;">${cleanRemark}</span>
                 </div>
               `;
-            }).join("")}
+              })
+              .join("")}
           </div>
         </div>
       `;
@@ -822,27 +1489,35 @@ export default function CustomerProfilingPage() {
             <img src="${window.location.origin}/brand/main-logo-wide.webp" alt="Logo" class="print-logo" />
           </div>
           
-          ${handoffRemark ? `
+          ${
+            handoffRemark
+              ? `
             <div class="section">
               <h3>Handoff Instruction / Team Remark</h3>
               <div class="field" style="background: #eff6ff; border-color: #bfdbfe;">
                 <span class="value" style="font-weight: 600; color: #1e3a8a; display: block; white-space: pre-wrap;">${handoffRemark}</span>
               </div>
             </div>
-          ` : ""}
+          `
+              : ""
+          }
 
           ${renderPrintSection("General Client Information", generalFields)}
           ${lobFields.length ? renderPrintSection(`${conversionType} Details`, lobFields) : ""}
           ${followUpsHtml}
           
-          ${profile.remarks ? `
+          ${
+            profile.remarks
+              ? `
             <div class="section">
               <h3>Remarks</h3>
               <div class="field" style="background: #fffbeb; border-color: #fef3c7;">
                 <span class="value" style="font-weight: 500; white-space: pre-wrap;">${profile.remarks}</span>
               </div>
             </div>
-          ` : ""}
+          `
+              : ""
+          }
 
           <script>
             window.onload = function() {
@@ -868,13 +1543,16 @@ export default function CustomerProfilingPage() {
       conversionType: conversionType,
       handoffRemark: "",
       step: "remark",
-      error: ""
+      error: "",
     });
   }
 
   async function submitConversion(remark) {
     if (!remark || !remark.trim()) {
-      setConversionModalData(current => ({ ...current, error: "Handoff remark is required to convert the lead." }));
+      setConversionModalData((current) => ({
+        ...current,
+        error: "Handoff remark is required to convert the lead.",
+      }));
       return;
     }
 
@@ -883,23 +1561,26 @@ export default function CustomerProfilingPage() {
         const response = await fetch(`/api/customer-profiles/${selectedExistingId}/convert`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ insuranceType: conversionModalData.conversionType })
+          body: JSON.stringify({ insuranceType: conversionModalData.conversionType }),
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
-          setConversionModalData(current => ({ ...current, error: payload.error || "Conversion could not be started." }));
+          setConversionModalData((current) => ({
+            ...current,
+            error: payload.error || "Conversion could not be started.",
+          }));
           return;
         }
-        setConversionModalData(current => ({
+        setConversionModalData((current) => ({
           ...current,
           handoffRemark: remark.trim(),
           step: "options",
-          error: ""
+          error: "",
         }));
         setAlert({ type: "success", message: "Customer profile converted successfully!" });
         await loadProfiles();
       } catch (err) {
-        setConversionModalData(current => ({ ...current, error: err.message || "An error occurred." }));
+        setConversionModalData((current) => ({ ...current, error: err.message || "An error occurred." }));
       }
     });
   }
@@ -939,22 +1620,43 @@ export default function CustomerProfilingPage() {
             <p>Enter phone number to check whether another agent is already handling this profiling lead.</p>
           </div>
           <div className="profile-table-actions">
-            <button type="button" onClick={newProfile}>New Profile</button>
+            <button type="button" onClick={newProfile}>
+              New Profile
+            </button>
             <Search size={20} />
           </div>
         </div>
         <div className="customer-profile-grid two">
           <Field label="Phone Number" value={form.phone} onChange={(value) => updateField("phone", value)} />
-          <SelectField label="Customer Type" value={form.customerType} options={CUSTOMER_TYPES} onChange={(value) => updateField("customerType", value)} />
+          <SelectField
+            label="Customer Type"
+            value={form.customerType}
+            options={CUSTOMER_TYPES}
+            onChange={(value) => updateField("customerType", value)}
+          />
         </div>
 
         {hasMatches || isClaimedByAnotherUser ? (
           <div className={hasExternalMatches ? "duplicate-warning" : "duplicate-clear"}>
             {hasExternalMatches ? <AlertTriangle size={18} /> : <CheckCircle size={18} />}
             <div>
-              <strong>{isClaimedByAnotherUser ? "This phone number is already claimed in Customer Profiling." : hasExternalMatches ? "This phone number is being handled by another user." : "This phone number has matching records."}</strong>
-              <p>{isClaimedByAnotherUser ? "Another user has already added this lead. You cannot view or add it from this page." : hasExternalMatches ? "Check the existing lead before creating another follow-up." : "Select an existing profile or policy customer to create a lead."}</p>
-              {!isClaimedByAnotherUser && hasExternalMatches && assignedNames[0] ? <p>Existing follow-up is being handled by {assignedNames[0]}.</p> : null}
+              <strong>
+                {isClaimedByAnotherUser
+                  ? "This phone number is already claimed in Customer Profiling."
+                  : hasExternalMatches
+                    ? "This phone number is being handled by another user."
+                    : "This phone number has matching records."}
+              </strong>
+              <p>
+                {isClaimedByAnotherUser
+                  ? "Another user has already added this lead. You cannot view or add it from this page."
+                  : hasExternalMatches
+                    ? "Check the existing lead before creating another follow-up."
+                    : "Select an existing profile or policy customer to create a lead."}
+              </p>
+              {!isClaimedByAnotherUser && hasExternalMatches && assignedNames[0] ? (
+                <p>Existing follow-up is being handled by {assignedNames[0]}.</p>
+              ) : null}
             </div>
           </div>
         ) : isValidProfilePhone ? (
@@ -987,63 +1689,121 @@ export default function CustomerProfilingPage() {
           </div>
           <>
             <div className="customer-profile-filters">
-                <input value={filters.q} placeholder="Search name or phone" onChange={(event) => updateFilter("q", event.target.value)} />
-                <select value={filters.status} onChange={(event) => updateFilter("status", event.target.value)}>
-                  <option value="">All Statuses</option>
-                  {PROFILE_STATUS.map((status) => <option key={status} value={status}>{status}</option>)}
-                </select>
-                <select value={filters.assignedTo} onChange={(event) => updateFilter("assignedTo", event.target.value)}>
-                  <option value="">All Assigned To</option>
-                  {filterOptions.assignedTo.map((name) => <option key={name} value={name}>{name}</option>)}
-                </select>
-                <select value={filters.lob} onChange={(event) => updateFilter("lob", event.target.value)}>
-                  <option value="">All LOBs</option>
-                  {[...new Set([...LOB_OPTIONS, ...(filterOptions.lobs || [])])].map((lob) => <option key={lob} value={lob}>{lob}</option>)}
-                </select>
-                <input type="date" value={filters.followUpDate} onChange={(event) => updateFilter("followUpDate", event.target.value)} />
-              </div>
-              <ProfileListingTable
-                profiles={profiles}
-                onEdit={(profile) => router.push(`/dashboard/manual-entry/customer-profiling/${profile.id}`)}
+              <input
+                value={filters.q}
+                placeholder="Search name or phone"
+                onChange={(event) => updateFilter("q", event.target.value)}
               />
+              <select value={filters.status} onChange={(event) => updateFilter("status", event.target.value)}>
+                <option value="">All Statuses</option>
+                {PROFILE_STATUS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filters.assignedTo}
+                onChange={(event) => updateFilter("assignedTo", event.target.value)}
+              >
+                <option value="">All Assigned To</option>
+                {filterOptions.assignedTo.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <select value={filters.lob} onChange={(event) => updateFilter("lob", event.target.value)}>
+                <option value="">All LOBs</option>
+                {[...new Set([...LOB_OPTIONS, ...(filterOptions.lobs || [])])].map((lob) => (
+                  <option key={lob} value={lob}>
+                    {lob}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="date"
+                value={filters.followUpDate}
+                onChange={(event) => updateFilter("followUpDate", event.target.value)}
+              />
+            </div>
+            <ProfileListingTable
+              profiles={profiles}
+              onEdit={(profile) => router.push(`/dashboard/manual-entry/customer-profiling/${profile.id}`)}
+            />
 
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="table-pagination" style={{ marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "14px", color: "var(--text-secondary, #64748b)" }}>Showing page {page} of {totalPages} ({totalCount} profiles found)</span>
-                  <div className="table-page-list" style={{ display: "flex", gap: "6px" }}>
-                    <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", cursor: page === 1 ? "not-allowed" : "pointer" }}>
-                      Prev
-                    </button>
-                    {getPageNumbers(page, totalPages).map((pNum, index) => (
-                      pNum === "..." ? (
-                        <span key={`ellipsis-${index}`} style={{ padding: "0 8px", color: "var(--text-secondary, #64748b)" }}>...</span>
-                      ) : (
-                        <button
-                          key={pNum}
-                          type="button"
-                          className={page === pNum ? "active" : ""}
-                          onClick={() => setPage(pNum)}
-                          style={{
-                            padding: "6px 12px",
-                            borderRadius: "6px",
-                            border: "1px solid var(--border, #cbd5e1)",
-                            background: page === pNum ? "var(--primary, #1e3a8a)" : "#ffffff",
-                            color: page === pNum ? "#ffffff" : "var(--text-primary, #0f172a)",
-                            cursor: "pointer",
-                            fontWeight: page === pNum ? "bold" : "normal"
-                          }}
-                        >
-                          {pNum}
-                        </button>
-                      )
-                    ))}
-                    <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", cursor: page === totalPages ? "not-allowed" : "pointer" }}>
-                      Next
-                    </button>
-                  </div>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div
+                className="table-pagination"
+                style={{
+                  marginTop: "20px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span style={{ fontSize: "14px", color: "var(--text-secondary, #64748b)" }}>
+                  Showing page {page} of {totalPages} ({totalCount} profiles found)
+                </span>
+                <div className="table-page-list" style={{ display: "flex", gap: "6px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid var(--border, #cbd5e1)",
+                      cursor: page === 1 ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    Prev
+                  </button>
+                  {getPageNumbers(page, totalPages).map((pNum, index) =>
+                    pNum === "..." ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        style={{ padding: "0 8px", color: "var(--text-secondary, #64748b)" }}
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={pNum}
+                        type="button"
+                        className={page === pNum ? "active" : ""}
+                        onClick={() => setPage(pNum)}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          border: "1px solid var(--border, #cbd5e1)",
+                          background: page === pNum ? "var(--primary, #1e3a8a)" : "#ffffff",
+                          color: page === pNum ? "#ffffff" : "var(--text-primary, #0f172a)",
+                          cursor: "pointer",
+                          fontWeight: page === pNum ? "bold" : "normal",
+                        }}
+                      >
+                        {pNum}
+                      </button>
+                    ),
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid var(--border, #cbd5e1)",
+                      cursor: page === totalPages ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    Next
+                  </button>
                 </div>
-              )}
+              </div>
+            )}
           </>
         </section>
 
@@ -1069,18 +1829,66 @@ export default function CustomerProfilingPage() {
                 ) : null}
 
                 <div className="customer-profile-grid">
-                  <Field label="Customer Name" value={form.name} onChange={(value) => updateField("name", value)} />
-                  <Field label="Alternate Phone Number" value={form.alternatePhone} onChange={(value) => updateField("alternatePhone", value)} />
+                  <Field
+                    label="Customer Name"
+                    value={form.name}
+                    onChange={(value) => updateField("name", value)}
+                  />
+                  <Field
+                    label="Alternate Phone Number"
+                    value={form.alternatePhone}
+                    onChange={(value) => updateField("alternatePhone", value)}
+                  />
                   <Field label="Email" value={form.email} onChange={(value) => updateField("email", value)} />
-                  <SelectField label="State" value={form.state} options={STATE_OPTIONS} onChange={updateState} />
-                  <SelectField label="City" value={form.city} options={cityOptions} onChange={(value) => updateField("city", value)} />
-                  <Field label="Occupation / Business Type" value={form.occupation} onChange={(value) => updateField("occupation", value)} />
-                  <Field label="Business Type" value={form.businessType} onChange={(value) => updateField("businessType", value)} />
-                  <Field label="Contact Person Name" value={form.contactPersonName} onChange={(value) => updateField("contactPersonName", value)} />
-                  <Field label="Reference Source" value={form.referenceSource} onChange={(value) => updateField("referenceSource", value)} />
-                  <Field label="Assigned To" value={form.assignedTo} onChange={(value) => updateField("assignedTo", value)} />
-                  <Field label="Address" wide value={form.address} onChange={(value) => updateField("address", value)} />
-                  <Field label="Remark" wide value={form.remarks} onChange={(value) => updateField("remarks", value)} />
+                  <SelectField
+                    label="State"
+                    value={form.state}
+                    options={STATE_OPTIONS}
+                    onChange={updateState}
+                  />
+                  <SelectField
+                    label="City"
+                    value={form.city}
+                    options={cityOptions}
+                    onChange={(value) => updateField("city", value)}
+                  />
+                  <Field
+                    label="Occupation / Business Type"
+                    value={form.occupation}
+                    onChange={(value) => updateField("occupation", value)}
+                  />
+                  <Field
+                    label="Business Type"
+                    value={form.businessType}
+                    onChange={(value) => updateField("businessType", value)}
+                  />
+                  <Field
+                    label="Contact Person Name"
+                    value={form.contactPersonName}
+                    onChange={(value) => updateField("contactPersonName", value)}
+                  />
+                  <Field
+                    label="Reference Source"
+                    value={form.referenceSource}
+                    onChange={(value) => updateField("referenceSource", value)}
+                  />
+                  <Field
+                    label="Assigned To"
+                    value={form.assignedTo}
+                    onChange={(value) => updateField("assignedTo", value)}
+                  />
+                  <Field
+                    label="Address"
+                    wide
+                    value={form.address}
+                    onChange={(value) => updateField("address", value)}
+                  />
+                  <Field
+                    label="Remark"
+                    wide
+                    value={form.remarks}
+                    onChange={(value) => updateField("remarks", value)}
+                  />
                 </div>
               </section>
               <section className="customer-profile-actions">
@@ -1095,14 +1903,30 @@ export default function CustomerProfilingPage() {
                 <div className="customer-profile-section-head">
                   <div>
                     <h2>Customer Details</h2>
-                    <p>{[form.phone, form.assignedTo].filter(Boolean).join(" / ") || "Selected customer details."}</p>
+                    <p>
+                      {[form.phone, form.assignedTo].filter(Boolean).join(" / ") ||
+                        "Selected customer details."}
+                    </p>
                   </div>
                 </div>
                 <div className="customer-profile-grid">
-                  <Field label="Customer Name" value={form.name} onChange={(value) => updateField("name", value)} />
+                  <Field
+                    label="Customer Name"
+                    value={form.name}
+                    onChange={(value) => updateField("name", value)}
+                  />
                   <Field label="Phone" value={form.phone} onChange={(value) => updateField("phone", value)} />
-                  <Field label="Assigned To" value={form.assignedTo} onChange={(value) => updateField("assignedTo", value)} />
-                  <Field label="Remark" wide value={form.remarks} onChange={(value) => updateField("remarks", value)} />
+                  <Field
+                    label="Assigned To"
+                    value={form.assignedTo}
+                    onChange={(value) => updateField("assignedTo", value)}
+                  />
+                  <Field
+                    label="Remark"
+                    wide
+                    value={form.remarks}
+                    onChange={(value) => updateField("remarks", value)}
+                  />
                 </div>
               </section>
 
@@ -1116,7 +1940,11 @@ export default function CustomerProfilingPage() {
                 <div className="lob-checklist">
                   {LOB_OPTIONS.map((lob) => (
                     <label key={lob}>
-                      <input type="checkbox" checked={form.selectedLOBs.includes(lob)} onChange={() => toggleLob(lob)} />
+                      <input
+                        type="checkbox"
+                        checked={form.selectedLOBs.includes(lob)}
+                        onChange={() => toggleLob(lob)}
+                      />
                       <span>{lob}</span>
                     </label>
                   ))}
@@ -1140,17 +1968,31 @@ export default function CustomerProfilingPage() {
                 ))}
 
                 <div className="customer-profile-grid">
-                  <Field label="Policy Interest Remark" wide value={form.followUpRemark} onChange={(value) => updateField("followUpRemark", value)} />
+                  <Field
+                    label="Policy Interest Remark"
+                    wide
+                    value={form.followUpRemark}
+                    onChange={(value) => updateField("followUpRemark", value)}
+                  />
                 </div>
                 <div className="customer-profile-actions inline-actions">
-                  <button type="button" onClick={submitProfile} disabled={isPending}>Save Interest Details</button>
+                  <button type="button" onClick={submitProfile} disabled={isPending}>
+                    Save Interest Details
+                  </button>
                   <select value={convertType} onChange={(event) => setConvertType(event.target.value)}>
                     <option value="">Select converted policy type</option>
                     {form.selectedLOBs.map((lob) => (
-                      <option key={lob} value={lob}>{lob}</option>
+                      <option key={lob} value={lob}>
+                        {lob}
+                      </option>
                     ))}
                   </select>
-                  <button className="secondary-action" type="button" onClick={convertProfile} disabled={isPending}>
+                  <button
+                    className="secondary-action"
+                    type="button"
+                    onClick={convertProfile}
+                    disabled={isPending}
+                  >
                     Convert Lead
                   </button>
                 </div>
@@ -1160,334 +2002,408 @@ export default function CustomerProfilingPage() {
         </aside>
       </div>
 
-      {typeof window !== "undefined" && conversionModalData && createPortal(
-        <div
-          className="tb-modal-backdrop"
-          onClick={() => setConversionModalData(null)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(15, 23, 42, 0.25)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            zIndex: 2000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "24px"
-          }}
-        >
+      {typeof window !== "undefined" &&
+        conversionModalData &&
+        createPortal(
           <div
-            className="tb-modal-card"
-            onClick={(e) => e.stopPropagation()}
+            className="tb-modal-backdrop"
+            onClick={() => setConversionModalData(null)}
             style={{
-              background: "#ffffff",
-              borderRadius: "24px",
-              boxShadow: "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
-              width: "100%",
-              maxWidth: "600px",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(15, 23, 42, 0.25)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              zIndex: 2000,
               display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              border: "none",
-              animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both"
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "24px",
             }}
           >
-            {conversionModalData.step === "remark" ? (
-              <>
-                {/* Step 1: Collect Handoff Remark */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "20px 24px",
-                    borderBottom: "1px solid #f1f5f9"
-                  }}
-                >
-                  <div>
-                    <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "var(--primary)" }}>Lead Conversion</span>
-                    <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "850", color: "#0f172a" }}>
-                      Enter Handoff Instructions
-                    </h2>
-                  </div>
-                  <button
-                    onClick={() => setConversionModalData(null)}
-                    aria-label="Close"
+            <div
+              className="tb-modal-card"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#ffffff",
+                borderRadius: "24px",
+                boxShadow:
+                  "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
+                width: "100%",
+                maxWidth: "600px",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                border: "none",
+                animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both",
+              }}
+            >
+              {conversionModalData.step === "remark" ? (
+                <>
+                  {/* Step 1: Collect Handoff Remark */}
+                  <div
                     style={{
-                      background: "rgba(15, 23, 42, 0.05)",
-                      border: "none",
-                      color: "#64748b",
-                      cursor: "pointer",
                       display: "flex",
+                      justifyContent: "space-between",
                       alignItems: "center",
-                      justifyContent: "center",
-                      width: "36px",
-                      height: "36px",
-                      borderRadius: "50%",
-                      transition: "background-color 0.2s"
+                      padding: "20px 24px",
+                      borderBottom: "1px solid #f1f5f9",
                     }}
                   >
-                    <X size={20} />
-                  </button>
-                </div>
-
-                <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                  <p style={{ margin: 0, fontSize: "14px", color: "#475569", lineHeight: "1.5" }}>
-                    Please enter the handoff remark or instructions for the relevant team who will be handling this converted lead.
-                  </p>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Handoff Remark / Instructions (Required)</span>
-                    <textarea
-                      placeholder="Type the remark for the team here..."
-                      value={conversionModalData.handoffRemark || ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setConversionModalData(current => ({ ...current, handoffRemark: val, error: "" }));
-                      }}
-                      style={{
-                        width: "100%",
-                        height: "120px",
-                        padding: "12px",
-                        borderRadius: "8px",
-                        border: "1px solid #e2e8f0",
-                        background: "#ffffff",
-                        fontSize: "14px",
-                        color: "#334155",
-                        resize: "none"
-                      }}
-                    />
-                  </div>
-
-                  {conversionModalData.error ? (
-                    <div style={{ color: "#ef4444", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
-                      <AlertTriangle size={16} />
-                      <span>{conversionModalData.error}</span>
+                    <div>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          textTransform: "uppercase",
+                          letterSpacing: "1px",
+                          color: "var(--primary)",
+                        }}
+                      >
+                        Lead Conversion
+                      </span>
+                      <h2
+                        style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "850", color: "#0f172a" }}
+                      >
+                        Enter Handoff Instructions
+                      </h2>
                     </div>
-                  ) : null}
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                    padding: "16px 24px",
-                    borderTop: "1px solid #f1f5f9",
-                    gap: "12px"
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setConversionModalData(null)}
-                    style={{
-                      padding: "10px 20px",
-                      borderRadius: "12px",
-                      border: "1px solid #cbd5e1",
-                      backgroundColor: "#ffffff",
-                      color: "#475569",
-                      fontWeight: "600",
-                      cursor: "pointer"
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => submitConversion(conversionModalData.handoffRemark)}
-                    disabled={isPending}
-                    style={{
-                      padding: "10px 20px",
-                      borderRadius: "12px",
-                      border: "none",
-                      backgroundColor: "var(--primary)",
-                      color: "#ffffff",
-                      fontWeight: "600",
-                      cursor: "pointer"
-                    }}
-                  >
-                    {isPending ? "Converting..." : "Convert Lead"}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Step 2: Converted options */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "20px 24px",
-                    borderBottom: "1px solid #f1f5f9"
-                  }}
-                >
-                  <div>
-                    <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "var(--primary)" }}>Lead Converted</span>
-                    <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "850", color: "#0f172a" }}>
-                      Team Handoff Options
-                    </h2>
-                  </div>
-                  <button
-                    onClick={() => setConversionModalData(null)}
-                    aria-label="Close"
-                    style={{
-                      background: "rgba(15, 23, 42, 0.05)",
-                      border: "none",
-                      color: "#64748b",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: "36px",
-                      height: "36px",
-                      borderRadius: "50%",
-                      transition: "background-color 0.2s"
-                    }}
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-
-                {/* Modal Body */}
-                <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                  <p style={{ margin: 0, fontSize: "14px", color: "#475569", lineHeight: "1.5" }}>
-                    This lead has been successfully marked as <strong>Converted</strong>. You can now format a message for WhatsApp / team share, or print a summary for handoff.
-                  </p>
-
-                  {/* Message Preview Textarea */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Message Summary Preview</span>
-                    <textarea
-                      readOnly
-                      value={generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark)}
+                    <button
+                      onClick={() => setConversionModalData(null)}
+                      aria-label="Close"
                       style={{
-                        width: "100%",
-                        height: "180px",
-                        padding: "12px",
-                        borderRadius: "8px",
-                        border: "1px solid #e2e8f0",
-                        background: "#f8fafc",
-                        fontFamily: "monospace",
-                        fontSize: "12px",
-                        color: "#334155",
-                        resize: "none"
+                        background: "rgba(15, 23, 42, 0.05)",
+                        border: "none",
+                        color: "#64748b",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        transition: "background-color 0.2s",
                       }}
-                    />
+                    >
+                      <X size={20} />
+                    </button>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <p style={{ margin: 0, fontSize: "14px", color: "#475569", lineHeight: "1.5" }}>
+                      Please enter the handoff remark or instructions for the relevant team who will be
+                      handling this converted lead.
+                    </p>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>
+                        Handoff Remark / Instructions (Required)
+                      </span>
+                      <textarea
+                        placeholder="Type the remark for the team here..."
+                        value={conversionModalData.handoffRemark || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setConversionModalData((current) => ({
+                            ...current,
+                            handoffRemark: val,
+                            error: "",
+                          }));
+                        }}
+                        style={{
+                          width: "100%",
+                          height: "120px",
+                          padding: "12px",
+                          borderRadius: "8px",
+                          border: "1px solid #e2e8f0",
+                          background: "#ffffff",
+                          fontSize: "14px",
+                          color: "#334155",
+                          resize: "none",
+                        }}
+                      />
+                    </div>
+
+                    {conversionModalData.error ? (
+                      <div
+                        style={{
+                          color: "#ef4444",
+                          fontSize: "13px",
+                          fontWeight: "600",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <AlertTriangle size={16} />
+                        <span>{conversionModalData.error}</span>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      padding: "16px 24px",
+                      borderTop: "1px solid #f1f5f9",
+                      gap: "12px",
+                    }}
+                  >
                     <button
                       type="button"
-                      onClick={() => {
-                        const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark);
-                        if (typeof window !== "undefined" && window.navigator && window.navigator.clipboard) {
-                          window.navigator.clipboard.writeText(text);
-                          alert("Message summary copied to clipboard!");
-                        } else {
-                          alert("Clipboard copy not supported in this browser. Please copy the preview manually.");
-                        }
-                      }}
+                      onClick={() => setConversionModalData(null)}
                       style={{
-                        padding: "12px",
+                        padding: "10px 20px",
                         borderRadius: "12px",
                         border: "1px solid #cbd5e1",
                         backgroundColor: "#ffffff",
-                        color: "#0f172a",
+                        color: "#475569",
                         fontWeight: "600",
                         cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px"
                       }}
                     >
-                      Copy Message
+                      Cancel
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        const text = generateMessageText(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark);
-                        const whatsappPhone = formatPhoneForWhatsapp(conversionModalData.profile?.phone);
-                        if (whatsappPhone) {
-                          window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`, "_blank");
-                        } else {
-                          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-                        }
-                      }}
+                      onClick={() => submitConversion(conversionModalData.handoffRemark)}
+                      disabled={isPending}
                       style={{
-                        padding: "12px",
+                        padding: "10px 20px",
                         borderRadius: "12px",
                         border: "none",
-                        backgroundColor: "#25D366",
+                        backgroundColor: "var(--primary)",
                         color: "#ffffff",
                         fontWeight: "600",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {isPending ? "Converting..." : "Convert Lead"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Step 2: Converted options */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "20px 24px",
+                      borderBottom: "1px solid #f1f5f9",
+                    }}
+                  >
+                    <div>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          textTransform: "uppercase",
+                          letterSpacing: "1px",
+                          color: "var(--primary)",
+                        }}
+                      >
+                        Lead Converted
+                      </span>
+                      <h2
+                        style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "850", color: "#0f172a" }}
+                      >
+                        Team Handoff Options
+                      </h2>
+                    </div>
+                    <button
+                      onClick={() => setConversionModalData(null)}
+                      aria-label="Close"
+                      style={{
+                        background: "rgba(15, 23, 42, 0.05)",
+                        border: "none",
+                        color: "#64748b",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        gap: "8px"
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        transition: "background-color 0.2s",
                       }}
                     >
-                      Send on WhatsApp
+                      <X size={20} />
                     </button>
                   </div>
-                </div>
 
-                {/* Modal Footer */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "16px 24px",
-                    borderTop: "1px solid #f1f5f9"
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => handlePrintProfile(conversionModalData.profile, conversionModalData.conversionType, conversionModalData.handoffRemark)}
+                  {/* Modal Body */}
+                  <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                    <p style={{ margin: 0, fontSize: "14px", color: "#475569", lineHeight: "1.5" }}>
+                      This lead has been successfully marked as <strong>Converted</strong>. You can now format
+                      a message for WhatsApp / team share, or print a summary for handoff.
+                    </p>
+
+                    {/* Message Preview Textarea */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>
+                        Message Summary Preview
+                      </span>
+                      <textarea
+                        readOnly
+                        value={generateMessageText(
+                          conversionModalData.profile,
+                          conversionModalData.conversionType,
+                          conversionModalData.handoffRemark,
+                        )}
+                        style={{
+                          width: "100%",
+                          height: "180px",
+                          padding: "12px",
+                          borderRadius: "8px",
+                          border: "1px solid #e2e8f0",
+                          background: "#f8fafc",
+                          fontFamily: "monospace",
+                          fontSize: "12px",
+                          color: "#334155",
+                          resize: "none",
+                        }}
+                      />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const text = generateMessageText(
+                            conversionModalData.profile,
+                            conversionModalData.conversionType,
+                            conversionModalData.handoffRemark,
+                          );
+                          if (
+                            typeof window !== "undefined" &&
+                            window.navigator &&
+                            window.navigator.clipboard
+                          ) {
+                            window.navigator.clipboard.writeText(text);
+                            alert("Message summary copied to clipboard!");
+                          } else {
+                            alert(
+                              "Clipboard copy not supported in this browser. Please copy the preview manually.",
+                            );
+                          }
+                        }}
+                        style={{
+                          padding: "12px",
+                          borderRadius: "12px",
+                          border: "1px solid #cbd5e1",
+                          backgroundColor: "#ffffff",
+                          color: "#0f172a",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        Copy Message
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const text = generateMessageText(
+                            conversionModalData.profile,
+                            conversionModalData.conversionType,
+                            conversionModalData.handoffRemark,
+                          );
+                          const whatsappPhone = formatPhoneForWhatsapp(conversionModalData.profile?.phone);
+                          if (whatsappPhone) {
+                            window.open(
+                              `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`,
+                              "_blank",
+                            );
+                          } else {
+                            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                          }
+                        }}
+                        style={{
+                          padding: "12px",
+                          borderRadius: "12px",
+                          border: "none",
+                          backgroundColor: "#25D366",
+                          color: "#ffffff",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        Send on WhatsApp
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div
                     style={{
-                      padding: "10px 20px",
-                      borderRadius: "12px",
-                      border: "1px solid var(--primary)",
-                      backgroundColor: "#ffffff",
-                      color: "var(--primary)",
-                      fontWeight: "600",
-                      cursor: "pointer",
                       display: "flex",
+                      justifyContent: "space-between",
                       alignItems: "center",
-                      gap: "8px"
+                      padding: "16px 24px",
+                      borderTop: "1px solid #f1f5f9",
                     }}
                   >
-                    Print Summary
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConversionModalData(null)}
-                    style={{
-                      padding: "10px 20px",
-                      borderRadius: "12px",
-                      border: "none",
-                      backgroundColor: "var(--primary)",
-                      color: "#ffffff",
-                      fontWeight: "600",
-                      cursor: "pointer"
-                    }}
-                  >
-                    Done
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      , document.body)}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handlePrintProfile(
+                          conversionModalData.profile,
+                          conversionModalData.conversionType,
+                          conversionModalData.handoffRemark,
+                        )
+                      }
+                      style={{
+                        padding: "10px 20px",
+                        borderRadius: "12px",
+                        border: "1px solid var(--primary)",
+                        backgroundColor: "#ffffff",
+                        color: "var(--primary)",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      Print Summary
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConversionModalData(null)}
+                      style={{
+                        padding: "10px 20px",
+                        borderRadius: "12px",
+                        border: "none",
+                        backgroundColor: "var(--primary)",
+                        color: "#ffffff",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Done
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -1519,25 +2435,31 @@ function ProfileListingTable({ profiles, onEdit }) {
           </tr>
         </thead>
         <tbody>
-          {profiles.length ? profiles.map((profile) => (
-            <tr key={profile.id}>
-              <td>{profile.name || "-"}</td>
-              <td>{profile.phone || "-"}</td>
-              <td>{profile.customerType || "-"}</td>
-              <td>{(profile.selectedLOBs || []).join(", ") || "-"}</td>
-              <td>{profile.status || "-"}</td>
-              <td>{profile.assignedTo || "-"}</td>
-              <td>{formatDate(profile.nextFollowUpDate || profile.followUpDate)}</td>
-              <td>{profile.convertedToCustomer ? "Yes" : "No"}</td>
-              <td>
-                <div className="profile-table-actions">
-                  <button type="button" onClick={() => onEdit(profile)}>View More</button>
-                </div>
-              </td>
-            </tr>
-          )) : (
+          {profiles.length ? (
+            profiles.map((profile) => (
+              <tr key={profile.id}>
+                <td>{profile.name || "-"}</td>
+                <td>{profile.phone || "-"}</td>
+                <td>{profile.customerType || "-"}</td>
+                <td>{(profile.selectedLOBs || []).join(", ") || "-"}</td>
+                <td>{profile.status || "-"}</td>
+                <td>{profile.assignedTo || "-"}</td>
+                <td>{formatDate(profile.nextFollowUpDate || profile.followUpDate)}</td>
+                <td>{profile.convertedToCustomer ? "Yes" : "No"}</td>
+                <td>
+                  <div className="profile-table-actions">
+                    <button type="button" onClick={() => onEdit(profile)}>
+                      View More
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          ) : (
             <tr>
-              <td colSpan={9} className="empty">No customer profiles found.</td>
+              <td colSpan={9} className="empty">
+                No customer profiles found.
+              </td>
             </tr>
           )}
         </tbody>
@@ -1559,14 +2481,16 @@ function formatDateTime(value) {
   if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleString("en-IN", {
     dateStyle: "medium",
-    timeStyle: "short"
+    timeStyle: "short",
   });
 }
 
 function canCurrentUserHandleProfile(profile, user) {
   if (!user) return false;
   const userTokens = [user.name, user.email].filter(Boolean).map((value) => value.toLowerCase());
-  const ownerTokens = [profile.assignedTo, profile.createdBy].filter(Boolean).map((value) => value.toLowerCase());
+  const ownerTokens = [profile.assignedTo, profile.createdBy]
+    .filter(Boolean)
+    .map((value) => value.toLowerCase());
   return ownerTokens.some((owner) => userTokens.includes(owner));
 }
 
@@ -1594,7 +2518,11 @@ function ExistingCustomerTable({ profiles, policyMatches, onSelectProfile, onSel
               <td>{(profile.selectedLOBs || []).join(", ") || "-"}</td>
               <td>{profile.assignedTo || profile.createdBy || "-"}</td>
               <td>{profile.remarks || "-"}</td>
-              <td><button type="button" onClick={() => onSelectProfile(profile)}>Use Lead</button></td>
+              <td>
+                <button type="button" onClick={() => onSelectProfile(profile)}>
+                  Use Lead
+                </button>
+              </td>
             </tr>
           ))}
           {policyMatches.map((record) => (
@@ -1605,7 +2533,11 @@ function ExistingCustomerTable({ profiles, policyMatches, onSelectProfile, onSel
               <td>{[record.policyType, record.insuranceCompany].filter(Boolean).join(" / ") || "-"}</td>
               <td>{record.assignedTo || "-"}</td>
               <td>{record.remarks || record.policyNumber || "-"}</td>
-              <td><button type="button" onClick={() => onSelectPolicy(record)}>Select Lead</button></td>
+              <td>
+                <button type="button" onClick={() => onSelectPolicy(record)}>
+                  Select Lead
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -1622,7 +2554,8 @@ function inferLobFromPolicyType(policyType = "") {
     return keyword && normalized.includes(keyword);
   });
   if (match) return match;
-  if (normalized.includes("vehicle") || normalized.includes("car") || normalized.includes("bike")) return "Motor Insurance";
+  if (normalized.includes("vehicle") || normalized.includes("car") || normalized.includes("bike"))
+    return "Motor Insurance";
   if (normalized.includes("medical") || normalized.includes("mediclaim")) return "Health Insurance";
   if (normalized.includes("shop") || normalized.includes("office")) return "Shop / Office Insurance";
   return "Other";
@@ -1649,7 +2582,9 @@ function SelectField({ label, value, options, onChange }) {
       <span>{label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)}>
         {options.map((option) => (
-          <option key={option} value={option}>{option}</option>
+          <option key={option} value={option}>
+            {option}
+          </option>
         ))}
       </select>
     </label>

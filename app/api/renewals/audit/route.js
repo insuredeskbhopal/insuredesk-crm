@@ -16,7 +16,10 @@ export async function GET(request) {
       return Response.json({ error: "Invalid session" }, { status: 401 });
     }
     if (!["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(user.role)) {
-      return Response.json({ error: "Audit logs are restricted to managers and administrators." }, { status: 403 });
+      return Response.json(
+        { error: "Audit logs are restricted to managers and administrators." },
+        { status: 403 },
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -32,8 +35,8 @@ export async function GET(request) {
     const policy = await prisma.policyRecord.findFirst({
       where: {
         id: policyId,
-        ...tenantFilter
-      }
+        ...tenantFilter,
+      },
     });
 
     if (!policy) {
@@ -44,19 +47,19 @@ export async function GET(request) {
     const dbLogs = await prisma.auditLog.findMany({
       where: {
         entityId: policyId,
-        entityType: "PolicyRecord"
+        entityType: "PolicyRecord",
       },
       orderBy: {
-        createdAt: "desc"
+        createdAt: "desc",
       },
       include: {
         user: {
           select: {
             name: true,
-            email: true
-          }
-        }
-      }
+            email: true,
+          },
+        },
+      },
     });
 
     // Format logs into changes list
@@ -66,7 +69,7 @@ export async function GET(request) {
       const userName = log.user?.name || log.user?.email || "System/User";
       const timestamp = log.createdAt.toISOString();
       const metadata = log.metadata || {};
-      
+
       let actionLabel = log.action;
       let changes = [];
 
@@ -82,8 +85,8 @@ export async function GET(request) {
             {
               field: "Assigned User",
               oldValue: "Previous Agent",
-              newValue: metadata.assignedTo || "Unassigned"
-            }
+              newValue: metadata.assignedTo || "Unassigned",
+            },
           ];
           break;
 
@@ -93,8 +96,8 @@ export async function GET(request) {
             {
               field: "Renewal Status",
               oldValue: metadata.oldStatus || "Active",
-              newValue: metadata.newStatus || "Active"
-            }
+              newValue: metadata.newStatus || "Active",
+            },
           ];
           break;
 
@@ -104,14 +107,14 @@ export async function GET(request) {
             {
               field: "Remark",
               oldValue: "N/A",
-              newValue: metadata.remark || "New follow-up remark added"
-            }
+              newValue: metadata.remark || "New follow-up remark added",
+            },
           ];
           if (metadata.nextFollowUpDate) {
             changes.push({
               field: "Next Follow-Up",
               oldValue: "N/A",
-              newValue: metadata.nextFollowUpDate
+              newValue: metadata.nextFollowUpDate,
             });
           }
           break;
@@ -122,8 +125,8 @@ export async function GET(request) {
             {
               field: "Renewal Status",
               oldValue: "Active",
-              newValue: "Renewed"
-            }
+              newValue: "Renewed",
+            },
           ];
           break;
 
@@ -133,14 +136,14 @@ export async function GET(request) {
             {
               field: "Renewal Status",
               oldValue: "Active",
-              newValue: `Lost / Not Interested (${metadata.lostReason || "No Reason Specified"})`
-            }
+              newValue: `Lost / Not Interested (${metadata.lostReason || "No Reason Specified"})`,
+            },
           ];
           if (metadata.remarks) {
             changes.push({
               field: "Lost Notes",
               oldValue: "N/A",
-              newValue: metadata.remarks
+              newValue: metadata.remarks,
             });
           }
           break;
@@ -151,8 +154,8 @@ export async function GET(request) {
             {
               field: "WhatsApp Message",
               oldValue: "N/A",
-              newValue: `Opened chat for ${metadata.contactNumber || "customer"}`
-            }
+              newValue: `Opened chat for ${metadata.contactNumber || "customer"}`,
+            },
           ];
           break;
 
@@ -162,8 +165,8 @@ export async function GET(request) {
             {
               field: "File Metadata",
               oldValue: "N/A",
-              newValue: metadata.sourceFile || "Policy updated"
-            }
+              newValue: metadata.sourceFile || "Policy updated",
+            },
           ];
           break;
 
@@ -174,8 +177,8 @@ export async function GET(request) {
             {
               field: "Action Details",
               oldValue: "N/A",
-              newValue: JSON.stringify(metadata)
-            }
+              newValue: JSON.stringify(metadata),
+            },
           ];
       }
 
@@ -184,7 +187,7 @@ export async function GET(request) {
         action: actionLabel,
         userName,
         timestamp,
-        changes
+        changes,
       });
     }
 

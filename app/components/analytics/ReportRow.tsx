@@ -7,4 +7,3 @@ export default function ReportRow({ item, onClick }) {
     </button>
   );
 }
-

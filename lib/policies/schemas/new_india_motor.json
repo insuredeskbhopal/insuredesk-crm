@@ -10,48 +10,281 @@
     "premium_details",
     "idv_details"
   ],
-  "expectedTables": [
-    "vehicle_details_table",
-    "premium_table",
-    "idv_table"
-  ],
+  "expectedTables": ["vehicle_details_table", "premium_table", "idv_table"],
   "fields": [
-    { "field": "insuranceCompany", "aliases": ["THE NEW INDIA ASSURANCE CO. LTD.", "The New India Assurance Company Limited", "New India Assurance"], "section": "policy_details", "type": "string", "required": true },
-    { "field": "policyNumber", "aliases": ["Policy No.", "Policy Number", "Policy Number :", "POLICY NO."], "section": "policy_details", "type": "string", "required": true },
-    { "field": "policyType", "aliases": ["Two Wheeler Liability Only Policy", "Private Car Liability Policy", "Commercial Vehicle Liability Only Policy", "Commercial Vehicle Package Policy", "Commercial Vehicle Package Policy Enhanced Covers", "Private Car Package Policy", "Private Car Package Policy - Enhanced Covers", "Two Wheeler Package Policy", "Standalone Motor Own Damage Policy for Two Wheelers - Enhanced Covers", "Two Wheeler Enhancement Cover Policy"], "section": "policy_details", "type": "string", "required": true },
-    { "field": "insuredName", "aliases": ["Insured Name", "Insured's Name", "Name of Insured"], "section": "insured_details", "type": "string", "required": true },
-    { "field": "customerId", "aliases": ["Customer ID"], "section": "insured_details", "type": "string", "required": false },
-    { "field": "insuredAddress", "aliases": ["Insured Address", "Insured's Address"], "section": "insured_details", "type": "string", "required": false },
-    { "field": "customerMobile", "aliases": ["Contact Number"], "section": "insured_details", "type": "string", "required": false },
-    { "field": "customerEmail", "aliases": ["Email"], "section": "insured_details", "type": "email", "required": false },
-    { "field": "gstin", "aliases": ["GSTIN"], "section": "insured_details", "type": "string", "required": false },
-    { "field": "policyStartDate", "aliases": ["Period of cover", "OD Cover", "TP Cover"], "section": "policy_details", "type": "date", "required": true },
-    { "field": "policyEndDate", "aliases": ["Period of cover", "OD Cover", "TP Cover"], "section": "policy_details", "type": "date", "required": true },
-    { "field": "receiptNumber", "aliases": ["Receipt Number"], "section": "policy_details", "type": "string", "required": false },
-    { "field": "previousInsurer", "aliases": ["Previous Insurer"], "section": "policy_details", "type": "string", "required": false },
-    { "field": "previousPolicyNumber", "aliases": ["Previous Policy Number"], "section": "policy_details", "type": "string", "required": false },
-    { "field": "registrationNumber", "aliases": ["Registration Number", "Registration no.", "Registration No"], "section": "vehicle_details", "type": "registration", "required": false },
-    { "field": "chassisNumber", "aliases": ["Chassis no./Engine Number", "Chassis no./Engine no."], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "engineNumber", "aliases": ["Chassis no./Engine Number", "Chassis no./Engine no.", "Engine Number"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "makeModel", "aliases": ["Make / Model", "Make/Model"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "variant", "aliases": ["Variant"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "manufacturingYear", "aliases": ["Year of manufacture"], "section": "vehicle_details", "type": "year", "required": false },
-    { "field": "fuelType", "aliases": ["Type of Fuel", "Type of fuel"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "bodyType", "aliases": ["Type of body", "Type of body / Type of Fuel"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "cubicCapacity", "aliases": ["Cubic capacity(cc)/Wattage(kW)", "Cubic capacity(cc)"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "seatingCapacity", "aliases": ["Seating capacity including Driver"], "section": "vehicle_details", "type": "number", "required": false },
-    { "field": "grossVehicleWeight", "aliases": ["Gross Vehicle Weight", "Gross Vehicle Weight (GVW)", "GVW"], "section": "vehicle_details", "type": "amount", "required": false },
-    { "field": "commercialVehicleType", "aliases": ["Type of Commercial Vehicles"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "commercialVehicleSubType", "aliases": ["Sub Type"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "rtoLocation", "aliases": ["Name of registration authority"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "financerName", "aliases": ["Name of the Financier"], "section": "vehicle_details", "type": "string", "required": false },
-    { "field": "totalIdv", "aliases": ["INSURED DECLARED VALUE", "Total Value", "For individual covers (OD) in RS"], "section": "idv_details", "type": "amount", "required": false },
-    { "field": "basicOwnDamage", "aliases": ["Basic OD Premium"], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "basicThirdPartyLiability", "aliases": ["Basic TP Premium"], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "netOwnDamagePremium", "aliases": ["Total OD Premium", "Calculated OD Premium"], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "netLiabilityPremium", "aliases": ["Total TP Premium", "Calculated TP Premium"], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "netPremium", "aliases": ["Net Premium in Rs", "Net Premium (Rs)"], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "gstAmount", "aliases": ["GST in Rs", "GST (Rs)"], "section": "premium_details", "type": "amount", "required": false },
-    { "field": "totalPremium", "aliases": ["Total Payable in Rs", "Total Payable (Rs)"], "section": "premium_details", "type": "amount", "required": false }
+    {
+      "field": "insuranceCompany",
+      "aliases": [
+        "THE NEW INDIA ASSURANCE CO. LTD.",
+        "The New India Assurance Company Limited",
+        "New India Assurance"
+      ],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "policyNumber",
+      "aliases": ["Policy No.", "Policy Number", "Policy Number :", "POLICY NO."],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "policyType",
+      "aliases": [
+        "Two Wheeler Liability Only Policy",
+        "Private Car Liability Policy",
+        "Commercial Vehicle Liability Only Policy",
+        "Commercial Vehicle Package Policy",
+        "Commercial Vehicle Package Policy Enhanced Covers",
+        "Private Car Package Policy",
+        "Private Car Package Policy - Enhanced Covers",
+        "Two Wheeler Package Policy",
+        "Standalone Motor Own Damage Policy for Two Wheelers - Enhanced Covers",
+        "Two Wheeler Enhancement Cover Policy"
+      ],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "insuredName",
+      "aliases": ["Insured Name", "Insured's Name", "Name of Insured"],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "customerId",
+      "aliases": ["Customer ID"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "insuredAddress",
+      "aliases": ["Insured Address", "Insured's Address"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "customerMobile",
+      "aliases": ["Contact Number"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "customerEmail",
+      "aliases": ["Email"],
+      "section": "insured_details",
+      "type": "email",
+      "required": false
+    },
+    {
+      "field": "gstin",
+      "aliases": ["GSTIN"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "policyStartDate",
+      "aliases": ["Period of cover", "OD Cover", "TP Cover"],
+      "section": "policy_details",
+      "type": "date",
+      "required": true
+    },
+    {
+      "field": "policyEndDate",
+      "aliases": ["Period of cover", "OD Cover", "TP Cover"],
+      "section": "policy_details",
+      "type": "date",
+      "required": true
+    },
+    {
+      "field": "receiptNumber",
+      "aliases": ["Receipt Number"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "previousInsurer",
+      "aliases": ["Previous Insurer"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "previousPolicyNumber",
+      "aliases": ["Previous Policy Number"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "registrationNumber",
+      "aliases": ["Registration Number", "Registration no.", "Registration No"],
+      "section": "vehicle_details",
+      "type": "registration",
+      "required": false
+    },
+    {
+      "field": "chassisNumber",
+      "aliases": ["Chassis no./Engine Number", "Chassis no./Engine no."],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "engineNumber",
+      "aliases": ["Chassis no./Engine Number", "Chassis no./Engine no.", "Engine Number"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "makeModel",
+      "aliases": ["Make / Model", "Make/Model"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "variant",
+      "aliases": ["Variant"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "manufacturingYear",
+      "aliases": ["Year of manufacture"],
+      "section": "vehicle_details",
+      "type": "year",
+      "required": false
+    },
+    {
+      "field": "fuelType",
+      "aliases": ["Type of Fuel", "Type of fuel"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "bodyType",
+      "aliases": ["Type of body", "Type of body / Type of Fuel"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "cubicCapacity",
+      "aliases": ["Cubic capacity(cc)/Wattage(kW)", "Cubic capacity(cc)"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "seatingCapacity",
+      "aliases": ["Seating capacity including Driver"],
+      "section": "vehicle_details",
+      "type": "number",
+      "required": false
+    },
+    {
+      "field": "grossVehicleWeight",
+      "aliases": ["Gross Vehicle Weight", "Gross Vehicle Weight (GVW)", "GVW"],
+      "section": "vehicle_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "commercialVehicleType",
+      "aliases": ["Type of Commercial Vehicles"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "commercialVehicleSubType",
+      "aliases": ["Sub Type"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "rtoLocation",
+      "aliases": ["Name of registration authority"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "financerName",
+      "aliases": ["Name of the Financier"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "totalIdv",
+      "aliases": ["INSURED DECLARED VALUE", "Total Value", "For individual covers (OD) in RS"],
+      "section": "idv_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "basicOwnDamage",
+      "aliases": ["Basic OD Premium"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "basicThirdPartyLiability",
+      "aliases": ["Basic TP Premium"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "netOwnDamagePremium",
+      "aliases": ["Total OD Premium", "Calculated OD Premium"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "netLiabilityPremium",
+      "aliases": ["Total TP Premium", "Calculated TP Premium"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "netPremium",
+      "aliases": ["Net Premium in Rs", "Net Premium (Rs)"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "gstAmount",
+      "aliases": ["GST in Rs", "GST (Rs)"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "totalPremium",
+      "aliases": ["Total Payable in Rs", "Total Payable (Rs)"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    }
   ]
 }

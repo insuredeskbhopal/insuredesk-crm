@@ -34,6 +34,9 @@ export async function POST(request) {
     const schema = await createFieldSetup(payload);
     return Response.json(schema, { status: 201 });
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "Field setup could not be saved." }, { status: 400 });
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Field setup could not be saved." },
+      { status: 400 },
+    );
   }
 }

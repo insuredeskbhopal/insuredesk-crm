@@ -24,12 +24,11 @@ describe("record customer ID", () => {
       data: {
         srNo: "12",
         insuredName: "Vijay Kumar",
-        contactNumber: "9988776655"
-      }
+        contactNumber: "9988776655",
+      },
     });
 
     expect(record.customerId).toBe("VIJA6655");
     expect(record.srNo).toBeUndefined();
   });
-
 });

@@ -26,8 +26,8 @@ export async function GET(request) {
         organizationId: true,
         deletedAt: true,
         createdAt: true,
-        assignedLOBs: true
-      }
+        assignedLOBs: true,
+      },
     });
 
     if (!user || user.deletedAt) {
@@ -38,7 +38,6 @@ export async function GET(request) {
     const { deletedAt: _deletedAt, ...sanitizedUser } = user;
 
     return NextResponse.json({ success: true, user: sanitizedUser });
-
   } catch (error) {
     console.error("Auth Me error:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });

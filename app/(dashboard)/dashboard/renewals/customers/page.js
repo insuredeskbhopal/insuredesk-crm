@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { 
-  Search, 
-  Phone, 
-  MessageSquare, 
-  User, 
+import {
+  Search,
+  Phone,
+  MessageSquare,
+  User,
   AlertCircle,
   MoreVertical,
   Eye,
@@ -17,20 +17,20 @@ import {
   XCircle,
   UserPlus,
   Send,
-  Clipboard
+  Clipboard,
 } from "lucide-react";
 import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 
 const COL_HEADERS = [
-  "Contact Person Name", 
-  "Mobile Number", 
+  "Contact Person Name",
+  "Mobile Number",
   "Total Companies",
-  "Total Policies", 
-  "Policies Due", 
-  "Nearest Expiry Date", 
-  "Assigned Agent", 
-  "Customer Status", 
-  "Actions"
+  "Total Policies",
+  "Policies Due",
+  "Nearest Expiry Date",
+  "Assigned Agent",
+  "Customer Status",
+  "Actions",
 ];
 
 const formatDate = (dateStr) => {
@@ -38,9 +38,11 @@ const formatDate = (dateStr) => {
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    return `${String(d.getDate()).padStart(2,"0")}-${months[d.getMonth()]}-${d.getFullYear()}`;
-  } catch { return dateStr; }
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${String(d.getDate()).padStart(2, "0")}-${months[d.getMonth()]}-${d.getFullYear()}`;
+  } catch {
+    return dateStr;
+  }
 };
 
 export default function CustomerRenewalsPage() {
@@ -66,7 +68,7 @@ export default function CustomerRenewalsPage() {
       setActivePolicyTypeFilter(pol);
     }
   }, []);
-  
+
   // Interactive UI states
   const [activeDropdownRowId, setActiveDropdownRowId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState(null);
@@ -89,9 +91,35 @@ export default function CustomerRenewalsPage() {
   const [whatsappPreviewOpen, setWhatsAppPreviewOpen] = useState(false);
 
   // Forms states
-  const [remarkForm, setRemarkForm] = useState({ text: "", nextFollowUpDate: "", status: "Follow-Up", mode: "Call", priority: "Normal", nextAction: "" });
-  const [editForm, setEditForm] = useState({ insuredName: "", contactPersonName: "", contactNumber: "", policyNumber: "", insuranceCompany: "", policyType: "", premium: "", expiryDate: "", assignedToUserId: "", renewalStatus: "ACTIVE", remark: "", nextFollowUpDate: "" });
-  const [renewForm, setRenewForm] = useState({ policyNumber: "", startDate: "", expiryDate: "", premium: "", remark: "" });
+  const [remarkForm, setRemarkForm] = useState({
+    text: "",
+    nextFollowUpDate: "",
+    status: "Follow-Up",
+    mode: "Call",
+    priority: "Normal",
+    nextAction: "",
+  });
+  const [editForm, setEditForm] = useState({
+    insuredName: "",
+    contactPersonName: "",
+    contactNumber: "",
+    policyNumber: "",
+    insuranceCompany: "",
+    policyType: "",
+    premium: "",
+    expiryDate: "",
+    assignedToUserId: "",
+    renewalStatus: "ACTIVE",
+    remark: "",
+    nextFollowUpDate: "",
+  });
+  const [renewForm, setRenewForm] = useState({
+    policyNumber: "",
+    startDate: "",
+    expiryDate: "",
+    premium: "",
+    remark: "",
+  });
   const [lostForm, setLostForm] = useState({ lostReason: "Premium High", remarks: "" });
   const [reassignForm, setReassignForm] = useState({ assignedToUserId: "", note: "" });
   const [whatsappTemplates, setWhatsAppTemplates] = useState(null);
@@ -112,9 +140,9 @@ export default function CustomerRenewalsPage() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (
-          Array.isArray(parsed) && 
+          Array.isArray(parsed) &&
           parsed.length === DEFAULT_WIDTHS.length &&
-          parsed.every(w => typeof w === "number" && !isNaN(w) && w > 0)
+          parsed.every((w) => typeof w === "number" && !isNaN(w) && w > 0)
         ) {
           return parsed;
         }
@@ -133,7 +161,7 @@ export default function CustomerRenewalsPage() {
     const onMove = (moveE) => {
       const diff = moveE.clientX - startX;
       const newWidth = Math.max(40, startWidth + diff);
-      setColWidths(prev => {
+      setColWidths((prev) => {
         const next = [...prev];
         next[index] = newWidth;
         return next;
@@ -143,8 +171,10 @@ export default function CustomerRenewalsPage() {
       handle.classList.remove("resizing");
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
-      setColWidths(prev => {
-        try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prev)); } catch {}
+      setColWidths((prev) => {
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prev));
+        } catch {}
         return prev;
       });
     };
@@ -230,10 +260,10 @@ export default function CustomerRenewalsPage() {
     const rect = e.currentTarget.getBoundingClientRect();
     const cardHeight = 180;
     const cardWidth = 320;
-    
+
     let top = rect.bottom + window.scrollY + 6;
     let left = rect.left + window.scrollX;
-    
+
     if (left + cardWidth > window.innerWidth) {
       left = window.innerWidth - cardWidth - 16;
     }
@@ -244,7 +274,7 @@ export default function CustomerRenewalsPage() {
     setHoverCard({
       customer,
       top,
-      left
+      left,
     });
   };
 
@@ -259,7 +289,7 @@ export default function CustomerRenewalsPage() {
       const res = await fetch(`/api/renewals/customers/${cust.mobile}`);
       const data = await res.json();
       if (res.ok && data.success) {
-        const policy = data.policies.find(p => p.id === cust.nearest_due_policy_id) || data.policies[0];
+        const policy = data.policies.find((p) => p.id === cust.nearest_due_policy_id) || data.policies[0];
         if (policy) {
           setSelectedPolicy(policy);
           callback(policy);
@@ -285,16 +315,17 @@ export default function CustomerRenewalsPage() {
     try {
       const [profileRes, auditRes] = await Promise.all([
         fetch(`/api/renewals/customers/${cust.mobile}`),
-        fetch(`/api/renewals/audit?policyId=${cust.nearest_due_policy_id}`)
+        fetch(`/api/renewals/audit?policyId=${cust.nearest_due_policy_id}`),
       ]);
       const profileData = await profileRes.json();
       const auditData = await auditRes.json();
 
       if (profileRes.ok && profileData.success) {
-        const matchedPolicy = profileData.policies.find(p => p.id === cust.nearest_due_policy_id) || profileData.policies[0];
+        const matchedPolicy =
+          profileData.policies.find((p) => p.id === cust.nearest_due_policy_id) || profileData.policies[0];
         setProfileDrawerData({
           ...profileData,
-          policy: matchedPolicy
+          policy: matchedPolicy,
         });
       }
       if (auditRes.ok && auditData.success) {
@@ -311,7 +342,14 @@ export default function CustomerRenewalsPage() {
   const handleAddRemark = (cust) => {
     setSelectedCustomer(cust);
     fetchAndSelectPolicy(cust, () => {
-      setRemarkForm({ text: "", nextFollowUpDate: "", status: "Follow-Up", mode: "Call", priority: "Normal", nextAction: "" });
+      setRemarkForm({
+        text: "",
+        nextFollowUpDate: "",
+        status: "Follow-Up",
+        mode: "Call",
+        priority: "Normal",
+        nextAction: "",
+      });
       setRemarkModalOpen(true);
     });
   };
@@ -332,8 +370,8 @@ export default function CustomerRenewalsPage() {
           followUpStatus: remarkForm.status,
           followUpMode: remarkForm.mode,
           priority: remarkForm.priority,
-          nextAction: remarkForm.nextAction
-        })
+          nextAction: remarkForm.nextAction,
+        }),
       });
       if (res.ok) {
         setRemarkModalOpen(false);
@@ -359,12 +397,18 @@ export default function CustomerRenewalsPage() {
           const d = new Date(dStr);
           if (isNaN(d.getTime())) return "";
           return d.toISOString().split("T")[0];
-        } catch { return ""; }
+        } catch {
+          return "";
+        }
       };
 
       setEditForm({
         insuredName: policy.insuredName || "",
-        contactPersonName: cust.contact_person_name === "Contact not available" || cust.contact_person_name === "Unknown Contact" ? "" : (cust.contact_person_name || ""),
+        contactPersonName:
+          cust.contact_person_name === "Contact not available" ||
+          cust.contact_person_name === "Unknown Contact"
+            ? ""
+            : cust.contact_person_name || "",
         contactNumber: policy.contactNumber || "",
         policyNumber: policy.policyNumber || "",
         insuranceCompany: policy.insuranceCompany || "",
@@ -374,7 +418,7 @@ export default function CustomerRenewalsPage() {
         assignedToUserId: policy.assignedToId || "",
         renewalStatus: policy.renewalStatus || "ACTIVE",
         remark: "",
-        nextFollowUpDate: ""
+        nextFollowUpDate: "",
       });
       setEditModalOpen(true);
     });
@@ -382,7 +426,13 @@ export default function CustomerRenewalsPage() {
 
   const submitEdit = async (e) => {
     e.preventDefault();
-    if (!editForm.insuredName.trim() || !editForm.policyNumber.trim() || !editForm.insuranceCompany.trim() || !editForm.policyType.trim() || !editForm.expiryDate) {
+    if (
+      !editForm.insuredName.trim() ||
+      !editForm.policyNumber.trim() ||
+      !editForm.insuranceCompany.trim() ||
+      !editForm.policyType.trim() ||
+      !editForm.expiryDate
+    ) {
       window.alert("Please fill in all required fields.");
       return;
     }
@@ -406,8 +456,8 @@ export default function CustomerRenewalsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           policyId: selectedPolicy.id,
-          ...editForm
-        })
+          ...editForm,
+        }),
       });
       if (res.ok) {
         setEditModalOpen(false);
@@ -432,7 +482,7 @@ export default function CustomerRenewalsPage() {
         startDate: "",
         expiryDate: "",
         premium: policy.premium || policy.totalPremium || "",
-        remark: ""
+        remark: "",
       });
       setRenewModalOpen(true);
     });
@@ -457,9 +507,9 @@ export default function CustomerRenewalsPage() {
             startDate: renewForm.startDate,
             expiryDate: renewForm.expiryDate,
             premium: renewForm.premium,
-            remark: renewForm.remark
-          }
-        })
+            remark: renewForm.remark,
+          },
+        }),
       });
       if (res.ok) {
         setRenewModalOpen(false);
@@ -494,8 +544,8 @@ export default function CustomerRenewalsPage() {
         body: JSON.stringify({
           policyId: selectedPolicy.id,
           lostReason: lostForm.lostReason,
-          remarks: lostForm.remarks
-        })
+          remarks: lostForm.remarks,
+        }),
       });
       if (res.ok) {
         setLostModalOpen(false);
@@ -530,8 +580,8 @@ export default function CustomerRenewalsPage() {
         body: JSON.stringify({
           phone: selectedCustomer.mobile,
           assignedToUserId: reassignForm.assignedToUserId,
-          note: reassignForm.note
-        })
+          note: reassignForm.note,
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -560,7 +610,7 @@ export default function CustomerRenewalsPage() {
       const res = await fetch("/api/renewals/whatsapp-message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: cust.mobile })
+        body: JSON.stringify({ phone: cust.mobile }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -598,10 +648,10 @@ export default function CustomerRenewalsPage() {
       await fetch("/api/renewals/whatsapp-message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           phone: selectedCustomer.mobile,
-          logAudit: true
-        })
+          logAudit: true,
+        }),
       });
     } catch (e) {
       console.error("Failed to log WhatsApp audit:", e);
@@ -632,20 +682,23 @@ export default function CustomerRenewalsPage() {
       <form onSubmit={handleSearchSubmit} className="rn-filters-bar">
         <div style={{ display: "flex", alignItems: "center", position: "relative", flex: 1 }}>
           <Search size={16} style={{ position: "absolute", left: "12px", color: "var(--rn-text-muted)" }} />
-          <input 
-            type="text" 
-            className="rn-input" 
+          <input
+            type="text"
+            className="rn-input"
             style={{ paddingLeft: "36px", width: "100%" }}
             placeholder="Search by contact person, mobile, or company..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
-        
-        <select 
+
+        <select
           className="rn-input"
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(1);
+          }}
         >
           <option value="All">All Customer Statuses</option>
           <option value="Due Soon">Expiry Soon / Due Soon</option>
@@ -654,17 +707,41 @@ export default function CustomerRenewalsPage() {
           <option value="Lost">Lost</option>
         </select>
 
-        <button type="submit" className="rn-btn">Search</button>
+        <button type="submit" className="rn-btn">
+          Search
+        </button>
       </form>
 
       {/* Active filters display */}
       {(activeCompanyFilter !== "All" || activePolicyTypeFilter !== "All") && (
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", padding: "4px 8px", background: "#f8fafc", borderRadius: "8px", border: "1px solid var(--rn-border)" }}>
-          <span style={{ fontSize: "12px", color: "var(--rn-text-secondary)", fontWeight: "600" }}>Active Filters:</span>
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            flexWrap: "wrap",
+            alignItems: "center",
+            padding: "4px 8px",
+            background: "#f8fafc",
+            borderRadius: "8px",
+            border: "1px solid var(--rn-border)",
+          }}
+        >
+          <span style={{ fontSize: "12px", color: "var(--rn-text-secondary)", fontWeight: "600" }}>
+            Active Filters:
+          </span>
           {activeCompanyFilter !== "All" && (
-            <span 
-              className="rn-badge tone-info" 
-              style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 10px", fontSize: "12px", fontWeight: "600", cursor: "pointer", borderRadius: "6px" }}
+            <span
+              className="rn-badge tone-info"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "4px 10px",
+                fontSize: "12px",
+                fontWeight: "600",
+                cursor: "pointer",
+                borderRadius: "6px",
+              }}
               onClick={() => {
                 setActiveCompanyFilter("All");
                 const params = new window.URLSearchParams(window.location.search);
@@ -677,9 +754,18 @@ export default function CustomerRenewalsPage() {
             </span>
           )}
           {activePolicyTypeFilter !== "All" && (
-            <span 
-              className="rn-badge tone-info" 
-              style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 10px", fontSize: "12px", fontWeight: "600", cursor: "pointer", borderRadius: "6px" }}
+            <span
+              className="rn-badge tone-info"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "4px 10px",
+                fontSize: "12px",
+                fontWeight: "600",
+                cursor: "pointer",
+                borderRadius: "6px",
+              }}
               onClick={() => {
                 setActivePolicyTypeFilter("All");
                 const params = new window.URLSearchParams(window.location.search);
@@ -691,9 +777,18 @@ export default function CustomerRenewalsPage() {
               <span style={{ fontSize: "14px", fontWeight: "700", marginLeft: "4px" }}>&times;</span>
             </span>
           )}
-          <button 
-            type="button" 
-            style={{ fontSize: "11px", color: "var(--rn-danger)", border: "none", background: "none", cursor: "pointer", fontWeight: "700", textTransform: "uppercase", padding: "4px" }}
+          <button
+            type="button"
+            style={{
+              fontSize: "11px",
+              color: "var(--rn-danger)",
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              padding: "4px",
+            }}
             onClick={() => {
               setActiveCompanyFilter("All");
               setActivePolicyTypeFilter("All");
@@ -718,17 +813,27 @@ export default function CustomerRenewalsPage() {
             <p>Loading customers list...</p>
           </div>
         ) : customers.length === 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 0", gap: "8px" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "40px 0",
+              gap: "8px",
+            }}
+          >
             <AlertCircle size={24} style={{ color: "var(--rn-text-muted)" }} />
-            <p style={{ color: "var(--rn-text-secondary)", fontSize: "14px" }}>No customer portfolios found.</p>
+            <p style={{ color: "var(--rn-text-secondary)", fontSize: "14px" }}>
+              No customer portfolios found.
+            </p>
           </div>
         ) : (
-          <table 
+          <table
             className="rn-table"
-            style={{ 
-              width: "100%", 
+            style={{
+              width: "100%",
               minWidth: colWidths.reduce((sum, w) => sum + w, 0) + "px",
-              tableLayout: "fixed"
+              tableLayout: "fixed",
             }}
           >
             <thead>
@@ -736,10 +841,7 @@ export default function CustomerRenewalsPage() {
                 {COL_HEADERS.map((header, idx) => (
                   <th key={header} style={{ width: colWidths[idx] + "px", position: "relative" }}>
                     {header}
-                    <div
-                      className="rn-resize-handle"
-                      onMouseDown={(e) => handleResizeStart(idx, e)}
-                    />
+                    <div className="rn-resize-handle" onMouseDown={(e) => handleResizeStart(idx, e)} />
                   </th>
                 ))}
               </tr>
@@ -750,24 +852,39 @@ export default function CustomerRenewalsPage() {
                 return (
                   <tr key={cust.mobile || idx}>
                     {/* 1. Contact Person Name */}
-                    <td 
+                    <td
                       style={{ width: colWidths[0] + "px" }}
                       onMouseEnter={(e) => handleHoverEnter(cust, e)}
                       onMouseLeave={handleHoverLeave}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "var(--rn-border-light)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--rn-text-secondary)" }}>
+                        <div
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "50%",
+                            backgroundColor: "var(--rn-border-light)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "var(--rn-text-secondary)",
+                          }}
+                        >
                           <User size={16} />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column" }}>
-                          <span 
-                            className="rn-cell-link" 
-                            onClick={() => router.push(`/dashboard/renewals/customers/${encodeURIComponent(cust.mobile)}`)}
+                          <span
+                            className="rn-cell-link"
+                            onClick={() =>
+                              router.push(`/dashboard/renewals/customers/${encodeURIComponent(cust.mobile)}`)
+                            }
                           >
                             {cust.contact_person_name || cust.contact_person || "Contact not available"}
                           </span>
                           {cust.company_names && (
-                            <span style={{ fontSize: "11px", color: "var(--rn-text-muted)", marginTop: "2px" }}>
+                            <span
+                              style={{ fontSize: "11px", color: "var(--rn-text-muted)", marginTop: "2px" }}
+                            >
                               {cust.company_names}
                             </span>
                           )}
@@ -776,7 +893,7 @@ export default function CustomerRenewalsPage() {
                     </td>
 
                     {/* 2. Mobile Number */}
-                    <td 
+                    <td
                       style={{ width: colWidths[1] + "px" }}
                       onMouseEnter={(e) => handleHoverEnter(cust, e)}
                       onMouseLeave={handleHoverLeave}
@@ -791,7 +908,13 @@ export default function CustomerRenewalsPage() {
                     <td style={{ width: colWidths[3] + "px", fontWeight: "500" }}>{cust.total_policies}</td>
 
                     {/* 5. Policies Due */}
-                    <td style={{ width: colWidths[4] + "px", color: cust.policies_due > 0 ? "var(--rn-warning)" : "var(--rn-text-secondary)", fontWeight: "600" }}>
+                    <td
+                      style={{
+                        width: colWidths[4] + "px",
+                        color: cust.policies_due > 0 ? "var(--rn-warning)" : "var(--rn-text-secondary)",
+                        fontWeight: "600",
+                      }}
+                    >
                       {cust.policies_due}
                     </td>
 
@@ -803,64 +926,167 @@ export default function CustomerRenewalsPage() {
 
                     {/* 8. Customer Status */}
                     <td style={{ width: colWidths[7] + "px" }}>
-                      <span className={`rn-badge ${
-                        cust.customer_status === "renewed" || cust.customer_status === "Renewed" ? "rn-badge-success" :
-                        cust.customer_status === "lost" || cust.customer_status === "Lost" ? "rn-badge-danger" :
-                        cust.customer_status === "expiry_soon" || cust.customer_status === "Due Soon" ? "rn-badge-warning" : 
-                        ["Overdue", "Expired", "expired"].includes(cust.customer_status) ? "rn-badge-danger" : "rn-badge-active"
-                      }`}>
-                        {cust.customer_status === "expiry_soon" ? "Expiry Soon" :
-                         cust.customer_status === "expired" ? "Expired" :
-                         cust.customer_status === "renewed" ? "Renewed" :
-                         cust.customer_status === "lost" ? "Lost" :
-                         cust.customer_status === "active" ? "Active" :
-                         cust.customer_status}
+                      <span
+                        className={`rn-badge ${
+                          cust.customer_status === "renewed" || cust.customer_status === "Renewed"
+                            ? "rn-badge-success"
+                            : cust.customer_status === "lost" || cust.customer_status === "Lost"
+                              ? "rn-badge-danger"
+                              : cust.customer_status === "expiry_soon" || cust.customer_status === "Due Soon"
+                                ? "rn-badge-warning"
+                                : ["Overdue", "Expired", "expired"].includes(cust.customer_status)
+                                  ? "rn-badge-danger"
+                                  : "rn-badge-active"
+                        }`}
+                      >
+                        {cust.customer_status === "expiry_soon"
+                          ? "Expiry Soon"
+                          : cust.customer_status === "expired"
+                            ? "Expired"
+                            : cust.customer_status === "renewed"
+                              ? "Renewed"
+                              : cust.customer_status === "lost"
+                                ? "Lost"
+                                : cust.customer_status === "active"
+                                  ? "Active"
+                                  : cust.customer_status}
                       </span>
                     </td>
 
                     {/* 9. Actions (3-dot dropdown) */}
-                    <td 
-                      style={{ width: colWidths[8] + "px" }}
-                      onMouseEnter={() => setHoverCard(null)}
-                    >
+                    <td style={{ width: colWidths[8] + "px" }} onMouseEnter={() => setHoverCard(null)}>
                       <div className="rn-dropdown">
-                        <button 
-                          className="rn-dropdown-btn" 
-                          onClick={(e) => openActionMenu(cust.mobile, e)}
-                        >
+                        <button className="rn-dropdown-btn" onClick={(e) => openActionMenu(cust.mobile, e)}>
                           <MoreVertical size={16} />
                         </button>
-                        {activeDropdownRowId === cust.mobile && typeof document !== "undefined" && createPortal(
-                          <>
-                            <div 
-                              style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }} 
-                              onClick={(e) => { e.stopPropagation(); closeActionMenu(); }} 
-                            />
-                            <div 
-                              className="rn-dropdown-menu" 
-                              style={{ 
-                                position: "fixed",
-                                zIndex: 10000,
-                                top: `${dropdownPosition?.top || 0}px`,
-                                left: `${dropdownPosition?.left || 0}px`,
-                                right: "auto",
-                                width: `${dropdownPosition?.width || 230}px`
-                              }}
-                            >
-                              <button className="rn-dropdown-item" onClick={() => { setActiveDropdownRowId(null); router.push(`/dashboard/renewals/customers/${encodeURIComponent(cust.mobile)}`); }}><Eye size={14} /> View Profile</button>
-                              <button className="rn-dropdown-item" onClick={() => { setActiveDropdownRowId(null); handleCall(cust); }}><Phone size={14} /> Call Customer</button>
-                              <button className="rn-dropdown-item" onClick={() => { setActiveDropdownRowId(null); handleWhatsApp(cust); }}><Send size={14} style={{ color: '#25d366' }} /> Send WhatsApp</button>
-                              <button className="rn-dropdown-item" onClick={() => { setActiveDropdownRowId(null); handleEditRenewal(cust); }}><Edit3 size={14} /> Edit Contact</button>
-                              <button className="rn-dropdown-item" onClick={() => { setActiveDropdownRowId(null); handleAddRemark(cust); }}><MessageSquare size={14} /> Add Remark</button>
-                              <button className="rn-dropdown-item" onClick={() => { setActiveDropdownRowId(null); handleReassignUser(cust); }}><UserPlus size={14} /> Assign Agent</button>
-                              <button className="rn-dropdown-item" onClick={() => { setActiveDropdownRowId(null); router.push(`/dashboard/renewals/customers/${encodeURIComponent(cust.mobile)}`); }}><FileText size={14} /> View Policies</button>
-                              <button className="rn-dropdown-item" onClick={() => { setActiveDropdownRowId(null); handleViewPolicyDrawer(cust); }}><Clipboard size={14} /> View Renewal Timeline</button>
-                              <button className="rn-dropdown-item" onClick={() => { setActiveDropdownRowId(null); handleMarkRenewed(cust); }}><CheckCircle size={14} style={{ color: 'var(--rn-success)' }} /> Mark Renewed</button>
-                              <button className="rn-dropdown-item rn-dropdown-item-danger" onClick={() => { setActiveDropdownRowId(null); handleMarkLost(cust); }}><XCircle size={14} /> Mark Lost</button>
-                            </div>
-                          </>,
-                          document.body
-                        )}
+                        {activeDropdownRowId === cust.mobile &&
+                          typeof document !== "undefined" &&
+                          createPortal(
+                            <>
+                              <div
+                                style={{
+                                  position: "fixed",
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  zIndex: 999,
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  closeActionMenu();
+                                }}
+                              />
+                              <div
+                                className="rn-dropdown-menu"
+                                style={{
+                                  position: "fixed",
+                                  zIndex: 10000,
+                                  top: `${dropdownPosition?.top || 0}px`,
+                                  left: `${dropdownPosition?.left || 0}px`,
+                                  right: "auto",
+                                  width: `${dropdownPosition?.width || 230}px`,
+                                }}
+                              >
+                                <button
+                                  className="rn-dropdown-item"
+                                  onClick={() => {
+                                    setActiveDropdownRowId(null);
+                                    router.push(
+                                      `/dashboard/renewals/customers/${encodeURIComponent(cust.mobile)}`,
+                                    );
+                                  }}
+                                >
+                                  <Eye size={14} /> View Profile
+                                </button>
+                                <button
+                                  className="rn-dropdown-item"
+                                  onClick={() => {
+                                    setActiveDropdownRowId(null);
+                                    handleCall(cust);
+                                  }}
+                                >
+                                  <Phone size={14} /> Call Customer
+                                </button>
+                                <button
+                                  className="rn-dropdown-item"
+                                  onClick={() => {
+                                    setActiveDropdownRowId(null);
+                                    handleWhatsApp(cust);
+                                  }}
+                                >
+                                  <Send size={14} style={{ color: "#25d366" }} /> Send WhatsApp
+                                </button>
+                                <button
+                                  className="rn-dropdown-item"
+                                  onClick={() => {
+                                    setActiveDropdownRowId(null);
+                                    handleEditRenewal(cust);
+                                  }}
+                                >
+                                  <Edit3 size={14} /> Edit Contact
+                                </button>
+                                <button
+                                  className="rn-dropdown-item"
+                                  onClick={() => {
+                                    setActiveDropdownRowId(null);
+                                    handleAddRemark(cust);
+                                  }}
+                                >
+                                  <MessageSquare size={14} /> Add Remark
+                                </button>
+                                <button
+                                  className="rn-dropdown-item"
+                                  onClick={() => {
+                                    setActiveDropdownRowId(null);
+                                    handleReassignUser(cust);
+                                  }}
+                                >
+                                  <UserPlus size={14} /> Assign Agent
+                                </button>
+                                <button
+                                  className="rn-dropdown-item"
+                                  onClick={() => {
+                                    setActiveDropdownRowId(null);
+                                    router.push(
+                                      `/dashboard/renewals/customers/${encodeURIComponent(cust.mobile)}`,
+                                    );
+                                  }}
+                                >
+                                  <FileText size={14} /> View Policies
+                                </button>
+                                <button
+                                  className="rn-dropdown-item"
+                                  onClick={() => {
+                                    setActiveDropdownRowId(null);
+                                    handleViewPolicyDrawer(cust);
+                                  }}
+                                >
+                                  <Clipboard size={14} /> View Renewal Timeline
+                                </button>
+                                <button
+                                  className="rn-dropdown-item"
+                                  onClick={() => {
+                                    setActiveDropdownRowId(null);
+                                    handleMarkRenewed(cust);
+                                  }}
+                                >
+                                  <CheckCircle size={14} style={{ color: "var(--rn-success)" }} /> Mark
+                                  Renewed
+                                </button>
+                                <button
+                                  className="rn-dropdown-item rn-dropdown-item-danger"
+                                  onClick={() => {
+                                    setActiveDropdownRowId(null);
+                                    handleMarkLost(cust);
+                                  }}
+                                >
+                                  <XCircle size={14} /> Mark Lost
+                                </button>
+                              </div>
+                            </>,
+                            document.body,
+                          )}
                       </div>
                     </td>
                   </tr>
@@ -876,16 +1102,12 @@ export default function CustomerRenewalsPage() {
             Page {page} of {totalPages} ({totalCount} customer portfolios)
           </span>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button 
-              className="rn-btn" 
-              disabled={page <= 1 || loading} 
-              onClick={() => setPage(page - 1)}
-            >
+            <button className="rn-btn" disabled={page <= 1 || loading} onClick={() => setPage(page - 1)}>
               Previous
             </button>
-            <button 
-              className="rn-btn" 
-              disabled={page >= totalPages || loading} 
+            <button
+              className="rn-btn"
+              disabled={page >= totalPages || loading}
               onClick={() => setPage(page + 1)}
             >
               Next
@@ -896,29 +1118,36 @@ export default function CustomerRenewalsPage() {
 
       {/* Floating Hover Card */}
       {hoverCard && hoverCard.customer && !activeDropdownRowId && (
-        <div 
+        <div
           className="rn-hover-card"
           style={{
-            position: 'absolute',
-            top: hoverCard.top + 'px',
-            left: hoverCard.left + 'px',
+            position: "absolute",
+            top: hoverCard.top + "px",
+            left: hoverCard.left + "px",
           }}
         >
           <h4 className="rn-hover-title">{hoverCard.customer.contact_person_name || "Contact Details"}</h4>
           <div className="rn-hover-grid">
             <div className="rn-hover-item">
               <span className="rn-hover-label">Phone</span>
-              <span className="rn-hover-value">{hoverCard.customer.mobile.startsWith("NO-MOBILE-") ? "N/A" : hoverCard.customer.mobile}</span>
+              <span className="rn-hover-value">
+                {hoverCard.customer.mobile.startsWith("NO-MOBILE-") ? "N/A" : hoverCard.customer.mobile}
+              </span>
             </div>
             <div className="rn-hover-item">
               <span className="rn-hover-label">Status</span>
               <span className="rn-hover-value">
-                {hoverCard.customer.customer_status === "expiry_soon" ? "Expiry Soon" :
-                 hoverCard.customer.customer_status === "expired" ? "Expired" :
-                 hoverCard.customer.customer_status === "renewed" ? "Renewed" :
-                 hoverCard.customer.customer_status === "lost" ? "Lost" :
-                 hoverCard.customer.customer_status === "active" ? "Active" :
-                 hoverCard.customer.customer_status || "Active"}
+                {hoverCard.customer.customer_status === "expiry_soon"
+                  ? "Expiry Soon"
+                  : hoverCard.customer.customer_status === "expired"
+                    ? "Expired"
+                    : hoverCard.customer.customer_status === "renewed"
+                      ? "Renewed"
+                      : hoverCard.customer.customer_status === "lost"
+                        ? "Lost"
+                        : hoverCard.customer.customer_status === "active"
+                          ? "Active"
+                          : hoverCard.customer.customer_status || "Active"}
               </span>
             </div>
             <div className="rn-hover-item">
@@ -951,9 +1180,11 @@ export default function CustomerRenewalsPage() {
           <div className="rn-drawer" onClick={(e) => e.stopPropagation()}>
             <div className="rn-drawer-header">
               <h3 className="rn-drawer-title">Profile & Policy View</h3>
-              <button className="rn-drawer-close" onClick={() => setProfileDrawerOpen(false)}>&times;</button>
+              <button className="rn-drawer-close" onClick={() => setProfileDrawerOpen(false)}>
+                &times;
+              </button>
             </div>
-            
+
             <div className="rn-drawer-body">
               {profileDrawerLoading ? (
                 <div style={{ padding: "40px", textAlign: "center" }}>Loading details...</div>
@@ -965,11 +1196,19 @@ export default function CustomerRenewalsPage() {
                     <div className="rn-drawer-grid">
                       <div className="rn-drawer-item">
                         <span className="rn-drawer-label">Contact Person Name</span>
-                        <span className="rn-drawer-value">{profileDrawerData.profile?.contactPerson || profileDrawerData.profile?.name || "N/A"}</span>
+                        <span className="rn-drawer-value">
+                          {profileDrawerData.profile?.contactPerson ||
+                            profileDrawerData.profile?.name ||
+                            "N/A"}
+                        </span>
                       </div>
                       <div className="rn-drawer-item">
                         <span className="rn-drawer-label">Phone Number</span>
-                        <span className="rn-drawer-value">{profileDrawerData.profile?.phone?.startsWith("NO-MOBILE-") ? "N/A" : profileDrawerData.profile?.phone}</span>
+                        <span className="rn-drawer-value">
+                          {profileDrawerData.profile?.phone?.startsWith("NO-MOBILE-")
+                            ? "N/A"
+                            : profileDrawerData.profile?.phone}
+                        </span>
                       </div>
                       <div className="rn-drawer-item rn-drawer-grid-full">
                         <span className="rn-drawer-label">Email Address</span>
@@ -989,25 +1228,45 @@ export default function CustomerRenewalsPage() {
                       <div className="rn-drawer-grid">
                         <div className="rn-drawer-item">
                           <span className="rn-drawer-label">Policy Number</span>
-                          <span className="rn-drawer-value">{profileDrawerData.policy.policyNumber || "N/A"}</span>
+                          <span className="rn-drawer-value">
+                            {profileDrawerData.policy.policyNumber || "N/A"}
+                          </span>
                         </div>
                         <div className="rn-drawer-item">
                           <span className="rn-drawer-label">Insurance Company</span>
-                          <span className="rn-drawer-value">{profileDrawerData.policy.insuranceCompany || "N/A"}</span>
+                          <span className="rn-drawer-value">
+                            {profileDrawerData.policy.insuranceCompany || "N/A"}
+                          </span>
                         </div>
                         <div className="rn-drawer-item">
                           <span className="rn-drawer-label">Product Type</span>
-                          <span className="rn-drawer-value">{profileDrawerData.policy.displayPolicyType || profileDrawerData.policy.policyType || "N/A"}</span>
+                          <span className="rn-drawer-value">
+                            {profileDrawerData.policy.displayPolicyType ||
+                              profileDrawerData.policy.policyType ||
+                              "N/A"}
+                          </span>
                         </div>
                         <div className="rn-drawer-item">
                           <span className="rn-drawer-label">Premium</span>
-                          <span className="rn-drawer-value">₹{(profileDrawerData.policy.premium || profileDrawerData.policy.totalPremium || 0).toLocaleString("en-IN")}</span>
+                          <span className="rn-drawer-value">
+                            ₹
+                            {(
+                              profileDrawerData.policy.premium ||
+                              profileDrawerData.policy.totalPremium ||
+                              0
+                            ).toLocaleString("en-IN")}
+                          </span>
                         </div>
                         <div className="rn-drawer-item rn-drawer-grid-full">
                           <span className="rn-drawer-label">Validity Period</span>
                           <span className="rn-drawer-value">
-                            {formatDate(profileDrawerData.policy.startDate)} to {formatDate(profileDrawerData.policy.expiryDate)} 
-                            ({profileDrawerData.policy.daysRemaining !== undefined && profileDrawerData.policy.daysRemaining !== null ? `${profileDrawerData.policy.daysRemaining} days` : "N/A"})
+                            {formatDate(profileDrawerData.policy.startDate)} to{" "}
+                            {formatDate(profileDrawerData.policy.expiryDate)}(
+                            {profileDrawerData.policy.daysRemaining !== undefined &&
+                            profileDrawerData.policy.daysRemaining !== null
+                              ? `${profileDrawerData.policy.daysRemaining} days`
+                              : "N/A"}
+                            )
                           </span>
                         </div>
                       </div>
@@ -1021,19 +1280,30 @@ export default function CustomerRenewalsPage() {
                       <div className="rn-drawer-item">
                         <span className="rn-drawer-label">Current Status</span>
                         <span className="rn-drawer-value">
-                          <span className={`rn-badge ${
-                            profileDrawerData.profile?.customerStatus === "Renewed" ? "rn-badge-success" :
-                            profileDrawerData.profile?.customerStatus === "Lost" ? "rn-badge-danger" :
-                            profileDrawerData.profile?.customerStatus === "Due Soon" ? "rn-badge-warning" : 
-                            ["Overdue", "Expired"].includes(profileDrawerData.profile?.customerStatus) ? "rn-badge-danger" : "rn-badge-active"
-                          }`}>
+                          <span
+                            className={`rn-badge ${
+                              profileDrawerData.profile?.customerStatus === "Renewed"
+                                ? "rn-badge-success"
+                                : profileDrawerData.profile?.customerStatus === "Lost"
+                                  ? "rn-badge-danger"
+                                  : profileDrawerData.profile?.customerStatus === "Due Soon"
+                                    ? "rn-badge-warning"
+                                    : ["Overdue", "Expired"].includes(
+                                          profileDrawerData.profile?.customerStatus,
+                                        )
+                                      ? "rn-badge-danger"
+                                      : "rn-badge-active"
+                            }`}
+                          >
                             {profileDrawerData.profile?.customerStatus || "ACTIVE"}
                           </span>
                         </span>
                       </div>
                       <div className="rn-drawer-item">
                         <span className="rn-drawer-label">Assigned User</span>
-                        <span className="rn-drawer-value">{profileDrawerData.profile?.assignedTo || "Unassigned"}</span>
+                        <span className="rn-drawer-value">
+                          {profileDrawerData.profile?.assignedTo || "Unassigned"}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1043,7 +1313,9 @@ export default function CustomerRenewalsPage() {
                     <h4 className="rn-drawer-section-title">Timeline & Logs</h4>
                     <div className="rn-audit-timeline">
                       {profileAuditLogs.length === 0 ? (
-                        <p style={{ fontSize: "12px", color: "var(--rn-text-muted)", margin: 0 }}>No audit logs recorded for this policy.</p>
+                        <p style={{ fontSize: "12px", color: "var(--rn-text-muted)", margin: 0 }}>
+                          No audit logs recorded for this policy.
+                        </p>
                       ) : (
                         profileAuditLogs.map((log) => {
                           let dotClass = "";
@@ -1067,7 +1339,8 @@ export default function CustomerRenewalsPage() {
                                   <div className="rn-audit-changes">
                                     {log.changes.map((ch, idx) => (
                                       <span className="rn-audit-change-line" key={idx}>
-                                        {ch.field}: {String(ch.oldValue || 'N/A')} &rarr; {String(ch.newValue || 'N/A')}
+                                        {ch.field}: {String(ch.oldValue || "N/A")} &rarr;{" "}
+                                        {String(ch.newValue || "N/A")}
                                       </span>
                                     ))}
                                   </div>
@@ -1087,492 +1360,749 @@ export default function CustomerRenewalsPage() {
       )}
 
       {/* ADD REMARK MODAL */}
-      {remarkModalOpen && selectedPolicy && renderPortal(
-        <div className="tb-modal-backdrop renewal-action-modal-backdrop" onClick={() => setRemarkModalOpen(false)}>
-          <div className="tb-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--rn-border)", paddingBottom: "12px" }}>
-              <h3>Add Follow-up Remark</h3>
-              <button onClick={() => setRemarkModalOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}>&times;</button>
-            </div>
-            <form onSubmit={submitRemark}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
-                <div>
-                  <label className="customer-meta-label">Remark Text *</label>
-                  <textarea 
-                    className="rn-input" 
-                    style={{ width: "100%", height: "80px", marginTop: "4px" }}
-                    placeholder="Enter details of conversation..."
-                    value={remarkForm.text}
-                    onChange={(e) => setRemarkForm({...remarkForm, text: e.target.value})}
-                    required
-                  />
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <div>
-                    <label className="customer-meta-label">Renewal Status *</label>
-                    <select 
-                      className="rn-input" 
-                      style={{ width: "100%", marginTop: "4px" }}
-                      value={remarkForm.status}
-                      onChange={(e) => setRemarkForm({...remarkForm, status: e.target.value})}
-                    >
-                      <option value="Follow-Up">Follow-Up</option>
-                      <option value="Interested">Interested</option>
-                      <option value="Quote Sent">Quote Sent</option>
-                      <option value="Negotiation">Negotiation</option>
-                      <option value="Pending Approval">Pending Approval</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="customer-meta-label">Follow-up Date</label>
-                    <input 
-                      type="date" 
-                      className="rn-input" 
-                      style={{ width: "100%", marginTop: "4px" }}
-                      value={remarkForm.nextFollowUpDate}
-                      onChange={(e) => setRemarkForm({...remarkForm, nextFollowUpDate: e.target.value})}
-                    />
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                  <div>
-                    <label className="customer-meta-label">Priority</label>
-                    <select 
-                      className="rn-input" 
-                      style={{ width: "100%", marginTop: "4px" }}
-                      value={remarkForm.priority}
-                      onChange={(e) => setRemarkForm({...remarkForm, priority: e.target.value})}
-                    >
-                      <option value="Normal">Normal</option>
-                      <option value="Medium">Medium</option>
-                      <option value="High">High</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="customer-meta-label">Mode</label>
-                    <select 
-                      className="rn-input" 
-                      style={{ width: "100%", marginTop: "4px" }}
-                      value={remarkForm.mode}
-                      onChange={(e) => setRemarkForm({...remarkForm, mode: e.target.value})}
-                    >
-                      <option value="Call">Phone Call</option>
-                      <option value="WhatsApp">WhatsApp</option>
-                      <option value="Email">Email</option>
-                      <option value="In-Person">In-Person</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="customer-meta-label">Next Action</label>
-                    <input 
-                      type="text" 
-                      className="rn-input" 
-                      style={{ width: "100%", marginTop: "4px" }}
-                      placeholder="e.g. send quote"
-                      value={remarkForm.nextAction}
-                      onChange={(e) => setRemarkForm({...remarkForm, nextAction: e.target.value})}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid var(--rn-border)", marginTop: "24px", paddingTop: "12px" }}>
-                <button type="button" className="rn-btn" onClick={() => setRemarkModalOpen(false)}>Cancel</button>
-                <button type="submit" className="rn-btn" style={{ background: "var(--rn-primary)", color: "#fff", borderColor: "var(--rn-primary)" }} disabled={actionLoading}>
-                  {actionLoading ? "Submitting..." : "Save Remark"}
+      {remarkModalOpen &&
+        selectedPolicy &&
+        renderPortal(
+          <div
+            className="tb-modal-backdrop renewal-action-modal-backdrop"
+            onClick={() => setRemarkModalOpen(false)}
+          >
+            <div className="tb-modal-content" onClick={(e) => e.stopPropagation()}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  borderBottom: "1px solid var(--rn-border)",
+                  paddingBottom: "12px",
+                }}
+              >
+                <h3>Add Follow-up Remark</h3>
+                <button
+                  onClick={() => setRemarkModalOpen(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}
+                >
+                  &times;
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+              <form onSubmit={submitRemark}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
+                  <div>
+                    <label className="customer-meta-label">Remark Text *</label>
+                    <textarea
+                      className="rn-input"
+                      style={{ width: "100%", height: "80px", marginTop: "4px" }}
+                      placeholder="Enter details of conversation..."
+                      value={remarkForm.text}
+                      onChange={(e) => setRemarkForm({ ...remarkForm, text: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div>
+                      <label className="customer-meta-label">Renewal Status *</label>
+                      <select
+                        className="rn-input"
+                        style={{ width: "100%", marginTop: "4px" }}
+                        value={remarkForm.status}
+                        onChange={(e) => setRemarkForm({ ...remarkForm, status: e.target.value })}
+                      >
+                        <option value="Follow-Up">Follow-Up</option>
+                        <option value="Interested">Interested</option>
+                        <option value="Quote Sent">Quote Sent</option>
+                        <option value="Negotiation">Negotiation</option>
+                        <option value="Pending Approval">Pending Approval</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="customer-meta-label">Follow-up Date</label>
+                      <input
+                        type="date"
+                        className="rn-input"
+                        style={{ width: "100%", marginTop: "4px" }}
+                        value={remarkForm.nextFollowUpDate}
+                        onChange={(e) => setRemarkForm({ ...remarkForm, nextFollowUpDate: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                    <div>
+                      <label className="customer-meta-label">Priority</label>
+                      <select
+                        className="rn-input"
+                        style={{ width: "100%", marginTop: "4px" }}
+                        value={remarkForm.priority}
+                        onChange={(e) => setRemarkForm({ ...remarkForm, priority: e.target.value })}
+                      >
+                        <option value="Normal">Normal</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="customer-meta-label">Mode</label>
+                      <select
+                        className="rn-input"
+                        style={{ width: "100%", marginTop: "4px" }}
+                        value={remarkForm.mode}
+                        onChange={(e) => setRemarkForm({ ...remarkForm, mode: e.target.value })}
+                      >
+                        <option value="Call">Phone Call</option>
+                        <option value="WhatsApp">WhatsApp</option>
+                        <option value="Email">Email</option>
+                        <option value="In-Person">In-Person</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="customer-meta-label">Next Action</label>
+                      <input
+                        type="text"
+                        className="rn-input"
+                        style={{ width: "100%", marginTop: "4px" }}
+                        placeholder="e.g. send quote"
+                        value={remarkForm.nextAction}
+                        onChange={(e) => setRemarkForm({ ...remarkForm, nextAction: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "12px",
+                    borderTop: "1px solid var(--rn-border)",
+                    marginTop: "24px",
+                    paddingTop: "12px",
+                  }}
+                >
+                  <button type="button" className="rn-btn" onClick={() => setRemarkModalOpen(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rn-btn"
+                    style={{
+                      background: "var(--rn-primary)",
+                      color: "#fff",
+                      borderColor: "var(--rn-primary)",
+                    }}
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? "Submitting..." : "Save Remark"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+        )}
 
       {/* EDIT RENEWAL MODAL */}
-      {editModalOpen && selectedPolicy && renderPortal(
-        <div className="tb-modal-backdrop renewal-action-modal-backdrop" onClick={() => setEditModalOpen(false)}>
-          <div className="tb-modal-content" style={{ maxWidth: "600px" }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--rn-border)", paddingBottom: "12px" }}>
-              <h3>Edit Renewal Record</h3>
-              <button onClick={() => setEditModalOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}>&times;</button>
-            </div>
-            <form onSubmit={submitEdit}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "16px" }}>
-                <div>
-                  <label className="customer-meta-label">Company Name *</label>
-                  <input 
-                    type="text" 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    value={editForm.insuredName}
-                    onChange={(e) => setEditForm({...editForm, insuredName: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="customer-meta-label">Contact Person Name</label>
-                  <input 
-                    type="text" 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    placeholder="Enter contact person name"
-                    value={editForm.contactPersonName}
-                    onChange={(e) => setEditForm({...editForm, contactPersonName: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="customer-meta-label">Mobile Number</label>
-                  <input 
-                    type="text" 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    placeholder="10-digit number"
-                    value={editForm.contactNumber}
-                    onChange={(e) => setEditForm({...editForm, contactNumber: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="customer-meta-label">Policy Number *</label>
-                  <input 
-                    type="text" 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    value={editForm.policyNumber}
-                    onChange={(e) => setEditForm({...editForm, policyNumber: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="customer-meta-label">Insurance Company *</label>
-                  <input 
-                    type="text" 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    value={editForm.insuranceCompany}
-                    onChange={(e) => setEditForm({...editForm, insuranceCompany: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="customer-meta-label">Policy Type *</label>
-                  <input 
-                    type="text" 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    value={editForm.policyType}
-                    onChange={(e) => setEditForm({...editForm, policyType: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="customer-meta-label">Premium Amount (₹)</label>
-                  <input 
-                    type="number" 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    value={editForm.premium}
-                    onChange={(e) => setEditForm({...editForm, premium: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="customer-meta-label">Expiry Date *</label>
-                  <input 
-                    type="date" 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    value={editForm.expiryDate}
-                    onChange={(e) => setEditForm({...editForm, expiryDate: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="customer-meta-label">Assigned User</label>
-                  <select 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    value={editForm.assignedToUserId}
-                    onChange={(e) => setEditForm({...editForm, assignedToUserId: e.target.value})}
-                  >
-                    <option value="">Unassigned</option>
-                    {teamMembers.map(u => (
-                      <option key={u.id} value={u.id}>{u.name || u.email}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="customer-meta-label">Customer Status</label>
-                  <select 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    value={editForm.renewalStatus}
-                    onChange={(e) => setEditForm({...editForm, renewalStatus: e.target.value})}
-                  >
-                    <option value="ACTIVE">Active (Auto-Calculate)</option>
-                    <option value="RENEWED">Renewed</option>
-                    <option value="LOST">Lost</option>
-                  </select>
-                </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "12px", borderTop: "1px solid var(--rn-border-light)", paddingTop: "12px" }}>
-                <label className="customer-meta-label">Status change remark (Optional)</label>
-                <input 
-                  type="text" 
-                  className="rn-input" 
-                  style={{ width: "100%" }}
-                  placeholder="Enter details of changes..."
-                  value={editForm.remark}
-                  onChange={(e) => setEditForm({...editForm, remark: e.target.value})}
-                />
-              </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid var(--rn-border)", marginTop: "24px", paddingTop: "12px" }}>
-                <button type="button" className="rn-btn" onClick={() => setEditModalOpen(false)}>Cancel</button>
-                <button type="submit" className="rn-btn" style={{ background: "var(--rn-primary)", color: "#fff", borderColor: "var(--rn-primary)" }} disabled={actionLoading}>
-                  {actionLoading ? "Saving..." : "Save Changes"}
+      {editModalOpen &&
+        selectedPolicy &&
+        renderPortal(
+          <div
+            className="tb-modal-backdrop renewal-action-modal-backdrop"
+            onClick={() => setEditModalOpen(false)}
+          >
+            <div
+              className="tb-modal-content"
+              style={{ maxWidth: "600px" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  borderBottom: "1px solid var(--rn-border)",
+                  paddingBottom: "12px",
+                }}
+              >
+                <h3>Edit Renewal Record</h3>
+                <button
+                  onClick={() => setEditModalOpen(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}
+                >
+                  &times;
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* RENEW POLICY FORM MODAL */}
-      {renewModalOpen && selectedPolicy && renderPortal(
-        <div className="tb-modal-backdrop renewal-action-modal-backdrop" onClick={() => setRenewModalOpen(false)}>
-          <div className="tb-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--rn-border)", paddingBottom: "12px" }}>
-              <h3>Mark Policy as Renewed</h3>
-              <button onClick={() => setRenewModalOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}>&times;</button>
-            </div>
-            <form onSubmit={submitRenew}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "16px" }}>
-                <div>
-                  <label className="customer-meta-label">New Policy Number *</label>
-                  <input 
-                    type="text" 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    placeholder="Enter new policy number"
-                    value={renewForm.policyNumber}
-                    onChange={(e) => setRenewForm({...renewForm, policyNumber: e.target.value})}
-                    required
-                  />
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <form onSubmit={submitEdit}>
+                <div
+                  style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "16px" }}
+                >
                   <div>
-                    <label className="customer-meta-label">Start Date *</label>
-                    <input 
-                      type="date" 
-                      className="rn-input" 
+                    <label className="customer-meta-label">Company Name *</label>
+                    <input
+                      type="text"
+                      className="rn-input"
                       style={{ width: "100%", marginTop: "4px" }}
-                      value={renewForm.startDate}
-                      onChange={(e) => setRenewForm({...renewForm, startDate: e.target.value})}
+                      value={editForm.insuredName}
+                      onChange={(e) => setEditForm({ ...editForm, insuredName: e.target.value })}
                       required
+                    />
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Contact Person Name</label>
+                    <input
+                      type="text"
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      placeholder="Enter contact person name"
+                      value={editForm.contactPersonName}
+                      onChange={(e) => setEditForm({ ...editForm, contactPersonName: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Mobile Number</label>
+                    <input
+                      type="text"
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      placeholder="10-digit number"
+                      value={editForm.contactNumber}
+                      onChange={(e) => setEditForm({ ...editForm, contactNumber: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Policy Number *</label>
+                    <input
+                      type="text"
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      value={editForm.policyNumber}
+                      onChange={(e) => setEditForm({ ...editForm, policyNumber: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Insurance Company *</label>
+                    <input
+                      type="text"
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      value={editForm.insuranceCompany}
+                      onChange={(e) => setEditForm({ ...editForm, insuranceCompany: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Policy Type *</label>
+                    <input
+                      type="text"
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      value={editForm.policyType}
+                      onChange={(e) => setEditForm({ ...editForm, policyType: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Premium Amount (₹)</label>
+                    <input
+                      type="number"
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      value={editForm.premium}
+                      onChange={(e) => setEditForm({ ...editForm, premium: e.target.value })}
                     />
                   </div>
                   <div>
                     <label className="customer-meta-label">Expiry Date *</label>
-                    <input 
-                      type="date" 
-                      className="rn-input" 
+                    <input
+                      type="date"
+                      className="rn-input"
                       style={{ width: "100%", marginTop: "4px" }}
-                      value={renewForm.expiryDate}
-                      onChange={(e) => setRenewForm({...renewForm, expiryDate: e.target.value})}
+                      value={editForm.expiryDate}
+                      onChange={(e) => setEditForm({ ...editForm, expiryDate: e.target.value })}
                       required
                     />
                   </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px" }}>
                   <div>
-                    <label className="customer-meta-label">New Premium Amount *</label>
-                    <input 
-                      type="number" 
-                      className="rn-input" 
+                    <label className="customer-meta-label">Assigned User</label>
+                    <select
+                      className="rn-input"
                       style={{ width: "100%", marginTop: "4px" }}
-                      value={renewForm.premium}
-                      onChange={(e) => setRenewForm({...renewForm, premium: e.target.value})}
-                      required
-                    />
+                      value={editForm.assignedToUserId}
+                      onChange={(e) => setEditForm({ ...editForm, assignedToUserId: e.target.value })}
+                    >
+                      <option value="">Unassigned</option>
+                      {teamMembers.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name || u.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Customer Status</label>
+                    <select
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      value={editForm.renewalStatus}
+                      onChange={(e) => setEditForm({ ...editForm, renewalStatus: e.target.value })}
+                    >
+                      <option value="ACTIVE">Active (Auto-Calculate)</option>
+                      <option value="RENEWED">Renewed</option>
+                      <option value="LOST">Lost</option>
+                    </select>
                   </div>
                 </div>
-                <div>
-                  <label className="customer-meta-label">Remarks</label>
-                  <input 
-                    type="text" 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    placeholder="e.g. customer negotiated well"
-                    value={renewForm.remark}
-                    onChange={(e) => setRenewForm({...renewForm, remark: e.target.value})}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                    marginTop: "12px",
+                    borderTop: "1px solid var(--rn-border-light)",
+                    paddingTop: "12px",
+                  }}
+                >
+                  <label className="customer-meta-label">Status change remark (Optional)</label>
+                  <input
+                    type="text"
+                    className="rn-input"
+                    style={{ width: "100%" }}
+                    placeholder="Enter details of changes..."
+                    value={editForm.remark}
+                    onChange={(e) => setEditForm({ ...editForm, remark: e.target.value })}
                   />
                 </div>
-              </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid var(--rn-border)", marginTop: "24px", paddingTop: "12px" }}>
-                <button type="button" className="rn-btn" onClick={() => setRenewModalOpen(false)}>Cancel</button>
-                <button type="submit" className="rn-btn" style={{ background: "var(--rn-primary)", color: "#fff", borderColor: "var(--rn-primary)" }} disabled={actionLoading}>
-                  {actionLoading ? "Processing..." : "Complete Renewal"}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "12px",
+                    borderTop: "1px solid var(--rn-border)",
+                    marginTop: "24px",
+                    paddingTop: "12px",
+                  }}
+                >
+                  <button type="button" className="rn-btn" onClick={() => setEditModalOpen(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rn-btn"
+                    style={{
+                      background: "var(--rn-primary)",
+                      color: "#fff",
+                      borderColor: "var(--rn-primary)",
+                    }}
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+        )}
+
+      {/* RENEW POLICY FORM MODAL */}
+      {renewModalOpen &&
+        selectedPolicy &&
+        renderPortal(
+          <div
+            className="tb-modal-backdrop renewal-action-modal-backdrop"
+            onClick={() => setRenewModalOpen(false)}
+          >
+            <div className="tb-modal-content" onClick={(e) => e.stopPropagation()}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  borderBottom: "1px solid var(--rn-border)",
+                  paddingBottom: "12px",
+                }}
+              >
+                <h3>Mark Policy as Renewed</h3>
+                <button
+                  onClick={() => setRenewModalOpen(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}
+                >
+                  &times;
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+              <form onSubmit={submitRenew}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "16px" }}>
+                  <div>
+                    <label className="customer-meta-label">New Policy Number *</label>
+                    <input
+                      type="text"
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      placeholder="Enter new policy number"
+                      value={renewForm.policyNumber}
+                      onChange={(e) => setRenewForm({ ...renewForm, policyNumber: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div>
+                      <label className="customer-meta-label">Start Date *</label>
+                      <input
+                        type="date"
+                        className="rn-input"
+                        style={{ width: "100%", marginTop: "4px" }}
+                        value={renewForm.startDate}
+                        onChange={(e) => setRenewForm({ ...renewForm, startDate: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="customer-meta-label">Expiry Date *</label>
+                      <input
+                        type="date"
+                        className="rn-input"
+                        style={{ width: "100%", marginTop: "4px" }}
+                        value={renewForm.expiryDate}
+                        onChange={(e) => setRenewForm({ ...renewForm, expiryDate: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px" }}>
+                    <div>
+                      <label className="customer-meta-label">New Premium Amount *</label>
+                      <input
+                        type="number"
+                        className="rn-input"
+                        style={{ width: "100%", marginTop: "4px" }}
+                        value={renewForm.premium}
+                        onChange={(e) => setRenewForm({ ...renewForm, premium: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Remarks</label>
+                    <input
+                      type="text"
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      placeholder="e.g. customer negotiated well"
+                      value={renewForm.remark}
+                      onChange={(e) => setRenewForm({ ...renewForm, remark: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "12px",
+                    borderTop: "1px solid var(--rn-border)",
+                    marginTop: "24px",
+                    paddingTop: "12px",
+                  }}
+                >
+                  <button type="button" className="rn-btn" onClick={() => setRenewModalOpen(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rn-btn"
+                    style={{
+                      background: "var(--rn-primary)",
+                      color: "#fff",
+                      borderColor: "var(--rn-primary)",
+                    }}
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? "Processing..." : "Complete Renewal"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+        )}
 
       {/* MARK LOST MODAL */}
-      {lostModalOpen && selectedPolicy && renderPortal(
-        <div className="tb-modal-backdrop renewal-action-modal-backdrop" onClick={() => setLostModalOpen(false)}>
-          <div className="tb-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--rn-border)", paddingBottom: "12px" }}>
-              <h3>Mark Policy as Lost</h3>
-              <button onClick={() => setLostModalOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}>&times;</button>
-            </div>
-            <form onSubmit={submitLost}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
-                <div>
-                  <label className="customer-meta-label">Reason for Loss *</label>
-                  <select 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    value={lostForm.lostReason}
-                    onChange={(e) => setLostForm({...lostForm, lostReason: e.target.value})}
-                  >
-                    <option value="Premium High">Premium High</option>
-                    <option value="Better Coverage Elsewhere">Better Coverage Elsewhere</option>
-                    <option value="Customer Not Interested">Customer Not Interested</option>
-                    <option value="Wrong Mobile Number">Wrong Mobile Number</option>
-                    <option value="Renewed Elsewhere">Renewed Elsewhere</option>
-                    <option value="No Response">No Response</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="customer-meta-label">Details / Remarks</label>
-                  <textarea 
-                    className="rn-input" 
-                    style={{ width: "100%", height: "80px", marginTop: "4px" }}
-                    placeholder="Enter loss feedback details..."
-                    value={lostForm.remarks}
-                    onChange={(e) => setLostForm({...lostForm, remarks: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid var(--rn-border)", marginTop: "24px", paddingTop: "12px" }}>
-                <button type="button" className="rn-btn" onClick={() => setLostModalOpen(false)}>Cancel</button>
-                <button type="submit" className="rn-btn" style={{ color: "var(--rn-danger)", borderColor: "var(--rn-danger)" }} disabled={actionLoading}>
-                  {actionLoading ? "Processing..." : "Confirm Lost Status"}
+      {lostModalOpen &&
+        selectedPolicy &&
+        renderPortal(
+          <div
+            className="tb-modal-backdrop renewal-action-modal-backdrop"
+            onClick={() => setLostModalOpen(false)}
+          >
+            <div className="tb-modal-content" onClick={(e) => e.stopPropagation()}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  borderBottom: "1px solid var(--rn-border)",
+                  paddingBottom: "12px",
+                }}
+              >
+                <h3>Mark Policy as Lost</h3>
+                <button
+                  onClick={() => setLostModalOpen(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}
+                >
+                  &times;
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* REASSIGN USER MODAL */}
-      {reassignModalOpen && selectedCustomer && renderPortal(
-        <div className="tb-modal-backdrop renewal-action-modal-backdrop" onClick={() => setReassignModalOpen(false)}>
-          <div className="tb-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--rn-border)", paddingBottom: "12px" }}>
-              <h3>Reassign Portfolio Agent</h3>
-              <button onClick={() => setReassignModalOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}>&times;</button>
-            </div>
-            <form onSubmit={submitReassign}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
-                <div>
-                  <label className="customer-meta-label">Select Agent *</label>
-                  <select 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    value={reassignForm.assignedToUserId}
-                    onChange={(e) => setReassignForm({...reassignForm, assignedToUserId: e.target.value})}
-                    required
-                  >
-                    <option value="">Choose Agent...</option>
-                    {teamMembers.map(u => (
-                      <option key={u.id} value={u.id}>{u.name || u.email}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="customer-meta-label">Reassignment Note (Optional)</label>
-                  <input 
-                    type="text" 
-                    className="rn-input" 
-                    style={{ width: "100%", marginTop: "4px" }}
-                    placeholder="Reason for reassigning agent..."
-                    value={reassignForm.note}
-                    onChange={(e) => setReassignForm({...reassignForm, note: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid var(--rn-border)", marginTop: "24px", paddingTop: "12px" }}>
-                <button type="button" className="rn-btn" onClick={() => setReassignModalOpen(false)}>Cancel</button>
-                <button type="submit" className="rn-btn" style={{ background: "var(--rn-primary)", color: "#fff", borderColor: "var(--rn-primary)" }} disabled={actionLoading}>
-                  {actionLoading ? "Reassigning..." : "Confirm Reassignment"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* WHATSAPP TEMPLATE PREVIEW MODAL */}
-      {whatsappPreviewOpen && selectedCustomer && renderPortal(
-        <div className="tb-modal-backdrop renewal-action-modal-backdrop" onClick={() => setWhatsAppPreviewOpen(false)}>
-          <div className="tb-modal-content" style={{ maxWidth: "550px" }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--rn-border)", paddingBottom: "12px" }}>
-              <h3>WhatsApp Reminder Preview</h3>
-              <button onClick={() => setWhatsAppPreviewOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}>&times;</button>
-            </div>
-            
-            {whatsappTemplates && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
-                <div>
-                  <label className="customer-meta-label">Template Context</label>
-                  <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
-                    {Object.keys(whatsappTemplates).map(type => (
-                      <button 
-                        key={type} 
-                        type="button" 
-                        className="rn-btn"
-                        style={{ 
-                          fontSize: "12px", 
-                          padding: "6px 10px",
-                          ...(selectedTemplateType === type && { background: "var(--rn-primary-light)", color: "var(--rn-primary)", borderColor: "var(--rn-primary)" })
-                        }}
-                        onClick={() => {
-                          setSelectedTemplateType(type);
-                          setEditedWhatsAppMessage(whatsappTemplates[type]);
-                        }}
-                      >
-                        {type.replace("_", " ").toUpperCase()}
-                      </button>
-                    ))}
+              <form onSubmit={submitLost}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
+                  <div>
+                    <label className="customer-meta-label">Reason for Loss *</label>
+                    <select
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      value={lostForm.lostReason}
+                      onChange={(e) => setLostForm({ ...lostForm, lostReason: e.target.value })}
+                    >
+                      <option value="Premium High">Premium High</option>
+                      <option value="Better Coverage Elsewhere">Better Coverage Elsewhere</option>
+                      <option value="Customer Not Interested">Customer Not Interested</option>
+                      <option value="Wrong Mobile Number">Wrong Mobile Number</option>
+                      <option value="Renewed Elsewhere">Renewed Elsewhere</option>
+                      <option value="No Response">No Response</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Details / Remarks</label>
+                    <textarea
+                      className="rn-input"
+                      style={{ width: "100%", height: "80px", marginTop: "4px" }}
+                      placeholder="Enter loss feedback details..."
+                      value={lostForm.remarks}
+                      onChange={(e) => setLostForm({ ...lostForm, remarks: e.target.value })}
+                    />
                   </div>
                 </div>
-
-                <div>
-                  <label className="customer-meta-label">Message Preview & Edit</label>
-                  <textarea 
-                    className="rn-input"
-                    style={{ width: "100%", height: "180px", marginTop: "4px", fontFamily: "monospace", fontSize: "13px", lineHeight: "1.4" }}
-                    value={editedWhatsAppMessage}
-                    onChange={(e) => setEditedWhatsAppMessage(e.target.value)}
-                  />
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "12px",
+                    borderTop: "1px solid var(--rn-border)",
+                    marginTop: "24px",
+                    paddingTop: "12px",
+                  }}
+                >
+                  <button type="button" className="rn-btn" onClick={() => setLostModalOpen(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rn-btn"
+                    style={{ color: "var(--rn-danger)", borderColor: "var(--rn-danger)" }}
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? "Processing..." : "Confirm Lost Status"}
+                  </button>
                 </div>
-              </div>
-            )}
+              </form>
+            </div>
+          </div>,
+        )}
 
-            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--rn-border)", marginTop: "24px", paddingTop: "12px" }}>
-              <button type="button" className="rn-btn" onClick={handleCopyMessage} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                <Clipboard size={14} /> Copy text
-              </button>
-              <div style={{ display: "flex", gap: "12px" }}>
-                <button type="button" className="rn-btn" onClick={() => setWhatsAppPreviewOpen(false)}>Cancel</button>
-                <button type="button" className="rn-btn" onClick={handleSendWhatsApp} style={{ background: "#25d366", color: "#fff", borderColor: "#25d366" }}>
-                  <Send size={14} /> Send WhatsApp
+      {/* REASSIGN USER MODAL */}
+      {reassignModalOpen &&
+        selectedCustomer &&
+        renderPortal(
+          <div
+            className="tb-modal-backdrop renewal-action-modal-backdrop"
+            onClick={() => setReassignModalOpen(false)}
+          >
+            <div className="tb-modal-content" onClick={(e) => e.stopPropagation()}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  borderBottom: "1px solid var(--rn-border)",
+                  paddingBottom: "12px",
+                }}
+              >
+                <h3>Reassign Portfolio Agent</h3>
+                <button
+                  onClick={() => setReassignModalOpen(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}
+                >
+                  &times;
                 </button>
               </div>
+              <form onSubmit={submitReassign}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
+                  <div>
+                    <label className="customer-meta-label">Select Agent *</label>
+                    <select
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      value={reassignForm.assignedToUserId}
+                      onChange={(e) => setReassignForm({ ...reassignForm, assignedToUserId: e.target.value })}
+                      required
+                    >
+                      <option value="">Choose Agent...</option>
+                      {teamMembers.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name || u.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Reassignment Note (Optional)</label>
+                    <input
+                      type="text"
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      placeholder="Reason for reassigning agent..."
+                      value={reassignForm.note}
+                      onChange={(e) => setReassignForm({ ...reassignForm, note: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "12px",
+                    borderTop: "1px solid var(--rn-border)",
+                    marginTop: "24px",
+                    paddingTop: "12px",
+                  }}
+                >
+                  <button type="button" className="rn-btn" onClick={() => setReassignModalOpen(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rn-btn"
+                    style={{
+                      background: "var(--rn-primary)",
+                      color: "#fff",
+                      borderColor: "var(--rn-primary)",
+                    }}
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? "Reassigning..." : "Confirm Reassignment"}
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+        )}
+
+      {/* WHATSAPP TEMPLATE PREVIEW MODAL */}
+      {whatsappPreviewOpen &&
+        selectedCustomer &&
+        renderPortal(
+          <div
+            className="tb-modal-backdrop renewal-action-modal-backdrop"
+            onClick={() => setWhatsAppPreviewOpen(false)}
+          >
+            <div
+              className="tb-modal-content"
+              style={{ maxWidth: "550px" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  borderBottom: "1px solid var(--rn-border)",
+                  paddingBottom: "12px",
+                }}
+              >
+                <h3>WhatsApp Reminder Preview</h3>
+                <button
+                  onClick={() => setWhatsAppPreviewOpen(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}
+                >
+                  &times;
+                </button>
+              </div>
+
+              {whatsappTemplates && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
+                  <div>
+                    <label className="customer-meta-label">Template Context</label>
+                    <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                      {Object.keys(whatsappTemplates).map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          className="rn-btn"
+                          style={{
+                            fontSize: "12px",
+                            padding: "6px 10px",
+                            ...(selectedTemplateType === type && {
+                              background: "var(--rn-primary-light)",
+                              color: "var(--rn-primary)",
+                              borderColor: "var(--rn-primary)",
+                            }),
+                          }}
+                          onClick={() => {
+                            setSelectedTemplateType(type);
+                            setEditedWhatsAppMessage(whatsappTemplates[type]);
+                          }}
+                        >
+                          {type.replace("_", " ").toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="customer-meta-label">Message Preview & Edit</label>
+                    <textarea
+                      className="rn-input"
+                      style={{
+                        width: "100%",
+                        height: "180px",
+                        marginTop: "4px",
+                        fontFamily: "monospace",
+                        fontSize: "13px",
+                        lineHeight: "1.4",
+                      }}
+                      value={editedWhatsAppMessage}
+                      onChange={(e) => setEditedWhatsAppMessage(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  borderTop: "1px solid var(--rn-border)",
+                  marginTop: "24px",
+                  paddingTop: "12px",
+                }}
+              >
+                <button
+                  type="button"
+                  className="rn-btn"
+                  onClick={handleCopyMessage}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                >
+                  <Clipboard size={14} /> Copy text
+                </button>
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <button type="button" className="rn-btn" onClick={() => setWhatsAppPreviewOpen(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="rn-btn"
+                    onClick={handleSendWhatsApp}
+                    style={{ background: "#25d366", color: "#fff", borderColor: "#25d366" }}
+                  >
+                    <Send size={14} /> Send WhatsApp
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+        )}
     </div>
   );
 }
-

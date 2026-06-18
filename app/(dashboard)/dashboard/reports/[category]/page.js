@@ -17,7 +17,9 @@ export default async function BusinessIntelligenceReportPage(props) {
           <div className="state-icon">!</div>
           <p className="eyebrow">Report not found</p>
           <h1>Unknown reporting category</h1>
-          <Link className="primary-action" href="/dashboard/reports">Back to Reports</Link>
+          <Link className="primary-action" href="/dashboard/reports">
+            Back to Reports
+          </Link>
         </section>
       </main>
     );

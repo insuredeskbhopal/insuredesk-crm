@@ -8,4 +8,3 @@ export default function SearchBox({ className = "search-box", value, placeholder
     </label>
   );
 }
-

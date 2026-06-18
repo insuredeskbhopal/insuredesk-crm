@@ -19,7 +19,7 @@ function excelDateToString(excelDate) {
       return "";
     }
   }
-  
+
   const num = Number(excelDate);
   if (isNaN(num)) {
     // Attempt to parse text date
@@ -39,7 +39,7 @@ function excelDateToString(excelDate) {
     const utc_days = Math.floor(num - 25569);
     const utc_value = utc_days * 86400;
     const date_info = new Date(utc_value * 1000);
-    
+
     const yyyy = date_info.getFullYear();
     const mm = String(date_info.getMonth() + 1).padStart(2, "0");
     const dd = String(date_info.getDate()).padStart(2, "0");
@@ -54,7 +54,7 @@ async function main() {
   const workbook = XLSX.readFile(excelPath);
   const firstSheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
-  
+
   // Parse rows as raw JSON objects
   const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
   console.log(`Loaded ${rawRows.length} raw rows from sheet "${firstSheetName}".`);
@@ -80,7 +80,7 @@ async function main() {
   // Clear previous imports to remain idempotent
   console.log("Clearing previous imports from 'Renewal Page data.xlsx'...");
   const deleteResult = await prisma.policyRecord.deleteMany({
-    where: { sourceFile: "Renewal Page data.xlsx" }
+    where: { sourceFile: "Renewal Page data.xlsx" },
   });
   console.log(`Deleted ${deleteResult.count} existing records.`);
 
@@ -88,7 +88,7 @@ async function main() {
 
   for (let i = 0; i < rawRows.length; i++) {
     const row = rawRows[i];
-    
+
     // Map Excel columns to our database and schema properties
     // Headers: Product, Insured/Proposer Name, Policy Number, End Date, Status, Expiring Policy Sum Insured, Expiring Policy Premium, MOB, REMARK
     const product = String(row["Product"] || "").trim();
@@ -120,7 +120,7 @@ async function main() {
       contactNumber: mob,
       customerMobile: mob,
       remark: remark,
-      sourceFile: "Renewal Page data.xlsx"
+      sourceFile: "Renewal Page data.xlsx",
     };
 
     // Build customer ID
@@ -174,15 +174,17 @@ async function main() {
       schemaVersion: 1,
       organization: organizationId ? { connect: { id: organizationId } } : undefined,
       createdBy: createdById ? { connect: { id: createdById } } : undefined,
-      
+
       // Renewal specific fields
       renewalStatus: renewalStatus,
-      isActivePolicy: isActivePolicy
+      isActivePolicy: isActivePolicy,
     };
 
-    console.log(`[${i + 1}/${rawRows.length}] Saving Policy Record for "${sanitizedData.insuredName}" (Status: ${renewalStatus})`);
+    console.log(
+      `[${i + 1}/${rawRows.length}] Saving Policy Record for "${sanitizedData.insuredName}" (Status: ${renewalStatus})`,
+    );
     await prisma.policyRecord.create({
-      data: policyRecordPayload
+      data: policyRecordPayload,
     });
     insertedCount++;
   }

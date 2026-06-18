@@ -168,10 +168,17 @@ export default function AnalyticsReports({ analytics, onSelectReport }) {
       <section className="report-grid">
         <ReportPanel title="Top Customers" subtitle="Click a customer to open their report.">
           {analytics.customers.map((item) => (
-            <button className="report-row" type="button" key={item.id} onClick={() => onSelectReport(item.report)}>
+            <button
+              className="report-row"
+              type="button"
+              key={item.id}
+              onClick={() => onSelectReport(item.report)}
+            >
               <span>{item.name}</span>
               <strong>{formatMoney(item.premiumTotal)}</strong>
-              <small>{item.policies.length} polic{item.policies.length === 1 ? "y" : "ies"}</small>
+              <small>
+                {item.policies.length} polic{item.policies.length === 1 ? "y" : "ies"}
+              </small>
             </button>
           ))}
         </ReportPanel>
@@ -222,7 +229,16 @@ function DonutReport({ title, subtitle, items, onSelect }) {
   );
 }
 
-function BarReport({ title, subtitle, items, max, valueType = "count", compactInsurer = false, horizontal = false, onSelect }) {
+function BarReport({
+  title,
+  subtitle,
+  items,
+  max,
+  valueType = "count",
+  compactInsurer = false,
+  horizontal = false,
+  onSelect,
+}) {
   return (
     <section className={`glass-panel report-panel chart-panel ${horizontal ? "wide-chart-panel" : ""}`}>
       <div>
@@ -232,7 +248,14 @@ function BarReport({ title, subtitle, items, max, valueType = "count", compactIn
       </div>
       <div className={`report-list ${horizontal ? "horizontal-scroll" : ""}`}>
         {items.map((item) => (
-          <ReportBar key={item.id} item={item} max={max} valueType={valueType} compactInsurer={compactInsurer} onClick={() => onSelect(item.report)} />
+          <ReportBar
+            key={item.id}
+            item={item}
+            max={max}
+            valueType={valueType}
+            compactInsurer={compactInsurer}
+            onClick={() => onSelect(item.report)}
+          />
         ))}
       </div>
     </section>
@@ -246,7 +269,12 @@ function ReportBar({ item, max, valueType = "count", compactInsurer = false, onC
   const premium = item.amount ? formatMoney(item.amount) : "";
 
   return (
-    <button className={`report-bar-row ${compactInsurer ? "compact-insurer-bar" : ""}`} type="button" title={item.label} onClick={onClick}>
+    <button
+      className={`report-bar-row ${compactInsurer ? "compact-insurer-bar" : ""}`}
+      type="button"
+      title={item.label}
+      onClick={onClick}
+    >
       {compactInsurer ? (
         <span className="report-insurer-mark" aria-label={item.label}>
           <InsurerLogo company={item.label} showName={false} />
@@ -255,7 +283,9 @@ function ReportBar({ item, max, valueType = "count", compactInsurer = false, onC
       ) : (
         <span>{item.label}</span>
       )}
-      <div><i style={{ width }} /></div>
+      <div>
+        <i style={{ width }} />
+      </div>
       <strong>{value}</strong>
       <small>{compactInsurer ? premium : item.hint}</small>
     </button>

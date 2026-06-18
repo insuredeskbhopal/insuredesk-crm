@@ -25,8 +25,8 @@ export async function POST(request, { params }) {
     const existing = await prisma.customerProfile.findFirst({
       where: {
         id,
-        ...getCustomerProfileScopedFilter(session)
-      }
+        ...getCustomerProfileScopedFilter(session),
+      },
     });
 
     if (!existing || existing.deletedAt) {
@@ -43,8 +43,8 @@ export async function POST(request, { params }) {
       data: {
         convertedToCustomer: true,
         status: "Converted",
-        updatedById: actorId
-      }
+        updatedById: actorId,
+      },
     });
 
     const redirectUrl = `/bulk-upload?profileId=${encodeURIComponent(id)}&insuranceType=${encodeURIComponent(insuranceType)}`;
@@ -59,13 +59,14 @@ export async function POST(request, { params }) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { insuranceType, redirectUrl }
+      metadata: { insuranceType, redirectUrl },
     });
 
     return NextResponse.json({ id: profile.id, status: profile.status, redirectUrl });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Customer profile could not be converted." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Customer profile could not be converted." },
+      { status: 500 },
+    );
   }
 }
-
-

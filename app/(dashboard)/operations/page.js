@@ -16,7 +16,7 @@ import {
   Headphones,
   Search,
   ShieldCheck,
-  Users
+  Users,
 } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 import { OPERATIONS_MODULES, FUTURE_OPERATIONS_MODULES } from "@/app/lib/operations-modules";
@@ -29,7 +29,7 @@ const ICONS = {
   declarations: ClipboardCheck,
   endorsements: FileEdit,
   "service-requests": Headphones,
-  "lead-management": Handshake
+  "lead-management": Handshake,
 };
 
 const DEFAULT_METRICS = {
@@ -38,7 +38,7 @@ const DEFAULT_METRICS = {
   openActivities: 0,
   activeModules: OPERATIONS_MODULES.length,
   latestProfileActivity: "",
-  latestPolicyActivity: ""
+  latestPolicyActivity: "",
 };
 
 export default function OperationsHubPage() {
@@ -59,12 +59,12 @@ export default function OperationsHubPage() {
       try {
         const [profilesRes, recordsRes] = await Promise.all([
           fetch("/api/customer-profiles?limit=1", { cache: "no-store" }),
-          fetch("/api/records?limit=1", { cache: "no-store" })
+          fetch("/api/records?limit=1", { cache: "no-store" }),
         ]);
 
         const [profilesPayload, recordsPayload] = await Promise.all([
           profilesRes.ok ? profilesRes.json() : Promise.resolve(null),
-          recordsRes.ok ? recordsRes.json() : Promise.resolve(null)
+          recordsRes.ok ? recordsRes.json() : Promise.resolve(null),
         ]);
 
         if (cancelled) return;
@@ -77,7 +77,7 @@ export default function OperationsHubPage() {
           activities.push({
             label: "Customer profile updated",
             detail: latestProfile.name || latestProfile.phone || "Customer profile",
-            when: formatActivityDate(latestProfile.updatedAt || latestProfile.createdAt)
+            when: formatActivityDate(latestProfile.updatedAt || latestProfile.createdAt),
           });
         }
 
@@ -85,17 +85,18 @@ export default function OperationsHubPage() {
           activities.push({
             label: "Policy record saved",
             detail: latestRecord.policyNumber || latestRecord.insuredName || "Policy record",
-            when: formatActivityDate(latestRecord.savedAt || latestRecord.createdAt)
+            when: formatActivityDate(latestRecord.savedAt || latestRecord.createdAt),
           });
         }
 
         setMetrics({
           customerProfiles: profilesPayload?.total || 0,
           policyRecords: recordsPayload?.total || 0,
-          openActivities: (profilesPayload?.counters?.followUpRequired || 0) + (profilesPayload?.counters?.newLeads || 0),
+          openActivities:
+            (profilesPayload?.counters?.followUpRequired || 0) + (profilesPayload?.counters?.newLeads || 0),
           activeModules: OPERATIONS_MODULES.length,
           latestProfileActivity: formatActivityDate(latestProfile?.updatedAt || latestProfile?.createdAt),
-          latestPolicyActivity: formatActivityDate(latestRecord?.savedAt || latestRecord?.createdAt)
+          latestPolicyActivity: formatActivityDate(latestRecord?.savedAt || latestRecord?.createdAt),
         });
         setRecentActivity(activities);
       } catch {
@@ -117,7 +118,7 @@ export default function OperationsHubPage() {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return OPERATIONS_MODULES;
     return OPERATIONS_MODULES.filter((module) =>
-      [module.name, module.description, ...module.functions].join(" ").toLowerCase().includes(normalized)
+      [module.name, module.description, ...module.functions].join(" ").toLowerCase().includes(normalized),
     );
   }, [query]);
 
@@ -167,13 +168,15 @@ export default function OperationsHubPage() {
               <h3>Recent Activity</h3>
             </div>
             <div className="operations-activity-list">
-              {recentActivity.length ? recentActivity.map((item) => (
-                <div className="operations-activity-item" key={`${item.label}-${item.detail}`}>
-                  <span>{item.label}</span>
-                  <strong>{item.detail}</strong>
-                  <em>{item.when}</em>
-                </div>
-              )) : (
+              {recentActivity.length ? (
+                recentActivity.map((item) => (
+                  <div className="operations-activity-item" key={`${item.label}-${item.detail}`}>
+                    <span>{item.label}</span>
+                    <strong>{item.detail}</strong>
+                    <em>{item.when}</em>
+                  </div>
+                ))
+              ) : (
                 <div className="operations-empty-activity">
                   <strong>No recent activity loaded</strong>
                   <span>New servicing updates will appear here.</span>
@@ -202,7 +205,9 @@ export default function OperationsHubPage() {
 function SummaryCard({ icon: Icon, label, value }) {
   return (
     <div className="operations-summary-card">
-      <span><Icon size={20} /></span>
+      <span>
+        <Icon size={20} />
+      </span>
       <div>
         <strong>{Number(value || 0).toLocaleString("en-IN")}</strong>
         <p>{label}</p>
@@ -219,7 +224,9 @@ function OperationsCard({ module, metrics }) {
   return (
     <Link className={`operations-module-card accent-${module.accent}`} href={module.route}>
       <div className="operations-module-top">
-        <span className="operations-module-icon"><Icon size={22} /></span>
+        <span className="operations-module-icon">
+          <Icon size={22} />
+        </span>
         <span className="operations-module-count">{count.toLocaleString("en-IN")} records</span>
       </div>
       <h3>{module.name}</h3>
@@ -246,14 +253,19 @@ function getModuleCount(id, metrics) {
 
 function getLastActivityText(id, count, metrics) {
   if (id === "customer-profiling" || id === "lead-management") {
-    return count > 0 && metrics.latestProfileActivity ? `Last activity ${metrics.latestProfileActivity}` : "No recent activity";
+    return count > 0 && metrics.latestProfileActivity
+      ? `Last activity ${metrics.latestProfileActivity}`
+      : "No recent activity";
   }
   if (id === "manual-policy-entry") {
-    return count > 0 && metrics.latestPolicyActivity ? `Last policy ${metrics.latestPolicyActivity}` : "No recent activity";
+    return count > 0 && metrics.latestPolicyActivity
+      ? `Last policy ${metrics.latestPolicyActivity}`
+      : "No recent activity";
   }
   if (id === "work-center") return count > 0 ? `${count} open activities` : "No open activities";
   if (count > 0) return "Last activity available";
-  if (["claims-management", "declarations", "endorsements", "service-requests"].includes(id)) return "Ready for setup";
+  if (["claims-management", "declarations", "endorsements", "service-requests"].includes(id))
+    return "Ready for setup";
   return "No recent activity";
 }
 
@@ -264,6 +276,6 @@ function formatActivityDate(value) {
   return date.toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
-    year: "numeric"
+    year: "numeric",
   });
 }

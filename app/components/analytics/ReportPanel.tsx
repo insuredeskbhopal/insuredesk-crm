@@ -10,4 +10,3 @@ export default function ReportPanel({ eyebrow = "Clickable Report", title, subti
     </section>
   );
 }
-

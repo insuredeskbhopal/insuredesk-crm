@@ -17,7 +17,9 @@ export default async function OperationsModulePage({ params }) {
 
       <section className={`operations-module-detail accent-${operationsModule.accent}`}>
         <div className="operations-module-detail-head">
-          <span><ClipboardList size={26} /></span>
+          <span>
+            <ClipboardList size={26} />
+          </span>
           <div>
             <p>Operations Module</p>
             <h2>{operationsModule.name}</h2>
@@ -37,9 +39,8 @@ export default async function OperationsModulePage({ params }) {
         <div className="operations-module-coming-soon">
           <strong>Workflow shell ready</strong>
           <span>
-            This module route is available for the CRM workspace. Detailed forms,
-            document uploads, approvals, and reports can be added without changing
-            the Operations Hub layout.
+            This module route is available for the CRM workspace. Detailed forms, document uploads, approvals,
+            and reports can be added without changing the Operations Hub layout.
           </span>
         </div>
       </section>

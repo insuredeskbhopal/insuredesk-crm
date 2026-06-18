@@ -7,20 +7,30 @@ export function filterRecordsForReport(records, filter) {
 
   if (filter.type === "all") return records;
   if (filter.type === "hasPdf") return records.filter((record) => Boolean(record.hasPdf) === filter.value);
-  if (filter.type === "district") return records.filter((record) => (record.district || "Unknown district") === filter.value);
+  if (filter.type === "district")
+    return records.filter((record) => (record.district || "Unknown district") === filter.value);
   if (filter.type === "insuranceCompany") {
-    return records.filter((record) => normalizeInsuranceCompanyReportName(record.insuranceCompany) === filter.value);
+    return records.filter(
+      (record) => normalizeInsuranceCompanyReportName(record.insuranceCompany) === filter.value,
+    );
   }
-  if (filter.type === "policyType") return records.filter((record) => (record.policyType || "Unknown policy type") === filter.value);
-  if (filter.type === "customerName") return records.filter((record) => (record.insuredName || "Unnamed insured") === filter.value);
+  if (filter.type === "policyType")
+    return records.filter((record) => (record.policyType || "Unknown policy type") === filter.value);
+  if (filter.type === "customerName")
+    return records.filter((record) => (record.insuredName || "Unnamed insured") === filter.value);
   if (filter.type === "recordIds") return records.filter((record) => filter.value.includes(record.id));
   if (filter.type === "missing") return records.filter((record) => !record[filter.value]);
   if (filter.type === "policyFamily") {
-    return records.filter((record) => (FAMILY_LABELS[getRecordFamily(record)] || "Other Policies") === filter.value);
+    return records.filter(
+      (record) => (FAMILY_LABELS[getRecordFamily(record)] || "Other Policies") === filter.value,
+    );
   }
   if (filter.type === "makeModel") {
     return records.filter((record) => {
-      const rawMake = String(record.makeModel || "").trim().split(/\s+/)[0] || "Unknown";
+      const rawMake =
+        String(record.makeModel || "")
+          .trim()
+          .split(/\s+/)[0] || "Unknown";
       const make = rawMake.charAt(0).toUpperCase() + rawMake.slice(1).toLowerCase();
       return make === filter.value;
     });
@@ -60,7 +70,7 @@ export const FAMILY_LABELS = {
   life: "Life Policy",
   home: "Home Policy",
   cyber: "Cyber Policy",
-  misc: "Other Policies"
+  misc: "Other Policies",
 };
 
 export function normalizeInsuranceCompanyReportName(value) {
@@ -85,7 +95,9 @@ export function getRecordFamily(record) {
     record.ncb ||
     record.policyCoverType ||
     record.makeModel ||
-    /\b(motor|private car|two wheeler|bike|scooter|commercial vehicle|taxi|cab|bus|chassis|engine|fleet)\b/i.test(haystack);
+    /\b(motor|private car|two wheeler|bike|scooter|commercial vehicle|taxi|cab|bus|chassis|engine|fleet)\b/i.test(
+      haystack,
+    );
   if (hasMotorSignals) return "motor";
 
   // 2. Fire Check

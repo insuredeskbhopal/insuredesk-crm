@@ -17,7 +17,7 @@ import {
   RefreshCw,
   ShieldCheck,
   TrendingUp,
-  Users
+  Users,
 } from "lucide-react";
 
 const ICONS = {
@@ -31,7 +31,7 @@ const ICONS = {
   "service-requests": ClipboardList,
   team: Activity,
   operations: BriefcaseBusiness,
-  documents: FileBarChart
+  documents: FileBarChart,
 };
 
 const RANGE_OPTIONS = [
@@ -43,7 +43,7 @@ const RANGE_OPTIONS = [
   ["last_month", "Last Month"],
   ["quarter", "Quarter"],
   ["year", "Year"],
-  ["custom", "Custom Range"]
+  ["custom", "Custom Range"],
 ];
 
 export function ReportIndexPage({ modules, lastUpdated }) {
@@ -61,7 +61,9 @@ export function ReportIndexPage({ modules, lastUpdated }) {
           return (
             <article className="bi-module-card" key={module.id}>
               <div className="bi-module-head">
-                <span><Icon size={21} /></span>
+                <span>
+                  <Icon size={21} />
+                </span>
                 <small>{module.phase}</small>
               </div>
               <h2>{module.title}</h2>
@@ -92,7 +94,9 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
           <div className="state-icon">!</div>
           <p className="eyebrow">Report unavailable</p>
           <h1>Business report not found</h1>
-          <Link className="primary-action" href="/dashboard/reports">Back to Reports</Link>
+          <Link className="primary-action" href="/dashboard/reports">
+            Back to Reports
+          </Link>
         </section>
       </main>
     );
@@ -119,10 +123,18 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
           <button type="button" className="secondary-action" onClick={() => window.print()}>
             <Printer size={16} /> Print Report
           </button>
-          <button type="button" className="secondary-action" onClick={() => downloadCsv(`${report.category}-report.csv`, exportRows)}>
+          <button
+            type="button"
+            className="secondary-action"
+            onClick={() => downloadCsv(`${report.category}-report.csv`, exportRows)}
+          >
             <Download size={16} /> Export CSV
           </button>
-          <button type="button" className="secondary-action" onClick={() => downloadCsv(`${report.category}-report.xls`, exportRows)}>
+          <button
+            type="button"
+            className="secondary-action"
+            onClick={() => downloadCsv(`${report.category}-report.xls`, exportRows)}
+          >
             <Download size={16} /> Export Excel
           </button>
           <button type="button" className="secondary-action" onClick={() => window.print()}>
@@ -167,7 +179,9 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
               <div className={`bi-health-card ${getHealthClass(value)}`} key={label}>
                 <span>{label}</span>
                 <strong>{value}</strong>
-                <div><i style={{ width: `${Math.max(0, Math.min(100, value))}%` }} /></div>
+                <div>
+                  <i style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+                </div>
               </div>
             ))}
           </div>
@@ -227,7 +241,11 @@ function ReportFilters({ filters, users }) {
       <label>
         <span>Date Range</span>
         <select name="range" defaultValue={filters.range}>
-          {RANGE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          {RANGE_OPTIONS.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
         </select>
       </label>
       <label>
@@ -242,7 +260,11 @@ function ReportFilters({ filters, users }) {
         <span>User</span>
         <select name="user" defaultValue={filters.user}>
           <option value="">All Users</option>
-          {users.map((user) => <option key={user.id} value={user.id}>{user.name || user.email}</option>)}
+          {users.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.name || user.email}
+            </option>
+          ))}
         </select>
       </label>
       <label>
@@ -257,7 +279,9 @@ function ReportFilters({ filters, users }) {
         <span>Status</span>
         <input name="status" defaultValue={filters.status} placeholder="Status" />
       </label>
-      <button type="submit" className="primary-action">Apply Filters</button>
+      <button type="submit" className="primary-action">
+        Apply Filters
+      </button>
     </form>
   );
 }
@@ -271,16 +295,22 @@ function ChartCard({ chart }) {
         <h2>{chart.title}</h2>
       </div>
       <div className="bi-bars">
-        {chart.rows.length ? chart.rows.map((row) => {
-          const value = Number(row[1]) || 0;
-          return (
-            <div className="bi-bar-row" key={`${chart.title}-${row[0]}`}>
-              <span>{row[0]}</span>
-              <div><i style={{ width: `${Math.max(4, (value / max) * 100)}%` }} /></div>
-              <strong>{row[1]}</strong>
-            </div>
-          );
-        }) : <p className="bi-empty">No records found for this filter.</p>}
+        {chart.rows.length ? (
+          chart.rows.map((row) => {
+            const value = Number(row[1]) || 0;
+            return (
+              <div className="bi-bar-row" key={`${chart.title}-${row[0]}`}>
+                <span>{row[0]}</span>
+                <div>
+                  <i style={{ width: `${Math.max(4, (value / max) * 100)}%` }} />
+                </div>
+                <strong>{row[1]}</strong>
+              </div>
+            );
+          })
+        ) : (
+          <p className="bi-empty">No records found for this filter.</p>
+        )}
       </div>
     </section>
   );
@@ -298,15 +328,25 @@ function ReportTable({ table }) {
       <div className="table-wrap">
         <table>
           <thead>
-            <tr>{table.headers.map((header) => <th key={header}>{header}</th>)}</tr>
+            <tr>
+              {table.headers.map((header) => (
+                <th key={header}>{header}</th>
+              ))}
+            </tr>
           </thead>
           <tbody>
-            {table.rows.length ? table.rows.map((row, index) => (
-              <tr key={`${table.title}-${index}`}>
-                {row.map((cell, cellIndex) => <td key={`${table.title}-${index}-${cellIndex}`}>{cell}</td>)}
+            {table.rows.length ? (
+              table.rows.map((row, index) => (
+                <tr key={`${table.title}-${index}`}>
+                  {row.map((cell, cellIndex) => (
+                    <td key={`${table.title}-${index}-${cellIndex}`}>{cell}</td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={table.headers.length}>No records found.</td>
               </tr>
-            )) : (
-              <tr><td colSpan={table.headers.length}>No records found.</td></tr>
             )}
           </tbody>
         </table>
@@ -328,7 +368,9 @@ function flattenReportRows(report) {
 }
 
 function downloadCsv(fileName, rows) {
-  const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+  const csv = rows
+    .map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(","))
+    .join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
@@ -352,6 +394,6 @@ function formatRelative(value) {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   });
 }

@@ -12,8 +12,8 @@ export const OPERATIONS_MODULES = [
       "Renewal reminders",
       "Approvals",
       "Escalations",
-      "Activity feed"
-    ]
+      "Activity feed",
+    ],
   },
   {
     id: "customer-profiling",
@@ -30,8 +30,8 @@ export const OPERATIONS_MODULES = [
       "Family information",
       "Income information",
       "Future insurance requirements",
-      "Lead qualification"
-    ]
+      "Lead qualification",
+    ],
   },
   {
     id: "manual-policy-entry",
@@ -40,12 +40,7 @@ export const OPERATIONS_MODULES = [
     route: "/operations/manual-policy-entry",
     buttonLabel: "Open Policy Entry",
     accent: "blue",
-    functions: [
-      "Manual policy creation",
-      "Policy editing",
-      "Data verification",
-      "Policy upload support"
-    ]
+    functions: ["Manual policy creation", "Policy editing", "Data verification", "Policy upload support"],
   },
   {
     id: "claims-management",
@@ -60,8 +55,8 @@ export const OPERATIONS_MODULES = [
       "Upload claim documents",
       "Surveyor information",
       "Settlement tracking",
-      "Rejection tracking"
-    ]
+      "Rejection tracking",
+    ],
   },
   {
     id: "declarations",
@@ -75,8 +70,8 @@ export const OPERATIONS_MODULES = [
       "Risk declarations",
       "Business declarations",
       "Proposal declarations",
-      "Declaration history"
-    ]
+      "Declaration history",
+    ],
   },
   {
     id: "endorsements",
@@ -90,8 +85,8 @@ export const OPERATIONS_MODULES = [
       "Nominee changes",
       "Vehicle changes",
       "Coverage updates",
-      "Policy corrections"
-    ]
+      "Policy corrections",
+    ],
   },
   {
     id: "service-requests",
@@ -106,8 +101,8 @@ export const OPERATIONS_MODULES = [
       "Premium certificates",
       "NCB certificates",
       "Customer support tickets",
-      "General servicing"
-    ]
+      "General servicing",
+    ],
   },
   {
     id: "lead-management",
@@ -122,9 +117,9 @@ export const OPERATIONS_MODULES = [
       "Follow-ups",
       "Opportunity tracking",
       "Lead conversion tracking",
-      "Lost lead tracking"
-    ]
-  }
+      "Lost lead tracking",
+    ],
+  },
 ];
 
 export const FUTURE_OPERATIONS_MODULES = [
@@ -137,10 +132,9 @@ export const FUTURE_OPERATIONS_MODULES = [
   "Agent Activities",
   "Customer Support Center",
   "Task Management",
-  "Workflow Automation"
+  "Workflow Automation",
 ];
 
 export function getOperationsModule(id) {
   return OPERATIONS_MODULES.find((module) => module.id === id) || null;
 }
-

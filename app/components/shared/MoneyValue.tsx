@@ -2,4 +2,3 @@
 export default function MoneyValue({ value }) {
   return <>{value}</>;
 }
-

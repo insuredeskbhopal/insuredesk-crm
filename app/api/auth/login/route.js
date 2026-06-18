@@ -15,7 +15,7 @@ export async function POST(request) {
 
     // Find the user including role and organization
     const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail }
+      where: { email: normalizedEmail },
     });
 
     if (!user) {
@@ -43,7 +43,7 @@ export async function POST(request) {
         userAgent,
         userId: user.id,
         organizationId: user.organizationId,
-        metadata: { email: normalizedEmail }
+        metadata: { email: normalizedEmail },
       });
 
       return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
@@ -56,7 +56,7 @@ export async function POST(request) {
       name: user.name,
       role: user.role,
       organizationId: user.organizationId,
-      assignedLOBs: user.assignedLOBs || []
+      assignedLOBs: user.assignedLOBs || [],
     });
 
     // Extract IP and UA for success audit
@@ -73,7 +73,7 @@ export async function POST(request) {
       userAgent,
       userId: user.id,
       organizationId: user.organizationId,
-      metadata: { email: user.email, role: user.role }
+      metadata: { email: user.email, role: user.role },
     });
 
     // Set secure HTTP-only cookie
@@ -86,8 +86,8 @@ export async function POST(request) {
         name: user.name,
         role: user.role,
         organizationId: user.organizationId,
-        assignedLOBs: user.assignedLOBs || []
-      }
+        assignedLOBs: user.assignedLOBs || [],
+      },
     });
 
     response.cookies.set({
@@ -97,7 +97,7 @@ export async function POST(request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24, // 24 hours
-      path: "/"
+      path: "/",
     });
 
     return response;

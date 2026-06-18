@@ -6,7 +6,7 @@ export async function GET(request) {
     bankSourceId: searchParams.get("bankSourceId") || undefined,
     companyId: searchParams.get("companyId") || undefined,
     categoryId: searchParams.get("categoryId") || undefined,
-    policyTypeId: searchParams.get("policyTypeId") || undefined
+    policyTypeId: searchParams.get("policyTypeId") || undefined,
   });
 
   if (!schema) {

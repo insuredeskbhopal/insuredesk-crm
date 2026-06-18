@@ -3,7 +3,11 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter, getCustomerProfileScopedFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
-import { normalizeProfilePhone, sanitizeCustomerProfilePayload, serializeCustomerProfile } from "@/lib/customer-profiles/utils";
+import {
+  normalizeProfilePhone,
+  sanitizeCustomerProfilePayload,
+  serializeCustomerProfile,
+} from "@/lib/customer-profiles/utils";
 
 export const runtime = "nodejs";
 
@@ -31,7 +35,7 @@ export async function GET(request) {
 
       const where = {
         ...ownProfileFilter,
-        deletedAt: null
+        deletedAt: null,
       };
 
       const andFilters = [];
@@ -45,8 +49,8 @@ export async function GET(request) {
           OR: [
             { assignedTo: { contains: assignedTo, mode: "insensitive" } },
             { createdBy: { name: { contains: assignedTo, mode: "insensitive" } } },
-            { createdBy: { email: { contains: assignedTo, mode: "insensitive" } } }
-          ]
+            { createdBy: { email: { contains: assignedTo, mode: "insensitive" } } },
+          ],
         });
       }
 
@@ -58,10 +62,7 @@ export async function GET(request) {
         const start = new Date(`${followUpDate}T00:00:00.000Z`);
         const end = new Date(`${followUpDate}T23:59:59.999Z`);
         andFilters.push({
-          OR: [
-            { nextFollowUpDate: { gte: start, lte: end } },
-            { followUpDate: { gte: start, lte: end } }
-          ]
+          OR: [{ nextFollowUpDate: { gte: start, lte: end } }, { followUpDate: { gte: start, lte: end } }],
         });
       }
 
@@ -69,8 +70,8 @@ export async function GET(request) {
         andFilters.push({
           OR: [
             { name: { contains: q, mode: "insensitive" } },
-            { phone: { contains: q, mode: "insensitive" } }
-          ]
+            { phone: { contains: q, mode: "insensitive" } },
+          ],
         });
       }
 
@@ -79,7 +80,10 @@ export async function GET(request) {
       }
 
       // Fetch paginated profiles and total counts in parallel
-      const lobOptionsQuery = buildCustomerProfileLobOptionsQuery(ownProfileFilter, user.role === "SUPER_ADMIN" ? null : user.assignedLOBs);
+      const lobOptionsQuery = buildCustomerProfileLobOptionsQuery(
+        ownProfileFilter,
+        user.role === "SUPER_ADMIN" ? null : user.assignedLOBs,
+      );
       const [profiles, totalCount, counts, assignedToOptions, lobRows] = await Promise.all([
         prisma.customerProfile.findMany({
           where,
@@ -88,31 +92,31 @@ export async function GET(request) {
           take: limit,
           include: {
             createdBy: { select: { name: true, email: true } },
-            updatedBy: { select: { name: true, email: true } }
-          }
+            updatedBy: { select: { name: true, email: true } },
+          },
         }),
         prisma.customerProfile.count({ where }),
         prisma.customerProfile.groupBy({
           by: ["status", "convertedToCustomer"],
           where: {
             ...ownProfileFilter,
-            deletedAt: null
+            deletedAt: null,
           },
           _count: {
-            id: true
-          }
+            id: true,
+          },
         }),
         prisma.customerProfile.findMany({
           where: {
             ...ownProfileFilter,
-            deletedAt: null
+            deletedAt: null,
           },
           select: {
             assignedTo: true,
-            createdBy: { select: { name: true, email: true } }
-          }
+            createdBy: { select: { name: true, email: true } },
+          },
         }),
-        prisma.$queryRawUnsafe(lobOptionsQuery.sql, ...lobOptionsQuery.params)
+        prisma.$queryRawUnsafe(lobOptionsQuery.sql, ...lobOptionsQuery.params),
       ]);
 
       const serialized = profiles.map(serializeCustomerProfile);
@@ -141,12 +145,16 @@ export async function GET(request) {
         followUpRequired,
         interested,
         converted,
-        lost
+        lost,
       };
 
       const filterOptions = {
-        assignedTo: unique(assignedToOptions.map((profile) => profile.assignedTo || profile.createdBy?.name || profile.createdBy?.email)),
-        lobs: unique(lobRows.map((row) => row.lob))
+        assignedTo: unique(
+          assignedToOptions.map(
+            (profile) => profile.assignedTo || profile.createdBy?.name || profile.createdBy?.email,
+          ),
+        ),
+        lobs: unique(lobRows.map((row) => row.lob)),
       };
 
       return NextResponse.json({
@@ -157,7 +165,7 @@ export async function GET(request) {
         totalPages: Math.ceil(totalCount / limit) || 1,
         counters,
         filterOptions,
-        policyMatches: []
+        policyMatches: [],
       });
     }
 
@@ -165,27 +173,27 @@ export async function GET(request) {
       prisma.customerProfile.findMany({
         where: {
           ...ownProfileFilter,
-          phone: { contains: phone }
+          phone: { contains: phone },
         },
         orderBy: { updatedAt: "desc" },
         take: 50,
         include: {
           createdBy: { select: { name: true, email: true } },
-          updatedBy: { select: { name: true, email: true } }
-        }
+          updatedBy: { select: { name: true, email: true } },
+        },
       }),
       prisma.policyRecord.findMany({
         where: {
           ...tenantFilter,
           deletedAt: null,
           OR: [
-            { reviewedData: { path: ['contactNumber'], string_contains: phone } },
-            { reviewedData: { path: ['Contact No.'], string_contains: phone } },
-            { reviewedData: { path: ['customerMobile'], string_contains: phone } },
-            { data: { path: ['contactNumber'], string_contains: phone } },
-            { data: { path: ['Contact No.'], string_contains: phone } },
-            { data: { path: ['customerMobile'], string_contains: phone } }
-          ]
+            { reviewedData: { path: ["contactNumber"], string_contains: phone } },
+            { reviewedData: { path: ["Contact No."], string_contains: phone } },
+            { reviewedData: { path: ["customerMobile"], string_contains: phone } },
+            { data: { path: ["contactNumber"], string_contains: phone } },
+            { data: { path: ["Contact No."], string_contains: phone } },
+            { data: { path: ["customerMobile"], string_contains: phone } },
+          ],
         },
         orderBy: { savedAt: "desc" },
         take: 200,
@@ -194,9 +202,9 @@ export async function GET(request) {
           savedAt: true,
           data: true,
           reviewedData: true,
-          createdBy: { select: { name: true, email: true } }
-        }
-      })
+          createdBy: { select: { name: true, email: true } },
+        },
+      }),
     ]);
 
     const serializedProfiles = profiles.map(serializeCustomerProfile);
@@ -204,16 +212,16 @@ export async function GET(request) {
       where: {
         ...getCustomerProfileClaimFilter(user),
         phone: { contains: phone },
-        NOT: { createdById: actorId }
+        NOT: { createdById: actorId },
       },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (claimedByAnotherUser && !serializedProfiles.length) {
       return NextResponse.json({
         profiles: [],
         policyMatches: [],
-        claimedByAnotherUser: true
+        claimedByAnotherUser: true,
       });
     }
 
@@ -246,7 +254,7 @@ export async function GET(request) {
           occupancy: payload.occupancy || "",
           validIn: payload.validIn || "",
           description: payload.description || "",
-          remark: payload.remark || ""
+          remark: payload.remark || "",
         };
       })
       .filter((record) => normalizeProfilePhone(record.phone) === phone);
@@ -254,10 +262,13 @@ export async function GET(request) {
     return NextResponse.json({
       profiles: serializedProfiles,
       policyMatches: claimedByAnotherUser ? [] : policyMatches,
-      claimedByAnotherUser: Boolean(claimedByAnotherUser)
+      claimedByAnotherUser: Boolean(claimedByAnotherUser),
     });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to search customer profiles." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to search customer profiles." },
+      { status: 500 },
+    );
   }
 }
 
@@ -286,7 +297,7 @@ function buildCustomerProfileLobOptionsQuery(ownerFilter = {}) {
       WHERE ${conditions.join(" AND ")}
       ORDER BY lob ASC
     `,
-    params
+    params,
   };
 }
 
@@ -305,18 +316,18 @@ export async function POST(request) {
     const creatorLabel = user.name || user.email || "";
     const profileData = {
       ...data,
-      assignedTo: data.assignedTo || creatorLabel
+      assignedTo: data.assignedTo || creatorLabel,
     };
     if (profileData.phone) {
       const existing = await prisma.customerProfile.findFirst({
         where: {
           ...getCustomerProfileClaimFilter(user),
-          phone: { contains: profileData.phone }
+          phone: { contains: profileData.phone },
         },
         include: {
           createdBy: { select: { name: true, email: true } },
-          updatedBy: { select: { name: true, email: true } }
-        }
+          updatedBy: { select: { name: true, email: true } },
+        },
       });
 
       if (existing) {
@@ -327,9 +338,9 @@ export async function POST(request) {
               ? "This phone number already exists in your Customer Profiling leads."
               : "This phone number is already claimed by another user in Customer Profiling.",
             profile: isOwnLead ? serializeCustomerProfile(existing) : null,
-            claimedByAnotherUser: !isOwnLead
+            claimedByAnotherUser: !isOwnLead,
           },
-          { status: 409 }
+          { status: 409 },
         );
       }
     }
@@ -340,12 +351,12 @@ export async function POST(request) {
         name: profileData.name || "Unnamed Customer",
         organizationId: user.organizationId,
         createdById: actorId,
-        updatedById: actorId
+        updatedById: actorId,
       },
       include: {
         createdBy: { select: { name: true, email: true } },
-        updatedBy: { select: { name: true, email: true } }
-      }
+        updatedBy: { select: { name: true, email: true } },
+      },
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -359,12 +370,15 @@ export async function POST(request) {
       userAgent,
       userId: actorId,
       organizationId: user.organizationId,
-      metadata: { phone: record.phone, selectedLOBs: record.selectedLOBs }
+      metadata: { phone: record.phone, selectedLOBs: record.selectedLOBs },
     });
 
     return NextResponse.json(serializeCustomerProfile(record), { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Customer profile could not be saved." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Customer profile could not be saved." },
+      { status: 500 },
+    );
   }
 }
 
@@ -372,15 +386,14 @@ async function requireSession(request) {
   const token = request.cookies.get("token")?.value;
   if (!token) return { response: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) };
   const session = await verifyJWT(token);
-  if (!session) return { response: NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }) };
+  if (!session)
+    return { response: NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }) };
   return session;
 }
 
-
-
 function getCustomerProfileClaimFilter(user) {
   const filter = {
-    deletedAt: null
+    deletedAt: null,
   };
   if (user.organizationId) {
     filter.organizationId = user.organizationId;

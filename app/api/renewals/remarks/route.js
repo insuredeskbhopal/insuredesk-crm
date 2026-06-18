@@ -18,9 +18,9 @@ function appendRenewalRemark(payload = {}, remark) {
       priority: remark.priority || "",
       nextAction: remark.nextAction || "",
       lastRemarkAt: remark.createdAt,
-      lastRemarkBy: remark.createdBy
+      lastRemarkBy: remark.createdBy,
     },
-    renewalRemarks: [remark, ...existing]
+    renewalRemarks: [remark, ...existing],
   };
 }
 
@@ -36,7 +36,8 @@ export async function POST(request) {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { policyId, remark, nextFollowUpDate, followUpStatus, followUpMode, priority, nextAction } = await request.json();
+    const { policyId, remark, nextFollowUpDate, followUpStatus, followUpMode, priority, nextAction } =
+      await request.json();
     const text = String(remark || "").trim();
     if (!policyId) {
       return Response.json({ error: "Missing policyId parameter" }, { status: 400 });
@@ -53,8 +54,8 @@ export async function POST(request) {
     const policy = await prisma.policyRecord.findFirst({
       where: {
         id: policyId,
-        ...tenantFilter
-      }
+        ...tenantFilter,
+      },
     });
 
     if (!policy) {
@@ -76,7 +77,7 @@ export async function POST(request) {
       followUpStatus: String(followUpStatus || "Follow-up Scheduled").trim(),
       followUpMode: String(followUpMode || "Phone Call").trim(),
       priority: String(priority || "Normal").trim(),
-      nextAction: String(nextAction || "").trim()
+      nextAction: String(nextAction || "").trim(),
     };
 
     const reviewedData = appendRenewalRemark(policy.reviewedData || {}, renewalRemark);
@@ -88,8 +89,8 @@ export async function POST(request) {
         reviewedData,
         data,
         renewalStatus: followUpStatus || undefined,
-        updatedById: actorId
-      }
+        updatedById: actorId,
+      },
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -103,7 +104,14 @@ export async function POST(request) {
       userAgent,
       userId: actorId,
       organizationId: user.organizationId,
-      metadata: { remarkId: renewalRemark.id, nextFollowUpDate, followUpStatus, followUpMode, priority, nextAction }
+      metadata: {
+        remarkId: renewalRemark.id,
+        nextFollowUpDate,
+        followUpStatus,
+        followUpMode,
+        priority,
+        nextAction,
+      },
     });
 
     return Response.json({ success: true, remark: renewalRemark, followUp: reviewedData.renewalFollowUp });

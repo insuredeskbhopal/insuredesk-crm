@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log("Cleaning database...");
-  
+
   // Delete policy records first
   const deletedRecords = await prisma.policyRecord.deleteMany();
   console.log(`Deleted ${deletedRecords.count} policy records.`);

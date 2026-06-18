@@ -8,7 +8,7 @@ import {
   getCustomerProfileScopedFilter,
   UserRole,
   applyLOBRestriction,
-  getLOBFilterSQL
+  getLOBFilterSQL,
 } from "../lib/auth/rbac";
 
 describe("SaaS Multi-Tenancy & RBAC Tests", () => {
@@ -116,15 +116,23 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
     it("blocks cross-organization profiling access", () => {
       const session = { id: user1, role: UserRole.ADMIN, organizationId: orgA };
 
-      expect(canAccessCustomerProfile(session, "read", { organizationId: orgB, createdById: user1 })).toBe(false);
+      expect(canAccessCustomerProfile(session, "read", { organizationId: orgB, createdById: user1 })).toBe(
+        false,
+      );
     });
 
     it("allows access for users with no organization if they are the owner", () => {
       const session = { id: user1, role: UserRole.AGENT, organizationId: null };
 
-      expect(canAccessCustomerProfile(session, "read", { organizationId: null, createdById: user1 })).toBe(true);
-      expect(canAccessCustomerProfile(session, "read", { organizationId: orgA, createdById: user1 })).toBe(false);
-      expect(canAccessCustomerProfile(session, "read", { organizationId: null, createdById: user2 })).toBe(false);
+      expect(canAccessCustomerProfile(session, "read", { organizationId: null, createdById: user1 })).toBe(
+        true,
+      );
+      expect(canAccessCustomerProfile(session, "read", { organizationId: orgA, createdById: user1 })).toBe(
+        false,
+      );
+      expect(canAccessCustomerProfile(session, "read", { organizationId: null, createdById: user2 })).toBe(
+        false,
+      );
     });
   });
 
@@ -174,7 +182,7 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(filter).toEqual({
         organizationId: orgA,
         deletedAt: null,
-        createdById: user1
+        createdById: user1,
       });
     });
 
@@ -194,7 +202,7 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(filter).toEqual({
         organizationId: orgA,
         deletedAt: null,
-        createdById: user1
+        createdById: user1,
       });
     });
 
@@ -206,7 +214,7 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
         expect(filter).toEqual({
           organizationId: orgA,
           deletedAt: null,
-          createdById: user1
+          createdById: user1,
         });
       }
     });
@@ -218,7 +226,7 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(filter).toEqual({
         organizationId: orgA,
         deletedAt: null,
-        createdById: user1
+        createdById: user1,
       });
     });
 
@@ -229,7 +237,7 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(filter).toEqual({
         organizationId: null,
         deletedAt: null,
-        createdById: user1
+        createdById: user1,
       });
     });
   });
@@ -244,7 +252,12 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
 
   describe("LOB Scoping Filters", () => {
     it("returns unmodified where clause for SUPER_ADMIN", () => {
-      const session = { id: user1, role: UserRole.SUPER_ADMIN, organizationId: orgA, assignedLOBs: ["Motor Insurance"] };
+      const session = {
+        id: user1,
+        role: UserRole.SUPER_ADMIN,
+        organizationId: orgA,
+        assignedLOBs: ["Motor Insurance"],
+      };
       const where = { organizationId: orgA };
       const result = applyLOBRestriction(where, session);
       expect(result).toEqual({ organizationId: orgA });
@@ -258,7 +271,12 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
     });
 
     it("does not generate Prisma LOB filters when assignedLOBs is present", () => {
-      const session = { id: user1, role: UserRole.AGENT, organizationId: orgA, assignedLOBs: ["Motor Insurance"] };
+      const session = {
+        id: user1,
+        role: UserRole.AGENT,
+        organizationId: orgA,
+        assignedLOBs: ["Motor Insurance"],
+      };
       const where = { organizationId: orgA };
       const result = applyLOBRestriction(where, session);
       expect(result).toEqual({ organizationId: orgA });

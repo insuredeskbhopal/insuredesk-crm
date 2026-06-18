@@ -6,7 +6,7 @@ export default function BlogSidebarForm({ defaultService }) {
   const [formState, setFormState] = useState({
     name: "",
     phone: "",
-    message: `I need consultation regarding ${defaultService || "Insurance"}.`
+    message: `I need consultation regarding ${defaultService || "Insurance"}.`,
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -20,14 +20,14 @@ export default function BlogSidebarForm({ defaultService }) {
     setFormState({
       name: "",
       phone: "",
-      message: ""
+      message: "",
     });
   };
 
   const handleChange = (e) => {
     setFormState((curr) => ({
       ...curr,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
@@ -35,7 +35,7 @@ export default function BlogSidebarForm({ defaultService }) {
     <div className="blog-sidebar-cta">
       <h3>Need Expert Advice?</h3>
       <p>Request a free consultation regarding {defaultService || "insurance consulting"}.</p>
-      
+
       {isSubmitted ? (
         <div className="blog-sidebar-success">
           <span className="material-symbols-outlined">check_circle</span>

@@ -18,8 +18,8 @@ const contactSchema = {
       description:
         "Contact BimaHeadquarter for Pan India insurance consulting, policy review, renewals, risk advisory, and claim assistance.",
       isPartOf: {
-        "@id": `${SITE_URL}/#website`
-      }
+        "@id": `${SITE_URL}/#website`,
+      },
     },
     {
       "@type": "Organization",
@@ -35,8 +35,8 @@ const contactSchema = {
         telephone: BUSINESS_DETAILS.phoneHref,
         contactType: "customer support",
         areaServed: "IN",
-        availableLanguage: ["English", "Hindi"]
-      }
+        availableLanguage: ["English", "Hindi"],
+      },
     },
     {
       "@type": "InsuranceAgency",
@@ -50,21 +50,21 @@ const contactSchema = {
         addressLocality: BUSINESS_DETAILS.address.addressLocality,
         addressRegion: BUSINESS_DETAILS.address.addressRegion,
         postalCode: BUSINESS_DETAILS.address.postalCode,
-        addressCountry: BUSINESS_DETAILS.address.addressCountry
+        addressCountry: BUSINESS_DETAILS.address.addressCountry,
       },
       geo: {
         "@type": "GeoCoordinates",
-        "latitude": 23.1956,
-        "longitude": 77.4608
+        latitude: 23.1956,
+        longitude: 77.4608,
       },
       openingHoursSpecification: {
         "@type": "OpeningHoursSpecification",
         dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
         opens: "09:00",
-        closes: "18:00"
-      }
-    }
-  ]
+        closes: "18:00",
+      },
+    },
+  ],
 };
 
 const serviceOptions = [
@@ -77,7 +77,7 @@ const serviceOptions = [
   "Marine Insurance",
   "Policy Renewals",
   "Claims Assistance",
-  "Risk Advisory"
+  "Risk Advisory",
 ];
 
 const contactRoutes = [
@@ -85,21 +85,21 @@ const contactRoutes = [
     icon: "call",
     label: "Call",
     value: BUSINESS_DETAILS.phone,
-    href: `tel:${BUSINESS_DETAILS.phoneHref}`
+    href: `tel:${BUSINESS_DETAILS.phoneHref}`,
   },
   {
     icon: "mail",
     label: "Email",
     value: BUSINESS_DETAILS.email,
-    href: `mailto:${BUSINESS_DETAILS.email}`
+    href: `mailto:${BUSINESS_DETAILS.email}`,
   },
   {
     icon: "directions",
     label: "Directions",
     value: "Corporate Office",
     href: BUSINESS_DETAILS.mapsUrl,
-    external: true
-  }
+    external: true,
+  },
 ];
 
 export default function ContactPage() {
@@ -108,7 +108,7 @@ export default function ContactPage() {
     phone: "",
     email: "",
     service: "",
-    message: ""
+    message: "",
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -123,7 +123,7 @@ export default function ContactPage() {
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     revealElements.forEach((el) => revealObserver.observe(el));
     return () => {
@@ -135,7 +135,7 @@ export default function ContactPage() {
   const handleChange = (event) => {
     setFormState((current) => ({
       ...current,
-      [event.target.name]: event.target.value
+      [event.target.name]: event.target.value,
     }));
   };
 
@@ -151,7 +151,7 @@ export default function ContactPage() {
       phone: "",
       email: "",
       service: "",
-      message: ""
+      message: "",
     });
   };
 
@@ -175,12 +175,10 @@ export default function ContactPage() {
                   <span className="material-symbols-outlined">support_agent</span>
                   Pan India Insurance Support
                 </span>
-                <h1>
-                  Talk to BimaHeadquarter for policy, renewal, and claim support.
-                </h1>
+                <h1>Talk to BimaHeadquarter for policy, renewal, and claim support.</h1>
                 <p>
-                  Share your requirement and our team will help you review coverage,
-                  compare options, or understand the next step in a claim.
+                  Share your requirement and our team will help you review coverage, compare options, or
+                  understand the next step in a claim.
                 </p>
               </div>
 
@@ -236,8 +234,8 @@ export default function ContactPage() {
                   <span>Request Callback</span>
                   <h2>Send your insurance query</h2>
                   <p>
-                    Tell us what you need. A team member will use your details only to
-                    respond to this inquiry.
+                    Tell us what you need. A team member will use your details only to respond to this
+                    inquiry.
                   </p>
                 </div>
 

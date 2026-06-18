@@ -24,7 +24,7 @@ import {
   LoaderCircle,
   Upload,
   LayoutGrid,
-  List
+  List,
 } from "lucide-react";
 import { EMPTY_FORM } from "@/app/ui/dashboard/constants";
 import {
@@ -50,7 +50,7 @@ import {
   uniqueValues,
   shouldUseExtractedVariant,
   shouldUseExtractedFuelType,
-  download
+  download,
 } from "@/app/lib/dashboard-helpers";
 import { hasUploadDetection } from "@/lib/uploads/detection";
 import PreviewField from "@/app/components/shared/PreviewField";
@@ -63,7 +63,7 @@ import AnalyticsReports from "@/app/components/analytics/AnalyticsReports";
 const DASHBOARD_VIEW_KEY = "bimaheadquarter.dashboard.view";
 const FIELD_OPTIONS = {
   fuelType: FUEL_TYPE_OPTIONS,
-  modeOfPayment: PAYMENT_MODE_OPTIONS
+  modeOfPayment: PAYMENT_MODE_OPTIONS,
 };
 
 export default function Dashboard({
@@ -81,7 +81,7 @@ export default function Dashboard({
   initialPdfFilter = "all",
   initialViewCategory = "all",
   tabCounts = null,
-  serverLoadError = ""
+  serverLoadError = "",
 }) {
   const [activePage, setActivePage] = useState(routeActivePage || "bulk-entry");
   const [records, setRecords] = useState(initialRecords);
@@ -102,7 +102,7 @@ export default function Dashboard({
     renewed: 0,
     renewedPremium: 0,
     lost: 0,
-    lostPremium: 0
+    lostPremium: 0,
   });
 
   useEffect(() => {
@@ -132,11 +132,15 @@ export default function Dashboard({
   const [customerPage, setCustomerPage] = useState(1);
   const [customerViewType, setCustomerViewType] = useState("grid");
   const [toast, setToast] = useState("");
-  const [alert, setAlert] = useState(serverLoadError ? {
-    type: "error",
-    title: "Database temporarily unavailable",
-    message: serverLoadError
-  } : null);
+  const [alert, setAlert] = useState(
+    serverLoadError
+      ? {
+          type: "error",
+          title: "Database temporarily unavailable",
+          message: serverLoadError,
+        }
+      : null,
+  );
   const [isRecordFilterOpen, setIsRecordFilterOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState("xlsx");
@@ -166,12 +170,18 @@ export default function Dashboard({
     const catVal = newParams.viewCategory !== undefined ? newParams.viewCategory : recordViewCategory;
     const pageVal = newParams.page !== undefined ? newParams.page : 1;
 
-    if (qVal.trim()) params.set("q", qVal.trim()); else params.delete("q");
-    if (fieldVal) params.set("filterField", fieldVal); else params.delete("filterField");
-    if (valueVal.trim()) params.set("filterValue", valueVal.trim()); else params.delete("filterValue");
-    if (pdfVal && pdfVal !== "all") params.set("pdfFilter", pdfVal); else params.delete("pdfFilter");
-    if (catVal && catVal !== "all") params.set("viewCategory", catVal); else params.delete("viewCategory");
-    if (pageVal > 1) params.set("page", pageVal); else params.delete("page");
+    if (qVal.trim()) params.set("q", qVal.trim());
+    else params.delete("q");
+    if (fieldVal) params.set("filterField", fieldVal);
+    else params.delete("filterField");
+    if (valueVal.trim()) params.set("filterValue", valueVal.trim());
+    else params.delete("filterValue");
+    if (pdfVal && pdfVal !== "all") params.set("pdfFilter", pdfVal);
+    else params.delete("pdfFilter");
+    if (catVal && catVal !== "all") params.set("viewCategory", catVal);
+    else params.delete("viewCategory");
+    if (pageVal > 1) params.set("page", pageVal);
+    else params.delete("page");
 
     router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
   };
@@ -192,21 +202,28 @@ export default function Dashboard({
   };
 
   const [manualGroupId, setManualGroupId] = useState(POLICY_SCHEMA_LIBRARY[0]?.id || "");
-  const manualGroup = POLICY_SCHEMA_LIBRARY.find((group) => group.id === manualGroupId) || POLICY_SCHEMA_LIBRARY[0];
+  const manualGroup =
+    POLICY_SCHEMA_LIBRARY.find((group) => group.id === manualGroupId) || POLICY_SCHEMA_LIBRARY[0];
   const [manualPolicyId, setManualPolicyId] = useState(manualGroup?.policies?.[0]?.id || "");
-  const manualPolicy = manualGroup?.policies.find((policy) => policy.id === manualPolicyId) || manualGroup?.policies?.[0];
+  const manualPolicy =
+    manualGroup?.policies.find((policy) => policy.id === manualPolicyId) || manualGroup?.policies?.[0];
 
   const manualVisibleFields = manualPolicy?.fields?.length
-    ? FIELD_SETUP.filter(([, key]) => manualPolicy.fields.includes(key) || MANUAL_REQUIRED_FIELDS.includes(key) || COMMON_REVIEW_FIELDS.includes(key))
+    ? FIELD_SETUP.filter(
+        ([, key]) =>
+          manualPolicy.fields.includes(key) ||
+          MANUAL_REQUIRED_FIELDS.includes(key) ||
+          COMMON_REVIEW_FIELDS.includes(key),
+      )
     : FIELD_SETUP;
 
-  const manualGroupedFields = FIELD_GROUPS.map(group => {
+  const manualGroupedFields = FIELD_GROUPS.map((group) => {
     const fieldsInGroup = manualVisibleFields.filter(([, key]) => group.fields.includes(key));
     return {
       title: group.title,
-      fields: fieldsInGroup
+      fields: fieldsInGroup,
     };
-  }).filter(group => group.fields.length > 0);
+  }).filter((group) => group.fields.length > 0);
 
   useEffect(() => {
     if (manualGroup?.policies) {
@@ -220,7 +237,7 @@ export default function Dashboard({
         ...current,
         policyType: manualPolicy.name,
         sourceFile: "Manual Entry",
-        status: "saved"
+        status: "saved",
       }));
     }
   }, [manualPolicyId]);
@@ -266,7 +283,7 @@ export default function Dashboard({
       setAlert({
         type: "error",
         title: "Database temporarily unavailable",
-        message: serverLoadError
+        message: serverLoadError,
       });
     }
   }, [serverLoadError]);
@@ -277,7 +294,7 @@ export default function Dashboard({
       try {
         const payload = await cachedJson("/api/auth/me", {
           ttlMs: 10000,
-          fetchOptions: { cache: "no-store" }
+          fetchOptions: { cache: "no-store" },
         });
         if (!payload?.success) return;
         if (!ignore) setCurrentUserRole(payload?.user?.role || "");
@@ -291,7 +308,7 @@ export default function Dashboard({
 
   const indexedRecords = useMemo(
     () => records.map((record) => ({ record, searchText: getRecordSearchText(record) })),
-    [records]
+    [records],
   );
   const filteredRecords = useMemo(() => {
     const normalizedQuery = deferredQuery.trim().toLowerCase();
@@ -304,9 +321,12 @@ export default function Dashboard({
     const normalizedFilterValue = recordFilterValue.trim().toLowerCase();
 
     return filteredRecords.filter((record) => {
-      const matchesField = recordFilterField && normalizedFilterValue
-        ? String(record[recordFilterField] || "").toLowerCase().includes(normalizedFilterValue)
-        : true;
+      const matchesField =
+        recordFilterField && normalizedFilterValue
+          ? String(record[recordFilterField] || "")
+              .toLowerCase()
+              .includes(normalizedFilterValue)
+          : true;
       const matchesPdf =
         recordPdfFilter === "all" ||
         (recordPdfFilter === "with" && record.hasPdf) ||
@@ -315,13 +335,17 @@ export default function Dashboard({
       return matchesField && matchesPdf;
     });
   }, [filteredRecords, recordFilterField, recordFilterValue, recordPdfFilter]);
-  const recordsWithSchema = useMemo(() => policyRecordResults.map((record) => ({
-    record,
-    validation: getReviewValidation({
-      sourceFile: record.sourceFile || "",
-      extractedData: record
-    })
-  })), [policyRecordResults]);
+  const recordsWithSchema = useMemo(
+    () =>
+      policyRecordResults.map((record) => ({
+        record,
+        validation: getReviewValidation({
+          sourceFile: record.sourceFile || "",
+          extractedData: record,
+        }),
+      })),
+    [policyRecordResults],
+  );
   const duplicateRecordIds = useMemo(() => {
     const groups = new Map();
     policyRecordResults.forEach((record) => {
@@ -350,8 +374,8 @@ export default function Dashboard({
         { key: "fire", label: "Fire Policy", count: tabCounts.fire || 0 },
         { key: "life", label: "Life Policy", count: tabCounts.life || 0 },
         { key: "home", label: "Home Policy", count: tabCounts.home || 0 },
-        { key: "cyber", label: "Cyber Policy", count: tabCounts.cyber || 0 }
-      ].filter(opt => opt.key === "all" || opt.key === "duplicates" || opt.count > 0);
+        { key: "cyber", label: "Cyber Policy", count: tabCounts.cyber || 0 },
+      ].filter((opt) => opt.key === "all" || opt.key === "duplicates" || opt.count > 0);
     }
 
     const categories = new Map();
@@ -364,7 +388,7 @@ export default function Dashboard({
     return [
       { key: "all", label: "All Records", count: policyRecordResults.length },
       { key: "duplicates", label: "Duplicate Policies", count: duplicateRecordIds.size },
-      ...Array.from(categories.values())
+      ...Array.from(categories.values()),
     ];
   }, [duplicateRecordIds.size, policyRecordResults.length, recordsWithSchema, activePage, tabCounts]);
   const visiblePolicyRecordResults = useMemo(() => {
@@ -388,7 +412,7 @@ export default function Dashboard({
         { key: "expiryDate", label: "Expiry Date", className: "col-date", format: "date" },
         { key: "savedAt", label: "Saved At", className: "col-saved", format: "dateTime" },
         { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },
-        { key: "sourceFile", label: "Source File", className: "col-source" }
+        { key: "sourceFile", label: "Source File", className: "col-source" },
       ];
     }
 
@@ -426,7 +450,7 @@ export default function Dashboard({
       pptMpwlc: "col-ppt",
       occupancy: "col-occupancy",
       validIn: "col-valid",
-      sourceFile: "col-source"
+      sourceFile: "col-source",
     };
     const selectedSchemas = recordsWithSchema
       .filter(({ validation }) => (validation.resolvedSchema?.groupId || "general") === recordViewCategory)
@@ -437,18 +461,33 @@ export default function Dashboard({
     });
     visibleKeys.add("sourceFile");
 
-    return ["customerId", "savedAt", "uploadedAt", "uploadedBy", ...FIELD_SETUP.map(([, key]) => key), "sourceFile"]
+    return [
+      "customerId",
+      "savedAt",
+      "uploadedAt",
+      "uploadedBy",
+      ...FIELD_SETUP.map(([, key]) => key),
+      "sourceFile",
+    ]
       .filter((key, index, list) => visibleKeys.has(key) && list.indexOf(key) === index)
       .map((key) => ({
         key,
-        label: key === "savedAt" ? "Saved At" : key === "uploadedAt" ? "Uploaded At" : key === "uploadedBy" ? "Uploaded By" : fieldLabels.get(key) || key,
+        label:
+          key === "savedAt"
+            ? "Saved At"
+            : key === "uploadedAt"
+              ? "Uploaded At"
+              : key === "uploadedBy"
+                ? "Uploaded By"
+                : fieldLabels.get(key) || key,
         className: classNames[key] || "col-default",
         format: key === "savedAt" || key === "uploadedAt" ? "dateTime" : undefined,
         primary: key === "insuredName",
-        code: key === "policyNumber"
+        code: key === "policyNumber",
       }));
   }, [recordViewCategory, recordsWithSchema]);
-  const activeRecordFilterCount = (recordFilterField && recordFilterValue.trim() ? 1 : 0) + (recordPdfFilter !== "all" ? 1 : 0);
+  const activeRecordFilterCount =
+    (recordFilterField && recordFilterValue.trim() ? 1 : 0) + (recordPdfFilter !== "all" ? 1 : 0);
   const clientProfiles = buildClientProfiles(filteredRecords, parseMoney);
   const CUSTOMERS_PER_PAGE = 12;
   const customerPageCount = Math.max(1, Math.ceil(clientProfiles.length / CUSTOMERS_PER_PAGE));
@@ -458,7 +497,7 @@ export default function Dashboard({
   }, [clientProfiles, customerStartIndex]);
   const customerPageNumbers = useMemo(
     () => getPageNumbers(customerPage, customerPageCount),
-    [customerPage, customerPageCount]
+    [customerPage, customerPageCount],
   );
   const goToPage = (page) => {
     setCustomerPage(Math.min(Math.max(1, page), customerPageCount));
@@ -471,17 +510,25 @@ export default function Dashboard({
   const analytics = useMemo(() => buildAnalytics(filteredRecords), [filteredRecords]);
   const canEditPolicyRecords = ["SUPER_ADMIN", "ADMIN", "MANAGER", "AGENT"].includes(currentUserRole);
   const canDeletePolicyRecords = currentUserRole === "SUPER_ADMIN";
-  const editValidation = useMemo(() => getReviewValidation({
-    sourceFile: editingRecord?.sourceFile || "",
-    extractedData: editForm
-  }), [editingRecord, editForm]);
-  const editFieldGroups = useMemo(() => FIELD_GROUPS.map((group) => {
-    const fieldsInGroup = editValidation.visibleFields.filter(([, key]) => group.fields.includes(key));
-    return {
-      title: group.title,
-      fields: fieldsInGroup
-    };
-  }).filter((group) => group.fields.length > 0), [editValidation.visibleFields]);
+  const editValidation = useMemo(
+    () =>
+      getReviewValidation({
+        sourceFile: editingRecord?.sourceFile || "",
+        extractedData: editForm,
+      }),
+    [editingRecord, editForm],
+  );
+  const editFieldGroups = useMemo(
+    () =>
+      FIELD_GROUPS.map((group) => {
+        const fieldsInGroup = editValidation.visibleFields.filter(([, key]) => group.fields.includes(key));
+        return {
+          title: group.title,
+          fields: fieldsInGroup,
+        };
+      }).filter((group) => group.fields.length > 0),
+    [editValidation.visibleFields],
+  );
 
   const handleSelectReport = (report) => {
     if (!report) return;
@@ -490,10 +537,14 @@ export default function Dashboard({
   const selectedPolicy = selectedClient
     ? selectedClient.policies.find((record) => record.id === selectedPolicyId)
     : null;
-  const selectedUpload = selectedFiles.find((file) => file.id === selectedUploadId) || selectedFiles.find((file) => normalizeUploadStatus(file.status) !== UPLOAD_STATUS.FAILED) || null;
+  const selectedUpload =
+    selectedFiles.find((file) => file.id === selectedUploadId) ||
+    selectedFiles.find((file) => normalizeUploadStatus(file.status) !== UPLOAD_STATUS.FAILED) ||
+    null;
   const reviewCounts = getReviewCounts(selectedFiles);
 
-  const showRecordSaveActions = activePage === "bulk-entry" || activePage === "dashboard" || activePage === "manual-entry";
+  const showRecordSaveActions =
+    activePage === "bulk-entry" || activePage === "dashboard" || activePage === "manual-entry";
 
   useEffect(() => {
     const savedView = loadDashboardView(DASHBOARD_VIEW_KEY);
@@ -531,14 +582,14 @@ export default function Dashboard({
     setAlert({
       type: "info",
       title: "Extracting policy PDFs",
-      message: `${files.length} file${files.length === 1 ? "" : "s"} selected. Keep this page open while the records are prepared.`
+      message: `${files.length} file${files.length === 1 ? "" : "s"} selected. Keep this page open while the records are prepared.`,
     });
     const queuedFiles = files.map((file) => ({
       id: `${file.name}-${file.size}-${Date.now()}`,
       name: file.name,
       sourceFile: file.name,
       fileObject: file,
-      status: UPLOAD_STATUS.PENDING
+      status: UPLOAD_STATUS.PENDING,
     }));
     setSelectedFiles(queuedFiles);
     setSelectedUploadId(queuedFiles[0]?.id || "");
@@ -551,7 +602,7 @@ export default function Dashboard({
 
         const response = await fetch("/api/uploads", {
           method: "POST",
-          body
+          body,
         });
 
         if (!response.ok && response.status !== 422) {
@@ -560,10 +611,12 @@ export default function Dashboard({
             const payload = await response.json();
             if (payload?.error) message = payload.error;
           } catch {}
-          setSelectedFiles(queuedFiles.map((file) => ({
-            ...file,
-            status: UPLOAD_STATUS.FAILED
-          })));
+          setSelectedFiles(
+            queuedFiles.map((file) => ({
+              ...file,
+              status: UPLOAD_STATUS.FAILED,
+            })),
+          );
           setAlert({ type: "error", title: "Upload failed", message });
           setToast(message);
           return;
@@ -578,7 +631,7 @@ export default function Dashboard({
             ...record,
             name: record.sourceFile,
             status: normalizeUploadStatus(record.status || UPLOAD_STATUS.REVIEW_REQUIRED),
-            manualFields: []
+            manualFields: [],
           })),
           ...failed.map((item) => ({
             id: item.id,
@@ -586,8 +639,8 @@ export default function Dashboard({
             sourceFile: item.sourceFile,
             fileObject: queuedFiles.find((file) => file.name === item.sourceFile)?.fileObject,
             status: UPLOAD_STATUS.FAILED,
-            message: item.error
-          }))
+            message: item.error,
+          })),
         ]);
         setSelectedUploadId(extracted[0]?.id || failed[0]?.id || "");
 
@@ -606,11 +659,13 @@ export default function Dashboard({
         }
       } catch (error) {
         const message = error?.message || "The upload request could not be completed.";
-        setSelectedFiles(queuedFiles.map((file) => ({
-          ...file,
-          status: UPLOAD_STATUS.FAILED,
-          message
-        })));
+        setSelectedFiles(
+          queuedFiles.map((file) => ({
+            ...file,
+            status: UPLOAD_STATUS.FAILED,
+            message,
+          })),
+        );
         setAlert({ type: "error", title: "Upload failed", message });
         setToast(message);
       }
@@ -642,9 +697,9 @@ export default function Dashboard({
   }
 
   function updateSelectedUpload(updates) {
-    setSelectedFiles((current) => current.map((file) => (
-      file.id === selectedUpload?.id ? { ...file, ...updates } : file
-    )));
+    setSelectedFiles((current) =>
+      current.map((file) => (file.id === selectedUpload?.id ? { ...file, ...updates } : file)),
+    );
   }
 
   function removeQueuedUpload(fileId) {
@@ -652,7 +707,10 @@ export default function Dashboard({
     setSelectedFiles(nextFiles);
 
     if (selectedUploadId === fileId) {
-      const nextSelected = nextFiles.find((file) => normalizeUploadStatus(file.status) !== UPLOAD_STATUS.FAILED) || nextFiles[0] || null;
+      const nextSelected =
+        nextFiles.find((file) => normalizeUploadStatus(file.status) !== UPLOAD_STATUS.FAILED) ||
+        nextFiles[0] ||
+        null;
       setSelectedUploadId(nextSelected?.id || "");
     }
   }
@@ -662,21 +720,28 @@ export default function Dashboard({
     updateSelectedUpload({
       extractedData: {
         ...(selectedUpload.extractedData || {}),
-        [key]: value
+        [key]: value,
       },
-      manualFields: uniqueValues([...(selectedUpload.manualFields || []), key])
+      manualFields: uniqueValues([...(selectedUpload.manualFields || []), key]),
     });
   }
 
   function startEditRecord(record) {
     if (!canEditPolicyRecords) {
-      setAlert({ type: "error", title: "Edit unavailable", message: "Viewer role cannot edit policy records." });
+      setAlert({
+        type: "error",
+        title: "Edit unavailable",
+        message: "Viewer role cannot edit policy records.",
+      });
       return;
     }
-    const nextForm = FIELD_SETUP.reduce((payload, [, key]) => ({
-      ...payload,
-      [key]: record?.[key] ?? ""
-    }), {});
+    const nextForm = FIELD_SETUP.reduce(
+      (payload, [, key]) => ({
+        ...payload,
+        [key]: record?.[key] ?? "",
+      }),
+      {},
+    );
     setEditingRecord(record);
     setEditForm(nextForm);
     setAlert(null);
@@ -692,21 +757,27 @@ export default function Dashboard({
       try {
         setAlert(null);
         if (!editValidation.valid) {
-          const message = formatReviewValidationError(editValidation.missingRequired, editValidation.contactErrors);
+          const message = formatReviewValidationError(
+            editValidation.missingRequired,
+            editValidation.contactErrors,
+          );
           setAlert({ type: "error", title: "Review incomplete", message });
           setToast("Fix contact details before saving");
           return;
         }
-        const reviewedData = editValidation.visibleFields.reduce((payload, [, key]) => ({
-          ...payload,
-          [key]: editForm[key] ?? ""
-        }), {});
+        const reviewedData = editValidation.visibleFields.reduce(
+          (payload, [, key]) => ({
+            ...payload,
+            [key]: editForm[key] ?? "",
+          }),
+          {},
+        );
         const response = await fetch(`/api/policy-records/${editingRecord.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            reviewedData
-          })
+            reviewedData,
+          }),
         });
 
         if (!response.ok) {
@@ -721,10 +792,14 @@ export default function Dashboard({
         }
 
         const updated = await response.json();
-        setRecords((current) => current.map((record) => record.id === updated.id ? updated : record));
+        setRecords((current) => current.map((record) => (record.id === updated.id ? updated : record)));
         setEditingRecord(null);
         setEditForm({});
-        setAlert({ type: "success", title: "Record updated", message: updated.policyNumber || updated.insuredName || "Policy record updated successfully." });
+        setAlert({
+          type: "success",
+          title: "Record updated",
+          message: updated.policyNumber || updated.insuredName || "Policy record updated successfully.",
+        });
         setToast("Policy record updated");
       } catch (error) {
         const message = error?.message || "Policy record could not be updated.";
@@ -736,7 +811,11 @@ export default function Dashboard({
 
   function deletePolicyRecord(recordsToDelete) {
     if (!canDeletePolicyRecords) {
-      setAlert({ type: "error", title: "Delete unavailable", message: "Only super admin can delete policy records." });
+      setAlert({
+        type: "error",
+        title: "Delete unavailable",
+        message: "Only super admin can delete policy records.",
+      });
       return;
     }
 
@@ -748,7 +827,11 @@ export default function Dashboard({
     if (isArray) {
       confirmation = window.prompt(`Type "DELETE" to delete all ${items.length} selected policy records.`);
       if (confirmation !== "DELETE") {
-        setAlert({ type: "info", title: "Delete cancelled", message: "Confirmation did not match. No policy records were deleted." });
+        setAlert({
+          type: "info",
+          title: "Delete cancelled",
+          message: "Confirmation did not match. No policy records were deleted.",
+        });
         return;
       }
     } else {
@@ -758,7 +841,11 @@ export default function Dashboard({
       const expectedConfirmation = `DELETE ${deleteLabel}`;
       confirmation = window.prompt(`Type "${expectedConfirmation}" to delete this policy record.`);
       if (confirmation !== expectedConfirmation) {
-        setAlert({ type: "info", title: "Delete cancelled", message: "Typed confirmation did not match. No policy record was deleted." });
+        setAlert({
+          type: "info",
+          title: "Delete cancelled",
+          message: "Typed confirmation did not match. No policy record was deleted.",
+        });
         return;
       }
     }
@@ -777,7 +864,7 @@ export default function Dashboard({
             const response = await fetch(`/api/policy-records/${record.id}`, {
               method: "DELETE",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ confirmation: payloadConfirmation })
+              body: JSON.stringify({ confirmation: payloadConfirmation }),
             });
             if (response.ok) {
               deletedCount++;
@@ -804,14 +891,16 @@ export default function Dashboard({
           setAlert({
             type: "success",
             title: isArray ? "Records deleted" : "Record deleted",
-            message: isArray ? `${deletedCount} policy records were deleted.` : `${items[0].policyNumber || items[0].insuredName || "this policy record"} was removed.`
+            message: isArray
+              ? `${deletedCount} policy records were deleted.`
+              : `${items[0].policyNumber || items[0].insuredName || "this policy record"} was removed.`,
           });
           setToast(isArray ? `${deletedCount} records deleted` : "Policy record deleted");
         } else {
           setAlert({
             type: "warning",
             title: "Delete completed with errors",
-            message: `Successfully deleted ${deletedCount} records. Failed to delete ${failedCount} records. Last error: ${lastErrorMessage || "Unknown error"}`
+            message: `Successfully deleted ${deletedCount} records. Failed to delete ${failedCount} records. Last error: ${lastErrorMessage || "Unknown error"}`,
           });
           setToast(`Deleted ${deletedCount} records, ${failedCount} failed`);
         }
@@ -825,7 +914,11 @@ export default function Dashboard({
 
   function retryUpload(file) {
     if (!file?.fileObject) {
-      setAlert({ type: "error", title: "Retry unavailable", message: "Choose the PDF again to retry this failed file." });
+      setAlert({
+        type: "error",
+        title: "Retry unavailable",
+        message: "Choose the PDF again to retry this failed file.",
+      });
       return;
     }
     handleFilePick([file.fileObject]);
@@ -835,19 +928,32 @@ export default function Dashboard({
     startSaving(async () => {
       try {
         setAlert(null);
-        const isDynamicPolicySave = (activePage === "bulk-entry" || activePage === "dashboard") && selectedUpload?.id;
+        const isDynamicPolicySave =
+          (activePage === "bulk-entry" || activePage === "dashboard") && selectedUpload?.id;
         if ((activePage === "bulk-entry" || activePage === "dashboard") && !selectedUpload?.id) {
-          setAlert({ type: "info", title: "No PDF selected", message: "Upload a policy PDF before saving a reviewed record." });
+          setAlert({
+            type: "info",
+            title: "No PDF selected",
+            message: "Upload a policy PDF before saving a reviewed record.",
+          });
           return;
         }
         if (isDynamicPolicySave) {
           const uploadStatus = normalizeUploadStatus(selectedUpload.status);
           if (uploadStatus === UPLOAD_STATUS.FAILED) {
-            setAlert({ type: "error", title: "Save failed", message: "This PDF failed extraction. Retry it before saving." });
+            setAlert({
+              type: "error",
+              title: "Save failed",
+              message: "This PDF failed extraction. Retry it before saving.",
+            });
             return;
           }
           if (uploadStatus === UPLOAD_STATUS.APPROVED) {
-            setAlert({ type: "info", title: "Already saved", message: `${selectedUpload.sourceFile} is already saved.` });
+            setAlert({
+              type: "info",
+              title: "Already saved",
+              message: `${selectedUpload.sourceFile} is already saved.`,
+            });
             return;
           }
           const validation = getReviewValidation(selectedUpload);
@@ -861,7 +967,7 @@ export default function Dashboard({
           const resolvedSchema = resolvePolicySchema(manualGroup?.id, manualPolicy?.id);
           const validation = getReviewValidation(
             { sourceFile: form.sourceFile, extractedData: form },
-            { resolvedSchema }
+            { resolvedSchema },
           );
           if (!validation.valid) {
             const message = formatReviewValidationError(validation.missingRequired, validation.contactErrors);
@@ -874,26 +980,30 @@ export default function Dashboard({
         const response = await fetch(isDynamicPolicySave ? "/api/policy-records" : "/api/records", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(isDynamicPolicySave ? {
-            uploadedFileId: selectedUpload.id,
-            sourceFile: selectedUpload.sourceFile,
-            detectedBankSource: "",
-            detectedCompany: selectedUpload.extractedData?.insuranceCompany || "",
-            detectedServiceCategory: "",
-            detectedPolicyType: selectedUpload.extractedData?.policyType || "",
-            selectedBankSource: "",
-            selectedCompany: selectedUpload.extractedData?.insuranceCompany || "",
-            selectedServiceCategory: "",
-            selectedPolicyType: selectedUpload.extractedData?.policyType || "",
-            confidenceScore: 0,
-            extractedData: selectedUpload.extractedData || {},
-            reviewedData: reviewedUploadData,
-            extractionMethod: selectedUpload.extractionMethod,
-            extractionQuality: {},
-            extractionLog: selectedUpload.extractionLog,
-            schemaVersion: 1,
-            policySchemaId: ""
-          } : form)
+          body: JSON.stringify(
+            isDynamicPolicySave
+              ? {
+                  uploadedFileId: selectedUpload.id,
+                  sourceFile: selectedUpload.sourceFile,
+                  detectedBankSource: "",
+                  detectedCompany: selectedUpload.extractedData?.insuranceCompany || "",
+                  detectedServiceCategory: "",
+                  detectedPolicyType: selectedUpload.extractedData?.policyType || "",
+                  selectedBankSource: "",
+                  selectedCompany: selectedUpload.extractedData?.insuranceCompany || "",
+                  selectedServiceCategory: "",
+                  selectedPolicyType: selectedUpload.extractedData?.policyType || "",
+                  confidenceScore: 0,
+                  extractedData: selectedUpload.extractedData || {},
+                  reviewedData: reviewedUploadData,
+                  extractionMethod: selectedUpload.extractionMethod,
+                  extractionQuality: {},
+                  extractionLog: selectedUpload.extractionLog,
+                  schemaVersion: 1,
+                  policySchemaId: "",
+                }
+              : form,
+          ),
         });
 
         if (!response.ok) {
@@ -910,10 +1020,14 @@ export default function Dashboard({
         const saved = await response.json();
         setRecords((current) => [saved, ...current]);
         if (isDynamicPolicySave) {
-          const updatedFiles = selectedFiles.map((file) => (
-            file.id === selectedUpload.id ? { ...file, status: UPLOAD_STATUS.APPROVED, savedRecordId: saved.id } : file
-          ));
-          const allUploadsSaved = updatedFiles.length > 0 && updatedFiles.every((file) => normalizeUploadStatus(file.status) === UPLOAD_STATUS.APPROVED);
+          const updatedFiles = selectedFiles.map((file) =>
+            file.id === selectedUpload.id
+              ? { ...file, status: UPLOAD_STATUS.APPROVED, savedRecordId: saved.id }
+              : file,
+          );
+          const allUploadsSaved =
+            updatedFiles.length > 0 &&
+            updatedFiles.every((file) => normalizeUploadStatus(file.status) === UPLOAD_STATUS.APPROVED);
 
           if (allUploadsSaved) {
             setSelectedFiles([]);
@@ -924,19 +1038,29 @@ export default function Dashboard({
 
           const nextUpload = updatedFiles.find((file) => {
             const status = normalizeUploadStatus(file.status);
-            return file.id !== selectedUpload.id && status !== UPLOAD_STATUS.FAILED && status !== UPLOAD_STATUS.APPROVED;
+            return (
+              file.id !== selectedUpload.id &&
+              status !== UPLOAD_STATUS.FAILED &&
+              status !== UPLOAD_STATUS.APPROVED
+            );
           });
           if (nextUpload) {
             setSelectedUploadId(nextUpload.id);
           } else if (!allUploadsSaved) {
-            const fallbackUpload = updatedFiles.find((file) => normalizeUploadStatus(file.status) === UPLOAD_STATUS.FAILED) || null;
+            const fallbackUpload =
+              updatedFiles.find((file) => normalizeUploadStatus(file.status) === UPLOAD_STATUS.FAILED) ||
+              null;
             setSelectedUploadId(fallbackUpload?.id || "");
           }
         } else {
           setSelectedFiles([]);
           setForm(EMPTY_FORM);
         }
-        setAlert({ type: "success", title: "Record saved", message: saved.sourceFile || "Policy record saved successfully." });
+        setAlert({
+          type: "success",
+          title: "Record saved",
+          message: saved.sourceFile || "Policy record saved successfully.",
+        });
         setToast(`Saved ${saved.sourceFile}`);
       } catch (error) {
         const message = error?.message || "Record could not be saved.";
@@ -948,7 +1072,11 @@ export default function Dashboard({
 
   async function handleExportSubmit() {
     if (!canExportRecords) {
-      setAlert({ type: "error", title: "Export restricted", message: "You do not have permission to export records." });
+      setAlert({
+        type: "error",
+        title: "Export restricted",
+        message: "You do not have permission to export records.",
+      });
       setToast("Export restricted");
       return;
     }
@@ -958,7 +1086,11 @@ export default function Dashboard({
       let list = applyExportFilters(exportSource);
 
       if (!list.length) {
-        setAlert({ type: "error", title: "No records", message: "No records found matching the selected export filters." });
+        setAlert({
+          type: "error",
+          title: "No records",
+          message: "No records found matching the selected export filters.",
+        });
         setIsExporting(false);
         return;
       }
@@ -966,10 +1098,10 @@ export default function Dashboard({
       if (exportFormat === "csv") {
         const headers = FIELD_SETUP.map(([label]) => label);
         const keys = FIELD_SETUP.map(([, key]) => key);
-        const csvRows = [headers.map(h => `"${h.replace(/"/g, '""')}"`).join(",")];
+        const csvRows = [headers.map((h) => `"${h.replace(/"/g, '""')}"`).join(",")];
 
-        list.forEach(record => {
-          const rowValues = keys.map(key => {
+        list.forEach((record) => {
+          const rowValues = keys.map((key) => {
             const val = record[key] ?? "";
             if (key === "policyNumber" && val) {
               return `="` + String(val).replace(/"/g, '""') + `"`;
@@ -985,7 +1117,7 @@ export default function Dashboard({
       } else if (exportFormat === "xlsx") {
         const XLSXModule = await import("xlsx");
         const XLSX = XLSXModule.default || XLSXModule;
-        const data = list.map(record => {
+        const data = list.map((record) => {
           const obj = {};
           FIELD_SETUP.forEach(([label, key]) => {
             obj[label] = record[key] ?? "";
@@ -999,7 +1131,7 @@ export default function Dashboard({
         let policyNumberColIndex = -1;
         const headersList = FIELD_SETUP.map(([label]) => label);
         policyNumberColIndex = headersList.indexOf("Policy Number");
-        
+
         if (policyNumberColIndex !== -1) {
           const range = XLSX.utils.decode_range(worksheet["!ref"]);
           for (let r = range.s.r + 1; r <= range.e.r; r++) {
@@ -1016,7 +1148,9 @@ export default function Dashboard({
         XLSX.utils.book_append_sheet(workbook, worksheet, "Policy Records");
 
         const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-        const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        const blob = new Blob([excelBuffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
 
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -1028,7 +1162,7 @@ export default function Dashboard({
       } else if (exportFormat === "pdf") {
         const jspdfModule = await import("jspdf");
         const jsPDF = jspdfModule.jsPDF || jspdfModule.default || jspdfModule;
-        
+
         const autoTableModule = await import("jspdf-autotable");
         const autoTable = autoTableModule.default || autoTableModule;
 
@@ -1040,12 +1174,12 @@ export default function Dashboard({
 
         const selectedColumns = FIELD_SETUP.map(([label, key]) => ({
           header: label,
-          dataKey: key
+          dataKey: key,
         }));
 
-        const tableData = list.map(record => {
+        const tableData = list.map((record) => {
           const row = {};
-          selectedColumns.forEach(col => {
+          selectedColumns.forEach((col) => {
             let val = record[col.dataKey] ?? "";
             if (["startDate", "expiryDate"].includes(col.dataKey) && val) {
               const d = new Date(val);
@@ -1066,7 +1200,7 @@ export default function Dashboard({
           styles: { fontSize: 7, cellPadding: 2, overflow: "linebreak" },
           margin: { top: 25, bottom: 20 },
           horizontalPageBreak: true,
-          horizontalPageBreakRepeat: "customerId"
+          horizontalPageBreakRepeat: "customerId",
         });
 
         doc.save("policy-records-export.pdf");
@@ -1076,7 +1210,11 @@ export default function Dashboard({
       setIsExportModalOpen(false);
     } catch (err) {
       console.error("Export error:", err);
-      setAlert({ type: "error", title: "Export failed", message: err.message || "An error occurred during export." });
+      setAlert({
+        type: "error",
+        title: "Export failed",
+        message: err.message || "An error occurred during export.",
+      });
     } finally {
       setIsExporting(false);
     }
@@ -1125,7 +1263,7 @@ export default function Dashboard({
     let list = Array.isArray(sourceRecords) ? sourceRecords : [];
 
     if (exportCategory !== "all") {
-      list = list.filter(record => {
+      list = list.filter((record) => {
         const isMotor = isMotorPolicyData(record);
         if (exportCategory === "motor") return isMotor;
         if (exportCategory === "non-motor") return !isMotor;
@@ -1137,14 +1275,18 @@ export default function Dashboard({
         const insuredName = (record.insuredName || "").toLowerCase();
 
         if (exportCategory === "fire") {
-          return policyType.includes("fire") || policyType.includes("sfsp") || policyType.includes("burglary");
+          return (
+            policyType.includes("fire") || policyType.includes("sfsp") || policyType.includes("burglary")
+          );
         }
         if (exportCategory === "warehouse") {
-          return policyType.includes("warehouse") ||
-                 remark.includes("warehouse") ||
-                 riskLocation.includes("warehouse") ||
-                 description.includes("warehouse") ||
-                 insuredName.includes("warehouse");
+          return (
+            policyType.includes("warehouse") ||
+            remark.includes("warehouse") ||
+            riskLocation.includes("warehouse") ||
+            description.includes("warehouse") ||
+            insuredName.includes("warehouse")
+          );
         }
         return true;
       });
@@ -1153,7 +1295,7 @@ export default function Dashboard({
     if (exportDuration !== "all") {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      list = list.filter(record => {
+      list = list.filter((record) => {
         const dateVal = getExportRecordDate(record);
         if (!dateVal) return false;
 
@@ -1174,7 +1316,7 @@ export default function Dashboard({
           "past-month": 30,
           "past-3-months": 90,
           "past-6-months": 180,
-          "past-year": 365
+          "past-year": 365,
         }[exportDuration];
         if (!durationDays) return true;
 
@@ -1213,791 +1355,860 @@ export default function Dashboard({
 
   return (
     <>
-          <PageHeader
-            title={pageTitle(activePage)}
-            subtitle={pageSubtitle(activePage)}
-            showRecordSaveActions={showRecordSaveActions}
-            isSaving={isSaving}
-            isUploading={isUploading}
-            onSaveRecord={saveRecord}
-          />
+      <PageHeader
+        title={pageTitle(activePage)}
+        subtitle={pageSubtitle(activePage)}
+        showRecordSaveActions={showRecordSaveActions}
+        isSaving={isSaving}
+        isUploading={isUploading}
+        onSaveRecord={saveRecord}
+      />
 
-          {alert ? <AlertCard alert={alert} onDismiss={() => setAlert(null)} /> : null}
+      {alert ? <AlertCard alert={alert} onDismiss={() => setAlert(null)} /> : null}
 
-          {(activePage === "bulk-entry" || activePage === "dashboard") && (
-            <>
-              {/* Renewal Counters Grid */}
-              <section style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: "16px",
-                marginBottom: "24px"
-              }}>
-                {[
-                  {
-                    label: "EOD Total Premium",
-                    value: renewalCounts.eodPremium ? formatMoney(renewalCounts.eodPremium) : "₹0",
-                    subtext: `${renewalCounts.eodCount} polic${renewalCounts.eodCount === 1 ? "y" : "ies"} saved today`,
-                    color: "#f59e0b",
-                    reportPeriod: "eod"
-                  },
-                  {
-                    label: "MTD Total Premium",
-                    value: renewalCounts.mtdPremium ? formatMoney(renewalCounts.mtdPremium) : "₹0",
-                    subtext: `${renewalCounts.mtdCount} polic${renewalCounts.mtdCount === 1 ? "y" : "ies"} saved this month`,
-                    color: "#d97706",
-                    reportPeriod: "mtd"
-                  },
-                  {
-                    label: "YTD Total Premium",
-                    value: renewalCounts.ytdPremium ? formatMoney(renewalCounts.ytdPremium) : "₹0",
-                    subtext: `${renewalCounts.ytdCount} polic${renewalCounts.ytdCount === 1 ? "y" : "ies"} saved this year`,
-                    color: "var(--accent)",
-                    reportPeriod: "ytd"
-                  },
-                  {
-                    label: "Expired Premium",
-                    value: renewalCounts.expiredPremium ? formatMoney(renewalCounts.expiredPremium) : "₹0",
-                    subtext: `${renewalCounts.expired} expired polic${renewalCounts.expired === 1 ? "y" : "ies"}`,
-                    color: "#dc2626",
-                    reportPeriod: "expired"
-                  },
-                  {
-                    label: "Renewed Premium",
-                    value: renewalCounts.renewedPremium ? formatMoney(renewalCounts.renewedPremium) : "₹0",
-                    subtext: `${renewalCounts.renewed} renewed polic${renewalCounts.renewed === 1 ? "y" : "ies"}`,
-                    color: "#10b981",
-                    reportPeriod: "renewed"
-                  },
-                  {
-                    label: "Lost Premium",
-                    value: renewalCounts.lostPremium ? formatMoney(renewalCounts.lostPremium) : "₹0",
-                    subtext: `${renewalCounts.lost} lost polic${renewalCounts.lost === 1 ? "y" : "ies"}`,
-                    color: "#6b7280",
-                    reportPeriod: "lost"
-                  }
-                ].map((item) => (
-                  <article
-                    key={item.label}
-                    onClick={() => {
-                      router.push(`/premium-reports/${item.reportPeriod}`);
-                    }}
-                    style={{
-                      padding: "20px",
-                      borderRadius: "16px",
-                      border: "1px solid var(--border)",
-                      background: "var(--surface)",
-                      cursor: "pointer",
-                      transition: "transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
-                      position: "relative",
-                      overflow: "hidden",
-                      boxShadow: "var(--shadow-soft)"
-                    }}
-                    className="customer-card clickable-card"
-                  >
-                    <div style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: "6px",
-                      backgroundColor: item.color
-                    }} />
-                    <p style={{
-                      margin: 0,
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      color: "var(--text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px"
-                    }}>{item.label}</p>
-                    <strong style={{
-                      display: "block",
-                      fontSize: "24px",
-                      fontWeight: "800",
-                      color: "var(--text-primary)",
-                      marginTop: "8px"
-                    }}>{item.value}</strong>
-                    <small style={{
-                      display: "block",
-                      fontSize: "11px",
-                      fontWeight: "600",
-                      color: "var(--text-secondary)",
-                      marginTop: "4px"
-                    }}>{item.subtext}</small>
-                  </article>
-                ))}
-              </section>
-
-              <section className="bento-grid">
-                <div className="left-stack">
-                  <section
-                    className={`upload-zone ${isUploadDragging ? "drag-active" : ""}`}
-                    onDragEnter={handleUploadDragOver}
-                    onDragOver={handleUploadDragOver}
-                    onDragLeave={handleUploadDragLeave}
-                    onDrop={handleUploadDrop}
-                  >
-                    <div className="zone-glow glow-a" />
-                    <div className="zone-glow glow-b" />
-                    <div className="zone-content">
-                      <div className="zone-icon">
-                        <Upload size={40} />
-                      </div>
-                      <h3>Drag or drop PDF files here</h3>
-                      <p>Upload one or many policy PDFs. Each file is classified, reviewed one by one, then saved after missing details are added.</p>
-                      <label className="browse-button">
-                        Browse Files
-                        <input
-                          type="file"
-                          accept="application/pdf"
-                          multiple
-                          onChange={(event) => {
-                            handleFilePick(event.target.files);
-                            event.target.value = "";
-                          }}
-                        />
-                      </label>
-                    </div>
-                  </section>
-
-                  <section className="glass-panel queue-panel">
-                    <div className="queue-head">
-                      <h4>In-Queue <span>({selectedFiles.length} Files)</span></h4>
-                      <div>
-                        <span className="status-pill">{queueSummaryLabel({ isUploading, selectedFiles, reviewCounts })}</span>
-                      </div>
-                    </div>
-                    <div className="queue-list">
-                      {selectedFiles.length ? selectedFiles.map((file) => (
-                        <article
-                          className={`queue-card ${normalizeUploadStatus(file.status) === UPLOAD_STATUS.FAILED ? "failed" : ""} ${selectedUpload?.id === file.id ? "active" : ""}`}
-                          key={file.id || file.name}
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => setSelectedUploadId(file.id)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") setSelectedUploadId(file.id);
-                          }}
-                        >
-                          <div className="file-icon"><FileText size={20} /></div>
-                          <div>
-                            <div className="queue-line">
-                              <p>{file.name}</p>
-                              <div className="queue-card-actions">
-                                <span>{queueLabel(file.status)}</span>
-                                <button
-                                  aria-label={`Remove ${file.name} from queue`}
-                                  className="queue-remove"
-                                  title="Remove from queue"
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    removeQueuedUpload(file.id);
-                                  }}
-                                >
-                                  <X size={15} />
-                                </button>
-                              </div>
-                            </div>
-                            {hasUploadDetection(file.detection) ? (
-                              <small className="policy-detect-badge">
-                                {file.detection.bankSource?.name || "Unknown Source"} / {file.detection.company?.name || "Unknown"} / {file.detection.serviceCategory?.name || "Uncategorized"} / {file.detection.policyType?.name || "Policy"}
-                                {" "}({Math.round((file.detection.confidenceScore || 0) * 100)}%)
-                              </small>
-                            ) : null}
-                            {file.message ? <small className="queue-error">{file.message}</small> : null}
-                            {normalizeUploadStatus(file.status) === UPLOAD_STATUS.FAILED ? (
-                              <button className="queue-retry" type="button" onClick={(event) => {
-                                event.stopPropagation();
-                                retryUpload(file);
-                              }}>
-                                Retry extraction
-                              </button>
-                            ) : null}
-                            <div className="mini-progress"><i style={{ width: progressWidth(file.status) }} /></div>
-                          </div>
-                        </article>
-                      )) : (
-                        <EmptyState>No files selected yet.</EmptyState>
-                      )}
-                    </div>
-                  </section>
-                </div>
-
-                <FixedPolicyPreview
-                  upload={selectedUpload}
-                  isSaving={isSaving}
-                  onFieldChange={updateExtractedField}
-                  onClear={() => selectedUpload ? updateSelectedUpload({ extractedData: {}, manualFields: [] }) : null}
-                  onSave={saveRecord}
+      {(activePage === "bulk-entry" || activePage === "dashboard") && (
+        <>
+          {/* Renewal Counters Grid */}
+          <section
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: "16px",
+              marginBottom: "24px",
+            }}
+          >
+            {[
+              {
+                label: "EOD Total Premium",
+                value: renewalCounts.eodPremium ? formatMoney(renewalCounts.eodPremium) : "₹0",
+                subtext: `${renewalCounts.eodCount} polic${renewalCounts.eodCount === 1 ? "y" : "ies"} saved today`,
+                color: "#f59e0b",
+                reportPeriod: "eod",
+              },
+              {
+                label: "MTD Total Premium",
+                value: renewalCounts.mtdPremium ? formatMoney(renewalCounts.mtdPremium) : "₹0",
+                subtext: `${renewalCounts.mtdCount} polic${renewalCounts.mtdCount === 1 ? "y" : "ies"} saved this month`,
+                color: "#d97706",
+                reportPeriod: "mtd",
+              },
+              {
+                label: "YTD Total Premium",
+                value: renewalCounts.ytdPremium ? formatMoney(renewalCounts.ytdPremium) : "₹0",
+                subtext: `${renewalCounts.ytdCount} polic${renewalCounts.ytdCount === 1 ? "y" : "ies"} saved this year`,
+                color: "var(--accent)",
+                reportPeriod: "ytd",
+              },
+              {
+                label: "Expired Premium",
+                value: renewalCounts.expiredPremium ? formatMoney(renewalCounts.expiredPremium) : "₹0",
+                subtext: `${renewalCounts.expired} expired polic${renewalCounts.expired === 1 ? "y" : "ies"}`,
+                color: "#dc2626",
+                reportPeriod: "expired",
+              },
+              {
+                label: "Renewed Premium",
+                value: renewalCounts.renewedPremium ? formatMoney(renewalCounts.renewedPremium) : "₹0",
+                subtext: `${renewalCounts.renewed} renewed polic${renewalCounts.renewed === 1 ? "y" : "ies"}`,
+                color: "#10b981",
+                reportPeriod: "renewed",
+              },
+              {
+                label: "Lost Premium",
+                value: renewalCounts.lostPremium ? formatMoney(renewalCounts.lostPremium) : "₹0",
+                subtext: `${renewalCounts.lost} lost polic${renewalCounts.lost === 1 ? "y" : "ies"}`,
+                color: "#6b7280",
+                reportPeriod: "lost",
+              },
+            ].map((item) => (
+              <article
+                key={item.label}
+                onClick={() => {
+                  router.push(`/premium-reports/${item.reportPeriod}`);
+                }}
+                style={{
+                  padding: "20px",
+                  borderRadius: "16px",
+                  border: "1px solid var(--border)",
+                  background: "var(--surface)",
+                  cursor: "pointer",
+                  transition: "transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+                  position: "relative",
+                  overflow: "hidden",
+                  boxShadow: "var(--shadow-soft)",
+                }}
+                className="customer-card clickable-card"
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: "6px",
+                    backgroundColor: item.color,
+                  }}
                 />
-              </section>
-
-              <section className="glass-panel table-panel">
-                <div className="panel-head">
-                  <div>
-                    <p className="eyebrow">Saved Data</p>
-                    <h2>Extracted policy table</h2>
-                  </div>
-                </div>
-                <SearchBox value={query} placeholder="Search policy, insured, district..." onChange={(event) => setQuery(event.target.value)} />
-                <RecordsTable records={filteredRecords} />
-              </section>
-            </>
-          )}
-
-          {activePage === "records" && (
-            <section className="glass-panel table-panel records-panel">
-              <div className="panel-head">
-                <div>
-                  <p className="eyebrow">Admin Database</p>
-                  <h2>Saved policy records</h2>
-                </div>
-                <div className="actions">
-                  {canExportRecords ? (
-                    <>
-                      <button type="button" disabled={!records.length} onClick={() => setIsExportModalOpen(true)}>
-                        <Download size={17} /> Export As
-                      </button>
-                      <button type="button" disabled={!records.length} onClick={() => download("policy-records.json", JSON.stringify(records, null, 2), "application/json")}>
-                        <Download size={17} /> JSON
-                      </button>
-                    </>
-                  ) : null}
-                </div>
-              </div>
-              <div className="records-search-row">
-                <SearchBox value={query} placeholder="Search policy, insured, district..." onChange={(event) => setQuery(event.target.value)} />
-                <button
-                  className={activeRecordFilterCount ? "record-filter-toggle active" : "record-filter-toggle"}
-                  type="button"
-                  onClick={() => setIsRecordFilterOpen((open) => !open)}
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    color: "var(--text-secondary)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
                 >
-                  <SlidersHorizontal size={17} />
-                  Filter{activeRecordFilterCount ? ` (${activeRecordFilterCount})` : ""}
-                </button>
-              </div>
-              {isRecordFilterOpen ? (
-                <div className="record-filter-panel">
-                  <label>
-                    <span>Filter Field</span>
-                    <select
-                      value={recordFilterField}
-                      onChange={(event) => {
-                        setRecordFilterField(event.target.value);
-                        updateRecordQueryParams({ filterField: event.target.value, page: 1 });
-                      }}
-                    >
-                      <option value="">Any field</option>
-                      {FIELD_SETUP.map(([label, key]) => (
-                        <option key={key} value={key}>{label}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    <span>Custom Data</span>
+                  {item.label}
+                </p>
+                <strong
+                  style={{
+                    display: "block",
+                    fontSize: "24px",
+                    fontWeight: "800",
+                    color: "var(--text-primary)",
+                    marginTop: "8px",
+                  }}
+                >
+                  {item.value}
+                </strong>
+                <small
+                  style={{
+                    display: "block",
+                    fontSize: "11px",
+                    fontWeight: "600",
+                    color: "var(--text-secondary)",
+                    marginTop: "4px",
+                  }}
+                >
+                  {item.subtext}
+                </small>
+              </article>
+            ))}
+          </section>
+
+          <section className="bento-grid">
+            <div className="left-stack">
+              <section
+                className={`upload-zone ${isUploadDragging ? "drag-active" : ""}`}
+                onDragEnter={handleUploadDragOver}
+                onDragOver={handleUploadDragOver}
+                onDragLeave={handleUploadDragLeave}
+                onDrop={handleUploadDrop}
+              >
+                <div className="zone-glow glow-a" />
+                <div className="zone-glow glow-b" />
+                <div className="zone-content">
+                  <div className="zone-icon">
+                    <Upload size={40} />
+                  </div>
+                  <h3>Drag or drop PDF files here</h3>
+                  <p>
+                    Upload one or many policy PDFs. Each file is classified, reviewed one by one, then saved
+                    after missing details are added.
+                  </p>
+                  <label className="browse-button">
+                    Browse Files
                     <input
-                      value={recordFilterValue}
-                      placeholder="Type value to find..."
-                      onChange={(event) => setRecordFilterValue(event.target.value)}
-                      onBlur={() => updateRecordQueryParams({ filterValue: recordFilterValue, page: 1 })}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          updateRecordQueryParams({ filterValue: recordFilterValue, page: 1 });
-                        }
+                      type="file"
+                      accept="application/pdf"
+                      multiple
+                      onChange={(event) => {
+                        handleFilePick(event.target.files);
+                        event.target.value = "";
                       }}
                     />
                   </label>
-                  <label>
-                    <span>PDF Status</span>
-                    <select
-                      value={recordPdfFilter}
-                      onChange={(event) => {
-                        setRecordPdfFilter(event.target.value);
-                        updateRecordQueryParams({ pdfFilter: event.target.value, page: 1 });
-                      }}
-                    >
-                      <option value="all">All records</option>
-                      <option value="with">With PDF</option>
-                      <option value="missing">Missing PDF</option>
-                    </select>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRecordFilterField("");
-                      setRecordFilterValue("");
-                      setRecordPdfFilter("all");
-                      updateRecordQueryParams({ filterField: "", filterValue: "", pdfFilter: "all", page: 1 });
-                    }}
-                  >
-                    Clear
-                  </button>
-                  <button
-                    aria-label="Close filter panel"
-                    className="record-filter-close"
-                    type="button"
-                    onClick={() => setIsRecordFilterOpen(false)}
-                  >
-                    <X size={18} />
-                  </button>
                 </div>
-              ) : null}
-              <div className="record-view-tabs" aria-label="Policy record views">
-                {recordViewOptions.map((option) => (
-                  <button
-                    key={option.key}
-                    className={recordViewCategory === option.key ? "active" : ""}
-                    type="button"
-                    onClick={() => {
-                      setRecordViewCategory(option.key);
-                      updateRecordQueryParams({ viewCategory: option.key, page: 1 });
-                    }}
-                  >
-                    {option.label}
-                    <span>{option.count}</span>
-                  </button>
-                ))}
-              </div>
-              <RecordsTable
-                records={visiblePolicyRecordResults}
-                columns={recordViewColumns}
-                canEdit={canEditPolicyRecords}
-                onEdit={startEditRecord}
-                canDelete={canDeletePolicyRecords}
-                onDelete={deletePolicyRecord}
-                paginate={false}
-              />
+              </section>
 
-              {/* Pagination Controls */}
-              {activePage === "records" && totalPages > 1 && (
-                <div className="table-pagination" style={{ marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "14px", color: "var(--text-secondary, #64748b)" }}>Showing page {currentPage} of {totalPages} ({totalCount} records found)</span>
-                  <div className="table-page-list" style={{ display: "flex", gap: "6px" }}>
-                    <button type="button" onClick={() => handleRecordPageChange(currentPage - 1)} disabled={currentPage === 1} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", cursor: currentPage === 1 ? "not-allowed" : "pointer" }}>
-                      Prev
-                    </button>
-                    {getPageNumbers(currentPage, totalPages).map((pNum, index) => (
-                      pNum === "..." ? (
-                        <span key={`ellipsis-${index}`} style={{ padding: "0 8px", color: "var(--text-secondary, #64748b)" }}>...</span>
-                      ) : (
-                        <button
-                          key={pNum}
-                          type="button"
-                          className={currentPage === pNum ? "active" : ""}
-                          onClick={() => handleRecordPageChange(pNum)}
-                          style={{
-                            padding: "6px 12px",
-                            borderRadius: "6px",
-                            border: "1px solid var(--border, #cbd5e1)",
-                            background: currentPage === pNum ? "var(--primary, #1e3a8a)" : "#ffffff",
-                            color: currentPage === pNum ? "#ffffff" : "var(--text-primary, #0f172a)",
-                            cursor: "pointer",
-                            fontWeight: currentPage === pNum ? "bold" : "normal"
-                          }}
-                        >
-                          {pNum}
-                        </button>
-                      )
-                    ))}
-                    <button type="button" onClick={() => handleRecordPageChange(currentPage + 1)} disabled={currentPage === totalPages} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }}>
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-            </section>
-          )}
-
-          {typeof window !== "undefined" && isExportModalOpen && createPortal(
-            <div
-              className="tb-modal-backdrop"
-              onClick={() => setIsExportModalOpen(false)}
-              style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: "rgba(15, 23, 42, 0.25)",
-                backdropFilter: "blur(12px)",
-                WebkitBackdropFilter: "blur(12px)",
-                zIndex: 2000,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "24px"
-              }}
-            >
-              <div
-                className="tb-modal-card"
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  background: "#ffffff",
-                  borderRadius: "24px",
-                  boxShadow: "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
-                  width: "100%",
-                  maxWidth: "480px",
-                  maxHeight: "90vh",
-                  display: "flex",
-                  flexDirection: "column",
-                  overflow: "hidden",
-                  border: "none",
-                  animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both"
-                }}
-              >
-                {/* Modal Header */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "20px 24px",
-                    borderBottom: "1px solid #f1f5f9",
-                    backgroundColor: "#ffffff",
-                    color: "#0f172a"
-                  }}
-                >
+              <section className="glass-panel queue-panel">
+                <div className="queue-head">
+                  <h4>
+                    In-Queue <span>({selectedFiles.length} Files)</span>
+                  </h4>
                   <div>
-                    <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#64748b" }}>Data Export</span>
-                    <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "800", color: "#0f172a" }}>
-                      Export Policy Records
-                    </h2>
+                    <span className="status-pill">
+                      {queueSummaryLabel({ isUploading, selectedFiles, reviewCounts })}
+                    </span>
                   </div>
-                  <button
-                    onClick={() => setIsExportModalOpen(false)}
-                    aria-label="Close export dialog"
-                    style={{
-                      background: "rgba(15, 23, 42, 0.05)",
-                      border: "none",
-                      color: "#64748b",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "50%",
-                      transition: "background-color 0.2s"
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.1)"}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.05)"}
-                  >
-                    <X size={20} />
-                  </button>
                 </div>
-
-                {/* Modal Body */}
-                <div
-                  style={{
-                    padding: "24px",
-                    overflowY: "auto",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "20px",
-                    backgroundColor: "#ffffff"
-                  }}
-                >
-                  {/* Format selection */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    <span style={{ fontSize: "13px", fontWeight: "700", color: "#334155" }}>Export Format</span>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
-                      {[
-                        { value: "xlsx", label: "Excel (.xlsx)" },
-                        { value: "csv", label: "CSV (.csv)" },
-                        { value: "pdf", label: "PDF Tabular (.pdf)" }
-                      ].map((fmt) => (
-                        <button
-                          key={fmt.value}
-                          type="button"
-                          onClick={() => setExportFormat(fmt.value)}
-                          style={{
-                            padding: "12px 8px",
-                            borderRadius: "12px",
-                            border: exportFormat === fmt.value ? "2px solid #0f172a" : "1px solid #cbd5e1",
-                            backgroundColor: exportFormat === fmt.value ? "#f8fafc" : "#ffffff",
-                            color: exportFormat === fmt.value ? "#0f172a" : "#475569",
-                            fontWeight: "700",
-                            fontSize: "13px",
-                            cursor: "pointer",
-                            transition: "all 0.2s"
-                          }}
-                        >
-                          {fmt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Category selection */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <label htmlFor="export-category-select" style={{ fontSize: "13px", fontWeight: "700", color: "#334155" }}>Policy Category</label>
-                    <select
-                      id="export-category-select"
-                      value={exportCategory}
-                      onChange={(e) => setExportCategory(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 12px",
-                        borderRadius: "12px",
-                        border: "1px solid #cbd5e1",
-                        fontSize: "14px",
-                        color: "#0f172a",
-                        fontWeight: "600",
-                        outline: "none"
-                      }}
-                    >
-                      <option value="all">All Categories</option>
-                      <option value="fire">Fire Policy</option>
-                      <option value="warehouse">Warehouse Policy</option>
-                      <option value="motor">Motor Policy</option>
-                      <option value="non-motor">Non Motor Policy</option>
-                    </select>
-                  </div>
-
-                  {/* Time duration selection */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <label htmlFor="export-duration-select" style={{ fontSize: "13px", fontWeight: "700", color: "#334155" }}>Time Duration</label>
-                    <select
-                      id="export-duration-select"
-                      value={exportDuration}
-                      onChange={(e) => setExportDuration(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 12px",
-                        borderRadius: "12px",
-                        border: "1px solid #cbd5e1",
-                        fontSize: "14px",
-                        color: "#0f172a",
-                        fontWeight: "600",
-                        outline: "none"
-                      }}
-                    >
-                      <option value="all">All Time</option>
-                      <option value="today">Today</option>
-                      <option value="past-3-days">Past 3 Days</option>
-                      <option value="past-week">Past Week</option>
-                      <option value="past-month">Past Month</option>
-                      <option value="past-3-months">Past 3 Months</option>
-                      <option value="past-6-months">Past 6 Months</option>
-                      <option value="past-year">Past Year</option>
-                      <option value="custom">Custom Range...</option>
-                    </select>
-                  </div>
-
-                  {/* Custom date pickers */}
-                  {exportDuration === "custom" && (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", animation: "fade-in 0.2s ease-out" }}>
-                      <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                        <span style={{ fontSize: "12px", fontWeight: "600", color: "#64748b" }}>Start Date</span>
-                        <input
-                          type="date"
-                          value={exportCustomStart}
-                          onChange={(e) => setExportCustomStart(e.target.value)}
-                          style={{
-                            padding: "8px 12px",
-                            borderRadius: "8px",
-                            border: "1px solid #cbd5e1",
-                            fontSize: "13px",
-                            color: "#0f172a",
-                            fontWeight: "600"
-                          }}
-                        />
-                      </label>
-                      <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                        <span style={{ fontSize: "12px", fontWeight: "600", color: "#64748b" }}>End Date</span>
-                        <input
-                          type="date"
-                          value={exportCustomEnd}
-                          onChange={(e) => setExportCustomEnd(e.target.value)}
-                          style={{
-                            padding: "8px 12px",
-                            borderRadius: "8px",
-                            border: "1px solid #cbd5e1",
-                            fontSize: "13px",
-                            color: "#0f172a",
-                            fontWeight: "600"
-                          }}
-                        />
-                      </label>
-                    </div>
-                  )}
-                </div>
-
-                {/* Modal Footer */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "16px 24px",
-                    borderTop: "1px solid #f1f5f9",
-                    backgroundColor: "#ffffff"
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setIsExportModalOpen(false)}
-                    style={{
-                      padding: "10px 20px",
-                      borderRadius: "12px",
-                      border: "1px solid #cbd5e1",
-                      backgroundColor: "#ffffff",
-                      color: "#475569",
-                      cursor: "pointer",
-                      fontWeight: "600",
-                      fontSize: "14px",
-                      transition: "background-color 0.2s"
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f8fafc"}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#ffffff"}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleExportSubmit}
-                    disabled={isExporting}
-                    style={{
-                      padding: "10px 24px",
-                      borderRadius: "12px",
-                      border: "1px solid #cbd5e1",
-                      backgroundColor: "#ffffff",
-                      color: "#0f172a",
-                      cursor: "pointer",
-                      fontWeight: "700",
-                      fontSize: "14px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      opacity: isExporting ? 0.7 : 1,
-                      transition: "background-color 0.2s, border-color 0.2s"
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isExporting) {
-                        e.currentTarget.style.backgroundColor = "#f8fafc";
-                        e.currentTarget.style.borderColor = "#0f172a";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isExporting) {
-                        e.currentTarget.style.backgroundColor = "#ffffff";
-                        e.currentTarget.style.borderColor = "#cbd5e1";
-                      }
-                    }}
-                  >
-                    {isExporting ? <LoaderCircle size={16} className="spin" /> : <Download size={16} />}
-                    {isExporting ? "Exporting..." : "Download Export"}
-                  </button>
-                </div>
-              </div>
-            </div>
-            , document.body
-          )}
-
-          {editingRecord ? (
-            <div className="record-edit-backdrop" onClick={() => setEditingRecord(null)}>
-              <section className="record-edit-modal" onClick={(event) => event.stopPropagation()} aria-modal="true" role="dialog">
-                <div className="record-edit-head">
-                  <div>
-                    <p className="eyebrow">{editValidation.resolvedSchema ? `${editValidation.resolvedSchema.groupLabel} / ${editValidation.resolvedSchema.policyName}` : "Policy Record"}</p>
-                    <h2><Pencil size={18} /> Edit lead data</h2>
-                  </div>
-                  <button aria-label="Close edit form" className="record-edit-close" type="button" onClick={() => setEditingRecord(null)}>
-                    <X size={18} />
-                  </button>
-                </div>
-                <div className="record-edit-body">
-                  <div className="preview-form-grouped">
-                    {editFieldGroups.map((group) => (
-                      <fieldset key={group.title} className="preview-fieldset">
-                        <legend className="preview-legend">{group.title}</legend>
-                        <div className="preview-form">
-                          {group.fields.map(([label, key]) => {
-                            const contactPersonError = validateContactPerson(editForm.contactPerson);
-                            const isContactNumber = key === "contactNumber";
-                            const error = key === "contactPerson"
-                              ? contactPersonError
-                              : isContactNumber
-                                ? validateContactNumber(editForm.contactNumber)
-                                : "";
-                            return (
-                              <PreviewField
-                                key={key}
-                                label={label}
-                                value={editForm[key] || ""}
-                                onChange={(value) => updateEditField(key, value)}
-                                options={FIELD_OPTIONS[key]}
-                                wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
-                                error={error}
-                                disabled={isContactNumber && Boolean(contactPersonError)}
-                              />
-                            );
-                          })}
+                <div className="queue-list">
+                  {selectedFiles.length ? (
+                    selectedFiles.map((file) => (
+                      <article
+                        className={`queue-card ${normalizeUploadStatus(file.status) === UPLOAD_STATUS.FAILED ? "failed" : ""} ${selectedUpload?.id === file.id ? "active" : ""}`}
+                        key={file.id || file.name}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setSelectedUploadId(file.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") setSelectedUploadId(file.id);
+                        }}
+                      >
+                        <div className="file-icon">
+                          <FileText size={20} />
                         </div>
-                      </fieldset>
-                    ))}
-                  </div>
-                </div>
-                <div className="record-edit-actions">
-                  <button type="button" onClick={() => setEditingRecord(null)} disabled={isSaving}>
-                    Cancel
-                  </button>
-                  <button className="secondary-action" type="button" onClick={saveEditedRecord} disabled={isSaving}>
-                    {isSaving ? <LoaderCircle size={18} className="spin" /> : <CheckCircle size={18} />}
-                    Save Changes
-                  </button>
+                        <div>
+                          <div className="queue-line">
+                            <p>{file.name}</p>
+                            <div className="queue-card-actions">
+                              <span>{queueLabel(file.status)}</span>
+                              <button
+                                aria-label={`Remove ${file.name} from queue`}
+                                className="queue-remove"
+                                title="Remove from queue"
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  removeQueuedUpload(file.id);
+                                }}
+                              >
+                                <X size={15} />
+                              </button>
+                            </div>
+                          </div>
+                          {hasUploadDetection(file.detection) ? (
+                            <small className="policy-detect-badge">
+                              {file.detection.bankSource?.name || "Unknown Source"} /{" "}
+                              {file.detection.company?.name || "Unknown"} /{" "}
+                              {file.detection.serviceCategory?.name || "Uncategorized"} /{" "}
+                              {file.detection.policyType?.name || "Policy"} (
+                              {Math.round((file.detection.confidenceScore || 0) * 100)}%)
+                            </small>
+                          ) : null}
+                          {file.message ? <small className="queue-error">{file.message}</small> : null}
+                          {normalizeUploadStatus(file.status) === UPLOAD_STATUS.FAILED ? (
+                            <button
+                              className="queue-retry"
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                retryUpload(file);
+                              }}
+                            >
+                              Retry extraction
+                            </button>
+                          ) : null}
+                          <div className="mini-progress">
+                            <i style={{ width: progressWidth(file.status) }} />
+                          </div>
+                        </div>
+                      </article>
+                    ))
+                  ) : (
+                    <EmptyState>No files selected yet.</EmptyState>
+                  )}
                 </div>
               </section>
             </div>
+
+            <FixedPolicyPreview
+              upload={selectedUpload}
+              isSaving={isSaving}
+              onFieldChange={updateExtractedField}
+              onClear={() =>
+                selectedUpload ? updateSelectedUpload({ extractedData: {}, manualFields: [] }) : null
+              }
+              onSave={saveRecord}
+            />
+          </section>
+
+          <section className="glass-panel table-panel">
+            <div className="panel-head">
+              <div>
+                <p className="eyebrow">Saved Data</p>
+                <h2>Extracted policy table</h2>
+              </div>
+            </div>
+            <SearchBox
+              value={query}
+              placeholder="Search policy, insured, district..."
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <RecordsTable records={filteredRecords} />
+          </section>
+        </>
+      )}
+
+      {activePage === "records" && (
+        <section className="glass-panel table-panel records-panel">
+          <div className="panel-head">
+            <div>
+              <p className="eyebrow">Admin Database</p>
+              <h2>Saved policy records</h2>
+            </div>
+            <div className="actions">
+              {canExportRecords ? (
+                <>
+                  <button type="button" disabled={!records.length} onClick={() => setIsExportModalOpen(true)}>
+                    <Download size={17} /> Export As
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!records.length}
+                    onClick={() =>
+                      download("policy-records.json", JSON.stringify(records, null, 2), "application/json")
+                    }
+                  >
+                    <Download size={17} /> JSON
+                  </button>
+                </>
+              ) : null}
+            </div>
+          </div>
+          <div className="records-search-row">
+            <SearchBox
+              value={query}
+              placeholder="Search policy, insured, district..."
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <button
+              className={activeRecordFilterCount ? "record-filter-toggle active" : "record-filter-toggle"}
+              type="button"
+              onClick={() => setIsRecordFilterOpen((open) => !open)}
+            >
+              <SlidersHorizontal size={17} />
+              Filter{activeRecordFilterCount ? ` (${activeRecordFilterCount})` : ""}
+            </button>
+          </div>
+          {isRecordFilterOpen ? (
+            <div className="record-filter-panel">
+              <label>
+                <span>Filter Field</span>
+                <select
+                  value={recordFilterField}
+                  onChange={(event) => {
+                    setRecordFilterField(event.target.value);
+                    updateRecordQueryParams({ filterField: event.target.value, page: 1 });
+                  }}
+                >
+                  <option value="">Any field</option>
+                  {FIELD_SETUP.map(([label, key]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Custom Data</span>
+                <input
+                  value={recordFilterValue}
+                  placeholder="Type value to find..."
+                  onChange={(event) => setRecordFilterValue(event.target.value)}
+                  onBlur={() => updateRecordQueryParams({ filterValue: recordFilterValue, page: 1 })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      updateRecordQueryParams({ filterValue: recordFilterValue, page: 1 });
+                    }
+                  }}
+                />
+              </label>
+              <label>
+                <span>PDF Status</span>
+                <select
+                  value={recordPdfFilter}
+                  onChange={(event) => {
+                    setRecordPdfFilter(event.target.value);
+                    updateRecordQueryParams({ pdfFilter: event.target.value, page: 1 });
+                  }}
+                >
+                  <option value="all">All records</option>
+                  <option value="with">With PDF</option>
+                  <option value="missing">Missing PDF</option>
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setRecordFilterField("");
+                  setRecordFilterValue("");
+                  setRecordPdfFilter("all");
+                  updateRecordQueryParams({ filterField: "", filterValue: "", pdfFilter: "all", page: 1 });
+                }}
+              >
+                Clear
+              </button>
+              <button
+                aria-label="Close filter panel"
+                className="record-filter-close"
+                type="button"
+                onClick={() => setIsRecordFilterOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
           ) : null}
+          <div className="record-view-tabs" aria-label="Policy record views">
+            {recordViewOptions.map((option) => (
+              <button
+                key={option.key}
+                className={recordViewCategory === option.key ? "active" : ""}
+                type="button"
+                onClick={() => {
+                  setRecordViewCategory(option.key);
+                  updateRecordQueryParams({ viewCategory: option.key, page: 1 });
+                }}
+              >
+                {option.label}
+                <span>{option.count}</span>
+              </button>
+            ))}
+          </div>
+          <RecordsTable
+            records={visiblePolicyRecordResults}
+            columns={recordViewColumns}
+            canEdit={canEditPolicyRecords}
+            onEdit={startEditRecord}
+            canDelete={canDeletePolicyRecords}
+            onDelete={deletePolicyRecord}
+            paginate={false}
+          />
 
-          {activePage === "field-setup" && (
-            <FieldSetupPanel />
+          {/* Pagination Controls */}
+          {activePage === "records" && totalPages > 1 && (
+            <div
+              className="table-pagination"
+              style={{
+                marginTop: "20px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontSize: "14px", color: "var(--text-secondary, #64748b)" }}>
+                Showing page {currentPage} of {totalPages} ({totalCount} records found)
+              </span>
+              <div className="table-page-list" style={{ display: "flex", gap: "6px" }}>
+                <button
+                  type="button"
+                  onClick={() => handleRecordPageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border, #cbd5e1)",
+                    cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                  }}
+                >
+                  Prev
+                </button>
+                {getPageNumbers(currentPage, totalPages).map((pNum, index) =>
+                  pNum === "..." ? (
+                    <span
+                      key={`ellipsis-${index}`}
+                      style={{ padding: "0 8px", color: "var(--text-secondary, #64748b)" }}
+                    >
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={pNum}
+                      type="button"
+                      className={currentPage === pNum ? "active" : ""}
+                      onClick={() => handleRecordPageChange(pNum)}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--border, #cbd5e1)",
+                        background: currentPage === pNum ? "var(--primary, #1e3a8a)" : "#ffffff",
+                        color: currentPage === pNum ? "#ffffff" : "var(--text-primary, #0f172a)",
+                        cursor: "pointer",
+                        fontWeight: currentPage === pNum ? "bold" : "normal",
+                      }}
+                    >
+                      {pNum}
+                    </button>
+                  ),
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleRecordPageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border, #cbd5e1)",
+                    cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           )}
+        </section>
+      )}
 
-          {activePage === "manual-entry" && (
-            <section className="glass-panel manual-entry-container">
-              <div className="manual-selectors">
-                <label>
-                  <span>Policy Family</span>
-                  <select value={manualGroupId} onChange={(e) => setManualGroupId(e.target.value)}>
-                    {POLICY_SCHEMA_LIBRARY.map((group) => (
-                      <option key={group.id} value={group.id}>{group.label}</option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  <span>Policy Type</span>
-                  <select value={manualPolicyId} onChange={(e) => setManualPolicyId(e.target.value)}>
-                    {manualGroup?.policies.map((policy) => (
-                      <option key={policy.id} value={policy.id}>{policy.name}</option>
-                    ))}
-                  </select>
-                </label>
+      {typeof window !== "undefined" &&
+        isExportModalOpen &&
+        createPortal(
+          <div
+            className="tb-modal-backdrop"
+            onClick={() => setIsExportModalOpen(false)}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(15, 23, 42, 0.25)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              zIndex: 2000,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "24px",
+            }}
+          >
+            <div
+              className="tb-modal-card"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#ffffff",
+                borderRadius: "24px",
+                boxShadow:
+                  "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
+                width: "100%",
+                maxWidth: "480px",
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                border: "none",
+                animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both",
+              }}
+            >
+              {/* Modal Header */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "20px 24px",
+                  borderBottom: "1px solid #f1f5f9",
+                  backgroundColor: "#ffffff",
+                  color: "#0f172a",
+                }}
+              >
+                <div>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      color: "#64748b",
+                    }}
+                  >
+                    Data Export
+                  </span>
+                  <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "800", color: "#0f172a" }}>
+                    Export Policy Records
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setIsExportModalOpen(false)}
+                  aria-label="Close export dialog"
+                  style={{
+                    background: "rgba(15, 23, 42, 0.05)",
+                    border: "none",
+                    color: "#64748b",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    transition: "background-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.1)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.05)")}
+                >
+                  <X size={20} />
+                </button>
               </div>
 
+              {/* Modal Body */}
+              <div
+                style={{
+                  padding: "24px",
+                  overflowY: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "20px",
+                  backgroundColor: "#ffffff",
+                }}
+              >
+                {/* Format selection */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <span style={{ fontSize: "13px", fontWeight: "700", color: "#334155" }}>Export Format</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                    {[
+                      { value: "xlsx", label: "Excel (.xlsx)" },
+                      { value: "csv", label: "CSV (.csv)" },
+                      { value: "pdf", label: "PDF Tabular (.pdf)" },
+                    ].map((fmt) => (
+                      <button
+                        key={fmt.value}
+                        type="button"
+                        onClick={() => setExportFormat(fmt.value)}
+                        style={{
+                          padding: "12px 8px",
+                          borderRadius: "12px",
+                          border: exportFormat === fmt.value ? "2px solid #0f172a" : "1px solid #cbd5e1",
+                          backgroundColor: exportFormat === fmt.value ? "#f8fafc" : "#ffffff",
+                          color: exportFormat === fmt.value ? "#0f172a" : "#475569",
+                          fontWeight: "700",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                        }}
+                      >
+                        {fmt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Category selection */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label
+                    htmlFor="export-category-select"
+                    style={{ fontSize: "13px", fontWeight: "700", color: "#334155" }}
+                  >
+                    Policy Category
+                  </label>
+                  <select
+                    id="export-category-select"
+                    value={exportCategory}
+                    onChange={(e) => setExportCategory(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "12px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "14px",
+                      color: "#0f172a",
+                      fontWeight: "600",
+                      outline: "none",
+                    }}
+                  >
+                    <option value="all">All Categories</option>
+                    <option value="fire">Fire Policy</option>
+                    <option value="warehouse">Warehouse Policy</option>
+                    <option value="motor">Motor Policy</option>
+                    <option value="non-motor">Non Motor Policy</option>
+                  </select>
+                </div>
+
+                {/* Time duration selection */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label
+                    htmlFor="export-duration-select"
+                    style={{ fontSize: "13px", fontWeight: "700", color: "#334155" }}
+                  >
+                    Time Duration
+                  </label>
+                  <select
+                    id="export-duration-select"
+                    value={exportDuration}
+                    onChange={(e) => setExportDuration(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "12px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "14px",
+                      color: "#0f172a",
+                      fontWeight: "600",
+                      outline: "none",
+                    }}
+                  >
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="past-3-days">Past 3 Days</option>
+                    <option value="past-week">Past Week</option>
+                    <option value="past-month">Past Month</option>
+                    <option value="past-3-months">Past 3 Months</option>
+                    <option value="past-6-months">Past 6 Months</option>
+                    <option value="past-year">Past Year</option>
+                    <option value="custom">Custom Range...</option>
+                  </select>
+                </div>
+
+                {/* Custom date pickers */}
+                {exportDuration === "custom" && (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "12px",
+                      animation: "fade-in 0.2s ease-out",
+                    }}
+                  >
+                    <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <span style={{ fontSize: "12px", fontWeight: "600", color: "#64748b" }}>
+                        Start Date
+                      </span>
+                      <input
+                        type="date"
+                        value={exportCustomStart}
+                        onChange={(e) => setExportCustomStart(e.target.value)}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: "8px",
+                          border: "1px solid #cbd5e1",
+                          fontSize: "13px",
+                          color: "#0f172a",
+                          fontWeight: "600",
+                        }}
+                      />
+                    </label>
+                    <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <span style={{ fontSize: "12px", fontWeight: "600", color: "#64748b" }}>End Date</span>
+                      <input
+                        type="date"
+                        value={exportCustomEnd}
+                        onChange={(e) => setExportCustomEnd(e.target.value)}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: "8px",
+                          border: "1px solid #cbd5e1",
+                          fontSize: "13px",
+                          color: "#0f172a",
+                          fontWeight: "600",
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "16px 24px",
+                  borderTop: "1px solid #f1f5f9",
+                  backgroundColor: "#ffffff",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsExportModalOpen(false)}
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: "12px",
+                    border: "1px solid #cbd5e1",
+                    backgroundColor: "#ffffff",
+                    color: "#475569",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    transition: "background-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportSubmit}
+                  disabled={isExporting}
+                  style={{
+                    padding: "10px 24px",
+                    borderRadius: "12px",
+                    border: "1px solid #cbd5e1",
+                    backgroundColor: "#ffffff",
+                    color: "#0f172a",
+                    cursor: "pointer",
+                    fontWeight: "700",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    opacity: isExporting ? 0.7 : 1,
+                    transition: "background-color 0.2s, border-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isExporting) {
+                      e.currentTarget.style.backgroundColor = "#f8fafc";
+                      e.currentTarget.style.borderColor = "#0f172a";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isExporting) {
+                      e.currentTarget.style.backgroundColor = "#ffffff";
+                      e.currentTarget.style.borderColor = "#cbd5e1";
+                    }
+                  }}
+                >
+                  {isExporting ? <LoaderCircle size={16} className="spin" /> : <Download size={16} />}
+                  {isExporting ? "Exporting..." : "Download Export"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {editingRecord ? (
+        <div className="record-edit-backdrop" onClick={() => setEditingRecord(null)}>
+          <section
+            className="record-edit-modal"
+            onClick={(event) => event.stopPropagation()}
+            aria-modal="true"
+            role="dialog"
+          >
+            <div className="record-edit-head">
+              <div>
+                <p className="eyebrow">
+                  {editValidation.resolvedSchema
+                    ? `${editValidation.resolvedSchema.groupLabel} / ${editValidation.resolvedSchema.policyName}`
+                    : "Policy Record"}
+                </p>
+                <h2>
+                  <Pencil size={18} /> Edit lead data
+                </h2>
+              </div>
+              <button
+                aria-label="Close edit form"
+                className="record-edit-close"
+                type="button"
+                onClick={() => setEditingRecord(null)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="record-edit-body">
               <div className="preview-form-grouped">
-                {manualGroupedFields.map((group) => (
+                {editFieldGroups.map((group) => (
                   <fieldset key={group.title} className="preview-fieldset">
                     <legend className="preview-legend">{group.title}</legend>
                     <div className="preview-form">
                       {group.fields.map(([label, key]) => {
-                        const contactPersonError = validateContactPerson(form.contactPerson);
+                        const contactPersonError = validateContactPerson(editForm.contactPerson);
                         const isContactNumber = key === "contactNumber";
-                        const error = key === "contactPerson"
-                          ? contactPersonError
-                          : isContactNumber
-                            ? validateContactNumber(form.contactNumber)
-                            : "";
+                        const error =
+                          key === "contactPerson"
+                            ? contactPersonError
+                            : isContactNumber
+                              ? validateContactNumber(editForm.contactNumber)
+                              : "";
                         return (
                           <PreviewField
                             key={key}
                             label={label}
-                            value={form[key] || ""}
-                            onChange={(value) => updateField(key, value)}
+                            value={editForm[key] || ""}
+                            onChange={(value) => updateEditField(key, value)}
                             options={FIELD_OPTIONS[key]}
                             wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
                             error={error}
@@ -2009,240 +2220,359 @@ export default function Dashboard({
                   </fieldset>
                 ))}
               </div>
+            </div>
+            <div className="record-edit-actions">
+              <button type="button" onClick={() => setEditingRecord(null)} disabled={isSaving}>
+                Cancel
+              </button>
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={saveEditedRecord}
+                disabled={isSaving}
+              >
+                {isSaving ? <LoaderCircle size={18} className="spin" /> : <CheckCircle size={18} />}
+                Save Changes
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
 
-              <div className="manual-actions">
-                <button className="secondary-action" type="button" onClick={saveRecord} disabled={isSaving}>
-                  {isSaving ? <LoaderCircle size={18} className="spin" /> : <CheckCircle size={18} />}
-                  Save Manual Entry
-                </button>
+      {activePage === "field-setup" && <FieldSetupPanel />}
+
+      {activePage === "manual-entry" && (
+        <section className="glass-panel manual-entry-container">
+          <div className="manual-selectors">
+            <label>
+              <span>Policy Family</span>
+              <select value={manualGroupId} onChange={(e) => setManualGroupId(e.target.value)}>
+                {POLICY_SCHEMA_LIBRARY.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Policy Type</span>
+              <select value={manualPolicyId} onChange={(e) => setManualPolicyId(e.target.value)}>
+                {manualGroup?.policies.map((policy) => (
+                  <option key={policy.id} value={policy.id}>
+                    {policy.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="preview-form-grouped">
+            {manualGroupedFields.map((group) => (
+              <fieldset key={group.title} className="preview-fieldset">
+                <legend className="preview-legend">{group.title}</legend>
+                <div className="preview-form">
+                  {group.fields.map(([label, key]) => {
+                    const contactPersonError = validateContactPerson(form.contactPerson);
+                    const isContactNumber = key === "contactNumber";
+                    const error =
+                      key === "contactPerson"
+                        ? contactPersonError
+                        : isContactNumber
+                          ? validateContactNumber(form.contactNumber)
+                          : "";
+                    return (
+                      <PreviewField
+                        key={key}
+                        label={label}
+                        value={form[key] || ""}
+                        onChange={(value) => updateField(key, value)}
+                        options={FIELD_OPTIONS[key]}
+                        wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
+                        error={error}
+                        disabled={isContactNumber && Boolean(contactPersonError)}
+                      />
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ))}
+          </div>
+
+          <div className="manual-actions">
+            <button className="secondary-action" type="button" onClick={saveRecord} disabled={isSaving}>
+              {isSaving ? <LoaderCircle size={18} className="spin" /> : <CheckCircle size={18} />}
+              Save Manual Entry
+            </button>
+          </div>
+        </section>
+      )}
+
+      {activePage === "customers" && (
+        <section className="glass-panel customer-panel">
+          {!selectedPolicy ? (
+            <SearchBox
+              value={query}
+              placeholder="Search customers..."
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          ) : null}
+          {selectedClient && selectedPolicy ? (
+            <PolicyDetail
+              client={selectedClient}
+              record={selectedPolicy}
+              onBack={() => router.push(`/customer-management/${encodeURIComponent(selectedClient.name)}`)}
+            />
+          ) : selectedClient ? (
+            <ClientProfile
+              client={selectedClient}
+              onBack={() => {
+                router.push("/customer-management");
+              }}
+              onPolicySelect={(policyId) => {
+                router.push(
+                  `/customer-management/${encodeURIComponent(selectedClient.name)}/policy/${policyId}`,
+                );
+              }}
+            />
+          ) : (
+            <>
+              <div className="customer-controls-row">
+                <span className="customer-count-label">
+                  Showing {clientProfiles.length ? customerStartIndex + 1 : 0}-
+                  {Math.min(customerStartIndex + CUSTOMERS_PER_PAGE, clientProfiles.length)} of{" "}
+                  {clientProfiles.length} customers
+                </span>
+                <div className="view-type-toggles">
+                  <button
+                    type="button"
+                    className={customerViewType === "grid" ? "active" : ""}
+                    onClick={() => setCustomerViewType("grid")}
+                    title="Grid View"
+                  >
+                    <LayoutGrid size={18} /> Grid
+                  </button>
+                  <button
+                    type="button"
+                    className={customerViewType === "list" ? "active" : ""}
+                    onClick={() => setCustomerViewType("list")}
+                    title="List View"
+                  >
+                    <List size={18} /> List
+                  </button>
+                </div>
               </div>
-            </section>
-          )}
 
-          {activePage === "customers" && (
-            <section className="glass-panel customer-panel">
-              {!selectedPolicy ? (
-                <SearchBox value={query} placeholder="Search customers..." onChange={(event) => setQuery(event.target.value)} />
-              ) : null}
-              {selectedClient && selectedPolicy ? (
-                <PolicyDetail client={selectedClient} record={selectedPolicy} onBack={() => router.push(`/customer-management/${encodeURIComponent(selectedClient.name)}`)} />
-              ) : selectedClient ? (
-                <ClientProfile
-                  client={selectedClient}
-                  onBack={() => {
-                    router.push("/customer-management");
-                  }}
-                  onPolicySelect={(policyId) => {
-                    router.push(`/customer-management/${encodeURIComponent(selectedClient.name)}/policy/${policyId}`);
-                  }}
-                />
-              ) : (
-                <>
-                  <div className="customer-controls-row">
-                    <span className="customer-count-label">
-                      Showing {clientProfiles.length ? customerStartIndex + 1 : 0}-{Math.min(customerStartIndex + CUSTOMERS_PER_PAGE, clientProfiles.length)} of {clientProfiles.length} customers
-                    </span>
-                    <div className="view-type-toggles">
-                      <button
-                        type="button"
-                        className={customerViewType === "grid" ? "active" : ""}
-                        onClick={() => setCustomerViewType("grid")}
-                        title="Grid View"
-                      >
-                        <LayoutGrid size={18} /> Grid
-                      </button>
-                      <button
-                        type="button"
-                        className={customerViewType === "list" ? "active" : ""}
-                        onClick={() => setCustomerViewType("list")}
-                        title="List View"
-                      >
-                        <List size={18} /> List
-                      </button>
-                    </div>
-                  </div>
+              {clientProfiles.length ? (
+                customerViewType === "grid" ? (
+                  <div className="customer-grid">
+                    {paginatedClients.map((client) => {
+                      const firstLetter = client.name ? client.name.charAt(0).toUpperCase() : "?";
+                      const vehicleNumbers = formatClientVehicleNumbers(client);
 
-                  {clientProfiles.length ? (
-                    customerViewType === "grid" ? (
-                      <div className="customer-grid">
-                        {paginatedClients.map((client) => {
-                          const firstLetter = client.name ? client.name.charAt(0).toUpperCase() : "?";
-                          const vehicleNumbers = formatClientVehicleNumbers(client);
-
-                          return (
-                            <article className="customer-card" key={client.name}>
-                              <div className="customer-card-header">
-                                <div className="customer-avatar">
-                                  {firstLetter}
-                                </div>
-                                <div className="customer-title-block">
-                                  <h3 title={client.name}>{client.name}</h3>
-                                  <p className="customer-contact-text">
-                                    {client.customerId ? `ID: ${client.customerId} · ` : ""}
-                                    {client.contactNumber || "No contact recorded"}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="customer-card-stats">
-                                <div className="stat-item">
-                                  <span className="stat-label">Policies</span>
-                                  <strong className="stat-value">{client.policies.length}</strong>
-                                </div>
-                                <div className="stat-item">
-                                  <span className="stat-label">Premium</span>
-                                  <strong className="stat-value">{formatMoney(client.premiumTotal)}</strong>
-                                </div>
-                              </div>
-                              <div className="customer-card-details">
-                                <div>
-                                  <span>District</span>
-                                  <p title={client.district || "-"}>{client.district || "-"}</p>
-                                </div>
-                                <div>
-                                  <span>Tehsil</span>
-                                  <p title={client.tehsil || "-"}>{client.tehsil || "-"}</p>
-                                </div>
-                                <div className="wide">
-                                  <span>Sum Insured</span>
-                                  <p>{formatMoney(client.sumInsuredTotal)}</p>
-                                </div>
-                                <div className="wide">
-                                  <span>Vehicle No.</span>
-                                  <p title={vehicleNumbers}>{vehicleNumbers}</p>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                className="view-profile-btn"
-                                onClick={() => {
-                                  router.push(`/customer-management/${encodeURIComponent(client.name)}`);
-                                }}
-                              >
-                                View Profile
-                              </button>
-                            </article>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="customer-directory">
-                        <div className="customer-directory-head">
-                          <span>Customer</span>
-                          <span>Policies</span>
-                          <span>District</span>
-                          <span>Tehsil</span>
-                          <span>Vehicle No.</span>
-                          <span>Premium</span>
-                          <span>Sum Insured</span>
-                          <span>Action</span>
-                        </div>
-                        {paginatedClients.map((client) => (
-                          <article className="customer-row" key={client.name}>
-                            <div className="customer-name-cell">
-                              <strong>{client.name}</strong>
-                              <small>
+                      return (
+                        <article className="customer-card" key={client.name}>
+                          <div className="customer-card-header">
+                            <div className="customer-avatar">{firstLetter}</div>
+                            <div className="customer-title-block">
+                              <h3 title={client.name}>{client.name}</h3>
+                              <p className="customer-contact-text">
                                 {client.customerId ? `ID: ${client.customerId} · ` : ""}
                                 {client.contactNumber || "No contact recorded"}
-                              </small>
+                              </p>
                             </div>
-                            <span>{client.policies.length} polic{client.policies.length === 1 ? "y" : "ies"}</span>
-                            <span>{client.district || "-"}</span>
-                            <span>{client.tehsil || "-"}</span>
-                            <span title={formatClientVehicleNumbers(client)}>{formatClientVehicleNumbers(client)}</span>
-                            <span>{formatMoney(client.premiumTotal)}</span>
-                            <span>{formatMoney(client.sumInsuredTotal)}</span>
-                            <button type="button" onClick={() => {
+                          </div>
+                          <div className="customer-card-stats">
+                            <div className="stat-item">
+                              <span className="stat-label">Policies</span>
+                              <strong className="stat-value">{client.policies.length}</strong>
+                            </div>
+                            <div className="stat-item">
+                              <span className="stat-label">Premium</span>
+                              <strong className="stat-value">{formatMoney(client.premiumTotal)}</strong>
+                            </div>
+                          </div>
+                          <div className="customer-card-details">
+                            <div>
+                              <span>District</span>
+                              <p title={client.district || "-"}>{client.district || "-"}</p>
+                            </div>
+                            <div>
+                              <span>Tehsil</span>
+                              <p title={client.tehsil || "-"}>{client.tehsil || "-"}</p>
+                            </div>
+                            <div className="wide">
+                              <span>Sum Insured</span>
+                              <p>{formatMoney(client.sumInsuredTotal)}</p>
+                            </div>
+                            <div className="wide">
+                              <span>Vehicle No.</span>
+                              <p title={vehicleNumbers}>{vehicleNumbers}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="view-profile-btn"
+                            onClick={() => {
                               router.push(`/customer-management/${encodeURIComponent(client.name)}`);
-                            }}>
-                              View Profile
-                            </button>
-                          </article>
-                        ))}
-                      </div>
-                    )
-                  ) : (
-                    <EmptyState>No saved customers yet.</EmptyState>
-                  )}
-
-                  {clientProfiles.length > CUSTOMERS_PER_PAGE ? (
-                    <div className="table-pagination customer-pagination" aria-label="Customer pagination">
-                      <span>
-                        Showing {customerStartIndex + 1}-{Math.min(customerStartIndex + CUSTOMERS_PER_PAGE, clientProfiles.length)} of {clientProfiles.length}
-                      </span>
-                      <div className="table-page-list">
-                        <button type="button" onClick={() => goToPage(customerPage - 1)} disabled={customerPage === 1}>
-                          Prev
-                        </button>
-                        {customerPageNumbers.map((page, index) => (
-                          page === "..." ? (
-                            <span
-                              key={`ellipsis-${index}`}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                minWidth: "34px",
-                                minHeight: "32px",
-                                color: "var(--text-secondary, #64748b)",
-                                fontSize: "14px",
-                                fontWeight: "700",
-                                userSelect: "none"
-                              }}
-                            >
-                              ...
-                            </span>
-                          ) : (
-                            <button
-                              aria-current={customerPage === page ? "page" : undefined}
-                              className={customerPage === page ? "active" : ""}
-                              key={page}
-                              type="button"
-                              onClick={() => goToPage(page)}
-                            >
-                              {page}
-                            </button>
-                          )
-                        ))}
-                        <button type="button" onClick={() => goToPage(customerPage + 1)} disabled={customerPage === customerPageCount}>
-                          Next
-                        </button>
-                      </div>
+                            }}
+                          >
+                            View Profile
+                          </button>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="customer-directory">
+                    <div className="customer-directory-head">
+                      <span>Customer</span>
+                      <span>Policies</span>
+                      <span>District</span>
+                      <span>Tehsil</span>
+                      <span>Vehicle No.</span>
+                      <span>Premium</span>
+                      <span>Sum Insured</span>
+                      <span>Action</span>
                     </div>
-                  ) : null}
-                </>
+                    {paginatedClients.map((client) => (
+                      <article className="customer-row" key={client.name}>
+                        <div className="customer-name-cell">
+                          <strong>{client.name}</strong>
+                          <small>
+                            {client.customerId ? `ID: ${client.customerId} · ` : ""}
+                            {client.contactNumber || "No contact recorded"}
+                          </small>
+                        </div>
+                        <span>
+                          {client.policies.length} polic{client.policies.length === 1 ? "y" : "ies"}
+                        </span>
+                        <span>{client.district || "-"}</span>
+                        <span>{client.tehsil || "-"}</span>
+                        <span title={formatClientVehicleNumbers(client)}>
+                          {formatClientVehicleNumbers(client)}
+                        </span>
+                        <span>{formatMoney(client.premiumTotal)}</span>
+                        <span>{formatMoney(client.sumInsuredTotal)}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            router.push(`/customer-management/${encodeURIComponent(client.name)}`);
+                          }}
+                        >
+                          View Profile
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                )
+              ) : (
+                <EmptyState>No saved customers yet.</EmptyState>
               )}
-            </section>
-          )}
 
-          {activePage === "analytics" && (
-            <AnalyticsReports
-              analytics={analytics}
-              onSelectReport={handleSelectReport}
-            />
+              {clientProfiles.length > CUSTOMERS_PER_PAGE ? (
+                <div className="table-pagination customer-pagination" aria-label="Customer pagination">
+                  <span>
+                    Showing {customerStartIndex + 1}-
+                    {Math.min(customerStartIndex + CUSTOMERS_PER_PAGE, clientProfiles.length)} of{" "}
+                    {clientProfiles.length}
+                  </span>
+                  <div className="table-page-list">
+                    <button
+                      type="button"
+                      onClick={() => goToPage(customerPage - 1)}
+                      disabled={customerPage === 1}
+                    >
+                      Prev
+                    </button>
+                    {customerPageNumbers.map((page, index) =>
+                      page === "..." ? (
+                        <span
+                          key={`ellipsis-${index}`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minWidth: "34px",
+                            minHeight: "32px",
+                            color: "var(--text-secondary, #64748b)",
+                            fontSize: "14px",
+                            fontWeight: "700",
+                            userSelect: "none",
+                          }}
+                        >
+                          ...
+                        </span>
+                      ) : (
+                        <button
+                          aria-current={customerPage === page ? "page" : undefined}
+                          className={customerPage === page ? "active" : ""}
+                          key={page}
+                          type="button"
+                          onClick={() => goToPage(page)}
+                        >
+                          {page}
+                        </button>
+                      ),
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => goToPage(customerPage + 1)}
+                      disabled={customerPage === customerPageCount}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </>
           )}
+        </section>
+      )}
 
-          {activePage === "settings" && (
-            <section className="settings-grid">
-              <section className="glass-panel">
-                <p className="eyebrow">Database</p>
-                <h2>Prisma + Neon</h2>
-                <div className="settings-list">
-                  <div><span>Stack</span><strong>Next.js App Router</strong></div>
-                  <div><span>ORM</span><strong>Prisma</strong></div>
-                  <div><span>Database</span><strong>Neon PostgreSQL</strong></div>
-                </div>
-              </section>
-              <section className="glass-panel">
-                <p className="eyebrow">Status</p>
-                <h2>Current environment</h2>
-                <div className="settings-list">
-                  <div><span>Records loaded</span><strong>{records.length}</strong></div>
-                  <div><span>Uploads queued</span><strong>{selectedFiles.length}</strong></div>
-                  <div><span>Mock seed data</span><strong>Removed</strong></div>
-                </div>
-              </section>
-            </section>
-          )}
+      {activePage === "analytics" && (
+        <AnalyticsReports analytics={analytics} onSelectReport={handleSelectReport} />
+      )}
+
+      {activePage === "settings" && (
+        <section className="settings-grid">
+          <section className="glass-panel">
+            <p className="eyebrow">Database</p>
+            <h2>Prisma + Neon</h2>
+            <div className="settings-list">
+              <div>
+                <span>Stack</span>
+                <strong>Next.js App Router</strong>
+              </div>
+              <div>
+                <span>ORM</span>
+                <strong>Prisma</strong>
+              </div>
+              <div>
+                <span>Database</span>
+                <strong>Neon PostgreSQL</strong>
+              </div>
+            </div>
+          </section>
+          <section className="glass-panel">
+            <p className="eyebrow">Status</p>
+            <h2>Current environment</h2>
+            <div className="settings-list">
+              <div>
+                <span>Records loaded</span>
+                <strong>{records.length}</strong>
+              </div>
+              <div>
+                <span>Uploads queued</span>
+                <strong>{selectedFiles.length}</strong>
+              </div>
+              <div>
+                <span>Mock seed data</span>
+                <strong>Removed</strong>
+              </div>
+            </div>
+          </section>
+        </section>
+      )}
       {toast ? (
         <button className="toast" type="button" onClick={() => setToast("")}>
           <CheckCircle size={20} />
@@ -2284,12 +2614,14 @@ function prepareUploadReviewData(upload) {
 }
 
 function formatClientVehicleNumbers(client) {
-  const values = Array.from(new Set(
-    (client?.policies || [])
-      .map((record) => record.vehicleNumber || record.registrationNumber || "")
-      .map((value) => String(value || "").trim())
-      .filter(Boolean)
-  ));
+  const values = Array.from(
+    new Set(
+      (client?.policies || [])
+        .map((record) => record.vehicleNumber || record.registrationNumber || "")
+        .map((value) => String(value || "").trim())
+        .filter(Boolean),
+    ),
+  );
 
   if (!values.length) return "-";
   if (values.length <= 2) return values.join(", ");
@@ -2302,7 +2634,7 @@ function isMotorPolicyData(data) {
     data.registrationNumber ||
     data.engineNumber ||
     data.chassisNumber ||
-    /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(data.policyType || "")
+    /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(data.policyType || ""),
   );
 }
 
@@ -2314,7 +2646,7 @@ function getDuplicatePolicyKey(record = {}) {
     record.insuranceCompany,
     record.insuredName,
     record.vehicleNumber || record.registrationNumber,
-    record.expiryDate
+    record.expiryDate,
   ].map(compactDuplicateValue);
 
   if (fallbackParts.filter(Boolean).length < 3) return "";
@@ -2322,7 +2654,9 @@ function getDuplicatePolicyKey(record = {}) {
 }
 
 function compactDuplicateValue(value = "") {
-  return String(value || "").replace(/[^a-z0-9]/gi, "").toLowerCase();
+  return String(value || "")
+    .replace(/[^a-z0-9]/gi, "")
+    .toLowerCase();
 }
 
 function getPageNumbers(currentPage, totalPages) {

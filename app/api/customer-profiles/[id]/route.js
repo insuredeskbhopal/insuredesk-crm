@@ -20,12 +20,12 @@ export async function GET(request, { params }) {
     const profile = await prisma.customerProfile.findFirst({
       where: {
         id,
-        ...getCustomerProfileScopedFilter(session)
+        ...getCustomerProfileScopedFilter(session),
       },
       include: {
         createdBy: { select: { name: true, email: true } },
-        updatedBy: { select: { name: true, email: true } }
-      }
+        updatedBy: { select: { name: true, email: true } },
+      },
     });
 
     if (!profile || profile.deletedAt) {
@@ -34,7 +34,10 @@ export async function GET(request, { params }) {
 
     return NextResponse.json(serializeCustomerProfile(profile));
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Customer profile could not be loaded." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Customer profile could not be loaded." },
+      { status: 500 },
+    );
   }
 }
 
@@ -51,8 +54,8 @@ export async function PUT(request, { params }) {
     const existing = await prisma.customerProfile.findFirst({
       where: {
         id,
-        ...getCustomerProfileScopedFilter(session)
-      }
+        ...getCustomerProfileScopedFilter(session),
+      },
     });
 
     if (!existing || existing.deletedAt) {
@@ -73,12 +76,12 @@ export async function PUT(request, { params }) {
         ...data,
         name: data.name || "Unnamed Customer",
         assignedTo: data.assignedTo || existing.assignedTo || actorLabel,
-        updatedById: actorId
+        updatedById: actorId,
       },
       include: {
         createdBy: { select: { name: true, email: true } },
-        updatedBy: { select: { name: true, email: true } }
-      }
+        updatedBy: { select: { name: true, email: true } },
+      },
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -92,13 +95,14 @@ export async function PUT(request, { params }) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { phone: profile.phone, selectedLOBs: profile.selectedLOBs }
+      metadata: { phone: profile.phone, selectedLOBs: profile.selectedLOBs },
     });
 
     return NextResponse.json(serializeCustomerProfile(profile));
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Customer profile could not be updated." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Customer profile could not be updated." },
+      { status: 500 },
+    );
   }
 }
-
-

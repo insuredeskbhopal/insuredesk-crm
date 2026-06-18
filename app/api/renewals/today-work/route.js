@@ -7,7 +7,7 @@ import { startOfDay } from "@/app/lib/reporting/filters";
 import {
   RENEWAL_WORK_ACTIONS,
   getRenewalActionLabel,
-  buildTodayWorkSummary
+  buildTodayWorkSummary,
 } from "@/lib/renewals/today-work";
 
 export const dynamic = "force-dynamic";
@@ -57,18 +57,17 @@ export async function GET(request) {
     const end = new Date(start);
     end.setDate(end.getDate() + 1);
 
-    const orgFilter = user.role === "SUPER_ADMIN" && !user.organizationId
-      ? {}
-      : { organizationId: user.organizationId };
+    const orgFilter =
+      user.role === "SUPER_ADMIN" && !user.organizationId ? {} : { organizationId: user.organizationId };
 
     if (requestedUserId !== actorId) {
       const targetUser = await prisma.user.findFirst({
         where: {
           id: requestedUserId,
           deletedAt: null,
-          ...(user.role === "SUPER_ADMIN" ? {} : { organizationId: user.organizationId })
+          ...(user.role === "SUPER_ADMIN" ? {} : { organizationId: user.organizationId }),
         },
-        select: { id: true, name: true, email: true }
+        select: { id: true, name: true, email: true },
       });
       if (!targetUser) {
         return Response.json({ error: "Selected user not found." }, { status: 404 });
@@ -80,7 +79,7 @@ export async function GET(request) {
       entityType: "PolicyRecord",
       action: { in: RENEWAL_WORK_ACTIONS },
       createdAt: { gte: start, lt: end },
-      ...orgFilter
+      ...orgFilter,
     };
 
     const [auditRows, targetUser] = await Promise.all([
@@ -94,13 +93,13 @@ export async function GET(request) {
           createdAt: true,
           metadata: true,
           userId: true,
-          user: { select: { name: true, email: true } }
-        }
+          user: { select: { name: true, email: true } },
+        },
       }),
       prisma.user.findFirst({
         where: { id: requestedUserId },
-        select: { id: true, name: true, email: true }
-      })
+        select: { id: true, name: true, email: true },
+      }),
     ]);
 
     const tenantFilter = getTenantFilter(user, "read");
@@ -109,7 +108,7 @@ export async function GET(request) {
         ...tenantFilter,
         updatedById: requestedUserId,
         updatedAt: { gte: start, lt: end },
-        deletedAt: null
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -117,9 +116,9 @@ export async function GET(request) {
         reviewedData: true,
         renewalStatus: true,
         updatedAt: true,
-        updatedBy: { select: { name: true, email: true } }
+        updatedBy: { select: { name: true, email: true } },
       },
-      orderBy: { updatedAt: "desc" }
+      orderBy: { updatedAt: "desc" },
     });
 
     const policyIds = new Set();
@@ -133,7 +132,7 @@ export async function GET(request) {
       const records = await prisma.policyRecord.findMany({
         where: {
           id: { in: Array.from(policyIds) },
-          ...tenantFilter
+          ...tenantFilter,
         },
         select: {
           id: true,
@@ -141,8 +140,8 @@ export async function GET(request) {
           reviewedData: true,
           renewalStatus: true,
           updatedAt: true,
-          updatedBy: { select: { name: true, email: true } }
-        }
+          updatedBy: { select: { name: true, email: true } },
+        },
       });
       records.forEach((record) => {
         policyMap[record.id] = withRenewalPolicyDisplay(normalizeRecord(record));
@@ -174,7 +173,7 @@ export async function GET(request) {
         expiryDate: policy.expiryDate || "-",
         renewalStatus: policy.renewalStatus || "ACTIVE",
         detail: getActivityDetail(row.action, metadata, policy.latestRemark || ""),
-        userName: row.user?.name || row.user?.email || targetUser?.name || targetUser?.email || "User"
+        userName: row.user?.name || row.user?.email || targetUser?.name || targetUser?.email || "User",
       });
     }
 
@@ -202,7 +201,12 @@ export async function GET(request) {
         expiryDate: policy.expiryDate || "-",
         renewalStatus: policy.renewalStatus || "ACTIVE",
         detail: policy.latestRemark || "",
-        userName: record.updatedBy?.name || record.updatedBy?.email || targetUser?.name || targetUser?.email || "User"
+        userName:
+          record.updatedBy?.name ||
+          record.updatedBy?.email ||
+          targetUser?.name ||
+          targetUser?.email ||
+          "User",
       });
     }
 
@@ -214,10 +218,10 @@ export async function GET(request) {
       user: {
         id: requestedUserId,
         name: targetUser?.name || targetUser?.email || "User",
-        email: targetUser?.email || ""
+        email: targetUser?.email || "",
       },
       summary: buildTodayWorkSummary(activities),
-      activities
+      activities,
     });
   } catch (error) {
     console.error("Renewal today work fetch failed:", error);

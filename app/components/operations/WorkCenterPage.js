@@ -10,7 +10,7 @@ import {
   ListTodo,
   RefreshCw,
   ShieldCheck,
-  Users
+  Users,
 } from "lucide-react";
 
 const VIEWS = ["Agenda", "Day", "Week", "Month", "Timeline", "Team Workload"];
@@ -25,7 +25,7 @@ const STATUS_LABELS = {
   ESCALATED: "Escalated",
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
-  CLOSED: "Closed"
+  CLOSED: "Closed",
 };
 
 export default function WorkCenterPage() {
@@ -60,16 +60,23 @@ export default function WorkCenterPage() {
     const allTasks = data?.tasks || [];
     if (filter === "all") return allTasks;
     if (filter === "today") return allTasks.filter((task) => task.dueAt && isToday(task.dueAt));
-    if (filter === "upcoming") return allTasks.filter((task) => task.dueAt && new Date(task.dueAt) > endOfToday());
-    if (filter === "overdue") return allTasks.filter((task) => task.dueAt && new Date(task.dueAt) < startOfToday());
-    if (filter === "high-priority") return allTasks.filter((task) => ["HIGH", "CRITICAL", "EMERGENCY"].includes(task.priority));
+    if (filter === "upcoming")
+      return allTasks.filter((task) => task.dueAt && new Date(task.dueAt) > endOfToday());
+    if (filter === "overdue")
+      return allTasks.filter((task) => task.dueAt && new Date(task.dueAt) < startOfToday());
+    if (filter === "high-priority")
+      return allTasks.filter((task) => ["HIGH", "CRITICAL", "EMERGENCY"].includes(task.priority));
     if (filter === "claims-pending") return allTasks.filter((task) => task.type === "CLAIM");
     if (filter === "endorsements-pending") return allTasks.filter((task) => task.type === "ENDORSEMENT");
-    if (filter === "service-requests-pending") return allTasks.filter((task) => task.type === "SERVICE_REQUEST");
+    if (filter === "service-requests-pending")
+      return allTasks.filter((task) => task.type === "SERVICE_REQUEST");
     if (filter === "collections-pending") return allTasks.filter((task) => task.type === "COLLECTION");
-    if (filter === "followups-pending") return allTasks.filter((task) => ["FOLLOW_UP", "CALL"].includes(task.type));
-    if (filter === "renewals-today") return allTasks.filter((task) => task.type === "RENEWAL" && task.dueAt && isToday(task.dueAt));
-    if (filter === "meetings-today") return allTasks.filter((task) => task.type === "MEETING" && task.dueAt && isToday(task.dueAt));
+    if (filter === "followups-pending")
+      return allTasks.filter((task) => ["FOLLOW_UP", "CALL"].includes(task.type));
+    if (filter === "renewals-today")
+      return allTasks.filter((task) => task.type === "RENEWAL" && task.dueAt && isToday(task.dueAt));
+    if (filter === "meetings-today")
+      return allTasks.filter((task) => task.type === "MEETING" && task.dueAt && isToday(task.dueAt));
     return allTasks.filter((task) => task.type === filter.toUpperCase());
   }, [data, filter]);
 
@@ -77,7 +84,7 @@ export default function WorkCenterPage() {
     const response = await fetch(`/api/tasks/${taskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "COMPLETED" })
+      body: JSON.stringify({ status: "COMPLETED" }),
     });
     if (response.ok) load();
   };
@@ -88,7 +95,9 @@ export default function WorkCenterPage() {
         <div>
           <p className="eyebrow">Operations Command Center</p>
           <h1>Calendar & Work Center</h1>
-          <p className="page-subtitle">Tasks, renewals, approvals, escalations, reminders, and activity across your organization.</p>
+          <p className="page-subtitle">
+            Tasks, renewals, approvals, escalations, reminders, and activity across your organization.
+          </p>
         </div>
         <button className="secondary-action" type="button" onClick={load} disabled={loading}>
           <RefreshCw size={16} className={loading ? "spin" : ""} />
@@ -100,12 +109,21 @@ export default function WorkCenterPage() {
 
       <section className="work-summary-grid">
         {(data?.summaryCards || []).map((card) => (
-          <button key={card.key} className="work-summary-card" type="button" onClick={() => setFilter(card.key)}>
+          <button
+            key={card.key}
+            className="work-summary-card"
+            type="button"
+            onClick={() => setFilter(card.key)}
+          >
             <span>{card.label}</span>
             <strong>{card.value}</strong>
           </button>
         ))}
-        {loading && !data ? Array.from({ length: 6 }).map((_, index) => <div key={index} className="work-summary-card skeleton-card" />) : null}
+        {loading && !data
+          ? Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="work-summary-card skeleton-card" />
+            ))
+          : null}
       </section>
 
       <div className="work-layout">
@@ -113,12 +131,21 @@ export default function WorkCenterPage() {
           <div className="work-toolbar">
             <div className="segmented-control">
               {VIEWS.map((view) => (
-                <button key={view} className={activeView === view ? "active" : ""} type="button" onClick={() => setActiveView(view)}>
+                <button
+                  key={view}
+                  className={activeView === view ? "active" : ""}
+                  type="button"
+                  onClick={() => setActiveView(view)}
+                >
                   {view}
                 </button>
               ))}
             </div>
-            <select value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Task filter">
+            <select
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              aria-label="Task filter"
+            >
               <option value="all">All Tasks</option>
               <option value="overdue">Overdue</option>
               <option value="high-priority">High Priority</option>
@@ -195,7 +222,9 @@ function TaskList({ tasks, onComplete, loading }) {
     <div className="task-list">
       {tasks.map((task) => (
         <article key={task.id} className={`task-row priority-${String(task.priority).toLowerCase()}`}>
-          <div className="task-icon"><ListTodo size={18} /></div>
+          <div className="task-icon">
+            <ListTodo size={18} />
+          </div>
           <div className="task-body">
             <div className="task-title-line">
               <h3>{task.title}</h3>
@@ -203,13 +232,24 @@ function TaskList({ tasks, onComplete, loading }) {
             </div>
             <p>{task.description || task.module}</p>
             <div className="task-meta">
-              <span><ClipboardList size={13} />{task.type.replaceAll("_", " ")}</span>
-              <span><Clock size={13} />{formatDateTime(task.dueAt)}</span>
+              <span>
+                <ClipboardList size={13} />
+                {task.type.replaceAll("_", " ")}
+              </span>
+              <span>
+                <Clock size={13} />
+                {formatDateTime(task.dueAt)}
+              </span>
               <span>{task.priority}</span>
               {task.customerName ? <span>{task.customerName}</span> : null}
             </div>
           </div>
-          <button className="icon-action" type="button" onClick={() => onComplete(task.id)} aria-label="Complete task">
+          <button
+            className="icon-action"
+            type="button"
+            onClick={() => onComplete(task.id)}
+            aria-label="Complete task"
+          >
             <CheckCircle2 size={19} />
           </button>
         </article>
@@ -220,8 +260,13 @@ function TaskList({ tasks, onComplete, loading }) {
 
 function Timeline({ events, tasks }) {
   const rows = [
-    ...events.map((event) => ({ id: `event-${event.id}`, title: event.title, label: event.eventType, at: event.startsAt })),
-    ...tasks.map((task) => ({ id: `task-${task.id}`, title: task.title, label: task.type, at: task.dueAt }))
+    ...events.map((event) => ({
+      id: `event-${event.id}`,
+      title: event.title,
+      label: event.eventType,
+      at: event.startsAt,
+    })),
+    ...tasks.map((task) => ({ id: `task-${task.id}`, title: task.title, label: task.type, at: task.dueAt })),
   ]
     .filter((row) => row.at)
     .sort((a, b) => new Date(a.at) - new Date(b.at))
@@ -257,7 +302,10 @@ function TeamWorkload({ rows }) {
       </div>
       {rows.map((row) => (
         <div key={row.userId} className="team-row">
-          <span><Users size={14} />{row.user}</span>
+          <span>
+            <Users size={14} />
+            {row.user}
+          </span>
           <strong>{row.pendingTasks}</strong>
           <strong>{row.completedTasks}</strong>
           <strong>{row.overdueTasks}</strong>
@@ -271,7 +319,10 @@ function TeamWorkload({ rows }) {
 function Panel({ title, icon, children }) {
   return (
     <section className="work-panel-block">
-      <h2>{icon}{title}</h2>
+      <h2>
+        {icon}
+        {title}
+      </h2>
       {children}
     </section>
   );
@@ -296,7 +347,7 @@ function formatDateTime(value) {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   }).format(new Date(value));
 }
 

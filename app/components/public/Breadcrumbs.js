@@ -6,9 +6,9 @@ import Script from "next/script";
 import { SITE_URL } from "@/lib/seo/site";
 
 const ROUTE_NAMES = {
-  "services": "Services",
-  "about": "About Us",
-  "contact": "Contact Us",
+  services: "Services",
+  about: "About Us",
+  contact: "Contact Us",
   "general-insurance": "General Insurance",
   "health-insurance": "Health Insurance",
   "motor-insurance": "Motor Insurance",
@@ -16,7 +16,7 @@ const ROUTE_NAMES = {
   "commercial-insurance": "Commercial Insurance",
   "policy-renewals": "Policy Renewals",
   "claims-assistance": "Claims Assistance",
-  "risk-advisory": "Risk Advisory"
+  "risk-advisory": "Risk Advisory",
 };
 
 export default function Breadcrumbs() {
@@ -24,11 +24,11 @@ export default function Breadcrumbs() {
   if (pathname === "/") return null;
 
   const segments = pathname.split("/").filter(Boolean);
-  
+
   // Build breadcrumb objects
   const breadcrumbs = segments.map((segment, index) => {
     const path = "/" + segments.slice(0, index + 1).join("/");
-    const name = ROUTE_NAMES[segment] || segment.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    const name = ROUTE_NAMES[segment] || segment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     return { name, path };
   });
 
@@ -38,20 +38,20 @@ export default function Breadcrumbs() {
       "@type": "ListItem",
       position: 1,
       name: "Home",
-      item: SITE_URL
+      item: SITE_URL,
     },
     ...breadcrumbs.map((crumb, index) => ({
       "@type": "ListItem",
       position: index + 2,
       name: crumb.name,
-      item: `${SITE_URL}${crumb.path}`
-    }))
+      item: `${SITE_URL}${crumb.path}`,
+    })),
   ];
 
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    "itemListElement": schemaList
+    itemListElement: schemaList,
   };
 
   return (
@@ -63,9 +63,12 @@ export default function Breadcrumbs() {
         strategy="beforeInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      
+
       {/* Render Visual Breadcrumbs */}
-      <nav aria-label="Breadcrumb" className="flex items-center flex-wrap gap-2 text-sm text-on-surface-variant/70">
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center flex-wrap gap-2 text-sm text-on-surface-variant/70"
+      >
         <Link href="/" className="hover:text-secondary transition-colors text-[14px]">
           Home
         </Link>

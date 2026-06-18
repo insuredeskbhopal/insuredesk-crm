@@ -28,7 +28,10 @@ export async function POST(request) {
     const buffer = await validatePdfFile(file);
     const textResult = await extractTextFromPdf(buffer);
     if (!textResult.rawText) {
-      return NextResponse.json({ error: "No policy text could be extracted from this PDF." }, { status: 422 });
+      return NextResponse.json(
+        { error: "No policy text could be extracted from this PDF." },
+        { status: 422 },
+      );
     }
 
     const extractedData = extractPolicyFromText(textResult.rawText, file.name || "policy.pdf");
@@ -38,14 +41,17 @@ export async function POST(request) {
       sourceFile: file.name || "policy.pdf",
       extractionMethod: textResult.extractionMethod,
       extractionLog: textResult.extractionLog,
-      ocrAttempted: Boolean(textResult.ocrAttempted)
+      ocrAttempted: Boolean(textResult.ocrAttempted),
     });
   } catch (error) {
     if (error instanceof UploadValidationError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : "Policy extraction failed."
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Policy extraction failed.",
+      },
+      { status: 500 },
+    );
   }
 }

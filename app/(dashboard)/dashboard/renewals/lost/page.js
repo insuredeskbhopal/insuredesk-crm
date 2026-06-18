@@ -45,7 +45,15 @@ export default function LostPage() {
             <p>Loading lost renewals...</p>
           </div>
         ) : policies.length === 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 0", gap: "8px" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "40px 0",
+              gap: "8px",
+            }}
+          >
             <AlertCircle size={24} style={{ color: "var(--rn-text-muted)" }} />
             <p style={{ color: "var(--rn-text-secondary)", fontSize: "14px" }}>No lost policies recorded.</p>
           </div>
@@ -66,11 +74,15 @@ export default function LostPage() {
                 <tr key={p.id}>
                   <td>
                     <div style={{ fontWeight: "600", color: "var(--rn-text-primary)" }}>{p.insuredName}</div>
-                    <div style={{ fontSize: "12px", color: "var(--rn-text-muted)" }}>{p.contactNumber || "No Mobile"}</div>
+                    <div style={{ fontSize: "12px", color: "var(--rn-text-muted)" }}>
+                      {p.contactNumber || "No Mobile"}
+                    </div>
                   </td>
                   <td>
                     <div>{p.displayPolicyType || p.policyType}</div>
-                    <div style={{ fontSize: "12px", color: "var(--rn-text-muted)" }}>No: {p.policyNumber}</div>
+                    <div style={{ fontSize: "12px", color: "var(--rn-text-muted)" }}>
+                      No: {p.policyNumber}
+                    </div>
                   </td>
                   <td>{p.insuranceCompany}</td>
                   <td>{p.renewalDate ? new Date(p.renewalDate).toLocaleDateString("en-IN") : "-"}</td>
@@ -90,16 +102,12 @@ export default function LostPage() {
             Page {page} of {totalPages} ({totalCount} policies lost)
           </span>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button 
-              className="rn-btn" 
-              disabled={page <= 1 || loading} 
-              onClick={() => setPage(page - 1)}
-            >
+            <button className="rn-btn" disabled={page <= 1 || loading} onClick={() => setPage(page - 1)}>
               Previous
             </button>
-            <button 
-              className="rn-btn" 
-              disabled={page >= totalPages || loading} 
+            <button
+              className="rn-btn"
+              disabled={page >= totalPages || loading}
               onClick={() => setPage(page + 1)}
             >
               Next

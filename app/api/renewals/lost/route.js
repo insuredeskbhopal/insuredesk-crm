@@ -32,8 +32,8 @@ export async function POST(request) {
     const policy = await prisma.policyRecord.findFirst({
       where: {
         id: policyId,
-        ...tenantFilter
-      }
+        ...tenantFilter,
+      },
     });
 
     if (!policy) {
@@ -55,12 +55,18 @@ export async function POST(request) {
         type: status,
         oldStatus: previousStatus,
         newStatus: status,
-        lostReason: lostReason || ""
+        lostReason: lostReason || "",
       };
       existingReviewedData.remark = remarkText;
       existingData.remark = remarkText;
-      existingReviewedData.renewalRemarks = [renewalRemark, ...(Array.isArray(existingReviewedData.renewalRemarks) ? existingReviewedData.renewalRemarks : [])];
-      existingData.renewalRemarks = [renewalRemark, ...(Array.isArray(existingData.renewalRemarks) ? existingData.renewalRemarks : [])];
+      existingReviewedData.renewalRemarks = [
+        renewalRemark,
+        ...(Array.isArray(existingReviewedData.renewalRemarks) ? existingReviewedData.renewalRemarks : []),
+      ];
+      existingData.renewalRemarks = [
+        renewalRemark,
+        ...(Array.isArray(existingData.renewalRemarks) ? existingData.renewalRemarks : []),
+      ];
     }
 
     const updatedPolicy = await prisma.policyRecord.update({
@@ -72,8 +78,8 @@ export async function POST(request) {
         renewalDate: new Date(),
         reviewedData: existingReviewedData,
         data: existingData,
-        updatedById: actorId
-      }
+        updatedById: actorId,
+      },
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -87,7 +93,7 @@ export async function POST(request) {
       userAgent,
       userId: actorId,
       organizationId: user.organizationId,
-      metadata: { lostReason, remarks, renewalStatus: status }
+      metadata: { lostReason, remarks, renewalStatus: status },
     });
 
     return Response.json({ success: true, policy: updatedPolicy });

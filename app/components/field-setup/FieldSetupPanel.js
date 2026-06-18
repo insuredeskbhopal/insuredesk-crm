@@ -4,9 +4,11 @@ import { FIELD_SETUP, POLICY_SCHEMA_LIBRARY } from "@/app/lib/dashboard-helpers"
 
 export default function FieldSetupPanel() {
   const [selectedGroupId, setSelectedGroupId] = useState(POLICY_SCHEMA_LIBRARY[0]?.id || "");
-  const selectedGroup = POLICY_SCHEMA_LIBRARY.find((group) => group.id === selectedGroupId) || POLICY_SCHEMA_LIBRARY[0];
+  const selectedGroup =
+    POLICY_SCHEMA_LIBRARY.find((group) => group.id === selectedGroupId) || POLICY_SCHEMA_LIBRARY[0];
   const [selectedPolicyId, setSelectedPolicyId] = useState(selectedGroup?.policies?.[0]?.id || "");
-  const selectedPolicy = selectedGroup?.policies.find((policy) => policy.id === selectedPolicyId) || selectedGroup?.policies?.[0];
+  const selectedPolicy =
+    selectedGroup?.policies.find((policy) => policy.id === selectedPolicyId) || selectedGroup?.policies?.[0];
   const visibleFields = FIELD_SETUP.filter(([, key]) => selectedPolicy?.fields.includes(key));
 
   useEffect(() => {
@@ -22,7 +24,9 @@ export default function FieldSetupPanel() {
           <p className="eyebrow">Configuration</p>
           <h2>Prisma-backed field setup</h2>
         </div>
-        <button type="button"><ShieldCheck size={17} /> Prisma Schema Active</button>
+        <button type="button">
+          <ShieldCheck size={17} /> Prisma Schema Active
+        </button>
       </div>
       <div className="schema-browser">
         <aside className="schema-groups">
@@ -88,7 +92,9 @@ export default function FieldSetupPanel() {
                 {visibleFields.map(([label, key]) => (
                   <tr key={key}>
                     <td>{label}</td>
-                    <td><span className="record-code">{key}</span></td>
+                    <td>
+                      <span className="record-code">{key}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

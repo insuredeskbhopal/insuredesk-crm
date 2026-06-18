@@ -34,7 +34,7 @@ export async function GET(request) {
     }
 
     const tenantFilter = getTenantFilter(session, "read");
-    
+
     const isSuperAdmin = session.role === "SUPER_ADMIN";
     const orgId = session.organizationId || null;
 
@@ -42,11 +42,7 @@ export async function GET(request) {
     const todayParts = getIndiaDateParts(now);
     const todayStr = `${todayParts.year}-${String(todayParts.month).padStart(2, "0")}-${String(todayParts.day).padStart(2, "0")}`;
 
-    const queryParams = [
-      isSuperAdmin,
-      orgId,
-      todayStr
-    ];
+    const queryParams = [isSuperAdmin, orgId, todayStr];
 
     const renewalsCTE = `
       WITH normalized_policies AS (
@@ -123,7 +119,7 @@ export async function GET(request) {
       todayStr,
       startOfToday.toISOString(),
       startOfThisMonth.toISOString(),
-      startOfThisYear.toISOString()
+      startOfThisYear.toISOString(),
     ];
 
     const statsQuery = `
@@ -188,7 +184,7 @@ export async function GET(request) {
 
     const [renewalsResult, statsResult] = await Promise.all([
       prisma.$queryRawUnsafe(renewalsCTE, ...queryParams),
-      prisma.$queryRawUnsafe(statsQuery, ...statsQueryArgs(statsParams))
+      prisma.$queryRawUnsafe(statsQuery, ...statsQueryArgs(statsParams)),
     ]);
 
     const renewals = renewalsResult.map((r) => ({
@@ -199,7 +195,7 @@ export async function GET(request) {
       policyNumber: r.policyNumber,
       formattedExpiry: r.expiryDate || "",
       daysRemaining: r.daysRemaining,
-      isExpired: r.daysRemaining < 0
+      isExpired: r.daysRemaining < 0,
     }));
 
     const stats = statsResult[0] || {};
@@ -239,10 +235,10 @@ export async function GET(request) {
           select: {
             id: true,
             data: true,
-            reviewedData: true
-          }
-        }
-      }
+            reviewedData: true,
+          },
+        },
+      },
     });
 
     const notifications = uploads.map((u) => {
@@ -259,7 +255,7 @@ export async function GET(request) {
         clientName = payload.insuredName || payload["Insured Name"] || "";
         recordId = record.id;
       }
-      
+
       if (uploadStatus === UPLOAD_STATUS.APPROVED) {
         icon = "✅";
         text = `Successfully saved ${u.sourceFile}`;
@@ -277,7 +273,7 @@ export async function GET(request) {
         text = `Extracting details: ${u.sourceFile}`;
         type = "progress";
       }
-      
+
       return {
         id: u.id,
         icon,
@@ -286,7 +282,7 @@ export async function GET(request) {
         type,
         errorMessage: u.errorMessage || "",
         recordId,
-        clientName
+        clientName,
       };
     });
 
@@ -308,21 +304,20 @@ export async function GET(request) {
         renewed: renewedCount,
         renewedPremium,
         lost: lostCount,
-        lostPremium
+        lostPremium,
       },
-      success: true
+      success: true,
     });
   } catch (error) {
     console.error("Failed to load header data:", error);
-    return Response.json(
-      { error: "Failed to load header dashboard data", success: false },
-      { status: 500 }
-    );
+    return Response.json({ error: "Failed to load header dashboard data", success: false }, { status: 500 });
   }
 }
 
 function makeIndiaDate(year, month, day) {
-  return new Date(`${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00${INDIA_TIME_OFFSET}`);
+  return new Date(
+    `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00${INDIA_TIME_OFFSET}`,
+  );
 }
 
 function getIndiaDateParts(date) {
@@ -330,12 +325,14 @@ function getIndiaDateParts(date) {
     timeZone: REPORT_TIME_ZONE,
     year: "numeric",
     month: "2-digit",
-    day: "2-digit"
+    day: "2-digit",
   }).formatToParts(date);
-  const value = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  const value = Object.fromEntries(
+    parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]),
+  );
   return {
     year: Number(value.year),
     month: Number(value.month),
-    day: Number(value.day)
+    day: Number(value.day),
   };
 }

@@ -46,21 +46,25 @@ BIMAHEADQUARTER centralizes the entire policy lifecycle into a modern AI-powered
 ## 🔥 Key Features
 
 ### ⚡ 1. Bulk PDF Policy Intake & Extraction
+
 - **Batch Processing**: Drag-and-drop multiple policy PDFs at once. The platform processes them in parallel.
 - **Rule-Based Extractors**: Scans raw PDF text streams using optimized regular expressions to identify insured name, policy number, premium, sum insured, dates, contact numbers, risk locations (district/tehsil), and carrier.
 - **Payload Sanitization**: Automatic normalization of currency symbols, date string formats, and contact phone numbers.
 
 ### 📊 2. Real-Time Dashboard & Reporting
+
 - **Performance metrics**: Track Total Premium under management, Total Sum Insured, active policies, and average policy size.
 - **Quality Audits**: Proactively flags policies missing critical information (e.g., missing phone number, blank policy number, absent premium, or missing PDF attachments).
 - **Location & Carrier Insights**: Automatically groups and ranks premium distributions by district (e.g., tehsil, district level) and insurance company.
 
 ### 👥 3. Smart Customer Relationship Management (CRM)
+
 - **Automatic Client Profiling**: Reconstructs complete customer portfolios automatically by grouping policy records by the insured name.
 - **Profile Cards**: Displays client contact info, total premium contributed, and historical policy logs.
 - **Easy Policy Association**: View all coverages associated with a single client profile inside a consolidated page.
 
 ### 🔧 4. Flexible Administrator Control Panel
+
 - **Custom Metadata Fields**: Configure custom keys and descriptors for policies.
 - **Original PDF Archival**: High-fidelity storage of the raw PDF bytes in PostgreSQL so users can download original policy files anytime.
 - **Clean Search & Filters**: Instant full-text search across all policy descriptions, risk locations, and client names.
@@ -70,12 +74,15 @@ BIMAHEADQUARTER centralizes the entire policy lifecycle into a modern AI-powered
 ## 🖼️ Platform Screenshots
 
 ### Dashboard
+
 <img src="docs/dashboard.png" width="100%" />
 
 ### Analytics & Reporting
+
 <img src="docs/analytics.png" width="100%" />
 
 ### PDF Upload System
+
 <img src="docs/upload.png" width="100%" />
 
 ---
@@ -198,24 +205,28 @@ bimaheadquarter/
 ## 🚀 Getting Started
 
 ### 📋 Prerequisites
+
 - Node.js (v18.x or above recommended)
 - PostgreSQL Database (Neon serverless or local instance)
 
 ### 💾 Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/ABHISHEK9009/bimaheadquarter.git
    cd bimaheadquarter
    ```
 
 2. **Install project dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Configure Environment Variables:**
    Create a `.env` file in the root of the project:
+
    ```env
    # PostgreSQL Connection String (supports poolers e.g., Neon)
    DATABASE_URL="postgresql://user:password@hostname:5432/dbname?sslmode=require&connection_limit=1&pool_timeout=20"
@@ -223,14 +234,17 @@ bimaheadquarter/
 
 4. **Initialize Prisma Database Schema:**
    Push the schema to your database instance and generate the Prisma Client:
+
    ```bash
    npx prisma db push
    ```
 
 5. **Start the Development Server:**
+
    ```bash
    npm run dev
    ```
+
    Open [http://127.0.0.1:3000](http://127.0.0.1:3000) in your browser to explore the dashboard.
 
 6. **Create a Production Build:**
@@ -243,24 +257,26 @@ bimaheadquarter/
 
 ## 📡 API Directory
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/records` | Fetches all parsed policy records from the database. |
-| `POST` | `/api/records` | Manually inserts a new policy record (no PDF parsing required). |
-| `POST` | `/api/records/upload` | Processes multipart/form-data PDF file uploads and triggers the extraction engine. |
-| `DELETE` | `/api/records/[id]` | Deletes a policy record from the database. |
-| `GET` | `/api/records/[id]/pdf` | Streams back the raw PDF file binary corresponding to the policy. |
+| Method   | Endpoint                | Description                                                                        |
+| :------- | :---------------------- | :--------------------------------------------------------------------------------- |
+| `GET`    | `/api/records`          | Fetches all parsed policy records from the database.                               |
+| `POST`   | `/api/records`          | Manually inserts a new policy record (no PDF parsing required).                    |
+| `POST`   | `/api/records/upload`   | Processes multipart/form-data PDF file uploads and triggers the extraction engine. |
+| `DELETE` | `/api/records/[id]`     | Deletes a policy record from the database.                                         |
+| `GET`    | `/api/records/[id]/pdf` | Streams back the raw PDF file binary corresponding to the policy.                  |
 
 ---
 
 ## 🛡️ Security, Performance & Scalability
 
 ### 🔒 Data Security
+
 - **Binary Encapsulation**: Original policy PDFs are stored in binary format directly within the database, bypassing filesystem vulnerability risks.
 - **Validation Controls**: All files undergo strict size checks (under 5MB) and type validation via file headers to prevent malicious execution payloads.
 - **Safe HTML and Inputs**: Payloads are sanitized before write-time, preventing typical persistent Cross-Site Scripting (XSS).
 
 ### 🚀 Optimization and Scalability
+
 - **Connection Stability**: Database pooled connections are restricted with low timeouts (`pool_timeout=20`) and optimized limits (`connection_limit=1`) to prevent query exhaustion when hosted on serverless providers like Neon.
 - **Parallel Extraction**: Intake processing uses async Node streams, allowing concurrent file parsing without locking the main event thread.
 - **Client Grouping**: Indexes client listings dynamically in-memory during page load to scale rendering times.
@@ -269,16 +285,16 @@ bimaheadquarter/
 
 ## ✅ Production Status
 
-| System | Status |
-|---|---|
-| OCR Extraction Engine | ✅ Stable |
-| PostgreSQL Database | ✅ Connected |
-| Prisma ORM | ✅ Optimized |
-| Analytics Dashboard | ✅ Operational |
-| PDF Upload Pipeline | ✅ Active |
-| API Layer | ✅ Production Ready |
-| Build System | ✅ Stable |
-| Authentication Layer | 🚧 Planned |
+| System                | Status              |
+| --------------------- | ------------------- |
+| OCR Extraction Engine | ✅ Stable           |
+| PostgreSQL Database   | ✅ Connected        |
+| Prisma ORM            | ✅ Optimized        |
+| Analytics Dashboard   | ✅ Operational      |
+| PDF Upload Pipeline   | ✅ Active           |
+| API Layer             | ✅ Production Ready |
+| Build System          | ✅ Stable           |
+| Authentication Layer  | 🚧 Planned          |
 
 ---
 
@@ -302,6 +318,7 @@ The platform can be deployed on:
 - DigitalOcean
 
 Recommended:
+
 - Vercel + Neon PostgreSQL
 
 ---
@@ -309,6 +326,7 @@ Recommended:
 ## 🤝 Contributing
 
 Contributions are welcome! Please follow these guidelines:
+
 1. Fork the Project.
 2. Create a Feature Branch (`git checkout -b feature/AmazingFeature`).
 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
@@ -326,10 +344,10 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <div align="center">
 
 ### BIMAHEADQUARTER
+
 AI-Powered Insurance Workflow Infrastructure
 
 Built with Next.js, Prisma & PostgreSQL
 
 </div>
 <!-- . -->
-

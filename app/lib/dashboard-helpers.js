@@ -12,7 +12,7 @@ export const PAYMENT_MODE_OPTIONS = [
   { value: "UPI", label: "UPI" },
   { value: "NEFT / RTGS", label: "NEFT / RTGS" },
   { value: "Card", label: "Card" },
-  { value: "Online", label: "Online" }
+  { value: "Online", label: "Online" },
 ];
 
 export const FUEL_TYPE_OPTIONS = [
@@ -22,43 +22,67 @@ export const FUEL_TYPE_OPTIONS = [
   { value: "CNG", label: "CNG" },
   { value: "LPG", label: "LPG" },
   { value: "Electric", label: "Electric" },
-  { value: "Hybrid", label: "Hybrid" }
+  { value: "Hybrid", label: "Hybrid" },
 ];
 
 export const FIELD_GROUPS = [
   {
     title: "Policy Details",
     fields: [
-      "insuredName", "policyNumber", "insuranceCompany", "policyType", "premium", 
-      "sumInsured", "startDate", "expiryDate", "duration", "policyCoverType", "pptMpwlc"
-    ]
+      "insuredName",
+      "policyNumber",
+      "insuranceCompany",
+      "policyType",
+      "premium",
+      "sumInsured",
+      "startDate",
+      "expiryDate",
+      "duration",
+      "policyCoverType",
+      "pptMpwlc",
+    ],
   },
   {
     title: "Vehicle Details",
     fields: [
-      "vehicleNumber", "registrationNumber", "makeModel", "variant", "manufacturingYear", 
-      "registrationDate", "engineNumber", "chassisNumber", "fuelType", "cubicCapacity", 
-      "seatingCapacity", "grossVehicleWeight", "idv", "ncb", "rtoLocation"
-    ]
+      "vehicleNumber",
+      "registrationNumber",
+      "makeModel",
+      "variant",
+      "manufacturingYear",
+      "registrationDate",
+      "engineNumber",
+      "chassisNumber",
+      "fuelType",
+      "cubicCapacity",
+      "seatingCapacity",
+      "grossVehicleWeight",
+      "idv",
+      "ncb",
+      "rtoLocation",
+    ],
   },
   {
     title: "Contact & Parties",
-    fields: [
-      "contactPerson", "contactNumber", "whatsappGroupName"
-    ]
+    fields: ["contactPerson", "contactNumber", "whatsappGroupName"],
   },
   {
     title: "Payment",
     fields: [
-      "totalPremium", "netPremium", "tpDriverOwner", "odPremium", "dueCollection", "collectedAmount", "modeOfPayment", "remark"
-    ]
+      "totalPremium",
+      "netPremium",
+      "tpDriverOwner",
+      "odPremium",
+      "dueCollection",
+      "collectedAmount",
+      "modeOfPayment",
+      "remark",
+    ],
   },
   {
     title: "Risk & Locations",
-    fields: [
-      "riskLocation", "district", "tehsil", "occupancy", "description", "validIn"
-    ]
-  }
+    fields: ["riskLocation", "district", "tehsil", "occupancy", "description", "validIn"],
+  },
 ];
 
 export const FIELD_SETUP = [
@@ -109,7 +133,7 @@ export const FIELD_SETUP = [
   ["Cover Type", "policyCoverType"],
   ["RTO Location", "rtoLocation"],
   ["Nominee Name", "nomineeName"],
-  ["Financer Name", "financerName"]
+  ["Financer Name", "financerName"],
 ];
 
 const MOTOR_COMMON_FIELDS = [
@@ -143,7 +167,7 @@ const MOTOR_COMMON_FIELDS = [
   "dueCollection",
   "collectedAmount",
   "modeOfPayment",
-  "remark"
+  "remark",
 ];
 
 export const POLICY_SCHEMA_LIBRARY = [
@@ -152,84 +176,354 @@ export const POLICY_SCHEMA_LIBRARY = [
     label: "Fire Policy",
     description: "Property and stock protection policies.",
     policies: [
-      { id: "fire-standard", name: "Standard Fire", fields: ["insuredName", "policyNumber", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "riskLocation", "district", "tehsil", "insuranceCompany", "description", "occupancy", "validIn"] },
-      { id: "fire-sfsp", name: "SFSP", fields: ["insuredName", "policyNumber", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "duration", "riskLocation", "district", "tehsil", "insuranceCompany", "description", "occupancy"] },
-      { id: "fire-burglary", name: "Burglary", fields: ["insuredName", "policyNumber", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "riskLocation", "district", "tehsil", "insuranceCompany", "description"] }
-    ]
+      {
+        id: "fire-standard",
+        name: "Standard Fire",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "policyType",
+          "sumInsured",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "riskLocation",
+          "district",
+          "tehsil",
+          "insuranceCompany",
+          "description",
+          "occupancy",
+          "validIn",
+        ],
+      },
+      {
+        id: "fire-sfsp",
+        name: "SFSP",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "policyType",
+          "sumInsured",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "duration",
+          "riskLocation",
+          "district",
+          "tehsil",
+          "insuranceCompany",
+          "description",
+          "occupancy",
+        ],
+      },
+      {
+        id: "fire-burglary",
+        name: "Burglary",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "policyType",
+          "sumInsured",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "riskLocation",
+          "district",
+          "tehsil",
+          "insuranceCompany",
+          "description",
+        ],
+      },
+    ],
   },
   {
     id: "motor",
     label: "Motor Policy",
     description: "Car, bike, and commercial vehicle cover.",
     policies: [
-      { id: "motor-private-car-package", name: "Private Car - Package", fields: [...MOTOR_COMMON_FIELDS, "sumInsured", "seatingCapacity"] },
-      { id: "motor-private-car-third-party", name: "Private Car - Third Party", fields: MOTOR_COMMON_FIELDS.filter((key) => key !== "idv" && key !== "ncb").concat(["seatingCapacity"]) },
-      { id: "motor-two-wheeler-package", name: "Two Wheeler - Package", fields: [...MOTOR_COMMON_FIELDS, "sumInsured", "cubicCapacity"] },
-      { id: "motor-two-wheeler-third-party", name: "Two Wheeler - Third Party", fields: MOTOR_COMMON_FIELDS.filter((key) => key !== "idv" && key !== "ncb").concat(["cubicCapacity"]) },
-      { id: "motor-goods-carrying", name: "Goods Carrying Vehicle", fields: [...MOTOR_COMMON_FIELDS, "grossVehicleWeight", "sumInsured"] },
-      { id: "motor-passenger-carrying", name: "Passenger Carrying Vehicle", fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "grossVehicleWeight", "sumInsured"] },
-      { id: "motor-taxi-cab", name: "Taxi / Cab", fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "sumInsured"] },
-      { id: "motor-school-bus", name: "School Bus", fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "grossVehicleWeight"] },
-      { id: "motor-fleet", name: "Fleet Policy", fields: [...MOTOR_COMMON_FIELDS, "sumInsured"] }
-    ]
+      {
+        id: "motor-private-car-package",
+        name: "Private Car - Package",
+        fields: [...MOTOR_COMMON_FIELDS, "sumInsured", "seatingCapacity"],
+      },
+      {
+        id: "motor-private-car-third-party",
+        name: "Private Car - Third Party",
+        fields: MOTOR_COMMON_FIELDS.filter((key) => key !== "idv" && key !== "ncb").concat([
+          "seatingCapacity",
+        ]),
+      },
+      {
+        id: "motor-two-wheeler-package",
+        name: "Two Wheeler - Package",
+        fields: [...MOTOR_COMMON_FIELDS, "sumInsured", "cubicCapacity"],
+      },
+      {
+        id: "motor-two-wheeler-third-party",
+        name: "Two Wheeler - Third Party",
+        fields: MOTOR_COMMON_FIELDS.filter((key) => key !== "idv" && key !== "ncb").concat(["cubicCapacity"]),
+      },
+      {
+        id: "motor-goods-carrying",
+        name: "Goods Carrying Vehicle",
+        fields: [...MOTOR_COMMON_FIELDS, "grossVehicleWeight", "sumInsured"],
+      },
+      {
+        id: "motor-passenger-carrying",
+        name: "Passenger Carrying Vehicle",
+        fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "grossVehicleWeight", "sumInsured"],
+      },
+      {
+        id: "motor-taxi-cab",
+        name: "Taxi / Cab",
+        fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "sumInsured"],
+      },
+      {
+        id: "motor-school-bus",
+        name: "School Bus",
+        fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "grossVehicleWeight"],
+      },
+      { id: "motor-fleet", name: "Fleet Policy", fields: [...MOTOR_COMMON_FIELDS, "sumInsured"] },
+    ],
   },
   {
     id: "life",
     label: "Life Policy",
     description: "Term, endowment, and savings-linked life policies.",
     policies: [
-      { id: "life-term", name: "Term Life", fields: ["insuredName", "policyNumber", "contactPerson", "contactNumber", "policyType", "premium", "startDate", "expiryDate", "duration", "insuranceCompany", "description"] },
-      { id: "life-endowment", name: "Endowment", fields: ["insuredName", "policyNumber", "contactNumber", "groupName", "policyType", "premium", "startDate", "expiryDate", "duration", "insuranceCompany", "validIn"] }
-    ]
+      {
+        id: "life-term",
+        name: "Term Life",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "contactPerson",
+          "contactNumber",
+          "policyType",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "duration",
+          "insuranceCompany",
+          "description",
+        ],
+      },
+      {
+        id: "life-endowment",
+        name: "Endowment",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "contactNumber",
+          "groupName",
+          "policyType",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "duration",
+          "insuranceCompany",
+          "validIn",
+        ],
+      },
+    ],
   },
   {
     id: "health",
     label: "Health Policy",
     description: "Individual, family, and group mediclaim.",
     policies: [
-      { id: "health-individual", name: "Individual Health", fields: ["insuredName", "policyNumber", "contactPerson", "contactNumber", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "duration", "insuranceCompany"] },
-      { id: "health-family", name: "Family Floater", fields: ["insuredName", "policyNumber", "contactNumber", "groupName", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "duration", "insuranceCompany", "description"] }
-    ]
+      {
+        id: "health-individual",
+        name: "Individual Health",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "contactPerson",
+          "contactNumber",
+          "policyType",
+          "sumInsured",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "duration",
+          "insuranceCompany",
+        ],
+      },
+      {
+        id: "health-family",
+        name: "Family Floater",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "contactNumber",
+          "groupName",
+          "policyType",
+          "sumInsured",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "duration",
+          "insuranceCompany",
+          "description",
+        ],
+      },
+    ],
   },
   {
     id: "home",
     label: "Home Policy",
     description: "Home building and contents cover.",
     policies: [
-      { id: "home-building", name: "Home Building", fields: ["insuredName", "policyNumber", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "riskLocation", "district", "tehsil", "insuranceCompany", "description"] },
-      { id: "home-contents", name: "Home Contents", fields: ["insuredName", "policyNumber", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "riskLocation", "district", "tehsil", "insuranceCompany", "occupancy"] }
-    ]
+      {
+        id: "home-building",
+        name: "Home Building",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "policyType",
+          "sumInsured",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "riskLocation",
+          "district",
+          "tehsil",
+          "insuranceCompany",
+          "description",
+        ],
+      },
+      {
+        id: "home-contents",
+        name: "Home Contents",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "policyType",
+          "sumInsured",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "riskLocation",
+          "district",
+          "tehsil",
+          "insuranceCompany",
+          "occupancy",
+        ],
+      },
+    ],
   },
   {
     id: "cyber",
     label: "Cyber Policy",
     description: "Cyber liability and breach response cover.",
     policies: [
-      { id: "cyber-sme", name: "Cyber SME", fields: ["insuredName", "policyNumber", "contactPerson", "contactNumber", "policyType", "premium", "startDate", "expiryDate", "duration", "insuranceCompany", "description", "validIn"] },
-      { id: "cyber-enterprise", name: "Cyber Enterprise", fields: ["insuredName", "policyNumber", "groupName", "policyType", "premium", "startDate", "expiryDate", "duration", "riskLocation", "insuranceCompany", "description"] }
-    ]
+      {
+        id: "cyber-sme",
+        name: "Cyber SME",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "contactPerson",
+          "contactNumber",
+          "policyType",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "duration",
+          "insuranceCompany",
+          "description",
+          "validIn",
+        ],
+      },
+      {
+        id: "cyber-enterprise",
+        name: "Cyber Enterprise",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "groupName",
+          "policyType",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "duration",
+          "riskLocation",
+          "insuranceCompany",
+          "description",
+        ],
+      },
+    ],
   },
   {
     id: "misc",
     label: "Other Policies",
     description: "Marine, travel, liability, and custom formats.",
     policies: [
-      { id: "marine", name: "Marine", fields: ["insuredName", "policyNumber", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "insuranceCompany", "description", "validIn"] },
-      { id: "travel", name: "Travel", fields: ["insuredName", "policyNumber", "contactNumber", "policyType", "premium", "startDate", "expiryDate", "duration", "insuranceCompany", "validIn"] },
-      { id: "liability", name: "Liability", fields: ["insuredName", "policyNumber", "groupName", "policyType", "sumInsured", "premium", "startDate", "expiryDate", "insuranceCompany", "description"] }
-    ]
-  }
+      {
+        id: "marine",
+        name: "Marine",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "policyType",
+          "sumInsured",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "insuranceCompany",
+          "description",
+          "validIn",
+        ],
+      },
+      {
+        id: "travel",
+        name: "Travel",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "contactNumber",
+          "policyType",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "duration",
+          "insuranceCompany",
+          "validIn",
+        ],
+      },
+      {
+        id: "liability",
+        name: "Liability",
+        fields: [
+          "insuredName",
+          "policyNumber",
+          "groupName",
+          "policyType",
+          "sumInsured",
+          "premium",
+          "startDate",
+          "expiryDate",
+          "insuranceCompany",
+          "description",
+        ],
+      },
+    ],
+  },
 ];
 
 export function getReviewCounts(files) {
-  return files.reduce((counts, file) => {
-    const status = normalizeUploadStatus(file.status);
-    if (status === UPLOAD_STATUS.APPROVED) counts.saved += 1;
-    else if (status === UPLOAD_STATUS.FAILED) counts.failed += 1;
-    else if (status === UPLOAD_STATUS.PROCESSING || status === UPLOAD_STATUS.PENDING) counts.processing += 1;
-    else counts.pending += 1;
-    return counts;
-  }, { pending: 0, saved: 0, failed: 0, processing: 0 });
+  return files.reduce(
+    (counts, file) => {
+      const status = normalizeUploadStatus(file.status);
+      if (status === UPLOAD_STATUS.APPROVED) counts.saved += 1;
+      else if (status === UPLOAD_STATUS.FAILED) counts.failed += 1;
+      else if (status === UPLOAD_STATUS.PROCESSING || status === UPLOAD_STATUS.PENDING)
+        counts.processing += 1;
+      else counts.pending += 1;
+      return counts;
+    },
+    { pending: 0, saved: 0, failed: 0, processing: 0 },
+  );
 }
 
 export function queueSummaryLabel({ isUploading, selectedFiles, reviewCounts }) {
@@ -257,7 +551,10 @@ export function getReviewValidation(upload, options = {}) {
     ? FIELD_SETUP.filter(([, key]) => resolvedSchema.fields.includes(key))
     : FIELD_SETUP;
   const visibleFields = addFields(schemaVisibleFields, [...manualRequiredFields, ...COMMON_REVIEW_FIELDS]);
-  const requiredKeys = addUnique(resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : ["insuredName", "policyNumber"], manualRequiredFields);
+  const requiredKeys = addUnique(
+    resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : ["insuredName", "policyNumber"],
+    manualRequiredFields,
+  );
   const missingRequired = getMissingRequiredFields(upload, visibleFields, requiredKeys);
 
   const contactPersonVal = getReviewFieldValue(upload, "contactPerson");
@@ -274,9 +571,9 @@ export function getReviewValidation(upload, options = {}) {
     contactErrors,
     contactFieldErrors: {
       contactPerson: contactPersonErr,
-      contactNumber: contactNumberErr
+      contactNumber: contactNumberErr,
     },
-    valid: missingRequired.length === 0 && contactErrors.length === 0
+    valid: missingRequired.length === 0 && contactErrors.length === 0,
   };
 }
 
@@ -298,7 +595,7 @@ export function resolvePolicySchema(groupId, policyId) {
     policyId: policy.id,
     policyName: policy.name,
     fields: policy.fields || [],
-    requiredFields: inferRequiredFields(group.id, policy.id)
+    requiredFields: inferRequiredFields(group.id, policy.id),
   };
 }
 
@@ -327,12 +624,9 @@ export function isFieldManualForUpload(upload, key) {
 }
 
 export function shouldUseExtractedVariant(data = {}, upload = {}) {
-  const haystack = [
-    data.insuranceCompany,
-    data.companyName,
-    data.sourceFile,
-    upload.sourceFile
-  ].filter(Boolean).join(" ");
+  const haystack = [data.insuranceCompany, data.companyName, data.sourceFile, upload.sourceFile]
+    .filter(Boolean)
+    .join(" ");
 
   return /\bnew\s+india\b/i.test(haystack);
 }
@@ -343,20 +637,23 @@ export function shouldUseExtractedFuelType(data = {}) {
   const documentFormat = String(data?.documentFormat || data?.policyUnderstanding?.documentFormat || "");
   if (/_MOTOR_V\d+$/i.test(documentFormat)) return true;
 
-  const haystack = [
-    data?.insuranceCompany,
-    data?.companyName,
-    data?.policyType,
-    data?.sourceFile
-  ].filter(Boolean).join(" ");
+  const haystack = [data?.insuranceCompany, data?.companyName, data?.policyType, data?.sourceFile]
+    .filter(Boolean)
+    .join(" ");
 
-  return /\b(?:TATA\s*AIG|New\s+India|IFFCO[-\s]?TOKIO|HDFC\s+ERGO|ICICI\s+Lombard|Bajaj\s+Allianz|Go\s+Digit|Generali|Royal\s+Sundaram)\b/i.test(haystack) &&
-    /\b(?:motor|vehicle|private\s+car|two\s+wheeler|package|registration|chassis|engine)\b/i.test(haystack);
+  return (
+    /\b(?:TATA\s*AIG|New\s+India|IFFCO[-\s]?TOKIO|HDFC\s+ERGO|ICICI\s+Lombard|Bajaj\s+Allianz|Go\s+Digit|Generali|Royal\s+Sundaram)\b/i.test(
+      haystack,
+    ) &&
+    /\b(?:motor|vehicle|private\s+car|two\s+wheeler|package|registration|chassis|engine)\b/i.test(haystack)
+  );
 }
 
 export function getReviewFieldValue(upload, key) {
-  if (key === "fuelType" && shouldUseExtractedFuelType(upload?.extractedData)) return upload?.extractedData?.[key] || "";
-  if (isManualRequiredField(key) && Array.isArray(upload?.manualFields) && !upload.manualFields.includes(key)) return "";
+  if (key === "fuelType" && shouldUseExtractedFuelType(upload?.extractedData))
+    return upload?.extractedData?.[key] || "";
+  if (isManualRequiredField(key) && Array.isArray(upload?.manualFields) && !upload.manualFields.includes(key))
+    return "";
   return upload?.extractedData?.[key] || "";
 }
 
@@ -386,7 +683,7 @@ export function inferUploadSchema(upload) {
     extracted.vehicleNumber,
     extracted.registrationNumber,
     extracted.makeModel,
-    extracted.riskLocation
+    extracted.riskLocation,
   ]
     .filter(Boolean)
     .join(" ")
@@ -405,19 +702,34 @@ export function inferUploadSchema(upload) {
     policyId: policy?.id || group.policies?.[0]?.id || "",
     policyName: policy?.name || group.policies?.[0]?.name || group.label,
     fields: policy?.fields || group.policies?.[0]?.fields || [],
-    requiredFields: inferRequiredFields(group.id, policy?.id)
+    requiredFields: inferRequiredFields(group.id, policy?.id),
   };
 }
 
 export function inferRequiredFields(groupId, policyId) {
   if (groupId === "motor") {
-    const base = ["insuredName", "policyNumber", "insuranceCompany", "premium", "startDate", "expiryDate", "vehicleNumber", "engineNumber", "chassisNumber"];
+    const base = [
+      "insuredName",
+      "policyNumber",
+      "insuranceCompany",
+      "premium",
+      "startDate",
+      "expiryDate",
+      "vehicleNumber",
+      "engineNumber",
+      "chassisNumber",
+    ];
 
     if (policyId === "motor-private-car-package" || policyId === "motor-two-wheeler-package") {
       return [...base, "idv"];
     }
 
-    if (policyId === "motor-goods-carrying" || policyId === "motor-passenger-carrying" || policyId === "motor-taxi-cab" || policyId === "motor-school-bus") {
+    if (
+      policyId === "motor-goods-carrying" ||
+      policyId === "motor-passenger-carrying" ||
+      policyId === "motor-taxi-cab" ||
+      policyId === "motor-school-bus"
+    ) {
       return [...base, "policyCoverType"];
     }
 
@@ -425,10 +737,24 @@ export function inferRequiredFields(groupId, policyId) {
   }
 
   if (groupId === "fire") {
-    return ["insuredName", "policyNumber", "insuranceCompany", "premium", "startDate", "expiryDate", "riskLocation"];
+    return [
+      "insuredName",
+      "policyNumber",
+      "insuranceCompany",
+      "premium",
+      "startDate",
+      "expiryDate",
+      "riskLocation",
+    ];
   }
 
-  if (groupId === "health" || groupId === "life" || groupId === "home" || groupId === "cyber" || groupId === "misc") {
+  if (
+    groupId === "health" ||
+    groupId === "life" ||
+    groupId === "home" ||
+    groupId === "cyber" ||
+    groupId === "misc"
+  ) {
     return ["insuredName", "policyNumber", "insuranceCompany", "premium", "startDate", "expiryDate"];
   }
 
@@ -442,7 +768,9 @@ export function inferPolicyFamily(haystack, extracted) {
     hasValue(extracted.engineNumber) ||
     hasValue(extracted.chassisNumber) ||
     hasValue(extracted.idv) ||
-    /\b(motor|private car|two wheeler|bike|scooter|commercial vehicle|taxi|cab|bus|chassis|engine)\b/.test(haystack);
+    /\b(motor|private car|two wheeler|bike|scooter|commercial vehicle|taxi|cab|bus|chassis|engine)\b/.test(
+      haystack,
+    );
   if (hasMotorSignals) return "motor";
 
   if (/\b(sfsp|fire|burglary|msme|warehouse|stock|property|contents)\b/.test(haystack)) return "fire";
@@ -470,7 +798,11 @@ export function inferPolicySchemaWithinGroup(group, haystack, extracted) {
     }
     return group.policies.find((item) => item.id === "motor-two-wheeler-package");
   }
-  if (/\bprivate car\b/.test(haystack) || hasValue(extracted.seatingCapacity) || hasValue(extracted.makeModel)) {
+  if (
+    /\bprivate car\b/.test(haystack) ||
+    hasValue(extracted.seatingCapacity) ||
+    hasValue(extracted.makeModel)
+  ) {
     if (/\b(liability only|third party)\b/.test(haystack)) {
       return group.policies.find((item) => item.id === "motor-private-car-third-party");
     }
@@ -485,7 +817,10 @@ export function inferPolicySchemaWithinGroup(group, haystack, extracted) {
   if (/\b(passenger carrying|passenger)\b/.test(haystack)) {
     return group.policies.find((item) => item.id === "motor-passenger-carrying");
   }
-  if (/\b(goods carrying|commercial vehicle|goods vehicle)\b/.test(haystack) || hasValue(extracted.grossVehicleWeight)) {
+  if (
+    /\b(goods carrying|commercial vehicle|goods vehicle)\b/.test(haystack) ||
+    hasValue(extracted.grossVehicleWeight)
+  ) {
     return group.policies.find((item) => item.id === "motor-goods-carrying");
   }
   if (/\bfleet\b/.test(haystack) || hasValue(extracted.groupName)) {
@@ -508,7 +843,7 @@ export function pageTitle(page) {
     customers: "Customer Management",
     analytics: "Analytics & Reports",
     "field-setup": "Field Setup",
-    settings: "Settings"
+    settings: "Settings",
   }[page];
 }
 
@@ -521,7 +856,7 @@ export function pageSubtitle(page) {
     customers: "Browse insured parties and policy summaries.",
     analytics: "Review premium totals, insured value, and district coverage.",
     "field-setup": "See how the Prisma model maps to the intake fields.",
-    settings: "Review database connectivity and current app status."
+    settings: "Review database connectivity and current app status.",
   }[page];
 }
 
@@ -538,7 +873,7 @@ export function buildClientProfiles(records, parseMoney) {
       district: record.district || "",
       tehsil: record.tehsil || "",
       contactNumber: record.contactNumber || "",
-      customerId: record.customerId || ""
+      customerId: record.customerId || "",
     };
 
     current.policies.push(record);
@@ -583,7 +918,7 @@ export function queueLabel(status) {
     [UPLOAD_STATUS.PROCESSING]: "Extracting",
     [UPLOAD_STATUS.REVIEW_REQUIRED]: "Ready for review",
     [UPLOAD_STATUS.APPROVED]: "Saved",
-    [UPLOAD_STATUS.FAILED]: "Failed"
+    [UPLOAD_STATUS.FAILED]: "Failed",
   }[normalized];
 }
 
@@ -594,7 +929,7 @@ export function progressWidth(status) {
     [UPLOAD_STATUS.PROCESSING]: "50%",
     [UPLOAD_STATUS.REVIEW_REQUIRED]: "90%",
     [UPLOAD_STATUS.APPROVED]: "100%",
-    [UPLOAD_STATUS.FAILED]: "100%"
+    [UPLOAD_STATUS.FAILED]: "100%",
   }[normalized];
 }
 

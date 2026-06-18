@@ -18,8 +18,11 @@ export async function GET(request) {
   } catch (error) {
     console.error("Failed to load notifications:", error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Notifications could not be loaded." },
-      { status: 500 }
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Notifications could not be loaded.",
+      },
+      { status: 500 },
     );
   }
 }
@@ -37,8 +40,11 @@ export async function POST(request) {
   } catch (error) {
     console.error("Failed to update notifications:", error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Notifications could not be updated." },
-      { status: 500 }
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Notifications could not be updated.",
+      },
+      { status: 500 },
     );
   }
 }

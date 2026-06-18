@@ -8,7 +8,7 @@ import {
   getEndorsementWhere,
   requireEndorsementSession,
   sanitizeEndorsementPayload,
-  serializeEndorsement
+  serializeEndorsement,
 } from "../utils";
 
 export const runtime = "nodejs";
@@ -22,13 +22,16 @@ export async function GET(request, { params }) {
 
     const record = await prisma.endorsement.findFirst({
       where: { id, ...getEndorsementWhere(session, "read") },
-      include: endorsementInclude
+      include: endorsementInclude,
     });
 
     if (!record) return NextResponse.json({ error: "Endorsement not found." }, { status: 404 });
     return NextResponse.json(serializeEndorsement(record));
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Endorsement could not be loaded." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Endorsement could not be loaded." },
+      { status: 500 },
+    );
   }
 }
 
@@ -40,10 +43,11 @@ export async function PUT(request, { params }) {
     const { id } = await params;
 
     const existing = await prisma.endorsement.findFirst({
-      where: { id, ...getEndorsementWhere(session, "read") }
+      where: { id, ...getEndorsementWhere(session, "read") },
     });
     if (!existing) return NextResponse.json({ error: "Endorsement not found." }, { status: 404 });
-    if (!canWriteEndorsement(session, existing)) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    if (!canWriteEndorsement(session, existing))
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
 
     const payload = await request.json();
     const data = sanitizeEndorsementPayload(payload);
@@ -58,17 +62,32 @@ export async function PUT(request, { params }) {
         data: {
           ...data,
           endorsementNo: data.endorsementNo || existing.endorsementNo,
-          updatedById: actorId
-        }
+          updatedById: actorId,
+        },
       });
 
-      await syncDocument(tx, id, "Generated Letter", data.generatedLetterPdfUrl, data.generatedLetterFileName, actorId);
-      await syncDocument(tx, id, "Insurance Company Letter", data.insuranceCompanyLetterPdfUrl, data.insuranceCompanyLetterFileName, actorId, data.remark);
+      await syncDocument(
+        tx,
+        id,
+        "Generated Letter",
+        data.generatedLetterPdfUrl,
+        data.generatedLetterFileName,
+        actorId,
+      );
+      await syncDocument(
+        tx,
+        id,
+        "Insurance Company Letter",
+        data.insuranceCompanyLetterPdfUrl,
+        data.insuranceCompanyLetterFileName,
+        actorId,
+        data.remark,
+      );
     });
 
     const record = await prisma.endorsement.findUnique({
       where: { id },
-      include: endorsementInclude
+      include: endorsementInclude,
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -82,12 +101,15 @@ export async function PUT(request, { params }) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { endorsementNo: record.endorsementNo, oldStatus: existing.status, newStatus: record.status }
+      metadata: { endorsementNo: record.endorsementNo, oldStatus: existing.status, newStatus: record.status },
     });
 
     return NextResponse.json(serializeEndorsement(record));
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Endorsement could not be updated." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Endorsement could not be updated." },
+      { status: 500 },
+    );
   }
 }
 
@@ -99,7 +121,7 @@ export async function DELETE(request, { params }) {
     const { id } = await params;
 
     const existing = await prisma.endorsement.findFirst({
-      where: { id, ...getEndorsementWhere(session, "read") }
+      where: { id, ...getEndorsementWhere(session, "read") },
     });
     if (!existing) return NextResponse.json({ error: "Endorsement not found." }, { status: 404 });
     if (!canDeleteEndorsement(session, existing)) {
@@ -114,8 +136,8 @@ export async function DELETE(request, { params }) {
       where: { id },
       data: {
         deletedAt: new Date(),
-        deletedById: actorId
-      }
+        deletedById: actorId,
+      },
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -129,12 +151,15 @@ export async function DELETE(request, { params }) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { endorsementNo: existing.endorsementNo, policyNo: existing.policyNo }
+      metadata: { endorsementNo: existing.endorsementNo, policyNo: existing.policyNo },
     });
 
     return new Response(null, { status: 204 });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Endorsement could not be deleted." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Endorsement could not be deleted." },
+      { status: 500 },
+    );
   }
 }
 
@@ -149,7 +174,7 @@ async function syncDocument(tx, endorsementId, documentType, dataUrl, fileName, 
       fileType: "application/pdf",
       dataUrl,
       remark,
-      uploadedById: actorId
-    }
+      uploadedById: actorId,
+    },
   });
 }

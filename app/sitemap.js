@@ -6,16 +6,15 @@ export default function sitemap() {
     url: new URL(route.path, SITE_URL).href,
     lastModified: new Date(),
     changeFrequency: route.changeFrequency,
-    priority: route.priority
+    priority: route.priority,
   }));
 
   const blogRoutes = BLOG_POSTS.map((post) => ({
     url: `${SITE_URL}/blog/${post.slug}`,
     lastModified: new Date(post.date),
     changeFrequency: "monthly",
-    priority: 0.7
+    priority: 0.7,
   }));
 
   return [...routes, ...blogRoutes];
 }
-

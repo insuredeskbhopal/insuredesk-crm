@@ -12,8 +12,12 @@ function cleanMobile(value = "") {
 }
 
 function isUsefulContactName(contactName = "", companyName = "") {
-  const contact = String(contactName || "").replace(/\s+/g, " ").trim();
-  const company = String(companyName || "").replace(/\s+/g, " ").trim();
+  const contact = String(contactName || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const company = String(companyName || "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!contact) return false;
   if (company && contact.toLowerCase() === company.toLowerCase()) return false;
   return true;
@@ -56,7 +60,7 @@ export async function GET(request) {
       `%${q.trim().toLowerCase()}%`,
       assignedTo,
       companyFilter,
-      policyTypeFilter
+      policyTypeFilter,
     ];
 
     const baseCTE = `
@@ -280,12 +284,12 @@ export async function GET(request) {
           )
       )
     `;
- 
+
     const countQuery = `
       ${baseCTE}
       SELECT COUNT(*)::integer as count FROM filtered_groups
     `;
- 
+
     const dataQuery = `
       ${baseCTE}
       SELECT *
@@ -311,11 +315,13 @@ export async function GET(request) {
 
     const [countResult, dataResult] = await Promise.all([
       prisma.$queryRawUnsafe(countQuery, ...queryParams),
-      prisma.$queryRawUnsafe(dataQuery, ...queryParams, limit, offset)
+      prisma.$queryRawUnsafe(dataQuery, ...queryParams, limit, offset),
     ]);
 
     const totalCount = countResult[0]?.count || 0;
-    const pageMobiles = dataResult.map((row) => String(row.mobile || "")).filter((mobile) => mobile && !mobile.startsWith("NO-MOBILE-"));
+    const pageMobiles = dataResult
+      .map((row) => String(row.mobile || ""))
+      .filter((mobile) => mobile && !mobile.startsWith("NO-MOBILE-"));
     const rawPagePolicies = pageMobiles.length
       ? await prisma.policyRecord.findMany({
           where: {
@@ -325,8 +331,8 @@ export async function GET(request) {
               { reviewedData: { path: ["contactNumber"], string_contains: mobile } },
               { reviewedData: { path: ["customerMobile"], string_contains: mobile } },
               { data: { path: ["contactNumber"], string_contains: mobile } },
-              { data: { path: ["customerMobile"], string_contains: mobile } }
-            ])
+              { data: { path: ["customerMobile"], string_contains: mobile } },
+            ]),
           },
           select: {
             id: true,
@@ -343,8 +349,8 @@ export async function GET(request) {
             selectedPolicyType: true,
             pdfFileName: true,
             createdAt: true,
-            updatedAt: true
-          }
+            updatedAt: true,
+          },
         })
       : [];
 
@@ -374,7 +380,7 @@ export async function GET(request) {
         nearest_days_left: nearestDaysLeft,
         customer_status: computedStatus,
         contact_person_name: resolvedContact || "",
-        contact_person: resolvedContact || row.contact_person || ""
+        contact_person: resolvedContact || row.contact_person || "",
       };
     });
 
@@ -382,7 +388,7 @@ export async function GET(request) {
       customers: enrichedCustomers,
       totalCount,
       pages: Math.ceil(totalCount / limit) || 1,
-      currentPage: page
+      currentPage: page,
     });
   } catch (error) {
     console.error("Customers list fetch failed:", error);

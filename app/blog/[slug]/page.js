@@ -10,7 +10,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/seo/site";
 // Generate static params for Next.js build prerendering
 export function generateStaticParams() {
   return BLOG_POSTS.map((post) => ({
-    slug: post.slug
+    slug: post.slug,
   }));
 }
 
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }) {
     title: `${post.title} | BIMAHEADQUARTER Blog`,
     description: post.excerpt,
     alternates: {
-      canonical: `/blog/${post.slug}`
+      canonical: `/blog/${post.slug}`,
     },
     openGraph: {
       title: `${post.title} | BIMAHEADQUARTER Blog`,
@@ -35,25 +35,53 @@ export async function generateMetadata({ params }) {
       url: `${SITE_URL}/blog/${post.slug}`,
       type: "article",
       publishedTime: new Date(post.date).toISOString(),
-      authors: [post.author.name]
+      authors: [post.author.name],
     },
     twitter: {
       card: "summary_large_image",
       title: `${post.title} | BIMAHEADQUARTER Blog`,
-      description: post.excerpt
-    }
+      description: post.excerpt,
+    },
   };
 }
 
 const getRelatedServicesForBlog = (category) => {
   const allServices = [
-    { title: "Claims Assistance", desc: "Get expert representation, documentation support, and claims advocacy across India.", slug: "claims-assistance" },
-    { title: "Policy Renewals", desc: "Track and renew your active policies across leading insurers in India seamlessly.", slug: "policy-renewals" },
-    { title: "Health Insurance Consulting", desc: "Compare individual, family, senior citizen, and corporate health insurance plans.", slug: "health-insurance" },
-    { title: "Motor & Fleet Insurance", desc: "Compare own damage, third-party, add-on, and renewal options for personal and commercial vehicles.", slug: "motor-insurance" },
-    { title: "Commercial Insurance", desc: "Protect corporate assets, stock, liability, operations, and commercial risk.", slug: "commercial-insurance" },
-    { title: "Risk Advisory Services", desc: "Identify coverage gaps, audit asset values, and implement risk control strategies.", slug: "risk-advisory" },
-    { title: "Warehouse Insurance", desc: "Protect warehouse stock, inventory, burglary risks, and storage liabilities.", slug: "warehouse-insurance" }
+    {
+      title: "Claims Assistance",
+      desc: "Get expert representation, documentation support, and claims advocacy across India.",
+      slug: "claims-assistance",
+    },
+    {
+      title: "Policy Renewals",
+      desc: "Track and renew your active policies across leading insurers in India seamlessly.",
+      slug: "policy-renewals",
+    },
+    {
+      title: "Health Insurance Consulting",
+      desc: "Compare individual, family, senior citizen, and corporate health insurance plans.",
+      slug: "health-insurance",
+    },
+    {
+      title: "Motor & Fleet Insurance",
+      desc: "Compare own damage, third-party, add-on, and renewal options for personal and commercial vehicles.",
+      slug: "motor-insurance",
+    },
+    {
+      title: "Commercial Insurance",
+      desc: "Protect corporate assets, stock, liability, operations, and commercial risk.",
+      slug: "commercial-insurance",
+    },
+    {
+      title: "Risk Advisory Services",
+      desc: "Identify coverage gaps, audit asset values, and implement risk control strategies.",
+      slug: "risk-advisory",
+    },
+    {
+      title: "Warehouse Insurance",
+      desc: "Protect warehouse stock, inventory, burglary risks, and storage liabilities.",
+      slug: "warehouse-insurance",
+    },
   ];
 
   if (category === "Claims") {
@@ -78,8 +106,7 @@ export default async function BlogPostPage({ params }) {
   const relatedServices = getRelatedServicesForBlog(post.category);
 
   // Find related articles (same category or others, excluding current)
-  const relatedPosts = BLOG_POSTS.filter((p) => p.slug !== post.slug)
-    .slice(0, 2);
+  const relatedPosts = BLOG_POSTS.filter((p) => p.slug !== post.slug).slice(0, 2);
 
   const postUrl = `${SITE_URL}/blog/${post.slug}`;
 
@@ -98,7 +125,7 @@ export default async function BlogPostPage({ params }) {
         author: {
           "@type": "Person",
           name: post.author.name,
-          jobTitle: post.author.role
+          jobTitle: post.author.role,
         },
         publisher: {
           "@type": "Organization",
@@ -106,13 +133,13 @@ export default async function BlogPostPage({ params }) {
           url: SITE_URL,
           logo: {
             "@type": "ImageObject",
-            url: `${SITE_URL}/brand/main-logo-wide.webp`
-          }
+            url: `${SITE_URL}/brand/main-logo-wide.webp`,
+          },
         },
         mainEntityOfPage: {
           "@type": "WebPage",
-          "@id": postUrl
-        }
+          "@id": postUrl,
+        },
       },
       {
         "@type": "BreadcrumbList",
@@ -122,23 +149,23 @@ export default async function BlogPostPage({ params }) {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: SITE_URL
+            item: SITE_URL,
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Blog",
-            item: `${SITE_URL}/blog`
+            item: `${SITE_URL}/blog`,
           },
           {
             "@type": "ListItem",
             position: 3,
             name: post.title,
-            item: postUrl
-          }
-        ]
-      }
-    ]
+            item: postUrl,
+          },
+        ],
+      },
+    ],
   };
 
   return (
@@ -173,7 +200,7 @@ export default async function BlogPostPage({ params }) {
                 </div>
                 <h1>{post.title}</h1>
                 <p className="blog-excerpt">{post.excerpt}</p>
-                
+
                 <div className="blog-post-author-bar">
                   <span className="material-symbols-outlined">account_circle</span>
                   <div>
@@ -188,7 +215,6 @@ export default async function BlogPostPage({ params }) {
           {/* Reading Layout & Sidebar */}
           <section className="blog-detail-main">
             <div className="blog-detail-main-inner max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-              
               {/* Content Body */}
               <article className="blog-detail-content">
                 <div className="blog-detail-prose">
@@ -217,13 +243,22 @@ export default async function BlogPostPage({ params }) {
                   <h3 className="text-[22px] font-bold text-primary mb-6">Related Consulting Services</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     {relatedServices.map((service) => (
-                      <div key={service.slug} className="glass-card p-6 rounded-2xl border border-outline-variant/20 flex flex-col justify-between">
+                      <div
+                        key={service.slug}
+                        className="glass-card p-6 rounded-2xl border border-outline-variant/20 flex flex-col justify-between"
+                      >
                         <div>
                           <h4 className="font-bold text-primary text-[18px] mb-2">{service.title}</h4>
-                          <p className="text-sm text-on-surface-variant mb-4 leading-relaxed">{service.desc}</p>
+                          <p className="text-sm text-on-surface-variant mb-4 leading-relaxed">
+                            {service.desc}
+                          </p>
                         </div>
-                        <Link href={`/services/${service.slug}`} className="inline-flex items-center text-sm font-semibold text-secondary hover:underline gap-1 mt-2">
-                          Explore Service <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        <Link
+                          href={`/services/${service.slug}`}
+                          className="inline-flex items-center text-sm font-semibold text-secondary hover:underline gap-1 mt-2"
+                        >
+                          Explore Service{" "}
+                          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                         </Link>
                       </div>
                     ))}
@@ -254,7 +289,6 @@ export default async function BlogPostPage({ params }) {
                   </a>
                 </div>
               </aside>
-
             </div>
           </section>
 
@@ -272,7 +306,10 @@ export default async function BlogPostPage({ params }) {
                 <div className="blog-grid">
                   {relatedPosts.map((rPost) => (
                     <article key={rPost.slug} className="blog-card reveal">
-                      <div className="blog-card-media" style={{ backgroundImage: `url(${rPost.coverImage})` }}></div>
+                      <div
+                        className="blog-card-media"
+                        style={{ backgroundImage: `url(${rPost.coverImage})` }}
+                      ></div>
                       <div className="blog-card-copy">
                         <div className="blog-card-meta">
                           <span className="blog-card-category">{rPost.category}</span>

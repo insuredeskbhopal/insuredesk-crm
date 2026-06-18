@@ -3,7 +3,7 @@ const {
   INSURANCE_COMPANY_MASTER,
   getInsuranceCompanyNames,
   normalizeCompanyToken,
-  normalizeInsuranceCompanyName
+  normalizeInsuranceCompanyName,
 } = require("../lib/master/insurance-companies.cjs");
 
 const prisma = new PrismaClient();
@@ -11,14 +11,19 @@ const prisma = new PrismaClient();
 function standardizePayload(payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return payload;
   const standardCompany = normalizeInsuranceCompanyName(
-    payload.insuranceCompany || payload.companyName || payload.insurerName || payload.selectedCompany || payload.detectedCompany,
-    payload.sourceText || ""
+    payload.insuranceCompany ||
+      payload.companyName ||
+      payload.insurerName ||
+      payload.selectedCompany ||
+      payload.detectedCompany,
+    payload.sourceText || "",
   );
-  if (!standardCompany || standardCompany === (payload.insuranceCompany || payload.companyName)) return payload;
+  if (!standardCompany || standardCompany === (payload.insuranceCompany || payload.companyName))
+    return payload;
   return {
     ...payload,
     insuranceCompany: standardCompany,
-    companyName: standardCompany
+    companyName: standardCompany,
   };
 }
 
@@ -29,16 +34,16 @@ function hasPayloadChanged(before, after) {
 async function moveCompanyReferences(fromId, toId) {
   await prisma.uploadedFile.updateMany({
     where: { detectedCompanyId: fromId },
-    data: { detectedCompanyId: toId }
+    data: { detectedCompanyId: toId },
   });
 
   await prisma.policySchema.updateMany({
     where: { insuranceCompanyId: fromId },
-    data: { insuranceCompanyId: toId }
+    data: { insuranceCompanyId: toId },
   });
 
   const policyTypes = await prisma.policyType.findMany({
-    where: { insuranceCompanyId: fromId }
+    where: { insuranceCompanyId: fromId },
   });
 
   for (const policyType of policyTypes) {
@@ -47,24 +52,24 @@ async function moveCompanyReferences(fromId, toId) {
         id: { not: policyType.id },
         name: policyType.name,
         serviceCategoryId: policyType.serviceCategoryId,
-        insuranceCompanyId: toId
-      }
+        insuranceCompanyId: toId,
+      },
     });
 
     if (duplicate) {
       await prisma.policySchema.updateMany({
         where: { policyTypeId: policyType.id },
-        data: { policyTypeId: duplicate.id }
+        data: { policyTypeId: duplicate.id },
       });
       await prisma.uploadedFile.updateMany({
         where: { detectedPolicyTypeId: policyType.id },
-        data: { detectedPolicyTypeId: duplicate.id }
+        data: { detectedPolicyTypeId: duplicate.id },
       });
       await prisma.policyType.delete({ where: { id: policyType.id } });
     } else {
       await prisma.policyType.update({
         where: { id: policyType.id },
-        data: { insuranceCompanyId: toId }
+        data: { insuranceCompanyId: toId },
       });
     }
   }
@@ -78,7 +83,7 @@ async function cleanupMasterCompanies() {
     const row = await prisma.insuranceCompany.upsert({
       where: { name: company.name },
       update: { aliases: company.aliases, active: company.active },
-      create: { name: company.name, aliases: company.aliases, active: company.active }
+      create: { name: company.name, aliases: company.aliases, active: company.active },
     });
     canonicalByName.set(company.name, row);
   }
@@ -99,7 +104,7 @@ async function cleanupMasterCompanies() {
     } else {
       await prisma.insuranceCompany.update({
         where: { id: row.id },
-        data: { active: false }
+        data: { active: false },
       });
       deactivated += 1;
     }
@@ -117,8 +122,8 @@ async function cleanupPolicyRecords() {
       extractedData: true,
       selectedCompany: true,
       detectedCompany: true,
-      rawText: true
-    }
+      rawText: true,
+    },
   });
 
   let updated = 0;
@@ -126,15 +131,26 @@ async function cleanupPolicyRecords() {
     const data = standardizePayload(record.data);
     const reviewedData = standardizePayload(record.reviewedData);
     const extractedData = standardizePayload(record.extractedData);
-    const selectedCompany = normalizeInsuranceCompanyName(record.selectedCompany || data?.insuranceCompany || reviewedData?.insuranceCompany || extractedData?.insuranceCompany, record.rawText || "");
-    const detectedCompany = normalizeInsuranceCompanyName(record.detectedCompany || extractedData?.insuranceCompany || data?.insuranceCompany, record.rawText || "");
+    const selectedCompany = normalizeInsuranceCompanyName(
+      record.selectedCompany ||
+        data?.insuranceCompany ||
+        reviewedData?.insuranceCompany ||
+        extractedData?.insuranceCompany,
+      record.rawText || "",
+    );
+    const detectedCompany = normalizeInsuranceCompanyName(
+      record.detectedCompany || extractedData?.insuranceCompany || data?.insuranceCompany,
+      record.rawText || "",
+    );
 
     const update = {};
     if (hasPayloadChanged(record.data, data)) update.data = data;
     if (hasPayloadChanged(record.reviewedData, reviewedData)) update.reviewedData = reviewedData;
     if (hasPayloadChanged(record.extractedData, extractedData)) update.extractedData = extractedData;
-    if (selectedCompany && selectedCompany !== record.selectedCompany) update.selectedCompany = selectedCompany;
-    if (detectedCompany && detectedCompany !== record.detectedCompany) update.detectedCompany = detectedCompany;
+    if (selectedCompany && selectedCompany !== record.selectedCompany)
+      update.selectedCompany = selectedCompany;
+    if (detectedCompany && detectedCompany !== record.detectedCompany)
+      update.detectedCompany = detectedCompany;
 
     if (Object.keys(update).length) {
       await prisma.policyRecord.update({ where: { id: record.id }, data: update });
@@ -151,8 +167,8 @@ async function cleanupUploadedFiles() {
       id: true,
       extractedData: true,
       detectedCompanyName: true,
-      rawText: true
-    }
+      rawText: true,
+    },
   });
 
   const companies = await prisma.insuranceCompany.findMany();
@@ -161,12 +177,16 @@ async function cleanupUploadedFiles() {
   let updated = 0;
   for (const file of files) {
     const extractedData = standardizePayload(file.extractedData);
-    const standardCompany = normalizeInsuranceCompanyName(file.detectedCompanyName || extractedData?.insuranceCompany, file.rawText || "");
+    const standardCompany = normalizeInsuranceCompanyName(
+      file.detectedCompanyName || extractedData?.insuranceCompany,
+      file.rawText || "",
+    );
     const company = companyByToken.get(normalizeCompanyToken(standardCompany));
     const update = {};
 
     if (hasPayloadChanged(file.extractedData, extractedData)) update.extractedData = extractedData;
-    if (standardCompany && standardCompany !== file.detectedCompanyName) update.detectedCompanyName = standardCompany;
+    if (standardCompany && standardCompany !== file.detectedCompanyName)
+      update.detectedCompanyName = standardCompany;
     if (company) update.detectedCompanyId = company.id;
 
     if (Object.keys(update).length) {

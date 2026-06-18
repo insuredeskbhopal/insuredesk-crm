@@ -1,10 +1,28 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Download, Expand, FileCheck2, FileText, Loader2, RefreshCw, Save, Upload, UploadCloud, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Download,
+  Expand,
+  FileCheck2,
+  FileText,
+  Loader2,
+  RefreshCw,
+  Save,
+  Upload,
+  UploadCloud,
+  X,
+} from "lucide-react";
 import { generateEndorsementSchedulePdf, getMissingScheduleFields } from "@/lib/endorsements/schedule-pdf";
 import { EndorsementTemplatePreview } from "@/app/components/endorsements/templates/EndorsementTemplatePreview";
-import { buildEndorsementScheduleData, buildFinalReviewedData, generateEndorsementWording, INSURER_TEMPLATES, resolveInsurerTemplateId } from "@/lib/endorsements/template-data";
+import {
+  buildEndorsementScheduleData,
+  buildFinalReviewedData,
+  generateEndorsementWording,
+  INSURER_TEMPLATES,
+  resolveInsurerTemplateId,
+} from "@/lib/endorsements/template-data";
 
 const ENDORSEMENT_TYPES = [
   "Change in Address",
@@ -18,10 +36,19 @@ const ENDORSEMENT_TYPES = [
   "Change in Hypothecation / Bank Details",
   "Correction in Insured Name",
   "Correction in Policy Details",
-  "Other Endorsement"
+  "Other Endorsement",
 ];
 
-const STATUS_OPTIONS = ["Draft", "Letter Generated", "Sent to Customer", "Pending Insurance Company Letter", "Insurance Company Letter Received", "Approved", "Rejected", "Cancelled"];
+const STATUS_OPTIONS = [
+  "Draft",
+  "Letter Generated",
+  "Sent to Customer",
+  "Pending Insurance Company Letter",
+  "Insurance Company Letter Received",
+  "Approved",
+  "Rejected",
+  "Cancelled",
+];
 
 const EMPTY_FORM = {
   endorsementNo: "",
@@ -62,7 +89,7 @@ const EMPTY_FORM = {
   generatedLetterFileName: "",
   insuranceCompanyLetterPdfUrl: "",
   insuranceCompanyLetterFileName: "",
-  status: "Draft"
+  status: "Draft",
 };
 
 export default function EndorsementFormPage({ endorsementId = "" }) {
@@ -125,14 +152,26 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
   const generatedDescription = useMemo(() => {
     const wordingData = buildEndorsementScheduleData({ ...form, description: "", endorsementWording: "" });
     return generateEndorsementWording(wordingData);
-  }, [form.endorsementType, form.effectiveDate, form.effectiveFrom, form.oldValues, form.newValues, form.premium, form.extractedPolicyData]);
+  }, [
+    form.endorsementType,
+    form.effectiveDate,
+    form.effectiveFrom,
+    form.oldValues,
+    form.newValues,
+    form.premium,
+    form.extractedPolicyData,
+  ]);
   const scheduleData = useMemo(() => buildEndorsementScheduleData(form), [form]);
-  const selectedTemplateId = useMemo(() => resolveInsurerTemplateId(form.insuranceCompany), [form.insuranceCompany]);
+  const selectedTemplateId = useMemo(
+    () => resolveInsurerTemplateId(form.insuranceCompany),
+    [form.insuranceCompany],
+  );
 
   useEffect(() => {
     if (!generatedDescription) return;
     setForm((current) => {
-      const currentWasGenerated = !current.description || current.description === lastGeneratedDescriptionRef.current;
+      const currentWasGenerated =
+        !current.description || current.description === lastGeneratedDescriptionRef.current;
       lastGeneratedDescriptionRef.current = generatedDescription;
       if (!currentWasGenerated || current.description === generatedDescription) return current;
       return { ...current, description: generatedDescription };
@@ -148,8 +187,8 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
       ...current,
       [bucket]: {
         ...(current[bucket] || {}),
-        [key]: value
-      }
+        [key]: value,
+      },
     }));
   }
 
@@ -213,7 +252,7 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
         extractedPolicyData: extracted.raw || payload.extractedData,
         rawExtractedData: extracted.raw || payload.extractedData,
         finalReviewedData: buildFinalReviewedData({ ...current, ...extracted }),
-        oldValues: seedOldValues(current.endorsementType, extracted, current.oldValues)
+        oldValues: seedOldValues(current.endorsementType, extracted, current.oldValues),
       }));
       setLastExtractedFileName(file.name);
       setMessage("Policy data extracted. Review and correct the values before saving.");
@@ -239,7 +278,7 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
         finalReviewedData: reviewed,
         generatedLetterPdfUrl: generated.dataUrl,
         generatedLetterFileName: generated.fileName,
-        status: nextStatus
+        status: nextStatus,
       }));
       setMessage("Insurer-style endorsement schedule draft generated and attached.");
       return generated;
@@ -259,10 +298,12 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
       ...form,
       status,
       finalReviewedData: reviewed,
-      rawExtractedData: rawData
+      rawExtractedData: rawData,
     };
     if (status !== "Draft" && !nextForm.generatedLetterPdfUrl) {
-      const generated = await generatePdf(status === "Letter Generated" ? "Letter Generated" : "Pending Insurance Company Letter");
+      const generated = await generatePdf(
+        status === "Letter Generated" ? "Letter Generated" : "Pending Insurance Company Letter",
+      );
       if (generated) {
         nextForm = {
           ...nextForm,
@@ -270,7 +311,7 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
           generatedLetterFileName: generated.fileName,
           status: status === "Letter Generated" ? "Letter Generated" : "Pending Insurance Company Letter",
           finalReviewedData: reviewed,
-          rawExtractedData: rawData
+          rawExtractedData: rawData,
         };
       }
     }
@@ -279,7 +320,7 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
       const response = await fetch(isEdit ? `/api/endorsements/${endorsementId}` : "/api/endorsements", {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(nextForm)
+        body: JSON.stringify(nextForm),
       });
       const saved = await readJsonResponse(response);
       setForm({ ...EMPTY_FORM, ...saved });
@@ -307,7 +348,7 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
       ...current,
       insuranceCompanyLetterPdfUrl: dataUrl,
       insuranceCompanyLetterFileName: file.name,
-      status: "Insurance Company Letter Received"
+      status: "Insurance Company Letter Received",
     }));
   }
 
@@ -319,7 +360,9 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
         <div>
           <p>Endorsements &gt; {isEdit ? "View / Edit Endorsement" : "Create Endorsement"}</p>
           <h1>{isEdit ? form.endorsementNo : "Create Endorsement"}</h1>
-          <span>Upload policy PDF, extract details, choose endorsement type, and generate customer letter.</span>
+          <span>
+            Upload policy PDF, extract details, choose endorsement type, and generate customer letter.
+          </span>
         </div>
         <div className="endorsement-head-actions">
           <Link className="endorsement-secondary-btn" href="/dashboard/endorsements">
@@ -336,181 +379,337 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
 
       <div className="endorsement-workflow">
         <div className="endorsement-create-left">
-        <section className="endorsement-form-panel">
-          <div className="endorsement-section-head">
-            <span>1</span>
-            <div>
-              <h2>Upload & Extract Policy</h2>
-              <p>Use a real policy PDF, then correct extracted values before saving.</p>
-            </div>
-          </div>
-          <div
-            className="endorsement-dropzone"
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={handleDrop}
-          >
-            <UploadCloud size={42} />
-            <strong>Drag or drop PDF files here</strong>
-            <span>Upload a policy PDF. It will be extracted automatically after you click Extract Data.</span>
-            <label className="endorsement-browse-btn">
-              Browse Files
-              <input type="file" accept="application/pdf" onChange={(event) => handlePolicyFile(event.target.files?.[0])} />
-            </label>
-          </div>
-          {policyFile ? (
-            <div className="endorsement-selected-file">
+          <section className="endorsement-form-panel">
+            <div className="endorsement-section-head">
+              <span>1</span>
               <div>
-                <strong>{policyFile.name}</strong>
-                <span>{formatFileSize(policyFile.size)}</span>
+                <h2>Upload & Extract Policy</h2>
+                <p>Use a real policy PDF, then correct extracted values before saving.</p>
               </div>
-              <button type="button" onClick={() => { setPolicyFile(null); setLastExtractedFileName(""); }} aria-label="Remove selected policy PDF">
-                <X size={16} />
+            </div>
+            <div
+              className="endorsement-dropzone"
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={handleDrop}
+            >
+              <UploadCloud size={42} />
+              <strong>Drag or drop PDF files here</strong>
+              <span>
+                Upload a policy PDF. It will be extracted automatically after you click Extract Data.
+              </span>
+              <label className="endorsement-browse-btn">
+                Browse Files
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(event) => handlePolicyFile(event.target.files?.[0])}
+                />
+              </label>
+            </div>
+            {policyFile ? (
+              <div className="endorsement-selected-file">
+                <div>
+                  <strong>{policyFile.name}</strong>
+                  <span>{formatFileSize(policyFile.size)}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPolicyFile(null);
+                    setLastExtractedFileName("");
+                  }}
+                  aria-label="Remove selected policy PDF"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : null}
+            <div className="endorsement-upload-row">
+              <button type="button" disabled={extracting || !policyFile} onClick={() => extractPolicy()}>
+                {extracting ? <Loader2 className="spin" size={16} /> : <Upload size={16} />} Extract Data
               </button>
+              <span className="endorsement-upload-state">
+                {extracting
+                  ? "Extracting policy details..."
+                  : policyFile
+                    ? "Ready to extract"
+                    : "Waiting for PDF"}
+              </span>
             </div>
-          ) : null}
-          <div className="endorsement-upload-row">
-            <button type="button" disabled={extracting || !policyFile} onClick={() => extractPolicy()}>
-              {extracting ? <Loader2 className="spin" size={16} /> : <Upload size={16} />} Extract Data
-            </button>
-            <span className="endorsement-upload-state">{extracting ? "Extracting policy details..." : policyFile ? "Ready to extract" : "Waiting for PDF"}</span>
-          </div>
-          <div className="endorsement-field-grid">
-            <TextField label="Policy No." value={form.policyNo} onChange={(value) => update("policyNo", value)} />
-            <TextField label="Insured Name" value={form.insuredName} required onChange={(value) => update("insuredName", value)} />
-            <TextField label="Mailing Address" value={form.mailingAddress} onChange={(value) => update("mailingAddress", value)} />
-            <label>
-              <span>Insurance Company *</span>
-              <select value={selectedTemplateId} onChange={(event) => update("insuranceCompany", INSURER_TEMPLATES.find((item) => item.id === event.target.value)?.label || "")}>
-                <option value="">Select insurer</option>
-                {INSURER_TEMPLATES.map((template) => <option key={template.id} value={template.id}>{template.label}</option>)}
-              </select>
-            </label>
-            <TextField label="Policy Type" value={form.policyType} onChange={(value) => update("policyType", value)} />
-            <TextField label="Policy Start Date" type="date" value={form.policyStartDate} onChange={(value) => update("policyStartDate", value)} />
-            <TextField label="Policy Expiry Date" type="date" value={form.policyExpiryDate} onChange={(value) => update("policyExpiryDate", value)} />
-            <TextField label="Sum Insured" value={form.sumInsured} onChange={(value) => update("sumInsured", value)} />
-            <TextField label="Address" value={form.address} onChange={(value) => update("address", value)} />
-          </div>
-          <label className="endorsement-wide-field">
-            <span>Warehouse / Property Details</span>
-            <textarea rows={3} value={form.warehouseDetails} onChange={(event) => update("warehouseDetails", event.target.value)} />
-          </label>
-        </section>
-
-        <section className="endorsement-form-panel">
-          <div className="endorsement-section-head">
-            <span>2</span>
-            <div>
-              <h2>Select Endorsement Type</h2>
-              <p>Only relevant old/new value fields are shown.</p>
-            </div>
-          </div>
-          <div className="endorsement-field-grid">
-            <label>
-              <span>Endorsement Type *</span>
-              <select value={form.endorsementType} onChange={(event) => update("endorsementType", event.target.value)}>
-                {ENDORSEMENT_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
-              </select>
-            </label>
-            <TextField label="Endorsement No." value={form.endorsementNo} onChange={(value) => update("endorsementNo", value)} />
-          </div>
-          <div className="endorsement-field-grid">
-            {relevantFields.map((field) => (
+            <div className="endorsement-field-grid">
               <TextField
-                key={`${field.bucket}-${field.key}`}
-                label={field.label}
-                type={field.type || "text"}
-                value={(form[field.bucket] || {})[field.key] || ""}
-                onChange={(value) => updateValue(field.bucket, field.key, value)}
+                label="Policy No."
+                value={form.policyNo}
+                onChange={(value) => update("policyNo", value)}
               />
-            ))}
-          </div>
-        </section>
-
-        <section className="endorsement-form-panel">
-          <div className="endorsement-section-head">
-            <span>3</span>
-            <div>
-              <h2>Fill Endorsement Details</h2>
-              <p>Dates, remarks, and customer/internal description.</p>
+              <TextField
+                label="Insured Name"
+                value={form.insuredName}
+                required
+                onChange={(value) => update("insuredName", value)}
+              />
+              <TextField
+                label="Mailing Address"
+                value={form.mailingAddress}
+                onChange={(value) => update("mailingAddress", value)}
+              />
+              <label>
+                <span>Insurance Company *</span>
+                <select
+                  value={selectedTemplateId}
+                  onChange={(event) =>
+                    update(
+                      "insuranceCompany",
+                      INSURER_TEMPLATES.find((item) => item.id === event.target.value)?.label || "",
+                    )
+                  }
+                >
+                  <option value="">Select insurer</option>
+                  {INSURER_TEMPLATES.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <TextField
+                label="Policy Type"
+                value={form.policyType}
+                onChange={(value) => update("policyType", value)}
+              />
+              <TextField
+                label="Policy Start Date"
+                type="date"
+                value={form.policyStartDate}
+                onChange={(value) => update("policyStartDate", value)}
+              />
+              <TextField
+                label="Policy Expiry Date"
+                type="date"
+                value={form.policyExpiryDate}
+                onChange={(value) => update("policyExpiryDate", value)}
+              />
+              <TextField
+                label="Sum Insured"
+                value={form.sumInsured}
+                onChange={(value) => update("sumInsured", value)}
+              />
+              <TextField
+                label="Address"
+                value={form.address}
+                onChange={(value) => update("address", value)}
+              />
             </div>
-          </div>
-          <div className="endorsement-field-grid">
-            <TextField label="Endorsement Date" type="date" value={form.endorsementDate} onChange={(value) => update("endorsementDate", value)} />
-            <TextField label="Effective From" type="date" value={form.effectiveFrom} onChange={(value) => { update("effectiveFrom", value); update("effectiveDate", value); }} />
-            <TextField label="Effective To" type="date" value={form.effectiveTo} onChange={(value) => update("effectiveTo", value)} />
-            <TextField label="Customer Request Date" type="date" value={form.customerRequestDate} onChange={(value) => update("customerRequestDate", value)} />
-            <TextField label="Date of Issue" type="date" value={form.dateOfIssue} onChange={(value) => update("dateOfIssue", value)} />
-            <TextField label="Issued Office" value={form.issuedOffice} onChange={(value) => update("issuedOffice", value)} />
-            <TextField label="Financer Details" value={form.financerDetails} onChange={(value) => update("financerDetails", value)} />
-            <TextField label="Premium" value={form.premium} onChange={(value) => update("premium", value)} />
-            <label>
-              <span>Status</span>
-              <select value={form.status} onChange={(event) => update("status", event.target.value)}>
-                {STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
-              </select>
-            </label>
-          </div>
-          <label className="endorsement-wide-field">
-            <span>Description / Details</span>
-            <textarea rows={3} value={form.description} onChange={(event) => update("description", event.target.value)} />
-          </label>
-          <div className="endorsement-field-grid">
             <label className="endorsement-wide-field">
-              <span>Internal Remark</span>
-              <textarea rows={3} value={form.internalRemark} onChange={(event) => update("internalRemark", event.target.value)} />
+              <span>Warehouse / Property Details</span>
+              <textarea
+                rows={3}
+                value={form.warehouseDetails}
+                onChange={(event) => update("warehouseDetails", event.target.value)}
+              />
             </label>
-            <label className="endorsement-wide-field">
-              <span>Customer Remark</span>
-              <textarea rows={3} value={form.customerRemark} onChange={(event) => update("customerRemark", event.target.value)} />
-            </label>
-          </div>
-        </section>
+          </section>
 
+          <section className="endorsement-form-panel">
+            <div className="endorsement-section-head">
+              <span>2</span>
+              <div>
+                <h2>Select Endorsement Type</h2>
+                <p>Only relevant old/new value fields are shown.</p>
+              </div>
+            </div>
+            <div className="endorsement-field-grid">
+              <label>
+                <span>Endorsement Type *</span>
+                <select
+                  value={form.endorsementType}
+                  onChange={(event) => update("endorsementType", event.target.value)}
+                >
+                  {ENDORSEMENT_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <TextField
+                label="Endorsement No."
+                value={form.endorsementNo}
+                onChange={(value) => update("endorsementNo", value)}
+              />
+            </div>
+            <div className="endorsement-field-grid">
+              {relevantFields.map((field) => (
+                <TextField
+                  key={`${field.bucket}-${field.key}`}
+                  label={field.label}
+                  type={field.type || "text"}
+                  value={(form[field.bucket] || {})[field.key] || ""}
+                  onChange={(value) => updateValue(field.bucket, field.key, value)}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="endorsement-form-panel">
+            <div className="endorsement-section-head">
+              <span>3</span>
+              <div>
+                <h2>Fill Endorsement Details</h2>
+                <p>Dates, remarks, and customer/internal description.</p>
+              </div>
+            </div>
+            <div className="endorsement-field-grid">
+              <TextField
+                label="Endorsement Date"
+                type="date"
+                value={form.endorsementDate}
+                onChange={(value) => update("endorsementDate", value)}
+              />
+              <TextField
+                label="Effective From"
+                type="date"
+                value={form.effectiveFrom}
+                onChange={(value) => {
+                  update("effectiveFrom", value);
+                  update("effectiveDate", value);
+                }}
+              />
+              <TextField
+                label="Effective To"
+                type="date"
+                value={form.effectiveTo}
+                onChange={(value) => update("effectiveTo", value)}
+              />
+              <TextField
+                label="Customer Request Date"
+                type="date"
+                value={form.customerRequestDate}
+                onChange={(value) => update("customerRequestDate", value)}
+              />
+              <TextField
+                label="Date of Issue"
+                type="date"
+                value={form.dateOfIssue}
+                onChange={(value) => update("dateOfIssue", value)}
+              />
+              <TextField
+                label="Issued Office"
+                value={form.issuedOffice}
+                onChange={(value) => update("issuedOffice", value)}
+              />
+              <TextField
+                label="Financer Details"
+                value={form.financerDetails}
+                onChange={(value) => update("financerDetails", value)}
+              />
+              <TextField
+                label="Premium"
+                value={form.premium}
+                onChange={(value) => update("premium", value)}
+              />
+              <label>
+                <span>Status</span>
+                <select value={form.status} onChange={(event) => update("status", event.target.value)}>
+                  {STATUS_OPTIONS.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label className="endorsement-wide-field">
+              <span>Description / Details</span>
+              <textarea
+                rows={3}
+                value={form.description}
+                onChange={(event) => update("description", event.target.value)}
+              />
+            </label>
+            <div className="endorsement-field-grid">
+              <label className="endorsement-wide-field">
+                <span>Internal Remark</span>
+                <textarea
+                  rows={3}
+                  value={form.internalRemark}
+                  onChange={(event) => update("internalRemark", event.target.value)}
+                />
+              </label>
+              <label className="endorsement-wide-field">
+                <span>Customer Remark</span>
+                <textarea
+                  rows={3}
+                  value={form.customerRemark}
+                  onChange={(event) => update("customerRemark", event.target.value)}
+                />
+              </label>
+            </div>
+          </section>
         </div>
         <aside className="endorsement-preview-stack">
-        <section className="endorsement-form-panel endorsement-preview-panel">
-          <div className="endorsement-preview-head">
-            <h2>Policy PDF Preview</h2>
-            <span>{policyFile || form.uploadedPolicyFileId ? "PDF Uploaded" : "Waiting"}</span>
-          </div>
-          <div className="endorsement-pdf-frame">
-            {policyPreviewUrl ? (
-              <iframe title="Policy PDF preview" src={policyPreviewUrl} />
-            ) : (
-              <div>
-                <FileText size={28} />
-                <strong>No policy PDF selected</strong>
-                <small>Upload a PDF to preview it here.</small>
-              </div>
-            )}
-          </div>
-        </section>
+          <section className="endorsement-form-panel endorsement-preview-panel">
+            <div className="endorsement-preview-head">
+              <h2>Policy PDF Preview</h2>
+              <span>{policyFile || form.uploadedPolicyFileId ? "PDF Uploaded" : "Waiting"}</span>
+            </div>
+            <div className="endorsement-pdf-frame">
+              {policyPreviewUrl ? (
+                <iframe title="Policy PDF preview" src={policyPreviewUrl} />
+              ) : (
+                <div>
+                  <FileText size={28} />
+                  <strong>No policy PDF selected</strong>
+                  <small>Upload a PDF to preview it here.</small>
+                </div>
+              )}
+            </div>
+          </section>
 
-        <section className="endorsement-form-panel">
-          <div className="endorsement-preview-head">
-            <h2>Endorsement Schedule Preview</h2>
-            <span>{form.generatedLetterPdfUrl ? "PDF Ready" : "Live Preview"}</span>
-            <button type="button" onClick={() => generatePdf("Letter Generated")} aria-label="Refresh letter preview"><RefreshCw size={15} /></button>
-            <button type="button" aria-label="Expand letter preview"><Expand size={15} /></button>
-          </div>
-          <div className="endorsement-schedule-preview-shell">
-            <div className="endorsement-schedule-preview-scale">
-              <div>
-                <EndorsementTemplatePreview templateId={selectedTemplateId} data={scheduleData} previewRef={previewRef} />
+          <section className="endorsement-form-panel">
+            <div className="endorsement-preview-head">
+              <h2>Endorsement Schedule Preview</h2>
+              <span>{form.generatedLetterPdfUrl ? "PDF Ready" : "Live Preview"}</span>
+              <button
+                type="button"
+                onClick={() => generatePdf("Letter Generated")}
+                aria-label="Refresh letter preview"
+              >
+                <RefreshCw size={15} />
+              </button>
+              <button type="button" aria-label="Expand letter preview">
+                <Expand size={15} />
+              </button>
+            </div>
+            <div className="endorsement-schedule-preview-shell">
+              <div className="endorsement-schedule-preview-scale">
+                <div>
+                  <EndorsementTemplatePreview
+                    templateId={selectedTemplateId}
+                    data={scheduleData}
+                    previewRef={previewRef}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-          <div className="endorsement-actions-row">
-            <button type="button" onClick={() => generatePdf("Letter Generated")}><FileText size={16} /> Refresh Preview Data</button>
-            <button type="button" onClick={() => generatePdf("Letter Generated")}><FileCheck2 size={16} /> Print / Generate PDF</button>
-            {form.generatedLetterPdfUrl ? (
-              <a className="endorsement-secondary-btn" href={form.generatedLetterPdfUrl} download={form.generatedLetterFileName || `${form.endorsementNo}.pdf`}>
-                <Download size={16} /> Download Generated PDF
-              </a>
-            ) : null}
-          </div>
-        </section>
+            <div className="endorsement-actions-row">
+              <button type="button" onClick={() => generatePdf("Letter Generated")}>
+                <FileText size={16} /> Refresh Preview Data
+              </button>
+              <button type="button" onClick={() => generatePdf("Letter Generated")}>
+                <FileCheck2 size={16} /> Print / Generate PDF
+              </button>
+              {form.generatedLetterPdfUrl ? (
+                <a
+                  className="endorsement-secondary-btn"
+                  href={form.generatedLetterPdfUrl}
+                  download={form.generatedLetterFileName || `${form.endorsementNo}.pdf`}
+                >
+                  <Download size={16} /> Download Generated PDF
+                </a>
+              ) : null}
+            </div>
+          </section>
         </aside>
 
         {isEdit ? (
@@ -524,14 +723,26 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
             </div>
             <div className="endorsement-field-grid">
               <input type="file" accept="application/pdf" onChange={uploadCompanyLetter} />
-              <TextField label="Company Letter File" value={companyLetterName || form.insuranceCompanyLetterFileName} onChange={setCompanyLetterName} />
+              <TextField
+                label="Company Letter File"
+                value={companyLetterName || form.insuranceCompanyLetterFileName}
+                onChange={setCompanyLetterName}
+              />
             </div>
             <label className="endorsement-wide-field">
               <span>Remark</span>
-              <textarea rows={3} value={form.remark} onChange={(event) => update("remark", event.target.value)} />
+              <textarea
+                rows={3}
+                value={form.remark}
+                onChange={(event) => update("remark", event.target.value)}
+              />
             </label>
             {form.insuranceCompanyLetterPdfUrl ? (
-              <a className="endorsement-secondary-btn" href={form.insuranceCompanyLetterPdfUrl} download={form.insuranceCompanyLetterFileName || "insurance-company-letter.pdf"}>
+              <a
+                className="endorsement-secondary-btn"
+                href={form.insuranceCompanyLetterPdfUrl}
+                download={form.insuranceCompanyLetterFileName || "insurance-company-letter.pdf"}
+              >
                 <Download size={16} /> Download uploaded insurance company letter
               </a>
             ) : null}
@@ -549,9 +760,19 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
         </section>
 
         <footer className="endorsement-sticky-actions">
-          <Link className="endorsement-secondary-btn" href="/dashboard/endorsements">Cancel</Link>
-          <button type="button" disabled={saving} onClick={() => saveEndorsement("Draft")}><Save size={16} /> Save as Draft</button>
-          <button type="button" disabled={saving} onClick={() => saveEndorsement("Pending Insurance Company Letter")}><Save size={16} /> Save Endorsement</button>
+          <Link className="endorsement-secondary-btn" href="/dashboard/endorsements">
+            Cancel
+          </Link>
+          <button type="button" disabled={saving} onClick={() => saveEndorsement("Draft")}>
+            <Save size={16} /> Save as Draft
+          </button>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => saveEndorsement("Pending Insurance Company Letter")}
+          >
+            <Save size={16} /> Save Endorsement
+          </button>
         </footer>
       </div>
     </div>
@@ -561,8 +782,16 @@ export default function EndorsementFormPage({ endorsementId = "" }) {
 function TextField({ label, value, onChange, type = "text", required = false }) {
   return (
     <label>
-      <span>{label}{required ? " *" : ""}</span>
-      <input type={type} required={required} value={value || ""} onChange={(event) => onChange(event.target.value)} />
+      <span>
+        {label}
+        {required ? " *" : ""}
+      </span>
+      <input
+        type={type}
+        required={required}
+        value={value || ""}
+        onChange={(event) => onChange(event.target.value)}
+      />
     </label>
   );
 }
@@ -591,12 +820,22 @@ function SavedEndorsementsTable({ records }) {
           {records.map((record) => (
             <tr key={record.id}>
               <td>{displayDate(record.endorsementDate)}</td>
-              <td><Link href={`/dashboard/endorsements/${record.id}`}>{record.endorsementNo}</Link></td>
+              <td>
+                <Link href={`/dashboard/endorsements/${record.id}`}>{record.endorsementNo}</Link>
+              </td>
               <td>{record.policyNo || "-"}</td>
               <td>{record.customerName || record.insuredName || "-"}</td>
               <td>{record.insuranceCompany || "-"}</td>
               <td>{record.endorsementType}</td>
-              <td><span className={`endorsement-status ${String(record.status || "").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{record.status}</span></td>
+              <td>
+                <span
+                  className={`endorsement-status ${String(record.status || "")
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, "-")}`}
+                >
+                  {record.status}
+                </span>
+              </td>
               <td>{record.createdBy?.name || record.createdBy?.email || "-"}</td>
             </tr>
           ))}
@@ -612,41 +851,41 @@ function getRelevantFields(type) {
       { bucket: "oldValues", key: "sumInsured", label: "Old Sum Insured" },
       { bucket: "newValues", key: "sumInsured", label: "New Sum Insured" },
       { bucket: "newValues", key: "differenceAmount", label: "Difference Amount" },
-      { bucket: "newValues", key: "reason", label: "Reason / Description" }
+      { bucket: "newValues", key: "reason", label: "Reason / Description" },
     ];
   }
   if (type === "Change in Situation / Location") {
     return [
       { bucket: "oldValues", key: "location", label: "Old Location" },
       { bucket: "newValues", key: "location", label: "New Location" },
-      { bucket: "newValues", key: "reason", label: "Reason / Description" }
+      { bucket: "newValues", key: "reason", label: "Reason / Description" },
     ];
   }
   if (type === "Change in Address") {
     return [
       { bucket: "oldValues", key: "address", label: "Old Address" },
       { bucket: "newValues", key: "address", label: "New Address" },
-      { bucket: "newValues", key: "reason", label: "Reason / Description" }
+      { bucket: "newValues", key: "reason", label: "Reason / Description" },
     ];
   }
   if (type.includes("Warehouse") || type.includes("Property")) {
     return [
       { bucket: "oldValues", key: "propertyDetails", label: "Old Warehouse / Property" },
       { bucket: "newValues", key: "propertyDetails", label: "New Warehouse / Property" },
-      { bucket: "newValues", key: "reason", label: "Reason / Description" }
+      { bucket: "newValues", key: "reason", label: "Reason / Description" },
     ];
   }
   if (type.includes("Bank") || type.includes("Hypothecation")) {
     return [
       { bucket: "oldValues", key: "bankDetails", label: "Old Bank Details" },
       { bucket: "newValues", key: "bankDetails", label: "New Bank Details" },
-      { bucket: "newValues", key: "reason", label: "Reason / Description" }
+      { bucket: "newValues", key: "reason", label: "Reason / Description" },
     ];
   }
   return [
     { bucket: "oldValues", key: "value", label: "Old Value" },
     { bucket: "newValues", key: "value", label: "New Value" },
-    { bucket: "newValues", key: "reason", label: "Reason / Description" }
+    { bucket: "newValues", key: "reason", label: "Reason / Description" },
   ];
 }
 
@@ -665,7 +904,7 @@ function normalizeExtractedPolicy(data, upload) {
     issuedAt: data.issuedAt || data.validIn || "",
     financerDetails: data.hypothecationDetails || data.financerName || "",
     premium: data.premiumIncludingGst || data.totalPremium || data.premium || "",
-    raw: data
+    raw: data,
   };
 }
 
@@ -674,7 +913,8 @@ function seedOldValues(type, extracted, existing) {
   if (type.includes("Address")) return { address: extracted.address || "" };
   if (type.includes("Situation") || type.includes("Location")) return { location: extracted.address || "" };
   if (type.includes("Sum Insured")) return { sumInsured: extracted.sumInsured || "" };
-  if (type.includes("Warehouse") || type.includes("Property")) return { propertyDetails: extracted.warehouseDetails || "" };
+  if (type.includes("Warehouse") || type.includes("Property"))
+    return { propertyDetails: extracted.warehouseDetails || "" };
   return {};
 }
 

@@ -7,7 +7,7 @@ describe("getRecordSearchText", () => {
       insuredName: "Acme Warehouse",
       policyNumber: "POL-123",
       district: "Sehore",
-      sourceText: "very large raw pdf text that must not be searched"
+      sourceText: "very large raw pdf text that must not be searched",
     });
 
     expect(text).toContain("acme warehouse");
@@ -24,7 +24,7 @@ describe("getRecordSearchText", () => {
       engineNumber: "ENG12345",
       chassisNumber: "CHS67890",
       makeModel: "Maruti Suzuki Swift",
-      rtoLocation: "Bhopal"
+      rtoLocation: "Bhopal",
     });
 
     expect(text).toContain("mp04cm7166");

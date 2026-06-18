@@ -1,465 +1,464 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ICICI Endorsement Schedule</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <title>ICICI Endorsement Schedule</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 0;
+      }
 
-  <style>
-    @page {
-      size: A4;
-      margin: 0;
-    }
+      * {
+        box-sizing: border-box;
+      }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      background: #fff;
-      font-family: Arial, Helvetica, sans-serif;
-      color: #000;
-    }
-
-    .page {
-      width: 794px;
-      height: 1123px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 26px 16px 0;
-      position: relative;
-    }
-
-    .logo-wrap {
-      height: 58px;
-      display: flex;
-      justify-content: flex-end;
-      align-items: flex-start;
-      padding-right: 4px;
-      padding-top: 0;
-    }
-
-    .logo {
-      width: 272px;
-      height: auto;
-      transform: translateY(-28px);
-    }
-
-    .top-line {
-      height: 1px;
-      background: #bdbdbd;
-      margin: 1px 0 0;
-    }
-
-    .band {
-      height: 16px;
-      display: flex;
-      margin-top: 8px;
-      border: 0;
-    }
-
-    .band-red {
-      width: 225px;
-      background: #8f2b24;
-    }
-
-    .band-slant {
-      width: 8px;
-      background: linear-gradient(108deg, #8f2b24 0 48%, #f28b1e 49% 100%);
-    }
-
-    .band-orange {
-      flex: 1;
-      background: #f28b1e;
-    }
-
-    .content {
-      padding-top: 28px;
-      font-size: 13px;
-      line-height: 1.15;
-    }
-
-    h1 {
-      margin: 0 0 16px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    p {
-      margin: 0 0 12px;
-    }
-
-    .section-title {
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
-
-    td,
-    th {
-      border: 1px solid #222;
-      padding: 2px 4px;
-      font-size: 13px;
-      line-height: 1.1;
-      vertical-align: top;
-    }
-
-    .label {
-      width: 205px;
-      background: #b6b6b6;
-      font-weight: 700;
-    }
-
-    .financer-title {
-      font-weight: 700;
-      margin: 8px 0 8px;
-    }
-
-    .financer th {
-      background: #b6b6b6;
-      text-align: left;
-      font-weight: 700;
-    }
-
-    .wording-table {
-      margin-top: 6px;
-    }
-
-    .wording-label {
-      width: 155px;
-      font-weight: 700;
-    }
-
-    .wording {
-      height: 105px;
-      line-height: 1.16;
-    }
-
-    .premium-label,
-    .premium-value,
-    .premium-note {
-      font-weight: 700;
-    }
-
-    .signature-box {
-      height: 82px;
-      text-align: right;
-      vertical-align: bottom;
-      padding: 0 5px 8px 0;
-    }
-
-    .fake-sign {
-      font-family: "Brush Script MT", "Segoe Script", cursive;
-      font-size: 14px;
-      font-weight: 400;
-      margin-bottom: 14px;
-    }
-
-    .sign-bold {
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .footer td {
-      font-size: 13px;
-      padding: 2px 4px;
-    }
-
-    .vertical-code {
-      position: absolute;
-      right: 24px;
-      top: 210px;
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
-      font-size: 10px;
-    }
-
-    .digital-sign {
-      position: absolute;
-      right: 60px;
-      bottom:140px;
-      width: 180px;
-      height: auto;
-      display: block;
-    }
-
-    .page-footer {
-      position: absolute;
-      left: 16px;
-      right: 16px;
-      bottom: 05px;
-    }
-
-    .footer-strip {
-      height: 22px;
-      display: flex;
-      border: 2px solid #f2d2b8;
-      box-sizing: border-box;
-      overflow: hidden;
-    }
-
-    .footer-orange {
-      flex: 1;
-      background: linear-gradient(#f68b1f, #ef7300);
-    }
-
-    .footer-slant {
-      width: 14px;
-      background: linear-gradient(104deg, #f68b1f 0 43%, #f2d2b8 44% 57%, #a72a2a 58% 100%);
-    }
-
-    .footer-red {
-      width: 175px;
-      background: #a72a2a;
-      border-right: 2px solid #f2d2b8;
-    }
-
-    .footer-cream {
-      width: 18px;
-      background: #f4dfcf;
-    }
-
-    .footer-company {
-      margin: 4px 0 2px 1px;
-      font-size: 14.5px;
-      line-height: 16px;
-      font-weight: 700;
-      color: #000;
-    }
-
-    .footer-details {
-      display: grid;
-      grid-template-columns: 148px 167px 208px 189px;
-      column-gap: 8px;
-      font-size: 8px;
-      line-height: 10.4px;
-      color: #000;
-    }
-
-    .footer-bold {
-      font-weight: 700;
-    }
-
-    .footer-row {
-      display: grid;
-      grid-template-columns: 56px 5px 1fr;
-    }
-
-    .footer-policy {
-      font-weight: 700;
-      font-size: 8px;
-      line-height: 10.4px;
-      padding-top: 4px;
-    }
-
-    @media print {
       body {
         margin: 0;
+        background: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #000;
       }
 
       .page {
-        margin: 0;
+        width: 794px;
+        height: 1123px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 26px 16px 0;
+        position: relative;
       }
-    }
-  </style>
-</head>
 
-<body>
+      .logo-wrap {
+        height: 58px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+        padding-right: 4px;
+        padding-top: 0;
+      }
 
-  <div class="page">
+      .logo {
+        width: 272px;
+        height: auto;
+        transform: translateY(-28px);
+      }
 
-    <div class="logo-wrap">
-      <img class="logo" src="icici.png" alt="ICICI Lombard Logo" />
-    </div>
+      .top-line {
+        height: 1px;
+        background: #bdbdbd;
+        margin: 1px 0 0;
+      }
 
-    <div class="top-line"></div>
+      .band {
+        height: 16px;
+        display: flex;
+        margin-top: 8px;
+        border: 0;
+      }
 
-    <div class="band">
-      <div class="band-red"></div>
-      <div class="band-slant"></div>
-      <div class="band-orange"></div>
-    </div>
+      .band-red {
+        width: 225px;
+        background: #8f2b24;
+      }
 
-    <main class="content">
+      .band-slant {
+        width: 8px;
+        background: linear-gradient(108deg, #8f2b24 0 48%, #f28b1e 49% 100%);
+      }
 
-      <h1>MSME Suraksha Kavach Package Policy - Advance Endorsement Schedule</h1>
+      .band-orange {
+        flex: 1;
+        background: #f28b1e;
+      }
 
-      <p>
-        We value your relationship with ICICI Lombard General Insurance Company Limited and thank you for choosing us as
-        your
-        preferred service provider.
-      </p>
+      .content {
+        padding-top: 28px;
+        font-size: 13px;
+        line-height: 1.15;
+      }
 
-      <p>
-        Based on your request, your policy has been endorsed. Refer table below for updated details:
-      </p>
+      h1 {
+        margin: 0 0 16px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: 700;
+      }
 
-      <div class="section-title">Endorsement Details:</div>
+      p {
+        margin: 0 0 12px;
+      }
 
-      <table>
-        <tr>
-          <td class="label">Insured Name</td>
-          <td>DEVANSHI WAREHOUSE A/C MPWLC</td>
-        </tr>
-        <tr>
-          <td class="label">Mailing Address</td>
-          <td>
-            PROP. CHANDA BAI CHAUHAN, KHASRA NO. 44/2, GRAM BARKHEDI MAHARAJA,<br>
-            POST GAWRI, TEH RAGHOGARH, DIST GUNA- 473287, , , GUNA, MADHYA<br>
-            PRADESH - 473287
-          </td>
-        </tr>
-        <tr>
-          <td class="label">Policy Number</td>
-          <td>1030/421336154/00/000</td>
-        </tr>
-        <tr>
-          <td class="label">Period of Insurance</td>
-          <td>From: 00:00 Hours of 16-Dec-2025 To: 23:59 of 15-Dec-2026</td>
-        </tr>
-        <tr>
-          <td class="label">Endorsement Number</td>
-          <td>1030/421336154/00/000</td>
-        </tr>
-        <tr>
-          <td class="label">Endorsement Effective Time &<br>Date</td>
-          <td>00:00 Hrs 04-Jun-2026</td>
-        </tr>
-        <tr>
-          <td class="label">Date of Issue</td>
-          <td>Jun 09, 2026</td>
-        </tr>
-        <tr>
-          <td class="label">Issued Office</td>
-          <td>BHOPAL</td>
-        </tr>
-      </table>
+      .section-title {
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
 
-      <div class="financer-title">Financer Details:</div>
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
 
-      <table class="financer">
-        <tr>
-          <th>Name of the Financer</th>
-          <th style="width:140px;">Branch</th>
-          <th style="width:230px;">Agreement</th>
-        </tr>
-        <tr>
-          <td>MPWLC</td>
-          <td>MPWLC</td>
-          <td>Hypothecation</td>
-        </tr>
-      </table>
+      td,
+      th {
+        border: 1px solid #222;
+        padding: 2px 4px;
+        font-size: 13px;
+        line-height: 1.1;
+        vertical-align: top;
+      }
 
-      <table class="wording-table">
-        <tr>
-          <td class="wording-label">Endorsement Wording:</td>
-          <td class="wording">
-            At the request of the insured, the Sum insured has been increased in below mention section under<br>
-            the policy with effect from 04/06/2026. &nbsp;&nbsp; Fire Section Sum insured of stock from INR 19.86
-            crore<br>
-            to INR 20 crore by an equal amount of INR 14 lakhs &nbsp;&nbsp; Burglary Section Sum insured of stock
-            from<br>
-            INR 19.86 crore to INR 20 crore by an equal amount of INR 14 lakhs &nbsp;&nbsp; Fidelity Section Sum<br>
-            insured of stock from INR 01.986 crore to INR 02 crore by an equal amount of INR 01.40 Lakhs<br>
-            In view of the above premium of Rs.530/- stands charged to the insured. &nbsp;&nbsp; All the other
-            terms,<br>
-            conditions & warranties of the policy remain unaltered.
-          </td>
-        </tr>
-        <tr>
-          <td class="premium-label">Total Premium ₹:</td>
-          <td class="premium-value">140008</td>
-        </tr>
-        <tr>
-          <td colspan="2" class="premium-note">
-            *Premium value mentioned above is inclusive of taxes applicable
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2" class="signature-box">
-            <div class="fake-sign">Gautam Arora</div>
-            <div class="sign-bold">Authorized Signatory</div>
-            <div class="sign-bold">ICICI Lombard General Insurance Company Ltd.</div>
-          </td>
-        </tr>
-      </table>
+      .label {
+        width: 205px;
+        background: #b6b6b6;
+        font-weight: 700;
+      }
 
-      <table class="footer">
-        <tr>
-          <td>GSTIN Reg no : 23AAACI7904G1ZV</td>
-        </tr>
-        <tr>
-          <td>IL GIC GSTIN Address : Second and Third Floor, Nungambakkam High Road, Chottabhai Centre, Chennai, Tamil
-            Nadu 600034</td>
-        </tr>
-        <tr>
-          <td>HSN/SAC Code : 997137/ GENERAL INSURANCE SERVICES</td>
-        </tr>
-        <tr>
-          <td>Subject otherwise to the terms, conditions, exclusions, limitations and warranties attached to the within
-            mentioned policy.</td>
-        </tr>
-      </table>
+      .financer-title {
+        font-weight: 700;
+        margin: 8px 0 8px;
+      }
 
-    </main>
+      .financer th {
+        background: #b6b6b6;
+        text-align: left;
+        font-weight: 700;
+      }
 
-    <img class="digital-sign" src="Screenshot 2026-06-11 135711.png" alt="Signature Not Verified">
+      .wording-table {
+        margin-top: 6px;
+      }
 
-    <div class="page-footer">
-      <div class="footer-strip">
-        <div class="footer-orange"></div>
-        <div class="footer-slant"></div>
-        <div class="footer-red"></div>
-        <div class="footer-cream"></div>
+      .wording-label {
+        width: 155px;
+        font-weight: 700;
+      }
+
+      .wording {
+        height: 105px;
+        line-height: 1.16;
+      }
+
+      .premium-label,
+      .premium-value,
+      .premium-note {
+        font-weight: 700;
+      }
+
+      .signature-box {
+        height: 82px;
+        text-align: right;
+        vertical-align: bottom;
+        padding: 0 5px 8px 0;
+      }
+
+      .fake-sign {
+        font-family: "Brush Script MT", "Segoe Script", cursive;
+        font-size: 14px;
+        font-weight: 400;
+        margin-bottom: 14px;
+      }
+
+      .sign-bold {
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .footer td {
+        font-size: 13px;
+        padding: 2px 4px;
+      }
+
+      .vertical-code {
+        position: absolute;
+        right: 24px;
+        top: 210px;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        font-size: 10px;
+      }
+
+      .digital-sign {
+        position: absolute;
+        right: 60px;
+        bottom: 140px;
+        width: 180px;
+        height: auto;
+        display: block;
+      }
+
+      .page-footer {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 05px;
+      }
+
+      .footer-strip {
+        height: 22px;
+        display: flex;
+        border: 2px solid #f2d2b8;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+
+      .footer-orange {
+        flex: 1;
+        background: linear-gradient(#f68b1f, #ef7300);
+      }
+
+      .footer-slant {
+        width: 14px;
+        background: linear-gradient(104deg, #f68b1f 0 43%, #f2d2b8 44% 57%, #a72a2a 58% 100%);
+      }
+
+      .footer-red {
+        width: 175px;
+        background: #a72a2a;
+        border-right: 2px solid #f2d2b8;
+      }
+
+      .footer-cream {
+        width: 18px;
+        background: #f4dfcf;
+      }
+
+      .footer-company {
+        margin: 4px 0 2px 1px;
+        font-size: 14.5px;
+        line-height: 16px;
+        font-weight: 700;
+        color: #000;
+      }
+
+      .footer-details {
+        display: grid;
+        grid-template-columns: 148px 167px 208px 189px;
+        column-gap: 8px;
+        font-size: 8px;
+        line-height: 10.4px;
+        color: #000;
+      }
+
+      .footer-bold {
+        font-weight: 700;
+      }
+
+      .footer-row {
+        display: grid;
+        grid-template-columns: 56px 5px 1fr;
+      }
+
+      .footer-policy {
+        font-weight: 700;
+        font-size: 8px;
+        line-height: 10.4px;
+        padding-top: 4px;
+      }
+
+      @media print {
+        body {
+          margin: 0;
+        }
+
+        .page {
+          margin: 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page">
+      <div class="logo-wrap">
+        <img class="logo" src="icici.png" alt="ICICI Lombard Logo" />
       </div>
 
-      <div class="footer-company">ICICI Lombard General Insurance Company Limited</div>
+      <div class="top-line"></div>
 
-      <div class="footer-details">
-        <div>
-          <div class="footer-bold">IRDA Reg. No. 115</div>
-          <div class="footer-bold">Mailing Address:</div>
+      <div class="band">
+        <div class="band-red"></div>
+        <div class="band-slant"></div>
+        <div class="band-orange"></div>
+      </div>
+
+      <main class="content">
+        <h1>MSME Suraksha Kavach Package Policy - Advance Endorsement Schedule</h1>
+
+        <p>
+          We value your relationship with ICICI Lombard General Insurance Company Limited and thank you for
+          choosing us as your preferred service provider.
+        </p>
+
+        <p>Based on your request, your policy has been endorsed. Refer table below for updated details:</p>
+
+        <div class="section-title">Endorsement Details:</div>
+
+        <table>
+          <tr>
+            <td class="label">Insured Name</td>
+            <td>DEVANSHI WAREHOUSE A/C MPWLC</td>
+          </tr>
+          <tr>
+            <td class="label">Mailing Address</td>
+            <td>
+              PROP. CHANDA BAI CHAUHAN, KHASRA NO. 44/2, GRAM BARKHEDI MAHARAJA,<br />
+              POST GAWRI, TEH RAGHOGARH, DIST GUNA- 473287, , , GUNA, MADHYA<br />
+              PRADESH - 473287
+            </td>
+          </tr>
+          <tr>
+            <td class="label">Policy Number</td>
+            <td>1030/421336154/00/000</td>
+          </tr>
+          <tr>
+            <td class="label">Period of Insurance</td>
+            <td>From: 00:00 Hours of 16-Dec-2025 To: 23:59 of 15-Dec-2026</td>
+          </tr>
+          <tr>
+            <td class="label">Endorsement Number</td>
+            <td>1030/421336154/00/000</td>
+          </tr>
+          <tr>
+            <td class="label">Endorsement Effective Time &<br />Date</td>
+            <td>00:00 Hrs 04-Jun-2026</td>
+          </tr>
+          <tr>
+            <td class="label">Date of Issue</td>
+            <td>Jun 09, 2026</td>
+          </tr>
+          <tr>
+            <td class="label">Issued Office</td>
+            <td>BHOPAL</td>
+          </tr>
+        </table>
+
+        <div class="financer-title">Financer Details:</div>
+
+        <table class="financer">
+          <tr>
+            <th>Name of the Financer</th>
+            <th style="width: 140px">Branch</th>
+            <th style="width: 230px">Agreement</th>
+          </tr>
+          <tr>
+            <td>MPWLC</td>
+            <td>MPWLC</td>
+            <td>Hypothecation</td>
+          </tr>
+        </table>
+
+        <table class="wording-table">
+          <tr>
+            <td class="wording-label">Endorsement Wording:</td>
+            <td class="wording">
+              At the request of the insured, the Sum insured has been increased in below mention section
+              under<br />
+              the policy with effect from 04/06/2026. &nbsp;&nbsp; Fire Section Sum insured of stock from INR
+              19.86 crore<br />
+              to INR 20 crore by an equal amount of INR 14 lakhs &nbsp;&nbsp; Burglary Section Sum insured of
+              stock from<br />
+              INR 19.86 crore to INR 20 crore by an equal amount of INR 14 lakhs &nbsp;&nbsp; Fidelity Section
+              Sum<br />
+              insured of stock from INR 01.986 crore to INR 02 crore by an equal amount of INR 01.40 Lakhs<br />
+              In view of the above premium of Rs.530/- stands charged to the insured. &nbsp;&nbsp; All the
+              other terms,<br />
+              conditions & warranties of the policy remain unaltered.
+            </td>
+          </tr>
+          <tr>
+            <td class="premium-label">Total Premium ₹:</td>
+            <td class="premium-value">140008</td>
+          </tr>
+          <tr>
+            <td colspan="2" class="premium-note">
+              *Premium value mentioned above is inclusive of taxes applicable
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" class="signature-box">
+              <div class="fake-sign">Gautam Arora</div>
+              <div class="sign-bold">Authorized Signatory</div>
+              <div class="sign-bold">ICICI Lombard General Insurance Company Ltd.</div>
+            </td>
+          </tr>
+        </table>
+
+        <table class="footer">
+          <tr>
+            <td>GSTIN Reg no : 23AAACI7904G1ZV</td>
+          </tr>
+          <tr>
+            <td>
+              IL GIC GSTIN Address : Second and Third Floor, Nungambakkam High Road, Chottabhai Centre,
+              Chennai, Tamil Nadu 600034
+            </td>
+          </tr>
+          <tr>
+            <td>HSN/SAC Code : 997137/ GENERAL INSURANCE SERVICES</td>
+          </tr>
+          <tr>
+            <td>
+              Subject otherwise to the terms, conditions, exclusions, limitations and warranties attached to
+              the within mentioned policy.
+            </td>
+          </tr>
+        </table>
+      </main>
+
+      <img class="digital-sign" src="Screenshot 2026-06-11 135711.png" alt="Signature Not Verified" />
+
+      <div class="page-footer">
+        <div class="footer-strip">
+          <div class="footer-orange"></div>
+          <div class="footer-slant"></div>
+          <div class="footer-red"></div>
+          <div class="footer-cream"></div>
+        </div>
+
+        <div class="footer-company">ICICI Lombard General Insurance Company Limited</div>
+
+        <div class="footer-details">
           <div>
-            601 &amp; 602, 6th Floor, Interface 16, New<br>
-            Linking Road, Malad (West) Mumbai - 400<br>
-            064
+            <div class="footer-bold">IRDA Reg. No. 115</div>
+            <div class="footer-bold">Mailing Address:</div>
+            <div>
+              601 &amp; 602, 6th Floor, Interface 16, New<br />
+              Linking Road, Malad (West) Mumbai - 400<br />
+              064
+            </div>
           </div>
-        </div>
 
-        <div>
-          <div class="footer-bold">CIN: L67200MH2000PLC129408</div>
-          <div class="footer-bold">Registered Office Address:</div>
           <div>
-            ICICI Lombard House, 414 Veer Savarkar Marg,<br>
-            Near Siddhi Vinayak Temple, Prabhadevi,<br>
-            Mumbai - 400 025.
+            <div class="footer-bold">CIN: L67200MH2000PLC129408</div>
+            <div class="footer-bold">Registered Office Address:</div>
+            <div>
+              ICICI Lombard House, 414 Veer Savarkar Marg,<br />
+              Near Siddhi Vinayak Temple, Prabhadevi,<br />
+              Mumbai - 400 025.
+            </div>
           </div>
-        </div>
 
-        <div>
-          <div class="footer-bold">UIN - IRDAN115RPPP0012V01202425</div>
-          <div class="footer-row"><b>Toll free no.</b><span>:</span><span>1800 2666</span></div>
-          <div class="footer-row"><b>Alternate No.</b><span>:</span><span>86552 22666 (chargeable)</span></div>
-          <div class="footer-row"><b>Email</b><span>:</span><span>customersupport@icicilombard.com</span></div>
-          <div class="footer-row"><b>Website</b><span>:</span><span>www.icicilombard.com</span></div>
-        </div>
+          <div>
+            <div class="footer-bold">UIN - IRDAN115RPPP0012V01202425</div>
+            <div class="footer-row"><b>Toll free no.</b><span>:</span><span>1800 2666</span></div>
+            <div class="footer-row">
+              <b>Alternate No.</b><span>:</span><span>86552 22666 (chargeable)</span>
+            </div>
+            <div class="footer-row">
+              <b>Email</b><span>:</span><span>customersupport@icicilombard.com</span>
+            </div>
+            <div class="footer-row"><b>Website</b><span>:</span><span>www.icicilombard.com</span></div>
+          </div>
 
-        <div class="footer-policy">
-          MSME Suraksha Kavach Package Policy -<br>
-          Advance
+          <div class="footer-policy">
+            MSME Suraksha Kavach Package Policy -<br />
+            Advance
+          </div>
         </div>
       </div>
     </div>
-
-  </div>
-
-</body>
-
+  </body>
 </html>

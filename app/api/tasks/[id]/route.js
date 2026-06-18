@@ -15,7 +15,7 @@ const ALLOWED_STATUSES = new Set([
   "ESCALATED",
   "COMPLETED",
   "CANCELLED",
-  "CLOSED"
+  "CLOSED",
 ]);
 
 export async function PATCH(request, context) {
@@ -28,7 +28,9 @@ export async function PATCH(request, context) {
 
     const { id } = await context.params;
     const body = await request.json();
-    const status = String(body.status || "").trim().toUpperCase();
+    const status = String(body.status || "")
+      .trim()
+      .toUpperCase();
     if (!ALLOWED_STATUSES.has(status)) {
       return NextResponse.json({ error: "Invalid task status." }, { status: 422 });
     }
@@ -39,7 +41,7 @@ export async function PATCH(request, context) {
     console.error("Failed to update task:", error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : "Task could not be updated." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

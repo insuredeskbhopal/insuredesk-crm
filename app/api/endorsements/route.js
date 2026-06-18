@@ -8,7 +8,7 @@ import {
   getSummary,
   requireEndorsementSession,
   sanitizeEndorsementPayload,
-  serializeEndorsement
+  serializeEndorsement,
 } from "./utils";
 
 export const runtime = "nodejs";
@@ -42,8 +42,8 @@ export async function GET(request) {
           { insuranceCompany: { contains: q, mode: "insensitive" } },
           { policyType: { contains: q, mode: "insensitive" } },
           { endorsementType: { contains: q, mode: "insensitive" } },
-          { remark: { contains: q, mode: "insensitive" } }
-        ]
+          { remark: { contains: q, mode: "insensitive" } },
+        ],
       });
     }
 
@@ -53,8 +53,8 @@ export async function GET(request) {
       andFilters.push({
         endorsementDate: {
           ...(from ? { gte: from } : {}),
-          ...(to ? { lte: to } : {})
-        }
+          ...(to ? { lte: to } : {}),
+        },
       });
     }
     if (andFilters.length) where.AND = andFilters;
@@ -65,14 +65,14 @@ export async function GET(request) {
         include: endorsementInclude,
         orderBy: { createdAt: "desc" },
         skip,
-        take: limit
+        take: limit,
       }),
       prisma.endorsement.count({ where }),
       prisma.endorsement.findMany({
         where,
         select: { status: true },
-        take: 10000
-      })
+        take: 10000,
+      }),
     ]);
 
     return NextResponse.json({
@@ -81,10 +81,13 @@ export async function GET(request) {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit) || 1
+      totalPages: Math.ceil(total / limit) || 1,
     });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Endorsements could not be loaded." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Endorsements could not be loaded." },
+      { status: 500 },
+    );
   }
 }
 
@@ -112,10 +115,10 @@ export async function POST(request) {
         createdById: actorId,
         updatedById: actorId,
         documents: {
-          create: buildDocumentsFromPayload(data, actorId)
-        }
+          create: buildDocumentsFromPayload(data, actorId),
+        },
       },
-      include: endorsementInclude
+      include: endorsementInclude,
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -129,12 +132,15 @@ export async function POST(request) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { endorsementNo: record.endorsementNo, policyNo: record.policyNo, status: record.status }
+      metadata: { endorsementNo: record.endorsementNo, policyNo: record.policyNo, status: record.status },
     });
 
     return NextResponse.json(serializeEndorsement(record), { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Endorsement could not be saved." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Endorsement could not be saved." },
+      { status: 500 },
+    );
   }
 }
 
@@ -146,16 +152,17 @@ function buildDocumentsFromPayload(data, actorId) {
       fileName: data.generatedLetterFileName || `${data.endorsementNo || "endorsement"}-letter.pdf`,
       fileType: "application/pdf",
       dataUrl: data.generatedLetterPdfUrl,
-      uploadedById: actorId
+      uploadedById: actorId,
     });
   }
   if (data.insuranceCompanyLetterPdfUrl) {
     documents.push({
       documentType: "Insurance Company Letter",
-      fileName: data.insuranceCompanyLetterFileName || `${data.endorsementNo || "endorsement"}-company-letter.pdf`,
+      fileName:
+        data.insuranceCompanyLetterFileName || `${data.endorsementNo || "endorsement"}-company-letter.pdf`,
       fileType: "application/pdf",
       dataUrl: data.insuranceCompanyLetterPdfUrl,
-      uploadedById: actorId
+      uploadedById: actorId,
     });
   }
   return documents;
@@ -172,9 +179,11 @@ function parseDate(value, endOfDay = false) {
 async function resolveEndorsementLinks(session, data) {
   const tenantFilter = {
     organizationId: session.role === "SUPER_ADMIN" ? undefined : session.organizationId,
-    deletedAt: null
+    deletedAt: null,
   };
-  const cleanTenantFilter = Object.fromEntries(Object.entries(tenantFilter).filter(([, value]) => value !== undefined));
+  const cleanTenantFilter = Object.fromEntries(
+    Object.entries(tenantFilter).filter(([, value]) => value !== undefined),
+  );
 
   let policyId = data.policyId;
   if (!policyId && data.policyNo) {
@@ -183,10 +192,10 @@ async function resolveEndorsementLinks(session, data) {
         ...cleanTenantFilter,
         OR: [
           { reviewedData: { path: ["policyNumber"], equals: data.policyNo } },
-          { data: { path: ["policyNumber"], equals: data.policyNo } }
-        ]
+          { data: { path: ["policyNumber"], equals: data.policyNo } },
+        ],
       },
-      select: { id: true }
+      select: { id: true },
     });
     policyId = policy?.id || null;
   }
@@ -196,9 +205,9 @@ async function resolveEndorsementLinks(session, data) {
     const customer = await prisma.customerProfile.findFirst({
       where: {
         ...cleanTenantFilter,
-        name: { contains: data.customerName || data.insuredName, mode: "insensitive" }
+        name: { contains: data.customerName || data.insuredName, mode: "insensitive" },
       },
-      select: { id: true }
+      select: { id: true },
     });
     customerId = customer?.id || null;
   }

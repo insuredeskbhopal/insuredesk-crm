@@ -7,7 +7,7 @@ const ROLE_RANK: Record<string, number> = {
   ADMIN: 4,
   MANAGER: 3,
   AGENT: 2,
-  VIEWER: 1
+  VIEWER: 1,
 };
 
 export function canOpenUserManagement(role?: string | null) {
@@ -21,7 +21,8 @@ export function canManageRole(actorRole?: string | null, targetRole?: string | n
 }
 
 export function getAssignableRoles(actorRole?: string | null) {
-  if (actorRole === UserRole.SUPER_ADMIN) return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER, UserRole.AGENT, UserRole.VIEWER];
+  if (actorRole === UserRole.SUPER_ADMIN)
+    return [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER, UserRole.AGENT, UserRole.VIEWER];
   if (actorRole === UserRole.ADMIN) return [UserRole.MANAGER, UserRole.AGENT, UserRole.VIEWER];
   return [];
 }
@@ -31,7 +32,9 @@ export function canMutateUsers(role?: string | null) {
 }
 
 export function getVisibleUserWhere(actor: { role?: string | null; organizationId?: string | null }) {
-  const where: { deletedAt: null; organizationId?: string | null; role?: { in: UserRole[] } } = { deletedAt: null };
+  const where: { deletedAt: null; organizationId?: string | null; role?: { in: UserRole[] } } = {
+    deletedAt: null,
+  };
 
   if (actor.role !== "SUPER_ADMIN") {
     if (actor.organizationId) {

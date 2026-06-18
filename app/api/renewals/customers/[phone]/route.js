@@ -2,7 +2,11 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
-import { isRenewalWindowPolicy, sortByDaysLeftAscending, withRenewalWindowDisplay } from "@/lib/renewals/dates";
+import {
+  isRenewalWindowPolicy,
+  sortByDaysLeftAscending,
+  withRenewalWindowDisplay,
+} from "@/lib/renewals/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +39,12 @@ export async function GET(request, props) {
         where: {
           phone: { contains: cleanPhone || phone },
           deletedAt: null,
-          ...(isSuperAdmin ? {} : { organizationId: orgId })
+          ...(isSuperAdmin ? {} : { organizationId: orgId }),
         },
         include: {
           createdBy: { select: { name: true, email: true } },
-          updatedBy: { select: { name: true, email: true } }
-        }
+          updatedBy: { select: { name: true, email: true } },
+        },
       });
     }
 
@@ -50,13 +54,13 @@ export async function GET(request, props) {
         deletedAt: null,
         ...(isSuperAdmin ? {} : { organizationId: orgId }),
         OR: [
-          { reviewedData: { path: ['contactNumber'], string_contains: cleanPhone || phone } },
-          { reviewedData: { path: ['customerMobile'], string_contains: cleanPhone || phone } },
-          { data: { path: ['contactNumber'], string_contains: cleanPhone || phone } },
-          { data: { path: ['customerMobile'], string_contains: cleanPhone || phone } },
+          { reviewedData: { path: ["contactNumber"], string_contains: cleanPhone || phone } },
+          { reviewedData: { path: ["customerMobile"], string_contains: cleanPhone || phone } },
+          { data: { path: ["contactNumber"], string_contains: cleanPhone || phone } },
+          { data: { path: ["customerMobile"], string_contains: cleanPhone || phone } },
           // Also check fallback mapping by ID if NO-MOBILE
-          phone.startsWith("NO-MOBILE-") ? { id: phone.replace("NO-MOBILE-", "") } : {}
-        ]
+          phone.startsWith("NO-MOBILE-") ? { id: phone.replace("NO-MOBILE-", "") } : {},
+        ],
       },
       orderBy: { savedAt: "desc" },
       select: {
@@ -75,8 +79,8 @@ export async function GET(request, props) {
         pdfFileName: true,
         createdAt: true,
         updatedAt: true,
-        createdBy: { select: { name: true, email: true } }
-      }
+        createdBy: { select: { name: true, email: true } },
+      },
     });
 
     const allPolicies = rawPolicies.map((record) => {
@@ -104,29 +108,45 @@ export async function GET(request, props) {
       totalSumInsured += siNum;
 
       // Check if it is an active unrenewed policy in the renewal window
-      const isClosed = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(policy.renewalStatus);
-      if (policy.isActivePolicy && !isClosed && Number.isFinite(Number(policy.daysRemaining)) && policy.daysRemaining >= -30 && policy.daysRemaining <= 30) {
+      const isClosed = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(
+        policy.renewalStatus,
+      );
+      if (
+        policy.isActivePolicy &&
+        !isClosed &&
+        Number.isFinite(Number(policy.daysRemaining)) &&
+        policy.daysRemaining >= -30 &&
+        policy.daysRemaining <= 30
+      ) {
         policiesDue++;
       }
     });
 
     // Filter active policies in the 30-day window to compute due status.
-    const policiesInWindow = policies.filter(policy => {
-      return Number.isFinite(Number(policy.daysRemaining)) && policy.daysRemaining >= -30 && policy.daysRemaining <= 30;
+    const policiesInWindow = policies.filter((policy) => {
+      return (
+        Number.isFinite(Number(policy.daysRemaining)) &&
+        policy.daysRemaining >= -30 &&
+        policy.daysRemaining <= 30
+      );
     });
 
-    const duePoliciesInWindow = policiesInWindow.filter(policy => {
-      const isClosed = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(policy.renewalStatus);
+    const duePoliciesInWindow = policiesInWindow.filter((policy) => {
+      const isClosed = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(
+        policy.renewalStatus,
+      );
       return policy.isActivePolicy && !isClosed;
     });
 
     let customerStatus = "Active";
     if (duePoliciesInWindow.length > 0) {
-      const hasExpired = duePoliciesInWindow.some(policy => policy.daysRemaining < 0);
+      const hasExpired = duePoliciesInWindow.some((policy) => policy.daysRemaining < 0);
       customerStatus = hasExpired ? "Expired" : "Due Soon";
     } else if (policies.length > 0) {
-      const renewedCount = policies.filter(p => p.renewalStatus === "RENEWED").length;
-      const lostCount = policies.filter(p => ["LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(p.renewalStatus)).length;
+      const renewedCount = policies.filter((p) => p.renewalStatus === "RENEWED").length;
+      const lostCount = policies.filter((p) =>
+        ["LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(p.renewalStatus),
+      ).length;
       if (renewedCount > 0) {
         customerStatus = "Renewed";
       } else if (lostCount > 0) {
@@ -145,7 +165,7 @@ export async function GET(request, props) {
           ...remark,
           policyId: policy.id,
           policyNumber: policy.policyNumber,
-          policyType: policy.displayPolicyType || policy.policyType
+          policyType: policy.displayPolicyType || policy.policyType,
         });
       });
     });
@@ -155,7 +175,7 @@ export async function GET(request, props) {
 
     // 5. Aggregate Customer Summary with Auto-Enrichment Scan from Policy Records
     const latestPolicy = allPolicies[0] || {};
-    const uniqueCompanies = Array.from(new Set(allPolicies.map(p => p.insuredName).filter(Boolean)));
+    const uniqueCompanies = Array.from(new Set(allPolicies.map((p) => p.insuredName).filter(Boolean)));
     const totalCompanies = uniqueCompanies.length;
 
     let enrichedContactPerson = "";
@@ -169,12 +189,12 @@ export async function GET(request, props) {
       if (!enrichedContactPerson && p.contactPerson) enrichedContactPerson = p.contactPerson;
       if (!enrichedEmail && p.email) enrichedEmail = p.email;
       if (!enrichedName && p.insuredName) enrichedName = p.insuredName;
-      
+
       const addr = p.riskLocation || p.premisesAddress || p.mailingAddress || "";
       if (!enrichedAddress && addr) enrichedAddress = addr;
-      
+
       if (!enrichedState && p.state) enrichedState = p.state;
-      
+
       const cty = p.city || p.district || "";
       if (!enrichedCity && cty) enrichedCity = cty;
     }
@@ -187,13 +207,22 @@ export async function GET(request, props) {
       address: enrichedAddress || "",
       state: enrichedState || "",
       city: enrichedCity || "",
-      assignedTo: latestPolicy.assignedTo || "Unassigned"
+      assignedTo: latestPolicy.assignedTo || "Unassigned",
     };
 
     const profileData = customerProfile
       ? {
-          name: customerProfile.contactPersonName || enrichedContactPerson || customerProfile.name || enrichedName || "Unknown Contact",
-          contactPerson: customerProfile.contactPersonName || enrichedContactPerson || customerProfile.name || "Contact not available",
+          name:
+            customerProfile.contactPersonName ||
+            enrichedContactPerson ||
+            customerProfile.name ||
+            enrichedName ||
+            "Unknown Contact",
+          contactPerson:
+            customerProfile.contactPersonName ||
+            enrichedContactPerson ||
+            customerProfile.name ||
+            "Contact not available",
           phone: customerProfile.phone || phone,
           email: customerProfile.email || enrichedEmail || "",
           address: customerProfile.address || enrichedAddress || "",
@@ -201,7 +230,7 @@ export async function GET(request, props) {
           city: customerProfile.city || enrichedCity || "",
           assignedTo: latestPolicy.assignedTo || "Unassigned",
           createdBy: customerProfile.createdBy,
-          updatedBy: customerProfile.updatedBy
+          updatedBy: customerProfile.updatedBy,
         }
       : fallbackSummary;
 
@@ -209,7 +238,7 @@ export async function GET(request, props) {
       success: true,
       profile: {
         ...profileData,
-        customerStatus
+        customerStatus,
       },
       policies,
       companies: uniqueCompanies,
@@ -218,9 +247,9 @@ export async function GET(request, props) {
         totalSumInsured,
         totalPolicies: policies.length,
         policiesDue,
-        totalCompanies
+        totalCompanies,
       },
-      timeline: remarks
+      timeline: remarks,
     });
   } catch (error) {
     console.error("Fetch customer profile failed:", error);

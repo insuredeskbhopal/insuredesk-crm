@@ -14,38 +14,38 @@ const REPORTS = {
     title: "EOD Total Premium",
     eyebrow: "Today Upload Report",
     description: "Policies saved today with uploader and basic policy details.",
-    grouping: "records"
+    grouping: "records",
   },
   mtd: {
     title: "MTD Total Premium",
     eyebrow: "Month To Date Pivot",
     description: "Day-wise premium and policy count for this month.",
-    grouping: "day"
+    grouping: "day",
   },
   ytd: {
     title: "YTD Total Premium",
     eyebrow: "Year To Date Pivot",
     description: "Month-wise premium and policy count for this year.",
-    grouping: "month"
+    grouping: "month",
   },
   expired: {
     title: "Expired Premium",
     eyebrow: "Expired Renewal Report",
     description: "Active policies whose expiry date has passed.",
-    grouping: "records"
+    grouping: "records",
   },
   renewed: {
     title: "Renewed Premium",
     eyebrow: "Renewed Policy Report",
     description: "Policies marked as renewed.",
-    grouping: "records"
+    grouping: "records",
   },
   lost: {
     title: "Lost Premium",
     eyebrow: "Lost Renewal Report",
     description: "Policies marked as lost.",
-    grouping: "records"
-  }
+    grouping: "records",
+  },
 };
 
 export default async function PremiumReportPage({ params }) {
@@ -60,7 +60,9 @@ export default async function PremiumReportPage({ params }) {
           <p className="eyebrow">Premium Report</p>
           <h1>Unknown premium report</h1>
           <p>The selected premium card does not match any available report.</p>
-          <Link className="primary-action" href="/dashboard">Back to Dashboard</Link>
+          <Link className="primary-action" href="/dashboard">
+            Back to Dashboard
+          </Link>
         </section>
       </main>
     );
@@ -84,7 +86,9 @@ export default async function PremiumReportPage({ params }) {
             <p>{config.description}</p>
           </div>
           <div className="title-actions">
-            <Link className="secondary-action" href="/dashboard">Back to Dashboard</Link>
+            <Link className="secondary-action" href="/dashboard">
+              Back to Dashboard
+            </Link>
           </div>
         </div>
 
@@ -99,7 +103,9 @@ export default async function PremiumReportPage({ params }) {
           </div>
           <div className="metric-card">
             <span>Latest saved</span>
-            <strong>{latestRecord ? formatDateTime(latestRecord.savedAt || latestRecord.uploadedAt) : "-"}</strong>
+            <strong>
+              {latestRecord ? formatDateTime(latestRecord.savedAt || latestRecord.uploadedAt) : "-"}
+            </strong>
           </div>
           <div className="metric-card">
             <span>Report basis</span>
@@ -113,14 +119,26 @@ export default async function PremiumReportPage({ params }) {
           <div className="panel-head">
             <div>
               <p className="eyebrow">Pivot Report</p>
-              <h2>{config.grouping === "month" ? "Month-wise premium" : config.grouping === "day" ? "Day-wise premium" : "Uploader summary"}</h2>
+              <h2>
+                {config.grouping === "month"
+                  ? "Month-wise premium"
+                  : config.grouping === "day"
+                    ? "Day-wise premium"
+                    : "Uploader summary"}
+              </h2>
             </div>
           </div>
           <div className="table-wrap">
             <table className="records-table">
               <thead>
                 <tr>
-                  <th>{config.grouping === "month" ? "Month" : config.grouping === "day" ? "Date" : "Uploaded By"}</th>
+                  <th>
+                    {config.grouping === "month"
+                      ? "Month"
+                      : config.grouping === "day"
+                        ? "Date"
+                        : "Uploaded By"}
+                  </th>
                   <th>Policies</th>
                   <th>Total Premium</th>
                 </tr>
@@ -128,9 +146,13 @@ export default async function PremiumReportPage({ params }) {
               <tbody>
                 {pivotRows.map((row) => (
                   <tr key={row.key}>
-                    <td><strong>{row.label}</strong></td>
+                    <td>
+                      <strong>{row.label}</strong>
+                    </td>
                     <td>{row.count}</td>
-                    <td><span className="record-code">{formatMoney(row.premium)}</span></td>
+                    <td>
+                      <span className="record-code">{formatMoney(row.premium)}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -160,19 +182,30 @@ export default async function PremiumReportPage({ params }) {
               </tr>
             </thead>
             <tbody>
-              {filteredRecords.length ? filteredRecords.map((record) => (
-                <tr key={record.id}>
-                  <td>{formatDateTime(record.savedAt || record.uploadedAt)}</td>
-                  <td>{record.uploadedBy || "-"}</td>
-                  <td><strong>{record.insuredName || "Unnamed"}</strong></td>
-                  <td><span className="record-code">{record.policyNumber || "-"}</span></td>
-                  <td>{record.insuranceCompany || "-"}</td>
-                  <td>{record.policyType || "-"}</td>
-                  <td><span className="record-code">{formatMoney(getPremium(record))}</span></td>
-                </tr>
-              )) : (
+              {filteredRecords.length ? (
+                filteredRecords.map((record) => (
+                  <tr key={record.id}>
+                    <td>{formatDateTime(record.savedAt || record.uploadedAt)}</td>
+                    <td>{record.uploadedBy || "-"}</td>
+                    <td>
+                      <strong>{record.insuredName || "Unnamed"}</strong>
+                    </td>
+                    <td>
+                      <span className="record-code">{record.policyNumber || "-"}</span>
+                    </td>
+                    <td>{record.insuranceCompany || "-"}</td>
+                    <td>{record.policyType || "-"}</td>
+                    <td>
+                      <span className="record-code">{formatMoney(getPremium(record))}</span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", color: "var(--text-secondary)", padding: "28px" }}>
+                  <td
+                    colSpan={7}
+                    style={{ textAlign: "center", color: "var(--text-secondary)", padding: "28px" }}
+                  >
                     No policies found for this report.
                   </td>
                 </tr>
@@ -218,11 +251,24 @@ function buildPivotRows(records, grouping) {
 
     if (grouping === "day") {
       key = savedDate ? formatDateKey(savedDate) : "unknown-date";
-      label = savedDate ? savedDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: REPORT_TIME_ZONE }) : "Unknown date";
+      label = savedDate
+        ? savedDate.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            timeZone: REPORT_TIME_ZONE,
+          })
+        : "Unknown date";
     } else if (grouping === "month") {
       const parts = savedDate ? getIndiaDateParts(savedDate) : null;
       key = parts ? `${parts.year}-${String(parts.month).padStart(2, "0")}` : "unknown-month";
-      label = savedDate ? savedDate.toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: REPORT_TIME_ZONE }) : "Unknown month";
+      label = savedDate
+        ? savedDate.toLocaleDateString("en-IN", {
+            month: "long",
+            year: "numeric",
+            timeZone: REPORT_TIME_ZONE,
+          })
+        : "Unknown month";
     }
 
     const current = groups.get(key) || { key, label, count: 0, premium: 0 };
@@ -255,7 +301,7 @@ function formatDateTime(value) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: REPORT_TIME_ZONE
+    timeZone: REPORT_TIME_ZONE,
   });
 }
 
@@ -280,7 +326,9 @@ function startOfIndiaYear(date) {
 }
 
 function makeIndiaDate(year, month, day) {
-  return new Date(`${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00${INDIA_TIME_OFFSET}`);
+  return new Date(
+    `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00${INDIA_TIME_OFFSET}`,
+  );
 }
 
 function getIndiaDateParts(date) {
@@ -288,13 +336,15 @@ function getIndiaDateParts(date) {
     timeZone: REPORT_TIME_ZONE,
     year: "numeric",
     month: "2-digit",
-    day: "2-digit"
+    day: "2-digit",
   }).formatToParts(date);
-  const value = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  const value = Object.fromEntries(
+    parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]),
+  );
   return {
     year: Number(value.year),
     month: Number(value.month),
-    day: Number(value.day)
+    day: Number(value.day),
   };
 }
 

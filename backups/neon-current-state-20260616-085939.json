@@ -1411,11 +1411,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "frontend",
-            "react",
-            "js"
-          ],
+          "keywords": ["frontend", "react", "js"],
           "slug": "react",
           "updatedAt": "2026-06-16T05:40:49.184Z"
         },
@@ -1429,11 +1425,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "frontend",
-            "ts",
-            "js"
-          ],
+          "keywords": ["frontend", "ts", "js"],
           "slug": "typescript",
           "updatedAt": "2026-06-16T05:40:49.724Z"
         },
@@ -1447,11 +1439,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "frontend",
-            "next",
-            "react"
-          ],
+          "keywords": ["frontend", "next", "react"],
           "slug": "nextjs",
           "updatedAt": "2026-06-16T05:40:49.945Z"
         },
@@ -1465,10 +1453,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "frontend",
-            "vue"
-          ],
+          "keywords": ["frontend", "vue"],
           "slug": "vuejs",
           "updatedAt": "2026-06-16T05:40:50.166Z"
         },
@@ -1482,10 +1467,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "frontend",
-            "angular"
-          ],
+          "keywords": ["frontend", "angular"],
           "slug": "angular",
           "updatedAt": "2026-06-16T05:40:50.385Z"
         },
@@ -1499,11 +1481,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "frontend",
-            "html",
-            "css"
-          ],
+          "keywords": ["frontend", "html", "css"],
           "slug": "html-css",
           "updatedAt": "2026-06-16T05:40:50.606Z"
         },
@@ -1517,10 +1495,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "frontend",
-            "tailwind"
-          ],
+          "keywords": ["frontend", "tailwind"],
           "slug": "tailwind",
           "updatedAt": "2026-06-16T05:40:50.827Z"
         },
@@ -1534,10 +1509,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "frontend",
-            "js"
-          ],
+          "keywords": ["frontend", "js"],
           "slug": "javascript",
           "updatedAt": "2026-06-16T05:40:51.046Z"
         },
@@ -1551,11 +1523,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "backend",
-            "node",
-            "express"
-          ],
+          "keywords": ["backend", "node", "express"],
           "slug": "nodejs",
           "updatedAt": "2026-06-16T05:40:51.279Z"
         },
@@ -1569,10 +1537,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "backend",
-            "python"
-          ],
+          "keywords": ["backend", "python"],
           "slug": "python",
           "updatedAt": "2026-06-16T05:40:51.511Z"
         },
@@ -1586,11 +1551,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "backend",
-            "go",
-            "golang"
-          ],
+          "keywords": ["backend", "go", "golang"],
           "slug": "go",
           "updatedAt": "2026-06-16T05:40:51.736Z"
         },
@@ -1604,11 +1565,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "backend",
-            "sql",
-            "postgres"
-          ],
+          "keywords": ["backend", "sql", "postgres"],
           "slug": "postgresql",
           "updatedAt": "2026-06-16T05:40:51.956Z"
         },
@@ -1622,10 +1579,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "backend",
-            "graphql"
-          ],
+          "keywords": ["backend", "graphql"],
           "slug": "graphql",
           "updatedAt": "2026-06-16T05:40:52.181Z"
         },
@@ -1639,10 +1593,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "backend",
-            "docker"
-          ],
+          "keywords": ["backend", "docker"],
           "slug": "docker",
           "updatedAt": "2026-06-16T05:40:52.788Z"
         },
@@ -1656,10 +1607,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "backend",
-            "mongo"
-          ],
+          "keywords": ["backend", "mongo"],
           "slug": "mongodb",
           "updatedAt": "2026-06-16T05:40:53.429Z"
         },
@@ -1673,10 +1621,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "backend",
-            "java"
-          ],
+          "keywords": ["backend", "java"],
           "slug": "java",
           "updatedAt": "2026-06-16T05:40:53.663Z"
         },
@@ -1690,11 +1635,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "data",
-            "ai",
-            "ml"
-          ],
+          "keywords": ["data", "ai", "ml"],
           "slug": "machine-learning",
           "updatedAt": "2026-06-16T05:40:53.887Z"
         },
@@ -1708,10 +1649,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "data",
-            "sql"
-          ],
+          "keywords": ["data", "sql"],
           "slug": "sql",
           "updatedAt": "2026-06-16T05:40:54.109Z"
         },
@@ -1725,11 +1663,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "data",
-            "ai",
-            "dl"
-          ],
+          "keywords": ["data", "ai", "dl"],
           "slug": "deep-learning",
           "updatedAt": "2026-06-16T05:40:54.329Z"
         },
@@ -1743,11 +1677,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "data",
-            "tableau",
-            "powerbi"
-          ],
+          "keywords": ["data", "tableau", "powerbi"],
           "slug": "data-vis",
           "updatedAt": "2026-06-16T05:40:54.550Z"
         },
@@ -1761,11 +1691,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "data",
-            "ai",
-            "tf"
-          ],
+          "keywords": ["data", "ai", "tf"],
           "slug": "tensorflow",
           "updatedAt": "2026-06-16T05:40:54.774Z"
         },
@@ -1779,11 +1705,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "data",
-            "ai",
-            "pytorch"
-          ],
+          "keywords": ["data", "ai", "pytorch"],
           "slug": "pytorch",
           "updatedAt": "2026-06-16T05:40:54.993Z"
         },
@@ -1797,11 +1719,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "data",
-            "spark",
-            "hadoop"
-          ],
+          "keywords": ["data", "spark", "hadoop"],
           "slug": "big-data",
           "updatedAt": "2026-06-16T05:40:55.212Z"
         },
@@ -1815,10 +1733,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "data",
-            "pipeline"
-          ],
+          "keywords": ["data", "pipeline"],
           "slug": "data-eng",
           "updatedAt": "2026-06-16T05:40:55.430Z"
         },
@@ -1832,11 +1747,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "design",
-            "ui",
-            "ux"
-          ],
+          "keywords": ["design", "ui", "ux"],
           "slug": "ui-ux",
           "updatedAt": "2026-06-16T05:40:55.650Z"
         },
@@ -1850,10 +1761,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "design",
-            "figma"
-          ],
+          "keywords": ["design", "figma"],
           "slug": "figma",
           "updatedAt": "2026-06-16T05:40:55.916Z"
         },
@@ -1867,10 +1775,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "design",
-            "adobe"
-          ],
+          "keywords": ["design", "adobe"],
           "slug": "graphic-design",
           "updatedAt": "2026-06-16T05:40:56.145Z"
         },
@@ -1884,10 +1789,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "design",
-            "web"
-          ],
+          "keywords": ["design", "web"],
           "slug": "web-design",
           "updatedAt": "2026-06-16T05:40:56.391Z"
         },
@@ -1901,10 +1803,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "design",
-            "mobile"
-          ],
+          "keywords": ["design", "mobile"],
           "slug": "mobile-design",
           "updatedAt": "2026-06-16T05:40:56.645Z"
         },
@@ -1918,10 +1817,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "design",
-            "adobe"
-          ],
+          "keywords": ["design", "adobe"],
           "slug": "adobe-xd",
           "updatedAt": "2026-06-16T05:40:56.885Z"
         },
@@ -1935,10 +1831,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "cloud",
-            "aws"
-          ],
+          "keywords": ["cloud", "aws"],
           "slug": "aws",
           "updatedAt": "2026-06-16T05:40:57.124Z"
         },
@@ -1952,10 +1845,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "cloud",
-            "docker"
-          ],
+          "keywords": ["cloud", "docker"],
           "slug": "docker-cloud",
           "updatedAt": "2026-06-16T05:40:57.360Z"
         },
@@ -1969,10 +1859,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "cloud",
-            "k8s"
-          ],
+          "keywords": ["cloud", "k8s"],
           "slug": "kubernetes",
           "updatedAt": "2026-06-16T05:40:57.587Z"
         },
@@ -1986,10 +1873,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "cloud",
-            "azure"
-          ],
+          "keywords": ["cloud", "azure"],
           "slug": "azure",
           "updatedAt": "2026-06-16T05:40:57.811Z"
         },
@@ -2003,10 +1887,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "cloud",
-            "gcp"
-          ],
+          "keywords": ["cloud", "gcp"],
           "slug": "gcp",
           "updatedAt": "2026-06-16T05:40:58.034Z"
         },
@@ -2020,11 +1901,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "cloud",
-            "devops",
-            "cicd"
-          ],
+          "keywords": ["cloud", "devops", "cicd"],
           "slug": "devops",
           "updatedAt": "2026-06-16T05:40:58.303Z"
         },
@@ -2038,10 +1915,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "cloud",
-            "terraform"
-          ],
+          "keywords": ["cloud", "terraform"],
           "slug": "terraform",
           "updatedAt": "2026-06-16T05:40:58.525Z"
         },
@@ -2055,10 +1929,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "career",
-            "interview"
-          ],
+          "keywords": ["career", "interview"],
           "slug": "interview-prep",
           "updatedAt": "2026-06-16T05:40:58.745Z"
         },
@@ -2072,10 +1943,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "career",
-            "resume"
-          ],
+          "keywords": ["career", "resume"],
           "slug": "resume-review",
           "updatedAt": "2026-06-16T05:40:58.976Z"
         },
@@ -2089,10 +1957,7 @@
           "description": null,
           "isActive": true,
           "isTrending": true,
-          "keywords": [
-            "career",
-            "system-design"
-          ],
+          "keywords": ["career", "system-design"],
           "slug": "system-design",
           "updatedAt": "2026-06-16T05:40:59.198Z"
         },
@@ -2106,10 +1971,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "career",
-            "speaking"
-          ],
+          "keywords": ["career", "speaking"],
           "slug": "public-speaking",
           "updatedAt": "2026-06-16T05:40:59.417Z"
         },
@@ -2123,10 +1985,7 @@
           "description": null,
           "isActive": true,
           "isTrending": false,
-          "keywords": [
-            "career",
-            "negotiation"
-          ],
+          "keywords": ["career", "negotiation"],
           "slug": "negotiation",
           "updatedAt": "2026-06-16T05:40:59.702Z"
         }

@@ -27,11 +27,11 @@ export async function GET(_request, { params }) {
   const record = await prisma.policyRecord.findFirst({
     where: {
       id,
-      ...getTenantFilter(session, "read")
+      ...getTenantFilter(session, "read"),
     },
     include: {
-      uploadedFile: true
-    }
+      uploadedFile: true,
+    },
   });
 
   if (!record || record.deletedAt) {
@@ -39,14 +39,13 @@ export async function GET(_request, { params }) {
   }
 
   // Validate tenant context and RBAC permissions
-  const isAuthorized = canAccessSharedResource(
-    session,
-    "read",
-    record.organizationId
-  );
+  const isAuthorized = canAccessSharedResource(session, "read", record.organizationId);
 
   if (!isAuthorized) {
-    return Response.json({ error: "Access denied: record is outside your organization scope" }, { status: 403 });
+    return Response.json(
+      { error: "Access denied: record is outside your organization scope" },
+      { status: 403 },
+    );
   }
 
   const file = record.uploadedFile;
@@ -80,7 +79,7 @@ export async function GET(_request, { params }) {
         userAgent,
         userId: session.userId,
         organizationId: session.organizationId,
-        metadata: { filename: fileName }
+        metadata: { filename: fileName },
       });
 
       return new Response(fileBuffer, {
@@ -88,8 +87,8 @@ export async function GET(_request, { params }) {
           ...securityHeaders,
           "Content-Type": file.mimeType || "application/pdf",
           "Content-Disposition": `attachment; filename="${fileName}"`,
-          "Content-Length": String(fileBuffer.length)
-        }
+          "Content-Length": String(fileBuffer.length),
+        },
       });
     } catch {
       return Response.json({ error: "File not found on disk storage." }, { status: 404 });
@@ -109,7 +108,7 @@ export async function GET(_request, { params }) {
         userAgent,
         userId: session.userId,
         organizationId: session.organizationId,
-        metadata: { filename: fileName, storageProvider: file.storageProvider }
+        metadata: { filename: fileName, storageProvider: file.storageProvider },
       });
 
       return new Response(fileBuffer, {
@@ -117,8 +116,8 @@ export async function GET(_request, { params }) {
           ...securityHeaders,
           "Content-Type": file.mimeType || "application/pdf",
           "Content-Disposition": `attachment; filename="${fileName}"`,
-          "Content-Length": String(fileBuffer.length)
-        }
+          "Content-Length": String(fileBuffer.length),
+        },
       });
     } catch {
       return Response.json({ error: "File not found in Google Drive storage." }, { status: 404 });
@@ -138,7 +137,7 @@ export async function GET(_request, { params }) {
       userAgent,
       userId: session.userId,
       organizationId: session.organizationId,
-      metadata: { storagePath: file.storagePath }
+      metadata: { storagePath: file.storagePath },
     });
 
     return NextResponse.redirect(signedUrl);

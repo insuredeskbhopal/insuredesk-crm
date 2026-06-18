@@ -17,12 +17,14 @@ export default async function PolicyRecordsPage(props) {
   const viewCategory = searchParams.viewCategory || "all";
 
   const session = await getCurrentSessionFromCookies();
-  const tenantFilter = session ? getTenantFilter(session, "read") : { id: "00000000-0000-0000-0000-000000000000" };
+  const tenantFilter = session
+    ? getTenantFilter(session, "read")
+    : { id: "00000000-0000-0000-0000-000000000000" };
   const isSuperAdmin = session?.role === "SUPER_ADMIN";
   const orgId = session?.organizationId || null;
   const basePolicyWhere = {
     ...tenantFilter,
-    deletedAt: null
+    deletedAt: null,
   };
   const dataPayload = await loadScopedPolicyRecords({
     includeInactive: true,
@@ -32,7 +34,7 @@ export default async function PolicyRecordsPage(props) {
     filterField,
     filterValue,
     pdfFilter,
-    viewCategory
+    viewCategory,
   });
   const countsPayload = await loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId, session });
   const {
@@ -44,7 +46,7 @@ export default async function PolicyRecordsPage(props) {
     lifeCount,
     homeCount,
     cyberCount,
-    error: countsError
+    error: countsError,
   } = countsPayload;
 
   const { records, totalCount, totalPages } = dataPayload;
@@ -57,7 +59,7 @@ export default async function PolicyRecordsPage(props) {
     fire: fireCount,
     life: lifeCount,
     home: homeCount,
-    cyber: cyberCount
+    cyber: cyberCount,
   };
 
   return (
@@ -74,7 +76,12 @@ export default async function PolicyRecordsPage(props) {
       initialPdfFilter={pdfFilter}
       initialViewCategory={viewCategory}
       tabCounts={tabCounts}
-      serverLoadError={countsError || (dataPayload.serverLoadError ? "Policy records could not be loaded from the database. Please try again after database access is restored." : "")}
+      serverLoadError={
+        countsError ||
+        (dataPayload.serverLoadError
+          ? "Policy records could not be loaded from the database. Please try again after database access is restored."
+          : "")
+      }
     />
   );
 }
@@ -97,18 +104,65 @@ async function loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId,
         )
     `;
 
-    const [totalAll, totalDuplicates, motorCount, healthCount, fireCount, lifeCount, homeCount, cyberCount] = await Promise.all([
-      prisma.policyRecord.count({ where: basePolicyWhere }),
-      prisma.$queryRawUnsafe(duplicateCountQuery, isSuperAdmin, orgId).then(res => res[0]?.count || 0),
-      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['motor', 'vehicle', 'car', 'two wheeler', 'bike', 'scooter', 'commercial vehicle', 'taxi', 'cab', 'bus']) }),
-      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['health', 'mediclaim', 'hospital', 'family floater']) }),
-      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['fire', 'sfsp', 'burglary', 'msme', 'warehouse', 'stock', 'property']) }),
-      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['life assured', 'life policy', 'term life', 'endowment']) }),
-      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['home building', 'home contents', 'home policy']) }),
-      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, ['cyber', 'ransomware', 'data breach']) })
-    ]);
+    const [totalAll, totalDuplicates, motorCount, healthCount, fireCount, lifeCount, homeCount, cyberCount] =
+      await Promise.all([
+        prisma.policyRecord.count({ where: basePolicyWhere }),
+        prisma.$queryRawUnsafe(duplicateCountQuery, isSuperAdmin, orgId).then((res) => res[0]?.count || 0),
+        prisma.policyRecord.count({
+          where: withPolicyTypeTerms(basePolicyWhere, [
+            "motor",
+            "vehicle",
+            "car",
+            "two wheeler",
+            "bike",
+            "scooter",
+            "commercial vehicle",
+            "taxi",
+            "cab",
+            "bus",
+          ]),
+        }),
+        prisma.policyRecord.count({
+          where: withPolicyTypeTerms(basePolicyWhere, ["health", "mediclaim", "hospital", "family floater"]),
+        }),
+        prisma.policyRecord.count({
+          where: withPolicyTypeTerms(basePolicyWhere, [
+            "fire",
+            "sfsp",
+            "burglary",
+            "msme",
+            "warehouse",
+            "stock",
+            "property",
+          ]),
+        }),
+        prisma.policyRecord.count({
+          where: withPolicyTypeTerms(basePolicyWhere, [
+            "life assured",
+            "life policy",
+            "term life",
+            "endowment",
+          ]),
+        }),
+        prisma.policyRecord.count({
+          where: withPolicyTypeTerms(basePolicyWhere, ["home building", "home contents", "home policy"]),
+        }),
+        prisma.policyRecord.count({
+          where: withPolicyTypeTerms(basePolicyWhere, ["cyber", "ransomware", "data breach"]),
+        }),
+      ]);
 
-    return { totalAll, totalDuplicates, motorCount, healthCount, fireCount, lifeCount, homeCount, cyberCount, error: "" };
+    return {
+      totalAll,
+      totalDuplicates,
+      motorCount,
+      healthCount,
+      fireCount,
+      lifeCount,
+      homeCount,
+      cyberCount,
+      error: "",
+    };
   } catch (error) {
     console.error("Policy record tab counts failed:", error instanceof Error ? error.message : error);
     return {
@@ -120,7 +174,8 @@ async function loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId,
       lifeCount: 0,
       homeCount: 0,
       cyberCount: 0,
-      error: "Policy records could not be loaded from the database. Please try again after database access is restored."
+      error:
+        "Policy records could not be loaded from the database. Please try again after database access is restored.",
     };
   }
 }
@@ -131,7 +186,7 @@ function withPolicyTypeTerms(baseWhere, terms) {
     OR: terms.flatMap((term) => [
       { selectedPolicyType: { contains: term, mode: "insensitive" } },
       { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
-      { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } }
-    ])
+      { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+    ]),
   };
 }

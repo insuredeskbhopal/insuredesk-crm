@@ -19,7 +19,7 @@ function formatDate(date) {
       month: "short",
       year: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   } catch {
     return String(date);
@@ -33,7 +33,7 @@ function getStatusStyle(status) {
     [UPLOAD_STATUS.APPROVED]: { background: "rgba(46, 125, 50, 0.12)", color: "#2e7d32" },
     [UPLOAD_STATUS.REVIEW_REQUIRED]: { background: "rgba(25, 118, 210, 0.12)", color: "#1976d2" },
     [UPLOAD_STATUS.PROCESSING]: { background: "rgba(239, 108, 0, 0.12)", color: "#ef6c00" },
-    [UPLOAD_STATUS.PENDING]: { background: "#f3f4f5", color: "var(--primary)" }
+    [UPLOAD_STATUS.PENDING]: { background: "#f3f4f5", color: "var(--primary)" },
   }[normalized];
 }
 
@@ -44,7 +44,7 @@ function statusLabel(status) {
     [UPLOAD_STATUS.PROCESSING]: "Processing",
     [UPLOAD_STATUS.REVIEW_REQUIRED]: "Ready for Review",
     [UPLOAD_STATUS.APPROVED]: "Saved to DB",
-    [UPLOAD_STATUS.FAILED]: "Failed"
+    [UPLOAD_STATUS.FAILED]: "Failed",
   }[normalized];
 }
 
@@ -81,8 +81,8 @@ export default async function UploadHistoryPage(props) {
       sizeBytes: true,
       status: true,
       createdAt: true,
-      errorMessage: true
-    }
+      errorMessage: true,
+    },
   });
   const pageHref = (targetPage) => {
     const params = new URLSearchParams();
@@ -123,7 +123,9 @@ export default async function UploadHistoryPage(props) {
               {uploads.length ? (
                 uploads.map((upload) => (
                   <tr key={upload.id}>
-                    <td><strong>{upload.sourceFile}</strong></td>
+                    <td>
+                      <strong>{upload.sourceFile}</strong>
+                    </td>
                     <td>{formatDate(upload.createdAt)}</td>
                     <td>{formatSize(upload.sizeBytes)}</td>
                     <td>
@@ -157,19 +159,57 @@ export default async function UploadHistoryPage(props) {
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="table-pagination" style={{ marginTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: "1px solid var(--border, #e2e8f0)" }}>
-            <span style={{ fontSize: "14px", color: "var(--text-secondary, #64748b)" }}>Showing page {page} of {totalPages} ({totalCount} uploads found)</span>
+          <div
+            className="table-pagination"
+            style={{
+              marginTop: "20px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 24px",
+              borderTop: "1px solid var(--border, #e2e8f0)",
+            }}
+          >
+            <span style={{ fontSize: "14px", color: "var(--text-secondary, #64748b)" }}>
+              Showing page {page} of {totalPages} ({totalCount} uploads found)
+            </span>
             <div className="table-page-list" style={{ display: "flex", gap: "6px", alignItems: "center" }}>
               {page > 1 ? (
-                <a href={pageHref(page - 1)} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", textDecoration: "none", color: "var(--text-primary)", fontSize: "14px" }}>
+                <a
+                  href={pageHref(page - 1)}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border, #cbd5e1)",
+                    textDecoration: "none",
+                    color: "var(--text-primary)",
+                    fontSize: "14px",
+                  }}
+                >
                   Prev
                 </a>
               ) : (
-                <span style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", color: "var(--text-secondary, #cbd5e1)", fontSize: "14px", cursor: "not-allowed" }}>Prev</span>
+                <span
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border, #cbd5e1)",
+                    color: "var(--text-secondary, #cbd5e1)",
+                    fontSize: "14px",
+                    cursor: "not-allowed",
+                  }}
+                >
+                  Prev
+                </span>
               )}
-              {getPageNumbers(page, totalPages).map((pNum, index) => (
+              {getPageNumbers(page, totalPages).map((pNum, index) =>
                 pNum === "..." ? (
-                  <span key={`ellipsis-${index}`} style={{ padding: "0 8px", color: "var(--text-secondary, #64748b)" }}>...</span>
+                  <span
+                    key={`ellipsis-${index}`}
+                    style={{ padding: "0 8px", color: "var(--text-secondary, #64748b)" }}
+                  >
+                    ...
+                  </span>
                 ) : (
                   <a
                     key={pNum}
@@ -182,19 +222,40 @@ export default async function UploadHistoryPage(props) {
                       color: page === pNum ? "#ffffff" : "var(--text-primary, #0f172a)",
                       textDecoration: "none",
                       fontSize: "14px",
-                      fontWeight: page === pNum ? "bold" : "normal"
+                      fontWeight: page === pNum ? "bold" : "normal",
                     }}
                   >
                     {pNum}
                   </a>
-                )
-              ))}
+                ),
+              )}
               {page < totalPages ? (
-                <a href={pageHref(page + 1)} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", textDecoration: "none", color: "var(--text-primary)", fontSize: "14px" }}>
+                <a
+                  href={pageHref(page + 1)}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border, #cbd5e1)",
+                    textDecoration: "none",
+                    color: "var(--text-primary)",
+                    fontSize: "14px",
+                  }}
+                >
                   Next
                 </a>
               ) : (
-                <span style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid var(--border, #cbd5e1)", color: "var(--text-secondary, #cbd5e1)", fontSize: "14px", cursor: "not-allowed" }}>Next</span>
+                <span
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border, #cbd5e1)",
+                    color: "var(--text-secondary, #cbd5e1)",
+                    fontSize: "14px",
+                    cursor: "not-allowed",
+                  }}
+                >
+                  Next
+                </span>
               )}
             </div>
           </div>

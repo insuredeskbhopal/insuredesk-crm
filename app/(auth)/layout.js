@@ -7,12 +7,12 @@ export const metadata = {
   robots: {
     index: false,
     follow: false,
-    nocache: true
+    nocache: true,
   },
   icons: {
     icon: { url: "/favicon.png", type: "image/png" },
-    apple: "/apple-icon.png"
-  }
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function AuthLayout({ children }) {

@@ -75,4 +75,3 @@ app/styles/
 - Shared button/card classes: confirm global button styles, secondary actions, report cards, metric cards, panels, and PDF links do not change visually.
 - Import order: confirm tokens load first, then global base styles, then domain styles in the intended cascade order.
 - Build safety: run `npm run build` after each movement and fix only refactor-related regressions.
-

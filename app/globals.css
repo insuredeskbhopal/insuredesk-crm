@@ -193,7 +193,11 @@ button:focus-visible,
   background: #ffffff;
   color: var(--primary);
   text-decoration: none;
-  transition: transform var(--motion-fast), background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast);
+  transition:
+    transform var(--motion-fast),
+    background var(--motion-fast),
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
 }
 
 .pdf-icon-link:hover {
@@ -223,7 +227,10 @@ textarea {
   background: var(--surface-lowest);
   color: var(--on-surface);
   outline: none;
-  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), background var(--motion-fast);
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    background var(--motion-fast);
 }
 
 input,
@@ -254,8 +261,39 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(25, 28, 29, 0.1);
 }
 
-:is(button, a, input, select, textarea, .icon-button, .avatar, .top-brand a, .side-nav button, .pdf-link, .pdf-icon-link, .glass-panel, .record-card, .queue-card, .metric-card, .status-pill, .customer-row, .profile-head, .settings-list div, .control-list label, .panel, .panel-head, .preview-head, .preview-actions) {
-  transition: transform var(--motion-fast), background var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), opacity var(--motion-fast);
+:is(
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  .icon-button,
+  .avatar,
+  .top-brand a,
+  .side-nav button,
+  .pdf-link,
+  .pdf-icon-link,
+  .glass-panel,
+  .record-card,
+  .queue-card,
+  .metric-card,
+  .status-pill,
+  .customer-row,
+  .profile-head,
+  .settings-list div,
+  .control-list label,
+  .panel,
+  .panel-head,
+  .preview-head,
+  .preview-actions
+) {
+  transition:
+    transform var(--motion-fast),
+    background var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    opacity var(--motion-fast);
   will-change: transform, opacity;
 }
 
@@ -466,7 +504,9 @@ a:hover {
   font-weight: 800;
   padding: 0 12px;
   text-decoration: none;
-  transition: transform var(--motion-fast), box-shadow var(--motion-fast);
+  transition:
+    transform var(--motion-fast),
+    box-shadow var(--motion-fast);
 }
 
 .state-link:hover {
@@ -493,8 +533,12 @@ a:hover {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes skeleton-shimmer {

@@ -10,7 +10,7 @@ export const ENDORSEMENT_STATUSES = [
   "Insurance Company Letter Received",
   "Approved",
   "Rejected",
-  "Cancelled"
+  "Cancelled",
 ];
 
 export const ENDORSEMENT_TYPES = [
@@ -25,7 +25,7 @@ export const ENDORSEMENT_TYPES = [
   "Change in Hypothecation / Bank Details",
   "Correction in Insured Name",
   "Correction in Policy Details",
-  "Other Endorsement"
+  "Other Endorsement",
 ];
 
 export async function requireEndorsementSession(request, write = false) {
@@ -33,7 +33,8 @@ export async function requireEndorsementSession(request, write = false) {
   if (!token) return { response: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) };
 
   const session = await verifyJWT(token);
-  if (!session) return { response: NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }) };
+  if (!session)
+    return { response: NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }) };
   if (write && session.role === "VIEWER") {
     return { response: NextResponse.json({ error: "Unauthorized" }, { status: 403 }) };
   }
@@ -44,7 +45,7 @@ export async function requireEndorsementSession(request, write = false) {
 export function getEndorsementWhere(session, action = "read") {
   return {
     ...getTenantFilter(session, action),
-    deletedAt: null
+    deletedAt: null,
   };
 }
 
@@ -59,9 +60,11 @@ export function canDeleteEndorsement(session, endorsement) {
 export const endorsementInclude = {
   createdBy: { select: { name: true, email: true } },
   updatedBy: { select: { name: true, email: true } },
-  policy: { select: { id: true, reviewedData: true, data: true, selectedCompany: true, selectedPolicyType: true } },
+  policy: {
+    select: { id: true, reviewedData: true, data: true, selectedCompany: true, selectedPolicyType: true },
+  },
   customer: { select: { id: true, name: true, phone: true, email: true } },
-  documents: { orderBy: { uploadedAt: "desc" } }
+  documents: { orderBy: { uploadedAt: "desc" } },
 };
 
 export function sanitizeEndorsementPayload(payload = {}) {
@@ -77,7 +80,9 @@ export function sanitizeEndorsementPayload(payload = {}) {
     mailingAddress: stringValue(payload.mailingAddress),
     insuranceCompany: stringValue(payload.insuranceCompany),
     policyType: stringValue(payload.policyType),
-    endorsementType: ENDORSEMENT_TYPES.includes(payload.endorsementType) ? payload.endorsementType : "Other Endorsement",
+    endorsementType: ENDORSEMENT_TYPES.includes(payload.endorsementType)
+      ? payload.endorsementType
+      : "Other Endorsement",
     endorsementDate: dateValue(payload.endorsementDate) || new Date(),
     effectiveDate: dateValue(payload.effectiveDate || payload.effectiveFrom),
     effectiveFrom: dateValue(payload.effectiveFrom || payload.effectiveDate),
@@ -105,7 +110,7 @@ export function sanitizeEndorsementPayload(payload = {}) {
     generatedLetterFileName: stringValue(payload.generatedLetterFileName),
     insuranceCompanyLetterPdfUrl: stringValue(payload.insuranceCompanyLetterPdfUrl),
     insuranceCompanyLetterFileName: stringValue(payload.insuranceCompanyLetterFileName),
-    status: ENDORSEMENT_STATUSES.includes(status) ? status : "Draft"
+    status: ENDORSEMENT_STATUSES.includes(status) ? status : "Draft",
   };
 }
 
@@ -163,8 +168,8 @@ export function serializeEndorsement(record) {
       size: document.size || 0,
       dataUrl: document.dataUrl,
       remark: document.remark || "",
-      uploadedAt: document.uploadedAt?.toISOString?.() || document.uploadedAt
-    }))
+      uploadedAt: document.uploadedAt?.toISOString?.() || document.uploadedAt,
+    })),
   };
 }
 
@@ -174,7 +179,8 @@ export function getSummary(records) {
     draft: records.filter((item) => item.status === "Draft").length,
     generated: records.filter((item) => item.status === "Letter Generated").length,
     approved: records.filter((item) => item.status === "Approved").length,
-    rejectedCancelled: records.filter((item) => item.status === "Rejected" || item.status === "Cancelled").length
+    rejectedCancelled: records.filter((item) => item.status === "Rejected" || item.status === "Cancelled")
+      .length,
   };
 }
 
@@ -196,7 +202,7 @@ export function normalizePolicyData(data = {}) {
     financerDetails: source.hypothecationDetails || source.financerName || "",
     premium: source.premiumIncludingGst || source.totalPremium || source.premium || "",
     coverages: source.coverages || [],
-    raw: source
+    raw: source,
   };
 }
 
@@ -233,5 +239,7 @@ function objectValue(value) {
 
 function uuidOrNull(value) {
   const text = stringValue(value);
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text || "") ? text : null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text || "")
+    ? text
+    : null;
 }

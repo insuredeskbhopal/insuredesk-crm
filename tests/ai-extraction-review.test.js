@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getExtractionAuthenticityIssues,
   mergeAiExtractionPatch,
-  reviewPolicyExtractionWithAi
+  reviewPolicyExtractionWithAi,
 } from "../lib/policies/ai/extraction-review";
 import { extractCompanyEvidence, hasCompanyEvidence } from "../lib/policies/company-detector";
 
@@ -14,7 +14,7 @@ describe("AI extraction review guardrails", () => {
       registrationNumber: "MP04ZJ1165",
       engineNumber: "MP04ZJ11652023XUV700",
       chassisNumber: "Seating",
-      fuelType: "CNG"
+      fuelType: "CNG",
     });
 
     expect(issues).toContain("engineNumber appears to contain registrationNumber");
@@ -24,28 +24,31 @@ describe("AI extraction review guardrails", () => {
   });
 
   it("flags empty compact identifier values as invalid instead of source-backed", () => {
-    const issues = getExtractionAuthenticityIssues({
-      insuranceCompany: "TATA AIG",
-      policyType: "Auto Secure - Private Car Package Policy",
-      insuredName: "MRS CHANCHAL ANAND SONI",
-      policyNumber: "6206191778 00 00",
-      startDate: "2026-04-22",
-      expiryDate: "2027-04-21",
-      registrationNumber: "MP04ZH3415",
-      vehicleNumber: "MP04ZH3415",
-      makeModel: "MARUTI XL6",
-      engineNumber: "/",
-      chassisNumber: "MA3CNC62SPD328639",
-      fuelType: "CNG",
-      cubicCapacity: "1462",
-      seatingCapacity: "6",
-      idv: "907994.00",
-      premium: "21466.00",
-      totalPremium: "21466.00",
-      netPremium: "18075.00",
-      odPremium: "6084.56",
-      tpDriverOwner: "4051.00"
-    }, "Engine Number / Motor No. (for EV)\nK15CN9223488\nChassis No.MA3CNC62SPD328639");
+    const issues = getExtractionAuthenticityIssues(
+      {
+        insuranceCompany: "TATA AIG",
+        policyType: "Auto Secure - Private Car Package Policy",
+        insuredName: "MRS CHANCHAL ANAND SONI",
+        policyNumber: "6206191778 00 00",
+        startDate: "2026-04-22",
+        expiryDate: "2027-04-21",
+        registrationNumber: "MP04ZH3415",
+        vehicleNumber: "MP04ZH3415",
+        makeModel: "MARUTI XL6",
+        engineNumber: "/",
+        chassisNumber: "MA3CNC62SPD328639",
+        fuelType: "CNG",
+        cubicCapacity: "1462",
+        seatingCapacity: "6",
+        idv: "907994.00",
+        premium: "21466.00",
+        totalPremium: "21466.00",
+        netPremium: "18075.00",
+        odPremium: "6084.56",
+        tpDriverOwner: "4051.00",
+      },
+      "Engine Number / Motor No. (for EV)\nK15CN9223488\nChassis No.MA3CNC62SPD328639",
+    );
 
     expect(issues).toContain("engineNumber is invalid");
   });
@@ -74,103 +77,103 @@ describe("AI extraction review guardrails", () => {
         registrationNumber: "MP04ZJ1165",
         engineNumber: "MP04ZJ11652023XUV700",
         chassisNumber: "Seating",
-        fuelType: "CNG"
+        fuelType: "CNG",
       },
       aiPatch: {
         correctedFields: {
           startDate: {
             value: "21/05/2026",
             sourceText: "Policy effective from 0001 hrs 21/05/2026",
-            reason: "missing"
+            reason: "missing",
           },
           expiryDate: {
             value: "20/05/2027",
             sourceText: "To MidNight 20/05/2027",
-            reason: "missing"
+            reason: "missing",
           },
           engineNumber: {
             value: "ZTP4D64994",
             sourceText: "Engine No. ZTP4D64994",
-            reason: "extractor included registration/model text"
+            reason: "extractor included registration/model text",
           },
           chassisNumber: {
             value: "MA1NE2ZTFP6E12261",
             sourceText: "Chassis No. MA1NE2ZTFP6E12261",
-            reason: "extractor captured a label"
+            reason: "extractor captured a label",
           },
           fuelType: {
             value: "Diesel",
             sourceText: "XUV700 AX7 D AT LUXURY PACK",
-            reason: "extractor value was not supported by source text"
+            reason: "extractor value was not supported by source text",
           },
           policyType: {
             value: "PRIVATE CAR PACKAGE POLICY",
             sourceText: "PRIVATE CAR PACKAGE POLICY",
-            reason: "missing"
+            reason: "missing",
           },
           insuredName: {
             value: "SHRIDHAR RENEWABLE ENERGY PRIVATE LIMITED",
             sourceText: "Insured Name: SHRIDHAR RENEWABLE ENERGY PRIVATE LIMITED",
-            reason: "missing"
+            reason: "missing",
           },
           makeModel: {
             value: "XUV700 AX7 D AT LUXURY PACK",
             sourceText: "XUV700 AX7 D AT LUXURY PACK",
-            reason: "missing"
+            reason: "missing",
           },
           cubicCapacity: {
             value: "2184",
             sourceText: "Cubic Capacity 2184 Seating Capacity 7",
-            reason: "missing"
+            reason: "missing",
           },
           seatingCapacity: {
             value: "7",
             sourceText: "Cubic Capacity 2184 Seating Capacity 7",
-            reason: "missing"
+            reason: "missing",
           },
           idv: {
             value: "1723680.00",
             sourceText: "IDV 1723680.00 Total Premium 33681.92 Net Premium 28544.00",
-            reason: "missing"
+            reason: "missing",
           },
           totalPremium: {
             value: "33681.92",
             sourceText: "IDV 1723680.00 Total Premium 33681.92 Net Premium 28544.00",
-            reason: "missing"
+            reason: "missing",
           },
           netPremium: {
             value: "28544.00",
             sourceText: "IDV 1723680.00 Total Premium 33681.92 Net Premium 28544.00",
-            reason: "missing"
+            reason: "missing",
           },
           odPremium: {
             value: "4321.00",
             sourceText: "Own Damage Premium 4321.00 TP Driver Owner 7947.00",
-            reason: "missing"
+            reason: "missing",
           },
           tpDriverOwner: {
             value: "7947.00",
             sourceText: "Own Damage Premium 4321.00 TP Driver Owner 7947.00",
-            reason: "missing"
+            reason: "missing",
           },
           policyNumber: {
             value: "NOT-IN-SOURCE",
             sourceText: "Policy No. 1234567890",
-            reason: "missing"
-          }
+            reason: "missing",
+          },
         },
         unchangedFields: {
           registrationNumber: {
             value: "MP04ZJ1165",
-            reason: "extractor value matched PDF evidence"
-          }
+            reason: "extractor value matched PDF evidence",
+          },
         },
         unresolvedFields: {
           premium: {
-            reason: "value not found in PDF text"
-          }
-        }
-      }
+            reason: "value not found in PDF text",
+          },
+        },
+      },
     });
 
     expect(merge.data.engineNumber).toBe("ZTP4D64994");
@@ -189,23 +192,25 @@ describe("AI extraction review guardrails", () => {
     expect(merge.data.odPremium).toBe("4321.00");
     expect(merge.data.tpDriverOwner).toBe("7947.00");
     expect(merge.data.policyNumber).toBeUndefined();
-    expect(merge.acceptedFields).toEqual(expect.arrayContaining([
-      "policyType",
-      "insuredName",
-      "startDate",
-      "expiryDate",
-      "makeModel",
-      "engineNumber",
-      "chassisNumber",
-      "fuelType",
-      "cubicCapacity",
-      "seatingCapacity",
-      "idv",
-      "totalPremium",
-      "netPremium",
-      "odPremium",
-      "tpDriverOwner"
-    ]));
+    expect(merge.acceptedFields).toEqual(
+      expect.arrayContaining([
+        "policyType",
+        "insuredName",
+        "startDate",
+        "expiryDate",
+        "makeModel",
+        "engineNumber",
+        "chassisNumber",
+        "fuelType",
+        "cubicCapacity",
+        "seatingCapacity",
+        "idv",
+        "totalPremium",
+        "netPremium",
+        "odPremium",
+        "tpDriverOwner",
+      ]),
+    );
     expect(merge.rejectedFields).toContain("policyNumber");
   });
 
@@ -225,7 +230,7 @@ describe("AI extraction review guardrails", () => {
         odPremium: "7947.00",
         tpDriverOwner: "4321.00",
         netPremium: "12,268.00",
-        totalPremium: "14,476.00"
+        totalPremium: "14,476.00",
       },
       aiPatch: {
         extractedFields: {
@@ -233,16 +238,16 @@ describe("AI extraction review guardrails", () => {
             value: "4321",
             sourceText: "Total OD Premium (Rs)4321Total TP Premium (Rs)7947",
             sourceLabel: "Total OD Premium",
-            reason: "OD amount is under the Total OD Premium label"
+            reason: "OD amount is under the Total OD Premium label",
           },
           tpDriverOwner: {
             value: "7947",
             sourceText: "Total OD Premium (Rs)4321Total TP Premium (Rs)7947",
             sourceLabel: "Total TP Premium",
-            reason: "TP amount is under the Total TP Premium label"
-          }
-        }
-      }
+            reason: "TP amount is under the Total TP Premium label",
+          },
+        },
+      },
     });
 
     expect(merge.data.odPremium).toBe("4321.00");
@@ -262,27 +267,27 @@ describe("AI extraction review guardrails", () => {
       extractedData: {
         policyNumber: "REAL12345",
         engineNumber: "GOODENGINE99",
-        chassisNumber: "MA1NE2ZTFP6E12261"
+        chassisNumber: "MA1NE2ZTFP6E12261",
       },
       aiPatch: {
         correctedFields: {
           policyNumber: {
             value: "REAL12345",
             sourceText: "Policy No. REAL12345",
-            reason: "same value"
+            reason: "same value",
           },
           engineNumber: {
             value: "GOODENGINE99",
             sourceText: "Engine No. GOODENGINE99",
-            reason: "same value"
+            reason: "same value",
           },
           chassisNumber: {
             value: "MA1NE2ZTFP6E12261",
             sourceText: "Chassis No. MA1NE2ZTFP6E12261",
-            reason: "same value"
-          }
-        }
-      }
+            reason: "same value",
+          },
+        },
+      },
     });
 
     expect(merge.data.policyNumber).toBe("REAL12345");
@@ -301,10 +306,10 @@ describe("AI extraction review guardrails", () => {
           engineNumber: {
             value: "ZTP4D64994",
             sourceText: "Engine Number: ZTP4D64994",
-            reason: "missing"
-          }
-        }
-      }
+            reason: "missing",
+          },
+        },
+      },
     });
 
     expect(merge.data.engineNumber).toBeUndefined();
@@ -325,8 +330,8 @@ describe("AI extraction review guardrails", () => {
         extractedData: {
           policyNumber: "REAL12345",
           engineNumber: "WRONGENGINE",
-          chassisNumber: "Seating"
-        }
+          chassisNumber: "Seating",
+        },
       });
     } finally {
       if (previousOpenAiKey) process.env.OPENAI_API_KEY = previousOpenAiKey;

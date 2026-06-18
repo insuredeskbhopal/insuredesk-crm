@@ -1,12 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Script from "next/script";
-import {
-  BUSINESS_DETAILS,
-  MARKETING_PAGES,
-  SITE_NAME,
-  SITE_URL
-} from "@/lib/seo/site";
+import { BUSINESS_DETAILS, MARKETING_PAGES, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
 function findPage(slug) {
   const path = `/${slug}`;
@@ -15,7 +10,7 @@ function findPage(slug) {
 
 export function generateStaticParams() {
   return MARKETING_PAGES.map((page) => ({
-    slug: page.path.replace("/", "")
+    slug: page.path.replace("/", ""),
   }));
 }
 
@@ -31,19 +26,19 @@ export async function generateMetadata({ params }) {
     title: page.title,
     description: page.description,
     alternates: {
-      canonical: page.path
+      canonical: page.path,
     },
     openGraph: {
       title: `${page.title} | ${SITE_NAME}`,
       description: page.description,
       url: new URL(page.path, SITE_URL).href,
-      type: "website"
+      type: "website",
     },
     twitter: {
       card: "summary_large_image",
       title: `${page.title} | ${SITE_NAME}`,
-      description: page.description
-    }
+      description: page.description,
+    },
   };
 }
 
@@ -67,12 +62,12 @@ export default async function MarketingPage({ params }) {
         headline: page.heading,
         description: page.description,
         isPartOf: {
-          "@id": `${SITE_URL}/#website`
+          "@id": `${SITE_URL}/#website`,
         },
         about: {
-          "@id": `${SITE_URL}/#organization`
+          "@id": `${SITE_URL}/#organization`,
         },
-        inLanguage: "en-IN"
+        inLanguage: "en-IN",
       },
       {
         "@type": "Service",
@@ -83,12 +78,12 @@ export default async function MarketingPage({ params }) {
           "@type": "Organization",
           name: SITE_NAME,
           legalName: BUSINESS_DETAILS.legalName,
-          url: SITE_URL
+          url: SITE_URL,
         },
         areaServed: {
           "@type": "Country",
-          name: BUSINESS_DETAILS.serviceArea
-        }
+          name: BUSINESS_DETAILS.serviceArea,
+        },
       },
       {
         "@type": "BreadcrumbList",
@@ -98,17 +93,17 @@ export default async function MarketingPage({ params }) {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: SITE_URL
+            item: SITE_URL,
           },
           {
             "@type": "ListItem",
             position: 2,
             name: page.heading,
-            item: pageUrl
-          }
-        ]
-      }
-    ]
+            item: pageUrl,
+          },
+        ],
+      },
+    ],
   };
 
   return (
@@ -141,8 +136,7 @@ export default async function MarketingPage({ params }) {
       <section className="seo-page-contact">
         <h2>Talk to BIMAHEADQUARTER</h2>
         <p>
-          Contact {BUSINESS_DETAILS.legalName} at {BUSINESS_DETAILS.email} or{" "}
-          {BUSINESS_DETAILS.phone}.
+          Contact {BUSINESS_DETAILS.legalName} at {BUSINESS_DETAILS.email} or {BUSINESS_DETAILS.phone}.
         </p>
         <Link href="/">Back to Home</Link>
       </section>

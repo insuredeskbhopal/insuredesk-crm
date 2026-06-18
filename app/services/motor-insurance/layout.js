@@ -2,21 +2,24 @@ import { SITE_URL } from "@/lib/seo/site";
 
 export const metadata = {
   title: "Motor Insurance Consulting Across India",
-  description: "Compare and renew car, bike, and commercial vehicle insurance across India. Get expert claim support at BimaHeadquarter.",
+  description:
+    "Compare and renew car, bike, and commercial vehicle insurance across India. Get expert claim support at BimaHeadquarter.",
   alternates: {
-    canonical: "/services/motor-insurance"
+    canonical: "/services/motor-insurance",
   },
   openGraph: {
     title: `Motor Insurance Consulting Across India`,
-    description: "Compare and renew car, bike, and commercial vehicle insurance across India. Get expert claim support at BimaHeadquarter.",
+    description:
+      "Compare and renew car, bike, and commercial vehicle insurance across India. Get expert claim support at BimaHeadquarter.",
     url: `${SITE_URL}/services/motor-insurance`,
-    type: "website"
+    type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: `Motor Insurance Consulting Across India`,
-    description: "Compare and renew car, bike, and commercial vehicle insurance across India. Get expert claim support at BimaHeadquarter."
-  }
+    description:
+      "Compare and renew car, bike, and commercial vehicle insurance across India. Get expert claim support at BimaHeadquarter.",
+  },
 };
 
 export default function MotorInsuranceLayout({ children }) {

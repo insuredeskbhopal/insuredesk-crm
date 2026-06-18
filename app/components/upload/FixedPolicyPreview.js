@@ -15,12 +15,12 @@ import {
   hasValue,
   isFieldManualForUpload,
   isManualRequiredField,
-  shouldUseExtractedVariant
+  shouldUseExtractedVariant,
 } from "@/app/lib/dashboard-helpers";
 
 const FIELD_OPTIONS = {
   fuelType: FUEL_TYPE_OPTIONS,
-  modeOfPayment: PAYMENT_MODE_OPTIONS
+  modeOfPayment: PAYMENT_MODE_OPTIONS,
 };
 
 export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, onClear, onSave }) {
@@ -30,7 +30,13 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
   const manualFields = upload?.manualFields || [];
   const getPreviewValue = (key) => {
     if (isManualRequiredField(key)) return getReviewFieldValue(upload, key);
-    if (isMotorPreview && key === "variant" && !manualFields.includes(key) && !shouldUseExtractedVariant(upload?.extractedData, upload)) return "";
+    if (
+      isMotorPreview &&
+      key === "variant" &&
+      !manualFields.includes(key) &&
+      !shouldUseExtractedVariant(upload?.extractedData, upload)
+    )
+      return "";
     return upload?.extractedData?.[key] || "";
   };
   const getFieldMeta = (key) => {
@@ -45,22 +51,26 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
   const filledFieldCount = visibleFields.filter(([, key]) => hasValue(getPreviewValue(key))).length;
   const uploadStatus = normalizeUploadStatus(upload?.status);
 
-  const groupedFields = FIELD_GROUPS.map(group => {
+  const groupedFields = FIELD_GROUPS.map((group) => {
     const fieldsInGroup = visibleFields.filter(([, key]) => group.fields.includes(key));
     return {
       title: group.title,
-      fields: fieldsInGroup
+      fields: fieldsInGroup,
     };
-  }).filter(group => group.fields.length > 0);
+  }).filter((group) => group.fields.length > 0);
 
   return (
     <section className="glass-panel preview-panel">
       <div className="preview-head">
         <div>
           <h4>Data Preview</h4>
-          <p>Editing: <span>{upload?.sourceFile || "No file selected"}</span></p>
+          <p>
+            Editing: <span>{upload?.sourceFile || "No file selected"}</span>
+          </p>
         </div>
-        <strong><CheckCircle size={15} /> {reviewStatusLabel(upload, missingRequired)}</strong>
+        <strong>
+          <CheckCircle size={15} /> {reviewStatusLabel(upload, missingRequired)}
+        </strong>
       </div>
 
       {!upload ? (
@@ -70,18 +80,49 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
       ) : (
         <>
           <div className="detection-summary">
-            <div><span>Source File</span><strong>{upload.sourceFile || "-"}</strong></div>
-            <div><span>Policy Type</span><strong>{upload.extractedData?.policyType || "-"}</strong></div>
-            <div><span>Insurance Company</span><strong><InsurerLogo company={upload.extractedData?.insuranceCompany} /></strong></div>
-            <div><span>Schema</span><strong>{resolvedSchema ? `${resolvedSchema.groupLabel} / ${resolvedSchema.policyName}` : "General Review"}</strong></div>
-            <div><span>Extraction</span><strong>{upload.extractionMethod || "unknown"}</strong></div>
-            <div><span>Fields Filled</span><strong>{`${filledFieldCount}/${visibleFields.length}`}</strong></div>
-            <div><span>Status</span><strong>{uploadStatus === UPLOAD_STATUS.APPROVED ? "Database Ready" : "Ready for Review"}</strong></div>
+            <div>
+              <span>Source File</span>
+              <strong>{upload.sourceFile || "-"}</strong>
+            </div>
+            <div>
+              <span>Policy Type</span>
+              <strong>{upload.extractedData?.policyType || "-"}</strong>
+            </div>
+            <div>
+              <span>Insurance Company</span>
+              <strong>
+                <InsurerLogo company={upload.extractedData?.insuranceCompany} />
+              </strong>
+            </div>
+            <div>
+              <span>Schema</span>
+              <strong>
+                {resolvedSchema
+                  ? `${resolvedSchema.groupLabel} / ${resolvedSchema.policyName}`
+                  : "General Review"}
+              </strong>
+            </div>
+            <div>
+              <span>Extraction</span>
+              <strong>{upload.extractionMethod || "unknown"}</strong>
+            </div>
+            <div>
+              <span>Fields Filled</span>
+              <strong>{`${filledFieldCount}/${visibleFields.length}`}</strong>
+            </div>
+            <div>
+              <span>Status</span>
+              <strong>
+                {uploadStatus === UPLOAD_STATUS.APPROVED ? "Database Ready" : "Ready for Review"}
+              </strong>
+            </div>
           </div>
 
           {missingRequired.length ? (
             <section className="alert-card warning">
-              <div className="alert-icon"><ShieldCheck size={18} /></div>
+              <div className="alert-icon">
+                <ShieldCheck size={18} />
+              </div>
               <div>
                 <strong>Manual details needed.</strong>
                 <p>{missingRequired.join(", ")}</p>
@@ -98,7 +139,7 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
                     {group.fields.map(([label, key]) => {
                       const isContactNumber = key === "contactNumber";
                       const isContactPerson = key === "contactPerson";
-                      
+
                       let fieldError = "";
                       let isDisabled = false;
 
@@ -112,17 +153,19 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
 
                       return (
                         <PreviewField
-                           key={key}
-                           label={label}
-                           meta={getFieldMeta(key)}
-                           value={getPreviewValue(key)}
-                           onChange={(value) => onFieldChange(key, value)}
-                           options={FIELD_OPTIONS[key]}
-                           wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
-                           error={fieldError}
-                           disabled={isDisabled}
-                           suggestion={getEligibleAiSuggestion(upload, key)}
-                           onApplySuggestion={(suggestion) => applyAiSuggestionToReviewField({ fieldKey: key, suggestion, onFieldChange })}
+                          key={key}
+                          label={label}
+                          meta={getFieldMeta(key)}
+                          value={getPreviewValue(key)}
+                          onChange={(value) => onFieldChange(key, value)}
+                          options={FIELD_OPTIONS[key]}
+                          wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
+                          error={fieldError}
+                          disabled={isDisabled}
+                          suggestion={getEligibleAiSuggestion(upload, key)}
+                          onApplySuggestion={(suggestion) =>
+                            applyAiSuggestionToReviewField({ fieldKey: key, suggestion, onFieldChange })
+                          }
                         />
                       );
                     })}
@@ -133,8 +176,15 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
           </div>
 
           <div className="preview-actions">
-            <button type="button" onClick={onClear}><Trash2 size={18} /> Clear</button>
-            <button className="secondary-action" type="button" onClick={onSave} disabled={isSaving || uploadStatus === UPLOAD_STATUS.APPROVED || !validation.valid}>
+            <button type="button" onClick={onClear}>
+              <Trash2 size={18} /> Clear
+            </button>
+            <button
+              className="secondary-action"
+              type="button"
+              onClick={onSave}
+              disabled={isSaving || uploadStatus === UPLOAD_STATUS.APPROVED || !validation.valid}
+            >
               {isSaving ? <LoaderCircle size={18} className="spin" /> : <CheckCircle size={18} />}
               Verify & Save
             </button>

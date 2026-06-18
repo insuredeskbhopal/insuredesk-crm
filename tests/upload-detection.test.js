@@ -7,14 +7,14 @@ describe("upload detection summary", () => {
       insuranceCompany: "Tata AIG General Insurance Company Limited",
       documentCategory: "Motor Insurance",
       policyType: "Auto Secure - Private Car Package Policy",
-      schemaExtraction: { confidence: 0.89 }
+      schemaExtraction: { confidence: 0.89 },
     });
 
     expect(detection).toMatchObject({
       company: { name: "Tata AIG General Insurance Company Limited" },
       serviceCategory: { name: "Motor Insurance" },
       policyType: { name: "Auto Secure - Private Car Package Policy" },
-      confidenceScore: 0.89
+      confidenceScore: 0.89,
     });
     expect(hasUploadDetection(detection)).toBe(true);
   });
@@ -23,7 +23,7 @@ describe("upload detection summary", () => {
     const detection = buildUploadDetection({
       companyName: "The New India Assurance Company Limited",
       documentCategory: "Motor Insurance",
-      extractionQuality: { confidenceScore: 0.72 }
+      extractionQuality: { confidenceScore: 0.72 },
     });
 
     expect(detection.policyType).toBeNull();

@@ -17,7 +17,7 @@ export default function LandingEffects() {
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     revealElements.forEach((el) => revealObserver.observe(el));
 

@@ -28,7 +28,7 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
@@ -122,7 +122,13 @@ export default function AdminLoginPage() {
         </label>
 
         <button type="submit" className="primary-action auth-btn" disabled={loading || isVerified}>
-          {loading ? <Loader2 size={16} className="spin" /> : isVerified ? <ShieldCheck size={16} /> : <LogIn size={16} />}
+          {loading ? (
+            <Loader2 size={16} className="spin" />
+          ) : isVerified ? (
+            <ShieldCheck size={16} />
+          ) : (
+            <LogIn size={16} />
+          )}
           <span>{isVerified ? "Verified" : "Enter CRM"}</span>
         </button>
       </form>

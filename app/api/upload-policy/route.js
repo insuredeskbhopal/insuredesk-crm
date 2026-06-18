@@ -3,7 +3,12 @@ import { prisma } from "@/lib/db/prisma";
 import { extractTextFromPdf } from "@/lib/policies/pdf/text";
 import { extractPolicyDataFromTextResult } from "@/lib/policies/extraction-pipeline";
 import { sanitizeRecordPayload } from "@/lib/records/validation";
-import { MAX_UPLOAD_BYTES, UploadValidationError, validatePdfFile, validateUploadList } from "@/lib/uploads/validation";
+import {
+  MAX_UPLOAD_BYTES,
+  UploadValidationError,
+  validatePdfFile,
+  validateUploadList,
+} from "@/lib/uploads/validation";
 import { verifyJWT } from "@/lib/auth";
 import { uploadFile } from "@/lib/storage";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
@@ -44,13 +49,9 @@ export async function POST(request) {
 
       try {
         buffer = await validatePdfFile(file);
-        
+
         // 1. Upload to storage layer (Local/S3) and get metadata
-        storageResult = await uploadFile(
-          buffer,
-          file.type || "application/pdf",
-          file.name || "Untitled.pdf"
-        );
+        storageResult = await uploadFile(buffer, file.type || "application/pdf", file.name || "Untitled.pdf");
 
         // 2. Perform PDF text extraction
         const textResult = await extractTextFromPdf(buffer);
@@ -59,12 +60,16 @@ export async function POST(request) {
         extractionLog = textResult.extractionLog || null;
 
         if (!rawText) {
-          throw new Error(textResult.ocrAttempted ? "No text could be extracted from this PDF using text extraction or OCR." : "PDF text extraction returned no content.");
+          throw new Error(
+            textResult.ocrAttempted
+              ? "No text could be extracted from this PDF using text extraction or OCR."
+              : "PDF text extraction returned no content.",
+          );
         }
 
         const extraction = await extractPolicyDataFromTextResult({
           textResult,
-          sourceFile: file.name || ""
+          sourceFile: file.name || "",
         });
         const extractedData = sanitizeRecordPayload(extraction.data);
         const detection = buildUploadDetection(extractedData);
@@ -89,22 +94,22 @@ export async function POST(request) {
             extractionLog: {
               ...extractionLog,
               policyUnderstanding: extractedData.policyUnderstanding || null,
-              schemaExtraction: extractedData.schemaExtraction || null
+              schemaExtraction: extractedData.schemaExtraction || null,
             },
             schemaFallbackLevel: null,
             schemaVersion: extractedData.schemaExtraction?.schemaVersion || null,
-            
+
             // SaaS scoping and tracking
             organizationId: user.organizationId,
             createdById: actorId,
-            
+
             // Storage references
             storageProvider: storageResult.storageProvider,
             storagePath: storageResult.storagePath,
             fileHash: storageResult.fileHash,
             fileSize: storageResult.fileSize,
-            storageMetadata: storageResult.storageMetadata || {}
-          }
+            storageMetadata: storageResult.storageMetadata || {},
+          },
         });
 
         // 4. Audit successful file upload
@@ -119,7 +124,11 @@ export async function POST(request) {
             userAgent,
             userId: actorId,
             organizationId: user.organizationId,
-            metadata: { filename: file.name, fileHash: storageResult.fileHash, fileSize: storageResult.fileSize }
+            metadata: {
+              filename: file.name,
+              fileHash: storageResult.fileHash,
+              fileSize: storageResult.fileSize,
+            },
           });
         } catch (auditError) {
           console.warn("Upload audit log failed:", auditError);
@@ -135,18 +144,18 @@ export async function POST(request) {
             bankSourceName: detection.bankSource?.name || "",
             companyName: detection.company?.name || "",
             serviceCategoryName: detection.serviceCategory?.name || "",
-            policyTypeName: detection.policyType?.name || ""
+            policyTypeName: detection.policyType?.name || "",
           },
           extractedData,
           extractionMethod: extractedData.extractionMethod || extractionMethod,
           extractionLog: {
             ...extractionLog,
             policyUnderstanding: extractedData.policyUnderstanding || null,
-            schemaExtraction: extractedData.schemaExtraction || null
+            schemaExtraction: extractedData.schemaExtraction || null,
           },
           storageProvider: uploadedFile.storageProvider,
           storagePath: uploadedFile.storagePath,
-          storageMetadata: uploadedFile.storageMetadata || null
+          storageMetadata: uploadedFile.storageMetadata || null,
         });
       } catch (error) {
         const failedUpload = await persistFailedUploadedFile({
@@ -158,7 +167,7 @@ export async function POST(request) {
           storageResult,
           rawText,
           extractionMethod,
-          extractionLog
+          extractionLog,
         });
         const errorMessage = failedUpload?.errorMessage || getUploadFailureMessage(error);
 
@@ -179,8 +188,8 @@ export async function POST(request) {
               error: errorMessage,
               uploadedFileId: failedUpload?.id || null,
               storagePath: failedUpload?.storagePath || storageResult?.storagePath || null,
-              fileHash: failedUpload?.fileHash || storageResult?.fileHash || null
-            }
+              fileHash: failedUpload?.fileHash || storageResult?.fileHash || null,
+            },
           });
         } catch (auditError) {
           console.warn("Failed upload audit log failed:", auditError);
@@ -192,7 +201,7 @@ export async function POST(request) {
           status: UPLOAD_STATUS.FAILED,
           error: errorMessage,
           errorMessage,
-          storagePath: failedUpload?.storagePath || null
+          storagePath: failedUpload?.storagePath || null,
         });
       }
     }
@@ -204,16 +213,19 @@ export async function POST(request) {
         summary: {
           total: files.length,
           ready: uploaded.length,
-          failed: failed.length
-        }
+          failed: failed.length,
+        },
       },
-      { status: uploaded.length ? (failed.length ? 207 : 201) : 422 }
+      { status: uploaded.length ? (failed.length ? 207 : 201) : 422 },
     );
   } catch (error) {
     if (error instanceof UploadValidationError) {
       return Response.json({ error: error.message, limitBytes: MAX_UPLOAD_BYTES }, { status: error.status });
     }
 
-    return Response.json({ error: error instanceof Error ? error.message : "Unknown upload error." }, { status: 500 });
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Unknown upload error." },
+      { status: 500 },
+    );
   }
 }

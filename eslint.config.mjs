@@ -4,7 +4,7 @@ import reactPlugin from "eslint-plugin-react";
 
 export default [
   {
-    ignores: [".next/**", ".vite/**", "dist/**", "node_modules/**", "coverage/**"]
+    ignores: [".next/**", ".vite/**", "dist/**", "node_modules/**", "coverage/**"],
   },
   js.configs.recommended,
   {
@@ -14,8 +14,8 @@ export default [
       sourceType: "module",
       parserOptions: {
         ecmaFeatures: {
-          jsx: true
-        }
+          jsx: true,
+        },
       },
       globals: {
         Blob: "readonly",
@@ -34,12 +34,12 @@ export default [
         require: "readonly",
         self: "readonly",
         setTimeout: "readonly",
-        window: "readonly"
-      }
+        window: "readonly",
+      },
     },
     plugins: {
       "@next/next": nextPlugin,
-      react: reactPlugin
+      react: reactPlugin,
     },
     rules: {
       ...nextPlugin.configs.recommended.rules,
@@ -48,7 +48,7 @@ export default [
       "no-control-regex": "off",
       "no-empty": ["error", { allowEmptyCatch: true }],
       "react/jsx-uses-react": "off",
-      "react/jsx-uses-vars": "error"
-    }
-  }
+      "react/jsx-uses-vars": "error",
+    },
+  },
 ];

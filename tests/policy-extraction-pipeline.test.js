@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildPassiveReview, normalizePassiveAiPatch } from "../lib/policies/ai/extraction-review";
-import { extractPolicyDataFromTextResult, mergeExtractionData, shouldUseAiPrimaryExtraction } from "../lib/policies/extraction-pipeline";
+import {
+  extractPolicyDataFromTextResult,
+  mergeExtractionData,
+  shouldUseAiPrimaryExtraction,
+} from "../lib/policies/extraction-pipeline";
 import { extractPolicyFromText } from "../lib/policies/pdf/extractor.cjs";
 
 const previousOpenAiKey = process.env.OPENAI_API_KEY;
@@ -27,13 +31,13 @@ describe("policy extraction pipeline", () => {
         sourceFile: "scan.pdf",
         insuredName: "OCR WRONG NAME",
         policyNumber: "P123",
-        vehicleNumber: "MP04AB1234"
+        vehicleNumber: "MP04AB1234",
       },
       {
         insuredName: "CORRECT AI NAME",
         premium: "12,345.00",
-        vehicleNumber: ""
-      }
+        vehicleNumber: "",
+      },
     );
 
     expect(merged).toMatchObject({
@@ -41,34 +45,39 @@ describe("policy extraction pipeline", () => {
       insuredName: "CORRECT AI NAME",
       policyNumber: "P123",
       vehicleNumber: "MP04AB1234",
-      premium: "12,345.00"
+      premium: "12,345.00",
     });
   });
 
   it("stores passive AI suggestions without overwriting valid rule values", async () => {
     process.env.OPENAI_API_KEY = "test-key";
     delete process.env.GROQ_API_KEY;
-    vi.stubGlobal("fetch", vi.fn(async () => ({
-      ok: true,
-      json: async () => ({
-        choices: [{
-          message: {
-            content: JSON.stringify({
-              suggestedCorrections: {
-                policyNumber: {
-                  value: "AI-WRONG-999",
-                  evidenceText: "Policy No. REAL12345",
-                  reason: "AI reviewer suggested a correction"
-                }
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  suggestedCorrections: {
+                    policyNumber: {
+                      value: "AI-WRONG-999",
+                      evidenceText: "Policy No. REAL12345",
+                      reason: "AI reviewer suggested a correction",
+                    },
+                  },
+                  filledMissingFields: {},
+                  rejectedCorrections: {},
+                  evidence: {},
+                }),
               },
-              filledMissingFields: {},
-              rejectedCorrections: {},
-              evidence: {}
-            })
-          }
-        }]
-      })
-    })));
+            },
+          ],
+        }),
+      })),
+    );
 
     const rawText = [
       "TATA AIG General Insurance Company Limited",
@@ -78,30 +87,35 @@ describe("policy extraction pipeline", () => {
       "Engine No. GOODENGINE99",
       "Chassis No. MA3CNC62SPD328639",
       "Registration No. MP04ZH3415",
-      "Total Premium 21466.00"
+      "Total Premium 21466.00",
     ].join("\n");
     const ruleBased = extractPolicyFromText(rawText, "passive-ai.pdf");
     const result = await extractPolicyDataFromTextResult({
       textResult: { rawText, extractionMethod: "pdf_text", ocrAttempted: false },
-      sourceFile: "passive-ai.pdf"
+      sourceFile: "passive-ai.pdf",
     });
 
     expect(result.data.policyNumber).toBe(ruleBased.policyNumber);
     expect(result.data.policyNumber).not.toBe("AI-WRONG-999");
     expect(result.data.extractionQuality.aiReview.suggestedCorrections.policyNumber).toBeUndefined();
-    expect(result.data.extractionQuality.aiReview.rejectedCorrections.policyNumber).toBe("evidence does not support field value");
+    expect(result.data.extractionQuality.aiReview.rejectedCorrections.policyNumber).toBe(
+      "evidence does not support field value",
+    );
   });
 
   it("rejects passive AI suggestions when no evidence exists", () => {
-    const normalized = normalizePassiveAiPatch({
-      suggestedCorrections: {
-        engineNumber: {
-          value: "GOODENGINE99",
-          evidenceText: "Engine Number: GOODENGINE99",
-          reason: "missing"
-        }
-      }
-    }, "Engine No. DIFFERENTENGINE88");
+    const normalized = normalizePassiveAiPatch(
+      {
+        suggestedCorrections: {
+          engineNumber: {
+            value: "GOODENGINE99",
+            evidenceText: "Engine Number: GOODENGINE99",
+            reason: "missing",
+          },
+        },
+      },
+      "Engine No. DIFFERENTENGINE88",
+    );
 
     expect(normalized.suggestedCorrections).toEqual({});
     expect(normalized.rejectedCorrections.engineNumber).toBe("missing source evidence");
@@ -118,23 +132,34 @@ describe("policy extraction pipeline", () => {
       "Period of Insurance: From 03/05/2026 To 02/05/2027",
       "MP-04-TA-6636, BHOPAL TATA INDIGO ECS",
       "14GVYP29539MAT607331EPH19673",
-      "Total Premium 5521.00"
+      "Total Premium 5521.00",
     ].join("\n");
 
     const ruleBased = extractPolicyFromText(rawText, "unchanged.pdf");
     const result = await extractPolicyDataFromTextResult({
       textResult: { rawText, extractionMethod: "pdf_text", ocrAttempted: false },
-      sourceFile: "unchanged.pdf"
+      sourceFile: "unchanged.pdf",
     });
 
-    for (const key of ["policyNumber", "insuredName", "insuranceCompany", "policyType", "startDate", "expiryDate", "registrationNumber", "engineNumber", "chassisNumber", "totalPremium"]) {
+    for (const key of [
+      "policyNumber",
+      "insuredName",
+      "insuranceCompany",
+      "policyType",
+      "startDate",
+      "expiryDate",
+      "registrationNumber",
+      "engineNumber",
+      "chassisNumber",
+      "totalPremium",
+    ]) {
       expect(result.data[key]).toBe(ruleBased[key]);
     }
     expect(result.data.extractionQuality.aiReview).toMatchObject({
       used: false,
       mode: "passive-review",
       suggestedCorrections: {},
-      filledMissingFields: {}
+      filledMissingFields: {},
     });
   });
 
@@ -146,7 +171,7 @@ describe("policy extraction pipeline", () => {
       validationIssues: {
         status: "review_required",
         fieldIssues: [{ code: "engineNumber_format", fields: ["engineNumber"] }],
-        crossFieldIssues: []
+        crossFieldIssues: [],
       },
       suspiciousFields: ["engineNumber"],
       aiPatch: {
@@ -154,18 +179,18 @@ describe("policy extraction pipeline", () => {
           engineNumber: {
             value: "ZTP4D64994",
             evidenceText: "Engine No. ZTP4D64994",
-            reason: "blank field has source evidence"
-          }
-        }
+            reason: "blank field has source evidence",
+          },
+        },
       },
-      sourceText: "Engine No. ZTP4D64994"
+      sourceText: "Engine No. ZTP4D64994",
     });
 
     expect(review.validationIssues.status).toBe("review_required");
     expect(review.suspiciousFields).toEqual(["engineNumber"]);
     expect(review.filledMissingFields.engineNumber).toMatchObject({
       value: "ZTP4D64994",
-      evidenceText: "Engine No. ZTP4D64994"
+      evidenceText: "Engine No. ZTP4D64994",
     });
   });
 });

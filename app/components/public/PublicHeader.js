@@ -53,10 +53,18 @@ export default function PublicHeader() {
           <Link href="/services" className={getLinkClass("/services")} style={{ animationDelay: "0.3s" }}>
             Services
           </Link>
-          <Link href="/services/claims-assistance" className={getLinkClass("/services/claims-assistance")} style={{ animationDelay: "0.4s" }}>
+          <Link
+            href="/services/claims-assistance"
+            className={getLinkClass("/services/claims-assistance")}
+            style={{ animationDelay: "0.4s" }}
+          >
             Claims
           </Link>
-          <Link href="/services/policy-renewals" className={getLinkClass("/services/policy-renewals")} style={{ animationDelay: "0.45s" }}>
+          <Link
+            href="/services/policy-renewals"
+            className={getLinkClass("/services/policy-renewals")}
+            style={{ animationDelay: "0.45s" }}
+          >
             Renewals
           </Link>
           <Link href="/about" className={getLinkClass("/about")} style={{ animationDelay: "0.5s" }}>

@@ -9,7 +9,7 @@ export function pageTitle(page) {
     customers: "Customer Management",
     analytics: "Analytics & Reports",
     "field-setup": "Field Setup",
-    settings: "Settings"
+    settings: "Settings",
   }[page];
 }
 
@@ -22,7 +22,7 @@ export function pageSubtitle(page) {
     customers: "Browse insured parties and policy summaries.",
     analytics: "Review premium totals, insured value, and district coverage.",
     "field-setup": "See how the Prisma model maps to the intake fields.",
-    settings: "Review database connectivity and current app status."
+    settings: "Review database connectivity and current app status.",
   }[page];
 }
 
@@ -38,7 +38,7 @@ export function buildClientProfiles(records) {
       sumInsuredTotal: 0,
       district: record.district || "",
       tehsil: record.tehsil || "",
-      contactNumber: record.contactNumber || ""
+      contactNumber: record.contactNumber || "",
     };
 
     current.policies.push(record);
@@ -63,7 +63,7 @@ export function formatMoney(value) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(numeric);
 }
 
@@ -79,7 +79,7 @@ export function formatDate(value) {
     if (isNaN(date.getTime())) return "";
     return new Intl.DateTimeFormat("en-IN", {
       dateStyle: "medium",
-      timeStyle: "short"
+      timeStyle: "short",
     }).format(date);
   } catch {
     return "";
@@ -103,6 +103,6 @@ export function queueLabel(status) {
     [UPLOAD_STATUS.PROCESSING]: "Extracting",
     [UPLOAD_STATUS.REVIEW_REQUIRED]: "Ready for review",
     [UPLOAD_STATUS.APPROVED]: "Saved",
-    [UPLOAD_STATUS.FAILED]: "Failed"
+    [UPLOAD_STATUS.FAILED]: "Failed",
   }[normalized];
 }

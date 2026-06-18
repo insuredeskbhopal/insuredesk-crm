@@ -22,11 +22,7 @@ export async function GET(request) {
     const isSuperAdmin = user.role === "SUPER_ADMIN";
     const orgId = user.organizationId || null;
 
-    const queryParams = [
-      isSuperAdmin,
-      orgId,
-      todayStr
-    ];
+    const queryParams = [isSuperAdmin, orgId, todayStr];
 
     const sql = `
       WITH normalized_policies AS (

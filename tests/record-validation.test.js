@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { sanitizeRecordPayload, validateContactNumber, validateContactPerson } from "../lib/records/validation";
-import { getReviewFieldValue, getReviewValidation, shouldUseExtractedFuelType } from "../app/lib/dashboard-helpers";
+import {
+  sanitizeRecordPayload,
+  validateContactNumber,
+  validateContactPerson,
+} from "../lib/records/validation";
+import {
+  getReviewFieldValue,
+  getReviewValidation,
+  shouldUseExtractedFuelType,
+} from "../app/lib/dashboard-helpers";
 
 describe("sanitizeRecordPayload", () => {
   it("normalizes whitespace and drops unsupported raw extraction fields", () => {
@@ -8,7 +16,7 @@ describe("sanitizeRecordPayload", () => {
       insuredName: "  Example    Client  ",
       whatsappGroupName: "  Renewal    Team  ",
       sourceText: "raw pdf text",
-      riskLocation: "A".repeat(3000)
+      riskLocation: "A".repeat(3000),
     });
 
     expect(record.insuredName).toBe("Example Client");
@@ -20,7 +28,7 @@ describe("sanitizeRecordPayload", () => {
   it("normalizes registration numbers without spaces or hyphens", () => {
     const record = sanitizeRecordPayload({
       vehicleNumber: "MP-04-SS-8925",
-      registrationNumber: "mp 04 ss 8925"
+      registrationNumber: "mp 04 ss 8925",
     });
 
     expect(record.vehicleNumber).toBe("MP04SS8925");
@@ -42,8 +50,8 @@ describe("sanitizeRecordPayload", () => {
         chassisNumber: "MALC281RLGM127005",
         idv: "400000.00",
         contactNumber: "9876543210",
-        contactPerson: "LEENA SAJWANI"
-      }
+        contactPerson: "LEENA SAJWANI",
+      },
     });
 
     expect(validation.requiredKeys).not.toContain("fuelType");
@@ -64,41 +72,68 @@ describe("sanitizeRecordPayload", () => {
     expect(validateContactNumber("9876543210")).toBe("");
     expect(validateContactNumber("XXXXXX4257")).toBe("");
     expect(validateContactNumber("91******92")).toBe("");
-    expect(validateContactNumber("98765 43210")).toBe("Contact Number must be exactly 10 digits or a masked policy contact number.");
-    expect(validateContactNumber("987654321")).toBe("Contact Number must be exactly 10 digits or a masked policy contact number.");
-    expect(validateContactNumber("987654321A")).toBe("Contact Number must be exactly 10 digits or a masked policy contact number.");
+    expect(validateContactNumber("98765 43210")).toBe(
+      "Contact Number must be exactly 10 digits or a masked policy contact number.",
+    );
+    expect(validateContactNumber("987654321")).toBe(
+      "Contact Number must be exactly 10 digits or a masked policy contact number.",
+    );
+    expect(validateContactNumber("987654321A")).toBe(
+      "Contact Number must be exactly 10 digits or a masked policy contact number.",
+    );
   });
 
   it("includes contact format errors in review validation", () => {
-    const validation = getReviewValidation({
-      sourceFile: "manual-entry",
-      extractedData: {
-        insuredName: "Example Client",
-        policyNumber: "POL-001",
-        insuranceCompany: "Example Insurer",
-        premium: "1000",
-        startDate: "01/01/2026",
-        expiryDate: "01/01/2027",
-        contactPerson: "Example 42",
-        contactNumber: "98765 43210"
-      }
-    }, {
-      resolvedSchema: {
-        groupId: "health",
-        groupLabel: "Health Policy",
-        policyId: "health-individual",
-        policyName: "Individual Health",
-        fields: ["insuredName", "policyNumber", "insuranceCompany", "premium", "startDate", "expiryDate", "contactPerson", "contactNumber"],
-        requiredFields: ["insuredName", "policyNumber", "insuranceCompany", "premium", "startDate", "expiryDate"]
-      }
-    });
+    const validation = getReviewValidation(
+      {
+        sourceFile: "manual-entry",
+        extractedData: {
+          insuredName: "Example Client",
+          policyNumber: "POL-001",
+          insuranceCompany: "Example Insurer",
+          premium: "1000",
+          startDate: "01/01/2026",
+          expiryDate: "01/01/2027",
+          contactPerson: "Example 42",
+          contactNumber: "98765 43210",
+        },
+      },
+      {
+        resolvedSchema: {
+          groupId: "health",
+          groupLabel: "Health Policy",
+          policyId: "health-individual",
+          policyName: "Individual Health",
+          fields: [
+            "insuredName",
+            "policyNumber",
+            "insuranceCompany",
+            "premium",
+            "startDate",
+            "expiryDate",
+            "contactPerson",
+            "contactNumber",
+          ],
+          requiredFields: [
+            "insuredName",
+            "policyNumber",
+            "insuranceCompany",
+            "premium",
+            "startDate",
+            "expiryDate",
+          ],
+        },
+      },
+    );
 
     expect(validation.valid).toBe(false);
     expect(validation.contactFieldErrors.contactPerson).toBe("Contact Person cannot contain numbers.");
-    expect(validation.contactFieldErrors.contactNumber).toBe("Contact Number must be exactly 10 digits or a masked policy contact number.");
+    expect(validation.contactFieldErrors.contactNumber).toBe(
+      "Contact Number must be exactly 10 digits or a masked policy contact number.",
+    );
     expect(validation.contactErrors).toEqual([
       "Contact Person cannot contain numbers.",
-      "Contact Number must be exactly 10 digits or a masked policy contact number."
+      "Contact Number must be exactly 10 digits or a masked policy contact number.",
     ]);
   });
 
@@ -107,13 +142,13 @@ describe("sanitizeRecordPayload", () => {
       documentFormat: "NEW_INDIA_MOTOR_V1",
       insuranceCompany: "The New India Assurance Company Limited",
       policyType: "Private Car Package Policy",
-      fuelType: "Diesel"
+      fuelType: "Diesel",
     };
     const iffcoData = {
       documentFormat: "IFFCO_TOKIO_MOTOR_V1",
       insuranceCompany: "IFFCO-TOKIO GENERAL INSURANCE CO.LTD",
       policyType: "TWO WHEELER POLICY",
-      fuelType: "Petrol"
+      fuelType: "Petrol",
     };
 
     expect(shouldUseExtractedFuelType(newIndiaData)).toBe(true);

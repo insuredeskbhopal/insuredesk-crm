@@ -76,4 +76,3 @@ Each report function should eventually return the same shape:
 - Export JSON should export the currently selected drill-down records.
 - Renewal date parsing should not change.
 - Money parsing should not change.
-

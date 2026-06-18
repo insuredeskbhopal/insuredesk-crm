@@ -22,11 +22,11 @@ export default function robots() {
           "/premium-reports/",
           "/settings/",
           "/signup",
-          "/upload-history/"
-        ]
-      }
+          "/upload-history/",
+        ],
+      },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL
+    host: SITE_URL,
   };
 }

@@ -13,7 +13,7 @@ function appendAssignmentRemark(payload = {}, remark) {
     assignedTo: remark.assignedTo,
     assignedToId: remark.assignedToId || "",
     assignedDate: remark.assignedDate,
-    renewalRemarks: [remark, ...existing]
+    renewalRemarks: [remark, ...existing],
   };
 }
 
@@ -31,7 +31,7 @@ export async function POST(request) {
 
     const body = await request.json();
     const { policyId, phone, assignedToUserId, note } = body;
-    
+
     if (!policyId && !phone) {
       return Response.json({ error: "Missing policyId or phone parameter" }, { status: 400 });
     }
@@ -52,20 +52,20 @@ export async function POST(request) {
           deletedAt: null,
           ...(isSuperAdmin ? {} : { organizationId: orgId }),
           OR: [
-            { reviewedData: { path: ['contactNumber'], string_contains: phone } },
-            { reviewedData: { path: ['customerMobile'], string_contains: phone } },
-            { data: { path: ['contactNumber'], string_contains: phone } },
-            { data: { path: ['customerMobile'], string_contains: phone } },
-            phone.startsWith("NO-MOBILE-") ? { id: phone.replace("NO-MOBILE-", "") } : {}
-          ]
-        }
+            { reviewedData: { path: ["contactNumber"], string_contains: phone } },
+            { reviewedData: { path: ["customerMobile"], string_contains: phone } },
+            { data: { path: ["contactNumber"], string_contains: phone } },
+            { data: { path: ["customerMobile"], string_contains: phone } },
+            phone.startsWith("NO-MOBILE-") ? { id: phone.replace("NO-MOBILE-", "") } : {},
+          ],
+        },
       });
     } else {
       const singlePolicy = await prisma.policyRecord.findFirst({
         where: {
           id: policyId,
-          ...tenantFilter
-        }
+          ...tenantFilter,
+        },
       });
       if (singlePolicy) {
         targetPolicies = [singlePolicy];
@@ -81,7 +81,7 @@ export async function POST(request) {
       where: isSuperAdmin
         ? { id: assignedToUserId, role: { not: "VIEWER" } }
         : { id: assignedToUserId, organizationId: user.organizationId, role: { not: "VIEWER" } },
-      select: { id: true, name: true, email: true }
+      select: { id: true, name: true, email: true },
     });
 
     if (!assignee) {
@@ -97,7 +97,7 @@ export async function POST(request) {
     const updates = targetPolicies.map(async (policy) => {
       const previousPayload = policy.reviewedData || policy.data || {};
       const previousAssignee = previousPayload.assignedTo || "";
-      
+
       let remarkText = previousAssignee
         ? `Reassigned from ${previousAssignee} to ${assigneeLabel}.`
         : `Assigned to ${assigneeLabel}.`;
@@ -115,16 +115,16 @@ export async function POST(request) {
         oldStatus: policy.renewalStatus || "ACTIVE",
         newStatus: policy.renewalStatus || "ACTIVE",
         assignedTo: assigneeLabel,
-        assignedToId: assignee.id
+        assignedToId: assignee.id,
       };
 
       const reviewedData = appendAssignmentRemark(policy.reviewedData || {}, {
         ...assignmentRemark,
-        assignedDate
+        assignedDate,
       });
       const data = appendAssignmentRemark(policy.data || {}, {
         ...assignmentRemark,
-        assignedDate
+        assignedDate,
       });
 
       await prisma.policyRecord.update({
@@ -132,8 +132,8 @@ export async function POST(request) {
         data: {
           reviewedData,
           data,
-          updatedById: actorId
-        }
+          updatedById: actorId,
+        },
       });
 
       const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -147,7 +147,7 @@ export async function POST(request) {
         userAgent,
         userId: actorId,
         organizationId: user.organizationId,
-        metadata: { assignedToUserId: assignee.id, assignedTo: assigneeLabel }
+        metadata: { assignedToUserId: assignee.id, assignedTo: assigneeLabel },
       });
     });
 
@@ -157,7 +157,7 @@ export async function POST(request) {
       success: true,
       assignedTo: assigneeLabel,
       assignedToId: assignee.id,
-      assignedDate
+      assignedDate,
     });
   } catch (error) {
     console.error("Renewal assign failed:", error);

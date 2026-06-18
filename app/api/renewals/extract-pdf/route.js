@@ -31,19 +31,21 @@ export async function POST(request) {
     const storageResult = await uploadFile(
       buffer,
       file.type || "application/pdf",
-      file.name || "Untitled.pdf"
+      file.name || "Untitled.pdf",
     );
 
     const textResult = await extractTextFromPdf(buffer);
     const rawText = textResult.rawText;
 
     if (!rawText) {
-      throw new Error(textResult.ocrAttempted ? "No text could be extracted." : "PDF text extraction returned no content.");
+      throw new Error(
+        textResult.ocrAttempted ? "No text could be extracted." : "PDF text extraction returned no content.",
+      );
     }
 
     const extraction = await extractPolicyDataFromTextResult({
       textResult,
-      sourceFile: file.name || ""
+      sourceFile: file.name || "",
     });
     const extractedData = sanitizeRecordPayload(extraction.data);
 
@@ -54,7 +56,7 @@ export async function POST(request) {
       rawText,
       fileName: file.name,
       fileType: file.type,
-      fileSize: buffer.byteLength
+      fileSize: buffer.byteLength,
     });
   } catch (error) {
     console.error("PDF extraction for renewal failed:", error);

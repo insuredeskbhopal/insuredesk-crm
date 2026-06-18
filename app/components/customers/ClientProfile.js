@@ -8,10 +8,19 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
     <div className="client-profile">
       <div className="profile-head">
         <div className="profile-title-block">
-          <div className="profile-avatar"><Users size={20} /></div>
+          <div className="profile-avatar">
+            <Users size={20} />
+          </div>
           <div>
             <p className="eyebrow">Client Profile</p>
-            <h2>{client.name} {client.customerId ? <span style={{ fontSize: "16px", color: "var(--text-secondary)", fontWeight: "500" }}>(#{client.customerId})</span> : null}</h2>
+            <h2>
+              {client.name}{" "}
+              {client.customerId ? (
+                <span style={{ fontSize: "16px", color: "var(--text-secondary)", fontWeight: "500" }}>
+                  (#{client.customerId})
+                </span>
+              ) : null}
+            </h2>
             <span>
               {client.policies.length} linked polic{client.policies.length === 1 ? "y" : "ies"}
               {client.district ? ` · ${client.district}` : ""}
@@ -19,7 +28,9 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
             </span>
           </div>
         </div>
-        <button type="button" onClick={onBack}>Back to Clients</button>
+        <button type="button" onClick={onBack}>
+          Back to Clients
+        </button>
       </div>
 
       <section className="profile-metrics">
@@ -50,20 +61,34 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
               {client.policies.map((record) => (
                 <tr key={record.id}>
                   <td>
-                    <button className="policy-number-link" type="button" onClick={() => onPolicySelect(record.id)}>
+                    <button
+                      className="policy-number-link"
+                      type="button"
+                      onClick={() => onPolicySelect(record.id)}
+                    >
                       {record.policyNumber || "No policy number"}
                     </button>
                   </td>
-                  <td><strong>{record.vehicleNumber || record.registrationNumber || "-"}</strong></td>
+                  <td>
+                    <strong>{record.vehicleNumber || record.registrationNumber || "-"}</strong>
+                  </td>
                   <td>{record.policyType || record.sourceFile || "Policy document"}</td>
                   <td>{formatMoney(record.netPremium || record.totalPremium || record.premium)}</td>
                   <td>{formatMoney(record.sumInsured)}</td>
-                  <td>{record.startDate || "-"} - {record.expiryDate || "-"}</td>
+                  <td>
+                    {record.startDate || "-"} - {record.expiryDate || "-"}
+                  </td>
                   <td>
                     {record.hasPdf ? (
-                      <PdfLink href={`/api/records/${record.id}/pdf`} title="Download PDF" ariaLabel="Download PDF" />
+                      <PdfLink
+                        href={`/api/records/${record.id}/pdf`}
+                        title="Download PDF"
+                        ariaLabel="Download PDF"
+                      />
                     ) : (
-                      <span className="missing-pdf compact" style={{ color: "#d93025", fontWeight: "700" }}>PDF Missing</span>
+                      <span className="missing-pdf compact" style={{ color: "#d93025", fontWeight: "700" }}>
+                        PDF Missing
+                      </span>
                     )}
                   </td>
                 </tr>

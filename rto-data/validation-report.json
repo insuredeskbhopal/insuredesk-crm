@@ -1,11 +1,7 @@
 {
   "totalRecords": 1331,
   "totalStates": 34,
-  "duplicateCodes": [
-    "AP39",
-    "AP40",
-    "TN57W"
-  ],
+  "duplicateCodes": ["AP39", "AP40", "TN57W"],
   "missingDistricts": [
     "AP09",
     "AP10",

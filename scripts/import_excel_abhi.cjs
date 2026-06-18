@@ -9,7 +9,7 @@ const excelPath = "c:\\Users\\Wim11\\Desktop\\bimaheadquarter\\storage\\samples\
 const RTO_FALLBACKS = {
   RJ09: "CHITTORGARH",
   RJ14: "JAIPUR",
-  RJ19: "JODHPUR"
+  RJ19: "JODHPUR",
 };
 
 // Default IDs
@@ -85,39 +85,39 @@ function excelDateToString(excelDate) {
 
 // Map spreadsheet headers (cleaned) to db properties
 const headerMap = {
-  'insured name': 'insuredName',
-  'policy number': 'policyNumber',
-  'policy type': 'policyType',
-  'premium': 'premium',
-  'sum insured': 'sumInsured',
-  'start date': 'startDate',
-  'expiry date': 'expiryDate',
-  'duration': 'duration',
-  'insurance company': 'insuranceCompany',
-  'cover type': 'policyCoverType',
-  'vehicle number': 'vehicleNumber',
-  'registration number': 'registrationNumber',
-  'make / model': 'makeModel',
-  'variant': 'variant',
-  'manufacturing year': 'manufacturingYear',
-  'registration date': 'registrationDate',
-  'engine number': 'engineNumber',
-  'chassis number': 'chassisNumber',
-  'fuel type': 'fuelType',
-  'cubic capacity': 'cubicCapacity',
-  'idv': 'idv',
-  'ncb': 'ncb',
-  'rto location': 'rtoLocation',
-  'contact number': 'contactNumber',
-  'contact person': 'contactPerson',
-  'whatsapp group name': 'whatsappGroupName',
-  'total premium': 'totalPremium',
-  'net premium': 'netPremium',
-  'od premium': 'odPremium',
-  'tp+driver+owner': 'tpDriverOwner',
-  'collected amount': 'collectedAmount',
-  'mode of payment': 'modeOfPayment',
-  'remark': 'remark'
+  "insured name": "insuredName",
+  "policy number": "policyNumber",
+  "policy type": "policyType",
+  premium: "premium",
+  "sum insured": "sumInsured",
+  "start date": "startDate",
+  "expiry date": "expiryDate",
+  duration: "duration",
+  "insurance company": "insuranceCompany",
+  "cover type": "policyCoverType",
+  "vehicle number": "vehicleNumber",
+  "registration number": "registrationNumber",
+  "make / model": "makeModel",
+  variant: "variant",
+  "manufacturing year": "manufacturingYear",
+  "registration date": "registrationDate",
+  "engine number": "engineNumber",
+  "chassis number": "chassisNumber",
+  "fuel type": "fuelType",
+  "cubic capacity": "cubicCapacity",
+  idv: "idv",
+  ncb: "ncb",
+  "rto location": "rtoLocation",
+  "contact number": "contactNumber",
+  "contact person": "contactPerson",
+  "whatsapp group name": "whatsappGroupName",
+  "total premium": "totalPremium",
+  "net premium": "netPremium",
+  "od premium": "odPremium",
+  "tp+driver+owner": "tpDriverOwner",
+  "collected amount": "collectedAmount",
+  "mode of payment": "modeOfPayment",
+  remark: "remark",
 };
 
 async function main() {
@@ -142,7 +142,7 @@ async function main() {
   // Make script idempotent
   console.log("Clearing previous imports from 'Last month abhi.xlsx'...");
   const deleteResult = await prisma.policyRecord.deleteMany({
-    where: { sourceFile: "Last month abhi.xlsx" }
+    where: { sourceFile: "Last month abhi.xlsx" },
   });
   console.log(`Deleted ${deleteResult.count} existing records.`);
 
@@ -190,7 +190,12 @@ async function main() {
 
     // Generate customer ID according to the system logic, blank should be blank
     let customerIdVal = "";
-    if (payload.insuredName && payload.insuredName.trim() !== "" && payload.contactNumber && payload.contactNumber.trim() !== "") {
+    if (
+      payload.insuredName &&
+      payload.insuredName.trim() !== "" &&
+      payload.contactNumber &&
+      payload.contactNumber.trim() !== ""
+    ) {
       customerIdVal = buildCustomerId(payload.insuredName, payload.contactNumber);
     }
     payload.customerId = customerIdVal;
@@ -229,12 +234,12 @@ async function main() {
       uploadedFileId: null,
       policySchemaId: null,
       organizationId: DEFAULT_ORG_ID,
-      createdById: DEFAULT_USER_ID
+      createdById: DEFAULT_USER_ID,
     };
 
     console.log(`[${i + 1}/${rawRows.length}] Saving Policy Record for "${data.insuredName}"`);
     await prisma.policyRecord.create({
-      data: policyRecordPayload
+      data: policyRecordPayload,
     });
     insertedCount++;
   }

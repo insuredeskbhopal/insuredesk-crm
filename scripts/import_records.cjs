@@ -6,7 +6,9 @@ const path = require("path");
 const prisma = new PrismaClient();
 
 // Absolute path to the converted JSON file
-const jsonPath = path.resolve("C:\\Users\\Wim11\\.gemini\\antigravity-ide\\brain\\c6e988e9-59b6-4897-86a7-abf20995200d\\scratch\\LAST_MONTH_DATA_MAPPED.json");
+const jsonPath = path.resolve(
+  "C:\\Users\\Wim11\\.gemini\\antigravity-ide\\brain\\c6e988e9-59b6-4897-86a7-abf20995200d\\scratch\\LAST_MONTH_DATA_MAPPED.json",
+);
 
 // Define defaults as discovered
 const DEFAULT_ORG_ID = "00000000-0000-4000-8000-000000000001";
@@ -26,7 +28,7 @@ async function main() {
   // Make the script idempotent by clearing previous imports
   console.log("Deleting any existing policy records associated with 'LAST MONTH DATA.xlsx'...");
   const deleteResult = await prisma.policyRecord.deleteMany({
-    where: { sourceFile: "LAST MONTH DATA.xlsx" }
+    where: { sourceFile: "LAST MONTH DATA.xlsx" },
   });
   console.log(`Deleted ${deleteResult.count} existing records.`);
 
@@ -67,12 +69,12 @@ async function main() {
       uploadedFileId: null,
       policySchemaId: null,
       organizationId: DEFAULT_ORG_ID,
-      createdById: DEFAULT_USER_ID
+      createdById: DEFAULT_USER_ID,
     };
 
     console.log(`Inserting Policy Record: ${policyRecordPayload.id} for "${data.insuredName}"`);
     await prisma.policyRecord.create({
-      data: policyRecordPayload
+      data: policyRecordPayload,
     });
     insertedCount++;
   }

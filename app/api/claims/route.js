@@ -7,7 +7,7 @@ import {
   requireClaimSession,
   sanitizeClaimDocuments,
   sanitizeClaimPayload,
-  serializeClaim
+  serializeClaim,
 } from "./utils";
 
 export const runtime = "nodejs";
@@ -36,7 +36,7 @@ export async function GET(request) {
         { claimDescription: { contains: q, mode: "insensitive" } },
         { claimType: { contains: q, mode: "insensitive" } },
         { claimStatus: { contains: q, mode: "insensitive" } },
-        { currentRemark: { contains: q, mode: "insensitive" } }
+        { currentRemark: { contains: q, mode: "insensitive" } },
       ];
     }
 
@@ -46,9 +46,9 @@ export async function GET(request) {
         include: claimInclude,
         orderBy: { updatedAt: "desc" },
         skip,
-        take: limit
+        take: limit,
       }),
-      prisma.claim.count({ where })
+      prisma.claim.count({ where }),
     ]);
 
     return NextResponse.json({
@@ -56,10 +56,13 @@ export async function GET(request) {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit) || 1
+      totalPages: Math.ceil(total / limit) || 1,
     });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Claims could not be loaded." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Claims could not be loaded." },
+      { status: 500 },
+    );
   }
 }
 
@@ -83,10 +86,10 @@ export async function POST(request) {
         createdById: actorId,
         updatedById: actorId,
         documents: {
-          create: sanitizeClaimDocuments(payload.documents, actorId)
-        }
+          create: sanitizeClaimDocuments(payload.documents, actorId),
+        },
       },
-      include: claimInclude
+      include: claimInclude,
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
@@ -100,11 +103,14 @@ export async function POST(request) {
       userAgent,
       userId: actorId,
       organizationId: session.organizationId,
-      metadata: { claimNo: claim.claimNo, insuredName: claim.insuredName }
+      metadata: { claimNo: claim.claimNo, insuredName: claim.insuredName },
     });
 
     return NextResponse.json(serializeClaim(claim), { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Claim could not be saved." }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Claim could not be saved." },
+      { status: 500 },
+    );
   }
 }

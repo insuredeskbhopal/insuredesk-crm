@@ -16,7 +16,7 @@ export async function GET(request) {
     console.error("Failed to load work center:", error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : "Work center could not be loaded." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

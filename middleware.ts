@@ -3,7 +3,8 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { PUBLIC_ROUTE_PATHS } from "@/lib/seo/site";
 
-const SECRET_KEY = process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? "" : "dev-only-jwt-secret-change-me");
+const SECRET_KEY =
+  process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? "" : "dev-only-jwt-secret-change-me");
 if (!SECRET_KEY) {
   throw new Error("JWT_SECRET is required in production.");
 }
@@ -71,5 +72,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"]
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
