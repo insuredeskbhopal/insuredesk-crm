@@ -6,7 +6,7 @@ export const BLOG_POSTS = [
     category: "Claims",
     readTime: "5 min read",
     date: "June 15, 2026",
-    author: { name: "Aditya Sharma", role: "Claims Operations Lead" },
+    author: { name: "Indu Mandrai", role: "Motor Claims Expert" },
     coverImage: "/brand/blog-claims.png",
     sections: [
       { type: "paragraph", text: "Filing a motor insurance claim can feel overwhelming right after an accident. However, knowing the exact steps to take can accelerate the survey process and prevent claim rejection. Here is a comprehensive guide compiled by our claims consulting team." },
@@ -28,7 +28,7 @@ export const BLOG_POSTS = [
     category: "Renewals",
     readTime: "4 min read",
     date: "June 10, 2026",
-    author: { name: "Meera Nair", role: "Policy Relations Specialist" },
+    author: { name: "Payal Sahu", role: "Insurance Renewal Expert" },
     coverImage: "/brand/blog-general.png",
     sections: [
       { type: "paragraph", text: "An insurance policy is active only as long as the premiums are paid. Letting a policy expire—even for a single day—can expose you to immense financial risk, wipe out your No Claim Bonus (NCB), and trigger pre-renewal inspections." },
@@ -43,7 +43,7 @@ export const BLOG_POSTS = [
     category: "Business Risk",
     readTime: "6 min read",
     date: "June 05, 2026",
-    author: { name: "Rajesh Varma", role: "Corporate Risk Advisory Lead" },
+    author: { name: "Pragati Pandey", role: "Warehouse Risk Expert" },
     coverImage: "/brand/blog-business.png",
     sections: [
       { type: "paragraph", text: "Warehouses serve as central hubs for high-value inventory, machinery, and logistics. A single fire incident or burglary can result in business interruption and severe financial losses." },
@@ -58,7 +58,7 @@ export const BLOG_POSTS = [
     category: "Claims",
     readTime: "5 min read",
     date: "June 01, 2026",
-    author: { name: "Aditya Sharma", role: "Claims Operations Lead" },
+    author: { name: "Shewata Hariyali", role: "Claims Settlement Specialist" },
     coverImage: "/brand/blog-health.png",
     sections: [
       { type: "paragraph", text: "Cashless hospitalization is one of the most convenient features of modern health insurance. It allows you to receive treatment at network hospitals without paying the medical bills directly from your pocket." },
@@ -78,7 +78,7 @@ export const BLOG_POSTS = [
     category: "Personal Insurance",
     readTime: "4 min read",
     date: "May 28, 2026",
-    author: { name: "Meera Nair", role: "Policy Relations Specialist" },
+    author: { name: "Prakhar Patil", role: "Motor Insurance Specialist" },
     coverImage: "/brand/blog-motor.png",
     sections: [
       { type: "paragraph", text: "When filing a standard car insurance claim, the insurer doesn't pay for the full cost of replaced parts. They deduct depreciation based on the material of the parts (up to 50% for rubber and plastic). A Zero Depreciation add-on eliminates this deduction." },
@@ -93,7 +93,7 @@ export const BLOG_POSTS = [
     category: "Business Risk",
     readTime: "5 min read",
     date: "May 25, 2026",
-    author: { name: "Rajesh Varma", role: "Corporate Risk Advisory Lead" },
+    author: { name: "Payal Sahu", role: "Non-Motor Insurance Advisory" },
     coverImage: "/brand/blog-business.png",
     sections: [
       { type: "paragraph", text: "As corporate governance becomes stricter, company directors and officers face growing personal liability for management decisions. D&O liability insurance protects management from legal actions taken by shareholders, regulators, or employees." },
@@ -108,7 +108,7 @@ export const BLOG_POSTS = [
     category: "Personal Insurance",
     readTime: "4 min read",
     date: "May 20, 2026",
-    author: { name: "Aditya Sharma", role: "Claims Operations Lead" },
+    author: { name: "Payal Sahu", role: "Non-Motor Insurance Advisory" },
     coverImage: "/brand/blog-health.png",
     sections: [
       { type: "paragraph", text: "A pre-existing disease (PED) is any condition diagnosed or treated within 48 months before purchasing a health insurance policy. Declaring PEDs honestly is crucial to avoid claim rejection." },
@@ -123,7 +123,7 @@ export const BLOG_POSTS = [
     category: "Business Risk",
     readTime: "5 min read",
     date: "May 15, 2026",
-    author: { name: "Rajesh Varma", role: "Corporate Risk Advisory Lead" },
+    author: { name: "Saurav Mehra", role: "Commercial & Warehouse Property Expert" },
     coverImage: "/brand/blog-business.png",
     sections: [
       { type: "paragraph", text: "Retailers interact with customers daily, increasing the exposure to public liability. A customer slipping on a wet floor or getting injured by falling merchandise can result in costly lawsuits." },
@@ -138,7 +138,7 @@ export const BLOG_POSTS = [
     category: "Renewals",
     readTime: "3 min read",
     date: "May 10, 2026",
-    author: { name: "Meera Nair", role: "Policy Relations Specialist" },
+    author: { name: "Payal Sahu", role: "Renewal & Retention Specialist" },
     coverImage: "/brand/blog-motor.png",
     sections: [
       { type: "paragraph", text: "No Claim Bonus (NCB) is a discount on own-damage premium offered to drivers who make zero claims. It starts at 20% and goes up to 50%. However, a single minor claim normally resets this discount to 0%." },
@@ -153,7 +153,7 @@ export const BLOG_POSTS = [
     category: "Personal Insurance",
     readTime: "5 min read",
     date: "May 05, 2026",
-    author: { name: "Aditya Sharma", role: "Claims Operations Lead" },
+    author: { name: "Payal Sahu", role: "Non-Motor Insurance Advisory" },
     coverImage: "/brand/blog-health.png",
     sections: [
       { type: "paragraph", text: "Many corporate employees rely solely on corporate group health insurance provided by their employers. While group schemes offer great benefits (like zero waiting periods), relying on them exclusively is risky." },
@@ -168,7 +168,7 @@ export const BLOG_POSTS = [
     category: "Business Risk",
     readTime: "6 min read",
     date: "May 01, 2026",
-    author: { name: "Rajesh Varma", role: "Corporate Risk Advisory Lead" },
+    author: { name: "Siya Thaku", role: "Transit & Warehouse Risk Consultant" },
     coverImage: "/brand/blog-business.png",
     sections: [
       { type: "paragraph", text: "During transport by sea, road, rail, or air, goods face hazards like accidents, loading damage, theft, and natural calamities. Marine Cargo Insurance is vital for manufacturers and traders." },
@@ -183,7 +183,7 @@ export const BLOG_POSTS = [
     category: "Personal Insurance",
     readTime: "4 min read",
     date: "April 28, 2026",
-    author: { name: "Aditya Sharma", role: "Claims Operations Lead" },
+    author: { name: "Payal Sahu", role: "Non-Motor Insurance Advisory" },
     coverImage: "/brand/blog-health.png",
     sections: [
       { type: "paragraph", text: "To reduce premiums, many policyholders opt for co-payments or deductibles, but these can surprise you during claims if not understood beforehand." },
@@ -198,7 +198,7 @@ export const BLOG_POSTS = [
     category: "Personal Insurance",
     readTime: "4 min read",
     date: "April 25, 2026",
-    author: { name: "Meera Nair", role: "Policy Relations Specialist" },
+    author: { name: "Indu Mandrai", role: "Motor Insurance Expert" },
     coverImage: "/brand/blog-motor.png",
     sections: [
       { type: "paragraph", text: "Indian law mandates third-party liability cover for all vehicles. However, it does not cover any damage to your own vehicle. A comprehensive policy provides complete peace of mind." },
@@ -213,7 +213,7 @@ export const BLOG_POSTS = [
     category: "Claims",
     readTime: "5 min read",
     date: "April 20, 2026",
-    author: { name: "Rajesh Varma", role: "Corporate Risk Advisory Lead" },
+    author: { name: "Roshni Sahu", role: "Warehouse Claims Analyst" },
     coverImage: "/brand/blog-claims.png",
     sections: [
       { type: "paragraph", text: "Commercial fire claims involve high financial stakes. Insurer companies audit claim submissions rigorously. Understanding the common reasons for rejection can help secure your claim." },
@@ -228,7 +228,7 @@ export const BLOG_POSTS = [
     category: "Business Risk",
     readTime: "5 min read",
     date: "April 15, 2026",
-    author: { name: "Rajesh Varma", role: "Corporate Risk Advisory Lead" },
+    author: { name: "Anand Soni", role: "Insurance Portfolio Advisory Lead" },
     coverImage: "/brand/blog-general.png",
     sections: [
       { type: "paragraph", text: "Risk management is more than just buying insurance. It involves mapping out all operational vulnerabilities—electrical safety, security, supply chain disruptions, and liability exposures." },
@@ -243,7 +243,7 @@ export const BLOG_POSTS = [
     category: "Renewals",
     readTime: "4 min read",
     date: "April 10, 2026",
-    author: { name: "Meera Nair", role: "Policy Relations Specialist" },
+    author: { name: "Payal Sahu", role: "Renewal & Retention Specialist" },
     coverImage: "/brand/blog-motor.png",
     sections: [
       { type: "paragraph", text: "Insured Declared Value (IDV) represents the current market value of your vehicle as agreed upon by the insurer. It depreciates as the car ages." },
@@ -258,7 +258,7 @@ export const BLOG_POSTS = [
     category: "Renewals",
     readTime: "4 min read",
     date: "April 05, 2026",
-    author: { name: "Aditya Sharma", role: "Claims Operations Lead" },
+    author: { name: "Payal Sahu", role: "Renewal & Retention Specialist" },
     coverImage: "/brand/blog-general.png",
     sections: [
       { type: "paragraph", text: "Failing to pay your health insurance premium on time triggers policy lapse. However, the regulator mandates a grace period to assist policyholders." },
@@ -273,7 +273,7 @@ export const BLOG_POSTS = [
     category: "Personal Insurance",
     readTime: "4 min read",
     date: "April 01, 2026",
-    author: { name: "Aditya Sharma", role: "Claims Operations Lead" },
+    author: { name: "Payal Sahu", role: "Non-Motor Insurance Advisory" },
     coverImage: "/brand/blog-health.png",
     sections: [
       { type: "paragraph", text: "Hospitalization expenses for delivery and newborn care are high. Standard health insurance policies do not cover maternity immediately upon purchase." },
@@ -288,7 +288,7 @@ export const BLOG_POSTS = [
     category: "Claims",
     readTime: "3 min read",
     date: "March 25, 2026",
-    author: { name: "Meera Nair", role: "Policy Relations Specialist" },
+    author: { name: "Prakhar Patil", role: "Motor Claims Expert" },
     coverImage: "/brand/blog-claims.png",
     sections: [
       { type: "paragraph", text: "Getting stranded on a remote highway due to mechanical failure or a flat tire is stressful. Roadside Assistance (RSA) provides support 24/7." },
@@ -303,7 +303,7 @@ export const BLOG_POSTS = [
     category: "Claims",
     readTime: "4 min read",
     date: "March 20, 2026",
-    author: { name: "Aditya Sharma", role: "Claims Operations Lead" },
+    author: { name: "Shewata Hariyali", role: "Claims Operations Lead" },
     coverImage: "/brand/blog-claims.png",
     sections: [
       { type: "paragraph", text: "Delayed claims are usually caused by missing paperwork. Having the correct documentation ready speed up insurer approval." },
