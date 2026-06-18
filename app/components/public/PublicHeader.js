@@ -62,6 +62,9 @@ export default function PublicHeader() {
           <Link href="/about" className={getLinkClass("/about")} style={{ animationDelay: "0.5s" }}>
             About
           </Link>
+          <Link href="/blog" className={getLinkClass("/blog")} style={{ animationDelay: "0.52s" }}>
+            Blog
+          </Link>
           <Link href="/contact" className={getLinkClass("/contact")} style={{ animationDelay: "0.55s" }}>
             Contact
           </Link>
