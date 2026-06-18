@@ -7,7 +7,7 @@ import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import { BLOG_POSTS } from "./blogData";
 
-const categories = ["All", "Claims", "Renewals", "Business Risk"];
+const categories = ["All", "Claims", "Renewals", "Business Risk", "Personal Insurance"];
 
 export default function BlogFeedPage() {
   const [activeCategory, setActiveCategory] = useState("All");
