@@ -1,5 +1,4 @@
-import { Inter, Manrope } from "next/font/google";
-import Script from "next/script";
+import { Manrope, Be_Vietnam_Pro } from "next/font/google";
 import {
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
@@ -10,14 +9,18 @@ import {
 import "./globals.css";
 import "./landing.css";
 
-const inter = Inter({
+const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin"],
-  variable: "--font-body"
+  weight: ["400", "500", "600"],
+  variable: "--font-body",
+  display: "swap"
 });
 
 const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-display"
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-display",
+  display: "swap"
 });
 
 export const metadata = {
@@ -44,7 +47,7 @@ export const metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: "/brand/main-logo-wide.png",
+        url: "/brand/main-logo-wide.webp",
         width: 1024,
         height: 570,
         alt: `${SITE_NAME} logo`
@@ -55,7 +58,7 @@ export const metadata = {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: ["/brand/main-logo-wide.png"]
+    images: ["/brand/main-logo-wide.webp"]
   },
   robots: {
     index: true,
@@ -78,12 +81,14 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${manrope.variable}`}>
-        {children}
-        <Script
-          src="https://cdn.tailwindcss.com?plugins=forms,container-queries"
-          strategy="beforeInteractive"
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet"
         />
+      </head>
+      <body className={`${beVietnamPro.variable} ${manrope.variable}`}>
+        {children}
       </body>
     </html>
   );

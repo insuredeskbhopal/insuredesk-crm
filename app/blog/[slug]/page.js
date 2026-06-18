@@ -45,6 +45,28 @@ export async function generateMetadata({ params }) {
   };
 }
 
+const getRelatedServicesForBlog = (category) => {
+  const allServices = [
+    { title: "Claims Assistance", desc: "Get expert representation, documentation support, and claims advocacy across India.", slug: "claims-assistance" },
+    { title: "Policy Renewals", desc: "Track and renew your active policies across leading insurers in India seamlessly.", slug: "policy-renewals" },
+    { title: "Health Insurance Consulting", desc: "Compare individual, family, senior citizen, and corporate health insurance plans.", slug: "health-insurance" },
+    { title: "Motor & Fleet Insurance", desc: "Compare own damage, third-party, add-on, and renewal options for personal and commercial vehicles.", slug: "motor-insurance" },
+    { title: "Commercial Insurance", desc: "Protect corporate assets, stock, liability, operations, and commercial risk.", slug: "commercial-insurance" },
+    { title: "Risk Advisory Services", desc: "Identify coverage gaps, audit asset values, and implement risk control strategies.", slug: "risk-advisory" },
+    { title: "Warehouse Insurance", desc: "Protect warehouse stock, inventory, burglary risks, and storage liabilities.", slug: "warehouse-insurance" }
+  ];
+
+  if (category === "Claims") {
+    return [allServices[0], allServices[1]];
+  } else if (category === "Renewals") {
+    return [allServices[1], allServices[3]];
+  } else if (category === "Business Risk") {
+    return [allServices[4], allServices[5]];
+  } else {
+    return [allServices[2], allServices[3]];
+  }
+};
+
 export default async function BlogPostPage({ params }) {
   const { slug } = await params;
   const post = BLOG_POSTS.find((p) => p.slug === slug);
@@ -52,6 +74,8 @@ export default async function BlogPostPage({ params }) {
   if (!post) {
     notFound();
   }
+
+  const relatedServices = getRelatedServicesForBlog(post.category);
 
   // Find related articles (same category or others, excluding current)
   const relatedPosts = BLOG_POSTS.filter((p) => p.slug !== post.slug)
@@ -82,7 +106,7 @@ export default async function BlogPostPage({ params }) {
           url: SITE_URL,
           logo: {
             "@type": "ImageObject",
-            url: `${SITE_URL}/brand/main-logo-wide.png`
+            url: `${SITE_URL}/brand/main-logo-wide.webp`
           }
         },
         mainEntityOfPage: {
@@ -119,12 +143,6 @@ export default async function BlogPostPage({ params }) {
 
   return (
     <>
-      <Script
-        src="https://cdn.tailwindcss.com?plugins=forms,container-queries"
-        strategy="beforeInteractive"
-      />
-      <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       <Script
         id={`blog-schema-${post.slug}`}
         type="application/ld+json"
@@ -184,14 +202,32 @@ export default async function BlogPostPage({ params }) {
                           {section.items.map((item, itemIdx) => (
                             <li key={itemIdx}>
                               <span className="material-symbols-outlined">check_circle</span>
-                              <span>{item}</span>
+                              <span dangerouslySetInnerHTML={{ __html: item }} />
                             </li>
                           ))}
                         </ul>
                       );
                     }
-                    return <p key={idx}>{section.text}</p>;
+                    return <p key={idx} dangerouslySetInnerHTML={{ __html: section.text }} />;
                   })}
+                </div>
+
+                {/* Related Services Section */}
+                <div className="blog-related-services mt-12 pt-8 border-t border-outline-variant/30 reveal">
+                  <h3 className="text-[22px] font-bold text-primary mb-6">Related Consulting Services</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    {relatedServices.map((service) => (
+                      <div key={service.slug} className="glass-card p-6 rounded-2xl border border-outline-variant/20 flex flex-col justify-between">
+                        <div>
+                          <h4 className="font-bold text-primary text-[18px] mb-2">{service.title}</h4>
+                          <p className="text-sm text-on-surface-variant mb-4 leading-relaxed">{service.desc}</p>
+                        </div>
+                        <Link href={`/services/${service.slug}`} className="inline-flex items-center text-sm font-semibold text-secondary hover:underline gap-1 mt-2">
+                          Explore Service <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Back to Blog Button */}

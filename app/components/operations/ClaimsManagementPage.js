@@ -229,7 +229,7 @@ export default function ClaimsManagementPage() {
               <p>Claim Record Details</p>
               <h1>${record.claimNo || "No Claim Number"}</h1>
             </div>
-            <img src="${window.location.origin}/brand/main-logo-wide.png" alt="Bima Headquarter" class="print-logo" />
+            <img src="${window.location.origin}/brand/main-logo-wide.webp" alt="Bima Headquarter" class="print-logo" />
           </div>
           
           ${renderPrintSection("General Information", [
@@ -760,7 +760,7 @@ export default function ClaimsManagementPage() {
             >
               <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                 <img
-                  src="/brand/main-logo-wide.png"
+                  src="/brand/main-logo-wide.webp"
                   alt="Bima Headquarter"
                   style={{ height: "74px", width: "auto", objectFit: "contain" }}
                 />

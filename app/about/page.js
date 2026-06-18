@@ -1,9 +1,8 @@
-"use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
+import LandingEffects from "@/app/components/LandingEffects";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import Breadcrumbs from "@/app/components/public/Breadcrumbs";
 import {
@@ -38,7 +37,7 @@ const structuredData = {
       alternateName: "Bima Headquarter",
       legalName: BUSINESS_DETAILS.legalName,
       url: SITE_URL,
-      logo: `${SITE_URL}/brand/main-logo-wide.png`,
+      logo: `${SITE_URL}/brand/main-logo-wide.webp`,
       email: BUSINESS_DETAILS.email,
       telephone: BUSINESS_DETAILS.phoneHref,
       description: SITE_DESCRIPTION,
@@ -48,184 +47,14 @@ const structuredData = {
 };
 
 export default function AboutPage() {
-  const [scrolled, setScrolled] = useState(false);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Add page-specific body class to scope styles and prevent overrides from globals.css
-    document.body.classList.add("landing-page");
-
-    // Check if user is logged in
-    fetch("/api/auth/me")
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("Not logged in");
-      })
-      .then((data) => {
-        if (data.success && data.user) {
-          setUser(data.user);
-        }
-      })
-      .catch(() => {
-        // No-op (remain as guest)
-      });
-
-    // Handle scroll events for navbar state
-    const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-
-    // Scroll Reveal animations using IntersectionObserver
-    const revealElements = document.querySelectorAll(".reveal");
-    const revealObserver = new window.IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("active");
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-    revealElements.forEach((el) => revealObserver.observe(el));
-
-    // Mouse Tracking for glassmorphism shimmer on hover
-    const glassCards = document.querySelectorAll(".glass-card");
-    const handleMouseMove = (e) => {
-      const card = e.currentTarget;
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      card.style.setProperty("--x", `${x}px`);
-      card.style.setProperty("--y", `${y}px`);
-    };
-    glassCards.forEach((card) => {
-      card.addEventListener("mousemove", handleMouseMove);
-    });
-
-    return () => {
-      document.body.classList.remove("landing-page");
-      window.removeEventListener("scroll", handleScroll);
-      revealObserver.disconnect();
-      glassCards.forEach((card) => {
-        card.removeEventListener("mousemove", handleMouseMove);
-      });
-    };
-  }, []);
-
   return (
     <>
-      <Script id="tailwind-config" strategy="afterInteractive">
-        {`
-          tailwind.config = {
-            darkMode: "class",
-            theme: {
-              extend: {
-                "colors": {
-                  "on-tertiary-container": "#8c94a1",
-                  "surface-bright": "#f8f9ff",
-                  "outline-variant": "#c5c6cf",
-                  "on-primary-fixed-variant": "#36466b",
-                  "on-secondary": "#ffffff",
-                  "on-secondary-fixed-variant": "#005225",
-                  "inverse-on-surface": "#eaf1ff",
-                  "tertiary-fixed": "#dbe3f1",
-                  "background": "#f8f9ff",
-                  "secondary": "#1c6c39",
-                  "surface": "#f8f9ff",
-                  "primary-fixed": "#d9e2ff",
-                  "surface-tint": "#4e5e84",
-                  "primary-fixed-dim": "#b6c6f2",
-                  "outline": "#75777f",
-                  "on-primary-container": "#8393bc",
-                  "tertiary-fixed-dim": "#bfc7d4",
-                  "surface-container-low": "#eff4ff",
-                  "surface-container-lowest": "#ffffff",
-                  "primary-container": "#1a2b4e",
-                  "on-tertiary-fixed-variant": "#3f4752",
-                  "on-surface": "#0b1c30",
-                  "inverse-surface": "#213145",
-                  "on-error": "#ffffff",
-                  "on-tertiary-fixed": "#141c26",
-                  "surface-variant": "#d3e4fe",
-                  "surface-container": "#e5eeff",
-                  "surface-container-highest": "#d3e4fe",
-                  "tertiary": "#101822",
-                  "error": "#ba1a1a",
-                  "on-secondary-container": "#24723e",
-                  "surface-dim": "#cbdbf5",
-                  "secondary-fixed-dim": "#8ad899",
-                  "on-primary-fixed": "#071a3d",
-                  "inverse-primary": "#b6c6f2",
-                  "error-container": "#ffdad6",
-                  "on-error-container": "#93000a",
-                  "on-secondary-fixed": "#00210b",
-                  "secondary-fixed": "#a5f5b3",
-                  "surface-container-high": "#dce9ff",
-                  "primary": "#031638",
-                  "on-tertiary": "#ffffff",
-                  "on-background": "#0b1c30",
-                  "secondary-container": "#a5f5b3",
-                  "on-primary": "#ffffff",
-                  "on-surface-variant": "#44464e",
-                  "tertiary-container": "#252d37"
-                },
-                "borderRadius": {
-                  "DEFAULT": "0.25rem",
-                  "lg": "0.5rem",
-                  "xl": "0.75rem",
-                  "full": "9999px"
-                },
-                "spacing": {
-                  "margin-desktop": "64px",
-                  "unit": "8px",
-                  "margin-mobile": "16px",
-                  "gutter": "24px",
-                  "container-max": "1280px"
-                },
-                "fontFamily": {
-                  "body-lg": ["Be Vietnam Pro"],
-                  "label-md": ["Manrope"],
-                  "headline-md": ["Manrope"],
-                  "display-lg": ["Manrope"],
-                  "headline-lg-mobile": ["Manrope"],
-                  "headline-lg": ["Manrope"],
-                  "body-md": ["Be Vietnam Pro"]
-                },
-                "fontSize": {
-                  "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
-                  "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
-                  "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
-                  "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                  "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
-                  "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
-                  "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
-                }
-              },
-            },
-          }
-        `}
-      </Script>
+      <LandingEffects />
       <Script
         id="about-structured-data"
         type="application/ld+json"
         strategy="beforeInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
-
-      {/* Inject external fonts & CSS references */}
-      <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap"
-        rel="stylesheet"
-      />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet"
       />
 
       <style dangerouslySetInnerHTML={{
@@ -383,6 +212,7 @@ export default function AboutPage() {
 
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
+      <main>
         <Breadcrumbs />
 
         {/* Hero Section */}
@@ -581,6 +411,7 @@ export default function AboutPage() {
           </div>
         </section>
 
+        </main>
         <PublicFooter />
       </div>
     </>

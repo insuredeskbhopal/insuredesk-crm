@@ -1,9 +1,8 @@
-"use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
+import LandingEffects from "@/app/components/LandingEffects";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import { BUSINESS_DETAILS } from "@/lib/seo/site";
 import { getRelatedServices, getServicePageSchema } from "./servicePageData";
@@ -12,37 +11,15 @@ export default function ServiceDetailPage({ service }) {
   const pageSchema = getServicePageSchema(service);
   const relatedServices = getRelatedServices(service);
 
-  useEffect(() => {
-    document.body.classList.add("landing-page");
-    const revealElements = document.querySelectorAll(".reveal");
-    const revealObserver = new window.IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("active");
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-    revealElements.forEach((el) => revealObserver.observe(el));
-    return () => {
-      document.body.classList.remove("landing-page");
-      revealObserver.disconnect();
-    };
-  }, []);
-
   return (
     <>
-      <Script src="https://cdn.tailwindcss.com?plugins=forms,container-queries" strategy="beforeInteractive" />
+      <LandingEffects />
       <Script
         id={`${service.slug}-schema`}
         type="application/ld+json"
         strategy="beforeInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema) }}
       />
-      <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
       <div className="landing-shell service-detail-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />

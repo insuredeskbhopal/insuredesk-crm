@@ -819,7 +819,7 @@ export default function CustomerProfilingPage() {
               <h1>Lead Converted Successfully</h1>
               <p>We need this policy: ${conversionType}</p>
             </div>
-            <img src="${window.location.origin}/brand/main-logo-wide.png" alt="Logo" class="print-logo" />
+            <img src="${window.location.origin}/brand/main-logo-wide.webp" alt="Logo" class="print-logo" />
           </div>
           
           ${handoffRemark ? `

@@ -49,12 +49,6 @@ export default function BlogFeedPage() {
 
   return (
     <>
-      <Script
-        src="https://cdn.tailwindcss.com?plugins=forms,container-queries"
-        strategy="beforeInteractive"
-      />
-      <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
       <div className="landing-shell blog-feed-page bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />

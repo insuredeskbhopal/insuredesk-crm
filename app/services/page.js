@@ -1,10 +1,9 @@
-"use client";
 
-import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
+import LandingEffects from "@/app/components/LandingEffects";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import { BUSINESS_DETAILS, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
@@ -126,56 +125,10 @@ const servicesSchema = {
 };
 
 export default function ServicesPage() {
-  useEffect(() => {
-    // Add landing-page class for scoped styles
-    document.body.classList.add("landing-page");
-
-    const revealElements = document.querySelectorAll(".reveal");
-    const revealObserver = new window.IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("active");
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-    revealElements.forEach((el) => revealObserver.observe(el));
-
-    // Mouse Tracking for glassmorphism shimmer on hover
-    const glassCards = document.querySelectorAll(".glass-card");
-    const handleMouseMove = (e) => {
-      const card = e.currentTarget;
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      card.style.setProperty("--x", `${x}px`);
-      card.style.setProperty("--y", `${y}px`);
-    };
-    glassCards.forEach((card) => {
-      card.addEventListener("mousemove", handleMouseMove);
-    });
-
-    return () => {
-      document.body.classList.remove("landing-page");
-      revealObserver.disconnect();
-      glassCards.forEach((card) => {
-        card.removeEventListener("mousemove", handleMouseMove);
-      });
-    };
-  }, []);
-
   return (
     <>
-      {/* Script for Tailwind and Schemas */}
-      <Script
-        src="https://cdn.tailwindcss.com?plugins=forms,container-queries"
-        strategy="beforeInteractive"
-      />
+      <LandingEffects />
       <Script id="services-structured-data" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(servicesSchema) }} />
-      <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -239,6 +192,7 @@ export default function ServicesPage() {
 
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
+      <main>
 
         {/* Hero Section */}
         <header className="service-page-hero relative pt-16 pb-20">
@@ -260,7 +214,7 @@ export default function ServicesPage() {
 
             <div className="service-hero-media entry-anim" aria-hidden="true">
               <Image
-                src="/brand/service-bg.png"
+                src="/brand/service-bg.webp"
                 alt=""
                 width={720}
                 height={520}
@@ -335,6 +289,7 @@ export default function ServicesPage() {
           </div>
         </section>
 
+        </main>
         <PublicFooter />
       </div>
     </>

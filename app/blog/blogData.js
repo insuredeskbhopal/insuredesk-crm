@@ -7,9 +7,9 @@ export const BLOG_POSTS = [
     readTime: "7 min read",
     date: "June 15, 2026",
     author: { name: "Indu Mandrai", role: "Motor Claims Expert" },
-    coverImage: "/brand/blog-claims.png",
+    coverImage: "/brand/blog-claims.webp",
     sections: [
-      { type: "paragraph", text: "Filing a motor insurance claim in India can feel overwhelming right after an accident. However, knowing the exact steps to take can accelerate the surveyor inspection process, prevent claim rejection, and ensure your vehicle is repaired quickly. In this comprehensive manual, our motor claims consulting team outlines the exact roadmap to successful settlements." },
+      { type: "paragraph", text: "Filing a <a href='/services/motor-insurance' class='text-secondary hover:underline font-medium'>motor insurance claim</a> in India can feel overwhelming right after an accident. However, knowing the exact steps to take can accelerate the surveyor inspection process, prevent claim rejection, and ensure your vehicle is repaired quickly. In this comprehensive manual, our <a href='/services/claims-assistance' class='text-secondary hover:underline font-medium'>motor claims consulting</a> team outlines the exact roadmap to successful settlements." },
       { type: "heading", text: "1. Immediate Actions at the Accident Site" },
       { type: "paragraph", text: "Safety is your immediate priority. Once you have moved to a safe location, document the scene. Do not flee, and do not attempt to start an altercation with other parties involved. Instead, take clear photographs and videos of the damage to your vehicle, the other vehicle's license plate, and the surrounding road layout. If there are third-party injuries or significant property damage, filing a First Information Report (FIR) at the local police station is a statutory requirement under the Motor Vehicles Act." },
       { type: "heading", text: "2. Registering the Claim and Arranging the Tow" },
@@ -32,13 +32,13 @@ export const BLOG_POSTS = [
     readTime: "6 min read",
     date: "June 10, 2026",
     author: { name: "Payal Sahu", role: "Insurance Renewal Expert" },
-    coverImage: "/brand/blog-general.png",
+    coverImage: "/brand/blog-general.webp",
     sections: [
       { type: "paragraph", text: "An insurance policy is a continuous contract of security. Letting a policy expire—even for a single day—can expose you to immense financial risk, wipe out your accumulated No Claim Bonus (NCB), and trigger expensive, time-consuming pre-renewal inspections. This checklist is designed to help you streamline renewals for motor, health, and commercial fire insurance." },
       { type: "heading", text: "1. The Danger of Lapsed Policies" },
-      { type: "paragraph", text: "For motor insurance, a gap of more than 90 days results in the complete loss of your No Claim Bonus, which can range from 20% to 50% of the own-damage premium. For health insurance, a lapsed policy means losing continuity benefits for pre-existing disease waiting periods, forcing you to start the 3-4 year waiting cycle all over again. For commercial properties, a single day without coverage could coincide with a catastrophic fire, bankrupting the business." },
+      { type: "paragraph", text: "For motor insurance, a gap of more than 90 days results in the complete loss of your No Claim Bonus, which can range from 20% to 50% of the own-damage premium. For <a href='/services/health-insurance' class='text-secondary hover:underline font-medium'>health insurance</a>, a lapsed policy means losing continuity benefits for pre-existing disease waiting periods, forcing you to start the 3-4 year waiting cycle all over again. For commercial properties, a single day without coverage could coincide with a catastrophic fire, bankrupting the business." },
       { type: "heading", text: "2. Setting Up the Grace Period Buffer" },
-      { type: "paragraph", text: "While some policies offer a grace period (for example, 30 days for health insurance premiums), this is not a period of active coverage. Any claims arising during the grace period will be rejected. The grace period only serves to protect your loyalty benefits once the premium is paid. Therefore, aiming to renew at least 15 days before the expiry date is the only safe practice." },
+      { type: "paragraph", text: "While some policies offer a grace period (for example, 30 days for health insurance premiums), this is not a period of active coverage. Any claims arising during the grace period will be rejected. The grace period only serves to protect your <a href='/services/policy-renewals' class='text-secondary hover:underline font-medium'>loyalty benefits</a> once the premium is paid. Therefore, aiming to renew at least 15 days before the expiry date is the only safe practice." },
       { type: "list", items: [
         "Review changes in asset values (like vehicle depreciation or property value inflation) to adjust your sum insured.",
         "Verify your contact details (mobile, email, address) are updated to avoid missing critical renewal notices.",
@@ -50,12 +50,12 @@ export const BLOG_POSTS = [
   {
     slug: "protecting-warehouse-assets-fire-burglary",
     title: "Protecting Warehouse Assets: Mitigating Fire and Burglary Risks",
-    excerpt: "Commercial warehouses face high concentration of value. Learn key risk assessment tips and fire insurance strategies to secure stock.",
+    excerpt: "Commercial warehouses face high concentration of value. Learn key risk assessment tips and <a href='/services/commercial-insurance' class='text-secondary hover:underline font-medium'>fire insurance</a> strategies to secure stock.",
     category: "Business Risk",
     readTime: "8 min read",
     date: "June 05, 2026",
     author: { name: "Pragati Pandey", role: "Warehouse Risk Expert" },
-    coverImage: "/brand/blog-business.png",
+    coverImage: "/brand/blog-business.webp",
     sections: [
       { type: "paragraph", text: "Warehouses serve as central hubs for high-value inventory, machinery, and critical logistics. Because of the high density of assets, a single incident of fire or a coordinated burglary can result in business interruption and devastating financial losses. Implementing a structured risk-mitigation plan alongside comprehensive insurance is essential for long-term viability." },
       { type: "heading", text: "1. Assessing Fire Risk Exposure" },
@@ -78,9 +78,9 @@ export const BLOG_POSTS = [
     readTime: "7 min read",
     date: "June 01, 2026",
     author: { name: "Shweta Hariyale", role: "Claims Settlement Specialist" },
-    coverImage: "/brand/blog-health.png",
+    coverImage: "/brand/blog-health.webp",
     sections: [
-      { type: "paragraph", text: "Cashless hospitalization is one of the most convenient features of modern health insurance. It allows you to receive medical treatment at network hospitals without paying the hospital bills directly from your pocket. However, navigating the approvals between the hospital's TPA desk and the insurance company requires a clear understanding of the pre-authorization process." },
+      { type: "paragraph", text: "Cashless hospitalization is one of the most convenient features of modern <a href='/services/health-insurance' class='text-secondary hover:underline font-medium'>health insurance</a>. It allows you to receive medical treatment at network hospitals without paying the hospital bills directly from your pocket. However, navigating the approvals between the hospital's TPA desk and the insurance company requires a clear understanding of the pre-authorization process." },
       { type: "heading", text: "1. Pre-Authorization Timelines" },
       { type: "paragraph", text: "For planned treatments (such as a scheduled surgery), apply for pre-authorization at least 3 to 4 days before admission. The hospital's Third Party Administrator (TPA) desk will coordinate with the insurer. For emergency admissions, notify the TPA desk and your insurer within 24 hours of hospitalization. Delayed emergency notifications can lead to initial rejection, forcing you to pay out of pocket and apply for reimbursement later." },
       { type: "heading", text: "2. Exclusions and Co-payments" },
@@ -101,9 +101,9 @@ export const BLOG_POSTS = [
     readTime: "6 min read",
     date: "May 28, 2026",
     author: { name: "Prakhar Patil", role: "Motor Insurance Specialist" },
-    coverImage: "/brand/blog-motor.png",
+    coverImage: "/brand/blog-motor.webp",
     sections: [
-      { type: "paragraph", text: "When you file a standard car insurance claim, the insurer does not pay the full cost of replaced parts. Instead, they deduct depreciation based on the age and material of the parts (for example, up to 50% for rubber, nylon, and plastic parts, and up to 30% for fiber glass). A Zero Depreciation add-on cover eliminates these deductions, ensuring a nearly complete payout during claim settlement." },
+      { type: "paragraph", text: "When you file a standard <a href='/services/motor-insurance' class='text-secondary hover:underline font-medium'>car insurance claim</a>, the insurer does not pay the full cost of replaced parts. Instead, they deduct depreciation based on the age and material of the parts (for example, up to 50% for rubber, nylon, and plastic parts, and up to 30% for fiber glass). A Zero Depreciation add-on cover eliminates these deductions, ensuring a nearly complete payout during claim settlement." },
       { type: "heading", text: "1. Zero Dep vs Standard Insurance" },
       { type: "paragraph", text: "Under a standard comprehensive policy, if your car's bumper (which is plastic) gets damaged in an accident and needs replacement, you would have to pay 50% of the cost of the new bumper from your pocket due to depreciation. With a Zero Depreciation add-on (also known as Nil Depreciation or Bumper-to-Bumper cover), the insurer pays for the entire cost of the part, leaving you to pay only the standard compulsory deductible." },
       { type: "heading", text: "2. Age Limits and Claim Caps" },
@@ -119,16 +119,16 @@ export const BLOG_POSTS = [
   {
     slug: "directors-officers-liability-insurance-importance",
     title: "Directors & Officers (D&O) Liability: Securing Corporate Leadership",
-    excerpt: "Learn how D&O insurance protects the personal assets of company directors and officers against regulatory and shareholder lawsuits.",
+    excerpt: "Learn how <a href='/services/commercial-insurance' class='text-secondary hover:underline font-medium'>D&O insurance</a> protects the personal assets of company directors and officers against regulatory and shareholder lawsuits.",
     category: "Business Risk",
     readTime: "8 min read",
     date: "May 25, 2026",
     author: { name: "Payal Sahu", role: "Non-Motor Insurance Advisory" },
-    coverImage: "/brand/blog-business.png",
+    coverImage: "/brand/blog-business.webp",
     sections: [
       { type: "paragraph", text: "As corporate governance regulations in India become increasingly stringent, company directors, officers, and management executives face growing personal liability for corporate decisions. A single allegation of mismanagement, regulatory non-compliance, or shareholder dissatisfaction can lead to costly legal investigations, threatening personal assets. Directors & Officers (D&O) liability insurance is the primary shield for corporate leaders." },
       { type: "heading", text: "1. The Scope of Personal Liability" },
-      { type: "paragraph", text: "Unlike typical corporate structures where the liability of shareholders is limited, directors can be held personally liable for breaches of fiduciary duty, misleading statements, omissions, or regulatory violations. Shareholder class actions, competitor lawsuits, and inquiries by regulatory bodies like SEBI or the Ministry of Corporate Affairs can target individual board members, freezing their personal bank accounts and properties." },
+      { type: "paragraph", text: "Unlike typical corporate structures where the liability of shareholders is limited, directors can be held personally liable for breaches of fiduciary duty, misleading statements, omissions, or regulatory violations. Shareholder class actions, competitor lawsuits, and inquiries by regulatory bodies like <a href='/services/risk-advisory' class='text-secondary hover:underline font-medium'>SEBI or the Ministry of Corporate Affairs</a> can target individual board members, freezing their personal bank accounts and properties." },
       { type: "heading", text: "2. What D&O Insurance Covers" },
       { type: "paragraph", text: "D&O insurance covers legal defense costs, representation expenses at regulatory investigations, out-of-court settlements, and court-ordered damages. It features three primary modules: Side A (covers directors when the company cannot indemnify them), Side B (reimburses the company when it indemnifies the directors), and Side C (covers the company itself for securities claims)." },
       { type: "list", items: [
@@ -147,9 +147,9 @@ export const BLOG_POSTS = [
     readTime: "7 min read",
     date: "May 20, 2026",
     author: { name: "Payal Sahu", role: "Non-Motor Insurance Advisory" },
-    coverImage: "/brand/blog-health.png",
+    coverImage: "/brand/blog-health.webp",
     sections: [
-      { type: "paragraph", text: "A pre-existing disease (PED) is any medical condition, injury, or ailment that was diagnosed, treated, or for which medical advice was sought within 48 months before purchasing a health insurance policy. Under IRDAI guidelines, declaring PEDs honestly is crucial to secure your health coverage and avoid claim rejections down the road." },
+      { type: "paragraph", text: "A pre-existing disease (PED) is any medical condition, injury, or ailment that was diagnosed, treated, or for which medical advice was sought within 48 months before purchasing a <a href='/services/health-insurance' class='text-secondary hover:underline font-medium'>health insurance policy</a>. Under IRDAI guidelines, declaring PEDs honestly is crucial to secure your health coverage and avoid <a href='/services/claims-assistance' class='text-secondary hover:underline font-medium'>claim rejections</a> down the road." },
       { type: "heading", text: "1. The Concept of Waiting Periods" },
       { type: "paragraph", text: "Inurers do not cover hospitalization expenses related to pre-existing diseases immediately. Most policies mandate a waiting period of 2 to 4 years of continuous coverage. During this waiting period, if you are hospitalized for a condition directly related to your declared PED (for example, a heart condition linked to long-term diabetes), the claim will not be paid. Once the waiting period is completed, the PED is covered like any other illness." },
       { type: "heading", text: "2. The Danger of Non-Disclosure" },
@@ -170,7 +170,7 @@ export const BLOG_POSTS = [
     readTime: "8 min read",
     date: "May 15, 2026",
     author: { name: "Saurav Mehra", role: "Commercial & Warehouse Property Expert" },
-    coverImage: "/brand/blog-business.png",
+    coverImage: "/brand/blog-business.webp",
     sections: [
       { type: "paragraph", text: "Retail operations and storage warehouses experience high footfalls of customers, delivery partners, and vendors daily. This constant movement increases exposure to public liability. A customer slipping on a wet warehouse floor or getting injured by falling inventory can result in massive legal claims. Commercial General Liability (CGL) is the foundational cover to mitigate these third-party risks." },
       { type: "heading", text: "1. The Risk of Public Liability" },
@@ -193,9 +193,9 @@ export const BLOG_POSTS = [
     readTime: "6 min read",
     date: "May 10, 2026",
     author: { name: "Payal Sahu", role: "Renewal & Retention Specialist" },
-    coverImage: "/brand/blog-motor.png",
+    coverImage: "/brand/blog-motor.webp",
     sections: [
-      { type: "paragraph", text: "No Claim Bonus (NCB) is a reward discount given by insurers on the own-damage component of your car insurance premium for maintaining a claim-free year. It starts at 20% for the first claim-free year and increases by 5-10% annually up to a maximum of 50%. However, under standard rules, even a single minor claim will reset your NCB discount back to 0%." },
+      { type: "paragraph", text: "No Claim Bonus (NCB) is a reward discount given by insurers on the own-damage component of your <a href='/services/motor-insurance' class='text-secondary hover:underline font-medium'>car insurance premium</a> for maintaining a claim-free year. It starts at 20% for the first claim-free year and increases by 5-10% annually up to a maximum of 50%. However, under standard rules, even a single minor claim will reset your NCB discount back to 0%." },
       { type: "heading", text: "1. How NCB Protection Add-on Works" },
       { type: "paragraph", text: "By adding an NCB Protection cover to your comprehensive policy, your accumulated discount remains secure even if you file a claim during the year. For example, if you have a 45% NCB and make a claim for a cracked windshield or minor dent repair, your discount will remain at 45% (or transition to 50%) at renewal, saving you thousands on your next premium." },
       { type: "heading", text: "2. Key Conditions and Limitations" },
@@ -216,7 +216,7 @@ export const BLOG_POSTS = [
     readTime: "7 min read",
     date: "May 05, 2026",
     author: { name: "Payal Sahu", role: "Non-Motor Insurance Advisory" },
-    coverImage: "/brand/blog-health.png",
+    coverImage: "/brand/blog-health.webp",
     sections: [
       { type: "paragraph", text: "Many corporate employees rely exclusively on the Group Health Insurance (GHI) provided by their employers. While GHI schemes offer excellent benefits like zero waiting periods and coverage for pre-existing diseases from day one, relying on them as your sole medical safety net is a high-risk financial strategy." },
       { type: "heading", text: "1. The Risk of Job Transitions" },
@@ -239,7 +239,7 @@ export const BLOG_POSTS = [
     readTime: "8 min read",
     date: "May 01, 2026",
     author: { name: "Siya Thakur", role: "Transit & Warehouse Risk Consultant" },
-    coverImage: "/brand/blog-business.png",
+    coverImage: "/brand/blog-business.webp",
     sections: [
       { type: "paragraph", text: "Goods in transit face a multitude of hazards, including road accidents, train derailments, sea vessel capsizing, cargo handling damage, and theft. For manufacturers, traders, and logistics companies, securing transit values with Marine Cargo Insurance is a vital step to avoid supply chain disruptions and balance sheet shocks." },
       { type: "heading", text: "1. Understanding Policy Types: Single Transit vs Open Policy" },
@@ -262,7 +262,7 @@ export const BLOG_POSTS = [
     readTime: "7 min read",
     date: "April 28, 2026",
     author: { name: "Payal Sahu", role: "Non-Motor Insurance Advisory" },
-    coverImage: "/brand/blog-health.png",
+    coverImage: "/brand/blog-health.webp",
     sections: [
       { type: "paragraph", text: "To reduce premiums, many health insurance buyers opt for policies containing co-payment, deductible, or sub-limit clauses. While these options make the initial purchase cheaper, they can lead to massive financial surprises at the hospital billing desk if you do not understand their impact on claim calculations." },
       { type: "heading", text: "1. Co-payment vs Deductible" },
@@ -285,7 +285,7 @@ export const BLOG_POSTS = [
     readTime: "6 min read",
     date: "April 25, 2026",
     author: { name: "Indu Mandrai", role: "Motor Insurance Expert" },
-    coverImage: "/brand/blog-motor.png",
+    coverImage: "/brand/blog-motor.webp",
     sections: [
       { type: "paragraph", text: "Under the Motor Vehicles Act of India, having at least a Third-Party liability insurance policy is a legal mandate for all vehicles on public roads. However, while a third-party policy fulfills legal compliance, it does not cover any damage to your own vehicle. Choosing between Third-Party and Comprehensive cover requires balancing cost against financial security." },
       { type: "heading", text: "1. Third-Party Liability Coverage" },
@@ -308,7 +308,7 @@ export const BLOG_POSTS = [
     readTime: "8 min read",
     date: "April 20, 2026",
     author: { name: "Roshni Sahu", role: "Warehouse Claims Analyst" },
-    coverImage: "/brand/blog-claims.png",
+    coverImage: "/brand/blog-claims.webp",
     sections: [
       { type: "paragraph", text: "Commercial fire claims involve high financial stakes. Insurer companies audit claim submissions and warehouse logs rigorously. Understanding the common reasons for rejection—ranging from under-insurance to undisclosed storage practices—can help you prepare a watertight claim submission and protect your business recovery." },
       { type: "heading", text: "1. The Under-Insurance and Average Clause Trap" },
@@ -331,7 +331,7 @@ export const BLOG_POSTS = [
     readTime: "7 min read",
     date: "April 15, 2026",
     author: { name: "Anand Soni", role: "Insurance Portfolio Advisory Lead" },
-    coverImage: "/brand/blog-general.png",
+    coverImage: "/brand/blog-general.webp",
     sections: [
       { type: "paragraph", text: "Modern corporate risk advisory is more than just purchasing insurance policies. It involves a structured approach to identifying operational, financial, and compliance vulnerabilities, minimizing hazards, and optimizing insurance portfolios. Working with a certified risk advisor helps companies build resilience and negotiate better terms with underwriters." },
       { type: "heading", text: "1. Identification of Uninsured Vulnerabilities" },
@@ -354,7 +354,7 @@ export const BLOG_POSTS = [
     readTime: "6 min read",
     date: "April 10, 2026",
     author: { name: "Payal Sahu", role: "Renewal & Retention Specialist" },
-    coverImage: "/brand/blog-motor.png",
+    coverImage: "/brand/blog-motor.webp",
     sections: [
       { type: "paragraph", text: "Insured Declared Value (IDV) is the maximum sum assured for your vehicle under a comprehensive motor insurance policy. It represents the manufacturer's listed selling price minus depreciation based on the age of the vehicle. Calculating your IDV correctly is essential, as it determines both your own-damage premium and the payout you receive if your car is stolen or totaled." },
       { type: "heading", text: "1. The Depreciation Schedule" },
@@ -372,12 +372,12 @@ export const BLOG_POSTS = [
   {
     slug: "grace-period-health-policy-renewal-guide",
     title: "Lapsed Health Policies: Continuity Benefits & Grace Periods",
-    excerpt: "Learn what happens when your health policy lapses, and how to utilize the grace period to protect active waiting period credits.",
+    excerpt: "Learn what happens when your <a href='/services/health-insurance' class='text-secondary hover:underline font-medium'>health policy</a> lapses, and how to utilize the grace period to protect active waiting period credits.",
     category: "Renewals",
     readTime: "7 min read",
     date: "April 05, 2026",
     author: { name: "Payal Sahu", role: "Renewal & Retention Specialist" },
-    coverImage: "/brand/blog-general.png",
+    coverImage: "/brand/blog-general.webp",
     sections: [
       { type: "paragraph", text: "Failing to pay your health insurance premium on or before the due date results in a policy lapse. A lapsed policy is a serious risk, as it leaves you without medical coverage and can wipe out years of accumulated loyalty benefits. However, understanding the grace period rules can help you restore coverage without losing your continuity credits." },
       { type: "heading", text: "1. What is the Grace Period?" },
@@ -400,9 +400,9 @@ export const BLOG_POSTS = [
     readTime: "7 min read",
     date: "April 01, 2026",
     author: { name: "Payal Sahu", role: "Non-Motor Insurance Advisory" },
-    coverImage: "/brand/blog-health.png",
+    coverImage: "/brand/blog-health.webp",
     sections: [
-      { type: "paragraph", text: "With hospital and medical delivery costs rising, securing maternity insurance is a key step for couples planning a family. However, maternity coverage is rarely standard and is subject to strict waiting periods and financial sub-limits that require early planning." },
+      { type: "paragraph", text: "With hospital and medical delivery costs rising, securing maternity insurance is a key step for couples planning a family. However, <a href='/services/health-insurance' class='text-secondary hover:underline font-medium'>maternity cover</a>age is rarely standard and is subject to strict waiting periods and financial sub-limits that require early planning." },
       { type: "heading", text: "1. The Standard 2-4 Year Waiting Period" },
       { type: "paragraph", text: "Inurers do not cover maternity claims immediately. Because pregnancy is a planned event, insurers mandate a continuous policy history of 24 to 48 months before maternity benefits become active. If you purchase a health policy and file a maternity claim within the first year, it will be rejected under the waiting period clause. Early purchase of a family floater is essential." },
       { type: "heading", text: "2. Sub-limits and Newborn Coverage" },
@@ -423,7 +423,7 @@ export const BLOG_POSTS = [
     readTime: "6 min read",
     date: "March 25, 2026",
     author: { name: "Prakhar Patil", role: "Motor Claims Expert" },
-    coverImage: "/brand/blog-claims.png",
+    coverImage: "/brand/blog-claims.webp",
     sections: [
       { type: "paragraph", text: "Getting stranded on a remote highway due to a flat tire, engine breakdown, dead battery, or empty fuel tank is a stressful experience. Roadside Assistance (RSA) is a highly valuable add-on cover for comprehensive motor insurance that provides round-the-clock emergency support, ensuring you are never left helpless on the road." },
       { type: "heading", text: "1. Services Included in RSA" },
@@ -446,7 +446,7 @@ export const BLOG_POSTS = [
     readTime: "7 min read",
     date: "March 20, 2026",
     author: { name: "Shweta Hariyale", role: "Claims Operations Lead" },
-    coverImage: "/brand/blog-claims.png",
+    coverImage: "/brand/blog-claims.webp",
     sections: [
       { type: "paragraph", text: "Delayed claims are usually caused by incomplete or incorrect paperwork. Having your documentation ready before filing is the single most effective way to speed up insurer approvals, prevent queries from surveyors, and secure a clean claim settlement. Below is the master checklist of essential documents required for motor, health, and commercial claims." },
       { type: "heading", text: "1. Documentation for Motor Insurance Claims" },
@@ -469,7 +469,7 @@ export const BLOG_POSTS = [
     readTime: "8 min read",
     date: "March 15, 2026",
     author: { name: "Roshni Sahu", role: "Warehouse & Commercial Claims Analyst" },
-    coverImage: "/brand/blog-claims.png",
+    coverImage: "/brand/blog-claims.webp",
     sections: [
       { type: "paragraph", text: "Commercial burglary claims involve specific legal definitions under insurance contracts. Unlike simple theft, a 'burglary' claim typically requires evidence of forcible or violent entry or exit from the insured premises. If a warehouse is left unlocked and stock is taken, the insurer may reject the claim under the theft exclusion. Understanding the criteria for proof is key." },
       { type: "heading", text: "1. Gathering Immediate Evidence of Forcible Entry" },
@@ -492,7 +492,7 @@ export const BLOG_POSTS = [
     readTime: "7 min read",
     date: "March 10, 2026",
     author: { name: "Payal Sahu", role: "Non-Motor Insurance Advisory" },
-    coverImage: "/brand/blog-health.png",
+    coverImage: "/brand/blog-health.webp",
     sections: [
       { type: "paragraph", text: "When purchasing health insurance, we naturally focus on the features and sum insured. However, understanding what the policy *excludes* is equally critical to prevent massive out-of-pocket bills at the time of hospitalization. Standard health policies contain both temporary and permanent exclusions that every buyer must understand." },
       { type: "heading", text: "1. Non-Medical and Consumable Exclusions" },
@@ -515,7 +515,7 @@ export const BLOG_POSTS = [
     readTime: "8 min read",
     date: "March 05, 2026",
     author: { name: "Siya Thakur", role: "Transit & Warehouse Risk Consultant" },
-    coverImage: "/brand/blog-business.png",
+    coverImage: "/brand/blog-business.webp",
     sections: [
       { type: "paragraph", text: "For companies engaged in manufacturing, trading, or importing/exporting, goods transit is a highly vulnerable phase. Marine cargo policies protect transit values, but coverage boundaries are defined by standard international clauses. Knowing the difference between Clause A, B, and C is the key to correct risk management." },
       { type: "heading", text: "1. Institute Cargo Clause A (ICC A) - All Risks" },
@@ -538,7 +538,7 @@ export const BLOG_POSTS = [
     readTime: "6 min read",
     date: "March 01, 2026",
     author: { name: "Prakhar Patil", role: "Motor Insurance Specialist" },
-    coverImage: "/brand/blog-motor.png",
+    coverImage: "/brand/blog-motor.webp",
     sections: [
       { type: "paragraph", text: "Standard comprehensive car insurance does not cover engine damage caused by water logging or oil leaks. If water enters your engine cylinder (a condition known as hydrostatic lock) and you try to start the car, the engine will fail. Repairing or replacing a damaged engine can cost lakhs, making an Engine Protection add-on essential, especially in monsoon-prone cities." },
       { type: "heading", text: "1. The Danger of Hydrostatic Lock" },
@@ -561,7 +561,7 @@ export const BLOG_POSTS = [
     readTime: "8 min read",
     date: "February 25, 2026",
     author: { name: "Saurav Mehra", role: "Commercial & Warehouse Property Expert" },
-    coverImage: "/brand/blog-business.png",
+    coverImage: "/brand/blog-business.webp",
     sections: [
       { type: "paragraph", text: "When a fire breaks out in a factory or warehouse, standard fire insurance pays for the physical reconstruction of the building and the replacement of damaged machinery or stock. However, during the months it takes to rebuild, the business cannot operate. Lost sales, standing charges (like salaries, rent, and loan interest), and rehabilitation costs can lead to insolvency. Consequential Loss insurance (also known as Business Interruption cover) is designed to protect your cash flow during this rebuilding phase." },
       { type: "heading", text: "1. Physical Damage vs Financial Loss" },

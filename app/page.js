@@ -1,10 +1,9 @@
-"use client";
 
-import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
+import LandingEffects from "@/app/components/LandingEffects";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import { INSURER_LOGOS } from "@/app/components/brand/logoAssets";
 import {
@@ -25,7 +24,7 @@ const structuredData = {
       alternateName: "Bima Headquarter",
       legalName: BUSINESS_DETAILS.legalName,
       url: SITE_URL,
-      logo: `${SITE_URL}/brand/main-logo-wide.png`,
+      logo: `${SITE_URL}/brand/main-logo-wide.webp`,
       email: BUSINESS_DETAILS.email,
       telephone: BUSINESS_DETAILS.phoneHref,
       description: SITE_DESCRIPTION,
@@ -44,16 +43,21 @@ const structuredData = {
       ]
     },
     {
-      "@type": "LocalBusiness",
+      "@type": "InsuranceAgency",
       "@id": `${SITE_URL}/#local-business`,
       name: SITE_NAME,
       url: SITE_URL,
-      image: `${SITE_URL}/brand/main-logo-wide.png`,
+      image: `${SITE_URL}/brand/main-logo-wide.webp`,
       telephone: BUSINESS_DETAILS.phoneHref,
       email: BUSINESS_DETAILS.email,
       address: {
         "@type": "PostalAddress",
         ...BUSINESS_DETAILS.address
+      },
+      geo: {
+        "@type": "GeoCoordinates",
+        "latitude": 23.1956,
+        "longitude": 77.4608
       },
       areaServed: {
         "@type": "Country",
@@ -154,162 +158,15 @@ const structuredData = {
 };
 
 export default function RootPage() {
-  useEffect(() => {
-    // Add page-specific body class to scope styles and prevent overrides from globals.css
-    document.body.classList.add("landing-page");
-
-    // Scroll Reveal animations using IntersectionObserver
-    const revealElements = document.querySelectorAll(".reveal");
-    const revealObserver = new window.IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("active");
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-    revealElements.forEach((el) => revealObserver.observe(el));
-
-    // Mouse Tracking for glassmorphism shimmer on hover
-    const glassCards = document.querySelectorAll(".glass-card");
-    const handleMouseMove = (e) => {
-      const card = e.currentTarget;
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      card.style.setProperty("--x", `${x}px`);
-      card.style.setProperty("--y", `${y}px`);
-    };
-    glassCards.forEach((card) => {
-      card.addEventListener("mousemove", handleMouseMove);
-    });
-    return () => {
-      document.body.classList.remove("landing-page");
-      revealObserver.disconnect();
-      glassCards.forEach((card) => {
-        card.removeEventListener("mousemove", handleMouseMove);
-      });
-    };
-  }, []);
-
-  const scrollToSection = (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
-  };
   const partnerLogos = [...INSURER_LOGOS, ...INSURER_LOGOS];
 
   return (
     <>
-      <Script id="tailwind-config" strategy="afterInteractive">
-        {`
-          tailwind.config = {
-            darkMode: "class",
-            theme: {
-              extend: {
-                "colors": {
-                  "on-tertiary-container": "#8c94a1",
-                  "surface-bright": "#f8f9ff",
-                  "outline-variant": "#c5c6cf",
-                  "on-primary-fixed-variant": "#36466b",
-                  "on-secondary": "#ffffff",
-                  "on-secondary-fixed-variant": "#005225",
-                  "inverse-on-surface": "#eaf1ff",
-                  "tertiary-fixed": "#dbe3f1",
-                  "background": "#f8f9ff",
-                  "secondary": "#1c6c39",
-                  "surface": "#f8f9ff",
-                  "primary-fixed": "#d9e2ff",
-                  "surface-tint": "#4e5e84",
-                  "primary-fixed-dim": "#b6c6f2",
-                  "outline": "#75777f",
-                  "on-primary-container": "#8393bc",
-                  "tertiary-fixed-dim": "#bfc7d4",
-                  "surface-container-low": "#eff4ff",
-                  "surface-container-lowest": "#ffffff",
-                  "primary-container": "#1a2b4e",
-                  "on-tertiary-fixed-variant": "#3f4752",
-                  "on-surface": "#0b1c30",
-                  "inverse-surface": "#213145",
-                  "on-error": "#ffffff",
-                  "on-tertiary-fixed": "#141c26",
-                  "surface-variant": "#d3e4fe",
-                  "surface-container": "#e5eeff",
-                  "surface-container-highest": "#d3e4fe",
-                  "tertiary": "#101822",
-                  "error": "#ba1a1a",
-                  "on-secondary-container": "#24723e",
-                  "surface-dim": "#cbdbf5",
-                  "secondary-fixed-dim": "#8ad899",
-                  "on-primary-fixed": "#071a3d",
-                  "inverse-primary": "#b6c6f2",
-                  "error-container": "#ffdad6",
-                  "on-error-container": "#93000a",
-                  "on-secondary-fixed": "#00210b",
-                  "secondary-fixed": "#a5f5b3",
-                  "surface-container-high": "#dce9ff",
-                  "primary": "#031638",
-                  "on-tertiary": "#ffffff",
-                  "on-background": "#0b1c30",
-                  "secondary-container": "#a5f5b3",
-                  "on-primary": "#ffffff",
-                  "on-surface-variant": "#44464e",
-                  "tertiary-container": "#252d37"
-                },
-                "borderRadius": {
-                  "DEFAULT": "0.25rem",
-                  "lg": "0.5rem",
-                  "xl": "0.75rem",
-                  "full": "9999px"
-                },
-                "spacing": {
-                  "margin-desktop": "64px",
-                  "unit": "8px",
-                  "margin-mobile": "16px",
-                  "gutter": "24px",
-                  "container-max": "1280px"
-                },
-                "fontFamily": {
-                  "body-lg": ["Be Vietnam Pro"],
-                  "label-md": ["Manrope"],
-                  "headline-md": ["Manrope"],
-                  "display-lg": ["Manrope"],
-                  "headline-lg-mobile": ["Manrope"],
-                  "headline-lg": ["Manrope"],
-                  "body-md": ["Be Vietnam Pro"]
-                },
-                "fontSize": {
-                  "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
-                  "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
-                  "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
-                  "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                  "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
-                  "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
-                  "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
-                }
-              },
-            },
-          }
-        `}
-      </Script>
       <Script
         id="bimaheadquarter-structured-data"
         type="application/ld+json"
         strategy="beforeInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
-
-      {/* Inject external fonts & CSS references */}
-      <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap"
-        rel="stylesheet"
-      />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet"
       />
 
       <style dangerouslySetInnerHTML={{
@@ -509,9 +366,11 @@ export default function RootPage() {
             animation: slow-spin 180s linear infinite;
         }
       ` }} />
+      <LandingEffects />
 
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
+      <main>
 
         <header className="relative pt-24 pb-32 flex items-center justify-start min-h-[640px] lg:min-h-[680px] isolate" id="hero">
           <div className="max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
@@ -538,18 +397,8 @@ export default function RootPage() {
                 so you don't have to.
               </p>
               <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                <button
-                  className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all border-0 min-h-0 text-[14px]"
-                  onClick={() => scrollToSection("solutions")}
-                >
-                  Get Insurance Consultation
-                </button>
-                <button
-                  className="px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all bg-transparent min-h-0 text-[14px]"
-                  onClick={() => scrollToSection("process")}
-                >
-                  Claim Assistance
-                </button>
+                <a href="#solutions" className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all border-0 min-h-0 text-[14px] inline-block text-center">Get Insurance Consultation</a>
+                <a href="#process" className="px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all bg-transparent min-h-0 text-[14px] inline-block text-center">Claim Assistance</a>
               </div>
               <div className="mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-8 grayscale opacity-70">
                 <div className="flex flex-col">
@@ -734,9 +583,11 @@ export default function RootPage() {
                   
                   <div className="service-card-media">
                     <div className="service-image-clip">
-                      <img
+                      <Image
                         src={service.image}
                         alt={service.title}
+                        width={600}
+                        height={400}
                       />
                     </div>
                   </div>
@@ -749,7 +600,7 @@ export default function RootPage() {
               <div className="services-trust-item">
                 <span className="material-symbols-outlined">shield</span>
                 <div>
-                  <h4>Trusted Expertise</h4>
+                  <h3>Trusted Expertise</h3>
                   <p>Years of experience you can rely on.</p>
                 </div>
               </div>
@@ -757,7 +608,7 @@ export default function RootPage() {
               <div className="services-trust-item">
                 <span className="material-symbols-outlined">person_add</span>
                 <div>
-                  <h4>Client First Approach</h4>
+                  <h3>Client First Approach</h3>
                   <p>Solutions tailored to your needs.</p>
                 </div>
               </div>
@@ -765,7 +616,7 @@ export default function RootPage() {
               <div className="services-trust-item">
                 <span className="material-symbols-outlined">verified</span>
                 <div>
-                  <h4>Reliable Support</h4>
+                  <h3>Reliable Support</h3>
                   <p>We're here when you need us most.</p>
                 </div>
               </div>
@@ -786,12 +637,7 @@ export default function RootPage() {
                   through advocacy and expertise.
                 </p>
               </div>
-              <button
-                onClick={() => scrollToSection("process")}
-                className="font-label-md text-label-md text-primary flex items-center gap-2 px-6 py-3 border border-outline rounded-xl hover:bg-white transition-all bg-transparent min-h-0 text-[14px]"
-              >
-                View Our Process
-              </button>
+              <a href="#process" className="font-label-md text-label-md text-primary inline-flex items-center gap-2 px-6 py-3 border border-outline rounded-xl hover:bg-white transition-all bg-transparent min-h-0 text-[14px]">View Our Process</a>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
               <div className="md:col-span-2 glass-card p-10 rounded-3xl flex flex-col justify-between reveal border border-outline-variant/20">
@@ -832,12 +678,7 @@ export default function RootPage() {
                     From documentation to settlement, our experts are by your
                     side at your time of need.
                   </p>
-                  <button
-                    onClick={() => scrollToSection("cta-banner")}
-                    className="w-full py-4 bg-secondary text-white rounded-xl font-label-md hover:bg-secondary/90 transition-all border-0 min-h-0 text-[14px]"
-                  >
-                    Get Support Now
-                  </button>
+                  <a href="#cta-banner" className="w-full py-4 bg-secondary text-white rounded-xl font-label-md hover:bg-secondary/90 transition-all border-0 min-h-0 text-[14px] inline-block text-center">Get Support Now</a>
                 </div>
               </div>
               <div
@@ -893,10 +734,12 @@ export default function RootPage() {
         <section className="py-24 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop" id="process">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="order-2 lg:order-1 reveal">
-              <img
+              <Image
                 alt="Insurance claim assistance meeting with documents"
                 className="rounded-3xl shadow-2xl w-full aspect-video object-cover"
                 src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=80"
+                width={1200}
+                height={675}
               />
             </div>
             <div
@@ -915,9 +758,9 @@ export default function RootPage() {
                     1
                   </div>
                   <div>
-                    <h4 className="font-headline-md text-[18px] text-primary mb-1 font-semibold">
+                    <h3 className="font-headline-md text-[18px] text-primary mb-1 font-semibold">
                       Incident Reporting
-                    </h4>
+                    </h3>
                     <p className="text-body-md text-on-surface-variant">
                       Notify us immediately after an incident. Our response team
                       is available 24/7 to guide you.
@@ -929,9 +772,9 @@ export default function RootPage() {
                     2
                   </div>
                   <div>
-                    <h4 className="font-headline-md text-[18px] text-primary mb-1 font-semibold">
+                    <h3 className="font-headline-md text-[18px] text-primary mb-1 font-semibold">
                       Documentation Support
-                    </h4>
+                    </h3>
                     <p className="text-body-md text-on-surface-variant">
                       Our experts help you gather and verify all required
                       documents to ensure no technical rejections.
@@ -943,9 +786,9 @@ export default function RootPage() {
                     3
                   </div>
                   <div>
-                    <h4 className="font-headline-md text-[18px] text-primary mb-1 font-semibold">
+                    <h3 className="font-headline-md text-[18px] text-primary mb-1 font-semibold">
                       Advocacy &amp; Settlement
-                    </h4>
+                    </h3>
                     <p className="text-body-md text-on-surface-variant">
                       We represent you to the insurer, handling all negotiations
                       until the claim is successfully settled.
@@ -953,13 +796,7 @@ export default function RootPage() {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => scrollToSection("cta-banner")}
-                className="mt-12 px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md hover:shadow-lg transition-all reveal border-0 min-h-0 text-[14px]"
-                style={{ transitionDelay: "0.4s" }}
-              >
-                Start a Claim Request
-              </button>
+              <a href="#cta-banner" className="mt-12 px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md hover:shadow-lg transition-all reveal border-0 min-h-0 text-[14px] inline-block text-center" style={{ transitionDelay: "0.4s" }}>Start a Claim Request</a>
             </div>
           </div>
         </section>
@@ -1072,15 +909,7 @@ export default function RootPage() {
                 Can't find what you're looking for? Reach out to our dedicated
                 support team directly.
               </p>
-              <button
-                onClick={() => scrollToSection("cta-banner")}
-                className="text-secondary font-label-md flex items-center gap-2 hover:underline group bg-transparent p-0 min-h-0 shadow-none hover:translate-y-0 text-[14px]"
-              >
-                Contact Support{" "}
-                <span className="material-symbols-outlined group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform">
-                  arrow_outward
-                </span>
-              </button>
+              <a href="#cta-banner" className="text-secondary font-label-md inline-flex items-center gap-2 hover:underline group bg-transparent p-0 min-h-0 shadow-none hover:translate-y-0 text-[14px]">Contact Support <span className="material-symbols-outlined group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform">arrow_outward</span></a>
             </div>
             <div className="lg:col-span-2 space-y-4">
               <details
@@ -1167,16 +996,17 @@ export default function RootPage() {
                 <span className="material-symbols-outlined">call</span> Call Now:
                 {BUSINESS_DETAILS.phone}
               </a>
-              <button
-                onClick={() => window.alert("Consultation scheduled! Our office staff will reach out to you shortly.")}
+              <Link
+                href="/contact"
                 className="px-10 py-5 bg-white text-primary rounded-xl font-label-md text-label-md flex items-center gap-3 hover:scale-105 transition-all border-0 min-h-0 text-[14px]"
               >
                 Schedule Consultation
-              </button>
+              </Link>
             </div>
           </div>
         </section>
 
+        </main>
         <PublicFooter />
       </div>
     </>

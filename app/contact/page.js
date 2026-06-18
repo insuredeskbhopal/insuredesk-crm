@@ -39,7 +39,7 @@ const contactSchema = {
       }
     },
     {
-      "@type": "LocalBusiness",
+      "@type": "InsuranceAgency",
       "@id": `${SITE_URL}/contact#corporate-office`,
       name: SITE_NAME,
       telephone: BUSINESS_DETAILS.phoneHref,
@@ -51,6 +51,11 @@ const contactSchema = {
         addressRegion: BUSINESS_DETAILS.address.addressRegion,
         postalCode: BUSINESS_DETAILS.address.postalCode,
         addressCountry: BUSINESS_DETAILS.address.addressCountry
+      },
+      geo: {
+        "@type": "GeoCoordinates",
+        "latitude": 23.1956,
+        "longitude": 77.4608
       },
       openingHoursSpecification: {
         "@type": "OpeningHoursSpecification",
@@ -153,17 +158,11 @@ export default function ContactPage() {
   return (
     <>
       <Script
-        src="https://cdn.tailwindcss.com?plugins=forms,container-queries"
-        strategy="beforeInteractive"
-      />
-      <Script
         id="contact-structured-data"
         type="application/ld+json"
         strategy="beforeInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(contactSchema) }}
       />
-      <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
       <div className="landing-shell contact-page bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />

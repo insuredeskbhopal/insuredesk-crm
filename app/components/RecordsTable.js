@@ -304,7 +304,7 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
               <p>Policy Record Details</p>
               <h1>${record.policyNumber || "No Policy Number"}</h1>
             </div>
-            <img src="${window.location.origin}/brand/main-logo-wide.png" alt="Bima Headquarter" class="print-logo" />
+            <img src="${window.location.origin}/brand/main-logo-wide.webp" alt="Bima Headquarter" class="print-logo" />
           </div>
           
           ${renderPrintSection("General Information", [
@@ -699,7 +699,7 @@ export default function RecordsTable({ records, columns = DEFAULT_RECORD_COLUMNS
             >
               <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                 <img
-                  src="/brand/main-logo-wide.png"
+                  src="/brand/main-logo-wide.webp"
                   alt="Bima Headquarter"
                   style={{ height: "74px", width: "auto", objectFit: "contain" }}
                 />
