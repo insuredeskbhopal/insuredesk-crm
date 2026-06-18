@@ -408,7 +408,7 @@ export default function Dashboard({
         { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
         { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
         { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
-        { key: "vehicleNumber", label: "Vehicle No.", className: "col-default" },
+        { key: "vehicleNumber", label: "Vehicle / Risk Location", className: "col-default" },
         { key: "expiryDate", label: "Expiry Date", className: "col-date", format: "date" },
         { key: "savedAt", label: "Saved At", className: "col-saved", format: "dateTime" },
         { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },

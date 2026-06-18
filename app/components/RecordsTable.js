@@ -89,7 +89,7 @@ const DEFAULT_RECORD_COLUMNS = [
   { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
   {
     key: "vehicleNumber",
-    label: "Vehicle No.",
+    label: "Vehicle / Risk Location",
     className: "col-vehicle",
     code: true,
     fallbackKey: "registrationNumber",
@@ -119,7 +119,17 @@ function formatDateTime(value) {
 }
 
 function renderCell(record, column) {
-  const rawValue = record[column.key] || (column.fallbackKey ? record[column.fallbackKey] : "");
+  let rawValue = record[column.key] || (column.fallbackKey ? record[column.fallbackKey] : "");
+  
+  if (column.key === "vehicleNumber" && !rawValue) {
+    const fallbackValue = record.riskLocation || record.policyType || "";
+    if (fallbackValue && fallbackValue.length > 30) {
+      const truncated = fallbackValue.substring(0, 27) + "...";
+      return <span title={fallbackValue}>{truncated}</span>;
+    }
+    return fallbackValue ? <span title={fallbackValue}>{fallbackValue}</span> : "";
+  }
+
   const value =
     column.format === "dateTime"
       ? formatDateTime(rawValue)

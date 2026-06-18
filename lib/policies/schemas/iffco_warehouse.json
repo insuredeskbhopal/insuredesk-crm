@@ -1,0 +1,198 @@
+{
+  "name": "IFFCO Tokio Warehouse Policy",
+  "version": 1,
+  "expectedSections": [
+    "policy_details",
+    "insured_details",
+    "risk_location",
+    "warehouse_details",
+    "premium_details"
+  ],
+  "expectedTables": ["sum_insured_table", "premium_table"],
+  "fields": [
+    {
+      "field": "policyNumber",
+      "aliases": ["Policy No", "Policy Number"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "insuredName",
+      "aliases": ["Insured Name", "Insured's Name", "Insured"],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "sourceDocumentType",
+      "aliases": ["IFFCO_TOKIO_WAREHOUSE_V1"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "productName",
+      "aliases": [
+        "FLEXI PROPERTY PROTECTOR",
+        "BURGLARY AND HOUSE BREAKING INSURANCE",
+        "Fidelity Guarantee"
+      ],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "policyType",
+      "aliases": [
+        "Warehouse / MSME / Fire & Burglary package",
+        "FLEXI PROPERTY PROTECTOR",
+        "BURGLARY AND HOUSE BREAKING INSURANCE",
+        "Fidelity Guarantee"
+      ],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "mailingAddress",
+      "aliases": ["Corresponding Address", "Address"],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "riskLocation",
+      "aliases": ["Location address", "Location of risk", "Risk Location"],
+      "section": "risk_location",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "businessDescription",
+      "aliases": ["Location Description", "Business"],
+      "section": "warehouse_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "issuedAt",
+      "aliases": ["Issued at", "Issued At"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "sumInsured",
+      "aliases": ["Total Sum Insured", "Aggregate Sum Insured / Limit Of Guarantee"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "contentsSumInsured",
+      "aliases": ["Stocks"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "burglarySumInsured",
+      "aliases": ["Stocks", "Theft"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "fidelitySumInsured",
+      "aliases": ["Unnamed Employee"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "premiumIncludingGst",
+      "aliases": ["Total Premium Payable", "Total Value"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "netPremium",
+      "aliases": ["Net Premium (Rs.) /Taxable Value", "Taxable Value"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "gstAmount",
+      "aliases": ["Total GST Amount", "Total Tax"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "cgst",
+      "aliases": ["CGST"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "sgst",
+      "aliases": ["SGST"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "invoiceNumber",
+      "aliases": ["Tax Invoice Number", "Unique Invoice No"],
+      "section": "premium_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "invoiceDate",
+      "aliases": ["Tax Invoice Date", "Date of Issuance"],
+      "section": "premium_details",
+      "type": "date",
+      "required": false
+    },
+    {
+      "field": "gstin",
+      "aliases": ["GSTIN"],
+      "section": "premium_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "placeOfSupply",
+      "aliases": ["Place of Supply"],
+      "section": "premium_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "hypothecationDetails",
+      "aliases": ["Hypothecation Details", "Agreed Bank Clause"],
+      "section": "warehouse_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "brokerCode",
+      "aliases": ["Intermediary Code", "Intermediary No"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "brokerName",
+      "aliases": ["Intermediary Name"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    }
+  ]
+}

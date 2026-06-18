@@ -4293,10 +4293,9 @@ td:last-child {
 .customer-directory-head,
 .customer-row {
   display: grid;
-  grid-template-columns: minmax(260px, 1.45fr) 100px minmax(110px, 0.65fr) minmax(110px, 0.65fr) minmax(
-      150px,
-      0.85fr
-    ) minmax(120px, 0.78fr) minmax(140px, 0.88fr) 126px;
+  grid-template-columns:
+    minmax(260px, 1.45fr) 100px minmax(110px, 0.65fr) minmax(110px, 0.65fr) minmax(150px, 0.85fr)
+    minmax(120px, 0.78fr) minmax(140px, 0.88fr) 126px;
   align-items: center;
   min-width: 1260px;
 }
@@ -5786,10 +5785,9 @@ td:last-child {
 
   .customer-directory-head,
   .customer-row {
-    grid-template-columns: minmax(260px, 1.4fr) 100px minmax(110px, 0.7fr) minmax(110px, 0.7fr) minmax(
-        150px,
-        0.9fr
-      ) minmax(130px, 0.8fr) minmax(150px, 0.95fr) 126px;
+    grid-template-columns:
+      minmax(260px, 1.4fr) 100px minmax(110px, 0.7fr) minmax(110px, 0.7fr) minmax(150px, 0.9fr)
+      minmax(130px, 0.8fr) minmax(150px, 0.95fr) 126px;
   }
 }
 

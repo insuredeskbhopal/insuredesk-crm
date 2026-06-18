@@ -49,7 +49,7 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
             <thead>
               <tr>
                 <th>Policy No.</th>
-                <th>Vehicle No.</th>
+                <th>Vehicle / Risk Location</th>
                 <th>Type</th>
                 <th>Premium</th>
                 <th>Sum Insured</th>
@@ -70,7 +70,15 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
                     </button>
                   </td>
                   <td>
-                    <strong>{record.vehicleNumber || record.registrationNumber || "-"}</strong>
+                    <strong>
+                      {record.vehicleNumber ||
+                        record.registrationNumber ||
+                        (record.riskLocation
+                          ? (record.riskLocation.length > 20
+                              ? record.riskLocation.substring(0, 18) + "..."
+                              : record.riskLocation)
+                          : record.policyType || "-")}
+                    </strong>
                   </td>
                   <td>{record.policyType || record.sourceFile || "Policy document"}</td>
                   <td>{formatMoney(record.netPremium || record.totalPremium || record.premium)}</td>
