@@ -206,11 +206,13 @@ body:has(.seo-page) {
 
 @media (min-width: 901px) {
   .landing-shell nav#mainNav .landing-nav-inner,
-  .landing-shell #hero > .max-w-container-max {
+  .landing-shell #hero > .max-w-container-max,
+  .landing-shell .public-footer-inner {
     max-width: 1680px !important;
     width: min(100% - 96px, 1680px) !important;
     padding-left: 48px !important;
     padding-right: 48px !important;
+    transform: none !important;
   }
 }
 
