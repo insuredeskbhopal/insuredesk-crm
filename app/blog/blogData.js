@@ -58,7 +58,7 @@ export const BLOG_POSTS = [
     category: "Claims",
     readTime: "5 min read",
     date: "June 01, 2026",
-    author: { name: "Shewata Hariyali", role: "Claims Settlement Specialist" },
+    author: { name: "Shweta Hariyali", role: "Claims Settlement Specialist" },
     coverImage: "/brand/blog-health.png",
     sections: [
       { type: "paragraph", text: "Cashless hospitalization is one of the most convenient features of modern health insurance. It allows you to receive treatment at network hospitals without paying the medical bills directly from your pocket." },
@@ -303,7 +303,7 @@ export const BLOG_POSTS = [
     category: "Claims",
     readTime: "4 min read",
     date: "March 20, 2026",
-    author: { name: "Shewata Hariyali", role: "Claims Operations Lead" },
+    author: { name: "Shweta Hariyali", role: "Claims Operations Lead" },
     coverImage: "/brand/blog-claims.png",
     sections: [
       { type: "paragraph", text: "Delayed claims are usually caused by missing paperwork. Having the correct documentation ready speed up insurer approval." },
