@@ -2821,7 +2821,8 @@ body:has(.seo-page) {
   align-items: center;
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(10, 43, 92, 0.98) 0%, rgba(5, 25, 62, 1) 54%, rgba(13, 82, 53, 0.96) 100%);
+    linear-gradient(135deg, rgba(10, 43, 92, 0.9) 0%, rgba(5, 25, 62, 0.95) 54%, rgba(13, 82, 53, 0.9) 100%),
+    url("/brand/contact-bg.png") center center / cover no-repeat;
   padding: 32px;
   color: #ffffff;
 }
@@ -2865,6 +2866,7 @@ body:has(.seo-page) {
   color: currentColor;
   font-size: 20px;
   text-transform: none;
+  vertical-align: middle;
 }
 
 .landing-shell .public-footer {
