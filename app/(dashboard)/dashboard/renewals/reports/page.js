@@ -48,7 +48,7 @@ export default function ReportsPage() {
   }, []);
 
   // Check if role is allowed to export/print
-  const canExport = ["SUPER_ADMIN", "ADMIN"].includes(userRole);
+  const canExport = ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(userRole);
 
   // Print function
   const handlePrint = () => {

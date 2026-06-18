@@ -5,6 +5,7 @@ import {
   canAccessCustomerProfile,
   getTenantFilter,
   getCustomerProfileOwnerFilter,
+  getCustomerProfileScopedFilter,
   UserRole,
   applyLOBRestriction,
   getLOBFilterSQL
@@ -26,12 +27,13 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(canAccessSharedResource(session, "admin", orgB)).toBe(true);
     });
 
-    it("allows ADMIN to read and write inside their own organization but not delete", () => {
+    it("allows ADMIN to read, write, delete, and export inside their own organization", () => {
       const session = { id: user1, role: UserRole.ADMIN, organizationId: orgA };
 
       expect(canAccessSharedResource(session, "read", orgA)).toBe(true);
       expect(canAccessSharedResource(session, "write", orgA)).toBe(true);
-      expect(canAccessSharedResource(session, "delete", orgA)).toBe(false);
+      expect(canAccessSharedResource(session, "delete", orgA)).toBe(true);
+      expect(canAccessSharedResource(session, "export", orgA)).toBe(true);
     });
 
     it("blocks ADMIN from accessing resources belonging to another organization", () => {
@@ -42,11 +44,12 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(canAccessSharedResource(session, "delete", orgB)).toBe(false);
     });
 
-    it("allows MANAGER to read and write inside their own organization", () => {
+    it("allows MANAGER to read, write, and export inside their own organization", () => {
       const session = { id: user1, role: UserRole.MANAGER, organizationId: orgA };
 
       expect(canAccessSharedResource(session, "read", orgA)).toBe(true);
       expect(canAccessSharedResource(session, "write", orgA)).toBe(true);
+      expect(canAccessSharedResource(session, "export", orgA)).toBe(true);
     });
 
     it("blocks MANAGER from deleting records or accessing other organizations", () => {
@@ -90,13 +93,22 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
     const ownProfile = { organizationId: orgA, createdById: user1 };
     const otherProfile = { organizationId: orgA, createdById: user2 };
 
-    it("allows users to access only their own profiling records", () => {
+    it("allows agents to access only their own profiling records", () => {
       const session = { id: user1, role: UserRole.AGENT, organizationId: orgA };
 
       expect(canAccessCustomerProfile(session, "read", ownProfile)).toBe(true);
       expect(canAccessCustomerProfile(session, "write", ownProfile)).toBe(true);
       expect(canAccessCustomerProfile(session, "read", otherProfile)).toBe(false);
       expect(canAccessCustomerProfile(session, "write", otherProfile)).toBe(false);
+    });
+
+    it("allows manager, admin, and super admin to access all profiling records in scope", () => {
+      for (const role of [UserRole.MANAGER, UserRole.ADMIN, UserRole.SUPER_ADMIN]) {
+        const session = { id: user1, role, organizationId: orgA };
+
+        expect(canAccessCustomerProfile(session, "read", otherProfile)).toBe(true);
+        expect(canAccessCustomerProfile(session, "write", otherProfile)).toBe(true);
+      }
     });
 
     it("blocks cross-organization profiling access", () => {
@@ -164,6 +176,28 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
     });
   });
 
+  describe("getCustomerProfileScopedFilter", () => {
+    it("scopes agents to their own customer profiling records", () => {
+      const session = { userId: user1, role: UserRole.AGENT, organizationId: orgA };
+      const filter = getCustomerProfileScopedFilter(session);
+
+      expect(filter).toEqual({
+        organizationId: orgA,
+        deletedAt: null,
+        createdById: user1
+      });
+    });
+
+    it("allows managers and admins to view all customer profiles in their organization", () => {
+      for (const role of [UserRole.MANAGER, UserRole.ADMIN, UserRole.VIEWER]) {
+        const session = { userId: user1, role, organizationId: orgA };
+        const filter = getCustomerProfileScopedFilter(session);
+
+        expect(filter).toEqual({ organizationId: orgA, deletedAt: null });
+      }
+    });
+  });
+
   describe("canAccessResource compatibility alias", () => {
     it("delegates to shared org-wide access rules", () => {
       const session = { id: user1, role: UserRole.AGENT, organizationId: orgA };
@@ -180,30 +214,28 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(result).toEqual({ organizationId: orgA });
     });
 
-    it("returns blocking filter if assignedLOBs is empty array and role is not SUPER_ADMIN", () => {
+    it("does not block if assignedLOBs is empty because LOB visibility is disabled", () => {
       const session = { id: user1, role: UserRole.AGENT, organizationId: orgA, assignedLOBs: [] };
       const where = { organizationId: orgA };
       const result = applyLOBRestriction(where, session);
-      expect(result.id).toBe("00000000-0000-0000-0000-000000000000");
+      expect(result).toEqual({ organizationId: orgA });
     });
 
-    it("generates correct Prisma query filters when assignedLOBs is present", () => {
+    it("does not generate Prisma LOB filters when assignedLOBs is present", () => {
       const session = { id: user1, role: UserRole.AGENT, organizationId: orgA, assignedLOBs: ["Motor Insurance"] };
       const where = { organizationId: orgA };
       const result = applyLOBRestriction(where, session);
-      expect(result.AND).toBeDefined();
-      expect(result.AND[0].OR.length).toBeGreaterThan(0);
-      expect(result.AND[0].OR[0].selectedPolicyType.contains).toBe("motor");
+      expect(result).toEqual({ organizationId: orgA });
     });
 
-    it("returns correct getLOBFilterSQL output", () => {
+    it("returns no SQL LOB filter", () => {
       const sql = getLOBFilterSQL(["Motor Insurance"]);
-      expect(sql).toContain("LOWER(COALESCE(selected_policy_type, '')) LIKE '%motor%'");
+      expect(sql).toBe("");
     });
 
-    it("blocks queries in SQL when assignedLOBs is empty array", () => {
+    it("does not block SQL queries when assignedLOBs is empty array", () => {
       const sql = getLOBFilterSQL([]);
-      expect(sql).toBe("AND 1=0");
+      expect(sql).toBe("");
     });
   });
 });

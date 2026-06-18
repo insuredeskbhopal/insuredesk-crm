@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/db/prisma";
-import { startOfDay } from "@/app/lib/reporting/filters";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 
 export const dynamic = "force-dynamic";
 
+const REPORT_TIME_ZONE = "Asia/Kolkata";
+const INDIA_TIME_OFFSET = "+05:30";
 
 function formatRelativeTime(dateString) {
   const now = new Date();
@@ -37,8 +38,9 @@ export async function GET(request) {
     const isSuperAdmin = session.role === "SUPER_ADMIN";
     const orgId = session.organizationId || null;
 
-    const today = startOfDay(new Date());
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const now = new Date();
+    const todayParts = getIndiaDateParts(now);
+    const todayStr = `${todayParts.year}-${String(todayParts.month).padStart(2, "0")}-${String(todayParts.day).padStart(2, "0")}`;
 
     const queryParams = [
       isSuperAdmin,
@@ -111,9 +113,9 @@ export async function GET(request) {
       LIMIT 5
     `;
 
-    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const startOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const startOfThisYear = new Date(today.getFullYear(), 0, 1);
+    const startOfToday = makeIndiaDate(todayParts.year, todayParts.month, todayParts.day);
+    const startOfThisMonth = makeIndiaDate(todayParts.year, todayParts.month, 1);
+    const startOfThisYear = makeIndiaDate(todayParts.year, 1, 1);
 
     const statsParams = [
       isSuperAdmin,
@@ -317,4 +319,23 @@ export async function GET(request) {
       { status: 500 }
     );
   }
+}
+
+function makeIndiaDate(year, month, day) {
+  return new Date(`${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00${INDIA_TIME_OFFSET}`);
+}
+
+function getIndiaDateParts(date) {
+  const parts = new Intl.DateTimeFormat("en-IN", {
+    timeZone: REPORT_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+  const value = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  return {
+    year: Number(value.year),
+    month: Number(value.month),
+    day: Number(value.day)
+  };
 }

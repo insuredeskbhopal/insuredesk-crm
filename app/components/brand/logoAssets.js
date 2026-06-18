@@ -25,16 +25,6 @@ export const INSURER_LOGOS = [
     aliases: ["new india", "the new india assurance"]
   },
   {
-    name: "National Insurance",
-    src: "/logo/national-insurance-company.svg",
-    aliases: ["national insurance"]
-  },
-  {
-    name: "Oriental Insurance",
-    src: "/logo/oriental-insurance-company.svg",
-    aliases: ["oriental insurance", "the oriental insurance"]
-  },
-  {
     name: "United India Insurance",
     src: "/logo/united-india-insurance-company.svg",
     aliases: ["united india"]
@@ -50,20 +40,9 @@ export const INSURER_LOGOS = [
     aliases: ["royal sundaram", "royal-sundaram"]
   },
   {
-    name: "SBI General Insurance",
-    src: "/logo/sbi-general-insurance.png",
-    aliases: ["sbi general"],
-    className: "sbi-general-logo"
-  },
-  {
     name: "Future Generali",
     src: "/logo/future-generali-logo.png",
     aliases: ["future generali", "generali central", "generali"]
-  },
-  {
-    name: "Reliance General Insurance",
-    src: "/logo/reliance-general-insurance.svg",
-    aliases: ["reliance general"]
   }
 ];
 

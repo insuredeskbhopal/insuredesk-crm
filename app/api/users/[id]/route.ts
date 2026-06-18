@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { requireUserManager } from '@/lib/auth/middleware';
-import { canManageRole, getVisibleUserWhere } from '@/lib/auth/user-permissions';
+import { canManageRole, canMutateUsers, getVisibleUserWhere } from '@/lib/auth/user-permissions';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
@@ -43,9 +43,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
-  if (!canManageRole(requester.role, user.role)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
   return NextResponse.json(user);
 }
 
@@ -54,6 +51,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const authResult = await requireUserManager(request);
   if ('response' in authResult) return authResult.response;
   const requester = authResult.user;
+  if (!canMutateUsers(requester.role)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   const body = await request.json();
   const parseResult = updateUserSchema.safeParse(body);
@@ -117,6 +117,9 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const authResult = await requireUserManager(request);
   if ('response' in authResult) return authResult.response;
   const requester = authResult.user;
+  if (!canMutateUsers(requester.role)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   // Prevent self-deletion and ensure at least one SUPER_ADMIN remains
   const requesterId = requester.id;

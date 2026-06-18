@@ -1,6 +1,6 @@
 import { normalizeRecord } from "@/lib/records";
 import { prisma } from "@/lib/db/prisma";
-import { getCustomerProfileOwnerFilter, getTenantFilter } from "@/lib/auth/rbac";
+import { getCustomerProfileScopedFilter, getTenantFilter } from "@/lib/auth/rbac";
 import { getCurrentSessionFromCookies } from "@/lib/records/scoped-data";
 import { parseMoney } from "@/app/lib/reporting/totals";
 import { parsePolicyDate, startOfDay } from "@/app/lib/reporting/filters";
@@ -135,7 +135,7 @@ export async function loadReportingCenterData({ category = "executive", searchPa
   const auditWhere = applyDateAndFieldFilters({ ...auditBaseWhere }, filters, dateRange, "createdAt", {
     userField: "userId"
   });
-  const profileWhere = applyProfileFilters(getCustomerProfileOwnerFilter(session), filters, dateRange);
+  const profileWhere = applyProfileFilters(getCustomerProfileScopedFilter(session), filters, dateRange);
   const userWhere = session.role === "SUPER_ADMIN"
     ? { deletedAt: null }
     : { organizationId: session.organizationId, deletedAt: null };
@@ -189,8 +189,8 @@ export async function loadReportingCenterData({ category = "executive", searchPa
   };
 
   const summary = buildSummary(context);
-  const modules = buildCategoryCards(context, summary).filter((item) => canAccessReportCategory(session, item.id));
-  const report = canAccessReportCategory(session, category)
+  const modules = buildCategoryCards(context, summary).filter(() => canAccessReportCategory(session));
+  const report = canAccessReportCategory(session)
     ? buildReport(category, context, summary)
     : buildAccessDeniedReport(category);
 
@@ -203,12 +203,8 @@ export async function loadReportingCenterData({ category = "executive", searchPa
   };
 }
 
-function canAccessReportCategory(session, category) {
-  if (!session) return false;
-  if (session.role === "AGENT") {
-    return ["customer-profiling", "team", "operations", "documents"].includes(category);
-  }
-  return true;
+function canAccessReportCategory(session) {
+  return Boolean(session?.role);
 }
 
 function buildAccessDeniedReport(category) {

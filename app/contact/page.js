@@ -20,7 +20,7 @@ const contactSchema = {
       "logo": `${SITE_URL}/brand/main-logo-wide.png`,
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": BUSINESS_DETAILS.phone,
+        "telephone": BUSINESS_DETAILS.phoneHref,
         "contactType": "customer service",
         "areaServed": "IN",
         "availableLanguage": ["English", "Hindi"]
@@ -31,7 +31,7 @@ const contactSchema = {
       "@id": `${SITE_URL}/contact#local-business`,
       "name": SITE_NAME,
       "image": `${SITE_URL}/brand/main-logo-wide.png`,
-      "telephone": BUSINESS_DETAILS.phone,
+      "telephone": BUSINESS_DETAILS.phoneHref,
       "email": BUSINESS_DETAILS.email,
       "address": {
         "@type": "PostalAddress",
@@ -66,7 +66,7 @@ const contactSchema = {
       "parentOrganization": {
         "@id": `${SITE_URL}/#organization`
       },
-      "telephone": BUSINESS_DETAILS.phone,
+      "telephone": BUSINESS_DETAILS.phoneHref,
       "address": {
         "@type": "PostalAddress",
         "streetAddress": BUSINESS_DETAILS.address.streetAddress,
@@ -244,7 +244,7 @@ export default function ContactPage() {
                       OFFICE ADDRESS
                     </h3>
                     <p className="text-sm text-on-surface-variant leading-relaxed">
-                      {BUSINESS_DETAILS.address.streetAddress}, {BUSINESS_DETAILS.address.addressLocality}, {BUSINESS_DETAILS.address.addressRegion} - {BUSINESS_DETAILS.address.postalCode}
+                      {BUSINESS_DETAILS.fullAddress}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -252,7 +252,7 @@ export default function ContactPage() {
                       <h3 className="text-sm font-bold uppercase tracking-wider text-on-surface-variant/70 text-[11px] mb-2">
                         PHONE
                       </h3>
-                      <a href={`tel:${BUSINESS_DETAILS.phone.replace(/\s+/g, "")}`} className="text-[16px] font-bold text-secondary hover:underline">
+                      <a href={`tel:${BUSINESS_DETAILS.phoneHref}`} className="text-[16px] font-bold text-secondary hover:underline">
                         {BUSINESS_DETAILS.phone}
                       </a>
                     </div>
@@ -474,7 +474,7 @@ export default function ContactPage() {
         <section className="py-12 bg-surface-container-low border-t border-b border-outline-variant/20 text-center">
           <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex flex-wrap justify-center gap-8 reveal">
             <a
-              href={`tel:${BUSINESS_DETAILS.phone.replace(/\s+/g, "")}`}
+              href={`tel:${BUSINESS_DETAILS.phoneHref}`}
               className="px-8 py-4 bg-secondary text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:scale-105 transition-all text-[14px]"
             >
               <span className="material-symbols-outlined">call</span>
@@ -488,7 +488,7 @@ export default function ContactPage() {
               Get Insurance Assistance
             </a>
             <a
-              href="https://maps.google.com/?q=Nikhil+Homes+Danish+Nagar+Bhopal"
+              href={BUSINESS_DETAILS.mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-4 bg-white text-primary rounded-xl text-sm font-bold flex items-center gap-2 hover:scale-105 transition-all border border-outline-variant/30 text-[14px]"

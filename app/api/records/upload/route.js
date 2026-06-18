@@ -9,6 +9,7 @@ import { verifyJWT } from "@/lib/auth";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/uploads/failure";
 import { UPLOAD_STATUS } from "@/lib/uploads/status";
+import { uploadFile } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
@@ -33,9 +34,15 @@ export async function POST(request) {
 
     for (const file of files) {
       let buffer = null;
+      let storageResult = null;
 
       try {
         buffer = await validatePdfFile(file);
+        storageResult = await uploadFile(
+          buffer,
+          file.type || "application/pdf",
+          file.name || "Untitled.pdf"
+        );
 
         const textResult = await extractTextFromPdf(buffer);
         const rawText = textResult.rawText;
@@ -57,6 +64,32 @@ export async function POST(request) {
           throw new Error(formatReviewValidationError(validation.missingRequired));
         }
 
+        const uploadedFile = await prisma.uploadedFile.create({
+          data: {
+            id: randomUUID(),
+            sourceFile: file.name || data.sourceFile || "Untitled.pdf",
+            mimeType: file.type || "application/pdf",
+            sizeBytes: buffer.byteLength,
+            rawText,
+            extractionMethod: data.extractionMethod || textResult.extractionMethod || "pdf_text",
+            status: UPLOAD_STATUS.APPROVED,
+            detectedCompanyName: data.insuranceCompany || "",
+            detectedServiceCategoryName: data.documentCategory || "",
+            detectedPolicyTypeName: data.policyType || "",
+            extractedData: data,
+            extractionQuality: data.extractionQuality || {},
+            extractionLog: textResult.extractionLog || {},
+            schemaVersion: data.schemaExtraction?.schemaVersion || null,
+            organizationId: user.organizationId,
+            createdById: user.userId || user.id,
+            storageProvider: storageResult.storageProvider,
+            storagePath: storageResult.storagePath,
+            fileHash: storageResult.fileHash,
+            fileSize: storageResult.fileSize,
+            storageMetadata: storageResult.storageMetadata || {}
+          }
+        });
+
         const record = await prisma.policyRecord.create({
           data: {
             id: randomUUID(),
@@ -64,7 +97,22 @@ export async function POST(request) {
             data,
             pdfFileName: file.name || data.sourceFile || "Untitled.pdf",
             pdfMimeType: file.type || "application/pdf",
-            pdfBytes: buffer,
+            sourceFile: file.name || data.sourceFile || "Untitled.pdf",
+            rawText,
+            detectedCompany: data.insuranceCompany || "",
+            detectedServiceCategory: data.documentCategory || "",
+            detectedPolicyType: data.policyType || "",
+            selectedCompany: data.insuranceCompany || "",
+            selectedServiceCategory: data.documentCategory || "",
+            selectedPolicyType: data.policyType || "",
+            confidenceScore: Number(data.confidenceScore || 0),
+            extractedData: data,
+            reviewedData: data,
+            extractionMethod: data.extractionMethod || textResult.extractionMethod || "",
+            extractionQuality: data.extractionQuality || {},
+            extractionLog: textResult.extractionLog || {},
+            schemaVersion: Number(data.schemaExtraction?.schemaVersion || 1),
+            uploadedFileId: uploadedFile.id,
             organizationId: user.organizationId,
             createdById: user.userId || user.id
           }
@@ -80,7 +128,8 @@ export async function POST(request) {
           error,
           user,
           actorId: user.userId || user.id,
-          buffer
+          buffer,
+          storageResult
         });
         const errorMessage = failedUpload?.errorMessage || getUploadFailureMessage(error);
 

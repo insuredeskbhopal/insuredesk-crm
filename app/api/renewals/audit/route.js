@@ -15,6 +15,9 @@ export async function GET(request) {
     if (!user) {
       return Response.json({ error: "Invalid session" }, { status: 401 });
     }
+    if (!["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(user.role)) {
+      return Response.json({ error: "Audit logs are restricted to managers and administrators." }, { status: 403 });
+    }
 
     const { searchParams } = new URL(request.url);
     const policyId = searchParams.get("policyId");

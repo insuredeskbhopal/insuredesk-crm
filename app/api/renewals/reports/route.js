@@ -12,8 +12,8 @@ export async function GET(request) {
     }
 
     const user = await verifyJWT(token);
-    if (!user || !["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(user.role)) {
-      return Response.json({ error: "Unauthorized. Reports are management-only." }, { status: 403 });
+    if (!user) {
+      return Response.json({ error: "Invalid session" }, { status: 401 });
     }
 
     const isSuperAdmin = user.role === "SUPER_ADMIN";

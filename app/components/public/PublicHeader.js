@@ -4,29 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import BrandLogo from "@/app/components/brand/BrandLogo";
-import { BUSINESS_DETAILS } from "@/lib/seo/site";
 
 export default function PublicHeader() {
   const [scrolled, setScrolled] = useState(false);
-  const [user, setUser] = useState(null);
   const pathname = usePathname();
 
   useEffect(() => {
-    // Check if user is logged in
-    fetch("/api/auth/me")
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("Not logged in");
-      })
-      .then((data) => {
-        if (data.success && data.user) {
-          setUser(data.user);
-        }
-      })
-      .catch(() => {
-        // No-op (remain as guest)
-      });
-
     // Handle scroll events for navbar shadow
     const handleScroll = () => {
       if (window.scrollY > 40) {
@@ -96,30 +79,12 @@ export default function PublicHeader() {
             </Link>
           </div>
 
-          {user ? (
-            <Link
-              className="hidden md:block font-label-md text-label-md px-6 py-3 rounded-lg border border-secondary text-secondary hover:bg-secondary/5 transition-all entry-anim flex items-center justify-center text-[14px]"
-              style={{ animationDelay: "0.7s" }}
-              href="/dashboard"
-            >
-              Go to CRM Dashboard
-            </Link>
-          ) : (
-            <Link
-              className="hidden md:block font-label-md text-label-md px-6 py-3 rounded-lg border border-secondary text-secondary hover:bg-secondary/5 transition-all entry-anim flex items-center justify-center text-[14px]"
-              style={{ animationDelay: "0.7s" }}
-              href="/crm/admin/login"
-            >
-              Client Login
-            </Link>
-          )}
-
           <Link
-            href="/contact"
+            href="/services"
             className="font-label-md text-label-md px-6 py-3 rounded-lg bg-primary text-on-primary hover:shadow-lg active:scale-95 transition-all entry-anim flex items-center justify-center text-[14px] font-bold"
-            style={{ animationDelay: "0.8s" }}
+            style={{ animationDelay: "0.7s" }}
           >
-            Free Consultation
+            Explore Services
           </Link>
         </div>
       </div>

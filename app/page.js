@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
-import BrandLogo from "@/app/components/brand/BrandLogo";
 import { INSURER_LOGOS } from "@/app/components/brand/logoAssets";
 import {
   BUSINESS_DETAILS,
@@ -28,7 +27,7 @@ const structuredData = {
       url: SITE_URL,
       logo: `${SITE_URL}/brand/main-logo-wide.png`,
       email: BUSINESS_DETAILS.email,
-      telephone: BUSINESS_DETAILS.phone,
+      telephone: BUSINESS_DETAILS.phoneHref,
       description: SITE_DESCRIPTION,
       areaServed: BUSINESS_DETAILS.serviceArea,
       knowsAbout: [
@@ -50,7 +49,7 @@ const structuredData = {
       name: SITE_NAME,
       url: SITE_URL,
       image: `${SITE_URL}/brand/main-logo-wide.png`,
-      telephone: BUSINESS_DETAILS.phone,
+      telephone: BUSINESS_DETAILS.phoneHref,
       email: BUSINESS_DETAILS.email,
       address: {
         "@type": "PostalAddress",
@@ -155,39 +154,9 @@ const structuredData = {
 };
 
 export default function RootPage() {
-  const [scrolled, setScrolled] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
-  const [user, setUser] = useState(null);
-
   useEffect(() => {
     // Add page-specific body class to scope styles and prevent overrides from globals.css
     document.body.classList.add("landing-page");
-
-    // Check if user is logged in
-    fetch("/api/auth/me")
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("Not logged in");
-      })
-      .then((data) => {
-        if (data.success && data.user) {
-          setUser(data.user);
-        }
-      })
-      .catch(() => {
-        // No-op (remain as guest)
-      });
-
-    // Handle scroll events for navbar state and parallax positioning
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-      if (window.scrollY > 50) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
 
     // Scroll Reveal animations using IntersectionObserver
     const revealElements = document.querySelectorAll(".reveal");
@@ -216,46 +185,12 @@ export default function RootPage() {
     glassCards.forEach((card) => {
       card.addEventListener("mousemove", handleMouseMove);
     });
-
-    // Mouse Tracking for Interactive Parallax Hero
-    const hero = document.getElementById("hero");
-    const handleHeroMouseMove = (e) => {
-      if (!hero) return;
-      const rect = hero.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
-      hero.style.setProperty("--mx", `${x * 35}px`);
-      hero.style.setProperty("--my", `${y * 35}px`);
-      hero.style.setProperty("--rx", `${y * -15}deg`);
-      hero.style.setProperty("--ry", `${x * 15}deg`);
-      hero.style.setProperty("--bmx", `${x * -50}px`);
-      hero.style.setProperty("--bmy", `${y * -50}px`);
-    };
-    const handleHeroMouseLeave = () => {
-      if (!hero) return;
-      hero.style.setProperty("--mx", "0px");
-      hero.style.setProperty("--my", "0px");
-      hero.style.setProperty("--rx", "0deg");
-      hero.style.setProperty("--ry", "0deg");
-      hero.style.setProperty("--bmx", "0px");
-      hero.style.setProperty("--bmy", "0px");
-    };
-    if (hero) {
-      hero.addEventListener("mousemove", handleHeroMouseMove);
-      hero.addEventListener("mouseleave", handleHeroMouseLeave);
-    }
-
     return () => {
       document.body.classList.remove("landing-page");
-      window.removeEventListener("scroll", handleScroll);
       revealObserver.disconnect();
       glassCards.forEach((card) => {
         card.removeEventListener("mousemove", handleMouseMove);
       });
-      if (hero) {
-        hero.removeEventListener("mousemove", handleHeroMouseMove);
-        hero.removeEventListener("mouseleave", handleHeroMouseLeave);
-      }
     };
   }, []);
 
@@ -266,15 +201,9 @@ export default function RootPage() {
     }
   };
   const partnerLogos = [...INSURER_LOGOS, ...INSURER_LOGOS];
-  const heroInsurerLogos = INSURER_LOGOS;
 
   return (
     <>
-      {/* Load Tailwind CSS via CDN since it is not set up locally */}
-      <Script
-        src="https://cdn.tailwindcss.com?plugins=forms,container-queries"
-        strategy="beforeInteractive"
-      />
       <Script id="tailwind-config" strategy="afterInteractive">
         {`
           tailwind.config = {
@@ -457,11 +386,11 @@ export default function RootPage() {
             will-change: transform;
         }
 
-        nav.scrolled {
-            height: 64px !important;
-            background-color: rgba(255, 255, 255, 0.9) !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-            border-color: rgba(197, 198, 207, 0.3) !important;
+        nav#mainNav.scrolled {
+            height: 72px !important;
+            background: linear-gradient(90deg, #F8FAFC 0%, #EEF4FF 50%, #F8FAFC 100%) !important;
+            box-shadow: none !important;
+            border: none !important;
         }
 
         /* Specificity bypass to override body * color: #000000 !important from globals.css */
@@ -584,50 +513,9 @@ export default function RootPage() {
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
 
-        <header className="relative pt-20 pb-32 overflow-hidden flex items-center justify-center min-h-[600px] isolate" id="hero">
-          <div
-            className="parallax-bg absolute inset-0 -z-20 bg-gradient-to-b from-surface-container/30 to-background"
-            style={{ transform: `translateY(${scrollY * 0.4}px)` }}
-          ></div>
-
-          {/* Centered Background Parallax Logo behind the text */}
-          <div
-            className="hero-brand-stage absolute inset-0 -z-10 flex items-center justify-center pointer-events-none transition-all duration-300 ease-out preserve-3d"
-            style={{
-              transform: `translate3d(var(--bmx, 0px), calc(var(--bmy, 0px) + ${scrollY * 0.1}px), 0) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))`,
-            }}
-          >
-            <div className="hero-logo-halo"></div>
-            <div className="hero-logo-mark animate-float">
-              <Image
-                unoptimized
-                src="/brand/main-logo-wide.png"
-                alt=""
-                className="select-none"
-                width={610}
-                height={340}
-              />
-            </div>
-            <div className="hero-insurer-orbit" aria-hidden="true">
-              {heroInsurerLogos.map((logo, index) => (
-                <span
-                  className={`hero-insurer-logo hero-insurer-logo-${index + 1} ${logo.className || ""}`.trim()}
-                  key={`hero-${logo.src}`}
-                >
-                  <Image
-                    unoptimized
-                    src={logo.src}
-                    alt=""
-                    width={132}
-                    height={54}
-                  />
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="hero-content max-w-4xl mx-auto px-margin-mobile md:px-margin-desktop text-center flex flex-col items-center justify-center relative z-10">
-            <div className="entry-anim flex flex-col items-center">
+        <header className="relative pt-24 pb-32 flex items-center justify-start min-h-[640px] lg:min-h-[680px] isolate" id="hero">
+          <div className="max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
+            <div className="hero-content flex flex-col items-center lg:items-start text-center lg:text-left justify-center max-w-[680px]">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[12px] mb-6">
                 <span
                   className="material-symbols-outlined text-[16px]"
@@ -637,32 +525,33 @@ export default function RootPage() {
                 </span>
                 BY INSUREDESK IMF PVT LTD
               </div>
-              <h1 className="font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold">
-                Your Trusted Insurance &amp;{" "}
+              <h1 className="font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold text-center lg:text-left">
+                Your Trusted Insurance &amp;
+                <br />
                 <span className="text-secondary">Claim Consulting</span> Partner
               </h1>
-              <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl mx-auto text-[18px]">
+              <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-center lg:text-left">
                 Helping Individuals &amp; Businesses Choose the Right Insurance
-                with Expert Claim Assistance. We navigate the complexity so you
-                don't have to.
+                <br className="hidden lg:inline" />
+                with Expert Claim Assistance. We navigate the complexity
+                <br className="hidden lg:inline" />
+                so you don't have to.
               </p>
-              <div className="flex flex-wrap gap-4 justify-center">
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                 <button
-                  className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all entry-anim border-0 min-h-0 text-[14px]"
-                  style={{ animationDelay: "0.2s" }}
+                  className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all border-0 min-h-0 text-[14px]"
                   onClick={() => scrollToSection("solutions")}
                 >
                   Get Insurance Consultation
                 </button>
                 <button
-                  className="px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all entry-anim bg-transparent min-h-0 text-[14px]"
-                  style={{ animationDelay: "0.3s" }}
+                  className="px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all bg-transparent min-h-0 text-[14px]"
                   onClick={() => scrollToSection("process")}
                 >
                   Claim Assistance
                 </button>
               </div>
-              <div className="mt-12 flex flex-wrap items-center justify-center gap-8 grayscale opacity-70">
+              <div className="mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-8 grayscale opacity-70">
                 <div className="flex flex-col">
                   <span className="font-headline-md text-headline-md text-primary text-[24px] font-bold">
                     10+
@@ -695,8 +584,8 @@ export default function RootPage() {
         </header>
 
         {/* Partner Slider */}
-        <section className="py-12 bg-surface-container-lowest overflow-hidden border-t border-b border-outline-variant/30" id="partners">
-          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-8 text-center reveal">
+        <section className="pt-4 pb-8 bg-surface-container-lowest overflow-hidden border-t border-b border-outline-variant/30" id="partners">
+          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-2 text-center reveal">
             <p className="font-label-md text-on-surface-variant uppercase tracking-widest text-[12px] font-semibold">
               Authorized Partners with Leading Insurers
             </p>
@@ -711,142 +600,151 @@ export default function RootPage() {
         </section>
 
         {/* Insurance Categories Grid */}
-        <section className="py-24 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop" id="solutions">
-          <div className="text-center mb-16 reveal">
-            <h2 className="font-headline-lg text-headline-lg text-primary mb-4 text-[32px] font-bold">
-              Comprehensive Insurance Solutions
-            </h2>
-            <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto text-[18px]">
-              From personal protection to large-scale industrial risks, we
-              provide tailored consultancy for every need.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            {/* Card Components */}
-            <div
-              className="glass-card p-8 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20"
-              style={{ transitionDelay: "0.1s" }}
-            >
-              <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                <span className="material-symbols-outlined text-[32px]">
-                  directions_car
-                </span>
+        <section className="services-section py-24 relative overflow-hidden" id="solutions">
+          <div className="services-section-texture absolute inset-0"></div>
+          <div className="relative max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+            <div className="services-heading text-center reveal">
+              <div className="services-kicker">
+                <div></div>
+                <span>OUR SERVICES</span>
+                <div></div>
               </div>
-              <h3 className="font-headline-md text-[20px] text-primary mb-3 font-semibold">
-                Car
-              </h3>
-              <p className="text-body-md text-on-surface-variant mb-6 text-sm">
-                Full protection for your vehicle &amp; passengers.
+              <h2 className="font-headline-lg font-extrabold tracking-tight">
+                Comprehensive Insurance Solutions
+              </h2>
+              <p className="font-body-lg">
+                From personal protection to large-scale industrial risks,
+                <br />
+                we provide tailored consultancy for every need.
               </p>
-              <button
-                onClick={() => scrollToSection("cta-banner")}
-                className="mt-auto font-label-md text-secondary hover:underline flex items-center gap-1 bg-transparent p-0 min-h-0 shadow-none hover:translate-y-0 text-[14px]"
-              >
-                Learn More{" "}
-                <span className="material-symbols-outlined text-sm">
-                  arrow_forward
-                </span>
-              </button>
             </div>
-            <div
-              className="glass-card p-8 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20"
-              style={{ transitionDelay: "0.2s" }}
-            >
-              <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                <span className="material-symbols-outlined text-[32px]">
-                  two_wheeler
-                </span>
-              </div>
-              <h3 className="font-headline-md text-[20px] text-primary mb-3 font-semibold">
-                Bike
-              </h3>
-              <p className="text-body-md text-on-surface-variant mb-6 text-sm">
-                Swift coverage for two-wheeler safety.
-              </p>
-              <button
-                onClick={() => scrollToSection("cta-banner")}
-                className="mt-auto font-label-md text-secondary hover:underline flex items-center gap-1 bg-transparent p-0 min-h-0 shadow-none hover:translate-y-0 text-[14px]"
-              >
-                Learn More{" "}
-                <span className="material-symbols-outlined text-sm">
-                  arrow_forward
-                </span>
-              </button>
+            
+            <div className="services-grid">
+              {[
+                {
+                  title: "Motor Insurance",
+                  icon: "directions_car",
+                  desc: "Comprehensive coverage and claims support for personal cars, two-wheelers, and commercial logistics fleets.",
+                  image: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=600&q=80",
+                  route: "/services/motor-insurance",
+                  delay: "0.1s"
+                },
+                {
+                  title: "Life Insurance",
+                  icon: "family_restroom",
+                  desc: "Ensure your family's financial security with term life plans, savings strategies, and Keyman business protection.",
+                  image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=600&q=80",
+                  route: "/services/life-insurance",
+                  delay: "0.2s"
+                },
+                {
+                  title: "Warehouse Insurance",
+                  icon: "inventory_2",
+                  desc: "Protect warehouse stock, inventory, burglary risks, and storage liabilities from fire and hazards.",
+                  image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80",
+                  route: "/services/warehouse-insurance",
+                  delay: "0.3s"
+                },
+                {
+                  title: "Marine Insurance",
+                  icon: "directions_boat",
+                  desc: "Insure goods in transit via road, rail, air, or sea cargo policies and annual movement exposure.",
+                  image: "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=600&q=80",
+                  route: "/services/marine-insurance",
+                  delay: "0.4s"
+                },
+                {
+                  title: "Commercial Insurance",
+                  icon: "apartment",
+                  desc: "Robust risk management, corporate asset protection, and liability covers for business establishments.",
+                  image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
+                  route: "/services/commercial-insurance",
+                  delay: "0.5s"
+                },
+                {
+                  title: "General Insurance",
+                  icon: "shield",
+                  desc: "Protect your personal assets, property, households, and miscellaneous exposures with curated insurance consulting.",
+                  image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80",
+                  route: "/services/general-insurance",
+                  delay: "0.6s"
+                }
+              ].map((service, index) => (
+                <Link
+                  key={index}
+                  href={service.route}
+                  className="service-card group reveal"
+                  style={{ transitionDelay: service.delay }}
+                >
+                  <div className="service-card-copy">
+                    {/* Shield background overlay */}
+                    <div className="service-card-watermark" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                    </div>
+                    
+                    <div>
+                      <div className="service-card-icon">
+                        <span className="material-symbols-outlined text-[24px]">
+                          {service.icon}
+                        </span>
+                      </div>
+                      <h3 className="font-headline-md font-bold">
+                        {service.title}
+                      </h3>
+                      <p className="text-body-md">
+                        {service.desc}
+                      </p>
+                    </div>
+                    
+                    <span
+                      className="service-card-link font-label-md group/btn"
+                    >
+                      Learn More{" "}
+                      <span className="material-symbols-outlined text-[16px]">
+                        arrow_forward
+                      </span>
+                    </span>
+                  </div>
+                  
+                  <div className="service-card-media">
+                    <div className="service-image-clip">
+                      <img
+                        src={service.image}
+                        alt={service.title}
+                      />
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
-            <div
-              className="glass-card p-8 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20"
-              style={{ transitionDelay: "0.3s" }}
-            >
-              <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                <span className="material-symbols-outlined text-[32px]">
-                  medical_services
-                </span>
+
+            {/* Trust Indicator Bar */}
+            <div className="services-trust-bar reveal">
+              <div className="services-trust-item">
+                <span className="material-symbols-outlined">shield</span>
+                <div>
+                  <h4>Trusted Expertise</h4>
+                  <p>Years of experience you can rely on.</p>
+                </div>
               </div>
-              <h3 className="font-headline-md text-[20px] text-primary mb-3 font-semibold">
-                Health
-              </h3>
-              <p className="text-body-md text-on-surface-variant mb-6 text-sm">
-                Cashless treatments and wellness support.
-              </p>
-              <button
-                onClick={() => scrollToSection("cta-banner")}
-                className="mt-auto font-label-md text-secondary hover:underline flex items-center gap-1 bg-transparent p-0 min-h-0 shadow-none hover:translate-y-0 text-[14px]"
-              >
-                Learn More{" "}
-                <span className="material-symbols-outlined text-sm">
-                  arrow_forward
-                </span>
-              </button>
-            </div>
-            <div
-              className="glass-card p-8 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20"
-              style={{ transitionDelay: "0.4s" }}
-            >
-              <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                <span className="material-symbols-outlined text-[32px]">
-                  family_restroom
-                </span>
+              <div className="services-trust-divider"></div>
+              <div className="services-trust-item">
+                <span className="material-symbols-outlined">person_add</span>
+                <div>
+                  <h4>Client First Approach</h4>
+                  <p>Solutions tailored to your needs.</p>
+                </div>
               </div>
-              <h3 className="font-headline-md text-[20px] text-primary mb-3 font-semibold">
-                Life
-              </h3>
-              <p className="text-body-md text-on-surface-variant mb-6 text-sm">
-                Secure your family's financial future.
-              </p>
-              <button
-                onClick={() => scrollToSection("cta-banner")}
-                className="mt-auto font-label-md text-secondary hover:underline flex items-center gap-1 bg-transparent p-0 min-h-0 shadow-none hover:translate-y-0 text-[14px]"
-              >
-                Learn More{" "}
-                <span className="material-symbols-outlined text-sm">
-                  arrow_forward
-                </span>
-              </button>
-            </div>
-            <div
-              className="glass-card p-8 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20"
-              style={{ transitionDelay: "0.5s" }}
-            >
-              <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                <span className="material-symbols-outlined text-[32px]">
-                  apartment
-                </span>
+              <div className="services-trust-divider"></div>
+              <div className="services-trust-item">
+                <span className="material-symbols-outlined">verified</span>
+                <div>
+                  <h4>Reliable Support</h4>
+                  <p>We're here when you need us most.</p>
+                </div>
               </div>
-              <h3 className="font-headline-md text-[20px] text-primary mb-3 font-semibold">
-                Commercial
-              </h3>
-              <p className="text-body-md text-on-surface-variant mb-6 text-sm">
-                Robust risk management for businesses.
-              </p>
-              <button
-                onClick={() => scrollToSection("cta-banner")}
-                className="mt-auto font-label-md text-secondary hover:underline flex items-center gap-1 bg-transparent p-0 min-h-0 shadow-none hover:translate-y-0 text-[14px]"
-              >
-                Learn More{" "}
-                <span className="material-symbols-outlined text-sm">
-                  arrow_forward
-                </span>
-              </button>
             </div>
           </div>
         </section>
@@ -972,9 +870,9 @@ export default function RootPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="order-2 lg:order-1 reveal">
               <img
-                alt="Close up of legal documentation and pen"
+                alt="Insurance claim assistance meeting with documents"
                 className="rounded-3xl shadow-2xl w-full aspect-video object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAKSTv4L68JEEu6b-BJ5RlpdK73HNSKLCBdZXj0vPW4yCgCuSwZC5c3cAqtdB7a3_fCsdqVn2pRNnc4uUkn2ihOapYDwjkACISDA1JaXf4x1PpY_ZlMGZh_Hz72yDoap7T7TfardOVZ1BqUlILw-UEhqF7sph8VsLEuTDVx8aIJbO73C-OqKXZ4Q8Ife_Ysi0iFinP-yH8CbjHb1iBDppr-PHldYKcWFAyecCGXESzFU6FSfh6bjweZI8eFj7Vv94exYwpvlZ_es8"
+                src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=80"
               />
             </div>
             <div
@@ -1239,11 +1137,11 @@ export default function RootPage() {
               style={{ animationDelay: "0.4s" }}
             >
               <a
-                href="tel:+911234567890"
+                href={`tel:${BUSINESS_DETAILS.phoneHref}`}
                 className="px-10 py-5 bg-secondary text-white rounded-xl font-label-md text-label-md flex items-center gap-3 hover:scale-105 transition-all text-[14px]"
               >
                 <span className="material-symbols-outlined">call</span> Call Now:
-                +91 123 456 7890
+                {BUSINESS_DETAILS.phone}
               </a>
               <button
                 onClick={() => window.alert("Consultation scheduled! Our office staff will reach out to you shortly.")}

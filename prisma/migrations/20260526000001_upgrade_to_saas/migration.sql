@@ -38,7 +38,8 @@ ALTER TABLE "uploaded_files" ALTER COLUMN "status" SET DEFAULT 'UPLOADED';
 -- AlterTable
 ALTER TABLE "users" ADD COLUMN     "deleted_at" TIMESTAMPTZ(6),
 ADD COLUMN     "organization_id" UUID,
-ADD COLUMN     "role" "UserRole" NOT NULL DEFAULT 'AGENT';
+ADD COLUMN     "role" "UserRole" NOT NULL DEFAULT 'AGENT',
+ADD COLUMN     "assigned_lobs" JSONB NOT NULL DEFAULT '[]';
 
 -- CreateTable
 CREATE TABLE "organizations" (

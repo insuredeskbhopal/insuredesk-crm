@@ -1,0 +1,96 @@
+
+> policy-pdf-intake@0.1.0 dev
+> next dev --hostname 127.0.0.1 --port 3000 --port 3001
+
+   ▲ Next.js 15.5.18
+   - Local:        http://127.0.0.1:3001
+   - Network:      http://127.0.0.1:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 2.4s
+ ✓ Compiled /middleware in 278ms (170 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 1071ms (695 modules)
+ GET / 200 in 1636ms
+ GET / 200 in 192ms
+ ✓ Compiled /[slug] in 461ms (708 modules)
+ GET / 200 in 254ms
+ GET /favicon.png 200 in 318ms
+ ○ Compiling /api/auth/me ...
+ ✓ Compiled /api/auth/me in 628ms (784 modules)
+ GET /api/auth/me 401 in 925ms
+ GET / 200 in 364ms
+ GET /favicon.png 200 in 186ms
+ GET /api/auth/me 401 in 47ms
+ GET / 200 in 229ms
+ GET /favicon.png 200 in 192ms
+ GET /api/auth/me 401 in 153ms
+ GET / 200 in 196ms
+ GET /favicon.png 200 in 222ms
+ GET /api/auth/me 401 in 73ms
+ ✓ Compiled in 1239ms (798 modules)
+ GET / 200 in 180ms
+ GET /favicon.png 200 in 242ms
+ GET / 200 in 299ms
+ GET /favicon.png 200 in 977ms
+ GET /api/auth/me 401 in 103ms
+ GET / 200 in 173ms
+ GET / 200 in 274ms
+ GET /favicon.png 200 in 135ms
+ GET /api/auth/me 401 in 45ms
+ ✓ Compiled in 697ms (784 modules)
+ GET / 200 in 774ms
+ GET /favicon.png 200 in 164ms
+ GET /api/auth/me 401 in 73ms
+ ✓ Compiled in 614ms (696 modules)
+ GET / 200 in 708ms
+ ✓ Compiled /[slug] in 160ms (436 modules)
+ GET /favicon.png 200 in 628ms
+ ✓ Compiled in 605ms (708 modules)
+ ✓ Compiled in 451ms (866 modules)
+ GET / 200 in 237ms
+ GET / 200 in 75ms
+ ✓ Compiled /[slug] in 190ms (436 modules)
+ GET /favicon.png 200 in 916ms
+ GET / 200 in 372ms
+ GET /favicon.png 200 in 345ms
+ GET / 200 in 108ms
+ GET /favicon.png 200 in 130ms
+ GET /favicon.png 200 in 134ms
+ ○ Compiling /services/marine-insurance ...
+ ✓ Compiled /services/marine-insurance in 537ms (718 modules)
+ GET /services/marine-insurance 200 in 928ms
+ ✓ Compiled /services/warehouse-insurance in 423ms (725 modules)
+ GET /services/warehouse-insurance 200 in 709ms
+ ✓ Compiled in 665ms (871 modules)
+ GET / 200 in 247ms
+ GET / 200 in 87ms
+ ✓ Compiled /[slug] in 150ms (436 modules)
+ GET /favicon.png 200 in 667ms
+ GET / 200 in 261ms
+ GET /favicon.png 200 in 291ms
+ GET / 200 in 170ms
+ GET /favicon.png 200 in 143ms
+ GET /favicon.png 200 in 118ms
+ ✓ Compiled in 102ms (277 modules)
+ ✓ Compiled in 219ms (277 modules)
+ ✓ Compiled in 660ms (713 modules)
+ ✓ Compiled in 449ms (713 modules)
+ ✓ Compiled in 417ms (701 modules)
+ ✓ Compiled in 305ms (701 modules)
+ ✓ Compiled in 454ms (715 modules)
+ GET / 200 in 251ms
+ GET / 200 in 82ms
+ ✓ Compiled /[slug] in 365ms (436 modules)
+ GET /favicon.png 200 in 858ms
+ GET / 200 in 226ms
+ GET /favicon.png 200 in 263ms
+ GET / 200 in 112ms
+ GET /favicon.png 200 in 105ms
+ GET /favicon.png 200 in 113ms
+ ✓ Compiled in 383ms (727 modules)
+ GET / 200 in 187ms
+ GET / 200 in 102ms
+ GET /favicon.png 200 in 251ms
+ GET /favicon.png 200 in 121ms

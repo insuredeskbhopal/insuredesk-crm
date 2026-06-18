@@ -1,6 +1,6 @@
 import { UserRole } from "@prisma/client";
 
-export const USER_MANAGEMENT_ROLES: UserRole[] = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
+export const USER_MANAGEMENT_ROLES: UserRole[] = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER];
 
 const ROLE_RANK: Record<string, number> = {
   SUPER_ADMIN: 5,
@@ -26,13 +26,20 @@ export function getAssignableRoles(actorRole?: string | null) {
   return [];
 }
 
+export function canMutateUsers(role?: string | null) {
+  return role === UserRole.SUPER_ADMIN || role === UserRole.ADMIN;
+}
+
 export function getVisibleUserWhere(actor: { role?: string | null; organizationId?: string | null }) {
   const where: { deletedAt: null; organizationId?: string | null; role?: { in: UserRole[] } } = { deletedAt: null };
 
   if (actor.role !== "SUPER_ADMIN") {
-    where.role = { in: getAssignableRoles(actor.role) };
     if (actor.organizationId) {
       where.organizationId = actor.organizationId;
+    }
+
+    if (actor.role === "ADMIN") {
+      where.role = { in: getAssignableRoles(actor.role) };
     }
   }
 

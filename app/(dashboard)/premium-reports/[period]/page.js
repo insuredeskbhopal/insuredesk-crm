@@ -4,7 +4,10 @@ import Link from "next/link";
 import { normalizeRecord } from "@/lib/records";
 import { loadScopedPolicyRecords } from "@/lib/records/scoped-data";
 import { formatMoney, parseMoney } from "@/lib/records/analytics";
-import { parsePolicyDate, startOfDay } from "@/app/lib/reporting/filters";
+import { parsePolicyDate } from "@/app/lib/reporting/filters";
+
+const REPORT_TIME_ZONE = "Asia/Kolkata";
+const INDIA_TIME_OFFSET = "+05:30";
 
 const REPORTS = {
   eod: {
@@ -65,8 +68,8 @@ export default async function PremiumReportPage({ params }) {
 
   const rawRecords = await loadScopedPolicyRecords({ includeInactive: true, excludeRenewalSources: false });
   const records = rawRecords.map(normalizeRecord);
-  const today = startOfDay(new Date());
-  const filteredRecords = filterPremiumRecords(records, reportId, today);
+  const now = new Date();
+  const filteredRecords = filterPremiumRecords(records, reportId, now);
   const pivotRows = buildPivotRows(filteredRecords, config.grouping);
   const totalPremium = filteredRecords.reduce((sum, record) => sum + getPremium(record), 0);
   const latestRecord = filteredRecords[0];
@@ -182,10 +185,10 @@ export default async function PremiumReportPage({ params }) {
   );
 }
 
-function filterPremiumRecords(records, reportId, today) {
-  const startToday = startOfDay(today);
-  const startMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const startYear = new Date(today.getFullYear(), 0, 1);
+function filterPremiumRecords(records, reportId, now) {
+  const startToday = startOfIndiaDay(now);
+  const startMonth = startOfIndiaMonth(now);
+  const startYear = startOfIndiaYear(now);
 
   return records
     .filter((record) => {
@@ -198,7 +201,7 @@ function filterPremiumRecords(records, reportId, today) {
       if (reportId === "expired") {
         if (!record.isActivePolicy || record.renewalStatus !== "ACTIVE") return false;
         const expiry = parsePolicyDate(record.expiryDate);
-        return expiry && expiry < today;
+        return expiry && expiry < startToday;
       }
       return false;
     })
@@ -215,10 +218,11 @@ function buildPivotRows(records, grouping) {
 
     if (grouping === "day") {
       key = savedDate ? formatDateKey(savedDate) : "unknown-date";
-      label = savedDate ? savedDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "Unknown date";
+      label = savedDate ? savedDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: REPORT_TIME_ZONE }) : "Unknown date";
     } else if (grouping === "month") {
-      key = savedDate ? `${savedDate.getFullYear()}-${String(savedDate.getMonth() + 1).padStart(2, "0")}` : "unknown-month";
-      label = savedDate ? savedDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" }) : "Unknown month";
+      const parts = savedDate ? getIndiaDateParts(savedDate) : null;
+      key = parts ? `${parts.year}-${String(parts.month).padStart(2, "0")}` : "unknown-month";
+      label = savedDate ? savedDate.toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: REPORT_TIME_ZONE }) : "Unknown month";
     }
 
     const current = groups.get(key) || { key, label, count: 0, premium: 0 };
@@ -250,12 +254,48 @@ function formatDateTime(value) {
     month: "short",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
+    timeZone: REPORT_TIME_ZONE
   });
 }
 
 function formatDateKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const parts = getIndiaDateParts(date);
+  return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
+}
+
+function startOfIndiaDay(date) {
+  const parts = getIndiaDateParts(date);
+  return makeIndiaDate(parts.year, parts.month, parts.day);
+}
+
+function startOfIndiaMonth(date) {
+  const parts = getIndiaDateParts(date);
+  return makeIndiaDate(parts.year, parts.month, 1);
+}
+
+function startOfIndiaYear(date) {
+  const parts = getIndiaDateParts(date);
+  return makeIndiaDate(parts.year, 1, 1);
+}
+
+function makeIndiaDate(year, month, day) {
+  return new Date(`${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00${INDIA_TIME_OFFSET}`);
+}
+
+function getIndiaDateParts(date) {
+  const parts = new Intl.DateTimeFormat("en-IN", {
+    timeZone: REPORT_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+  const value = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  return {
+    year: Number(value.year),
+    month: Number(value.month),
+    day: Number(value.day)
+  };
 }
 
 function getBasisLabel(reportId) {

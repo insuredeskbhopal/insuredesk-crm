@@ -155,6 +155,7 @@ export default function Dashboard({
   const [isSaving, startSaving] = useTransition();
   const [isUploading, startUploading] = useTransition();
   const deferredQuery = useDeferredValue(query);
+  const canExportRecords = ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(currentUserRole);
 
   const updateRecordQueryParams = (newParams = {}) => {
     const params = new window.URLSearchParams(window.location.search);
@@ -946,6 +947,11 @@ export default function Dashboard({
   }
 
   async function handleExportSubmit() {
+    if (!canExportRecords) {
+      setAlert({ type: "error", title: "Export restricted", message: "You do not have permission to export records." });
+      setToast("Export restricted");
+      return;
+    }
     setIsExporting(true);
     try {
       const exportSource = activePage === "records" ? await fetchAllPolicyRecordsForExport() : records;
@@ -1449,12 +1455,16 @@ export default function Dashboard({
                   <h2>Saved policy records</h2>
                 </div>
                 <div className="actions">
-                  <button type="button" disabled={!records.length} onClick={() => setIsExportModalOpen(true)}>
-                    <Download size={17} /> Export As
-                  </button>
-                  <button type="button" disabled={!records.length} onClick={() => download("policy-records.json", JSON.stringify(records, null, 2), "application/json")}>
-                    <Download size={17} /> JSON
-                  </button>
+                  {canExportRecords ? (
+                    <>
+                      <button type="button" disabled={!records.length} onClick={() => setIsExportModalOpen(true)}>
+                        <Download size={17} /> Export As
+                      </button>
+                      <button type="button" disabled={!records.length} onClick={() => download("policy-records.json", JSON.stringify(records, null, 2), "application/json")}>
+                        <Download size={17} /> JSON
+                      </button>
+                    </>
+                  ) : null}
                 </div>
               </div>
               <div className="records-search-row">

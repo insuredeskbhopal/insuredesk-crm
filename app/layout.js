@@ -1,4 +1,5 @@
 import { Inter, Manrope } from "next/font/google";
+import Script from "next/script";
 import {
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
@@ -77,7 +78,13 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${manrope.variable}`}>{children}</body>
+      <body className={`${inter.variable} ${manrope.variable}`}>
+        {children}
+        <Script
+          src="https://cdn.tailwindcss.com?plugins=forms,container-queries"
+          strategy="beforeInteractive"
+        />
+      </body>
     </html>
   );
 }

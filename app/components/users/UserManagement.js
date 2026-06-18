@@ -2,7 +2,24 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, Edit3, Plus, RefreshCcw, Search, Trash2, X, Eye, EyeOff } from "lucide-react";
+import { createPortal } from "react-dom";
+import BrandLogo from "@/app/components/brand/BrandLogo";
+import {
+  AlertTriangle,
+  Check,
+  Edit3,
+  Eye,
+  EyeOff,
+  Plus,
+  RefreshCcw,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+  Trash2,
+  UserRound,
+  UsersRound,
+  X
+} from "lucide-react";
 
 const ROLES = ["SUPER_ADMIN", "ADMIN", "MANAGER", "AGENT", "VIEWER"];
 const ROLE_LABELS = {
@@ -11,6 +28,22 @@ const ROLE_LABELS = {
   MANAGER: "Manager",
   AGENT: "Agent",
   VIEWER: "Viewer"
+};
+
+const ROLE_DESCRIPTIONS = {
+  SUPER_ADMIN: "Full platform control across organizations and all admin settings.",
+  ADMIN: "Manages users, records, and operational settings within allowed scope.",
+  MANAGER: "Oversees team work, reporting, assignments, and process execution.",
+  AGENT: "Works assigned processes and updates day-to-day policy records.",
+  VIEWER: "Read-only portal access for monitoring and review."
+};
+
+const ROLE_CARD_DESCRIPTIONS = {
+  SUPER_ADMIN: "Platform owners",
+  ADMIN: "Admin operators",
+  MANAGER: "Team supervisors",
+  AGENT: "Frontline users",
+  VIEWER: "Read-only access"
 };
 
 const LOB_OPTIONS = [
@@ -39,7 +72,21 @@ function formatDate(value) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString("en-IN");
+  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function getInitials(user) {
+  const source = user.name || user.email || "User";
+  return source
+    .split(/[.\s@_-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "U";
+}
+
+function getOrganizationLabel(user) {
+  return user.organization?.name || user.organizationName || user.organizationId || "No organization assigned";
 }
 
 export default function UserManagement() {
@@ -59,13 +106,40 @@ export default function UserManagement() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   const pageCount = Math.max(1, Math.ceil(meta.total / meta.pageSize));
   const assignableRoles = meta.assignableRoles?.length ? meta.assignableRoles : ["AGENT", "VIEWER"];
+  const selectedLobCount = form.assignedLOBs?.length || 0;
+  const canMutateUsers = meta.currentRole === "SUPER_ADMIN" || meta.currentRole === "ADMIN";
+  const userTableColumnCount = canMutateUsers ? 6 : 5;
 
   useEffect(() => {
     setQuery(urlQuery);
   }, [urlQuery]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload) => {
+        if (!ignore) setCurrentUser(payload?.user || null);
+      })
+      .catch(() => {
+        if (!ignore) setCurrentUser(null);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const filteredUsers = useMemo(() => {
     let result = users;
@@ -102,6 +176,24 @@ export default function UserManagement() {
     }, {});
   }, [users]);
 
+  const assignedCoverage = useMemo(() => {
+    const covered = new Set();
+    users.forEach((user) => {
+      if (Array.isArray(user.assignedLOBs)) {
+        user.assignedLOBs.forEach((lob) => covered.add(lob));
+      }
+    });
+    return covered.size;
+  }, [users]);
+
+  const hasActiveFilters = Boolean(query.trim()) || roleFilter !== "all" || lobFilter !== "all";
+
+  const clearFilters = () => {
+    setQuery("");
+    setRoleFilter("all");
+    setLobFilter("all");
+  };
+
   const loadUsers = async (targetPage = page) => {
     setIsLoading(true);
     setError("");
@@ -128,11 +220,14 @@ export default function UserManagement() {
     setEditingUserId("");
     setIsFormOpen(false);
     setShowPassword(false);
+    setFormErrors({});
   };
 
   const startCreate = () => {
+    if (!canMutateUsers) return;
     setMessage("");
     setError("");
+    setFormErrors({});
     setForm({ ...EMPTY_FORM, role: assignableRoles[0] || "AGENT" });
     setEditingUserId("");
     setIsFormOpen(true);
@@ -140,8 +235,10 @@ export default function UserManagement() {
   };
 
   const startEdit = (user) => {
+    if (!canMutateUsers) return;
     setMessage("");
     setError("");
+    setFormErrors({});
     setForm({
       name: user.name || "",
       email: user.email || "",
@@ -163,8 +260,24 @@ export default function UserManagement() {
     });
   };
 
+  const selectAllLOBs = () => {
+    setForm((current) => ({ ...current, assignedLOBs: [...LOB_OPTIONS] }));
+  };
+
+  const clearAllLOBs = () => {
+    setForm((current) => ({ ...current, assignedLOBs: [] }));
+  };
+
   const saveUser = async (event) => {
     event.preventDefault();
+    const nextErrors = {};
+    if (!form.email.trim()) nextErrors.email = "Email is required.";
+    if (!editingUserId && form.password.trim().length < 8) nextErrors.password = "Password must be at least 8 characters.";
+    if (editingUserId && form.password.trim() && form.password.trim().length < 8) nextErrors.password = "New password must be at least 8 characters.";
+    if (!form.role) nextErrors.role = "Choose a role for this user.";
+    setFormErrors(nextErrors);
+    if (Object.keys(nextErrors).length) return;
+
     setIsSaving(true);
     setMessage("");
     setError("");
@@ -198,167 +311,201 @@ export default function UserManagement() {
     }
   };
 
-  const deleteUser = async (user) => {
-    if (!window.confirm(`Delete ${user.email}? This will deactivate the user.`)) return;
+  const requestDeleteUser = (user) => {
+    if (!canMutateUsers) return;
+    setMessage("");
+    setError("");
+    setDeleteTarget(user);
+  };
+
+  const deleteUser = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     setMessage("");
     setError("");
     try {
-      const response = await fetch(`/api/users/${user.id}`, { method: "DELETE" });
+      const response = await fetch(`/api/users/${deleteTarget.id}`, { method: "DELETE" });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Unable to delete user");
       setMessage("User deleted");
+      setDeleteTarget(null);
       await loadUsers(page);
     } catch (err) {
       setError(err.message || "Unable to delete user");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
     <section className="user-management-page">
-      <section className="glass-panel user-management-header">
+      <section className="glass-panel user-management-header user-admin-card">
         <div>
           <p className="eyebrow">Admin Control</p>
           <h1>User Management</h1>
-          <p>Manage portal access, user roles, and active accounts.</p>
+          <p>Manage portal access, roles, permissions, and active accounts.</p>
         </div>
         <div className="title-actions">
-          <button className={isLoading ? "is-busy" : ""} type="button" onClick={() => loadUsers(page)} disabled={isLoading}>
+          <button className={`user-secondary-button ${isLoading ? "is-busy" : ""}`} type="button" onClick={() => loadUsers(page)} disabled={isLoading}>
             <RefreshCcw size={17} /> Refresh
           </button>
-          <button type="button" onClick={startCreate}>
-            <Plus size={17} /> Add User
-          </button>
+          {canMutateUsers ? (
+            <button className="user-primary-button" type="button" onClick={startCreate}>
+              <Plus size={17} /> Add User
+            </button>
+          ) : null}
         </div>
       </section>
 
       <section className="user-role-grid">
         {ROLES.map((role) => (
-          <div className="metric-card" key={role}>
-            <span>{ROLE_LABELS[role]}</span>
+          <div className={`user-role-card role-${role.toLowerCase().replace("_", "-")}`} key={role}>
+            <div className="user-role-card-top">
+              <span>{ROLE_LABELS[role]}</span>
+              <ShieldCheck size={18} />
+            </div>
             <strong>{roleCounts[role] || 0}</strong>
+            <p>{ROLE_CARD_DESCRIPTIONS[role]}</p>
           </div>
         ))}
+        <div className="user-role-card user-role-card-wide">
+          <div className="user-role-card-top">
+            <span>Active users</span>
+            <UsersRound size={18} />
+          </div>
+          <strong>{meta.total || users.length}</strong>
+          <p>{assignedCoverage} of {LOB_OPTIONS.length} processes covered</p>
+        </div>
       </section>
 
       {(message || error) ? (
-        <section className={error ? "user-notice error" : "user-notice"}>
-          {error || message}
+        <section className={error ? "user-notice error" : "user-notice"} role={error ? "alert" : "status"}>
+          {error ? <AlertTriangle size={18} /> : <Check size={18} />}
+          <span>{error || message}</span>
+          {error ? (
+            <button type="button" onClick={() => loadUsers(page)}>
+              Retry
+            </button>
+          ) : null}
         </section>
       ) : null}
 
-      {isFormOpen ? (
-        <section className="glass-panel user-form-panel animate-in">
-          <div className="panel-head">
-            <div>
-              <p className="eyebrow">{editingUserId ? "Edit User" : "Create User"}</p>
-              <h2>{editingUserId ? "Update account details" : "Add a new portal user"}</h2>
-            </div>
-            <button aria-label="Close user form" className="icon-button" type="button" onClick={resetForm}>
-              <X size={18} />
-            </button>
-          </div>
-
-          <form className="user-form" onSubmit={saveUser}>
-            <label>
-              <span>Name</span>
-              <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Full name" />
-            </label>
-            <label>
-              <span>Email</span>
-              <input required type="email" autoComplete="off" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="user@example.com" />
-            </label>
-            <label style={{ position: "relative" }}>
-              <span>{editingUserId ? "New Password" : "Password"}</span>
-              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                <input
-                  required={!editingUserId}
-                  minLength={8}
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  value={form.password}
-                  onChange={(event) => setForm({ ...form, password: event.target.value })}
-                  placeholder={editingUserId ? "Leave blank to keep current" : "Minimum 8 characters"}
-                  style={{ width: "100%", paddingRight: "40px" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: "absolute",
-                    right: "10px",
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "#64748b",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "4px"
-                  }}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+      {isFormOpen && canMutateUsers && isMounted ? createPortal((
+        <div className="user-form-modal-backdrop" role="presentation" onMouseDown={() => !isSaving && resetForm()}>
+          <section className="glass-panel user-form-panel user-admin-card animate-in" role="dialog" aria-modal="true" aria-labelledby="user-form-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="panel-head">
+              <div className="user-form-brand-block">
+                <BrandLogo className="user-form-logo" />
+                <div className="user-form-title-block">
+                  <p className="eyebrow">{editingUserId ? "Edit User" : "Create User"}</p>
+                  <h2 id="user-form-title">{editingUserId ? "Update account details" : "Add a new portal user"}</h2>
+                  <span className="panel-helper">Set credentials, assign a role, and scope process access without changing existing permissions.</span>
+                </div>
               </div>
-            </label>
-            <label>
-              <span>Role</span>
-              <select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
-                {assignableRoles.map((role) => (
-                  <option key={role} value={role}>{ROLE_LABELS[role]}</option>
-                ))}
-              </select>
-            </label>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", margin: "12px 0", gridColumn: "span 2" }}>
-              <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Assigned Processes (LOBs)</span>
-              <div className="lob-checklist">
-                {LOB_OPTIONS.map((lob) => {
-                  const isChecked = (form.assignedLOBs || []).includes(lob);
-                  return (
-                    <label key={lob}>
-                      <input 
-                        type="checkbox" 
-                        checked={isChecked} 
-                        onChange={() => toggleLOB(lob)} 
-                      />
-                      <span>{lob}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="user-form-actions" style={{ gridColumn: "span 2" }}>
-              <button type="button" onClick={resetForm}>Cancel</button>
-              <button className={isSaving ? "is-busy" : ""} type="submit" disabled={isSaving}>
-                <Check size={17} /> {isSaving ? "Saving..." : "Save User"}
+              <button aria-label="Close user form" className="icon-button user-form-close" type="button" onClick={resetForm}>
+                <X size={20} />
               </button>
             </div>
-          </form>
-        </section>
-      ) : null}
 
-      <section className="glass-panel user-table-panel">
-        <div className="panel-head" style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center", justifyContent: "space-between" }}>
+            <form className="user-form" onSubmit={saveUser}>
+              <label>
+                <span>Name</span>
+                <small>Display name shown across admin views.</small>
+                <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Full name" />
+              </label>
+              <label>
+                <span>Email</span>
+                <small>Used for login and account notifications.</small>
+                <input required type="email" autoComplete="off" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="user@example.com" />
+                {formErrors.email ? <em>{formErrors.email}</em> : null}
+              </label>
+              <label>
+                <span>{editingUserId ? "New Password" : "Password"}</span>
+                <small>{editingUserId ? "Leave blank to keep the existing password." : "Minimum 8 characters required."}</small>
+                <div className="user-password-field">
+                  <input
+                    required={!editingUserId}
+                    minLength={8}
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    value={form.password}
+                    onChange={(event) => setForm({ ...form, password: event.target.value })}
+                    placeholder={editingUserId ? "Leave blank to keep current" : "Minimum 8 characters"}
+                  />
+                  <button
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {formErrors.password ? <em>{formErrors.password}</em> : null}
+              </label>
+              <label>
+                <span>Role</span>
+                <small>{ROLE_DESCRIPTIONS[form.role] || "Choose the user permission level."}</small>
+                <select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
+                  {assignableRoles.map((role) => (
+                    <option key={role} value={role}>{ROLE_LABELS[role]}</option>
+                  ))}
+                </select>
+                {formErrors.role ? <em>{formErrors.role}</em> : null}
+              </label>
+              <div className="user-lob-section">
+                <div className="user-lob-header">
+                  <div>
+                    <span>Assigned Processes (LOBs)</span>
+                    <small>{selectedLobCount} selected. This controls the process scope already enforced by the app.</small>
+                  </div>
+                  <div>
+                    <button type="button" onClick={selectAllLOBs}>Select All</button>
+                    <button type="button" onClick={clearAllLOBs}>Clear All</button>
+                  </div>
+                </div>
+                <div className="lob-checklist">
+                  {LOB_OPTIONS.map((lob) => {
+                    const isChecked = (form.assignedLOBs || []).includes(lob);
+                    return (
+                      <label className={isChecked ? "is-selected" : ""} key={lob}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleLOB(lob)}
+                        />
+                        <Check size={14} />
+                        <span>{lob}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="user-form-actions">
+                <button type="button" onClick={resetForm}>Cancel</button>
+                <button className={isSaving ? "is-busy" : ""} type="submit" disabled={isSaving}>
+                  <Check size={18} /> {isSaving ? "Saving..." : "Save User"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ), document.body) : null}
+
+      <section className="glass-panel user-table-panel user-admin-card">
+        <div className="panel-head user-table-head">
           <div>
             <p className="eyebrow">Users</p>
             <h2>Portal accounts</h2>
+            <span className="panel-helper">Showing {filteredUsers.length} users{hasActiveFilters ? ` from ${users.length} loaded accounts` : ""}</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
+          <div className="user-filter-bar">
+            <label className="user-search">
+              <Search size={17} />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search name or email" />
+            </label>
             <select 
               value={roleFilter} 
               onChange={(event) => setRoleFilter(event.target.value)}
-              style={{
-                width: "160px",
-                minWidth: "160px",
-                flex: "0 0 auto",
-                minHeight: "38px",
-                padding: "0 12px",
-                borderRadius: "8px",
-                border: "1px solid rgba(25, 28, 29, 0.12)",
-                fontSize: "13px",
-                fontWeight: "600",
-                background: "#ffffff",
-                cursor: "pointer"
-              }}
             >
               <option value="all">All Roles</option>
               {ROLES.map((role) => (
@@ -368,32 +515,26 @@ export default function UserManagement() {
             <select 
               value={lobFilter} 
               onChange={(event) => setLobFilter(event.target.value)}
-              style={{
-                width: "200px",
-                minWidth: "200px",
-                flex: "0 0 auto",
-                minHeight: "38px",
-                padding: "0 12px",
-                borderRadius: "8px",
-                border: "1px solid rgba(25, 28, 29, 0.12)",
-                fontSize: "13px",
-                fontWeight: "600",
-                background: "#ffffff",
-                cursor: "pointer"
-              }}
             >
               <option value="all">All Processes</option>
               {LOB_OPTIONS.map((lob) => (
                 <option key={lob} value={lob}>{lob}</option>
               ))}
             </select>
-            <label className="user-search" style={{ margin: 0, width: "240px", minWidth: "240px", flex: "0 0 auto" }}>
-              <Search size={17} />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search users..." />
-            </label>
+            <button className="user-clear-filter" type="button" onClick={clearFilters} disabled={!hasActiveFilters}>
+              <SlidersHorizontal size={16} /> Clear
+            </button>
           </div>
         </div>
 
+        {error && !users.length && !isLoading ? (
+          <div className="user-state-card error">
+            <AlertTriangle size={28} />
+            <h3>Could not load users</h3>
+            <p>{error}</p>
+            <button type="button" onClick={() => loadUsers(page)}>Retry</button>
+          </div>
+        ) : (
         <div className="user-table-wrap">
           <table className="user-table">
             <thead>
@@ -403,55 +544,74 @@ export default function UserManagement() {
                 <th>Organization</th>
                 <th>Created</th>
                 <th>Updated</th>
-                <th>Actions</th>
+                {canMutateUsers ? <th>Actions</th> : null}
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={6}>Loading users...</td></tr>
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr className="user-skeleton-row" key={`loading-${index}`}>
+                    <td><span /><small /></td>
+                    <td><span /></td>
+                    <td><span /></td>
+                    <td><span /></td>
+                    <td><span /></td>
+                    {canMutateUsers ? <td><span /></td> : null}
+                  </tr>
+                ))
               ) : filteredUsers.length ? filteredUsers.map((user) => (
                 <tr key={user.id}>
                   <td>
-                    <strong>{user.name || "Unnamed user"}</strong>
-                    <small>{user.email}</small>
+                    <div className="user-identity">
+                      <div className="user-avatar">{getInitials(user)}</div>
+                      <div>
+                        <strong>{user.name || "Unnamed user"}</strong>
+                        <small>{user.email}</small>
+                      </div>
+                    </div>
                     {Array.isArray(user.assignedLOBs) && user.assignedLOBs.length > 0 ? (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "6px" }}>
+                      <div className="user-lob-pills">
                         {user.assignedLOBs.map((lob) => (
-                          <span key={lob} style={{
-                            fontSize: "10px",
-                            fontWeight: "600",
-                            background: "rgba(30, 58, 138, 0.08)",
-                            color: "var(--primary, #1e3a8a)",
-                            padding: "2px 6px",
-                            borderRadius: "4px"
-                          }}>
+                          <span key={lob}>
                             {lob.replace(" Insurance", "")}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <div style={{ fontSize: "10px", color: "#64748b", marginTop: "6px", fontStyle: "italic" }}>
+                      <div className="user-lob-empty">
                         No processes assigned
                       </div>
                     )}
                   </td>
-                  <td><span className="role-pill">{ROLE_LABELS[user.role] || user.role}</span></td>
-                  <td>{user.organizationId || "-"}</td>
+                  <td><span className={`role-pill role-${String(user.role || "").toLowerCase().replace("_", "-")}`}>{ROLE_LABELS[user.role] || user.role}</span></td>
+                  <td><span className="user-org-label">{getOrganizationLabel(user)}</span></td>
                   <td>{formatDate(user.createdAt)}</td>
                   <td>{formatDate(user.updatedAt)}</td>
-                  <td>
-                    <div className="user-row-actions">
-                      <button type="button" onClick={() => startEdit(user)}><Edit3 size={16} /> Edit</button>
-                      <button type="button" onClick={() => deleteUser(user)}><Trash2 size={16} /> Delete</button>
+                  {canMutateUsers ? (
+                    <td>
+                      <div className="user-row-actions">
+                        <button aria-label={`Edit ${user.email}`} title="Edit user" type="button" onClick={() => startEdit(user)}><Edit3 size={20} /></button>
+                        <button aria-label={`Delete ${user.email}`} title="Delete user" type="button" onClick={() => requestDeleteUser(user)}><Trash2 size={20} /></button>
+                      </div>
+                    </td>
+                  ) : null}
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={userTableColumnCount}>
+                    <div className="user-state-card">
+                      <UserRound size={28} />
+                      <h3>No users found</h3>
+                      <p>Adjust filters or add a new portal account.</p>
+                      {hasActiveFilters ? <button type="button" onClick={clearFilters}>Clear filters</button> : null}
                     </div>
                   </td>
                 </tr>
-              )) : (
-                <tr><td colSpan={6}>No users found.</td></tr>
               )}
             </tbody>
           </table>
         </div>
+        )}
 
         {pageCount > 1 ? (
           <div className="table-pagination">
@@ -462,17 +622,7 @@ export default function UserManagement() {
                 item === "..." ? (
                   <span
                     key={`ellipsis-${index}`}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      minWidth: "34px",
-                      minHeight: "32px",
-                      color: "var(--text-secondary, #64748b)",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      userSelect: "none"
-                    }}
+                    className="table-pagination-ellipsis"
                   >
                     ...
                   </span>
@@ -487,6 +637,30 @@ export default function UserManagement() {
           </div>
         ) : null}
       </section>
+
+      {deleteTarget && isMounted ? createPortal((
+        <div className="user-modal-backdrop" role="presentation" onMouseDown={() => !isDeleting && setDeleteTarget(null)}>
+          <section className="user-delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-user-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="user-delete-icon"><AlertTriangle size={22} /></div>
+            <div>
+              <h2 id="delete-user-title">Delete user?</h2>
+              <p>This will deactivate <strong>{deleteTarget.email}</strong>. Existing backend safeguards still apply.</p>
+              {currentUser?.id && currentUser.id === deleteTarget.id ? (
+                <div className="user-delete-warning">You are about to delete your own account. Confirm only if this is intentional.</div>
+              ) : null}
+              {deleteTarget.role === "SUPER_ADMIN" && (roleCounts.SUPER_ADMIN || 0) <= 1 ? (
+                <div className="user-delete-warning">This appears to be the last Super Admin in the loaded user list. The server may block this action.</div>
+              ) : null}
+            </div>
+            <div className="user-delete-actions">
+              <button type="button" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Cancel</button>
+              <button className={isDeleting ? "is-busy" : ""} type="button" onClick={deleteUser} disabled={isDeleting}>
+                <Trash2 size={16} /> {isDeleting ? "Deleting..." : "Delete User"}
+              </button>
+            </div>
+          </section>
+        </div>
+      ), document.body) : null}
     </section>
   );
 }

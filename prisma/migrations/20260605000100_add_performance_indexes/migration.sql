@@ -1,4 +1,12 @@
 -- Scalar indexes generated from prisma/schema.prisma
+ALTER TABLE "pdf_records"
+ADD COLUMN IF NOT EXISTS "renewal_status" TEXT DEFAULT 'ACTIVE',
+ADD COLUMN IF NOT EXISTS "previous_policy_id" UUID,
+ADD COLUMN IF NOT EXISTS "renewed_policy_id" UUID,
+ADD COLUMN IF NOT EXISTS "renewal_date" TIMESTAMPTZ(6),
+ADD COLUMN IF NOT EXISTS "lost_reason" TEXT,
+ADD COLUMN IF NOT EXISTS "is_active_policy" BOOLEAN NOT NULL DEFAULT true;
+
 CREATE INDEX IF NOT EXISTS "customer_profiles_organization_id_deleted_at_updated_at_idx" ON "customer_profiles"("organization_id", "deleted_at", "updated_at");
 CREATE INDEX IF NOT EXISTS "customer_profiles_organization_id_status_idx" ON "customer_profiles"("organization_id", "status");
 CREATE INDEX IF NOT EXISTS "customer_profiles_organization_id_next_follow_up_date_idx" ON "customer_profiles"("organization_id", "next_follow_up_date");

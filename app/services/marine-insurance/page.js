@@ -13,24 +13,24 @@ const pageSchema = {
   "@graph": [
     {
       "@type": "WebPage",
-      "@id": `${SITE_URL}/services/general-insurance#webpage`,
-      "url": `${SITE_URL}/services/general-insurance`,
-      "name": "General Insurance Consulting in Bhopal | BimaHeadquarter",
+      "@id": `${SITE_URL}/services/marine-insurance#webpage`,
+      "url": `${SITE_URL}/services/marine-insurance`,
+      "name": "Marine Insurance Consulting in Bhopal | BimaHeadquarter",
       "isPartOf": {
         "@id": `${SITE_URL}/#website`
       }
     },
     {
       "@type": "Service",
-      "@id": `${SITE_URL}/services/general-insurance#service`,
-      "name": "General Insurance Consulting",
+      "@id": `${SITE_URL}/services/marine-insurance#service`,
+      "name": "Marine Insurance Consulting",
       "provider": {
         "@type": "Organization",
         "name": SITE_NAME,
         "legalName": BUSINESS_DETAILS.legalName,
         "url": SITE_URL
       },
-      "description": "Secure your personal and business assets in Bhopal with General Insurance consulting by BimaHeadquarter (Insuredesk IMF Private Ltd).",
+      "description": "Inland transit and marine cargo insurance audits for shippers and distributors in Bhopal. Get claim support at BimaHeadquarter.",
       "areaServed": {
         "@type": "State",
         "name": BUSINESS_DETAILS.address.addressRegion
@@ -38,46 +38,46 @@ const pageSchema = {
     },
     {
       "@type": "FAQPage",
-      "@id": `${SITE_URL}/services/general-insurance#faq`,
+      "@id": `${SITE_URL}/services/marine-insurance#faq`,
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "What is covered under General Insurance?",
+          "name": "What is Marine Cargo Insurance?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "General insurance covers non-life assets including your home, personal belongings, vehicles, commercial property, factory equipment, marine cargo, and professional liabilities against accidental losses, fires, thefts, and natural calamities."
+            "text": "Marine Cargo Insurance covers physical loss or damage to goods while in transit via road, rail, air, or sea, both domestically and internationally."
           }
         },
         {
           "@type": "Question",
-          "name": "How does BimaHeadquarter help in choosing general insurance?",
+          "name": "Who needs Marine Insurance?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "As licensed advisors under Insuredesk IMF Private Ltd, we conduct complete risk assessments, audit policy terms, identify exclusions, and match your requirements with the most suitable policy packages from over 10 insurer partners."
+            "text": "It is essential for manufacturers, exporters, importers, wholesalers, and logistics operators who transport goods or cargo between cities and countries."
           }
         },
         {
           "@type": "Question",
-          "name": "What are the common exclusions in a general policy?",
+          "name": "What is the difference between an Open Policy and a Specific Voyage policy?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Common exclusions include losses due to wear and tear, war risk, nuclear hazards, intentional damage, and losses incurred during periods where the policy has lapsed. Exclusions vary, which is why we inspect policy documentation for transparency."
+            "text": "An Open Policy covers all shipments made by a business during a one-year period, with monthly declarations of transits. A Specific Voyage policy covers a single shipment from point A to point B."
           }
         },
         {
           "@type": "Question",
-          "name": "How is the sum insured determined for property or stock?",
+          "name": "Does Marine Insurance cover loading and unloading risks?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The sum insured is typically determined using either the Reinstatement Value (cost of replacing the asset with a new one of same specification) or Market Value (which accounts for depreciation). We help calculate this accurately to avoid under-insurance."
+            "text": "Under standard comprehensive terms (like Institute Cargo Clauses A), loading and unloading risks are generally covered. We review your specific policy clauses to ensure your loading exposures are explicitly covered."
           }
         },
         {
           "@type": "Question",
-          "name": "Can I transfer my general insurance from one insurer to another?",
+          "name": "What documentation is required for a Marine transit claim?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes, general insurance policies can be transferred to a different insurer at the time of renewal. We coordinate the transition, ensure continuous coverage, and carry forward any eligible discounts or ratings."
+            "text": "A marine transit claim requires the original policy certificate, the invoice and packing list, the bill of lading or lorry receipt (LR), a damage certificate from the carrier, and a formal claim bill. We assist you in collecting and preparing these documents for quick approval."
           }
         }
       ]
@@ -85,7 +85,7 @@ const pageSchema = {
   ]
 };
 
-export default function GeneralInsurancePage() {
+export default function MarineInsurancePage() {
   useEffect(() => {
     document.body.classList.add("landing-page");
     const revealElements = document.querySelectorAll(".reveal");
@@ -109,7 +109,7 @@ export default function GeneralInsurancePage() {
   return (
     <>
       <Script src="https://cdn.tailwindcss.com?plugins=forms,container-queries" strategy="beforeInteractive" />
-      <Script id="general-insurance-schema" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema) }} />
+      <Script id="marine-insurance-schema" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema) }} />
       <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
@@ -132,13 +132,13 @@ export default function GeneralInsurancePage() {
           <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
             <div className="flex flex-col items-start gap-4">
               <span className="w-14 h-14 rounded-xl bg-secondary-container text-secondary flex items-center justify-center">
-                <span className="material-symbols-outlined text-[32px]">shield</span>
+                <span className="material-symbols-outlined text-[32px]">directions_boat</span>
               </span>
               <h1 className="font-display-lg text-[40px] text-primary font-bold leading-tight">
-                General Insurance Consulting
+                Marine &amp; Transit Cargo Insurance Consulting
               </h1>
               <p className="font-body-lg text-on-surface-variant max-w-3xl text-[18px]">
-                Protecting your valuable physical assets and business operations in Bhopal with expert, unbiased risk advisory and coverage alignment.
+                Protecting cargo shipments, inland transits, and international logistical lines in Bhopal with tailored risk structures and claim resolution.
               </p>
             </div>
           </div>
@@ -154,14 +154,14 @@ export default function GeneralInsurancePage() {
               {/* Overview */}
               <section className="space-y-4">
                 <h2 className="font-display-lg text-[26px] text-primary font-bold">
-                  Overview of General Insurance
+                  Overview of Marine Insurance
                 </h2>
                 <div className="space-y-4 text-on-surface-variant text-[16px] leading-relaxed">
                   <p>
-                    General insurance covers all policies protecting assets other than human life. It forms the foundation of modern risk management, guarding houses, corporate establishments, storage facilities, and personal items against loss from fires, earthquakes, floods, vandalism, and theft.
+                    Goods in transit are vulnerable to various hazards: road accidents, vehicle overturns, train derailments, water damage, piracy, or port delays. If your business depends on importing raw materials or shipping finished products, a lack of robust transit cover can result in catastrophic financial losses.
                   </p>
                   <p>
-                    At BimaHeadquarter, we believe that purchasing a policy is only half the battle. Our consulting approach ensures that you avoid common pitfalls like under-insurance, hidden deductibles, and complex policy terms. By auditing your assets and comparing options, we ensure complete protection.
+                    BimaHeadquarter designs custom cargo insurance structures that shield you from these losses. We audit your supply routes, goods characteristics, and transit frequencies, comparing quotes from leading carrier partners to guarantee correct loading, unloading, and transit protections.
                   </p>
                 </div>
               </section>
@@ -169,27 +169,27 @@ export default function GeneralInsurancePage() {
               {/* Who Needs This */}
               <section className="space-y-4">
                 <h2 className="font-display-lg text-[26px] text-primary font-bold">
-                  Who Needs General Insurance?
+                  Who Needs Marine Insurance Consulting?
                 </h2>
                 <p className="text-on-surface-variant text-[16px]">
-                  General insurance consulting is essential for:
+                  Our transit cargo advisory covers:
                 </p>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <li className="flex gap-2 items-start text-[15px] text-on-surface-variant">
                     <span className="material-symbols-outlined text-secondary text-[20px] mt-1">check_circle</span>
-                    <span><strong>Homeowners & Tenants:</strong> Guarding structure and household content value.</span>
+                    <span><strong>Exporters &amp; Importers:</strong> Safeguarding cross-border sea and air cargo shipments.</span>
                   </li>
                   <li className="flex gap-2 items-start text-[15px] text-on-surface-variant">
                     <span className="material-symbols-outlined text-secondary text-[20px] mt-1">check_circle</span>
-                    <span><strong>Business & Factory Owners:</strong> Protecting equipment, buildings, and inventories.</span>
+                    <span><strong>Manufacturers &amp; Distributors:</strong> Covering domestic multi-city lorry transits.</span>
                   </li>
                   <li className="flex gap-2 items-start text-[15px] text-on-surface-variant">
                     <span className="material-symbols-outlined text-secondary text-[20px] mt-1">check_circle</span>
-                    <span><strong>Retailers & Shopkeepers:</strong> Covering stock-in-trade against fire and burglary.</span>
+                    <span><strong>Logistics &amp; Transport Firms:</strong> Managing carrier liability and customer cargo.</span>
                   </li>
                   <li className="flex gap-2 items-start text-[15px] text-on-surface-variant">
                     <span className="material-symbols-outlined text-secondary text-[20px] mt-1">check_circle</span>
-                    <span><strong>Logistics Operators:</strong> Securing transit goods against travel risks.</span>
+                    <span><strong>Trading Houses:</strong> Structuring open cover certificates for frequent shipments.</span>
                   </li>
                 </ul>
               </section>
@@ -197,20 +197,20 @@ export default function GeneralInsurancePage() {
               {/* Key Benefits */}
               <section className="space-y-4">
                 <h2 className="font-display-lg text-[26px] text-primary font-bold">
-                  Key Benefits of Consulting With Us
+                  Key Benefits of Marine Advisory
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="glass-card p-6 rounded-xl border border-outline-variant/10">
-                    <h3 className="font-bold text-[16px] text-primary mb-2">Unbiased Reviews</h3>
-                    <p className="text-sm text-on-surface-variant leading-relaxed">We evaluate options across leading insurers to find policies aligned with your risk needs.</p>
+                    <h3 className="font-bold text-[16px] text-primary mb-2">Transit Optimization</h3>
+                    <p className="text-sm text-on-surface-variant leading-relaxed">We compare premiums for Inland Cargo and Marine Cargo, saving costs on annual transport volumes.</p>
                   </div>
                   <div className="glass-card p-6 rounded-xl border border-outline-variant/10">
-                    <h3 className="font-bold text-[16px] text-primary mb-2">Coverage Engineering</h3>
-                    <p className="text-sm text-on-surface-variant leading-relaxed">We optimize policy wordings, eliminating loopholes and ensuring exclusions are clear.</p>
+                    <h3 className="font-bold text-[16px] text-primary mb-2">Claim Documentation</h3>
+                    <p className="text-sm text-on-surface-variant leading-relaxed">We assist you in gathering transit surveys, carrier notes, and lorry damage logs for speedy settlements.</p>
                   </div>
                   <div className="glass-card p-6 rounded-xl border border-outline-variant/10">
-                    <h3 className="font-bold text-[16px] text-primary mb-2">Advocacy in Claims</h3>
-                    <p className="text-sm text-on-surface-variant leading-relaxed">We stand with you, assisting in paperwork and surveyor coordination to speed settlements.</p>
+                    <h3 className="font-bold text-[16px] text-primary mb-2">Custom Clauses</h3>
+                    <p className="text-sm text-on-surface-variant leading-relaxed">We build tailor-made clauses covering loading, unloading, and intermediate storage exposures.</p>
                   </div>
                 </div>
               </section>
@@ -245,23 +245,23 @@ export default function GeneralInsurancePage() {
                 <h3 className="font-bold text-[18px] text-primary mb-4">Related Services</h3>
                 <ul className="space-y-3 text-sm text-on-surface-variant font-medium">
                   <li>
-                    <Link href="/services/health-insurance" className="hover:text-secondary flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[16px]">medical_services</span> Health Insurance
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/services/motor-insurance" className="hover:text-secondary flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[16px]">directions_car</span> Motor Insurance
-                    </Link>
-                  </li>
-                  <li>
                     <Link href="/services/commercial-insurance" className="hover:text-secondary flex items-center gap-1">
                       <span className="material-symbols-outlined text-[16px]">apartment</span> Commercial Insurance
                     </Link>
                   </li>
                   <li>
-                    <Link href="/services/claims-assistance" className="hover:text-secondary flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[16px]">gavel</span> Claims Assistance
+                    <Link href="/services/warehouse-insurance" className="hover:text-secondary flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">inventory_2</span> Warehouse Insurance
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/services/general-insurance" className="hover:text-secondary flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">shield</span> General Insurance
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/services/risk-advisory" className="hover:text-secondary flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">analytics</span> Risk Advisory
                     </Link>
                   </li>
                 </ul>
@@ -271,7 +271,7 @@ export default function GeneralInsurancePage() {
               <div className="glass-card p-6 rounded-2xl border border-outline-variant/20 bg-primary/5">
                 <h3 className="font-bold text-[18px] text-primary mb-3">Speak to an Advisor</h3>
                 <p className="text-xs text-on-surface-variant mb-6 leading-relaxed">
-                  Have an asset review requirement in Bhopal? Schedule a free initial consultation with our licensed representatives.
+                  Confused about FOB vs CIF terms or transit cargo clauses? Get a quick audit from our commercial desk today.
                 </p>
                 <div className="space-y-4">
                   <a href={`tel:${BUSINESS_DETAILS.phoneHref}`} className="w-full py-3 bg-secondary text-white rounded-lg text-sm font-bold flex justify-center items-center gap-2 hover:bg-secondary/90 transition-colors">
@@ -305,13 +305,13 @@ export default function GeneralInsurancePage() {
               <div className="absolute bottom-0 right-0 w-48 h-48 bg-secondary rounded-full blur-[80px]"></div>
             </div>
             <h2 className="font-display-lg text-[32px] font-bold text-white mb-4">
-              Need Unbiased Asset Valuation Advisory?
+              Protect Your Cargo Across Every Route
             </h2>
             <p className="text-[16px] text-white/80 max-w-2xl mx-auto mb-8 leading-relaxed">
-              Excluding a critical risk component can cost you heavy. Get a complimentary policy gap assessment check by our Bhopal desk today.
+              Don't leave transit exposures unchecked. Secure full risk audit and cargo valuation profiles from BimaHeadquarter today.
             </p>
             <Link href="/contact" className="px-8 py-4 bg-secondary text-white rounded-xl font-bold hover:shadow-lg transition-all text-[14px]">
-              Request Complimentry Audit
+              Compare Marine Quotes
             </Link>
           </div>
         </section>

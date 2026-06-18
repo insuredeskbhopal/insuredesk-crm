@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { requireUserManager } from '@/lib/auth/middleware';
-import { canManageRole, getAssignableRoles, getVisibleUserWhere } from '@/lib/auth/user-permissions';
+import { canManageRole, canMutateUsers, getAssignableRoles, getVisibleUserWhere } from '@/lib/auth/user-permissions';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
@@ -60,6 +60,9 @@ export async function POST(request: NextRequest) {
   const authResult = await requireUserManager(request);
   if ('response' in authResult) return authResult.response;
   const requester = authResult.user;
+  if (!canMutateUsers(requester.role)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
   const body = await request.json();
   const parseResult = createUserSchema.safeParse(body);

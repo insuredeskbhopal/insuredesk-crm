@@ -243,8 +243,9 @@ export default function ServicesPage() {
         <section className="py-20 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop bg-background">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {SERVICES_LIST.map((service, index) => (
-              <div
+              <Link
                 key={service.slug}
+                href={`/services/${service.slug}`}
                 className="glass-card p-8 rounded-2xl flex flex-col items-start transition-all group reveal border border-outline-variant/20"
                 style={{ transitionDelay: `${index * 0.05}s` }}
               >
@@ -259,16 +260,15 @@ export default function ServicesPage() {
                 <p className="text-body-md text-on-surface-variant mb-6 text-sm leading-relaxed">
                   {service.desc}
                 </p>
-                <Link
-                  href={`/services/${service.slug}`}
+                <span
                   className="mt-auto font-label-md text-secondary hover:underline flex items-center gap-1 text-[14px] font-semibold"
                 >
                   Learn More
                   <span className="material-symbols-outlined text-sm">
                     arrow_forward
                   </span>
-                </Link>
-              </div>
+                </span>
+              </Link>
             ))}
           </div>
         </section>

@@ -40,7 +40,7 @@ const structuredData = {
       url: SITE_URL,
       logo: `${SITE_URL}/brand/main-logo-wide.png`,
       email: BUSINESS_DETAILS.email,
-      telephone: BUSINESS_DETAILS.phone,
+      telephone: BUSINESS_DETAILS.phoneHref,
       description: SITE_DESCRIPTION,
       areaServed: BUSINESS_DETAILS.serviceArea
     }
@@ -120,11 +120,6 @@ export default function AboutPage() {
 
   return (
     <>
-      {/* Load Tailwind CSS via CDN since it is not set up locally */}
-      <Script
-        src="https://cdn.tailwindcss.com?plugins=forms,container-queries"
-        strategy="beforeInteractive"
-      />
       <Script id="tailwind-config" strategy="afterInteractive">
         {`
           tailwind.config = {
@@ -290,11 +285,11 @@ export default function AboutPage() {
             to { opacity: 1; transform: translateY(0); }
         }
 
-        nav.scrolled {
-            height: 64px !important;
-            background-color: rgba(255, 255, 255, 0.9) !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-            border-color: rgba(197, 198, 207, 0.3) !important;
+        nav#mainNav.scrolled {
+            height: 72px !important;
+            background: linear-gradient(90deg, #F8FAFC 0%, #EEF4FF 50%, #F8FAFC 100%) !important;
+            box-shadow: none !important;
+            border: none !important;
         }
 
         .landing-page,
@@ -571,7 +566,7 @@ export default function AboutPage() {
               style={{ animationDelay: "0.4s" }}
             >
               <a
-                href={`tel:${BUSINESS_DETAILS.phone.replace(/\s+/g, "")}`}
+                href={`tel:${BUSINESS_DETAILS.phoneHref}`}
                 className="px-10 py-5 bg-secondary text-white rounded-xl font-label-md text-label-md flex items-center gap-3 hover:scale-105 transition-all text-[14px]"
               >
                 <span className="material-symbols-outlined">call</span> Call Now: {BUSINESS_DETAILS.phone}

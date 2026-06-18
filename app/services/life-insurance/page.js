@@ -274,7 +274,7 @@ export default function LifeInsurancePage() {
                   Confused between term plans and ULIPs? Request a calculation breakdown from our Bhopal desk.
                 </p>
                 <div className="space-y-4">
-                  <a href={`tel:${BUSINESS_DETAILS.phone.replace(/\s+/g, "")}`} className="w-full py-3 bg-secondary text-white rounded-lg text-sm font-bold flex justify-center items-center gap-2 hover:bg-secondary/90 transition-colors">
+                  <a href={`tel:${BUSINESS_DETAILS.phoneHref}`} className="w-full py-3 bg-secondary text-white rounded-lg text-sm font-bold flex justify-center items-center gap-2 hover:bg-secondary/90 transition-colors">
                     <span className="material-symbols-outlined">call</span> Call: {BUSINESS_DETAILS.phone}
                   </a>
                   <Link href="/contact" className="w-full py-3 bg-primary text-white rounded-lg text-sm font-bold flex justify-center items-center gap-2 hover:bg-primary/95 transition-colors">

@@ -13,24 +13,24 @@ const pageSchema = {
   "@graph": [
     {
       "@type": "WebPage",
-      "@id": `${SITE_URL}/services/general-insurance#webpage`,
-      "url": `${SITE_URL}/services/general-insurance`,
-      "name": "General Insurance Consulting in Bhopal | BimaHeadquarter",
+      "@id": `${SITE_URL}/services/warehouse-insurance#webpage`,
+      "url": `${SITE_URL}/services/warehouse-insurance`,
+      "name": "Warehouse Insurance Consulting in Bhopal | BimaHeadquarter",
       "isPartOf": {
         "@id": `${SITE_URL}/#website`
       }
     },
     {
       "@type": "Service",
-      "@id": `${SITE_URL}/services/general-insurance#service`,
-      "name": "General Insurance Consulting",
+      "@id": `${SITE_URL}/services/warehouse-insurance#service`,
+      "name": "Warehouse Insurance Consulting",
       "provider": {
         "@type": "Organization",
         "name": SITE_NAME,
         "legalName": BUSINESS_DETAILS.legalName,
         "url": SITE_URL
       },
-      "description": "Secure your personal and business assets in Bhopal with General Insurance consulting by BimaHeadquarter (Insuredesk IMF Private Ltd).",
+      "description": "Compare and structure warehouse stock insurance, burglary covers, and fire policies in Bhopal. Get expert claim support at BimaHeadquarter.",
       "areaServed": {
         "@type": "State",
         "name": BUSINESS_DETAILS.address.addressRegion
@@ -38,46 +38,46 @@ const pageSchema = {
     },
     {
       "@type": "FAQPage",
-      "@id": `${SITE_URL}/services/general-insurance#faq`,
+      "@id": `${SITE_URL}/services/warehouse-insurance#faq`,
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "What is covered under General Insurance?",
+          "name": "What is Warehouse Insurance and who needs it?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "General insurance covers non-life assets including your home, personal belongings, vehicles, commercial property, factory equipment, marine cargo, and professional liabilities against accidental losses, fires, thefts, and natural calamities."
+            "text": "Warehouse insurance protects warehousing operations, third-party logistics (3PL) providers, cold storages, and manufacturers from financial losses due to physical damage or destruction of stored inventory, structures, and equipment."
           }
         },
         {
           "@type": "Question",
-          "name": "How does BimaHeadquarter help in choosing general insurance?",
+          "name": "What risks are covered under a standard warehouse policy?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "As licensed advisors under Insuredesk IMF Private Ltd, we conduct complete risk assessments, audit policy terms, identify exclusions, and match your requirements with the most suitable policy packages from over 10 insurer partners."
+            "text": "A standard warehouse policy covers fire and allied perils (like storms, floods, riots, earthquakes), burglary, theft, accidental damage, and warehouseman's legal liability for third-party goods."
           }
         },
         {
           "@type": "Question",
-          "name": "What are the common exclusions in a general policy?",
+          "name": "How is the sum insured calculated for fluctuating warehouse stock?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Common exclusions include losses due to wear and tear, war risk, nuclear hazards, intentional damage, and losses incurred during periods where the policy has lapsed. Exclusions vary, which is why we inspect policy documentation for transparency."
+            "text": "Since stock values fluctuate daily, we advise structuring either a Declaration Policy (monthly value declarations with premium adjustments at year-end) or a Floater Policy if stock moves constantly between multiple locations."
           }
         },
         {
           "@type": "Question",
-          "name": "How is the sum insured determined for property or stock?",
+          "name": "Does it cover temperature-controlled goods in cold storage?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The sum insured is typically determined using either the Reinstatement Value (cost of replacing the asset with a new one of same specification) or Market Value (which accounts for depreciation). We help calculate this accurately to avoid under-insurance."
+            "text": "Standard fire policies exclude deterioration of stock due to temperature changes. However, cold storage operators can purchase a Deterioration of Stock (DoS) add-on cover, protecting inventory against refrigeration failure."
           }
         },
         {
           "@type": "Question",
-          "name": "Can I transfer my general insurance from one insurer to another?",
+          "name": "What is Warehouseman's Liability insurance?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes, general insurance policies can be transferred to a different insurer at the time of renewal. We coordinate the transition, ensure continuous coverage, and carry forward any eligible discounts or ratings."
+            "text": "If you operate a commercial warehouse storing goods for clients, you are legally responsible as a bailee. Warehouseman's Liability covers legal defense fees and payouts if customer goods are damaged due to warehouse negligence."
           }
         }
       ]
@@ -85,7 +85,7 @@ const pageSchema = {
   ]
 };
 
-export default function GeneralInsurancePage() {
+export default function WarehouseInsurancePage() {
   useEffect(() => {
     document.body.classList.add("landing-page");
     const revealElements = document.querySelectorAll(".reveal");
@@ -109,7 +109,7 @@ export default function GeneralInsurancePage() {
   return (
     <>
       <Script src="https://cdn.tailwindcss.com?plugins=forms,container-queries" strategy="beforeInteractive" />
-      <Script id="general-insurance-schema" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema) }} />
+      <Script id="warehouse-insurance-schema" type="application/ld+json" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema) }} />
       <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
@@ -132,13 +132,13 @@ export default function GeneralInsurancePage() {
           <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
             <div className="flex flex-col items-start gap-4">
               <span className="w-14 h-14 rounded-xl bg-secondary-container text-secondary flex items-center justify-center">
-                <span className="material-symbols-outlined text-[32px]">shield</span>
+                <span className="material-symbols-outlined text-[32px]">inventory_2</span>
               </span>
               <h1 className="font-display-lg text-[40px] text-primary font-bold leading-tight">
-                General Insurance Consulting
+                Warehouse &amp; Stock Insurance Consulting
               </h1>
               <p className="font-body-lg text-on-surface-variant max-w-3xl text-[18px]">
-                Protecting your valuable physical assets and business operations in Bhopal with expert, unbiased risk advisory and coverage alignment.
+                Auditing high-value inventories, fire hazards, burglary risks, and storage liabilities in Bhopal with tailored industrial coverage structures.
               </p>
             </div>
           </div>
@@ -154,14 +154,14 @@ export default function GeneralInsurancePage() {
               {/* Overview */}
               <section className="space-y-4">
                 <h2 className="font-display-lg text-[26px] text-primary font-bold">
-                  Overview of General Insurance
+                  Overview of Warehouse Insurance
                 </h2>
                 <div className="space-y-4 text-on-surface-variant text-[16px] leading-relaxed">
                   <p>
-                    General insurance covers all policies protecting assets other than human life. It forms the foundation of modern risk management, guarding houses, corporate establishments, storage facilities, and personal items against loss from fires, earthquakes, floods, vandalism, and theft.
+                    Warehouses are high-exposure zones where massive inventories, materials, and machinery are concentrated under a single roof. A single incident like a short circuit fire, structural collapse, or organized burglary can wipe out millions in capital and interrupt critical business supply chains.
                   </p>
                   <p>
-                    At BimaHeadquarter, we believe that purchasing a policy is only half the battle. Our consulting approach ensures that you avoid common pitfalls like under-insurance, hidden deductibles, and complex policy terms. By auditing your assets and comparing options, we ensure complete protection.
+                    At BimaHeadquarter, we evaluate warehouse risks across a range of factors, including fire protection systems, boundary wall security, storage heights, and location hazards. We structure declaration and floater policies that optimize premium costs while ensuring fully compliant valuations.
                   </p>
                 </div>
               </section>
@@ -169,27 +169,27 @@ export default function GeneralInsurancePage() {
               {/* Who Needs This */}
               <section className="space-y-4">
                 <h2 className="font-display-lg text-[26px] text-primary font-bold">
-                  Who Needs General Insurance?
+                  Who Needs Warehouse Insurance Consulting?
                 </h2>
                 <p className="text-on-surface-variant text-[16px]">
-                  General insurance consulting is essential for:
+                  Our warehousing advisory covers:
                 </p>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <li className="flex gap-2 items-start text-[15px] text-on-surface-variant">
                     <span className="material-symbols-outlined text-secondary text-[20px] mt-1">check_circle</span>
-                    <span><strong>Homeowners & Tenants:</strong> Guarding structure and household content value.</span>
+                    <span><strong>Manufacturers &amp; Distributors:</strong> Covering raw material and finished stock storage.</span>
                   </li>
                   <li className="flex gap-2 items-start text-[15px] text-on-surface-variant">
                     <span className="material-symbols-outlined text-secondary text-[20px] mt-1">check_circle</span>
-                    <span><strong>Business & Factory Owners:</strong> Protecting equipment, buildings, and inventories.</span>
+                    <span><strong>Third-Party Logistics (3PL) Providers:</strong> Managing client cargo liabilities and operations.</span>
                   </li>
                   <li className="flex gap-2 items-start text-[15px] text-on-surface-variant">
                     <span className="material-symbols-outlined text-secondary text-[20px] mt-1">check_circle</span>
-                    <span><strong>Retailers & Shopkeepers:</strong> Covering stock-in-trade against fire and burglary.</span>
+                    <span><strong>Cold Storage Operators:</strong> Integrating refrigeration breakdown and deterioration cover.</span>
                   </li>
                   <li className="flex gap-2 items-start text-[15px] text-on-surface-variant">
                     <span className="material-symbols-outlined text-secondary text-[20px] mt-1">check_circle</span>
-                    <span><strong>Logistics Operators:</strong> Securing transit goods against travel risks.</span>
+                    <span><strong>E-Commerce Fulfillment Hubs:</strong> Structuring multi-item fast-moving inventory policies.</span>
                   </li>
                 </ul>
               </section>
@@ -197,20 +197,20 @@ export default function GeneralInsurancePage() {
               {/* Key Benefits */}
               <section className="space-y-4">
                 <h2 className="font-display-lg text-[26px] text-primary font-bold">
-                  Key Benefits of Consulting With Us
+                  Key Benefits of Warehouse Advisory
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="glass-card p-6 rounded-xl border border-outline-variant/10">
-                    <h3 className="font-bold text-[16px] text-primary mb-2">Unbiased Reviews</h3>
-                    <p className="text-sm text-on-surface-variant leading-relaxed">We evaluate options across leading insurers to find policies aligned with your risk needs.</p>
+                    <h3 className="font-bold text-[16px] text-primary mb-2">Fluctuating Value Cover</h3>
+                    <p className="text-sm text-on-surface-variant leading-relaxed">We design declaration structures so you only pay premiums for average monthly stock values, saving costs.</p>
                   </div>
                   <div className="glass-card p-6 rounded-xl border border-outline-variant/10">
-                    <h3 className="font-bold text-[16px] text-primary mb-2">Coverage Engineering</h3>
-                    <p className="text-sm text-on-surface-variant leading-relaxed">We optimize policy wordings, eliminating loopholes and ensuring exclusions are clear.</p>
+                    <h3 className="font-bold text-[16px] text-primary mb-2">Liability Management</h3>
+                    <p className="text-sm text-on-surface-variant leading-relaxed">We integrate Warehouseman's Liability to protect your business if customer goods are damaged under your custody.</p>
                   </div>
                   <div className="glass-card p-6 rounded-xl border border-outline-variant/10">
-                    <h3 className="font-bold text-[16px] text-primary mb-2">Advocacy in Claims</h3>
-                    <p className="text-sm text-on-surface-variant leading-relaxed">We stand with you, assisting in paperwork and surveyor coordination to speed settlements.</p>
+                    <h3 className="font-bold text-[16px] text-primary mb-2">Peril Auditing</h3>
+                    <p className="text-sm text-on-surface-variant leading-relaxed">We audit storage setups to ensure standard sprinkler and fire safety configurations match carrier guidelines.</p>
                   </div>
                 </div>
               </section>
@@ -245,23 +245,23 @@ export default function GeneralInsurancePage() {
                 <h3 className="font-bold text-[18px] text-primary mb-4">Related Services</h3>
                 <ul className="space-y-3 text-sm text-on-surface-variant font-medium">
                   <li>
-                    <Link href="/services/health-insurance" className="hover:text-secondary flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[16px]">medical_services</span> Health Insurance
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/services/motor-insurance" className="hover:text-secondary flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[16px]">directions_car</span> Motor Insurance
-                    </Link>
-                  </li>
-                  <li>
                     <Link href="/services/commercial-insurance" className="hover:text-secondary flex items-center gap-1">
                       <span className="material-symbols-outlined text-[16px]">apartment</span> Commercial Insurance
                     </Link>
                   </li>
                   <li>
-                    <Link href="/services/claims-assistance" className="hover:text-secondary flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[16px]">gavel</span> Claims Assistance
+                    <Link href="/services/marine-insurance" className="hover:text-secondary flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">directions_boat</span> Marine Insurance
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/services/general-insurance" className="hover:text-secondary flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">shield</span> General Insurance
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/services/risk-advisory" className="hover:text-secondary flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">analytics</span> Risk Advisory
                     </Link>
                   </li>
                 </ul>
@@ -271,7 +271,7 @@ export default function GeneralInsurancePage() {
               <div className="glass-card p-6 rounded-2xl border border-outline-variant/20 bg-primary/5">
                 <h3 className="font-bold text-[18px] text-primary mb-3">Speak to an Advisor</h3>
                 <p className="text-xs text-on-surface-variant mb-6 leading-relaxed">
-                  Have an asset review requirement in Bhopal? Schedule a free initial consultation with our licensed representatives.
+                  Need a full safety review or stock declaration strategy for your Bhopal warehouse? Talk to our commercial desk today.
                 </p>
                 <div className="space-y-4">
                   <a href={`tel:${BUSINESS_DETAILS.phoneHref}`} className="w-full py-3 bg-secondary text-white rounded-lg text-sm font-bold flex justify-center items-center gap-2 hover:bg-secondary/90 transition-colors">
@@ -305,13 +305,13 @@ export default function GeneralInsurancePage() {
               <div className="absolute bottom-0 right-0 w-48 h-48 bg-secondary rounded-full blur-[80px]"></div>
             </div>
             <h2 className="font-display-lg text-[32px] font-bold text-white mb-4">
-              Need Unbiased Asset Valuation Advisory?
+              Protect Your Inventories and Infrastructure
             </h2>
             <p className="text-[16px] text-white/80 max-w-2xl mx-auto mb-8 leading-relaxed">
-              Excluding a critical risk component can cost you heavy. Get a complimentary policy gap assessment check by our Bhopal desk today.
+              Ensure you have the right sum insured and float covers. Get a professional warehouse risk audit from BimaHeadquarter.
             </p>
             <Link href="/contact" className="px-8 py-4 bg-secondary text-white rounded-xl font-bold hover:shadow-lg transition-all text-[14px]">
-              Request Complimentry Audit
+              Compare Warehouse Quotes
             </Link>
           </div>
         </section>

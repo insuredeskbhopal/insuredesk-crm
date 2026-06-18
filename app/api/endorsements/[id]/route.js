@@ -103,7 +103,10 @@ export async function DELETE(request, { params }) {
     });
     if (!existing) return NextResponse.json({ error: "Endorsement not found." }, { status: 404 });
     if (!canDeleteEndorsement(session, existing)) {
-      return NextResponse.json({ error: "Only draft endorsements can be deleted." }, { status: 403 });
+      return NextResponse.json({ error: "Only admins can delete draft endorsements." }, { status: 403 });
+    }
+    if (existing.status !== "Draft") {
+      return NextResponse.json({ error: "Only Draft endorsements can be deleted." }, { status: 403 });
     }
 
     const actorId = session.userId || session.id || null;
