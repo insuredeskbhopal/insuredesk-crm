@@ -256,4 +256,71 @@ describe("IFFCO Tokio Warehouse Policy extraction", () => {
       expect(result.expiryDate).toBe(tc.expiryDate);
     });
   });
+
+  it("adds IFFCO warehouse training fields for fire policies", async () => {
+    const file = "tests/Warehouse/IFFCO/DERIYA WAREHOUSING AND LOGISTICS  FIRE POLICY.pdf";
+    const parsed = await pdf(fs.readFileSync(file));
+    const result = extractPolicyFromText(parsed.text, file);
+
+    expect(result.policySubType).toBe("WAREHOUSE_FIRE_POLICY");
+    expect(result.warehousePolicySubType).toBe("WAREHOUSE_FIRE_POLICY");
+    expect(result.warehouseProfileName).toBe("DERIYA WAREHOUSING AND LOGISTICS");
+    expect(result.warehouseFinanced).toBe(true);
+    expect(result.mpwlcReference).toBe("MPWLC");
+    expect(result.stockSumInsured).toBe("62000000.00");
+    expect(result.goodsStored).toContain("Rice");
+    expect(result.riskEntity).toMatchObject({
+      storageType: "Food Grain Storage",
+      hazardCategory: "Non-Hazardous Goods",
+      warehouseType: "Warehouse",
+    });
+    expect(result.coverageDetails).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ coverage: "Fire and Allied Perils", status: "Covered", sumInsured: "62000000.00" }),
+        expect.objectContaining({ coverage: "Earthquake", status: "Covered" }),
+      ]),
+    );
+    expect(result.iffcoFieldConfidence.sumInsured).toBeGreaterThanOrEqual(0.9);
+    expect(result.iffcoFieldEvidence.policyNumber).toContain("12A97642");
+    expect(result.needsManualReview).toBe(false);
+    expect(result.extractionTrainingVersion).toBe("IFFCO_TOKIO_WAREHOUSE_TRAINING_V1");
+  });
+
+  it("adds IFFCO warehouse training fields for burglary policies", async () => {
+    const file = "tests/Warehouse/IFFCO/DERIYA WAREHOUSING AND LOGISTICS BURGLARY POLICY.pdf";
+    const parsed = await pdf(fs.readFileSync(file));
+    const result = extractPolicyFromText(parsed.text, file);
+
+    expect(result.policySubType).toBe("WAREHOUSE_BURGLARY_POLICY");
+    expect(result.coverageDetails).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ coverage: "Theft", status: "Covered", sumInsured: "62000000.00" }),
+        expect.objectContaining({ coverage: "RSMD", status: "Covered", sumInsured: "62000000.00" }),
+      ]),
+    );
+    expect(result.warehouseProfile.policyNumber).toBe("44541964");
+    expect(result.premiumEntity).toMatchObject({
+      netPremium: "170.50",
+      totalPremium: "201.00",
+    });
+  });
+
+  it("adds IFFCO warehouse training fields for fidelity policies", async () => {
+    const file = "tests/Warehouse/IFFCO/DERIYA WAREHOUSING AND LOGISTICS - FIDELITY POLICY.pdf";
+    const parsed = await pdf(fs.readFileSync(file));
+    const result = extractPolicyFromText(parsed.text, file);
+
+    expect(result.policySubType).toBe("WAREHOUSE_FIDELITY_POLICY");
+    expect(result.coverageDetails).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ coverage: "Unnamed Employee", status: "Covered", sumInsured: "6200000.00" }),
+        expect.objectContaining({ coverage: "Limit of Guarantee", status: "Covered", sumInsured: "6200000.00" }),
+      ]),
+    );
+    expect(result.warehouseProfile).toMatchObject({
+      warehouseName: "DERIYA WAREHOUSING AND LOGISTICS",
+      policySubType: "WAREHOUSE_FIDELITY_POLICY",
+      warehouseFinanced: true,
+    });
+  });
 });
