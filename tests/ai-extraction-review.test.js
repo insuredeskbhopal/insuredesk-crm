@@ -3,8 +3,8 @@ import {
   getExtractionAuthenticityIssues,
   mergeAiExtractionPatch,
   reviewPolicyExtractionWithAi,
-} from "../lib/policies/ai/extraction-review";
-import { extractCompanyEvidence, hasCompanyEvidence } from "../lib/policies/company-detector";
+} from "../src/lib/policies/ai/extraction-review";
+import { extractCompanyEvidence, hasCompanyEvidence } from "../src/lib/policies/company-detector";
 
 describe("AI extraction review guardrails", () => {
   it("flags corrupted motor vehicle fields before AI review", () => {

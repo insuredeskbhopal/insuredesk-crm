@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getRecordSearchText } from "../lib/records/search";
+import { getRecordSearchText } from "../src/lib/records/search";
 
 describe("getRecordSearchText", () => {
   it("indexes searchable metadata without raw payload fields", () => {

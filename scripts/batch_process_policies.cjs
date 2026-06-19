@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const pdf = require("pdf-parse");
-const { extractPolicyFromText } = require("../lib/policies/pdf/extractor.cjs");
+const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
 
 async function runBatchAnalysis() {
   const targetDir = path.join(__dirname, "../tests/POLICY PORTAL ENTRY- JUNE");

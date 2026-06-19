@@ -4,7 +4,7 @@ const {
   getInsuranceCompanyNames,
   normalizeCompanyToken,
   normalizeInsuranceCompanyName,
-} = require("../lib/master/insurance-companies.cjs");
+} = require("../src/lib/master/insurance-companies.cjs");
 
 const prisma = new PrismaClient();
 

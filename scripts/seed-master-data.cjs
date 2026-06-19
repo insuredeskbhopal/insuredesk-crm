@@ -1,5 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
-const { INSURANCE_COMPANY_MASTER } = require("../lib/master/insurance-companies.cjs");
+const { INSURANCE_COMPANY_MASTER } = require("../src/lib/master/insurance-companies.cjs");
 
 const prisma = new PrismaClient();
 

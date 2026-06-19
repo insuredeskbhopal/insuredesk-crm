@@ -1,0 +1,401 @@
+{
+  "name": "IFFCO Tokio Warehouse Policy",
+  "version": 1,
+  "expectedSections": [
+    "policy_details",
+    "insured_details",
+    "risk_location",
+    "warehouse_details",
+    "premium_details"
+  ],
+  "expectedTables": ["sum_insured_table", "premium_table"],
+  "fields": [
+    {
+      "field": "insuranceCompany",
+      "aliases": [
+        "IFFCO-TOKIO GENERAL INSURANCE CO. LTD",
+        "IFFCO TOKIO GENERAL INSURANCE CO. LTD",
+        "IFFCO - TOKIO GENERAL INSURANCE CO. LTD"
+      ],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "policyType",
+      "aliases": [
+        "FLEXI PROPERTY PROTECTOR",
+        "Burglary And House Breaking Insurance Policy",
+        "BURGLARY AND HOUSE BREAKING INSURANCE",
+        "Fidelity Guarantee Policy Schedule",
+        "FIDELITY GUARANTEE"
+      ],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "policyNumber",
+      "aliases": [
+        "Policy Number",
+        "Policy No",
+        "Policy No…………………….",
+        "Attaching to and forming part of Policy Number",
+        "Tax Invoice Number",
+        "Unique Invoice No"
+      ],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "insuredName",
+      "aliases": [
+        "Insured",
+        "Insured's Name",
+        "KYC Name",
+        "Client Name"
+      ],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "mailingAddress",
+      "aliases": [
+        "Corresponding Address",
+        "Address",
+        "Address:"
+      ],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "riskLocation",
+      "aliases": [
+        "Location address",
+        "Location",
+        "Risk Location",
+        "Location Sum Insured & Premium"
+      ],
+      "section": "risk_location",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "district",
+      "aliases": [
+        "DISTRICT",
+        "DIST.",
+        "DIST.-",
+        "DISTRICT,",
+        "DISTRICT SEHORE",
+        "DISTRICT RAISEN",
+        "DISTRICT HOSHANGABAD",
+        "DISTRICT DATIA",
+        "DISCTRICT SAGAR",
+        "DISTRICT RAJGARH"
+      ],
+      "section": "risk_location",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "tehsil",
+      "aliases": [
+        "TEHSIL",
+        "Tehsil",
+        "TEHSIL BADI",
+        "TEHSIL BHAIRUNDA",
+        "TEHSIL BABAI",
+        "TEHSIL SARANGPUR"
+      ],
+      "section": "risk_location",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "village",
+      "aliases": [
+        "VILLAGE",
+        "Village",
+        "GRAM",
+        "Gram"
+      ],
+      "section": "risk_location",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "pincode",
+      "aliases": [
+        "Pincode",
+        "Pincode:",
+        "466331",
+        "464665",
+        "461661",
+        "475335",
+        "464240",
+        "465697"
+      ],
+      "section": "risk_location",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "state",
+      "aliases": [
+        "Madhya Pradesh",
+        "MADHYA PRADESH",
+        "Place of Supply Madhya Pradesh (23)",
+        "State Code: 23"
+      ],
+      "section": "risk_location",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "sumInsured",
+      "aliases": [
+        "Stocks",
+        "Total Sum Insured",
+        "Total Sum Insured (All Locations)",
+        "Floater Stock Sum Insured",
+        "Sum Insured(Rs.)",
+        "Sum Insured/Limit (Rs.)",
+        "Aggregate Sum Insured / Limit Of Guarantee",
+        "Theft",
+        "RSMD"
+      ],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "netPremium",
+      "aliases": [
+        "Base Premium (Rs.)",
+        "Net Premium (Rs.) /Taxable Value",
+        "Net Premium",
+        "Taxable Value",
+        "Amount"
+      ],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "cgst",
+      "aliases": [
+        "CGST",
+        "CGST Amount",
+        "Amount (Rs.)"
+      ],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "sgst",
+      "aliases": [
+        "SGST",
+        "SGST Amount",
+        "Amount (Rs.)"
+      ],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "igst",
+      "aliases": [
+        "IGST",
+        "IGST Amount"
+      ],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "gstAmount",
+      "aliases": [
+        "Total GST Amount (Rs.)",
+        "Total Tax"
+      ],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "premiumIncludingGst",
+      "aliases": [
+        "Total Premium Payable (Rs.)",
+        "Total Value",
+        "Premium Payable"
+      ],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "startDate",
+      "aliases": [
+        "Period of Insurance: From",
+        "From:",
+        "Policy effective from 0001 hrs",
+        "Policy effective from"
+      ],
+      "section": "policy_details",
+      "type": "date",
+      "required": true
+    },
+    {
+      "field": "expiryDate",
+      "aliases": [
+        "Period of Insurance: To",
+        "To:",
+        "To MidNight",
+        "MidNight"
+      ],
+      "section": "policy_details",
+      "type": "date",
+      "required": true
+    },
+    {
+      "field": "invoiceDate",
+      "aliases": [
+        "Tax Invoice Date",
+        "Date of Issuance"
+      ],
+      "section": "premium_details",
+      "type": "date",
+      "required": false
+    },
+    {
+      "field": "businessDescription",
+      "aliases": [
+        "Business",
+        "Warehouse",
+        "Location Description",
+        "GOOD HELD IN TRUST",
+        "STORAGE OF RICE/WHEAT/PULSES/DALHAN/FOOD GRAINS OTHER THAN OIL SEEDS",
+        "Storage of Non Hazardous Goods",
+        "Storage of Non-hazardous goods"
+      ],
+      "section": "warehouse_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "occupancy",
+      "aliases": [
+        "Occupancy",
+        "Materials stored in Godowns & Silos",
+        "Storage of Non-hazardous goods"
+      ],
+      "section": "warehouse_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "coverages",
+      "aliases": [
+        "Fire and Allied perils",
+        "Earthquake",
+        "Storm, Cyclone, Typhoon, Tempest, Hurricane, Tornado, Tsunami, Flood and Inundation",
+        "Terrorism and Sabotage Damage",
+        "Theft",
+        "RSMD"
+      ],
+      "section": "premium_details",
+      "type": "array",
+      "required": false
+    },
+    {
+      "field": "employeeCount",
+      "aliases": [
+        "05 - Unnamed Employee",
+        "05- Unnamed Employee",
+        "05 - UNNAMED EMPLOYEE",
+        "Insured Employees"
+      ],
+      "section": "warehouse_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "hypothecationDetails",
+      "aliases": [
+        "Hypothecation Details",
+        "Client Name",
+        "MPWLC"
+      ],
+      "section": "warehouse_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "clientNumber",
+      "aliases": [
+        "Client Number",
+        "C/N No",
+        "P400 Client ID"
+      ],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "brokerName",
+      "aliases": [
+        "Intermediary Name",
+        "Insuredesk Imf Private Limited"
+      ],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "brokerCode",
+      "aliases": [
+        "Intermediary Code",
+        "21002760"
+      ],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "tieUpCode",
+      "aliases": [
+        "Tie Up Code",
+        "21006009"
+      ],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "gstin",
+      "aliases": [
+        "GSTIN Number",
+        "GSTIN",
+        "GSTIN:"
+      ],
+      "section": "premium_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "invoiceNumber",
+      "aliases": [
+        "Tax Invoice Number",
+        "Unique Invoice No"
+      ],
+      "section": "premium_details",
+      "type": "string",
+      "required": false
+    }
+  ]
+}

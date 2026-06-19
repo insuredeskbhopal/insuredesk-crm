@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeUploadStatus, UPLOAD_STATUS } from "../lib/uploads/status";
+import { normalizeUploadStatus, UPLOAD_STATUS } from "../src/lib/uploads/status";
 
 describe("upload status normalization", () => {
   it("keeps supported upload statuses unchanged", () => {

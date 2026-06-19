@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getDaysStatus, getExpiryState, parseRenewalDate } from "../lib/renewals/dates.js";
+import { getDaysStatus, getExpiryState, parseRenewalDate } from "../src/lib/renewals/dates.js";
 
 describe("renewal date helpers", () => {
   it("parses DMY expiry dates", () => {

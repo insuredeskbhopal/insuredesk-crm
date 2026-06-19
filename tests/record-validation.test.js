@@ -3,12 +3,12 @@ import {
   sanitizeRecordPayload,
   validateContactNumber,
   validateContactPerson,
-} from "../lib/records/validation";
+} from "../src/lib/records/validation";
 import {
   getReviewFieldValue,
   getReviewValidation,
   shouldUseExtractedFuelType,
-} from "../app/lib/dashboard-helpers";
+} from "../src/app/lib/dashboard-helpers";
 
 describe("sanitizeRecordPayload", () => {
   it("normalizes whitespace and drops unsupported raw extraction fields", () => {

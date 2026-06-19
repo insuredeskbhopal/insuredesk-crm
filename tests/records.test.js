@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCustomerId, normalizeRecord } from "../lib/records/index.js";
+import { buildCustomerId, normalizeRecord } from "../src/lib/records/index.js";
 
 describe("record customer ID", () => {
   it("uses the first four insured-name letters and last four unmasked phone digits", () => {

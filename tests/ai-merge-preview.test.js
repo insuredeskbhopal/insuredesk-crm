@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAiMergePreview } from "../lib/policies/ai/merge-preview";
+import { buildAiMergePreview } from "../src/lib/policies/ai/merge-preview";
 
 describe("AI merge preview", () => {
   it("blocks AI update when the current rule value is valid", () => {

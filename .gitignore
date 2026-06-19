@@ -39,7 +39,7 @@ Thumbs.db
 *.db
 
 # local project-specific data & personal documents
-*.pdf
+# *.pdf
 WhatsApp Image*.jpg
 WhatsApp Image*.jpeg
 WhatsApp Image*.png

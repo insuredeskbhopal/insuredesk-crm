@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   applyAiSuggestionToReviewField,
   getEligibleAiSuggestion,
-} from "../app/components/upload/aiSuggestionHelpers";
+} from "../src/app/components/upload/aiSuggestionHelpers";
 
 function buildUpload() {
   return {

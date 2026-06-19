@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 const require = createRequire(import.meta.url);
 const pdf = require("pdf-parse");
-const { extractPolicyFromText } = require("../lib/policies/pdf/extractor.cjs");
+const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
 
 describe("Bajaj warehouse extraction", () => {
   const files = fs

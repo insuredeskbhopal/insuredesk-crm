@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildPassiveReview, normalizePassiveAiPatch } from "../lib/policies/ai/extraction-review";
+import { buildPassiveReview, normalizePassiveAiPatch } from "../src/lib/policies/ai/extraction-review";
 import {
   extractPolicyDataFromTextResult,
   mergeExtractionData,
   shouldUseAiPrimaryExtraction,
-} from "../lib/policies/extraction-pipeline";
-import { extractPolicyFromText } from "../lib/policies/pdf/extractor.cjs";
+} from "../src/lib/policies/extraction-pipeline";
+import { extractPolicyFromText } from "../src/lib/policies/pdf/extractor.cjs";
 
 const previousOpenAiKey = process.env.OPENAI_API_KEY;
 const previousGroqKey = process.env.GROQ_API_KEY;

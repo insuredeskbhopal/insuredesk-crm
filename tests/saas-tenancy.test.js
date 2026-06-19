@@ -9,7 +9,7 @@ import {
   UserRole,
   applyLOBRestriction,
   getLOBFilterSQL,
-} from "../lib/auth/rbac";
+} from "../src/lib/auth/rbac";
 
 describe("SaaS Multi-Tenancy & RBAC Tests", () => {
   const orgA = "org-aaaa-aaaa-aaaa-aaaa";

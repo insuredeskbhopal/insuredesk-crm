@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const require = createRequire(import.meta.url);
 const pdf = require("pdf-parse");
-const { extractPolicyFromText } = require("../lib/policies/pdf/extractor.cjs");
+const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
 
 describe("IFFCO Tokio Workmen Compensation extraction", () => {
   it("does not misclassify the IFFCO WC policy as motor", async () => {

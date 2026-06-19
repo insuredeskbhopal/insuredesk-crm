@@ -1,0 +1,12 @@
+c:\Users\abhis\insuredesk-crm\README.md
+c:\Users\abhis\insuredesk-crm\docs\AI_AGENT_EXTRACTION_RULES.md
+c:\Users\abhis\insuredesk-crm\docs\COMPONENT_ARCHITECTURE.md
+c:\Users\abhis\insuredesk-crm\docs\CSS_ARCHITECTURE.md
+c:\Users\abhis\insuredesk-crm\docs\DESIGN_GUIDE.md
+c:\Users\abhis\insuredesk-crm\docs\REPORTING_ARCHITECTURE.md
+c:\Users\abhis\insuredesk-crm\docs\SAFE_REFACTOR_PLAN.md
+c:\Users\abhis\insuredesk-crm\docs\STABILIZATION_REPORT.md
+c:\Users\abhis\insuredesk-crm\docs\database-restore.md
+c:\Users\abhis\insuredesk-crm\public\ai.txt
+c:\Users\abhis\insuredesk-crm\public\llms.txt
+c:\Users\abhis\insuredesk-crm\reports\policy-sorter-audit.md

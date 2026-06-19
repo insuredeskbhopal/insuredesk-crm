@@ -1,4 +1,3 @@
-/* global __dirname */
 const { PrismaClient } = require("@prisma/client");
 const fs = require("fs");
 const path = require("path");

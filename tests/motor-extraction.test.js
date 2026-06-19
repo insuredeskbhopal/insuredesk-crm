@@ -6,7 +6,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const require = createRequire(import.meta.url);
-const { extractPolicyFromText } = require("../lib/policies/pdf/extractor.cjs");
+const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
 const pdf = require("pdf-parse");
 
 describe("generic motor policy extraction", () => {
