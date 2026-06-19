@@ -1,15 +1,14 @@
 import fs from "node:fs";
-import { extractTextFromPdf } from "../lib/policies/pdf/text.js";
 
 async function run() {
   const file = "tests/Warehouse/IFFCO/KISHAN WAREHOUSE UNIT TARAIYA NO.2 0 2 CO MPWLC -FIRE POLICY.pdf";
   const buffer = fs.readFileSync(file);
-  
+
   const canvasModule = await import("@napi-rs/canvas");
-  global.Path2D = canvasModule.Path2D;
+  globalThis.Path2D = canvasModule.Path2D;
   const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const { createCanvas } = canvasModule;
-  
+
   try {
     const loadingTask = getDocument({
       data: new Uint8Array(buffer),

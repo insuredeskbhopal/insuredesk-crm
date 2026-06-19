@@ -904,4 +904,724 @@ export const BLOG_POSTS = [
       },
     ],
   },
+  {
+    slug: "family-floater-health-insurance-sum-insured-guide",
+    title: "Family Floater Health Insurance: How Much Sum Insured Is Enough?",
+    excerpt:
+      "Choosing a family floater limit is not only about premium. Learn how age, city, room rent, and medical inflation affect the right cover.",
+    category: "Personal Insurance",
+    readTime: "7 min read",
+    date: "February 20, 2026",
+    author: { name: "Payal Sahu", role: "Health Insurance Advisory" },
+    coverImage: "/brand/blog-health.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "A family floater policy covers multiple family members under one shared sum insured. It is usually more affordable than buying separate policies for every member, but the shared limit must be chosen carefully. A Rs. 5 lakh floater may look sufficient until two hospitalizations happen in the same policy year or treatment takes place in a metro hospital with high room and surgery charges.",
+      },
+      { type: "heading", text: "1. Start With Hospital Cost in Your City" },
+      {
+        type: "paragraph",
+        text: "The same surgery can cost very different amounts across cities and hospital categories. While smaller cities may have lower hospitalization bills, metro hospitals often have higher room rent, surgeon fees, diagnostic costs, and consumables. When selecting the floater limit, families should consider the hospitals they are most likely to use during an emergency, not only the cheapest premium available online.",
+      },
+      { type: "heading", text: "2. Check Restoration and Room Rent Rules" },
+      {
+        type: "paragraph",
+        text: "A restoration benefit can refill the sum insured after a claim, but the terms differ across insurers. Some restoration benefits apply only for unrelated illnesses, while others apply after full exhaustion of the base sum insured. Room rent limits also matter because a low room eligibility can trigger proportionate deductions on the entire hospital bill.",
+      },
+      {
+        type: "list",
+        items: [
+          "Prefer a higher floater amount when parents or senior family members are included.",
+          "Check whether restoration applies for the same illness and whether it activates after partial or full exhaustion.",
+          "Avoid policies with restrictive room rent caps if you want flexibility during hospitalization.",
+          "For help comparing family floater health plans, call or contact BIMAHEADQUARTER for a guided policy review.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "senior-citizen-health-insurance-buying-checklist",
+    title: "Senior Citizen Health Insurance: Buying Checklist for Parents",
+    excerpt:
+      "Senior citizen policies need careful review of waiting periods, co-payments, disease limits, and claim process support.",
+    category: "Personal Insurance",
+    readTime: "8 min read",
+    date: "February 18, 2026",
+    author: { name: "Shweta Hariyale", role: "Health Claims Specialist" },
+    coverImage: "/brand/blog-health.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Buying health insurance for parents is different from buying a young family floater. Senior citizen plans often include medical underwriting, pre-policy checkups, co-payment clauses, disease-specific sub-limits, and longer waiting periods. The right plan should balance premium affordability with practical claim usability.",
+      },
+      { type: "heading", text: "1. Understand Co-payment Before Buying" },
+      {
+        type: "paragraph",
+        text: "Co-payment means the policyholder pays a fixed percentage of every admissible claim. A 20% co-pay may reduce premium, but it can become expensive during major surgeries. Families should compare whether a higher premium without co-pay is better than a low premium policy that creates a large out-of-pocket burden at discharge.",
+      },
+      { type: "heading", text: "2. Review Disease-wise Limits" },
+      {
+        type: "paragraph",
+        text: "Some senior citizen plans cap common procedures such as cataract, knee replacement, cardiac procedures, or dialysis. These limits may not be obvious in the summary brochure. Always read the policy wordings, especially the schedule of benefits and exclusions, before making the final purchase.",
+      },
+      {
+        type: "list",
+        items: [
+          "Declare all existing illnesses honestly to avoid claim disputes later.",
+          "Check waiting periods for diabetes, hypertension, cardiac disease, and joint disorders.",
+          "Prefer plans with strong cashless hospital networks near your parents' residence.",
+          "For senior citizen policy comparison and claim-readiness support, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "term-insurance-income-replacement-planning",
+    title: "Term Insurance: Planning Cover as Income Replacement",
+    excerpt:
+      "A term plan should protect future income, loans, education goals, and family expenses, not just match a random premium budget.",
+    category: "Personal Insurance",
+    readTime: "7 min read",
+    date: "February 16, 2026",
+    author: { name: "Anand Soni", role: "Insurance Portfolio Advisory Lead" },
+    coverImage: "/brand/blog-general.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Term insurance is the simplest form of life cover. It pays a lump sum to the nominee if the insured person passes away during the policy term. The purpose is not investment return; the purpose is income replacement. A good term plan helps the family continue expenses, pay loans, and protect long-term goals even when the earning member is no longer present.",
+      },
+      { type: "heading", text: "1. Calculate Human Life Value" },
+      {
+        type: "paragraph",
+        text: "A practical approach is to estimate the present value of future income and subtract existing assets. Families should include monthly household expenses, children's education, outstanding home loan, business liabilities, and inflation. A very small term cover may create emotional comfort but fail financially when the family actually needs it.",
+      },
+      { type: "heading", text: "2. Choose Tenure and Riders Carefully" },
+      {
+        type: "paragraph",
+        text: "The policy term should usually cover the earning years and major liabilities. Riders such as accidental death benefit, waiver of premium, and critical illness can be useful, but they should not replace a strong base sum assured. Medical disclosures must be accurate because life claims are carefully investigated.",
+      },
+      {
+        type: "list",
+        items: [
+          "Avoid choosing term cover only because the premium is low.",
+          "Review cover whenever income, loans, dependents, or business responsibilities change.",
+          "Nominee details should be updated after marriage, childbirth, or family restructuring.",
+          "For term insurance needs analysis, call or contact BIMAHEADQUARTER before finalizing a plan.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "fire-insurance-building-stock-machinery-valuation",
+    title: "Fire Insurance Valuation: Building, Stock, and Machinery",
+    excerpt:
+      "Under-insurance is a major reason commercial fire claims are reduced. Learn how to value assets correctly before buying cover.",
+    category: "Business Risk",
+    readTime: "8 min read",
+    date: "February 14, 2026",
+    author: { name: "Saurav Mehra", role: "Commercial & Warehouse Property Expert" },
+    coverImage: "/brand/blog-business.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Commercial fire insurance protects buildings, stock, machinery, furniture, fixtures, and other business assets. But the policy works properly only when the sum insured reflects the actual replacement value. If assets are insured at a lower value, the average clause can reduce the claim payment proportionately, even when the loss is partial.",
+      },
+      { type: "heading", text: "1. Replacement Value vs Book Value" },
+      {
+        type: "paragraph",
+        text: "Book value is an accounting figure after depreciation. Replacement value is the cost of rebuilding or replacing the asset today. Fire insurance for buildings and machinery is usually more effective when based on reinstatement value, subject to policy conditions. Businesses should not blindly use balance sheet values for insurance decisions.",
+      },
+      { type: "heading", text: "2. Stock Values Need Seasonal Attention" },
+      {
+        type: "paragraph",
+        text: "Inventory may rise during festival demand, procurement cycles, or export schedules. If a policy is purchased using the lowest stock month, the business can be severely under-insured during peak season. Declaration policies, floater policies, or periodic endorsements may be needed for changing stock levels.",
+      },
+      {
+        type: "list",
+        items: [
+          "Review building reconstruction cost, not only original purchase cost.",
+          "Include installation cost, freight, taxes, and foundation cost for machinery where applicable.",
+          "Update policy values after major purchases, expansion, or stock accumulation.",
+          "For commercial asset valuation support, call or contact BIMAHEADQUARTER for information and guidance.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "burglary-insurance-for-shops-and-offices",
+    title: "Burglary Insurance for Shops and Offices: What Owners Should Know",
+    excerpt:
+      "Burglary cover is different from simple theft cover. Learn how forceful entry, stock records, and security conditions affect claims.",
+    category: "Business Risk",
+    readTime: "7 min read",
+    date: "February 12, 2026",
+    author: { name: "Roshni Sahu", role: "Commercial Claims Analyst" },
+    coverImage: "/brand/blog-claims.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Retail shops, offices, warehouses, and godowns can face loss from break-ins, forced entry, and theft of stock or equipment. Burglary insurance is designed for such situations, but policyholders must understand that many policies require visible, forceful, and violent entry or exit for a claim to be admissible.",
+      },
+      { type: "heading", text: "1. Theft and Burglary Are Not Always the Same" },
+      {
+        type: "paragraph",
+        text: "If stock goes missing without signs of forced entry, insurers may classify it as mysterious disappearance or inventory shortage rather than burglary. That is why CCTV, access control, lock records, police reports, and stock reconciliation become important evidence during claim assessment.",
+      },
+      { type: "heading", text: "2. Security Warranties Must Be Followed" },
+      {
+        type: "paragraph",
+        text: "Policies may include conditions such as functional CCTV, security guards, burglar alarms, shutters, or specific locking systems. If a warranty is mentioned in the policy and the business fails to maintain it, the claim may be disputed. Owners should ensure that the declared security setup is actually operating every day.",
+      },
+      {
+        type: "list",
+        items: [
+          "Maintain daily stock records and purchase invoices for high-value inventory.",
+          "File the police complaint immediately after discovering burglary.",
+          "Do not repair locks, shutters, or damaged entry points before photographs and surveyor inspection.",
+          "For burglary policy review or claim documentation help, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "professional-indemnity-insurance-for-consultants",
+    title: "Professional Indemnity Insurance: Protection for Consultants",
+    excerpt:
+      "Errors, omissions, and professional negligence allegations can create major financial exposure for consultants and service firms.",
+    category: "Business Risk",
+    readTime: "8 min read",
+    date: "February 10, 2026",
+    author: { name: "Anand Soni", role: "Liability Insurance Consultant" },
+    coverImage: "/brand/blog-business.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Professional indemnity insurance protects professionals and service businesses against claims arising from errors, omissions, negligence, breach of professional duty, or incorrect advice. It is relevant for architects, engineers, doctors, consultants, accountants, technology vendors, and many advisory businesses.",
+      },
+      { type: "heading", text: "1. Why Contractual Liability Matters" },
+      {
+        type: "paragraph",
+        text: "Many clients now require consultants to carry professional indemnity insurance before awarding contracts. The required limit may be linked to project value, annual fees, or potential financial loss. Without a proper policy, a professional may win the contract but remain personally exposed if a client alleges loss due to advice or design error.",
+      },
+      { type: "heading", text: "2. Claims-made Policy Structure" },
+      {
+        type: "paragraph",
+        text: "Professional indemnity policies usually operate on a claims-made basis. This means the policy that responds is typically the one active when the claim is made, not necessarily when the mistake happened. Retroactive date, continuity, and timely renewal become critical for long-tail professional exposures.",
+      },
+      {
+        type: "list",
+        items: [
+          "Choose limits based on contract size, possible financial loss, and client requirements.",
+          "Check retroactive date protection when switching insurers.",
+          "Review exclusions for fraud, intentional breach, insolvency, and contractual penalties.",
+          "For professional indemnity information and quotes, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "cyber-insurance-for-small-businesses-india",
+    title: "Cyber Insurance for Small Businesses: Beyond Antivirus",
+    excerpt:
+      "Cyber policies can cover data breach response, ransomware expenses, legal costs, and business interruption after digital incidents.",
+    category: "Business Risk",
+    readTime: "8 min read",
+    date: "February 08, 2026",
+    author: { name: "Siya Thakur", role: "Corporate Risk Consultant" },
+    coverImage: "/brand/blog-business.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Small businesses often assume cyber risk is only a concern for large corporations. In reality, ransomware, phishing, payment fraud, data leakage, and website compromise can affect even a small office with basic digital operations. Cyber insurance helps manage the financial impact after a covered cyber event.",
+      },
+      { type: "heading", text: "1. What Cyber Insurance Can Cover" },
+      {
+        type: "paragraph",
+        text: "Depending on the policy, cyber insurance may cover forensic investigation, data restoration, breach notification, legal expenses, ransomware negotiation support, business interruption, and third-party liability. Some policies also provide access to incident response experts, which is extremely valuable during the first 48 hours after an attack.",
+      },
+      { type: "heading", text: "2. Security Controls Still Matter" },
+      {
+        type: "paragraph",
+        text: "Insurers may ask about backups, antivirus, multi-factor authentication, employee access control, payment approval processes, and firewall practices. Weak controls can lead to higher premiums or exclusions. Cyber insurance should work alongside basic cyber hygiene, not replace it.",
+      },
+      {
+        type: "list",
+        items: [
+          "Maintain offline or immutable backups for critical business data.",
+          "Train employees to identify phishing emails and fake payment instructions.",
+          "Enable multi-factor authentication for email, banking, and cloud tools.",
+          "For cyber policy information and risk review, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "contractors-all-risk-insurance-project-sites",
+    title: "Contractors All Risk Insurance: Protecting Project Sites",
+    excerpt:
+      "CAR insurance protects civil construction projects from material damage, third-party liability, and site-related risks.",
+    category: "Business Risk",
+    readTime: "8 min read",
+    date: "February 06, 2026",
+    author: { name: "Saurav Mehra", role: "Engineering Insurance Specialist" },
+    coverImage: "/brand/blog-business.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Contractors All Risk (CAR) insurance is designed for civil construction projects such as buildings, warehouses, factories, roads, and infrastructure works. It covers accidental physical loss or damage to project works and may also include third-party liability arising from construction activity.",
+      },
+      { type: "heading", text: "1. Why Project Value Must Be Complete" },
+      {
+        type: "paragraph",
+        text: "The sum insured should include contract value, materials, labor, freight, customs duty, escalation, and owner-supplied materials where applicable. If major components are excluded from declared value, the project can become under-insured. Endorsements may be needed when project cost increases during execution.",
+      },
+      { type: "heading", text: "2. Extensions Can Be Critical" },
+      {
+        type: "paragraph",
+        text: "Depending on project needs, CAR policies can include maintenance cover, removal of debris, surrounding property, escalation, cross liability, earthquake, terrorism, and third-party liability. The extensions should match site conditions, contract requirements, and lender expectations.",
+      },
+      {
+        type: "list",
+        items: [
+          "Start CAR cover before materials reach the project site.",
+          "Check whether testing, commissioning, and maintenance periods are covered.",
+          "Update the policy if project value or completion timeline changes.",
+          "For project insurance planning, call or contact BIMAHEADQUARTER for information.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "plant-machinery-insurance-construction-equipment",
+    title: "Plant and Machinery Insurance for Construction Equipment",
+    excerpt:
+      "Cranes, excavators, loaders, and compressors need specialized cover beyond ordinary property insurance.",
+    category: "Business Risk",
+    readTime: "7 min read",
+    date: "February 04, 2026",
+    author: { name: "Saurav Mehra", role: "Engineering Insurance Specialist" },
+    coverImage: "/brand/blog-business.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Construction equipment works in rough environments and faces risks such as overturning, collision, fire, theft, flood, landslide, and accidental damage during operation. Plant and Machinery insurance helps protect mobile equipment used at project sites, quarries, road works, and industrial operations.",
+      },
+      { type: "heading", text: "1. Site Movement and Operating Risk" },
+      {
+        type: "paragraph",
+        text: "Unlike fixed machinery, construction equipment moves from one location to another and operates under changing terrain conditions. Policies should clearly define geographic limits, permitted usage, operator requirements, and whether transit between sites is covered or requires separate marine transit insurance.",
+      },
+      { type: "heading", text: "2. Basis of Valuation" },
+      {
+        type: "paragraph",
+        text: "Sum insured should generally reflect current replacement value for similar equipment, including taxes, freight, and installation where applicable. Older machines may need careful valuation so that premium remains reasonable while avoiding under-insurance at claim time.",
+      },
+      {
+        type: "list",
+        items: [
+          "Keep operator licenses, maintenance logs, and purchase invoices safely recorded.",
+          "Clarify whether accessories, buckets, attachments, and tools are included.",
+          "Report major site changes or long-distance movement to the insurer.",
+          "For plant and machinery insurance guidance, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "workmen-compensation-policy-for-employers",
+    title: "Workmen Compensation Policy: Employer Protection Basics",
+    excerpt:
+      "Employers need to understand wage declarations, employee categories, occupational risk, and claim documentation.",
+    category: "Business Risk",
+    readTime: "8 min read",
+    date: "February 02, 2026",
+    author: { name: "Roshni Sahu", role: "Commercial Claims Analyst" },
+    coverImage: "/brand/blog-claims.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Workmen Compensation insurance, also known as Employee Compensation insurance, protects employers against statutory liability arising from workplace injury, disability, or death of employees during employment. It is important for factories, warehouses, contractors, logistics firms, and businesses with field or manual workers.",
+      },
+      { type: "heading", text: "1. Accurate Wage Declaration Is Essential" },
+      {
+        type: "paragraph",
+        text: "Premium depends on employee category, wage level, and occupational risk. Incorrect wage declaration or missing worker categories can create disputes during claim settlement. Employers should include permanent, contractual, and site workers as required by policy terms and applicable law.",
+      },
+      { type: "heading", text: "2. Documentation During Injury Claims" },
+      {
+        type: "paragraph",
+        text: "Injury claims require accident reports, wage records, attendance records, medical documents, disability certificates, and legal notices where applicable. Early reporting helps the insurer appoint investigators and process liability assessment without unnecessary delay.",
+      },
+      {
+        type: "list",
+        items: [
+          "Classify employees correctly based on actual work performed.",
+          "Maintain attendance, payroll, contractor, and safety training records.",
+          "Report workplace accidents immediately and preserve incident evidence.",
+          "For Workmen Compensation policy information, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "fleet-insurance-management-for-logistics-companies",
+    title: "Fleet Insurance Management for Logistics Companies",
+    excerpt:
+      "Fleet owners need structured renewals, driver controls, claim tracking, and add-on planning to reduce operating risk.",
+    category: "Business Risk",
+    readTime: "8 min read",
+    date: "January 30, 2026",
+    author: { name: "Indu Mandrai", role: "Motor Fleet Consultant" },
+    coverImage: "/brand/blog-motor.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "A logistics company may operate trucks, pickups, two-wheelers, employee transport vehicles, and leased vehicles across multiple locations. Managing insurance one vehicle at a time creates renewal gaps, missed endorsements, claim delays, and inconsistent add-on selection. Fleet insurance management brings structure to the entire vehicle portfolio.",
+      },
+      { type: "heading", text: "1. Renewal Calendar and Document Control" },
+      {
+        type: "paragraph",
+        text: "Every fleet should maintain a live register containing registration number, chassis number, engine number, policy number, permit, fitness, PUC, driver details, and renewal date. This prevents accidental lapse and helps operations teams quickly access documents during roadside checks or claim filing.",
+      },
+      { type: "heading", text: "2. Claims Data Helps Improve Premiums" },
+      {
+        type: "paragraph",
+        text: "Fleet claim frequency, driver behavior, route type, vehicle age, and workshop pattern all influence premium discussions. Tracking repeat accident points and driver-wise claim history allows businesses to improve safety practices and negotiate more intelligently during renewal.",
+      },
+      {
+        type: "list",
+        items: [
+          "Maintain a single fleet insurance tracker for all vehicles.",
+          "Review add-ons such as zero depreciation, RSA, engine protection, and IMT endorsements vehicle-wise.",
+          "Keep driver license verification and accident records updated.",
+          "For fleet insurance management support, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "electric-vehicle-insurance-battery-cover-guide",
+    title: "Electric Vehicle Insurance: Battery Cover and Charging Risks",
+    excerpt:
+      "EV owners should review battery protection, charger damage, towing support, and claim rules before choosing a policy.",
+    category: "Personal Insurance",
+    readTime: "7 min read",
+    date: "January 28, 2026",
+    author: { name: "Prakhar Patil", role: "Motor Insurance Specialist" },
+    coverImage: "/brand/blog-motor.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Electric vehicles have different risk patterns compared with petrol or diesel vehicles. The battery pack is often the most expensive component, and repair networks are still developing in many locations. EV insurance should be reviewed for battery damage, charging equipment, roadside assistance, and specialized repair support.",
+      },
+      { type: "heading", text: "1. Battery Damage Can Be Expensive" },
+      {
+        type: "paragraph",
+        text: "A traction battery can cost a large percentage of the vehicle value. Water ingress, impact damage, electrical surge, and fire-related damage must be reviewed carefully under policy terms and add-ons. Some insurers offer EV-specific covers that extend protection for battery and charger-related risks.",
+      },
+      { type: "heading", text: "2. Roadside Assistance Is More Important for EVs" },
+      {
+        type: "paragraph",
+        text: "Running out of charge, charger malfunction, or software-related immobilization can leave an EV stranded. Roadside assistance with towing to an authorized EV workshop is valuable because ordinary garages may not be equipped to handle high-voltage systems safely.",
+      },
+      {
+        type: "list",
+        items: [
+          "Check if battery, motor, controller, and charger are clearly covered.",
+          "Prefer cashless workshops authorized for your EV brand.",
+          "Review exclusions for unauthorized charging, modifications, or racing usage.",
+          "For EV insurance information and comparison, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "home-insurance-for-apartments-and-independent-houses",
+    title: "Home Insurance for Apartments and Independent Houses",
+    excerpt:
+      "Home insurance can protect structure, contents, valuables, rent loss, and liability depending on the selected policy package.",
+    category: "Personal Insurance",
+    readTime: "7 min read",
+    date: "January 26, 2026",
+    author: { name: "Payal Sahu", role: "Property Insurance Advisory" },
+    coverImage: "/brand/blog-general.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Many homeowners insure their vehicles and health but leave their largest asset, the house, under-protected. Home insurance can cover the building structure, contents, appliances, furniture, jewelry, portable equipment, and additional living expenses depending on the plan. Apartment owners and independent house owners should structure cover differently.",
+      },
+      { type: "heading", text: "1. Structure and Contents Are Separate" },
+      {
+        type: "paragraph",
+        text: "Structure insurance covers the cost of rebuilding the home after fire, earthquake, flood, or other covered events. Contents insurance covers items inside the home. Apartment owners should clarify whether the society or lender policy covers only the building shell, because personal contents usually require a separate cover.",
+      },
+      { type: "heading", text: "2. Valuables Need Proper Declaration" },
+      {
+        type: "paragraph",
+        text: "Jewelry, high-value electronics, artwork, and portable devices may have sub-limits or require itemized declaration. Keeping invoices, photographs, and valuation certificates helps during claim assessment. Without proof, settlement can become difficult even when the policy technically covers contents.",
+      },
+      {
+        type: "list",
+        items: [
+          "Review whether earthquake, flood, terrorism, and burglary covers are included.",
+          "Update contents value after renovations or major purchases.",
+          "Keep digital copies of invoices and photographs of valuable items.",
+          "For home insurance information, call or contact BIMAHEADQUARTER for guidance.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "travel-insurance-international-trip-checklist",
+    title: "Travel Insurance Checklist for International Trips",
+    excerpt:
+      "Travel cover should be checked for medical limits, trip cancellation, baggage delay, pre-existing conditions, and visa requirements.",
+    category: "Personal Insurance",
+    readTime: "7 min read",
+    date: "January 24, 2026",
+    author: { name: "Shweta Hariyale", role: "Claims Settlement Specialist" },
+    coverImage: "/brand/blog-general.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "International travel insurance protects travelers from medical emergencies, evacuation costs, baggage delay, passport loss, trip cancellation, and personal liability depending on the policy. It is especially important because medical costs abroad can be extremely high and some visa processes require minimum insurance limits.",
+      },
+      { type: "heading", text: "1. Medical Limit Should Match Destination Cost" },
+      {
+        type: "paragraph",
+        text: "A low medical limit may be inadequate for destinations with expensive healthcare. Travelers should check emergency hospitalization, day-care treatment, evacuation, repatriation, and dental emergency limits. Adventure activities, cruise travel, and student travel may need specialized plans.",
+      },
+      { type: "heading", text: "2. Disclose Health Conditions" },
+      {
+        type: "paragraph",
+        text: "Pre-existing disease coverage is often limited or excluded unless specifically covered. Senior travelers, pregnant travelers, and people with known medical conditions should read the terms carefully. Claim rejection abroad can create serious financial stress.",
+      },
+      {
+        type: "list",
+        items: [
+          "Buy travel insurance before departure, not after a problem starts.",
+          "Keep policy copy, assistance number, passport copy, and emergency contacts accessible.",
+          "Check baggage delay, missed connection, and cancellation limits.",
+          "For travel insurance information before your trip, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "critical-illness-cover-vs-health-insurance",
+    title: "Critical Illness Cover vs Health Insurance: Know the Difference",
+    excerpt:
+      "Health insurance reimburses hospitalization, while critical illness cover pays a lump sum after diagnosis of listed diseases.",
+    category: "Personal Insurance",
+    readTime: "7 min read",
+    date: "January 22, 2026",
+    author: { name: "Payal Sahu", role: "Health Insurance Advisory" },
+    coverImage: "/brand/blog-health.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Health insurance and critical illness insurance solve different problems. A health policy pays hospital bills subject to policy terms. A critical illness policy pays a fixed lump sum when the insured is diagnosed with a listed serious illness such as cancer, heart attack, stroke, kidney failure, or major organ transplant, subject to survival period conditions.",
+      },
+      { type: "heading", text: "1. Why Lump Sum Helps" },
+      {
+        type: "paragraph",
+        text: "Serious illness creates expenses beyond hospital bills. Families may face income loss, travel costs, home modifications, nursing support, second opinions, and lifestyle changes. A lump sum payout provides flexibility to use money where it is needed most, even if the hospitalization bill is handled by a health policy.",
+      },
+      { type: "heading", text: "2. Disease Definitions Matter" },
+      {
+        type: "paragraph",
+        text: "Critical illness policies pay only when the diagnosis matches policy definitions. Early-stage conditions, minor procedures, or less severe versions may not qualify. Buyers should compare the list of covered illnesses, survival period, exclusions, and claim documentation rules before purchase.",
+      },
+      {
+        type: "list",
+        items: [
+          "Do not replace health insurance with only critical illness cover.",
+          "Choose sum insured based on income replacement and recovery expenses.",
+          "Read disease definitions carefully, not just the number of illnesses covered.",
+          "For critical illness cover information, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "claim-surveyor-process-and-policyholder-rights",
+    title: "Claim Surveyor Process: What Policyholders Should Expect",
+    excerpt:
+      "Surveyors verify loss cause, quantum, documents, and policy conditions. Knowing the process helps avoid claim delays.",
+    category: "Claims",
+    readTime: "8 min read",
+    date: "January 20, 2026",
+    author: { name: "Roshni Sahu", role: "Claims Operations Lead" },
+    coverImage: "/brand/blog-claims.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "In many motor, fire, marine, burglary, and engineering claims, insurers appoint a licensed surveyor to inspect the loss and assess admissibility. The surveyor is not simply taking photographs; they evaluate cause of loss, extent of damage, policy coverage, salvage value, repair estimates, and supporting documents.",
+      },
+      { type: "heading", text: "1. Cooperate but Keep Records" },
+      {
+        type: "paragraph",
+        text: "Policyholders should cooperate with surveyors, provide requested documents, and avoid disturbing damaged property before inspection. At the same time, they should maintain their own photographs, videos, repair estimates, invoices, stock records, and communication trail. Good documentation helps resolve disputes if assessment differs from actual loss.",
+      },
+      { type: "heading", text: "2. Delay Often Comes From Missing Documents" },
+      {
+        type: "paragraph",
+        text: "Claim delays are frequently caused by incomplete claim forms, missing invoices, unclear ownership records, unavailable police reports, or inconsistent statements. Preparing a document checklist immediately after loss can reduce back-and-forth communication.",
+      },
+      {
+        type: "list",
+        items: [
+          "Do not dispose of damaged property or salvage without insurer consent.",
+          "Submit repair estimates, bills, and ownership documents in organized form.",
+          "Ask for written clarification when additional documents are requested.",
+          "For surveyor coordination and claim documentation help, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "policy-endorsement-when-to-update-insurance-details",
+    title: "Policy Endorsements: When You Must Update Insurance Details",
+    excerpt:
+      "Address changes, nominee updates, asset additions, hypothecation, and business changes often require policy endorsements.",
+    category: "Renewals",
+    readTime: "7 min read",
+    date: "January 18, 2026",
+    author: { name: "Payal Sahu", role: "Renewal & Retention Specialist" },
+    coverImage: "/brand/blog-general.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "An endorsement is an official amendment to an insurance policy. It updates details, adds or removes coverage, corrects errors, or changes policy terms. Many claim disputes begin because the policy was not updated after a real-world change in ownership, address, asset value, business activity, or nominee details.",
+      },
+      { type: "heading", text: "1. Common Endorsement Situations" },
+      {
+        type: "paragraph",
+        text: "Motor policies may need endorsement for hypothecation addition or removal, address change, CNG kit, ownership transfer, or correction in registration details. Commercial policies may need endorsement for increased stock, new machinery, additional locations, bank clause, or change in occupancy.",
+      },
+      { type: "heading", text: "2. Do Not Wait Until Claim Time" },
+      {
+        type: "paragraph",
+        text: "If a warehouse changes from storing general goods to storing hazardous chemicals, the insurer must know before a loss occurs. If a vehicle ownership transfer is delayed, claim settlement may become complicated. Endorsements should be processed as soon as the change happens.",
+      },
+      {
+        type: "list",
+        items: [
+          "Review policy schedule details after every renewal.",
+          "Update bank clause after loan closure or new financing.",
+          "Keep endorsement copies with the original policy document.",
+          "For endorsement support and policy correction, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "insurance-audit-for-small-business-owners",
+    title: "Insurance Audit for Small Business Owners: Annual Review Guide",
+    excerpt:
+      "A yearly insurance audit helps identify under-insurance, duplicate covers, missing liability protection, and renewal gaps.",
+    category: "Business Risk",
+    readTime: "8 min read",
+    date: "January 16, 2026",
+    author: { name: "Anand Soni", role: "Insurance Portfolio Advisory Lead" },
+    coverImage: "/brand/blog-business.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Small businesses evolve quickly. New stock, new machines, new rented premises, new contracts, new employees, and new loans can all change insurance needs. An annual insurance audit reviews whether current policies still match the actual risk profile of the business.",
+      },
+      { type: "heading", text: "1. Find Gaps Before Claims Expose Them" },
+      {
+        type: "paragraph",
+        text: "Common gaps include low stock sum insured, missing burglary cover, no liability policy, outdated fire values, absent Workmen Compensation cover, and expired vehicle policies. These issues are easy to correct during an audit but painful to discover after a loss.",
+      },
+      { type: "heading", text: "2. Remove Duplication and Improve Structure" },
+      {
+        type: "paragraph",
+        text: "An audit is not only about buying more insurance. It can also identify duplicate covers, wrong add-ons, unnecessary limits, and opportunities to combine policies more efficiently. The goal is a cleaner insurance portfolio with stronger claim readiness.",
+      },
+      {
+        type: "list",
+        items: [
+          "Review asset values, employee count, revenue, contracts, and location changes annually.",
+          "Check if lenders, landlords, or clients require specific insurance clauses.",
+          "Map every major business risk to an active policy or conscious retention decision.",
+          "For an annual business insurance audit, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "renewal-vs-portability-health-insurance-decision",
+    title: "Health Insurance Renewal vs Portability: How to Decide",
+    excerpt:
+      "Porting can improve benefits, but continuity, waiting periods, claim history, and underwriting must be reviewed carefully.",
+    category: "Renewals",
+    readTime: "7 min read",
+    date: "January 14, 2026",
+    author: { name: "Payal Sahu", role: "Renewal & Retention Specialist" },
+    coverImage: "/brand/blog-health.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "At renewal, policyholders often wonder whether to continue with the same health insurer or port to another plan. Portability allows transfer of certain continuity benefits, but approval is subject to underwriting. A lower premium should not be the only reason to port, especially when there is claim history or pre-existing disease.",
+      },
+      { type: "heading", text: "1. Compare Benefits, Not Only Premium" },
+      {
+        type: "paragraph",
+        text: "A new plan may offer better room rent, no disease-wise limits, restoration benefits, consumables cover, or larger hospital network. But it may also include different waiting periods, co-payments, or exclusions. The comparison must be policy wording to policy wording, not brochure to brochure.",
+      },
+      { type: "heading", text: "2. Apply Early for Portability" },
+      {
+        type: "paragraph",
+        text: "Portability requests should be initiated well before renewal due date. If underwriting takes time and the current policy expires, continuity may be at risk. Policyholders should keep renewal backup ready while evaluating the port option.",
+      },
+      {
+        type: "list",
+        items: [
+          "Port only after checking waiting period credit and underwriting conditions.",
+          "Do not hide past claims or illnesses in the portability proposal.",
+          "Compare network hospitals in your city before shifting insurer.",
+          "For renewal vs portability guidance, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "marine-open-policy-for-regular-shipments",
+    title: "Marine Open Policy: A Better Fit for Regular Shipments",
+    excerpt:
+      "Businesses with frequent dispatches can use marine open policies to simplify transit insurance declarations and coverage.",
+    category: "Business Risk",
+    readTime: "8 min read",
+    date: "January 12, 2026",
+    author: { name: "Siya Thakur", role: "Transit & Warehouse Risk Consultant" },
+    coverImage: "/brand/blog-business.webp",
+    sections: [
+      {
+        type: "paragraph",
+        text: "Businesses that ship goods regularly often struggle with shipment-wise marine insurance. A marine open policy provides a standing arrangement for multiple consignments during the policy period, subject to declared limits, routes, commodity type, and reporting conditions.",
+      },
+      { type: "heading", text: "1. Declaration Discipline Is Crucial" },
+      {
+        type: "paragraph",
+        text: "Open policies require periodic declarations of shipments. If a consignment is not declared as required, claim settlement can become difficult. Businesses should create a dispatch-to-insurance workflow so invoice generation, e-way bill creation, and insurance declaration happen together.",
+      },
+      { type: "heading", text: "2. Terms Must Match Real Transit" },
+      {
+        type: "paragraph",
+        text: "Coverage should match the actual movement of goods: road, rail, air, sea, courier, import, export, or multimodal transit. Packing standards, loading and unloading cover, storage during transit, and transshipment conditions should be checked before dispatches begin.",
+      },
+      {
+        type: "list",
+        items: [
+          "Define per-sending limit and annual turnover limit correctly.",
+          "Check whether loading, unloading, and temporary storage are covered.",
+          "Maintain dispatch records, invoices, LR copies, and delivery acknowledgments.",
+          "For marine open policy information, call or contact BIMAHEADQUARTER.",
+        ],
+      },
+    ],
+  },
 ];

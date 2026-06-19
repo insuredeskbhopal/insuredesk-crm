@@ -382,10 +382,11 @@ export default function RootPage() {
                   </span>
                   BY INSUREDESK IMF PVT LTD
                 </div>
-                <h1 className="font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold text-center lg:text-left">
-                  Your Trusted Insurance &amp;
-                  <br />
-                  <span className="text-secondary">Claim Consulting</span> Partner
+                <h1 className="typing-headline font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold text-center lg:text-left">
+                  <span className="typing-line typing-line-one">Your Trusted Insurance &amp;</span>
+                  <span className="typing-line typing-line-two">
+                    <span className="text-secondary">Claim Consulting</span> Partner
+                  </span>
                 </h1>
                 <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-center lg:text-left">
                   Helping Individuals &amp; Businesses Choose the Right Insurance
@@ -408,26 +409,32 @@ export default function RootPage() {
                     Claim Assistance
                   </a>
                 </div>
-                <div className="mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-8 grayscale opacity-70">
-                  <div className="flex flex-col">
-                    <span className="font-headline-md text-headline-md text-primary text-[24px] font-bold">
+                <div className="hero-stats mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-8 grayscale opacity-70">
+                  <div className="hero-stat flex flex-col">
+                    <span className="typing-stat typing-stat-value font-headline-md text-headline-md text-primary text-[24px] font-bold">
                       10+
                     </span>
-                    <span className="font-label-md text-[12px] uppercase tracking-wider">Partners</span>
+                    <span className="typing-stat typing-stat-label font-label-md text-[12px] uppercase tracking-wider">
+                      Partners
+                    </span>
                   </div>
                   <div className="w-px h-10 bg-outline-variant"></div>
-                  <div className="flex flex-col">
-                    <span className="font-headline-md text-headline-md text-primary text-[24px] font-bold">
+                  <div className="hero-stat flex flex-col">
+                    <span className="typing-stat typing-stat-value font-headline-md text-headline-md text-primary text-[24px] font-bold">
                       24/7
                     </span>
-                    <span className="font-label-md text-[12px] uppercase tracking-wider">Support</span>
+                    <span className="typing-stat typing-stat-label font-label-md text-[12px] uppercase tracking-wider">
+                      Support
+                    </span>
                   </div>
                   <div className="w-px h-10 bg-outline-variant"></div>
-                  <div className="flex flex-col">
-                    <span className="font-headline-md text-headline-md text-primary text-[24px] font-bold">
+                  <div className="hero-stat flex flex-col">
+                    <span className="typing-stat typing-stat-value font-headline-md text-headline-md text-primary text-[24px] font-bold">
                       100%
                     </span>
-                    <span className="font-label-md text-[12px] uppercase tracking-wider">Trusted</span>
+                    <span className="typing-stat typing-stat-label font-label-md text-[12px] uppercase tracking-wider">
+                      Trusted
+                    </span>
                   </div>
                 </div>
               </div>

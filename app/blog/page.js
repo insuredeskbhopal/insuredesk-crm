@@ -6,12 +6,17 @@ import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import { BLOG_POSTS } from "./blogData";
+import { SITE_URL } from "@/lib/seo/site";
 
 const categories = ["All", "Claims", "Renewals", "Business Risk", "Personal Insurance"];
+const POSTS_PER_PAGE = 9;
+
+const stripHtml = (value) => value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 
 export default function BlogFeedPage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     document.body.classList.add("landing-page");
@@ -33,21 +38,55 @@ export default function BlogFeedPage() {
     };
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, searchQuery]);
+
   // Filter posts by category and search query
   const filteredPosts = BLOG_POSTS.filter((post) => {
     const matchesCategory = activeCategory === "All" || post.category === activeCategory;
+    const searchableExcerpt = stripHtml(post.excerpt).toLowerCase();
     const matchesSearch =
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      searchableExcerpt.includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
   // Featured post is the first post (or from a specific flag)
   const featuredPost = BLOG_POSTS[0];
   const standardPosts = filteredPosts.filter((post) => post.slug !== featuredPost.slug);
+  const gridPosts = activeCategory !== "All" || searchQuery ? filteredPosts : standardPosts;
+  const totalPages = Math.max(1, Math.ceil(gridPosts.length / POSTS_PER_PAGE));
+  const pageStart = (currentPage - 1) * POSTS_PER_PAGE;
+  const paginatedPosts = gridPosts.slice(pageStart, pageStart + POSTS_PER_PAGE);
+  const pageSummaryStart = gridPosts.length === 0 ? 0 : pageStart + 1;
+  const pageSummaryEnd = Math.min(pageStart + POSTS_PER_PAGE, gridPosts.length);
+  const blogSchema = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "BIMAHEADQUARTER Insurance Knowledge Hub",
+    description:
+      "Insurance guides, claim assistance articles, renewal checklists, and business risk education from BIMAHEADQUARTER.",
+    blogPost: BLOG_POSTS.map((post) => ({
+      "@type": "BlogPosting",
+      headline: post.title,
+      description: stripHtml(post.excerpt),
+      datePublished: new Date(post.date).toISOString(),
+      author: {
+        "@type": "Person",
+        name: post.author.name,
+      },
+      url: `${SITE_URL}/blog/${post.slug}`,
+    })),
+  };
 
   return (
     <>
+      <Script
+        id="bimaheadquarter-blog-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
+      />
       <div className="landing-shell blog-feed-page bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
 
@@ -122,7 +161,7 @@ export default function BlogFeedPage() {
                       <h2>
                         <Link href={`/blog/${featuredPost.slug}`}>{featuredPost.title}</Link>
                       </h2>
-                      <p>{featuredPost.excerpt}</p>
+                      <p dangerouslySetInnerHTML={{ __html: featuredPost.excerpt }} />
                       <div className="blog-card-footer">
                         <div className="blog-author">
                           <strong>{featuredPost.author.name}</strong>
@@ -151,38 +190,77 @@ export default function BlogFeedPage() {
                     <p>Try refining your search queries or selecting another category.</p>
                   </div>
                 ) : (
-                  <div className="blog-grid">
-                    {/* Render featured post as a grid card if filtering is active */}
-                    {(activeCategory !== "All" || searchQuery ? filteredPosts : standardPosts).map((post) => (
-                      <article key={post.slug} className="blog-card reveal">
-                        <div
-                          className="blog-card-media"
-                          style={{ backgroundImage: `url(${post.coverImage})` }}
-                        ></div>
-                        <div className="blog-card-copy">
-                          <div className="blog-card-meta">
-                            <span className="blog-card-category">{post.category}</span>
-                            <span className="blog-card-dot">•</span>
-                            <span>{post.readTime}</span>
-                          </div>
-                          <h3>
-                            <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-                          </h3>
-                          <p>{post.excerpt}</p>
-                          <div className="blog-card-footer">
-                            <div className="blog-author">
-                              <strong>{post.author.name}</strong>
-                              <span>{post.author.role}</span>
+                  <>
+                    <div className="blog-grid" key={`${activeCategory}-${searchQuery}-${currentPage}`}>
+                      {paginatedPosts.map((post) => (
+                        <article key={post.slug} className="blog-card reveal active">
+                          <div
+                            className="blog-card-media"
+                            style={{ backgroundImage: `url(${post.coverImage})` }}
+                          ></div>
+                          <div className="blog-card-copy">
+                            <div className="blog-card-meta">
+                              <span className="blog-card-category">{post.category}</span>
+                              <span className="blog-card-dot">•</span>
+                              <span>{post.readTime}</span>
                             </div>
-                            <Link href={`/blog/${post.slug}`} className="blog-read-link">
-                              Read
-                              <span className="material-symbols-outlined">arrow_forward</span>
-                            </Link>
+                            <h3>
+                              <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                            </h3>
+                            <p dangerouslySetInnerHTML={{ __html: post.excerpt }} />
+                            <div className="blog-card-footer">
+                              <div className="blog-author">
+                                <strong>{post.author.name}</strong>
+                                <span>{post.author.role}</span>
+                              </div>
+                              <Link href={`/blog/${post.slug}`} className="blog-read-link">
+                                Read
+                                <span className="material-symbols-outlined">arrow_forward</span>
+                              </Link>
+                            </div>
                           </div>
+                        </article>
+                      ))}
+                    </div>
+
+                    {totalPages > 1 && (
+                      <nav className="blog-pagination" aria-label="Blog pagination">
+                        <p>
+                          Showing {pageSummaryStart}-{pageSummaryEnd} of {gridPosts.length} articles
+                        </p>
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                            disabled={currentPage === 1}
+                            aria-label="Previous blog page"
+                          >
+                            <span className="material-symbols-outlined">chevron_left</span>
+                          </button>
+                          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                            <button
+                              key={page}
+                              type="button"
+                              className={currentPage === page ? "active" : ""}
+                              onClick={() => setCurrentPage(page)}
+                              aria-label={`Go to blog page ${page}`}
+                              aria-current={currentPage === page ? "page" : undefined}
+                            >
+                              {page}
+                            </button>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                            disabled={currentPage === totalPages}
+                            aria-label="Next blog page"
+                          >
+                            <span className="material-symbols-outlined">chevron_right</span>
+                          </button>
                         </div>
-                      </article>
-                    ))}
-                  </div>
+                      </nav>
+                    )}
+                  </>
                 )}
               </div>
             </div>

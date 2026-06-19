@@ -3,7 +3,6 @@ import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import LandingEffects from "@/app/components/LandingEffects";
 import PublicFooter from "@/app/components/public/PublicFooter";
-import Breadcrumbs from "@/app/components/public/Breadcrumbs";
 import { BUSINESS_DETAILS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
 const structuredData = {
@@ -210,8 +209,6 @@ export default function AboutPage() {
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
         <main>
-          <Breadcrumbs />
-
           {/* Hero Section */}
           <header className="relative pt-24 pb-32 overflow-hidden flex items-center justify-center min-h-[500px] bg-gradient-to-b from-surface-container/30 to-background">
             <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center flex flex-col items-center justify-center relative z-10">

@@ -7,8 +7,28 @@ export default function LandingEffects() {
     // Add page-specific body class
     document.body.classList.add("landing-page");
 
+    const autoRevealSelectors = [
+      ".landing-shell main > header",
+      ".landing-shell main > section",
+      ".landing-shell .glass-card",
+      ".landing-shell .service-card",
+      ".landing-shell .service-directory-card",
+      ".landing-shell .contact-info-card",
+      ".landing-shell .contact-form-card",
+      ".landing-shell .blog-post-card",
+      ".landing-shell .public-footer",
+    ];
+
+    const autoRevealElements = document.querySelectorAll(autoRevealSelectors.join(", "));
+    autoRevealElements.forEach((element, index) => {
+      if (!element.classList.contains("reveal") && !element.classList.contains("entry-anim")) {
+        element.classList.add("landing-auto-reveal");
+        element.style.setProperty("--reveal-delay", `${Math.min(index * 35, 180)}ms`);
+      }
+    });
+
     // Scroll Reveal animations using IntersectionObserver
-    const revealElements = document.querySelectorAll(".reveal");
+    const revealElements = document.querySelectorAll(".reveal, .landing-auto-reveal");
     const revealObserver = new window.IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -42,6 +62,10 @@ export default function LandingEffects() {
     return () => {
       document.body.classList.remove("landing-page");
       revealObserver.disconnect();
+      autoRevealElements.forEach((element) => {
+        element.classList.remove("landing-auto-reveal", "active");
+        element.style.removeProperty("--reveal-delay");
+      });
       glassCards.forEach((card) => {
         card.removeEventListener("mousemove", handleMouseMove);
       });

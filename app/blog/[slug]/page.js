@@ -7,6 +7,8 @@ import BlogSidebarForm from "../BlogSidebarForm";
 import { BLOG_POSTS } from "../blogData";
 import { SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
+const stripHtml = (value) => value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+
 // Generate static params for Next.js build prerendering
 export function generateStaticParams() {
   return BLOG_POSTS.map((post) => ({
@@ -25,13 +27,13 @@ export async function generateMetadata({ params }) {
 
   return {
     title: `${post.title} | BIMAHEADQUARTER Blog`,
-    description: post.excerpt,
+    description: stripHtml(post.excerpt),
     alternates: {
       canonical: `/blog/${post.slug}`,
     },
     openGraph: {
       title: `${post.title} | BIMAHEADQUARTER Blog`,
-      description: post.excerpt,
+      description: stripHtml(post.excerpt),
       url: `${SITE_URL}/blog/${post.slug}`,
       type: "article",
       publishedTime: new Date(post.date).toISOString(),
@@ -40,7 +42,7 @@ export async function generateMetadata({ params }) {
     twitter: {
       card: "summary_large_image",
       title: `${post.title} | BIMAHEADQUARTER Blog`,
-      description: post.excerpt,
+      description: stripHtml(post.excerpt),
     },
   };
 }
@@ -119,7 +121,7 @@ export default async function BlogPostPage({ params }) {
         "@id": `${postUrl}#post`,
         url: postUrl,
         headline: post.title,
-        description: post.excerpt,
+        description: stripHtml(post.excerpt),
         datePublished: new Date(post.date).toISOString(),
         dateModified: new Date(post.date).toISOString(),
         author: {
@@ -199,7 +201,7 @@ export default async function BlogPostPage({ params }) {
                   <span>{post.date}</span>
                 </div>
                 <h1>{post.title}</h1>
-                <p className="blog-excerpt">{post.excerpt}</p>
+                <p className="blog-excerpt" dangerouslySetInnerHTML={{ __html: post.excerpt }} />
 
                 <div className="blog-post-author-bar">
                   <span className="material-symbols-outlined">account_circle</span>

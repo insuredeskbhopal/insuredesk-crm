@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Script from "next/script";
+import LandingEffects from "@/app/components/LandingEffects";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import { BUSINESS_DETAILS, SITE_NAME, SITE_URL } from "@/lib/seo/site";
@@ -112,26 +113,6 @@ export default function ContactPage() {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  useEffect(() => {
-    document.body.classList.add("landing-page");
-    const revealElements = document.querySelectorAll(".reveal");
-    const revealObserver = new window.IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("active");
-          }
-        });
-      },
-      { threshold: 0.1 },
-    );
-    revealElements.forEach((el) => revealObserver.observe(el));
-    return () => {
-      document.body.classList.remove("landing-page");
-      revealObserver.disconnect();
-    };
-  }, []);
-
   const handleChange = (event) => {
     setFormState((current) => ({
       ...current,
@@ -157,6 +138,7 @@ export default function ContactPage() {
 
   return (
     <>
+      <LandingEffects />
       <Script
         id="contact-structured-data"
         type="application/ld+json"
