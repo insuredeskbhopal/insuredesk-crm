@@ -147,7 +147,7 @@ export default function BlogFeedPage() {
               {activeCategory === "All" && !searchQuery && featuredPost && (
                 <div className="blog-featured-section reveal">
                   <span className="blog-section-title">Featured Article</span>
-                  <div className="blog-featured-card">
+                  <Link href={`/blog/${featuredPost.slug}`} className="blog-featured-card">
                     <div
                       className="blog-featured-media"
                       style={{ backgroundImage: `url(${featuredPost.coverImage})` }}
@@ -158,22 +158,20 @@ export default function BlogFeedPage() {
                         <span className="blog-card-dot">•</span>
                         <span>{featuredPost.readTime}</span>
                       </div>
-                      <h2>
-                        <Link href={`/blog/${featuredPost.slug}`}>{featuredPost.title}</Link>
-                      </h2>
+                      <h2>{featuredPost.title}</h2>
                       <p dangerouslySetInnerHTML={{ __html: featuredPost.excerpt }} />
                       <div className="blog-card-footer">
                         <div className="blog-author">
                           <strong>{featuredPost.author.name}</strong>
                           <span>{featuredPost.author.role}</span>
                         </div>
-                        <Link href={`/blog/${featuredPost.slug}`} className="blog-read-link">
+                        <span className="blog-read-link">
                           Read Article
                           <span className="material-symbols-outlined">arrow_forward</span>
-                        </Link>
+                        </span>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               )}
 
@@ -193,7 +191,7 @@ export default function BlogFeedPage() {
                   <>
                     <div className="blog-grid" key={`${activeCategory}-${searchQuery}-${currentPage}`}>
                       {paginatedPosts.map((post) => (
-                        <article key={post.slug} className="blog-card reveal active">
+                        <Link key={post.slug} href={`/blog/${post.slug}`} className="blog-card reveal active">
                           <div
                             className="blog-card-media"
                             style={{ backgroundImage: `url(${post.coverImage})` }}
@@ -204,22 +202,20 @@ export default function BlogFeedPage() {
                               <span className="blog-card-dot">•</span>
                               <span>{post.readTime}</span>
                             </div>
-                            <h3>
-                              <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-                            </h3>
+                            <h3>{post.title}</h3>
                             <p dangerouslySetInnerHTML={{ __html: post.excerpt }} />
                             <div className="blog-card-footer">
                               <div className="blog-author">
                                 <strong>{post.author.name}</strong>
                                 <span>{post.author.role}</span>
                               </div>
-                              <Link href={`/blog/${post.slug}`} className="blog-read-link">
+                              <span className="blog-read-link">
                                 Read
                                 <span className="material-symbols-outlined">arrow_forward</span>
-                              </Link>
+                              </span>
                             </div>
                           </div>
-                        </article>
+                        </Link>
                       ))}
                     </div>
 

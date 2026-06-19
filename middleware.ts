@@ -10,6 +10,18 @@ if (!SECRET_KEY) {
 }
 const encodedSecret = new TextEncoder().encode(SECRET_KEY);
 const ADMIN_LOGIN_PATH = "/crm/admin/login";
+const PROTECTED_ROUTE_PREFIXES = [
+  "/analytics-reports",
+  "/bulk-upload",
+  "/customer-management",
+  "/dashboard",
+  "/field-setup",
+  "/manual-policy-entry",
+  "/operations",
+  "/policy-records",
+  "/premium-reports",
+  "/settings",
+];
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
@@ -44,7 +56,7 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = pathname === ADMIN_LOGIN_PATH;
   const isAuthApi = pathname.startsWith("/api/auth");
   const isBlogPage = pathname.startsWith("/blog");
-  const isPublicPage = PUBLIC_ROUTE_PATHS.includes(pathname) || isAuthPage || isBlogPage;
+  const isPublicPage = PUBLIC_ROUTE_PATHS.includes(pathname) || pathname === "/not-found" || isAuthPage || isBlogPage;
 
   if (pathname === "/login" || pathname === "/signup") {
     return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : "/not-found", request.url));
@@ -57,6 +69,13 @@ export async function middleware(request: NextRequest) {
   if (!isAuthenticated && !isPublicPage) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+    }
+
+    const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    );
+    if (!isProtectedRoute) {
+      return NextResponse.next();
     }
 
     const notFoundUrl = new URL("/not-found", request.url);
