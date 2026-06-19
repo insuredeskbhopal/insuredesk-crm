@@ -96,7 +96,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.brokerCode).toBe("2021477077928594");
     expect(result.brokerMobile).toBe("8818889660");
     expect(result.brokerEmail).toBe("anand.soni10@gmai.com");
-    expect(result.coverages).toEqual([]);
+    expect(result.coverages).toEqual([{ sectionName: "MSME Suraksha Kavach - Buildings", sumInsured: "75,00,000.00" }]);
     expect(result.needsManualReview).toBe(false);
   });
 
@@ -118,7 +118,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.riskLocation).toBe(
       "PROP. BHAVANA KAMRANI, SURVEY NO. 516/1 2, VILLAGE MOHAMMADPURA, NEAR MACRO VISION ACADEMY SCHOOL, MADHYA PRADESH, MADHYA PRADESH, BURHANPUR, 450331",
     );
-    expect(result.district).toBe("BURHANPUR MADHYA PRADESH");
+    expect(result.district).toBe("BURHANPUR");
     expect(result.tehsil).toBe("");
     expect(result.startDate).toBe("01/06/2026");
     expect(result.expiryDate).toBe("31/05/2027");
@@ -140,7 +140,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.brokerCode).toBe("2021477077928594");
     expect(result.brokerMobile).toBe("8818889660");
     expect(result.brokerEmail).toBe("anand.soni10@gmai.com");
-    expect(result.coverages).toEqual([]);
+    expect(result.coverages).toEqual([{ sectionName: "MSME Suraksha Kavach - Buildings", sumInsured: "1,75,00,000.00" }]);
     expect(result.needsManualReview).toBe(false);
   });
 

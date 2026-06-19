@@ -1246,7 +1246,7 @@ describe("generic motor policy extraction", () => {
 
     const result = extractPolicyFromText(text, "generic-warehouse-msme.pdf");
 
-    expect(result.policyType).toBe("MSME Suraksha Kavach Package Policy - Advance");
+    expect(result.policyType).toBe("Warehouse / MSME / Fire & Burglary package");
     expect(result.policyCoverType).toBe("");
     expect(result.vehicleNumber).toBe("");
     expect(result.engineNumber).toBe("");
