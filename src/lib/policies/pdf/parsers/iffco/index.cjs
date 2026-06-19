@@ -1284,7 +1284,7 @@ function extractIffcoWarehouse(text, filename = "") {
   
   brokerCode = matchGroup(text, /Intermediary Code\s*:\s*(\d+)/i) || matchGroup(text, /Intermediary No\.\s*(\d+)/i) || "21002760";
   
-  const brokerNameMatch = text.match(/Intermediary\s*Name\s*(?:and Phone No\.)?\s*[:\-]*\s*([A-Za-z\s]{3,100})/i);
+  const brokerNameMatch = text.match(/Intermediary\s*Name\s*(?:and Phone No\.)?\s*[:-]*\s*([A-Za-z\s]{3,100})/i);
   if (brokerNameMatch) {
     brokerName = cleanHdfcValue(brokerNameMatch[1]);
   }
@@ -1297,7 +1297,7 @@ function extractIffcoWarehouse(text, filename = "") {
 
   const clientMatch = text.match(/Client\s*Number\s*([A-Za-z0-9]+)/i) || 
                       text.match(/P400\s*Client\s*ID\s*([A-Za-z0-9]+)/i) ||
-                      text.match(/C\/N\s*No\s*[:\-]*\s*([A-Za-z0-9]+)/i);
+                      text.match(/C\/N\s*No\s*[:-]*\s*([A-Za-z0-9]+)/i);
   clientNumber = clientMatch ? clientMatch[1].trim() : "";
   
   // Fallback: Calculate 18% GST if net premium exists but GST details are missing
