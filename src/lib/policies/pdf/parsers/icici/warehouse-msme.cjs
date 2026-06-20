@@ -35,14 +35,7 @@ function pick(text, regex) {
   return match ? clean(match[1]) : null;
 }
 
-function pickAll(text, regex) {
-  const out = [];
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    out.push(clean(match[1]));
-  }
-  return out;
-}
+
 
 function toAmount(value) {
   if (!value) return null;
@@ -118,7 +111,7 @@ function parsePolicy(rawText, fileName = "") {
   const text = normalizeText(rawText);
 
   const policyNumber =
-    pick(text, /Policy\s*(?:No\.?|Number)\s*[:\-]?\s*([0-9]{4}\/[0-9]+\/[0-9]{2}\/[0-9]{3})/i) ||
+    pick(text, /Policy\s*(?:No\.?|Number)\s*[:-]?\s*([0-9]{4}\/[0-9]+\/[0-9]{2}\/[0-9]{3})/i) ||
     pick(text, /attached herewith\s*([0-9]{4}\/[0-9]+\/[0-9]{2}\/[0-9]{3})/i);
 
   const insuredName =
@@ -137,7 +130,7 @@ function parsePolicy(rawText, fileName = "") {
     pick(text, /Business\s+of\s+the\s+insured\s+(.+?)\s+(?:Turnover|Premise|Premises|Policy Period)/i) ||
     pick(text, /Occupancy\s+of\s+Risk\s+(.+?)\s+Policy\s+Period/i);
 
-  const issuedAt = pick(text, /Issued\s+At\s*[:\-]?\s*(.+?)\s+(?:Product Code|URN|Item Description)/i);
+  const issuedAt = pick(text, /Issued\s+At\s*[:-]?\s*(.+?)\s+(?:Product Code|URN|Item Description)/i);
 
   const policyStartDate =
     pick(text, /Policy\s+Period\s+From:\s*(.+?)\s+To:/i) ||
@@ -154,12 +147,12 @@ function parsePolicy(rawText, fileName = "") {
 
   const burglarySumInsured =
     toAmount(pick(text, /Section\s*3:\s*Burglary.*?Total\s+Sum\s+Insured\s+([0-9,]+)/i)) ||
-    toAmount(pick(text, /Burglary\s+Stock\s*[:\-]?\s*([0-9,]+)/i)) ||
+    toAmount(pick(text, /Burglary\s+Stock\s*[:-]?\s*([0-9,]+)/i)) ||
     toAmount(pick(text, /Burglary\s+([0-9,]+)/i));
 
   const fidelitySumInsured =
     toAmount(pick(text, /Section\s*5:\s*Fidelity.*?Sum\s+Insured\s+([0-9,]+)/i)) ||
-    toAmount(pick(text, /Fidelity\s*[:\-]?\s*([0-9,]+)/i));
+    toAmount(pick(text, /Fidelity\s*[:-]?\s*([0-9,]+)/i));
 
   const netPremium =
     toAmount(pick(text, /Net\s+Premium\s+([0-9,]+)/i)) ||
@@ -172,17 +165,17 @@ function parsePolicy(rawText, fileName = "") {
     toAmount(pick(text, /Total\s+Tax\s+Amount\s+([0-9,]+)/i));
 
   const premiumIncludingGst =
-    toAmount(pick(text, /Total\s+Premium(?:\s+inclusive\s+Tax)?\s*[:\-]?\s*([0-9,]+)/i)) ||
+    toAmount(pick(text, /Total\s+Premium(?:\s+inclusive\s+Tax)?\s*[:-]?\s*([0-9,]+)/i)) ||
     (netPremium && gstAmount ? netPremium + gstAmount : null);
 
-  const invoiceNumber = pick(text, /Invoice\s+Number\s*[:\-]?\s*([0-9]+)/i);
-  const invoiceDate = parseDateLike(pick(text, /Invoice\s+Date\s*[:\-]?\s*([0-9A-Za-z,\-\/ ]+)/i));
+  const invoiceNumber = pick(text, /Invoice\s+Number\s*[:-]?\s*([0-9]+)/i);
+  const invoiceDate = parseDateLike(pick(text, /Invoice\s+Date\s*[:-]?\s*([0-9A-Za-z,/ -]+)/i));
 
   const gstin =
-    pick(text, /GSTIN(?:\s+Reg\s+no)?\s*[:\-]?\s*([0-9A-Z]{15})/i) ||
+    pick(text, /GSTIN(?:\s+Reg\s+no)?\s*[:-]?\s*([0-9A-Z]{15})/i) ||
     pick(text, /GSTIN\s+([0-9A-Z]{15})/i);
 
-  const placeOfSupply = pick(text, /Place\s+[Oo]f\s+[Ss]upply\s*[:\-]?\s*([A-Z ]+?)(?=\s+[A-Z][a-z]|\s*$)/);
+  const placeOfSupply = pick(text, /Place\s+[Oo]f\s+[Ss]upply\s*[:-]?\s*([A-Z ]+?)(?=\s+[A-Z][a-z]|\s*$)/);
 
   let hypothecationDetails =
     pick(text, /Hypothecation\s+Details\s*(.+?)\s+(?:WARRANTIES|SPECIAL|Authorized|GSTIN|Annexure|$)/i) ||
@@ -234,16 +227,16 @@ function parsePolicy(rawText, fileName = "") {
     financerName: /MPWLC/i.test(hypothecationDetails || "") ? "MPWLC" : null,
 
     brokerCode: (() => {
-      const val = pick(text, /Agency\/Broker\s+Code\s*[:\-]?\s*([A-Z0-9\-]+)/i);
+      const val = pick(text, /Agency\/Broker\s+Code\s*[:-]?\s*([A-Z0-9-]+)/i);
       return val === "Agency" ? null : val;
     })(),
     brokerName: (() => {
-      const val = pick(text, /Agency\/Broker\s+Name\s*[:\-]?\s*(.+?)\s+(?:Agency\/Broker|Mobile|Email)/i);
+      const val = pick(text, /Agency\/Broker\s+Name\s*[:-]?\s*(.+?)\s+(?:Agency\/Broker|Mobile|Email)/i);
       return val === "Agency/Broker" ? null : val;
     })(),
-    brokerMobile: pick(text, /Agency\/Broker\s+Mobile\s+No\s*[:\-]?\s*([0-9]+)/i),
+    brokerMobile: pick(text, /Agency\/Broker\s+Mobile\s+No\s*[:-]?\s*([0-9]+)/i),
     brokerEmail: (() => {
-      const val = pick(text, /Agency\/Broker\s+Email-ID\s*[:\-]?\s*([^\s]+)/i);
+      const val = pick(text, /Agency\/Broker\s+Email-ID\s*[:-]?\s*([^\s]+)/i);
       return (val && val.includes("INSUREDESK")) ? null : val;
     })(),
   };
@@ -293,15 +286,15 @@ function parseEndorsement(rawText, fileName = "") {
   const endorsementWording = pick(text, /Endorsement\s+Wording:\s*(.+?)\s+Total\s+Premium/i);
 
   const contentsSumInsured =
-    toAmount(pick(text, /Fire\s+Stocks?\s*[:\-]?\s*([0-9,]+)/i)) ||
+    toAmount(pick(text, /Fire\s+Stocks?\s*[:-]?\s*([0-9,]+)/i)) ||
     toAmount(pick(text, /Content\s+([0-9,]+)/i));
 
   const burglarySumInsured =
-    toAmount(pick(text, /Burglary\s+Stock\s*[:\-]?\s*([0-9,]+)/i)) ||
+    toAmount(pick(text, /Burglary\s+Stock\s*[:-]?\s*([0-9,]+)/i)) ||
     toAmount(pick(text, /Burglary\s+([0-9,]+)/i));
 
   const fidelitySumInsured =
-    toAmount(pick(text, /Fidelity\s*[:\-]?\s*([0-9,]+)/i)) ||
+    toAmount(pick(text, /Fidelity\s*[:-]?\s*([0-9,]+)/i)) ||
     toAmount(pick(text, /Fidelity\s+([0-9,]+)/i));
 
   const increasedBy =
@@ -364,7 +357,7 @@ function parseEndorsement(rawText, fileName = "") {
 function parseQuotation(rawText, fileName = "") {
   const text = normalizeText(rawText);
 
-  const quotationNumber = pick(text, /QUOTATION\s+No:\s*([A-Z0-9\-]+)/i);
+  const quotationNumber = pick(text, /QUOTATION\s+No:\s*([A-Z0-9-]+)/i);
   const insuredName = pick(text, /Insured\s+Name\s+(.+?)\s+Mailing\s+Address/i);
   const mailingAddress = pick(text, /Mailing\s+Address\s+with\s+Pincode\s+(.+?)\s+Occupancy\s+of\s+Risk/i);
   const occupancy = pick(text, /Occupancy\s+of\s+Risk\s+(.+?)\s+Policy\s+Period/i);
@@ -375,7 +368,7 @@ function parseQuotation(rawText, fileName = "") {
   const quotationDate = pick(text, /Quotation\s+Date\s+(.+?)\s+Quote\s+Valid/i);
   const quoteValidTill = pick(text, /Quote\s+Valid\s+Till\s+(.+?)\s+Intermediary/i);
 
-  const intermediaryId = pick(text, /Intermediary\s+ID\s+([A-Z0-9\-]+)/i);
+  const intermediaryId = pick(text, /Intermediary\s+ID\s+([A-Z0-9-]+)/i);
   const intermediaryName = pick(text, /Intermediary\s+Name\s+(.+?)\s+Claims\s+ratio/i);
 
   const claimsRatio = pick(text, /Claims\s+ratio\s+(.+?)\s+Amount/i);

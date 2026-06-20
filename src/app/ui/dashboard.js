@@ -1493,85 +1493,7 @@ export default function Dashboard({
             ))}
           </section>
 
-          {/* Agent-wise Performance Section */}
-          {agentWiseStats && agentWiseStats.length > 0 && (
-            <section
-              style={{
-                marginBottom: "24px",
-                padding: "24px",
-                borderRadius: "16px",
-                border: "1px solid var(--border)",
-                background: "var(--surface)",
-                boxShadow: "var(--shadow-soft)",
-              }}
-              className="glass-panel"
-            >
-              <div style={{ marginBottom: "16px" }}>
-                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "var(--text-primary)" }}>
-                  Agent-wise Performance Breakdown
-                </h3>
-                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
-                  Metrics grouped by the agent who uploaded or saved the records.
-                </p>
-              </div>
 
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: "800px" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid var(--border)", textAlign: "left" }}>
-                      <th style={{ padding: "12px 8px", color: "var(--text-secondary)", fontWeight: "600" }}>Agent</th>
-                      <th style={{ padding: "12px 8px", color: "var(--text-secondary)", fontWeight: "600", textAlign: "right" }}>EOD (Today)</th>
-                      <th style={{ padding: "12px 8px", color: "var(--text-secondary)", fontWeight: "600", textAlign: "right" }}>MTD (Month)</th>
-                      <th style={{ padding: "12px 8px", color: "var(--text-secondary)", fontWeight: "600", textAlign: "right" }}>YTD (Year)</th>
-                      <th style={{ padding: "12px 8px", color: "var(--text-secondary)", fontWeight: "600", textAlign: "right" }}>Renewed</th>
-                      <th style={{ padding: "12px 8px", color: "var(--text-secondary)", fontWeight: "600", textAlign: "right" }}>Lost</th>
-                      <th style={{ padding: "12px 8px", color: "var(--text-secondary)", fontWeight: "600", textAlign: "right" }}>Expired</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {agentWiseStats.map((agent, idx) => (
-                      <tr 
-                        key={agent.agentId || idx} 
-                        style={{ borderBottom: idx === agentWiseStats.length - 1 ? "none" : "1px solid var(--border-soft)", height: "48px" }}
-                        className="table-row-hover"
-                      >
-                        <td style={{ padding: "8px" }}>
-                          <div style={{ fontWeight: "600", color: "var(--text-primary)" }}>{agent.agentName}</div>
-                          {agent.agentEmail && (
-                            <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{agent.agentEmail}</div>
-                          )}
-                        </td>
-                        <td style={{ padding: "8px", textAlign: "right" }}>
-                          <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>{formatMoney(agent.eodPremium)}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{agent.eodCount} {agent.eodCount === 1 ? "policy" : "policies"}</div>
-                        </td>
-                        <td style={{ padding: "8px", textAlign: "right" }}>
-                          <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>{formatMoney(agent.mtdPremium)}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{agent.mtdCount} {agent.mtdCount === 1 ? "policy" : "policies"}</div>
-                        </td>
-                        <td style={{ padding: "8px", textAlign: "right" }}>
-                          <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>{formatMoney(agent.ytdPremium)}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{agent.ytdCount} {agent.ytdCount === 1 ? "policy" : "policies"}</div>
-                        </td>
-                        <td style={{ padding: "8px", textAlign: "right" }}>
-                          <div style={{ fontWeight: "700", color: "#10b981" }}>{formatMoney(agent.renewedPremium)}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{agent.renewedCount} {agent.renewedCount === 1 ? "policy" : "policies"}</div>
-                        </td>
-                        <td style={{ padding: "8px", textAlign: "right" }}>
-                          <div style={{ fontWeight: "700", color: "#6b7280" }}>{formatMoney(agent.lostPremium)}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{agent.lostCount} {agent.lostCount === 1 ? "policy" : "policies"}</div>
-                        </td>
-                        <td style={{ padding: "8px", textAlign: "right" }}>
-                          <div style={{ fontWeight: "700", color: "#dc2626" }}>{formatMoney(agent.expiredPremium)}</div>
-                          <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>{agent.expiredCount} {agent.expiredCount === 1 ? "policy" : "policies"}</div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
 
           <section className="bento-grid">
             <div className="left-stack">
@@ -2616,7 +2538,7 @@ export default function Dashboard({
       )}
 
       {activePage === "analytics" && (
-        <AnalyticsReports analytics={analytics} onSelectReport={handleSelectReport} />
+        <AnalyticsReports analytics={analytics} agentWiseStats={agentWiseStats} onSelectReport={handleSelectReport} />
       )}
 
       {activePage === "settings" && (

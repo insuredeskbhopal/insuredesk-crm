@@ -437,6 +437,11 @@ function buildReport(category, context, summary) {
     ];
     base.tables = [
       table(
+        "Agent-wise Performance Breakdown",
+        ["Agent", "EOD (Today)", "MTD (Month)", "YTD (Year)", "Renewed", "Lost", "Expired"],
+        buildAgentPerformanceTable(policies, users),
+      ),
+      table(
         "Top Insurance Companies",
         ["Company", "Policies", "Premium"],
         topGroups(policies, (r) => r.insuranceCompany || "Unknown", "premium"),
@@ -707,6 +712,11 @@ function buildReport(category, context, summary) {
       chart("Leaderboard", buildUserScores(context).slice(0, 8)),
     ];
     base.tables = [
+      table(
+        "Agent-wise Performance Breakdown",
+        ["Agent", "EOD (Today)", "MTD (Month)", "YTD (Year)", "Renewed", "Lost", "Expired"],
+        buildAgentPerformanceTable(policies, users),
+      ),
       table(
         "Top Users",
         ["User", "Score", "Work Items"],
@@ -1094,4 +1104,126 @@ function formatDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString("en-IN");
+}
+
+function buildAgentPerformanceTable(policies, users) {
+  const today = startOfDay(new Date());
+  const startOfToday = today;
+  const startOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const startOfThisYear = new Date(today.getFullYear(), 0, 1);
+  const expiredThreshold = addDays(today, -30);
+
+  const agentMap = new Map();
+
+  if (Array.isArray(users)) {
+    users.forEach((u) => {
+      if (u.role === "AGENT" || u.role === "ADMIN" || u.role === "MANAGER") {
+        agentMap.set(u.id, {
+          id: u.id,
+          name: u.name || u.email || "Unknown User",
+          email: u.email || "",
+          eodCount: 0,
+          eodPremium: 0,
+          mtdCount: 0,
+          mtdPremium: 0,
+          ytdCount: 0,
+          ytdPremium: 0,
+          renewedCount: 0,
+          renewedPremium: 0,
+          lostCount: 0,
+          lostPremium: 0,
+          expiredCount: 0,
+          expiredPremium: 0,
+        });
+      }
+    });
+  }
+
+  policies.forEach((p) => {
+    const creatorId = p.createdById || "system";
+    const agentName = p.createdBy?.name || p.uploadedBy || "System / Unassigned";
+    const agentEmail = p.createdBy?.email || "";
+
+    let stats = agentMap.get(creatorId);
+    if (!stats) {
+      stats = {
+        id: creatorId,
+        name: agentName,
+        email: agentEmail,
+        eodCount: 0,
+        eodPremium: 0,
+        mtdCount: 0,
+        mtdPremium: 0,
+        ytdCount: 0,
+        ytdPremium: 0,
+        renewedCount: 0,
+        renewedPremium: 0,
+        lostCount: 0,
+        lostPremium: 0,
+        expiredCount: 0,
+        expiredPremium: 0,
+      };
+      agentMap.set(creatorId, stats);
+    }
+
+    const premium = parseMoney(p.netPremium || p.totalPremium || p.premium);
+    const savedDate = p.savedAt ? new Date(p.savedAt) : null;
+    const expiry = parsePolicyDate(p.expiryDate);
+
+    // EOD
+    if (savedDate && savedDate >= startOfToday) {
+      stats.eodCount += 1;
+      stats.eodPremium += premium;
+    }
+    // MTD
+    if (savedDate && savedDate >= startOfThisMonth) {
+      stats.mtdCount += 1;
+      stats.mtdPremium += premium;
+    }
+    // YTD
+    if (savedDate && savedDate >= startOfThisYear) {
+      stats.ytdCount += 1;
+      stats.ytdPremium += premium;
+    }
+
+    // Renewal statuses
+    if (p.renewalStatus === "RENEWED") {
+      stats.renewedCount += 1;
+      stats.renewedPremium += premium;
+    } else if (["LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(p.renewalStatus)) {
+      stats.lostCount += 1;
+      stats.lostPremium += premium;
+    } else if (
+      p.isActivePolicy &&
+      expiry &&
+      expiry < today &&
+      expiry >= expiredThreshold
+    ) {
+      stats.expiredCount += 1;
+      stats.expiredPremium += premium;
+    }
+  });
+
+  return Array.from(agentMap.values())
+    .map((agent) => {
+      const eodText = `${formatCurrency(agent.eodPremium)} (${agent.eodCount} ${agent.eodCount === 1 ? "policy" : "policies"})`;
+      const mtdText = `${formatCurrency(agent.mtdPremium)} (${agent.mtdCount} ${agent.mtdCount === 1 ? "policy" : "policies"})`;
+      const ytdText = `${formatCurrency(agent.ytdPremium)} (${agent.ytdCount} ${agent.ytdCount === 1 ? "policy" : "policies"})`;
+      const renewedText = `${formatCurrency(agent.renewedPremium)} (${agent.renewedCount} ${agent.renewedCount === 1 ? "policy" : "policies"})`;
+      const lostText = `${formatCurrency(agent.lostPremium)} (${agent.lostCount} ${agent.lostCount === 1 ? "policy" : "policies"})`;
+      const expiredText = `${formatCurrency(agent.expiredPremium)} (${agent.expiredCount} ${agent.expiredCount === 1 ? "policy" : "policies"})`;
+
+      return [
+        agent.name + (agent.email && agent.name !== agent.email ? ` (${agent.email})` : ""),
+        eodText,
+        mtdText,
+        ytdText,
+        renewedText,
+        lostText,
+        expiredText,
+        agent.eodPremium + agent.mtdPremium + agent.ytdPremium, // hidden order key
+      ];
+    })
+    .sort((a, b) => b[7] - a[7]) // sort by total premium descending
+    .map((row) => row.slice(0, 7)); // remove hidden order key
 }
