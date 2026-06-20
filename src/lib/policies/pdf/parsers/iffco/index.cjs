@@ -1169,8 +1169,12 @@ function extractIffcoWarehouse(text, filename = "") {
     businessDescription = "Warehouse";
   } else {
     // Fire or Burglary
-    policyNumber = matchGroup(text, /Policy Number\s*([A-Za-z0-9/]+)/i);
-    insuredName = cleanHdfcValue(matchGroup(text, /Insured\s*([A-Z0-9 .&/()\r\n-]+?)\s*Client\s*Number/i));
+    policyNumber = matchGroup(text, /Policy Number\s*([A-Za-z0-9/]+)/i) ||
+                   matchGroup(text, /Policy\s*No\.?\s*([A-Za-z0-9/]+)/i);
+    insuredName = cleanHdfcValue(
+      matchGroup(text, /Insured\s*([A-Z0-9 .&/()\r\n-]+?)\s*Client\s*Number/i) ||
+      matchGroup(text, /Insured\s*([A-Z0-9 .&/()\r\n-]+?)\s*(?:CKYC\s*Number|GSTIN|Address|Client\s*Number)/i)
+    );
     if (!insuredName && text.includes("KISHAN WAREHOUSE")) {
       insuredName = "KISHAN WAREHOUSE UNIT TARAIYA NO. 2/O/2 C/O MPWLC";
     }
