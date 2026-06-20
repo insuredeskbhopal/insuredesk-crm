@@ -115,6 +115,20 @@ function isIciciMotor(text) {
   );
 }
 
+function parseCroreLakh(text, sectionRegex) {
+  const match = text.match(sectionRegex);
+  if (!match) return "";
+  const val = parseFloat(match[1].replace(/,/g, ""));
+  const unit = (match[2] || "").toLowerCase();
+  let multiplier = 1;
+  if (unit.includes("crore")) {
+    multiplier = 10000000;
+  } else if (unit.includes("lakh") || unit.includes("lac")) {
+    multiplier = 100000;
+  }
+  return sumAmounts(val * multiplier);
+}
+
 // Start of extractIciciWarehouseMsme (Lines 2012-2105)
 function extractIciciWarehouseMsme(text) {
   if (!isIciciWarehouseMsme(text)) return { documentDetected: false };
@@ -149,18 +163,27 @@ function extractIciciWarehouseMsme(text) {
   const hypothecation = extractIciciWarehouseHypothecation(text);
   const broker = extractIciciWarehouseBroker(text);
 
+  const policyNumber =
+    matchGroup(text, /Policy\s*(?:Number|No\.?)[^0-9]{0,20}([0-9]{4}\/[0-9]+\/[0-9]{2}\/[0-9]{3})/i) ||
+    matchGroup(text, /PolicyNo\s*([0-9]{4}\/[0-9]+\/[0-9]{2}\/[0-9]{3})/i) ||
+    matchGroup(text, /QUOTATION\s*No\s*:\s*([A-Za-z0-9-]+)/i);
+
+  const rawInsuredName =
+    matchGroup(text, /Name of the Insured\s*([A-Z0-9 .&/()\r\n-]+?)\s*Policy\s*No/i) ||
+    matchGroup(text, /Insured\s*Name\s*([A-Z0-9 .&/()\r\n-]+?)\s*(?:Mailing Address|MailingAddress|Address|Policy|$)/i) ||
+    matchGroup(text, /Endorsement Details:\s*\n\s*([A-Z0-9 .&/()-]+?)\s*\n\s*Mailing Address/i) ||
+    matchGroup(text, /Insured\s+Name\s*\n\s*([A-Z0-9 .&/()-]+)/i);
+
+  let insuredName = cleanHdfcValue(rawInsuredName);
+  if (insuredName) {
+    insuredName = insuredName.replace(/\s+\d+$/, "").replace(/\s+[a-zA-Z]$/, "").trim();
+  }
+
   const required = {
     insuranceCompany: "ICICI Lombard General Insurance",
     productName: "MSME Suraksha Kavach Package Policy - Advance",
-    policyNumber:
-      matchGroup(text, /Policy No\s*([0-9]{4}\/[0-9]+\/[0-9]{2}\/[0-9]{3})/i) ||
-      matchGroup(text, /PolicyNo\s*([0-9]{4}\/[0-9]+\/[0-9]{2}\/[0-9]{3})/i) ||
-      matchGroup(text, /QUOTATION\s*No\s*:\s*([A-Za-z0-9-]+)/i),
-    insuredName: cleanHdfcValue(
-      matchGroup(text, /Name of the Insured\s*([A-Z0-9 .&/()\r\n-]+?)\s*Policy\s*No/i) ||
-      matchGroup(text, /Insured\s*Name\s*([A-Z0-9 .&/()\r\n-]+?)\s*(?:Mailing Address|MailingAddress|Address|Policy|$)/i) ||
-      matchGroup(text, /Insured\s+Name\s*\n\s*([A-Z0-9 .&/()-]+)/i)
-    ),
+    policyNumber,
+    insuredName,
     mailingAddress,
     riskLocation,
     startDate,
@@ -187,6 +210,26 @@ function extractIciciWarehouseMsme(text) {
     .filter(([, value]) => !String(value || "").trim())
     .map(([key]) => key);
 
+  const croreMatch = text.match(/Sum\s+insured\s+of\s+stock\s+from\s+(?:INR|Rs\.?)\s*[\d.,]+\s*(?:crore|lakhs?|lacs?|thousand)?\s+to\s+(?:INR|Rs\.?)\s*([\d.,]+)\s*(crore|lakhs?|lacs?|thousand)?/i) ||
+                     text.match(/Sum\s+insured\s+of\s+stock\s+from\s+[\d.,]+\s*(?:crore|lakhs?|lacs?|thousand)?\s+to\s+([0-9.,]+)\s*(crore|lakhs?|lacs?|thousand)?/i) ||
+                     text.match(/Sum\s+insured\s+increased\s+to\s*(?:INR|Rs\.?)\s*([\d.,]+)\s*(crore|lakhs?|lacs?|thousand)?/i);
+  let croreSum = "";
+  if (croreMatch) {
+    const val = parseFloat(croreMatch[1].replace(/,/g, ""));
+    const unit = (croreMatch[2] || "").toLowerCase();
+    let multiplier = 1;
+    if (unit.includes("crore")) {
+      multiplier = 10000000;
+    } else if (unit.includes("lakh") || unit.includes("lac")) {
+      multiplier = 100000;
+    } else if (unit.includes("thousand")) {
+      multiplier = 1000;
+    }
+    croreSum = sumAmounts(val * multiplier);
+  }
+
+  const calculatedSum = croreSum || normalizeAmount(matchGroup(text, /increased\s+(?:[\s\S]*?)\s*by\s+an\s+amount\s+equal\s+to\s*(?:Rs\.?\s*)?([0-9,]+)/i));
+
   return {
     documentDetected: true,
     ...required,
@@ -197,7 +240,7 @@ function extractIciciWarehouseMsme(text) {
     buildingSumInsured: coverageAmount(coverages, "MSME Suraksha Kavach - Buildings"),
     burglarySumInsured: coverageAmount(coverages, "Burglary"),
     fidelitySumInsured: coverageAmount(coverages, "Fidelity"),
-    sumInsured: normalizeAmount(matchGroup(text, /increased\s+(?:[\s\S]*?)\s*by\s+an\s+amount\s+equal\s+to\s*(?:Rs\.?\s*)?([0-9,]+)/i)) ||
+    sumInsured: calculatedSum ||
                 coverageAmount(coverages, "MSME Suraksha Kavach - Contents") || 
                 coverageAmount(coverages, "MSME Suraksha Kavach - Buildings") || 
                 coverageAmount(coverages, "Burglary") || 
@@ -243,9 +286,12 @@ function extractIciciWarehouseCoverages(text) {
 
   // Fallback for Endorsement formats
   if (results.length === 0) {
-    const fireEndo = matchGroup(text, /(?:Fire\s*(?:\([^)]*\))?\s*stocks?|Content)\s*(?::-\s*|:\s*|\s+)\s*([0-9,]+)/i);
-    const burglaryEndo = matchGroup(text, /(?:Burglary\s*(?:\([^)]*\))?\s*stocks?|Burglary)\s*(?::-\s*|:\s*|\s+)\s*([0-9,]+)/i);
-    const fidelityEndo = matchGroup(text, /Fidelity\s*(?:\([^)]*\))?\s*\s*(?::-\s*|:\s*|\s+)\s*([0-9,]+)/i);
+    const fireEndo = matchGroup(text, /(?:Fire\s*(?:\([^)]*\))?\s*stocks?|Content)\s*(?::-\s*|:\s*|\s+)\s*([0-9,]+)/i) ||
+                     parseCroreLakh(text, /Fire Section Sum insured of stock from\s+(?:INR|Rs\.?)\s*[\d.,]+\s*(?:crore|lakhs?|lacs?)?\s+to\s+(?:INR|Rs\.?)\s*([\d.,]+)\s*(crore|lakhs?|lacs?)/i);
+    const burglaryEndo = matchGroup(text, /(?:Burglary\s*(?:\([^)]*\))?\s*stocks?|Burglary)\s*(?::-\s*|:\s*|\s+)\s*([0-9,]+)/i) ||
+                         parseCroreLakh(text, /Burglary Section Sum insured of stock from\s+(?:INR|Rs\.?)\s*[\d.,]+\s*(?:crore|lakhs?|lacs?)?\s+to\s+(?:INR|Rs\.?)\s*([\d.,]+)\s*(crore|lakhs?|lacs?)/i);
+    const fidelityEndo = matchGroup(text, /Fidelity\s*(?:\([^)]*\))?\s*\s*(?::-\s*|:\s*|\s+)\s*([0-9,]+)/i) ||
+                         parseCroreLakh(text, /Fidelity Section Sum(?: insured)? of stock from\s+(?:INR|Rs\.?)\s*[\d.,]+\s*(?:crore|lakhs?|lacs?)?\s+to\s+(?:INR|Rs\.?)\s*([\d.,]+)\s*(crore|lakhs?|lacs?)/i);
 
     if (fireEndo) {
       results.push({ sectionName: "MSME Suraksha Kavach - Contents", sumInsured: normalizeAmount(fireEndo) });
@@ -288,6 +334,7 @@ function extractIciciWarehousePremium(text) {
       ),
     ) ||
     normalizeAmount(matchGroup(text, /extra premium amounting to\s*(?:Rs\.?\s*)?([0-9,]+)/i)) ||
+    normalizeAmount(matchGroup(text, /(?:extra\s+)?premium\s+of\s+(?:Rs\.?\s*)?([0-9,]+)/i)) ||
     normalizeAmount(matchGroup(text, /Net Premium\s*([0-9,]+(?:\.\d{2})?)/i));
 
   let premiumIncludingGst =
@@ -295,7 +342,7 @@ function extractIciciWarehousePremium(text) {
       matchGroup(text, /Premium\s*\(`\)\s*\(Including GST\)\(`\)\s*([0-9,]+(?:\.\d{2})?)/i),
     ) || 
     normalizeAmount(matchGroup(text, /Total Premium inclusive Tax\s*\(`\)\s*([0-9,]+(?:\.\d{2})?)/i)) ||
-    normalizeAmount(matchGroup(text, /Total Premium\s*[:\s\\'`"]*\s*([0-9,]+)/i)) ||
+    normalizeAmount(matchGroup(text, /Total Premium\s*[:\s\\'`"3]*\s*([0-9,]+)/i)) ||
     normalizeAmount(matchGroup(text, /Total Premium\s*[:`\s]*\n\s*([0-9,]+)/i)) ||
     normalizeAmount(matchGroup(text, /Total Premium\s*[:`\s]*\s*([0-9,]+)/i)) ||
     normalizeAmount(matchGroup(text, /Total Premium\s*([0-9,]+(?:\.\d{2})?)/i));
