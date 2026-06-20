@@ -1,153 +1,168 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import BrandLogo from "@/app/components/brand/BrandLogo";
+import { BUSINESS_DETAILS } from "@/lib/seo/site";
+
+const navItems = [
+  { label: "Home", href: "/", priority: "core" },
+  { label: "Services", href: "/services", priority: "core" },
+  { label: "Claims", href: "/services/claims-assistance", priority: "core" },
+  { label: "Renewals", href: "/services/policy-renewals", priority: "core" },
+  { label: "About", href: "/about", priority: "support" },
+  { label: "Blog", href: "/blog", priority: "support" },
+  { label: "Contact", href: "/contact", priority: "support" },
+];
 
 export default function PublicHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const menuTitleId = useId();
 
   useEffect(() => {
-    // Handle scroll events for navbar shadow
-    const handleScroll = () => {
-      if (window.scrollY > 40) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 40);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
 
-  const getLinkClass = (path) => {
-    const isActive = pathname === path || (path !== "/" && pathname.startsWith(path));
-    const baseClass = "font-body-md text-body-md transition-colors entry-anim p-0 text-[16px] font-medium";
-    return isActive
-      ? `${baseClass} text-secondary border-b-2 border-secondary font-semibold pb-1`
-      : `${baseClass} text-on-surface-variant hover:text-primary`;
-  };
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
+
+  const isActive = (href) => pathname === href || (href !== "/" && pathname.startsWith(href));
 
   return (
     <>
       <nav
-        className={`bg-surface-container-lowest/0 backdrop-blur-0 sticky top-0 z-50 border-b border-transparent transition-all duration-300 h-20 flex items-center ${
-          scrolled ? "scrolled" : ""
-        }`}
+        className={`landing-premium-nav ${scrolled ? "scrolled" : ""}`}
         id="mainNav"
+        aria-label="Primary navigation"
       >
-        <div className="landing-nav-inner max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop flex justify-between items-center h-full">
-          {/* Brand Logo */}
-          <div className="landing-brand entry-anim" style={{ animationDelay: "0.1s" }}>
+        <div className="landing-nav-inner">
+          <div className="landing-brand">
             <BrandLogo href="/" />
           </div>
 
-          {/* Desktop Nav Links */}
-          <div className="landing-nav-links hidden md:flex gap-6">
-            <Link href="/" className={getLinkClass("/")} style={{ animationDelay: "0.2s" }}>
-              Home
-            </Link>
-            <Link href="/services" className={getLinkClass("/services")} style={{ animationDelay: "0.3s" }}>
-              Services
-            </Link>
-            <Link
-              href="/services/claims-assistance"
-              className={getLinkClass("/services/claims-assistance")}
-              style={{ animationDelay: "0.4s" }}
-            >
-              Claims
-            </Link>
-            <Link
-              href="/services/policy-renewals"
-              className={getLinkClass("/services/policy-renewals")}
-              style={{ animationDelay: "0.45s" }}
-            >
-              Renewals
-            </Link>
-            <Link href="/about" className={getLinkClass("/about")} style={{ animationDelay: "0.5s" }}>
-              About
-            </Link>
-            <Link href="/blog" className={getLinkClass("/blog")} style={{ animationDelay: "0.52s" }}>
-              Blog
-            </Link>
-            <Link href="/contact" className={getLinkClass("/contact")} style={{ animationDelay: "0.55s" }}>
-              Contact
-            </Link>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="landing-nav-actions flex items-center gap-4">
-            <div className="hidden lg:flex items-center gap-4 mr-4">
+          <div className="landing-nav-links" aria-label="Main menu">
+            {navItems.map((item) => (
               <Link
-                href="/contact"
-                className="p-2 rounded-full hover:bg-surface-container-low transition-all entry-anim text-primary flex items-center justify-center"
-                style={{ animationDelay: "0.6s" }}
+                href={item.href}
+                key={item.href}
+                className={`landing-nav-link landing-nav-priority-${item.priority} ${
+                  isActive(item.href) ? "active" : ""
+                }`}
+                aria-current={isActive(item.href) ? "page" : undefined}
               >
-                <span className="material-symbols-outlined text-primary">call</span>
+                {item.label}
               </Link>
-            </div>
-
-            <Link
-              href="/services"
-              className="font-label-md text-label-md px-6 py-3 rounded-lg bg-primary text-on-primary hover:shadow-lg active:scale-95 transition-all entry-anim flex items-center justify-center text-[14px] font-bold"
-              style={{ animationDelay: "0.7s" }}
-            >
-              Explore Services
-            </Link>
+            ))}
           </div>
 
-          <button
-            type="button"
-            className="landing-mobile-menu-toggle md:hidden"
-            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="landing-mobile-menu"
-            onClick={() => setMobileMenuOpen((open) => !open)}
-          >
-            <span className="material-symbols-outlined">{mobileMenuOpen ? "close" : "menu"}</span>
-          </button>
+          <div className="landing-nav-actions" aria-label="Primary actions">
+            <a className="landing-nav-phone" href={`tel:${BUSINESS_DETAILS.phoneHref}`} aria-label={`Call ${BUSINESS_DETAILS.phone}`}>
+              <span className="material-symbols-outlined" aria-hidden="true">
+                call
+              </span>
+              <span className="landing-nav-phone-label">{BUSINESS_DETAILS.phone}</span>
+            </a>
+
+            <Link href="/contact" className="landing-nav-cta">
+              Free Consultation
+            </Link>
+
+            <button
+              type="button"
+              className="landing-mobile-menu-toggle"
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="landing-mobile-menu"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+            >
+              <span aria-hidden="true" />
+              <span aria-hidden="true" />
+              <span aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </nav>
 
-      <div
-        className={`landing-mobile-menu-backdrop md:hidden ${mobileMenuOpen ? "open" : ""}`}
-        aria-hidden="true"
+      <button
+        type="button"
+        className={`landing-mobile-menu-backdrop ${mobileMenuOpen ? "open" : ""}`}
+        aria-label="Close navigation menu"
+        tabIndex={mobileMenuOpen ? 0 : -1}
         onClick={() => setMobileMenuOpen(false)}
       />
-      <div
+
+      <aside
         id="landing-mobile-menu"
-        className={`landing-mobile-menu md:hidden ${mobileMenuOpen ? "open" : ""}`}
+        className={`landing-mobile-menu ${mobileMenuOpen ? "open" : ""}`}
         aria-hidden={!mobileMenuOpen}
+        aria-labelledby={menuTitleId}
+        role="dialog"
+        aria-modal="true"
+        inert={!mobileMenuOpen ? true : undefined}
       >
         <div className="landing-mobile-menu-head">
-          <span>Menu</span>
+          <div>
+            <span id={menuTitleId}>Navigation</span>
+            <p>Insurance guidance, claims support, and policy renewals.</p>
+          </div>
           <button type="button" aria-label="Close navigation menu" onClick={() => setMobileMenuOpen(false)}>
-            <span className="material-symbols-outlined">close</span>
+            <span className="material-symbols-outlined" aria-hidden="true">
+              close
+            </span>
           </button>
         </div>
+
         <div className="landing-mobile-menu-links">
-          <Link href="/">Home</Link>
-          <Link href="/services">Services</Link>
-          <Link href="/services/claims-assistance">Claims Assistance</Link>
-          <Link href="/services/policy-renewals">Policy Renewals</Link>
-          <Link href="/about">About Us</Link>
-          <Link href="/blog">Blog</Link>
-          <Link href="/contact">Contact Us</Link>
+          {navItems.map((item) => (
+            <Link
+              href={item.href}
+              key={item.href}
+              className={isActive(item.href) ? "active" : ""}
+              aria-current={isActive(item.href) ? "page" : undefined}
+            >
+              <span>{item.label}</span>
+              <span className="material-symbols-outlined" aria-hidden="true">
+                chevron_right
+              </span>
+            </Link>
+          ))}
         </div>
-        <Link href="/services" className="landing-mobile-menu-cta">
-          Explore Services
-          <span className="material-symbols-outlined">arrow_forward</span>
-        </Link>
-      </div>
+
+        <div className="landing-mobile-menu-actions">
+          <a href={`tel:${BUSINESS_DETAILS.phoneHref}`} className="landing-mobile-menu-call">
+            <span className="material-symbols-outlined" aria-hidden="true">
+              call
+            </span>
+            Call {BUSINESS_DETAILS.phone}
+          </a>
+          <Link href="/contact" className="landing-mobile-menu-cta">
+            Get Free Consultation
+          </Link>
+        </div>
+      </aside>
     </>
   );
 }

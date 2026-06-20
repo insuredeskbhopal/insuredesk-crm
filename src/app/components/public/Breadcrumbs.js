@@ -24,51 +24,40 @@ export default function Breadcrumbs() {
   if (pathname === "/") return null;
 
   const segments = pathname.split("/").filter(Boolean);
-
-  // Build breadcrumb objects
   const breadcrumbs = segments.map((segment, index) => {
     const path = "/" + segments.slice(0, index + 1).join("/");
     const name = ROUTE_NAMES[segment] || segment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     return { name, path };
   });
 
-  // Construct JSON-LD Schema
-  const schemaList = [
-    {
-      "@type": "ListItem",
-      position: 1,
-      name: "Home",
-      item: SITE_URL,
-    },
-    ...breadcrumbs.map((crumb, index) => ({
-      "@type": "ListItem",
-      position: index + 2,
-      name: crumb.name,
-      item: `${SITE_URL}${crumb.path}`,
-    })),
-  ];
-
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: schemaList,
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE_URL,
+      },
+      ...breadcrumbs.map((crumb, index) => ({
+        "@type": "ListItem",
+        position: index + 2,
+        name: crumb.name,
+        item: `${SITE_URL}${crumb.path}`,
+      })),
+    ],
   };
 
   return (
     <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-4 flex flex-col gap-1">
-      {/* Schema Script */}
       <Script
         id={`breadcrumb-schema-${segments.join("-")}`}
         type="application/ld+json"
         strategy="beforeInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-
-      {/* Render Visual Breadcrumbs */}
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center flex-wrap gap-2 text-sm text-on-surface-variant/70"
-      >
+      <nav aria-label="Breadcrumb" className="flex items-center flex-wrap gap-2 text-sm text-on-surface-variant/70">
         <Link href="/" className="hover:text-secondary transition-colors text-[14px]">
           Home
         </Link>

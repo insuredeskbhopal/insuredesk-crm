@@ -12,7 +12,6 @@ export default function NotFoundPage() {
   return (
     <div className="landing-shell not-found-page bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
       <PublicHeader />
-
       <main>
         <section className="not-found-hero">
           <div className="not-found-hero-inner max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
@@ -24,8 +23,8 @@ export default function NotFoundPage() {
               <p className="not-found-code">404</p>
               <h1>This route is not insured.</h1>
               <p>
-                The address may be mistyped or the page may have moved. Head back to BIMAHEADQUARTER
-                and continue with insurance services, claims help, or renewals.
+                The address may be mistyped or the page may have moved. Head back to BIMAHEADQUARTER and
+                continue with insurance services, claims help, or renewals.
               </p>
               <div className="not-found-actions">
                 <Link href="/" className="not-found-primary-action">
@@ -57,7 +56,6 @@ export default function NotFoundPage() {
           </div>
         </section>
       </main>
-
       <PublicFooter />
     </div>
   );

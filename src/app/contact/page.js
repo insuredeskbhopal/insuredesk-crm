@@ -28,7 +28,7 @@ const contactSchema = {
       name: SITE_NAME,
       legalName: BUSINESS_DETAILS.legalName,
       url: SITE_URL,
-      logo: `${SITE_URL}/brand/main-logo-wide.png`,
+      logo: `${SITE_URL}/brand/main-logo-wide.webp`,
       email: BUSINESS_DETAILS.email,
       telephone: BUSINESS_DETAILS.phoneHref,
       contactPoint: {
