@@ -823,11 +823,11 @@ function extractTataWarehouse(text) {
 
   const productName = cleanHdfcValue(matchGroup(text, /(Business\s+Guard\s+(?:Laghu|Sookshma)\s+Package\s+Policy)/i));
   const policyNumber = matchGroup(text, /POLICY\s+NO\.?\s*[:\s]*([0-9]{10})/i) || matchGroup(text, /POLICY\s+NO\s*:\s*([0-9]+)/i);
-  let rawInsuredName = matchGroup(text, /INSURED\s+NAME\s*:\s*([^\n]+)/i) ||
+  let rawInsuredName = matchGroup(text, /INSURED\s+NAME\s*:\s*([\s\S]+?)(?=\s*(?:CUSTOMER\s+MOBILE|CUSTOMER\s+EMAIL|COMMUNICATION\s+ADDRESS|PLACE\s+OF\s+SUPPLY|$))/i) ||
                        matchGroup(text, /Name of Assured\s*\n\s*and Address\s*:\s*\n\s*([^\n]+)/i) ||
                        matchGroup(text, /Name of Assured\s*and Address\s*:\s*([^\n]+)/i) ||
                        matchGroup(text, /Name of Assured\s*:\s*([^\n]+)/i);
-  let insuredName = cleanHdfcValue(rawInsuredName);
+  let insuredName = cleanWarehouseBlock(rawInsuredName);
   if (insuredName) {
     insuredName = insuredName.replace(/\s+\d+$/, "").replace(/\s+[a-zA-Z]$/, "").trim();
   }

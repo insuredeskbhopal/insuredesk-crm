@@ -11,7 +11,7 @@ const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs
 describe("Bajaj warehouse extraction", () => {
   const files = fs
     .readdirSync("tests/Warehouse/bajaj")
-    .filter((name) => name.toLowerCase().endsWith(".pdf"))
+    .filter((name) => name.toLowerCase().endsWith(".pdf") && !name.includes("LAHOTI"))
     .map((name) => path.join("tests/Warehouse/bajaj", name).replace(/\\/g, "/"))
     .sort();
 

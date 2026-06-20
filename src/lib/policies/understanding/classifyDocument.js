@@ -95,6 +95,30 @@ function classifyDocument(text = "") {
         /Flexi\s+Property\s+Protector|Burglary\s+And\s+House\s+Breaking|Fidelity\s+Guarantee|FLEXI\s+PROPERTY|BURGLARY\s+AND\s+HOUSE\s+BREAKING\s+INSURANCE/i,
       ],
     },
+    {
+      company: "Tata AIG General Insurance Company Limited",
+      documentFormat: "TATA_AIG_WAREHOUSE_V1",
+      documentCategory: "Warehouse Insurance",
+      policyType: "Business Guard Laghu Package Policy",
+      signals: [
+        /\bTATA\s*AIG\b/i,
+        /Business\s+Guard\s+(?:Laghu|Sookshma)/i,
+        /occupancy/i,
+        /risk\s+location/i,
+      ],
+    },
+    {
+      company: "TATA AIG",
+      documentFormat: "TATA_AIG_MOTOR_V1",
+      documentCategory: "Motor Insurance",
+      policyType: "Motor Policy",
+      signals: [
+        /\bTATA\s*AIG\b/i,
+        /Auto\s*Secure/i,
+        /Private\s*Car/i,
+        /Registration\s+No/i,
+      ],
+    },
   ];
 
   let best = {

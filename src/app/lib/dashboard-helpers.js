@@ -72,6 +72,7 @@ export const FIELD_GROUPS = [
       "totalPremium",
       "netPremium",
       "gstAmount",
+      "gstin",
       "tpDriverOwner",
       "odPremium",
       "dueCollection",
@@ -136,6 +137,7 @@ export const FIELD_SETUP = [
   ["RTO Location", "rtoLocation"],
   ["Nominee Name", "nomineeName"],
   ["Financer Name", "financerName"],
+  ["GST Number", "gstin"],
 ];
 
 const MOTOR_COMMON_FIELDS = [
@@ -188,6 +190,7 @@ export const POLICY_SCHEMA_LIBRARY = [
           "sumInsured",
           "premium",
           "gstAmount",
+          "gstin",
           "startDate",
           "expiryDate",
           "riskLocation",
@@ -209,6 +212,7 @@ export const POLICY_SCHEMA_LIBRARY = [
           "sumInsured",
           "premium",
           "gstAmount",
+          "gstin",
           "startDate",
           "expiryDate",
           "duration",
@@ -230,6 +234,7 @@ export const POLICY_SCHEMA_LIBRARY = [
           "sumInsured",
           "premium",
           "gstAmount",
+          "gstin",
           "startDate",
           "expiryDate",
           "riskLocation",

@@ -322,6 +322,7 @@ function commercialFields(policyName) {
       "Policy Number",
       "Policy Schedule No",
     ]),
+    field("gstin", "GST Number", "text", false, ["GSTIN", "GST Registration No.", "GSTIN:"]),
     field("insurerName", "Insurer Name", "text", true, ["Insurance Company", "Insurer"]),
     field("policyType", "Policy Type", "text", true, ["Policy Type", policyName]),
     field("riskLocation", "Risk Location", "textarea", true, [
@@ -354,6 +355,7 @@ function msmeSurakshaFields() {
   return [
     field("insuredName", "Insured Name", "text", true, ["Name of the Insured", "Insured Name"]),
     field("policyNumber", "Policy Number", "text", true, ["Policy No", "Policy Number", "PolicyNo"]),
+    field("gstin", "GST Number", "text", false, ["GSTIN", "GST Registration No.", "GSTIN:"]),
     field("mailingAddress", "Mailing Address", "textarea", false, [
       "Mailing Address of the Insured",
       "Mailing Address",

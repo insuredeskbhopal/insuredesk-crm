@@ -38,4 +38,21 @@ describe("Tata AIG warehouse extraction", () => {
       expect(result.registrationNumber || result.vehicleNumber || "").toBe("");
     });
   });
+
+  it("extracts exact details from the Lahoti Warehousing policy", async () => {
+    const file = "tests/Warehouse/bajaj/_LAHOTI WAREHOUSING CORPORATION AC MPWLC -POLICY.pdf";
+    const parsed = await pdf(fs.readFileSync(file));
+    const result = extractPolicyFromText(parsed.text || "", file);
+
+    expect(result.documentFormat).toBe("TATA_AIG_WAREHOUSE_V1");
+    expect(result.sourceDocumentType).toBe("TATA_AIG_WAREHOUSE_V1");
+    expect(result.insuranceCompany).toBe("Tata AIG General Insurance Company Limited");
+    expect(result.policyNumber).toBe("5130026758");
+    expect(result.policyType).toBe("Business Guard Laghu Package Policy");
+    expect(result.insuredName).toBe("LAHOTI WAREHOUSING CORPORATION A/C MPWLC");
+    expect(result.riskLocation).toContain("VIDISHA");
+    expect(result.sumInsured).toBe("9,00,00,000.00");
+    expect(result.netPremium).toBe("16,351.00");
+    expect(result.premiumIncludingGst).toBe("19,294.00");
+  });
 });

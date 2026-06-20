@@ -232,7 +232,7 @@ function extractPolicyFromText(text, sourceFile = "") {
     return buildIntelligentResult(legacyData, policyUnderstanding, policySchema, schemaExtraction);
   }
 
-  const iciciWarehouse = extractIciciWarehouseMsme(sourceText);
+  const iciciWarehouse = extractIciciWarehouseMsme(sourceText, sourceFile);
   if (iciciWarehouse.documentDetected) {
     const legacyData = {
       sourceFile: sourceFile || "Untitled.pdf",

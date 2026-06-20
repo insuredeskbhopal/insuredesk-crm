@@ -1,6 +1,7 @@
 
 const { cleanHdfcValue, cleanWarehouseAddress, cleanWarehouseDescription, sliceText } = require("../../utils/text.cjs");
 const { inferFuelType } = require("../../utils/motor.cjs");
+const { parseIciciWarehouseMsme } = require("./warehouse-msme.cjs");
 const { matchGroup, escapeRegExp } = require("../../utils/regex.cjs");
 const { normalizeAmount, sumAmounts } = require("../../utils/amounts.cjs");
 const { coverageAmount } = require("../../utils/warehouse.cjs");
@@ -130,7 +131,230 @@ function parseCroreLakh(text, sectionRegex) {
 }
 
 // Start of extractIciciWarehouseMsme (Lines 2012-2105)
-function extractIciciWarehouseMsme(text) {
+function extractIciciWarehouseMsme(text, fileName = "") {
+  const warehouseMsme = parseIciciWarehouseMsme(text, fileName);
+  const legacy = extractIciciWarehouseMsmeLegacy(text);
+
+  if (warehouseMsme || legacy.documentDetected) {
+    const formatAmount = (val) => {
+      if (val === null || val === undefined || val === "") return "";
+      return sumAmounts(val);
+    };
+
+    const isEndorsement = (warehouseMsme ? warehouseMsme.documentFormat : legacy.documentFormat) === "ICICI_WAREHOUSE_MSME_ENDORSEMENT_V1";
+    const formatPremium = (val) => {
+      if (val === null || val === undefined || val === "") return "";
+      return isEndorsement ? normalizeAmount(String(val)) : formatAmount(val);
+    };
+
+    const cleanDate = (val) => {
+      if (!val) return null;
+      const m = String(val).match(/(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
+      if (m) {
+        const day = m[1].padStart(2, "0");
+        const month = m[2].padStart(2, "0");
+        let year = m[3];
+        if (year.length === 2) year = "20" + year;
+        return `${day}/${month}/${year}`;
+      }
+      const monthNames = {
+        jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+        jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12"
+      };
+      const m2 = String(val).match(/(\d{1,2})[-/]([A-Za-z]{3})[-/](\d{2,4})/);
+      if (m2) {
+        const day = m2[1].padStart(2, "0");
+        const month = monthNames[m2[2].toLowerCase()] || "01";
+        let year = m2[3];
+        if (year.length === 2) year = "20" + year;
+        return `${day}/${month}/${year}`;
+      }
+      return val;
+    };
+
+    let cgst = "";
+    let sgst = "";
+    let igst = "0.00";
+    let gstAmountVal = warehouseMsme ? warehouseMsme.gstAmount : null;
+    if (gstAmountVal) {
+      cgst = formatAmount(gstAmountVal / 2);
+      sgst = formatAmount(gstAmountVal / 2);
+    } else if (warehouseMsme && warehouseMsme.netPremium && warehouseMsme.premiumIncludingGst) {
+      const diff = warehouseMsme.premiumIncludingGst - warehouseMsme.netPremium;
+      if (diff > 0) {
+        gstAmountVal = diff;
+        cgst = formatAmount(diff / 2);
+        sgst = formatAmount(diff / 2);
+      }
+    }
+
+    const getMailAddress = () => {
+      if (warehouseMsme && warehouseMsme.mailingAddress) {
+        let addr = warehouseMsme.mailingAddress.split(/Period\s+of\s+Insurance/i)[0].trim();
+        return cleanWarehouseAddress(addr);
+      }
+      return legacy.mailingAddress || "";
+    };
+
+    const getRiskLocation = () => {
+      if (warehouseMsme && warehouseMsme.riskLocation) {
+        let loc = warehouseMsme.riskLocation.split(/Period\s+of\s+Insurance/i)[0].trim();
+        return cleanWarehouseAddress(loc);
+      }
+      return legacy.riskLocation || "";
+    };
+
+    const getInsuredName = () => {
+      let name = warehouseMsme ? (warehouseMsme.insuredName || legacy.insuredName) : legacy.insuredName;
+      if (name) {
+        name = name.replace(/\s+\d+$/, "").replace(/\s+[a-zA-Z]$/, "").trim();
+      }
+      return name || "";
+    };
+
+    const coverages = [];
+    let contentsSum = warehouseMsme ? warehouseMsme.contentsSumInsured : null;
+    let buildingSum = warehouseMsme ? warehouseMsme.buildingSumInsured : null;
+    let burglarySum = warehouseMsme ? warehouseMsme.burglarySumInsured : null;
+    let fidelitySum = warehouseMsme ? warehouseMsme.fidelitySumInsured : null;
+
+    if (!contentsSum && legacy.contentsSumInsured) contentsSum = Number(legacy.contentsSumInsured.replace(/,/g, ""));
+    if (!buildingSum && legacy.buildingSumInsured) buildingSum = Number(legacy.buildingSumInsured.replace(/,/g, ""));
+    if (!burglarySum && legacy.burglarySumInsured) burglarySum = Number(legacy.burglarySumInsured.replace(/,/g, ""));
+    if (!fidelitySum && legacy.fidelitySumInsured) fidelitySum = Number(legacy.fidelitySumInsured.replace(/,/g, ""));
+
+    if (contentsSum) {
+      coverages.push({
+        sectionName: "MSME Suraksha Kavach - Contents",
+        sumInsured: formatAmount(contentsSum),
+      });
+    }
+    if (buildingSum) {
+      coverages.push({
+        sectionName: "MSME Suraksha Kavach - Buildings",
+        sumInsured: formatAmount(buildingSum),
+      });
+    }
+    if (burglarySum) {
+      coverages.push({
+        sectionName: "Burglary",
+        sumInsured: formatAmount(burglarySum),
+      });
+    }
+    if (fidelitySum) {
+      coverages.push({
+        sectionName: "Fidelity",
+        sumInsured: formatAmount(fidelitySum),
+      });
+    }
+
+    let sumInsured = warehouseMsme ? warehouseMsme.sumInsured : null;
+    if (warehouseMsme && warehouseMsme.documentFormat === "ICICI_WAREHOUSE_MSME_ENDORSEMENT_V1") {
+      sumInsured = warehouseMsme.increasedBy || (legacy.sumInsured ? Number(legacy.sumInsured.replace(/,/g, "")) : null);
+    }
+    if (!sumInsured && legacy.sumInsured) {
+      sumInsured = Number(legacy.sumInsured.replace(/,/g, ""));
+    }
+    if (!sumInsured) {
+      sumInsured = contentsSum || buildingSum || burglarySum || fidelitySum;
+    }
+
+    let financerName = warehouseMsme ? warehouseMsme.financerName : null;
+    if (!financerName && legacy.hypothecationDetails && legacy.hypothecationDetails !== "None") {
+      financerName = legacy.hypothecationDetails;
+    }
+    let bankChargeType = "";
+    if (financerName && financerName !== "None") {
+      bankChargeType = `${financerName} - Hypothecation`;
+    }
+
+    let resolvedPolicyNumber = (warehouseMsme ? warehouseMsme.policyNumber : null) || legacy.policyNumber;
+    if (!resolvedPolicyNumber && warehouseMsme) {
+      resolvedPolicyNumber = warehouseMsme.quotationNumber || warehouseMsme.endorsementNumber;
+    }
+
+    return {
+      documentDetected: true,
+      documentFormat: warehouseMsme ? warehouseMsme.documentFormat : legacy.documentFormat,
+      sourceDocumentType: warehouseMsme ? warehouseMsme.sourceDocumentType : legacy.sourceDocumentType,
+      insuranceCompany: "ICICI Lombard General Insurance Company Limited",
+      productName: warehouseMsme ? warehouseMsme.productName : legacy.productName,
+      policyType: warehouseMsme ? warehouseMsme.policyType : legacy.policyType,
+      policyNumber: resolvedPolicyNumber,
+      insuredName: getInsuredName(),
+      mailingAddress: getMailAddress(),
+      riskLocation: getRiskLocation(),
+      businessDescription: (warehouseMsme ? (warehouseMsme.businessDescription || warehouseMsme.occupancy) : null) || legacy.businessDescription,
+      issuedAt: (warehouseMsme ? warehouseMsme.issuedAt : null) || legacy.issuedAt || "BHOPAL",
+
+      startDate: cleanDate(warehouseMsme ? warehouseMsme.policyStartDate : null) || legacy.startDate,
+      expiryDate: cleanDate(warehouseMsme ? warehouseMsme.policyEndDate : null) || legacy.expiryDate,
+      policyStartDate: cleanDate(warehouseMsme ? warehouseMsme.policyStartDate : null) || legacy.startDate,
+      policyEndDate: cleanDate(warehouseMsme ? warehouseMsme.policyEndDate : null) || legacy.expiryDate,
+
+      district: (warehouseMsme ? warehouseMsme.district : null) || legacy.district || "",
+      tehsil: (warehouseMsme ? warehouseMsme.tehsil : null) || legacy.tehsil || "",
+      village: (warehouseMsme ? warehouseMsme.village : null) || legacy.village || "",
+      pincode: (warehouseMsme ? warehouseMsme.pincode : null) || legacy.pincode || "",
+
+      sumInsured: legacy.sumInsured || formatAmount(sumInsured),
+      contentsSumInsured: legacy.contentsSumInsured || formatAmount(contentsSum),
+      buildingSumInsured: legacy.buildingSumInsured || formatAmount(buildingSum),
+      burglarySumInsured: legacy.burglarySumInsured || formatAmount(burglarySum),
+      fidelitySumInsured: legacy.fidelitySumInsured || formatAmount(fidelitySum),
+      
+      premiumIncludingGst: formatPremium(warehouseMsme ? warehouseMsme.premiumIncludingGst : null) || (isEndorsement && legacy.premiumIncludingGst ? legacy.premiumIncludingGst.replace(/,/g, "") : legacy.premiumIncludingGst),
+      netPremium: formatAmount(warehouseMsme ? warehouseMsme.netPremium : null) || legacy.netPremium,
+      gstAmount: formatAmount(gstAmountVal) || legacy.gstAmount,
+      cgst: cgst || legacy.cgst,
+      sgst: sgst || legacy.sgst,
+      igst: igst || legacy.igst,
+
+      invoiceNumber: (warehouseMsme ? warehouseMsme.invoiceNumber : null) || legacy.invoiceNumber || "",
+      invoiceDate: cleanDate(warehouseMsme ? warehouseMsme.invoiceDate : null) || legacy.invoiceDate || null,
+      gstin: (warehouseMsme ? warehouseMsme.gstin : null) || legacy.gstin || "",
+      placeOfSupply: (warehouseMsme ? warehouseMsme.placeOfSupply : null) || legacy.placeOfSupply || "",
+
+      hypothecationDetails: financerName || "None",
+      bankChargeType,
+      financerName: financerName || null,
+
+      brokerCode: (warehouseMsme ? warehouseMsme.brokerCode : null) || legacy.brokerCode || "",
+      brokerName: (warehouseMsme ? warehouseMsme.brokerName : null) || legacy.brokerName || "",
+      brokerMobile: (warehouseMsme ? warehouseMsme.brokerMobile : null) || legacy.brokerMobile || "",
+      brokerEmail: (warehouseMsme ? warehouseMsme.brokerEmail : null) || legacy.brokerEmail || "",
+
+      coverages: coverages.length ? coverages : legacy.coverages,
+      clauses: (warehouseMsme ? warehouseMsme.clauses : null) || legacy.clauses || [],
+      specialConditions: (warehouseMsme ? warehouseMsme.specialConditions : null) || legacy.specialConditions || [],
+      
+      endorsementNumber: (warehouseMsme ? warehouseMsme.endorsementNumber : null) || legacy.endorsementNumber || null,
+      endorsementEffectiveDate: cleanDate(warehouseMsme ? warehouseMsme.endorsementEffectiveDate : null) || legacy.endorsementEffectiveDate || null,
+      endorsementDate: cleanDate(warehouseMsme ? warehouseMsme.endorsementDate : null) || legacy.endorsementDate || null,
+      dateOfIssue: cleanDate(warehouseMsme ? warehouseMsme.dateOfIssue : null) || legacy.dateOfIssue || null,
+      issuedOffice: (warehouseMsme ? warehouseMsme.issuedOffice : null) || legacy.issuedOffice || null,
+      endorsementWording: (warehouseMsme ? warehouseMsme.endorsementWording : null) || legacy.endorsementWording || null,
+      previousSumInsured: formatAmount(warehouseMsme ? warehouseMsme.previousSumInsured : null) || legacy.previousSumInsured || "",
+      revisedSumInsured: formatAmount(warehouseMsme ? warehouseMsme.revisedSumInsured : null) || legacy.revisedSumInsured || "",
+      increasedBy: formatAmount(warehouseMsme ? warehouseMsme.increasedBy : null) || legacy.increasedBy || "",
+      extraPremium: formatPremium(warehouseMsme ? warehouseMsme.extraPremium : null) || (isEndorsement && legacy.extraPremium ? legacy.extraPremium.replace(/,/g, "") : legacy.extraPremium) || "",
+
+      quotationNumber: (warehouseMsme ? warehouseMsme.quotationNumber : null) || legacy.quotationNumber || null,
+      quotationDate: cleanDate(warehouseMsme ? warehouseMsme.quotationDate : null) || legacy.quotationDate || null,
+      quoteValidTill: cleanDate(warehouseMsme ? warehouseMsme.quoteValidTill : null) || legacy.quoteValidTill || null,
+      claimsRatio: (warehouseMsme ? warehouseMsme.claimsRatio : null) || legacy.claimsRatio || null,
+      earthquakeZone: (warehouseMsme ? warehouseMsme.earthquakeZone : null) || legacy.earthquakeZone || null,
+      basementRisk: (warehouseMsme ? warehouseMsme.basementRisk : null) || legacy.basementRisk || null,
+      employeeCount: (warehouseMsme ? warehouseMsme.employeeCount : null) || legacy.employeeCount || null,
+      aoaLimit: formatAmount(warehouseMsme ? warehouseMsme.aoaLimit : null) || legacy.aoaLimit || "",
+
+      needsManualReview: legacy.needsManualReview,
+    };
+  }
+  return { documentDetected: false };
+}
+
+function extractIciciWarehouseMsmeLegacy(text) {
   if (!isIciciWarehouseMsme(text)) return { documentDetected: false };
 
   const period = extractGenericPolicyPeriod(text);

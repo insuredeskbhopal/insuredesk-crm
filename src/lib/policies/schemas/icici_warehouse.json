@@ -11,6 +11,13 @@
   "expectedTables": ["sum_insured_table", "premium_table"],
   "fields": [
     {
+      "field": "insuranceCompany",
+      "aliases": ["ICICI Lombard", "ICICI Lombard General Insurance Company Limited"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
       "field": "policyNumber",
       "aliases": ["Policy No", "Policy Number"],
       "section": "policy_details",
@@ -60,6 +67,20 @@
       "aliases": ["Premises to be Insured", "Risk Location"],
       "section": "risk_location",
       "type": "string",
+      "required": true
+    },
+    {
+      "field": "startDate",
+      "aliases": ["Policy Period From", "Period of Insurance From", "From"],
+      "section": "policy_details",
+      "type": "date",
+      "required": true
+    },
+    {
+      "field": "expiryDate",
+      "aliases": ["To", "Policy Period To", "Period of Insurance To"],
+      "section": "policy_details",
+      "type": "date",
       "required": true
     },
     {

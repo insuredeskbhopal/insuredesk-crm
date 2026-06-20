@@ -2,13 +2,16 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { buildFieldMap } = require("../understanding/buildFieldMap");
 
-const SCHEMA_DIR = path.join(process.cwd(), "lib", "policies", "schemas");
+const SCHEMA_DIR = fs.existsSync(path.join(process.cwd(), "src", "lib", "policies", "schemas"))
+  ? path.join(process.cwd(), "src", "lib", "policies", "schemas")
+  : path.join(process.cwd(), "lib", "policies", "schemas");
 const FORMAT_TO_SCHEMA = {
   HDFC_ERGO_MOTOR_V1: "hdfc_motor.json",
   IFFCO_TOKIO_MOTOR_V1: "iffco_motor.json",
   GENERALI_MOTOR_V1: "generali_motor.json",
   NEW_INDIA_MOTOR_V1: "new_india_motor.json",
   TATA_AIG_MOTOR_V1: "tata_aig_motor.json",
+  TATA_AIG_WAREHOUSE_V1: "tata_aig_warehouse.json",
   ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1: "icici_warehouse.json",
   ICICI_WAREHOUSE_V1: "icici_warehouse.json",
   IFFCO_TOKIO_WAREHOUSE_V1: "iffco_warehouse.json",

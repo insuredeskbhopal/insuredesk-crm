@@ -1,0 +1,182 @@
+{
+  "name": "Tata AIG Warehouse Policy",
+  "version": 1,
+  "expectedSections": [
+    "policy_details",
+    "insured_details",
+    "risk_location",
+    "warehouse_details",
+    "premium_details"
+  ],
+  "expectedTables": ["sum_insured_table", "premium_table"],
+  "fields": [
+    {
+      "field": "insuranceCompany",
+      "aliases": ["Tata AIG General Insurance Company Limited", "TATA AIG"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "policyNumber",
+      "aliases": ["POLICY NO", "POLICY NO."],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "insuredName",
+      "aliases": ["INSURED NAME", "Name of Assured"],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "productName",
+      "aliases": ["Business Guard Laghu Package Policy", "Business Guard Sookshma Package Policy"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "policyType",
+      "aliases": ["Business Guard Laghu Package Policy", "Business Guard Sookshma Package Policy"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "mailingAddress",
+      "aliases": ["COMMUNICATION ADDRESS"],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "riskLocation",
+      "aliases": ["RISK LOCATION ADDRESS", "Location of Risk", "Risk Address"],
+      "section": "risk_location",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "businessDescription",
+      "aliases": ["OCCUPANCY"],
+      "section": "warehouse_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "occupancy",
+      "aliases": ["OCCUPANCY"],
+      "section": "warehouse_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "startDate",
+      "aliases": ["From"],
+      "section": "policy_details",
+      "type": "date",
+      "required": true
+    },
+    {
+      "field": "expiryDate",
+      "aliases": ["To"],
+      "section": "policy_details",
+      "type": "date",
+      "required": true
+    },
+    {
+      "field": "premiumIncludingGst",
+      "aliases": ["Total Amount (Rounded Off)"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "netPremium",
+      "aliases": ["Net Premium"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "gstAmount",
+      "aliases": ["GST Amount"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "cgst",
+      "aliases": ["CGST"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "sgst",
+      "aliases": ["SGST"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "sumInsured",
+      "aliases": ["Total Sum Insured"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "contentsSumInsured",
+      "aliases": ["Fire Building and/or Contents"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "burglarySumInsured",
+      "aliases": ["Burglary"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "fidelitySumInsured",
+      "aliases": ["Employee Fidelity"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "brokerCode",
+      "aliases": ["Agent/Broker License Code"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "brokerName",
+      "aliases": ["Agent/Broker Name"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "hypothecationDetails",
+      "aliases": ["BANK / FINANCIAL INSTITUTION"],
+      "section": "warehouse_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "gstin",
+      "aliases": ["GST Registration No."],
+      "section": "premium_details",
+      "type": "string",
+      "required": false
+    }
+  ]
+}
