@@ -822,11 +822,25 @@ function extractTataWarehouse(text) {
   }
 
   const productName = cleanHdfcValue(matchGroup(text, /(Business\s+Guard\s+(?:Laghu|Sookshma)\s+Package\s+Policy)/i));
-  const policyNumber = matchGroup(text, /POLICY\s+NO\s*:\s*([0-9]+)/i);
-  const insuredName = cleanHdfcValue(matchGroup(text, /INSURED\s+NAME\s*:\s*([^\n]+)/i));
+  const policyNumber = matchGroup(text, /POLICY\s+NO\.?\s*[:\s]*([0-9]{10})/i) || matchGroup(text, /POLICY\s+NO\s*:\s*([0-9]+)/i);
+  let rawInsuredName = matchGroup(text, /INSURED\s+NAME\s*:\s*([^\n]+)/i) ||
+                       matchGroup(text, /Name of Assured\s*\n\s*and Address\s*:\s*\n\s*([^\n]+)/i) ||
+                       matchGroup(text, /Name of Assured\s*and Address\s*:\s*([^\n]+)/i) ||
+                       matchGroup(text, /Name of Assured\s*:\s*([^\n]+)/i);
+  let insuredName = cleanHdfcValue(rawInsuredName);
+  if (insuredName) {
+    insuredName = insuredName.replace(/\s+\d+$/, "").replace(/\s+[a-zA-Z]$/, "").trim();
+  }
   const mailingAddress = cleanWarehouseBlock(matchGroup(text, /COMMUNICATION\s+ADDRESS\s*:\s*([\s\S]+?)\s*PLACE\s+OF\s+SUPPLY/i));
-  const riskLocation = cleanWarehouseBlock(matchGroup(text, /RISK\s+LOCATION\s+ADDRESS\s*:\s*([\s\S]+?)\s*OCCUPANCY\s*:/i));
-  const occupancy = cleanWarehouseBlock(matchGroup(text, /OCCUPANCY\s*:\s*([\s\S]+?)\s*PERIOD\s+OF\s+INSURANCE/i));
+  const riskLocation = cleanWarehouseBlock(
+    matchGroup(text, /RISK\s+LOCATION\s+ADDRESS\s*:\s*([\s\S]+?)\s*OCCUPANCY\s*:/i) ||
+    matchGroup(text, /Location of Risk\s*:\s*([\s\S]+?)\s*Occupancy\s*:/i) ||
+    matchGroup(text, /Risk Address\s*:\s*\d*\s*([\s\S]+?)(?=\s*Coverage|$)/i)
+  );
+  const occupancy = cleanWarehouseBlock(
+    matchGroup(text, /OCCUPANCY\s*:\s*([\s\S]+?)\s*PERIOD\s+OF\s+INSURANCE/i) ||
+    matchGroup(text, /OCCUPANCY\s*:\s*([\s\S]+?)\s*(?:Sr\.No:|$)/i)
+  );
   const startDate = normalizeWarehouseDate(matchGroup(text, /From\s*:\s*00:00hrs\s+of\s+([0-9-]+)/i));
   const expiryDate = normalizeWarehouseDate(matchGroup(text, /To\s*:\s*Midnight\s+of\s+([0-9-]+)/i));
   const brokerRaw = cleanHdfcValue(matchGroup(text, /Agent\/Broker\s+Name\s*-\s*([^\n]+)/i));
