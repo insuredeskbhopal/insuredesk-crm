@@ -6,46 +6,26 @@ const { mergeSchemaWithFallback, validateExtraction } = require("../intelligence
 const { normalizeInsuranceCompanyName: normalizeCompanyFromMaster } = require("../../master/insurance-companies.cjs");
 
 const {
-  cleanWarehouseAddress,
-  cleanWarehouseDescription,
-  sliceText,
-  cleanHdfcValue,
-  cleanInsuredName,
   cleanText,
-  cleanMakeModel,
-  cleanMotorTableMakeModel,
-  deriveGroupName,
-  cleanWarehouseBlock
+  cleanInsuredName,
+  deriveGroupName
 } = require("./utils/text.cjs");
 
 const {
-  extractByLabels,
-  extractNearLabel,
-  normalizeHdfcTypedValue,
-  matchGroup,
-  escapeRegExp
+  matchGroup
 } = require("./utils/regex.cjs");
 
 const {
-  buildDuration,
-  normalizeWarehouseDate,
-  parseRobustDate
+  buildDuration
 } = require("./utils/dates.cjs");
 
 const {
-  normalizeAmount,
-  sumAmounts,
-  diffAmounts,
-  extractIffcoPremiumFromBlock,
-  sumPlainAmounts,
-  parseDenseGst,
-  parseDenseAmounts
+  normalizeAmount
 } = require("./utils/amounts.cjs");
 
 const {
   lookupRtoLocation,
-  extractLocationPart,
-  localExtractLocationPart
+  extractLocationPart
 } = require("./utils/locations.cjs");
 
 const {
@@ -57,72 +37,34 @@ const {
   isVerifiedCompanyDocumentFormat,
   isMotorExtraction,
   extractPaymentCollection,
-  extractInsuredGstin,
-  extractGstAmount,
-  extractCscContact,
   matchNCB,
-  inferFuelTypeFromVehicleDescription,
   inferFuelType,
   extractInsuredName,
   extractPolicyNumber,
-  normalizeRegistrationDisplay,
-  cleanVehicleCode,
-  extractNewIndiaDenseIdv,
   extractMakeModel,
   extractMfgYear,
   extractMotorVehicleTable,
-  extractIffcoCompressedVehicleTable,
-  extractIffcoDensePrivateCarVehicleTable,
-  extractIffcoStandaloneOdVehicleTable,
-  extractMotorVehicleBlock,
   extractMotorRegistrationNumber,
-  extractMotorLabelValue,
-  extractMotorMakeModel,
   splitGenericMakeModel,
-  extractSeatingFromVehicleBlock,
   extractEngineNumber,
-  isPlausibleEngineNumber,
   extractChassisNumber,
   extractSeatingCapacity,
-  normalizeSeatingCapacity,
-  inferMotorVehicleType,
   isMotorCoverTypeContext,
   schemaSupportsCoverType,
   extractPolicyCoverType,
-  normalizeCoverType,
-  normalizeManufacturingYear,
   extractNominee,
-  extractFinancer,
-  normalizeFuelType
+  extractFinancer
 } = require("./utils/motor.cjs");
 
 const {
   buildWarehouseLegacyData,
   isWarehouseExtraction,
-  protectWarehouseMergedFields,
-  coverageAmount
+  protectWarehouseMergedFields
 } = require("./utils/warehouse.cjs");
 
 const {
   extractIciciMotor,
-  isIciciMotor,
-  extractIciciWarehouseMsme,
-  isIciciWarehouseMsme,
-  extractIciciWarehouseCoverages,
-  extractIciciWarehousePremium,
-  extractIciciWarehouseHypothecation,
-  extractIciciWarehouseBroker,
-  extractIciciWarehouseClauses,
-  extractIciciWarehouseSpecialConditions,
-  extractIciciRiskLetterVehicleDetails,
-  extractIciciScheduleVehicleDetails,
-  extractIciciPremiumDetails,
-  extractIciciPolicyPeriod,
-  extractIciciAddress,
-  normalizeIciciDate,
-  cleanIciciRto,
-  inferIciciFuelType,
-  splitIciciDenseIdv
+  extractIciciWarehouseMsme
 } = require("./parsers/icici/index.cjs");
 
 const {
@@ -133,84 +75,20 @@ const {
   extractIffcoPolicyType,
   isIffcoTokioMotorText,
   extractIffcoMotorDetails,
-  extractIffcoPolicyNumber,
-  extractIffcoInsuredName,
-  extractIffcoPolicyPeriod,
-  extractIffcoPremiumSchedule,
-  extractIffcoEngineNumber,
-  extractIffcoChassisNumber,
-  isValidIffcoEngine,
-  isValidIffcoChassis,
-  extractIffcoNcb,
-  extractIffcoIdv,
-  extractIffcoGvw,
-  extractIffcoFinancer,
-  extractIffcoPreviousPolicy,
-  splitIffcoMakeModel,
   extractIffcoWorkmenCompensation,
-  extractIffcoWorkmenEmployeeCategories,
-  extractIffcoWorkmenTaxAmounts,
-  cleanIffcoWarehouseAddress,
-  normalizeIffcoWarehouseAmount,
-  getIffcoWarehouseSubtypeCode,
-  normalizeIffcoWarehouseProfileName,
-  extractIffcoWarehouseLocationDescription,
-  extractIffcoWarehouseOccupancy,
-  inferIffcoGoodsStored,
-  buildIffcoCoverageDetails,
-  findIffcoEvidence,
-  buildIffcoFieldEvidence,
-  buildIffcoFieldConfidence,
-  enrichIffcoWarehouseTraining,
   extractIffcoWarehouse
 } = require("./parsers/iffco/index.cjs");
 
 const {
-  isBajajIssuerDocument,
-  isBajajAllianzMotor,
-  normalizeBajajDate,
-  extractBajajMakeModel,
   extractBajajAllianzMotor,
-  extractBajajWarehouse,
-  getBajajWarehouseSubtypeCode,
-  normalizeBajajWarehouseProfileName,
-  extractBajajProposalAddress,
-  extractBajajRiskLocation,
-  extractBajajOccupancy,
-  extractBajajAddressParts,
-  dedupeBajajPlace,
-  extractBajajFinancialInstitutions,
-  extractBajajLineAmount,
-  extractBajajBuildingAmount,
-  extractBajajPropertySums,
-  extractBajajAddonDetails,
-  extractBajajFidelityDetails,
-  buildBajajCoverageDetails,
-  buildBajajFieldEvidence,
-  buildBajajFieldConfidence,
-  enrichBajajWarehouseTraining,
-  extractBajajWarehouseDates
+  extractBajajWarehouse
 } = require("./parsers/bajaj/index.cjs");
 
 const {
   isTataAigFinalData,
   protectTataAigMergedFields,
   finalizeTataAigMotorFields,
-  isTataAigMotor,
-  extractTataInsuredName,
-  extractTataAigVehicleIdentifier,
-  detectTataAigFormat,
-  cleanTataVehicleValue,
-  extractTataAfterLabel,
-  extractTataAigMakeModelVariant,
-  extractTataAigWrappedVehicleValue,
-  mergeWrappedTataModel,
-  extractTataAigPolicyNumber,
-  extractTataAigGstAmount,
-  extractTataAigTotalPremium,
   extractTataAigMotor,
-  extractTataAigIdv,
-  normalizeTataDate,
   extractTataWarehouse
 } = require("./parsers/tata/index.cjs");
 
@@ -218,66 +96,29 @@ const {
   isNewIndiaFinalData,
   finalizeNewIndiaMotorFields,
   isNewIndiaAssuranceText,
-  detectNewIndiaPolicyFamily,
-  cleanNewIndiaPolicyType,
-  normalizeNewIndiaFuelType,
   extractNewIndiaMotorDetails,
-  extractNewIndiaPolicyPeriod,
-  extractNewIndiaEnhancedCovers,
-  extractNewIndiaPremiumSchedule,
-  parseNewIndiaStackedOwnDamagePremiums,
-  buildNewIndiaPremiumBreakup
+  extractNewIndiaPremiumSchedule
 } = require("./parsers/new-india/index.cjs");
 
 const {
-  extractHdfcErgoMotor,
-  isHdfcErgoMotor,
-  extractHdfcPolicyNumber,
-  extractHdfcRegistrationNumber,
-  extractHdfcBoundedText,
-  extractHdfcCommunicationAddress,
-  extractHdfcTotalIdv,
-  extractHdfcGeographicalArea,
-  extractHdfcInlineAmount,
-  extractHdfcAmountAfterCoverage,
-  extractHdfcPreviousPolicyNumber,
-  extractHdfcPreviousPolicyValidity,
-  extractHdfcPreviousInsurer,
-  extractHdfcPeriod,
-  cleanHdfcPeriodValue,
-  extractHdfcInsuredName
+  extractHdfcErgoMotor
 } = require("./parsers/hdfc-ergo/index.cjs");
 
 const {
-  extractGeneraliMotor,
-  isGeneraliMotor,
-  extractGeneraliPolicyNumber,
-  extractGeneraliPeriod,
-  extractGeneraliInsuredName,
-  extractGeneraliAddress,
-  extractGeneraliVehicle,
-  extractGeneraliTotalIdv,
-  extractGeneraliTotalPremium,
-  extractGeneraliNominee,
-  extractGeneraliFinancer,
-  cleanGeneraliAmount
+  extractGeneraliMotor
 } = require("./parsers/generali/index.cjs");
 
 const {
-  extractRoyalSundaramMotor,
-  isRoyalSundaramMotor
+  extractRoyalSundaramMotor
 } = require("./parsers/royal-sundaram/index.cjs");
 
 const {
-  isGoDigitMotor,
-  normalizeGoDigitDate,
   extractGoDigitMotor
 } = require("./parsers/go-digit/index.cjs");
 
 const {
   extractGenericPolicyPeriod,
   extractGenericPremiumSchedule,
-  extractGenericGstBreakup,
   extractPremium,
   extractIDV
 } = require("./parsers/generic/index.cjs");

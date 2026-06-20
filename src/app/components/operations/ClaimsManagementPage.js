@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
@@ -852,9 +853,11 @@ export default function ClaimsManagementPage() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  <img
+                  <Image
                     src="/brand/main-logo-wide.webp"
                     alt="Bima Headquarter"
+                    width={133}
+                    height={74}
                     style={{ height: "74px", width: "auto", objectFit: "contain" }}
                   />
                   <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>

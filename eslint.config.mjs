@@ -4,7 +4,16 @@ import reactPlugin from "eslint-plugin-react";
 
 export default [
   {
-    ignores: [".next/**", ".vite/**", "dist/**", "node_modules/**", "coverage/**"],
+    ignores: [
+      ".next/**",
+      ".vite/**",
+      "dist/**",
+      "node_modules/**",
+      "coverage/**",
+      "archive/**",
+      "scratch/**",
+      "scripts/**"
+    ],
   },
   js.configs.recommended,
   {

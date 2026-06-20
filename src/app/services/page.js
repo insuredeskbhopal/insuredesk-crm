@@ -223,7 +223,7 @@ export default function ServicesPage() {
               </div>
 
               <div className="service-hero-media entry-anim" aria-hidden="true">
-                <Image src="/brand/service-bg.webp" alt="" width={720} height={520} priority />
+                <Image src="/brand/service-bg.webp" alt="" width={800} height={580} priority />
               </div>
             </div>
           </header>
@@ -260,8 +260,10 @@ export default function ServicesPage() {
                           {service.icon}
                         </span>
                       </div>
-                      <h3>{service.title}</h3>
-                      <p>{service.desc}</p>
+                      <div className="service-directory-body">
+                        <h3>{service.title}</h3>
+                        <p>{service.desc}</p>
+                      </div>
                       <span className="service-directory-link">
                         View service
                         <span className="material-symbols-outlined">arrow_forward</span>

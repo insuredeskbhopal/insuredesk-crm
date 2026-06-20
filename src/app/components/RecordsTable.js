@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Download, Pencil, Eye, X, Printer, Trash2, CheckSquare, Square, MinusSquare } from "lucide-react";
@@ -787,9 +788,11 @@ export default function RecordsTable({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  <img
+                  <Image
                     src="/brand/main-logo-wide.webp"
                     alt="Bima Headquarter"
+                    width={133}
+                    height={74}
                     style={{ height: "74px", width: "auto", objectFit: "contain" }}
                   />
                   <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>

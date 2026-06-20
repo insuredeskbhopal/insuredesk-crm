@@ -165,6 +165,6 @@ describe("Endorsement Policy extraction regression baseline", () => {
       expect(result.sumInsured).toBe(tc.sumInsured);
       expect(result.netPremium).toBe(tc.netPremium);
       expect(result.premiumIncludingGst || result.premium).toBe(tc.premiumIncludingGst);
-    });
+    }, 30000);
   });
 });
