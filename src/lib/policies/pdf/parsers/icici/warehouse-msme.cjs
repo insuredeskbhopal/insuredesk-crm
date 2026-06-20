@@ -171,9 +171,8 @@ function parsePolicy(rawText, fileName = "") {
   const invoiceNumber = pick(text, /Invoice\s+Number\s*[:-]?\s*([0-9]+)/i);
   const invoiceDate = parseDateLike(pick(text, /Invoice\s+Date\s*[:-]?\s*([0-9A-Za-z,/ -]+)/i));
 
-  const gstin =
-    pick(text, /GSTIN(?:\s+Reg\s+no)?\s*[:-]?\s*([0-9A-Z]{15})/i) ||
-    pick(text, /GSTIN\s+([0-9A-Z]{15})/i);
+  // Client GSTIN is not present in policy PDFs; "GSTIN Reg no" is the insurer's GSTIN.
+  const gstin = "";
 
   const placeOfSupply = pick(text, /Place\s+[Oo]f\s+[Ss]upply\s*[:-]?\s*([A-Z ]+?)(?=\s+[A-Z][a-z]|\s*$)/);
 
@@ -350,7 +349,7 @@ function parseEndorsement(rawText, fileName = "") {
     premiumIncludingGst,
     premiumIncludingTax: premiumIncludingGst,
 
-    gstin: pick(text, /GSTIN\s+Reg\s+no\s*:\s*([0-9A-Z]{15})/i),
+    gstin: "", // Client GSTIN not in policy PDF; "GSTIN Reg no" is the insurer's GSTIN
   };
 }
 

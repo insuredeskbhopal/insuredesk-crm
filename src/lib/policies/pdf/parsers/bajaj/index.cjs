@@ -273,9 +273,8 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
   )
     .replace(/\s+/g, " ")
     .trim();
-  const gstin =
-    matchGroup(text, /Company GST\s*No[\s\S]{0,20}?\n\s*([A-Z0-9]{15})/i) ||
-    matchGroup(text, /Company GST\s*No\s*([A-Z0-9]{15})/i);
+  // Client GSTIN is not present in policy PDFs; "Company GST No" is the insurer's GSTIN.
+  const gstin = "";
 
   let ncbPercentage = matchGroup(text, /NCB\s*\(No\s*Claim\s*Bonus\)[\s\S]{0,200}?([0-9-]+)\s*%/i);
   if (ncbPercentage) {
@@ -501,7 +500,7 @@ function extractBajajWarehouse(text) {
     gstAmount,
     invoiceNumber: policyNumber,
     invoiceDate,
-    gstin: matchGroup(text, /Company\s+GST\s+No\s*:\s*([0-9A-Z]{15})/i) || matchGroup(text, /GSTIN\s*\/?[^\n]*\n\s*([0-9A-Z]{15})/i) || matchGroup(text, /(?:BGIL\s+)?GST\s+No\s*[:.-]?\s*([0-9A-Z]{15})/i),
+    gstin: "", // Client GSTIN not in policy PDF; these patterns match the insurer's GSTIN
     hypothecationDetails: cleanHdfcValue(
       matchGroup(text, /Financial\s+Institute\s+Name\s*\n?\s*1([^\n]+)/i) ||
         matchGroup(text, /Name\s+of\s+the\s+financial\s+institution[^:]*:\s*([^\n]+)/i),

@@ -5,13 +5,20 @@ import InsurerLogo from "@/app/components/brand/InsurerLogo";
 import { formatMoney } from "@/lib/records/analytics";
 
 export default function PolicyDetail({ client, record, onBack }) {
-  const isMotorPolicy = Boolean(
-    record.vehicleNumber ||
-    record.registrationNumber ||
-    record.engineNumber ||
-    record.chassisNumber ||
-    /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(record.policyType || ""),
-  );
+  // Check for explicit non-motor policy indicators first (warehouse, fire, MSME etc.)
+  const isExplicitlyNonMotor =
+    /\b(warehouse|fire|sfsp|msme|suraksha|burglary|property|stock|contents|workmen)/i.test(
+      [record.policyType, record.documentCategory, record.documentFormat].filter(Boolean).join(" "),
+    );
+  const isMotorPolicy =
+    !isExplicitlyNonMotor &&
+    Boolean(
+      record.vehicleNumber ||
+      record.registrationNumber ||
+      record.engineNumber ||
+      record.chassisNumber ||
+      /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(record.policyType || ""),
+    );
   const clientDetailItems = [
     ["Insured Name", client.name],
     ["Contact", client.contactNumber || record.contactNumber || "-"],

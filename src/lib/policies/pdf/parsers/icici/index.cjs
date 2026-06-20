@@ -312,7 +312,7 @@ function extractIciciWarehouseMsme(text, fileName = "") {
 
       invoiceNumber: (warehouseMsme ? warehouseMsme.invoiceNumber : null) || legacy.invoiceNumber || "",
       invoiceDate: cleanDate(warehouseMsme ? warehouseMsme.invoiceDate : null) || legacy.invoiceDate || null,
-      gstin: (warehouseMsme ? warehouseMsme.gstin : null) || legacy.gstin || "",
+      gstin: "", // Client GSTIN not in policy PDF; warehouseMsme.gstin is the insurer's GSTIN
       placeOfSupply: (warehouseMsme ? warehouseMsme.placeOfSupply : null) || legacy.placeOfSupply || "",
 
       hypothecationDetails: financerName || "None",
@@ -421,7 +421,7 @@ function extractIciciWarehouseMsmeLegacy(text) {
     sgst: premium.sgst,
     invoiceNumber: premium.invoiceNumber,
     invoiceDate: premium.invoiceDate,
-    gstin: premium.gstin,
+    gstin: "", // Client GSTIN not in policy PDF; premium.gstin is the insurer's GSTIN
     placeOfSupply: premium.placeOfSupply,
     hypothecationDetails: hypothecation.bankName,
     brokerCode: broker.brokerCode,

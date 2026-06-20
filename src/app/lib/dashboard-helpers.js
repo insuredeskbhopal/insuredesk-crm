@@ -705,6 +705,8 @@ export function inferUploadSchema(upload) {
     extracted.registrationNumber,
     extracted.makeModel,
     extracted.riskLocation,
+    extracted.documentCategory,
+    extracted.documentFormat,
   ]
     .filter(Boolean)
     .join(" ")
@@ -783,6 +785,17 @@ export function inferRequiredFields(groupId, policyId) {
 }
 
 export function inferPolicyFamily(haystack, extracted) {
+  // Check explicit document category/format FIRST — these are authoritative signals
+  // set by company-specific parsers (e.g. documentCategory: "Fire Insurance")
+  const docCategory = String(extracted.documentCategory || "").toLowerCase();
+  const docFormat = String(extracted.documentFormat || "").toLowerCase();
+  const explicitNonMotor = docCategory + " " + docFormat;
+  if (/warehouse|fire|msme|suraksha|sfsp|burglary|property|workmen/i.test(explicitNonMotor)) return "fire";
+
+  // Check policyType for explicit non-motor indicators before motor signals
+  const policyType = String(extracted.policyType || "").toLowerCase();
+  if (/warehouse|fire|sfsp|msme|suraksha|burglary|property|stock|contents/i.test(policyType)) return "fire";
+
   const hasMotorSignals =
     hasValue(extracted.vehicleNumber) ||
     hasValue(extracted.registrationNumber) ||

@@ -187,6 +187,7 @@ function isNoisyCandidate(candidate, field) {
   if (field.field === "policyNumber" && /previous/i.test(source)) return true;
   if (field.field === "customerMobile" && /claim|sms|contact us|customer care/i.test(source)) return true;
   if (field.field === "panNumber" && /GCI PAN|Company PAN|Insurer/i.test(source)) return true;
+  if (field.field === "gstin" && /Company\s+GST|GSTIN\s+Reg|Insurer|IL\s+GIC\s+GSTIN|BGIL\s+GST/i.test(source)) return true;
   if (/legal|exclusion|disclaimer|terms and conditions/i.test(source) && field.required) return true;
   return false;
 }
