@@ -182,9 +182,67 @@ export async function GET(request) {
       FROM dated
     `;
 
-    const [renewalsResult, statsResult] = await Promise.all([
+    const agentQuery = `
+      WITH parsed AS (
+        SELECT 
+          saved_at,
+          is_active_policy,
+          renewal_status,
+          created_by_id,
+          CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
+            NULLIF(reviewed_data->>'netPremium', ''),
+            NULLIF(data->>'netPremium', ''),
+            NULLIF(reviewed_data->>'totalPremium', ''),
+            NULLIF(reviewed_data->>'premium', ''),
+            NULLIF(data->>'totalPremium', ''),
+            NULLIF(data->>'premium', '')
+          ), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium,
+          COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry
+        FROM pdf_records
+        WHERE deleted_at IS NULL
+          AND ($1::boolean OR organization_id = $2::uuid)
+      ),
+      dated AS (
+        SELECT 
+          saved_at,
+          is_active_policy,
+          renewal_status,
+          created_by_id,
+          premium,
+          raw_expiry,
+          (CASE 
+            WHEN raw_expiry ~ '^\\d{4}-\\d{2}-\\d{2}' THEN CAST(SUBSTRING(raw_expiry FROM 1 FOR 10) AS DATE)
+            WHEN raw_expiry ~ '^\\d{1,2}[/-]\\d{1,2}[/-]\\d{4}' THEN TO_DATE(REPLACE(raw_expiry, '/', '-'), 'DD-MM-YYYY')
+            WHEN raw_expiry ~ '^\\d{1,2}[/-]\\d{1,2}[/-]\\d{2}' THEN TO_DATE(REPLACE(raw_expiry, '/', '-'), 'DD-MM-YY')
+            ELSE NULL
+           END) AS expiry_date
+        FROM parsed
+      )
+      SELECT 
+        u.id as agent_id,
+        u.name as agent_name,
+        u.email as agent_email,
+        COUNT(CASE WHEN saved_at >= $4::timestamptz THEN 1 END)::integer as eod_count,
+        SUM(CASE WHEN saved_at >= $4::timestamptz THEN premium ELSE 0 END)::numeric as eod_premium,
+        COUNT(CASE WHEN saved_at >= $5::timestamptz THEN 1 END)::integer as mtd_count,
+        SUM(CASE WHEN saved_at >= $5::timestamptz THEN premium ELSE 0 END)::numeric as mtd_premium,
+        COUNT(CASE WHEN saved_at >= $6::timestamptz THEN 1 END)::integer as ytd_count,
+        SUM(CASE WHEN saved_at >= $6::timestamptz THEN premium ELSE 0 END)::numeric as ytd_premium,
+        COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END)::integer as renewed_count,
+        SUM(CASE WHEN renewal_status = 'RENEWED' THEN premium ELSE 0 END)::numeric as renewed_premium,
+        COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END)::integer as lost_count,
+        SUM(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN premium ELSE 0 END)::numeric as lost_premium,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date < $3::date AND expiry_date >= $3::date - 30 THEN 1 END)::integer as expired_count,
+        SUM(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date < $3::date AND expiry_date >= $3::date - 30 THEN premium ELSE 0 END)::numeric as expired_premium
+      FROM dated d
+      LEFT JOIN users u ON d.created_by_id = u.id
+      GROUP BY u.id, u.name, u.email
+    `;
+
+    const [renewalsResult, statsResult, agentResult] = await Promise.all([
       prisma.$queryRawUnsafe(renewalsCTE, ...queryParams),
-      prisma.$queryRawUnsafe(statsQuery, ...statsQueryArgs(statsParams)),
+      prisma.$queryRawUnsafe(statsQuery, ...statsParams),
+      prisma.$queryRawUnsafe(agentQuery, ...statsParams),
     ]);
 
     const renewals = renewalsResult.map((r) => ({
@@ -215,9 +273,23 @@ export async function GET(request) {
     const lostCount = Number(stats.lost_count) || 0;
     const lostPremium = Number(stats.lost_premium) || 0;
 
-    function statsQueryArgs(params) {
-      return params;
-    }
+    const agentWise = (agentResult || []).map((a) => ({
+      agentId: a.agent_id,
+      agentName: a.agent_name || "System / Unassigned",
+      agentEmail: a.agent_email || "",
+      eodCount: Number(a.eod_count) || 0,
+      eodPremium: Number(a.eod_premium) || 0,
+      mtdCount: Number(a.mtd_count) || 0,
+      mtdPremium: Number(a.mtd_premium) || 0,
+      ytdCount: Number(a.ytd_count) || 0,
+      ytdPremium: Number(a.ytd_premium) || 0,
+      renewedCount: Number(a.renewed_count) || 0,
+      renewedPremium: Number(a.renewed_premium) || 0,
+      lostCount: Number(a.lost_count) || 0,
+      lostPremium: Number(a.lost_premium) || 0,
+      expiredCount: Number(a.expired_count) || 0,
+      expiredPremium: Number(a.expired_premium) || 0,
+    }));
 
     // 3. Fetch recent uploads
     const uploads = await prisma.uploadedFile.findMany({
@@ -289,6 +361,7 @@ export async function GET(request) {
     return Response.json({
       renewals,
       notifications,
+      agentWise,
       renewalCounts: {
         eodPremium,
         eodCount,
