@@ -202,6 +202,115 @@ export default function AboutPage() {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             50% { transform: translateY(-15px) rotate(1deg); }
         }
+
+        .leadership-section {
+            padding-top: 88px;
+            padding-bottom: 88px;
+            background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+        }
+
+        .leadership-card {
+            display: grid !important;
+            grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+            align-items: center;
+            gap: 48px;
+            padding: 38px;
+            border-radius: 22px;
+            background: #ffffff;
+            border: 0;
+            box-shadow: 0 22px 56px rgba(3, 22, 56, 0.07);
+        }
+
+        .leadership-photo-wrap {
+            width: 100%;
+            max-width: 360px;
+            justify-self: center;
+        }
+
+        .leadership-photo {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 999px;
+            padding: 4px;
+            background: linear-gradient(145deg, #ffffff 0%, #f2f6fc 48%, #dfe7f2 100%);
+            border: 1px solid rgba(3, 22, 56, 0.08);
+            box-shadow:
+                0 18px 38px rgba(3, 22, 56, 0.1),
+                inset 0 2px 3px rgba(255, 255, 255, 0.95),
+                inset 0 -2px 4px rgba(3, 22, 56, 0.1);
+        }
+
+        .leadership-photo img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            border-radius: inherit;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.92);
+        }
+
+        .leadership-photo::after {
+            content: "";
+            position: absolute;
+            inset: 4px;
+            pointer-events: none;
+            border-radius: inherit;
+            box-shadow:
+                inset 0 0 0 1px rgba(255, 255, 255, 0.86),
+                inset 0 -10px 22px rgba(3, 22, 56, 0.08);
+        }
+
+        .leadership-copy {
+            max-width: 760px;
+        }
+
+        .leadership-copy p {
+            max-width: 70ch;
+        }
+
+        .leadership-badge {
+            margin-bottom: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .leadership-section {
+                padding-top: 64px;
+                padding-bottom: 64px;
+            }
+
+            .leadership-card {
+                grid-template-columns: 1fr;
+                gap: 28px;
+                padding: 24px;
+            }
+
+            .leadership-photo-wrap {
+                max-width: 320px;
+            }
+
+            .leadership-copy {
+                text-align: center;
+                align-items: center !important;
+            }
+
+            .leadership-copy p {
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .leadership-card {
+                padding: 18px;
+                border-radius: 18px;
+            }
+
+            .leadership-photo-wrap {
+                max-width: 260px;
+            }
+        }
       `,
         }}
       />
@@ -402,7 +511,7 @@ export default function AboutPage() {
           </section>
 
           {/* Our Leadership Section */}
-          <section className="py-24 bg-background">
+          <section className="leadership-section bg-background">
             <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
               <div className="text-center mb-16 reveal">
                 <h2 className="font-headline-lg text-headline-lg text-primary mb-4 text-[32px] font-bold">
@@ -417,23 +526,23 @@ export default function AboutPage() {
                 {LEADERSHIP.map((leader) => (
                   <div
                     key={leader.name}
-                    className="glass-card rounded-3xl p-8 md:p-12 border border-outline-variant/20 flex flex-col lg:flex-row gap-12 items-center reveal"
+                    className="leadership-card reveal"
                   >
                     {/* Leader Image */}
-                    <div className="w-full lg:w-1/3 flex justify-center">
-                      <div className="relative rounded-2xl overflow-hidden border border-outline-variant/30 shadow-lg group max-w-[320px] aspect-square w-full bg-surface-container-low">
+                    <div className="leadership-photo-wrap">
+                      <div className="leadership-photo group">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={leader.image}
                           alt={leader.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          className="transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
                     </div>
 
                     {/* Leader Copy */}
-                    <div className="w-full lg:w-2/3 flex flex-col justify-center text-left items-start">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[11px] mb-4 w-fit">
+                    <div className="leadership-copy w-full flex flex-col justify-center text-left items-start">
+                      <div className="leadership-badge inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[11px] w-fit">
                         {leader.education}
                       </div>
                       <h3 className="font-headline-lg text-primary text-[28px] font-bold mb-1">
