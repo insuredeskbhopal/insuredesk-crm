@@ -214,7 +214,7 @@ export default function ServicesPage() {
                   CERTIFIED CONSULTING IN INDIA
                 </div>
                 <h1 className="font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold max-w-3xl">
-                  <span className="whitespace-nowrap">BimaHeadquarter</span> <span className="text-secondary">Services Hub</span>
+                  <span className="whitespace-nowrap">BIMAHEADQUARTER</span> <span className="text-secondary">Services Hub</span>
                 </h1>
                 <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl text-[18px]">
                   Providing independent coverage engineering, claim settlement advocacy, and corporate risk
@@ -236,7 +236,7 @@ export default function ServicesPage() {
                 <h2>Choose the coverage path that fits your risk.</h2>
                 <p>
                   Every service includes guidance on policy structure, insurer coordination, documentation,
-                  and claim-readiness from the BimaHeadquarter team.
+                  and claim-readiness from the <span className="whitespace-nowrap">BIMAHEADQUARTER</span> team.
                 </p>
               </div>
 
