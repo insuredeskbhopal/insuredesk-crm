@@ -511,7 +511,7 @@ export default function RootPage() {
                 <div className="hero-stats-container">
                   <div className="hero-stat-col">
                     <span className="hero-stat-value" id="partners-counter" suppressHydrationWarning={true}>
-                      +1
+                      +10
                     </span>
                     <span className="hero-stat-label">Partner Insurers</span>
                   </div>
@@ -524,33 +524,6 @@ export default function RootPage() {
                     <span className="hero-stat-label">Consultation</span>
                   </div>
                 </div>
-                <script dangerouslySetInnerHTML={{ __html: `
-                  (function initCounter() {
-                    function startAnimation() {
-                      const el = document.getElementById('partners-counter');
-                      if (!el) return;
-                      let count = 1;
-                      const target = 10;
-                      const duration = 1200;
-                      const stepTime = Math.floor(duration / target);
-                      
-                      const timer = setInterval(function() {
-                        count++;
-                        if (count >= target) {
-                          el.textContent = '+' + target;
-                          clearInterval(timer);
-                        } else {
-                          el.textContent = '+' + count;
-                        }
-                      }, stepTime);
-                    }
-                    if (document.readyState === 'complete') {
-                      setTimeout(startAnimation, 500);
-                    } else {
-                      window.addEventListener('load', () => setTimeout(startAnimation, 500));
-                    }
-                  })();
-                ` }} />
               </div>
             </div>
           </header>

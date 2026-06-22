@@ -59,6 +59,27 @@ export default function LandingEffects() {
       card.addEventListener("mousemove", handleMouseMove);
     });
 
+    // Partner Insurers counter animation
+    let counterTimer;
+    const counterEl = document.getElementById("partners-counter");
+    if (counterEl) {
+      let count = 1;
+      const target = 10;
+      counterEl.textContent = "+1";
+      const duration = 1000;
+      const stepTime = Math.floor(duration / target);
+      
+      counterTimer = window.setInterval(() => {
+        count++;
+        if (count >= target) {
+          counterEl.textContent = "+" + target;
+          window.clearInterval(counterTimer);
+        } else {
+          counterEl.textContent = "+" + count;
+        }
+      }, stepTime);
+    }
+
     return () => {
       document.body.classList.remove("landing-page");
       revealObserver.disconnect();
@@ -69,6 +90,9 @@ export default function LandingEffects() {
       glassCards.forEach((card) => {
         card.removeEventListener("mousemove", handleMouseMove);
       });
+      if (counterTimer) {
+        window.clearInterval(counterTimer);
+      }
     };
   }, []);
 
