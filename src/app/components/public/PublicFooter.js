@@ -20,6 +20,7 @@ const quickLinks = [
   ["Services", "/services"],
   ["About", "/about"],
   ["Blog", "/blog"],
+  ["FAQ", "/faq"],
   ["Contact", "/contact"],
 ];
 
@@ -109,6 +110,7 @@ export default function PublicFooter() {
           <div>
             <Link href="/privacy-policy">Privacy</Link>
             <Link href="/terms-and-conditions">Terms</Link>
+            <Link href="/faq">FAQ</Link>
           </div>
         </div>
       </div>

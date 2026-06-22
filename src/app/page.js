@@ -359,9 +359,132 @@ export default function RootPage() {
         .animate-slow-spin {
             animation: slow-spin 180s linear infinite;
         }
+        .hero-brand-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(28, 108, 57, 0.08) !important;
+            color: #1c6c39 !important;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            border: 1px solid rgba(28, 108, 57, 0.12);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 24px;
+        }
+        .hero-brand-pill .material-symbols-outlined {
+            color: #1c6c39 !important;
+            font-size: 16px;
+        }
+        .hero-stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            row-gap: 20px;
+            column-gap: 40px;
+            margin-top: 48px;
+            width: 100%;
+            justify-content: flex-start;
+        }
+        .hero-stat-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            position: relative;
+        }
+        .hero-stat-col:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            right: -20px;
+            top: 10%;
+            height: 80%;
+            width: 1px;
+            background-color: #c5c6cf;
+        }
+        .hero-stat-value {
+            font-size: 30px;
+            font-weight: 700;
+            color: #031638 !important;
+            line-height: 1.1;
+        }
+        .partners-counter-wrapper {
+            display: inline-block;
+            height: 1.1em;
+            line-height: 1.1em;
+            overflow: hidden;
+            vertical-align: bottom;
+        }
+        .partners-counter-strip {
+            display: inline-flex;
+            flex-direction: column;
+            transform: translateY(0);
+            transition: transform 1.5s cubic-bezier(0.1, 0.8, 0.3, 1);
+        }
+        .partners-counter-strip.animate {
+            transform: translateY(-90%);
+        }
+        .partners-counter-strip span {
+            height: 1.1em;
+            line-height: 1.1em;
+            display: block;
+        }
+        .hero-stat-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #5c5d66 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 6px;
+            line-height: 1.2;
+        }
+        @media (max-width: 640px) {
+            .hero-stats-container {
+                column-gap: 32px;
+            }
+            .hero-stat-col:not(:last-child)::after {
+                right: -16px;
+            }
+            .hero-stat-value {
+                font-size: 24px;
+            }
+            .hero-stat-label {
+                font-size: 11px;
+            }
+        }
+        @media (max-width: 480px) {
+            .hero-stats-container {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .hero-stat-col {
+                border-left: 2px solid #c5c6cf;
+                padding-left: 12px;
+                padding-right: 0;
+            }
+            .hero-stat-col:not(:last-child)::after {
+                display: none;
+            }
+        }
+        .typing-headline {
+            text-align: left !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+        }
+        .typing-line {
+            display: block !important;
+            text-align: left !important;
+            margin-left: 0 !important;
+            margin-right: auto !important;
+            width: fit-content !important;
+        }
       `,
         }}
       />
+
       <LandingEffects />
 
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
@@ -372,30 +495,26 @@ export default function RootPage() {
             id="hero"
           >
             <div className="max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
-              <div className="hero-content flex flex-col items-center lg:items-start text-center lg:text-left justify-center max-w-[680px]">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[12px] mb-6">
+              <div className="hero-content flex flex-col items-start text-left justify-center max-w-[680px]">
+                <div className="hero-brand-pill">
                   <span
-                    className="material-symbols-outlined text-[16px]"
+                    className="material-symbols-outlined"
                     style={{ fontVariationSettings: "'FILL' 1" }}
                   >
                     verified
                   </span>
-                  BY INSUREDESK IMF PVT LTD
+                  A Brand of InsureDesk IMF Private Limited
                 </div>
-                <h1 className="typing-headline font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold text-center lg:text-left">
-                  <span className="typing-line typing-line-one">Your Trusted Insurance &amp;</span>
+                <h1 className="typing-headline font-display-lg text-display-lg text-primary mb-6 leading-tight text-[40px] md:text-[48px] font-bold text-left">
+                  <span className="typing-line typing-line-one">Insurance Consulting &amp;</span>
                   <span className="typing-line typing-line-two">
-                    <span className="text-secondary">Claim Consulting</span> Partner
+                    <span className="text-secondary">Claim Assistance</span> Across India
                   </span>
                 </h1>
-                <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-center lg:text-left">
-                  Helping Individuals &amp; Businesses Choose the Right Insurance
-                  <br className="hidden lg:inline" />
-                  with Expert Claim Assistance. We navigate the complexity
-                  <br className="hidden lg:inline" />
-                  so you don't have to.
+                <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-left">
+                  BIMAHEADQUARTER helps individuals, families, businesses, warehouses, transporters, and institutions make informed insurance decisions with professional consulting and claim support. Headquartered in Bhopal, we assist clients across India with motor, health, life, marine, warehouse, and commercial insurance solutions.
                 </p>
-                <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+                <div className="flex flex-wrap gap-4 justify-start">
                   <a
                     href="#solutions"
                     className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all border-0 min-h-0 text-[14px] inline-block text-center"
@@ -409,34 +528,48 @@ export default function RootPage() {
                     Claim Assistance
                   </a>
                 </div>
-                <div className="hero-stats mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-8 grayscale opacity-70">
-                  <div className="hero-stat flex flex-col">
-                    <span className="typing-stat typing-stat-value font-headline-md text-headline-md text-primary text-[24px] font-bold">
-                      10+
+                <div className="hero-stats-container">
+                  <div className="hero-stat-col">
+                    <span className="hero-stat-value partners-counter-wrapper" suppressHydrationWarning={true}>
+                      <span className="partners-counter-strip" id="partners-counter" suppressHydrationWarning={true}>
+                        <span>1+</span>
+                        <span>2+</span>
+                        <span>3+</span>
+                        <span>4+</span>
+                        <span>5+</span>
+                        <span>6+</span>
+                        <span>7+</span>
+                        <span>8+</span>
+                        <span>9+</span>
+                        <span>10+</span>
+                      </span>
                     </span>
-                    <span className="typing-stat typing-stat-label font-label-md text-[12px] uppercase tracking-wider">
-                      Partners
-                    </span>
+                    <span className="hero-stat-label">Partner Insurers</span>
                   </div>
-                  <div className="w-px h-10 bg-outline-variant"></div>
-                  <div className="hero-stat flex flex-col">
-                    <span className="typing-stat typing-stat-value font-headline-md text-headline-md text-primary text-[24px] font-bold">
-                      24/7
-                    </span>
-                    <span className="typing-stat typing-stat-label font-label-md text-[12px] uppercase tracking-wider">
-                      Support
-                    </span>
+                  <div className="hero-stat-col">
+                    <span className="hero-stat-value">Claims</span>
+                    <span className="hero-stat-label">Assistance</span>
                   </div>
-                  <div className="w-px h-10 bg-outline-variant"></div>
-                  <div className="hero-stat flex flex-col">
-                    <span className="typing-stat typing-stat-value font-headline-md text-headline-md text-primary text-[24px] font-bold">
-                      100%
-                    </span>
-                    <span className="typing-stat typing-stat-label font-label-md text-[12px] uppercase tracking-wider">
-                      Trusted
-                    </span>
+                  <div className="hero-stat-col">
+                    <span className="hero-stat-value">Expert</span>
+                    <span className="hero-stat-label">Consultation</span>
                   </div>
                 </div>
+                <script dangerouslySetInnerHTML={{ __html: `
+                  (function initCounter() {
+                    function startAnimation() {
+                      const el = document.getElementById('partners-counter');
+                      if (el) {
+                        el.classList.add('animate');
+                      }
+                    }
+                    if (document.readyState === 'complete') {
+                      setTimeout(startAnimation, 500);
+                    } else {
+                      window.addEventListener('load', () => setTimeout(startAnimation, 500));
+                    }
+                  })();
+                ` }} />
               </div>
             </div>
           </header>
@@ -639,11 +772,10 @@ export default function RootPage() {
               <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 reveal">
                 <div className="max-w-xl">
                   <h2 className="font-headline-lg text-headline-lg text-primary mb-4 text-[32px] font-bold">
-                    Why BIMAHEADQUARTER is Your Best Bet
+                    BIMAHEADQUARTER At a Glance
                   </h2>
                   <p className="font-body-lg text-body-lg text-on-surface-variant text-[18px]">
-                    We don't just sell policies; we build long-term relationships through advocacy and
-                    expertise.
+                    Insurance consulting and claims advocacy backed by InsureDesk IMF Private Limited.
                   </p>
                 </div>
                 <a
@@ -654,90 +786,50 @@ export default function RootPage() {
                 </a>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-                <div className="md:col-span-2 glass-card p-10 rounded-3xl flex flex-col justify-between reveal border border-outline-variant/20">
+                <div className="glass-card p-10 rounded-3xl flex flex-col justify-between reveal border border-outline-variant/20">
                   <div>
-                    <span className="material-symbols-outlined text-secondary text-[48px] mb-6">
-                      compare_arrows
+                    <span className="material-symbols-outlined text-secondary text-[40px] mb-6">
+                      shield
                     </span>
-                    <h3 className="font-headline-lg text-headline-lg text-primary mb-4 text-[32px] font-bold">
-                      Unbiased Comparison
+                    <h3 className="font-headline-md text-headline-md text-primary mb-3 font-semibold text-[24px]">
+                      Brand &amp; Support
                     </h3>
-                    <p className="font-body-lg text-body-lg text-on-surface-variant max-w-md text-[18px]">
-                      Access 10+ premium insurance partners on a single platform. We help you compare
-                      premiums, features, and claim settlement ratios fairly.
+                    <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
+                      BIMAHEADQUARTER is a customer-facing insurance consulting and claim assistance brand of InsureDesk IMF Private Limited. We help clients understand policy options, documentation, renewals, and claim communication with insurers.
                     </p>
-                  </div>
-                  <div className="mt-12 flex flex-wrap gap-4">
-                    <div className="bg-white/50 px-4 py-2 rounded-lg text-sm font-label-md border border-white">
-                      Zero Hidden Costs
-                    </div>
-                    <div className="bg-white/50 px-4 py-2 rounded-lg text-sm font-label-md border border-white">
-                      Transparent Advice
-                    </div>
-                    <div className="bg-white/50 px-4 py-2 rounded-lg text-sm font-label-md border border-white">
-                      Real-time Quotes
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-primary p-10 rounded-3xl text-on-primary flex flex-col justify-between shadow-2xl reveal border border-primary/20">
-                  <span className="material-symbols-outlined text-secondary-fixed text-secondary text-[48px] mb-6">
-                    support_agent
-                  </span>
-                  <div>
-                    <h3 className="font-headline-lg text-headline-lg mb-4 text-[32px] font-bold text-white">
-                      24/7 Expert Claim Support
-                    </h3>
-                    <p className="font-body-md text-body-md opacity-80 mb-8 text-[16px] text-white/80">
-                      From documentation to settlement, our experts are by your side at your time of need.
-                    </p>
-                    <a
-                      href="#cta-banner"
-                      className="w-full py-4 bg-secondary text-white rounded-xl font-label-md hover:bg-secondary/90 transition-all border-0 min-h-0 text-[14px] inline-block text-center"
-                    >
-                      Get Support Now
-                    </a>
                   </div>
                 </div>
                 <div
-                  className="glass-card p-10 rounded-3xl reveal border border-outline-variant/20"
+                  className="glass-card p-10 rounded-3xl flex flex-col justify-between reveal border border-outline-variant/20"
                   style={{ transitionDelay: "0.1s" }}
                 >
-                  <span className="material-symbols-outlined text-secondary text-[40px] mb-6">
-                    assignment_turned_in
-                  </span>
-                  <h3 className="font-headline-md text-headline-md text-primary mb-3 font-semibold text-[24px]">
-                    Customized Plans
-                  </h3>
-                  <p className="text-body-md text-on-surface-variant text-[16px]">
-                    Every business and individual is unique. We tailor policies to fit your specific risk
-                    profile.
-                  </p>
+                  <div>
+                    <span className="material-symbols-outlined text-secondary text-[40px] mb-6">
+                      share_location
+                    </span>
+                    <h3 className="font-headline-md text-headline-md text-primary mb-3 font-semibold text-[24px]">
+                      Office &amp; Reach
+                    </h3>
+                    <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
+                      Based in Bhopal, we assist individuals, families, businesses, warehouses, transporters, and institutions across India through consultation, documentation support, and claim follow-up coordination.
+                    </p>
+                  </div>
                 </div>
                 <div
-                  className="glass-card p-10 rounded-3xl reveal border border-outline-variant/20"
+                  className="glass-card p-10 rounded-3xl flex flex-col justify-between reveal border border-outline-variant/20"
                   style={{ transitionDelay: "0.2s" }}
                 >
-                  <span className="material-symbols-outlined text-secondary text-[40px] mb-6">
-                    psychology
-                  </span>
-                  <h3 className="font-headline-md text-headline-md text-primary mb-3 font-semibold text-[24px]">
-                    Expert Consultation
-                  </h3>
-                  <p className="text-body-md text-on-surface-variant text-[16px]">
-                    Deep industry insights to help you understand the fine print and avoid policy traps.
-                  </p>
-                </div>
-                <div
-                  className="glass-card p-10 rounded-3xl reveal border border-outline-variant/20"
-                  style={{ transitionDelay: "0.3s" }}
-                >
-                  <span className="material-symbols-outlined text-secondary text-[40px] mb-6">groups</span>
-                  <h3 className="font-headline-md text-headline-md text-primary mb-3 font-semibold text-[24px]">
-                    Institutional Trust
-                  </h3>
-                  <p className="text-body-md text-on-surface-variant text-[16px]">
-                    Backed by InsureDesk IMF Pvt Ltd, ensuring corporate-grade compliance and reliability.
-                  </p>
+                  <div>
+                    <span className="material-symbols-outlined text-secondary text-[40px] mb-6">
+                      category
+                    </span>
+                    <h3 className="font-headline-md text-headline-md text-primary mb-3 font-semibold text-[24px]">
+                      Insurance Areas
+                    </h3>
+                    <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
+                      Our team supports motor, health, life, fire, marine, warehouse, commercial, group insurance, renewals, endorsements, and claim assistance.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -820,124 +912,7 @@ export default function RootPage() {
             </div>
           </section>
 
-          {/* Testimonials Section */}
-          <section className="py-24 bg-surface-container-highest/20 overflow-hidden border-t border-b border-outline-variant/10">
-            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-              <div className="text-center mb-16 reveal">
-                <h2 className="font-headline-lg text-headline-lg text-primary text-[32px] font-bold">
-                  Voices of Satisfaction
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-                <div
-                  className="glass-card p-10 rounded-3xl italic reveal border border-outline-variant/20"
-                  style={{ transitionDelay: "0.1s" }}
-                >
-                  <div className="flex text-secondary mb-6">
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                  </div>
-                  <p className="font-body-lg text-body-lg text-on-surface mb-8 text-[18px]">
-                    "BIMAHEADQUARTER helped our manufacturing firm save 25% on our commercial insurance
-                    premiums while actually increasing our coverage scope. Their claim assistance is
-                    unparalleled."
-                  </p>
-                  <div className="flex items-center gap-4 not-italic">
-                    <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center font-bold text-secondary text-sm">
-                      RK
-                    </div>
-                    <div>
-                      <p className="font-label-md text-primary font-bold text-[14px]">Rajesh Kumar</p>
-                      <p className="text-[12px] text-on-surface-variant">Director, RK Industries</p>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="glass-card p-10 rounded-3xl italic reveal border border-outline-variant/20"
-                  style={{ transitionDelay: "0.2s" }}
-                >
-                  <div className="flex text-secondary mb-6">
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                  </div>
-                  <p className="font-body-lg text-body-lg text-on-surface mb-8 text-[18px]">
-                    "When my health claim was rejected initially, BIMAHEADQUARTER stepped in. They reviewed
-                    the docs, found the error, and got it approved in 48 hours. Lifesavers!"
-                  </p>
-                  <div className="flex items-center gap-4 not-italic">
-                    <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center font-bold text-secondary text-sm">
-                      SS
-                    </div>
-                    <div>
-                      <p className="font-label-md text-primary font-bold text-[14px]">Sneha Sharma</p>
-                      <p className="text-[12px] text-on-surface-variant">Individual Policyholder</p>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="glass-card p-10 rounded-3xl italic reveal border border-outline-variant/20"
-                  style={{ transitionDelay: "0.3s" }}
-                >
-                  <div className="flex text-secondary mb-6">
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                  </div>
-                  <p className="font-body-lg text-body-lg text-on-surface mb-8 text-[18px]">
-                    "Managing fleet insurance was a headache until we partnered with them. Their portal and
-                    consultants make everything seamless. Highly professional team."
-                  </p>
-                  <div className="flex items-center gap-4 not-italic">
-                    <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center font-bold text-secondary text-sm">
-                      VS
-                    </div>
-                    <div>
-                      <p className="font-label-md text-primary font-bold text-[14px]">Vikram Singh</p>
-                      <p className="text-[12px] text-on-surface-variant">Logistics Manager</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+
 
           {/* FAQ Section */}
           <section

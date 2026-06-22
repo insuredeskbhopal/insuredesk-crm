@@ -53,6 +53,22 @@ export default function PublicHeader() {
 
   return (
     <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @media (min-width: 1181px) {
+            .landing-shell .landing-premium-nav .landing-nav-links {
+                margin-left: -90px !important;
+            }
+        }
+        @media (min-width: 901px) and (max-width: 1180px) {
+            .landing-shell .landing-premium-nav .landing-nav-links {
+                margin-left: -50px !important;
+            }
+        }
+      `,
+        }}
+      />
       <nav
         className={`landing-premium-nav ${scrolled ? "scrolled" : ""}`}
         id="mainNav"

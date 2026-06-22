@@ -5,7 +5,7 @@ export const SITE_NAME = "BIMAHEADQUARTER";
 export const SITE_TITLE = "BIMAHEADQUARTER | Insurance & Claim Consulting";
 
 export const SITE_DESCRIPTION =
-  "BIMAHEADQUARTER helps individuals and businesses compare insurance options, choose suitable coverage, and get expert claim assistance through InsureDesk IMF Pvt Ltd.";
+  "BIMAHEADQUARTER helps individuals, families, businesses, warehouses, transporters, and institutions make informed insurance decisions with professional consulting and claim support. Headquartered in Bhopal, we assist clients across India with motor, health, life, marine, warehouse, and commercial insurance solutions.";
 
 export const SITE_KEYWORDS = [
   "BIMAHEADQUARTER",
@@ -352,6 +352,22 @@ export const MARKETING_PAGES = [
       "Expert advice and detailed guides on navigating insurance claims, policy renewals, and risk management.",
     priority: 0.85,
     changeFrequency: "weekly",
+  },
+  {
+    path: "/faq",
+    title: "Frequently Asked Questions (FAQ) | BIMAHEADQUARTER",
+    description:
+      "Find answers to common questions about BIMAHEADQUARTER (InsureDesk IMF Pvt Ltd), claims assistance, policy renewals, and commercial risk advisory.",
+    heading: "Frequently Asked Questions",
+    summary:
+      "Clear, professional answers about our advisory process, claim representation, compliance, and policies.",
+    sections: [
+      "IRDAI registered Insurance Marketing Firm licensed through InsureDesk IMF Pvt Ltd.",
+      "Expert claims assistance and representation support for personal and commercial losses.",
+      "Data privacy, secure document management, and regular policy renewal support.",
+    ],
+    priority: 0.8,
+    changeFrequency: "monthly",
   },
 ];
 
