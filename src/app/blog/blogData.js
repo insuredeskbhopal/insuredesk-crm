@@ -1,3 +1,8 @@
+/**
+ * DEPRECATED: Do not import or use this file directly.
+ * All blog posts have been migrated to the database.
+ * This file is retained solely as a backup / reference.
+ */
 export const BLOG_POSTS = [
   {
     slug: "how-to-settle-motor-insurance-claims",

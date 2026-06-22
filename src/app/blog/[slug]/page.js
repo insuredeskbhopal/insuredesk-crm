@@ -4,22 +4,21 @@ import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import BlogSidebarForm from "../BlogSidebarForm";
-import { BLOG_POSTS } from "../blogData";
-import { SITE_NAME, SITE_URL } from "@/lib/seo/site";
+import { getBlogPostBySlug, getBlogPostSlugs, getRelatedPosts } from "@/lib/db/blog";
+import { BUSINESS_DETAILS, SITE_NAME, SITE_URL } from "@/lib/seo/site";
+import { SERVICES } from "@/content/services";
 
 const stripHtml = (value) => value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 
 // Generate static params for Next.js build prerendering
-export function generateStaticParams() {
-  return BLOG_POSTS.map((post) => ({
-    slug: post.slug,
-  }));
+export async function generateStaticParams() {
+  return await getBlogPostSlugs();
 }
 
 // Generate dynamic SEO metadata
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const post = BLOG_POSTS.find((p) => p.slug === slug);
+  const post = await getBlogPostBySlug(slug);
 
   if (!post) {
     return {};
@@ -48,58 +47,29 @@ export async function generateMetadata({ params }) {
 }
 
 const getRelatedServicesForBlog = (category) => {
-  const allServices = [
-    {
-      title: "Claims Assistance",
-      desc: "Get expert representation, documentation support, and claims advocacy across India.",
-      slug: "claims-assistance",
-    },
-    {
-      title: "Policy Renewals",
-      desc: "Track and renew your active policies across leading insurers in India seamlessly.",
-      slug: "policy-renewals",
-    },
-    {
-      title: "Health Insurance Consulting",
-      desc: "Compare individual, family, senior citizen, and corporate health insurance plans.",
-      slug: "health-insurance",
-    },
-    {
-      title: "Motor & Fleet Insurance",
-      desc: "Compare own damage, third-party, add-on, and renewal options for personal and commercial vehicles.",
-      slug: "motor-insurance",
-    },
-    {
-      title: "Commercial Insurance",
-      desc: "Protect corporate assets, stock, liability, operations, and commercial risk.",
-      slug: "commercial-insurance",
-    },
-    {
-      title: "Risk Advisory Services",
-      desc: "Identify coverage gaps, audit asset values, and implement risk control strategies.",
-      slug: "risk-advisory",
-    },
-    {
-      title: "Warehouse Insurance",
-      desc: "Protect warehouse stock, inventory, burglary risks, and storage liabilities.",
-      slug: "warehouse-insurance",
-    },
-  ];
+  const getBySlug = (slug) => {
+    const s = SERVICES.find((item) => item.slug === slug);
+    return {
+      title: s ? s.fullName || s.title : "",
+      desc: s ? s.desc : "",
+      slug: slug,
+    };
+  };
 
   if (category === "Claims") {
-    return [allServices[0], allServices[1]];
+    return [getBySlug("claims-assistance"), getBySlug("policy-renewals")];
   } else if (category === "Renewals") {
-    return [allServices[1], allServices[3]];
+    return [getBySlug("policy-renewals"), getBySlug("motor-insurance")];
   } else if (category === "Business Risk") {
-    return [allServices[4], allServices[5]];
+    return [getBySlug("commercial-insurance"), getBySlug("risk-advisory")];
   } else {
-    return [allServices[2], allServices[3]];
+    return [getBySlug("health-insurance"), getBySlug("motor-insurance")];
   }
 };
 
 export default async function BlogPostPage({ params }) {
   const { slug } = await params;
-  const post = BLOG_POSTS.find((p) => p.slug === slug);
+  const post = await getBlogPostBySlug(slug);
 
   if (!post) {
     notFound();
@@ -108,7 +78,7 @@ export default async function BlogPostPage({ params }) {
   const relatedServices = getRelatedServicesForBlog(post.category);
 
   // Find related articles (same category or others, excluding current)
-  const relatedPosts = BLOG_POSTS.filter((p) => p.slug !== post.slug).slice(0, 2);
+  const relatedPosts = await getRelatedPosts(post.slug, post.category, 2);
 
   const postUrl = `${SITE_URL}/blog/${post.slug}`;
 
@@ -285,9 +255,9 @@ export default async function BlogPostPage({ params }) {
                   <span className="material-symbols-outlined">help_center</span>
                   <h4>Need Immediate Assistance?</h4>
                   <p>Speak directly to our licensed support specialists for urgent motor or health claims.</p>
-                  <a href="tel:+918818889660">
+                  <a href={`tel:${BUSINESS_DETAILS.phoneHref}`}>
                     <span className="material-symbols-outlined">call</span>
-                    Call 88188 89660
+                    Call {BUSINESS_DETAILS.phone}
                   </a>
                 </div>
               </aside>

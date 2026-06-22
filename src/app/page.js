@@ -6,6 +6,8 @@ import LandingEffects from "@/app/components/LandingEffects";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import { INSURER_LOGOS } from "@/app/components/brand/logoAssets";
 import { BUSINESS_DETAILS, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/seo/site";
+import { HOMEPAGE_CONTENT } from "@/content/homepage";
+import { SERVICES } from "@/content/services";
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -25,14 +27,7 @@ const structuredData = {
       knowsAbout: [
         "Insurance consulting",
         "Claim assistance",
-        "Motor insurance",
-        "Health insurance",
-        "Life insurance",
-        "Business insurance",
-        "Warehouse insurance",
-        "Fire insurance",
-        "Marine insurance",
-        "Cyber insurance",
+        ...SERVICES.map((s) => s.title),
       ],
     },
     {
@@ -88,19 +83,11 @@ const structuredData = {
       hasOfferCatalog: {
         "@type": "OfferCatalog",
         name: "Insurance Consulting Services",
-        itemListElement: [
-          "Motor insurance consulting",
-          "Health insurance consulting",
-          "Life insurance consulting",
-          "Business insurance consulting",
-          "Warehouse insurance consulting",
-          "Claim documentation support",
-          "Claim settlement assistance",
-        ].map((name) => ({
+        itemListElement: SERVICES.map((s) => ({
           "@type": "Offer",
           itemOffered: {
             "@type": "Service",
-            name,
+            name: s.fullName || s.title,
           },
         })),
       },
@@ -108,32 +95,14 @@ const structuredData = {
     {
       "@type": "FAQPage",
       "@id": `${SITE_URL}/#faq`,
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "Is the first consultation really free?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes. BIMAHEADQUARTER provides an initial policy review and consultation at no cost to help clients understand coverage gaps and potential savings.",
-          },
+      mainEntity: HOMEPAGE_CONTENT.faqSection.faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.answer,
         },
-        {
-          "@type": "Question",
-          name: "How many insurance partners does BIMAHEADQUARTER work with?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "BIMAHEADQUARTER works with over 10 leading national insurance companies to help clients compare policy options and features.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Can BIMAHEADQUARTER help with a claim for a policy bought elsewhere?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes. Claim Assistance is available for policyholders even when the policy was not originally purchased through BIMAHEADQUARTER. Fees may apply for third-party advocacy.",
-          },
-        },
-      ],
+      })),
     },
     {
       "@type": "BreadcrumbList",
@@ -229,136 +198,10 @@ export default function RootPage() {
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .parallax-bg {
-            will-change: transform;
-        }
-
-        .parallax-item {
-            will-change: transform;
-        }
-
-        nav#mainNav.scrolled {
-            height: 72px !important;
-            background: linear-gradient(90deg, #F8FAFC 0%, #EEF4FF 50%, #F8FAFC 100%) !important;
-            box-shadow: none !important;
-            border: none !important;
-        }
-
-        /* Specificity bypass to override body * color: #000000 !important from globals.css */
-        .landing-page,
-        .landing-page * {
-            color: inherit !important;
-        }
-
-        .landing-page svg,
-        .landing-page [class*="icon"],
-        .landing-page [class^="icon"],
-        .landing-page .icon {
-            color: inherit !important;
-        }
-
-        /* Reset and override globals.css button styles on the landing page */
-        .landing-page button {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 8px !important;
-            transition: all 0.2s !important;
-            box-shadow: none !important;
-            animation: none !important;
-            transform: none !important;
-            border-radius: 0.75rem !important; /* xl */
-            font-weight: 600 !important;
-        }
-
-        /* Hero / Header Primary Buttons */
-        .landing-page button.bg-primary {
-            background-color: #031638 !important;
-            color: #ffffff !important;
-        }
-        .landing-page button.bg-primary:hover {
-            background-color: #0d2554 !important;
-            color: #ffffff !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 10px 15px -3px rgba(3, 22, 56, 0.3) !important;
-        }
-
-        /* Hero Secondary Button */
-        .landing-page button.border-secondary {
-            border: 2px solid #1c6c39 !important;
-            color: #1c6c39 !important;
-            background-color: transparent !important;
-        }
-        .landing-page button.border-secondary:hover {
-            background-color: rgba(28, 108, 57, 0.05) !important;
-            color: #1c6c39 !important;
-        }
-
-        /* CTA/Secondary Support Buttons */
-        .landing-page button.bg-secondary {
-            background-color: #1c6c39 !important;
-            color: #ffffff !important;
-        }
-        .landing-page button.bg-secondary:hover {
-            background-color: #16552d !important;
-            color: #ffffff !important;
-        }
-
-        /* White Buttons */
-        .landing-page button.bg-white {
-            background-color: #ffffff !important;
-            color: #031638 !important;
-        }
-        .landing-page button.bg-white:hover {
-            background-color: #f1f5f9 !important;
-            color: #031638 !important;
-            transform: scale(1.05) !important;
-        }
-
-        /* Nav links and layout buttons as transparent */
-        .landing-page button.bg-transparent,
-        .landing-page button.p-2 {
-            background-color: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            color: inherit !important;
-        }
-        .landing-page button.p-2:hover {
-            background-color: rgba(229, 238, 255, 0.5) !important;
-        }
-
-        /* Clean CSS Resets specific to the landing page */
-        .landing-page body,
-        .landing-page .bg-background {
-            background-color: #f8f9ff !important;
-            color: #0b1c30 !important;
-        }
-
-        .landing-page h1,
-        .landing-page h2,
-        .landing-page h3,
-        .landing-page h4,
-        .landing-page h5 {
-            color: #031638 !important;
-        }
-
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-15px) rotate(1deg); }
-        }
         .preserve-3d {
             transform-style: preserve-3d;
         }
-        @keyframes slow-spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .animate-slow-spin {
-            animation: slow-spin 180s linear infinite;
-        }
+        
         .hero-brand-pill {
             display: inline-flex;
             align-items: center;
@@ -511,46 +354,44 @@ export default function RootPage() {
                   >
                     verified
                   </span>
-                  A Brand of InsureDesk IMF Private Limited
+                  {HOMEPAGE_CONTENT.hero.brandBadge}
                 </div>
                 <h1 className="typing-headline font-display-lg text-display-lg text-primary mb-6 leading-tight text-[40px] md:text-[48px] font-bold text-left">
-                  <span className="typing-line typing-line-one">Insurance Consulting &amp;</span>
+                  <span className="typing-line typing-line-one">{HOMEPAGE_CONTENT.hero.headlineLine1}</span>
                   <span className="typing-line typing-line-two">
-                    <span className="text-secondary">Claim Assistance</span> Across India
+                    <span className="text-secondary">{HOMEPAGE_CONTENT.hero.headlineLine2Highlight}</span>{HOMEPAGE_CONTENT.hero.headlineLine2Tail}
                   </span>
                 </h1>
                 <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-left">
-                  BIMAHEADQUARTER helps individuals, families, businesses, warehouses, transporters, and institutions make informed insurance decisions with professional consulting and claim support. Headquartered in Bhopal, we assist clients across India with motor, health, life, marine, warehouse, and commercial insurance solutions.
+                  {HOMEPAGE_CONTENT.hero.description}
                 </p>
                 <div className="flex flex-wrap gap-4 justify-start">
                   <a
                     href="#solutions"
                     className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all border-0 min-h-0 text-[14px] inline-block text-center"
                   >
-                    Get Insurance Consultation
+                    {HOMEPAGE_CONTENT.hero.ctaConsultationText}
                   </a>
                   <a
                     href="#process"
                     className="px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all bg-transparent min-h-0 text-[14px] inline-block text-center"
                   >
-                    Claim Assistance
+                    {HOMEPAGE_CONTENT.hero.ctaClaimsText}
                   </a>
                 </div>
                 <div className="hero-stats-container">
-                  <div className="hero-stat-col">
-                    <span className="hero-stat-value" id="partners-counter" suppressHydrationWarning={true}>
-                      +10
-                    </span>
-                    <span className="hero-stat-label">Partner Insurers</span>
-                  </div>
-                  <div className="hero-stat-col">
-                    <span className="hero-stat-value">Claims</span>
-                    <span className="hero-stat-label">Assistance</span>
-                  </div>
-                  <div className="hero-stat-col">
-                    <span className="hero-stat-value">Expert</span>
-                    <span className="hero-stat-label">Consultation</span>
-                  </div>
+                  {HOMEPAGE_CONTENT.hero.stats.map((stat, idx) => (
+                    <div className="hero-stat-col" key={idx}>
+                      <span
+                        className="hero-stat-value"
+                        id={stat.id}
+                        suppressHydrationWarning={stat.suppressHydrationWarning || stat.isCounter}
+                      >
+                        {stat.value}
+                      </span>
+                      <span className="hero-stat-label">{stat.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -563,7 +404,7 @@ export default function RootPage() {
           >
             <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-2 text-center reveal">
               <p className="font-label-md text-on-surface-variant uppercase tracking-widest text-[12px] font-semibold">
-                Authorized Partners with Leading Insurers
+                {HOMEPAGE_CONTENT.partnerSliderTitle}
               </p>
             </div>
             <div className="flex partner-slider whitespace-nowrap gap-10 items-center">
@@ -585,103 +426,24 @@ export default function RootPage() {
               <div className="services-heading text-center reveal">
                 <div className="services-kicker">
                   <div></div>
-                  <span>OUR SERVICES</span>
+                  <span>{HOMEPAGE_CONTENT.servicesSection.kicker}</span>
                   <div></div>
                 </div>
                 <h2 className="font-headline-lg font-extrabold tracking-tight">
-                  Comprehensive Insurance Solutions
+                  {HOMEPAGE_CONTENT.servicesSection.heading}
                 </h2>
                 <p className="font-body-lg">
-                  From personal protection to large-scale industrial risks,
-                  <br />
-                  we provide tailored consultancy for every need.
+                  {HOMEPAGE_CONTENT.servicesSection.subheading.split("\n").map((line, lIdx) => (
+                    <span key={lIdx}>
+                      {line}
+                      {lIdx < HOMEPAGE_CONTENT.servicesSection.subheading.split("\n").length - 1 && <br />}
+                    </span>
+                  ))}
                 </p>
               </div>
 
               <div className="services-grid">
-                {[
-                  {
-                    title: "Motor Insurance",
-                    icon: "directions_car",
-                    desc: "Comprehensive coverage and claims support for personal cars, two-wheelers, and commercial logistics fleets.",
-                    image:
-                      "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=600&q=80",
-                    route: "/services/motor-insurance",
-                    delay: "0.1s",
-                  },
-                  {
-                    title: "Life Insurance",
-                    icon: "family_restroom",
-                    desc: "Ensure your family's financial security with term life plans, savings strategies, and Keyman business protection.",
-                    image:
-                      "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=600&q=80",
-                    route: "/services/life-insurance",
-                    delay: "0.2s",
-                  },
-                  {
-                    title: "Warehouse Insurance",
-                    icon: "inventory_2",
-                    desc: "Protect warehouse stock, inventory, burglary risks, and storage liabilities from fire and hazards.",
-                    image:
-                      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80",
-                    route: "/services/warehouse-insurance",
-                    delay: "0.3s",
-                  },
-                  {
-                    title: "Marine Insurance",
-                    icon: "directions_boat",
-                    desc: "Insure goods in transit via road, rail, air, or sea cargo policies and annual movement exposure.",
-                    image:
-                      "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=600&q=80",
-                    route: "/services/marine-insurance",
-                    delay: "0.4s",
-                  },
-                  {
-                    title: "Commercial Insurance",
-                    icon: "apartment",
-                    desc: "Robust risk management, corporate asset protection, and liability covers for business establishments.",
-                    image:
-                      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
-                    route: "/services/commercial-insurance",
-                    delay: "0.5s",
-                  },
-                  {
-                    title: "General Insurance",
-                    icon: "shield",
-                    desc: "Protect your personal assets, property, households, and miscellaneous exposures with curated insurance consulting.",
-                    image:
-                      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80",
-                    route: "/services/general-insurance",
-                    delay: "0.6s",
-                  },
-                  {
-                    title: "Health Insurance",
-                    icon: "medical_services",
-                    desc: "Secure cashless hospitalization, critical illness support, and family health protection plans with expert guidance.",
-                    image:
-                      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80",
-                    route: "/services/health-insurance",
-                    delay: "0.7s",
-                  },
-                  {
-                    title: "Policy Renewals",
-                    icon: "sync",
-                    desc: "Track and renew active policies across leading insurers without missing renewal dates or coverage continuity.",
-                    image:
-                      "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=600&q=80",
-                    route: "/services/policy-renewals",
-                    delay: "0.8s",
-                  },
-                  {
-                    title: "Claims Assistance",
-                    icon: "gavel",
-                    desc: "Get independent claim documentation reviews, insurer coordination, and settlement follow-up support.",
-                    image:
-                      "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80",
-                    route: "/services/claims-assistance",
-                    delay: "0.9s",
-                  },
-                ].map((service, index) => (
+                {SERVICES.filter((s) => s.slug !== "risk-advisory").map((service, index) => (
                   <Link
                     key={index}
                     href={service.route}
@@ -721,29 +483,20 @@ export default function RootPage() {
 
               {/* Trust Indicator Bar */}
               <div className="services-trust-bar reveal">
-                <div className="services-trust-item">
-                  <span className="material-symbols-outlined">shield</span>
-                  <div>
-                    <h3>Trusted Expertise</h3>
-                    <p>Years of experience you can rely on.</p>
-                  </div>
-                </div>
-                <div className="services-trust-divider"></div>
-                <div className="services-trust-item">
-                  <span className="material-symbols-outlined">person_add</span>
-                  <div>
-                    <h3>Client First Approach</h3>
-                    <p>Solutions tailored to your needs.</p>
-                  </div>
-                </div>
-                <div className="services-trust-divider"></div>
-                <div className="services-trust-item">
-                  <span className="material-symbols-outlined">verified</span>
-                  <div>
-                    <h3>Reliable Support</h3>
-                    <p>We're here when you need us most.</p>
-                  </div>
-                </div>
+                {HOMEPAGE_CONTENT.trustBar.map((item, idx) => (
+                  <span key={idx} className="contents">
+                    <div className="services-trust-item">
+                      <span className="material-symbols-outlined">{item.icon}</span>
+                      <div>
+                        <h3>{item.title}</h3>
+                        <p>{item.desc}</p>
+                      </div>
+                    </div>
+                    {idx < HOMEPAGE_CONTENT.trustBar.length - 1 && (
+                      <div className="services-trust-divider"></div>
+                    )}
+                  </span>
+                ))}
               </div>
             </div>
           </section>
@@ -754,65 +507,39 @@ export default function RootPage() {
               <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 reveal">
                 <div className="max-w-xl">
                   <h2 className="font-headline-lg text-headline-lg text-primary mb-4 text-[32px] font-bold">
-                    BIMAHEADQUARTER At a Glance
+                    {HOMEPAGE_CONTENT.whyChooseUs.heading}
                   </h2>
                   <p className="font-body-lg text-body-lg text-on-surface-variant text-[18px]">
-                    Insurance consulting and claims advocacy backed by InsureDesk IMF Private Limited.
+                    {HOMEPAGE_CONTENT.whyChooseUs.subheading}
                   </p>
                 </div>
                 <a
                   href="#process"
                   className="font-label-md text-label-md text-primary inline-flex items-center gap-2 px-6 py-3 border border-outline rounded-xl hover:bg-white transition-all bg-transparent min-h-0 text-[14px]"
                 >
-                  View Our Process
+                  {HOMEPAGE_CONTENT.whyChooseUs.ctaText}
                 </a>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-                <div className="glass-card p-10 rounded-3xl flex flex-col justify-between reveal border border-outline-variant/20">
-                  <div>
-                    <span className="material-symbols-outlined text-secondary text-[40px] mb-6">
-                      shield
-                    </span>
-                    <h3 className="font-headline-md text-headline-md text-primary mb-3 font-semibold text-[24px]">
-                      Brand &amp; Support
-                    </h3>
-                    <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
-                      BIMAHEADQUARTER is a customer-facing insurance consulting and claim assistance brand of InsureDesk IMF Private Limited. We help clients understand policy options, documentation, renewals, and claim communication with insurers.
-                    </p>
+                {HOMEPAGE_CONTENT.whyChooseUs.cards.map((card, index) => (
+                  <div
+                    key={index}
+                    className="glass-card p-10 rounded-3xl flex flex-col justify-between reveal border border-outline-variant/20"
+                    style={{ transitionDelay: `${index * 0.1}s` }}
+                  >
+                    <div>
+                      <span className="material-symbols-outlined text-secondary text-[40px] mb-6">
+                        {card.icon}
+                      </span>
+                      <h3 className="font-headline-md text-headline-md text-primary mb-3 font-semibold text-[24px]">
+                        {card.title}
+                      </h3>
+                      <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
+                        {card.desc}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div
-                  className="glass-card p-10 rounded-3xl flex flex-col justify-between reveal border border-outline-variant/20"
-                  style={{ transitionDelay: "0.1s" }}
-                >
-                  <div>
-                    <span className="material-symbols-outlined text-secondary text-[40px] mb-6">
-                      share_location
-                    </span>
-                    <h3 className="font-headline-md text-headline-md text-primary mb-3 font-semibold text-[24px]">
-                      Office &amp; Reach
-                    </h3>
-                    <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
-                      Based in Bhopal, we assist individuals, families, businesses, warehouses, transporters, and institutions across India through consultation, documentation support, and claim follow-up coordination.
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className="glass-card p-10 rounded-3xl flex flex-col justify-between reveal border border-outline-variant/20"
-                  style={{ transitionDelay: "0.2s" }}
-                >
-                  <div>
-                    <span className="material-symbols-outlined text-secondary text-[40px] mb-6">
-                      category
-                    </span>
-                    <h3 className="font-headline-md text-headline-md text-primary mb-3 font-semibold text-[24px]">
-                      Insurance Areas
-                    </h3>
-                    <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
-                      Our team supports motor, health, life, fire, marine, warehouse, commercial, group insurance, renewals, endorsements, and claim assistance.
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </section>
@@ -834,67 +561,38 @@ export default function RootPage() {
               </div>
               <div className="order-1 lg:order-2 reveal" style={{ transitionDelay: "0.2s" }}>
                 <span className="font-label-md text-secondary uppercase tracking-widest text-[12px] mb-4 block font-semibold">
-                  Stress-Free Settlements
+                  {HOMEPAGE_CONTENT.processSection.kicker}
                 </span>
                 <h2 className="font-headline-lg text-headline-lg text-primary mb-8 text-[32px] font-bold">
-                  Claim Assistance Excellence
+                  {HOMEPAGE_CONTENT.processSection.heading}
                 </h2>
                 <div className="space-y-8">
-                  <div className="flex gap-6 group">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold transition-transform group-hover:scale-110">
-                      1
+                  {HOMEPAGE_CONTENT.processSection.steps.map((step) => (
+                    <div className="flex gap-6 group" key={step.number}>
+                      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold transition-transform group-hover:scale-110">
+                        {step.number}
+                      </div>
+                      <div>
+                        <h3 className="font-headline-md text-[18px] text-primary mb-1 font-semibold">
+                          {step.title}
+                        </h3>
+                        <p className="text-body-md text-on-surface-variant">
+                          {step.desc}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-headline-md text-[18px] text-primary mb-1 font-semibold">
-                        Incident Reporting
-                      </h3>
-                      <p className="text-body-md text-on-surface-variant">
-                        Notify us immediately after an incident. Our response team is available 24/7 to guide
-                        you.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-6 group">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold transition-transform group-hover:scale-110">
-                      2
-                    </div>
-                    <div>
-                      <h3 className="font-headline-md text-[18px] text-primary mb-1 font-semibold">
-                        Documentation Support
-                      </h3>
-                      <p className="text-body-md text-on-surface-variant">
-                        Our experts help you gather and verify all required documents to ensure no technical
-                        rejections.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-6 group">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold transition-transform group-hover:scale-110">
-                      3
-                    </div>
-                    <div>
-                      <h3 className="font-headline-md text-[18px] text-primary mb-1 font-semibold">
-                        Advocacy &amp; Settlement
-                      </h3>
-                      <p className="text-body-md text-on-surface-variant">
-                        We represent you to the insurer, handling all negotiations until the claim is
-                        successfully settled.
-                      </p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
                 <a
                   href="#cta-banner"
                   className="mt-12 px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md hover:shadow-lg transition-all reveal border-0 min-h-0 text-[14px] inline-block text-center"
                   style={{ transitionDelay: "0.4s" }}
                 >
-                  Start a Claim Request
+                  {HOMEPAGE_CONTENT.processSection.ctaText}
                 </a>
               </div>
             </div>
           </section>
-
-
 
           {/* FAQ Section */}
           <section
@@ -904,67 +602,39 @@ export default function RootPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
               <div className="reveal">
                 <h2 className="font-headline-lg text-headline-lg text-primary mb-6 text-[32px] font-bold">
-                  Common Inquiries
+                  {HOMEPAGE_CONTENT.faqSection.heading}
                 </h2>
                 <p className="text-body-lg text-on-surface-variant mb-8 text-[18px]">
-                  Can't find what you're looking for? Reach out to our dedicated support team directly.
+                  {HOMEPAGE_CONTENT.faqSection.subheading}
                 </p>
                 <a
                   href="#cta-banner"
                   className="text-secondary font-label-md inline-flex items-center gap-2 hover:underline group bg-transparent p-0 min-h-0 shadow-none hover:translate-y-0 text-[14px]"
                 >
-                  Contact Support{" "}
+                  {HOMEPAGE_CONTENT.faqSection.ctaText}{" "}
                   <span className="material-symbols-outlined group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform">
                     arrow_outward
                   </span>
                 </a>
               </div>
               <div className="lg:col-span-2 space-y-4">
-                <details
-                  className="group bg-white rounded-2xl p-6 border border-outline-variant/30 open:shadow-md transition-all reveal"
-                  style={{ transitionDelay: "0.1s" }}
-                >
-                  <summary className="list-none cursor-pointer flex justify-between items-center font-headline-md text-[18px] text-primary font-semibold">
-                    Is the first consultation really free?
-                    <span className="material-symbols-outlined group-open:rotate-180 transition-transform">
-                      expand_more
-                    </span>
-                  </summary>
-                  <p className="mt-4 text-body-md text-on-surface-variant">
-                    Yes, we provide initial policy review and consultation at no cost to help you understand
-                    your current coverage gaps and potential savings.
-                  </p>
-                </details>
-                <details
-                  className="group bg-white rounded-2xl p-6 border border-outline-variant/30 open:shadow-md transition-all reveal"
-                  style={{ transitionDelay: "0.2s" }}
-                >
-                  <summary className="list-none cursor-pointer flex justify-between items-center font-headline-md text-[18px] text-primary font-semibold">
-                    How many insurance partners do you work with?
-                    <span className="material-symbols-outlined group-open:rotate-180 transition-transform">
-                      expand_more
-                    </span>
-                  </summary>
-                  <p className="mt-4 text-body-md text-on-surface-variant">
-                    We are authorized partners with over 10 leading national insurance companies, ensuring you
-                    get a wide range of quotes and feature sets.
-                  </p>
-                </details>
-                <details
-                  className="group bg-white rounded-2xl p-6 border border-outline-variant/30 open:shadow-md transition-all reveal"
-                  style={{ transitionDelay: "0.3s" }}
-                >
-                  <summary className="list-none cursor-pointer flex justify-between items-center font-headline-md text-[18px] text-primary font-semibold">
-                    Can you help with a claim for a policy I didn't buy through you?
-                    <span className="material-symbols-outlined group-open:rotate-180 transition-transform">
-                      expand_more
-                    </span>
-                  </summary>
-                  <p className="mt-4 text-body-md text-on-surface-variant">
-                    Absolutely. Our Claim Assistance service is available for all policyholders, regardless of
-                    where the policy was originally purchased. Fees may apply for third-party advocacy.
-                  </p>
-                </details>
+                {HOMEPAGE_CONTENT.faqSection.faqs.map((faq, index) => (
+                  <details
+                    key={index}
+                    className="group bg-white rounded-2xl p-6 border border-outline-variant/30 open:shadow-md transition-all reveal"
+                    style={{ transitionDelay: `${(index + 1) * 0.1}s` }}
+                  >
+                    <summary className="list-none cursor-pointer flex justify-between items-center font-headline-md text-[18px] text-primary font-semibold">
+                      {faq.question}
+                      <span className="material-symbols-outlined group-open:rotate-180 transition-transform">
+                        expand_more
+                      </span>
+                    </summary>
+                    <p className="mt-4 text-body-md text-on-surface-variant">
+                      {faq.answer}
+                    </p>
+                  </details>
+                ))}
               </div>
             </div>
           </section>
@@ -980,14 +650,13 @@ export default function RootPage() {
                 <div className="absolute bottom-0 right-0 w-64 h-64 bg-secondary rounded-full blur-[100px]"></div>
               </div>
               <h2 className="font-display-lg text-display-lg mb-6 entry-anim text-white text-[48px] font-bold">
-                Need Help Choosing Insurance?
+                {HOMEPAGE_CONTENT.ctaBanner.heading}
               </h2>
               <p
                 className="font-body-lg text-body-lg mb-10 opacity-80 max-w-2xl mx-auto entry-anim text-white/80 text-[18px]"
                 style={{ animationDelay: "0.2s" }}
               >
-                Get a personalized risk assessment and expert recommendations today from our certified
-                advisors.
+                {HOMEPAGE_CONTENT.ctaBanner.subheading}
               </p>
               <div
                 className="flex flex-wrap justify-center gap-6 entry-anim"
@@ -997,14 +666,14 @@ export default function RootPage() {
                   href={`tel:${BUSINESS_DETAILS.phoneHref}`}
                   className="px-10 py-5 bg-secondary text-white rounded-xl font-label-md text-label-md flex items-center gap-3 hover:scale-105 transition-all text-[14px]"
                 >
-                  <span className="material-symbols-outlined">call</span> Call Now:
+                  <span className="material-symbols-outlined">call</span> {HOMEPAGE_CONTENT.ctaBanner.callCtaText}{" "}
                   {BUSINESS_DETAILS.phone}
                 </a>
                 <Link
                   href="/contact"
                   className="px-10 py-5 bg-white text-primary rounded-xl font-label-md text-label-md flex items-center gap-3 hover:scale-105 transition-all border-0 min-h-0 text-[14px]"
                 >
-                  Schedule Consultation
+                  {HOMEPAGE_CONTENT.ctaBanner.scheduleCtaText}
                 </Link>
               </div>
             </div>
