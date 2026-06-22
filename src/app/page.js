@@ -410,27 +410,7 @@ export default function RootPage() {
             color: #031638 !important;
             line-height: 1.1;
         }
-        .partners-counter-wrapper {
-            display: inline-block;
-            height: 1.1em;
-            line-height: 1.1em;
-            overflow: hidden;
-            vertical-align: bottom;
-        }
-        .partners-counter-strip {
-            display: inline-flex;
-            flex-direction: column;
-            transform: translateY(0);
-            transition: transform 1.5s cubic-bezier(0.1, 0.8, 0.3, 1);
-        }
-        .partners-counter-strip.animate {
-            transform: translateY(-90%);
-        }
-        .partners-counter-strip span {
-            height: 1.1em;
-            line-height: 1.1em;
-            display: block;
-        }
+
         .hero-stat-label {
             font-size: 12px;
             font-weight: 700;
@@ -530,19 +510,8 @@ export default function RootPage() {
                 </div>
                 <div className="hero-stats-container">
                   <div className="hero-stat-col">
-                    <span className="hero-stat-value partners-counter-wrapper" suppressHydrationWarning={true}>
-                      <span className="partners-counter-strip" id="partners-counter" suppressHydrationWarning={true}>
-                        <span>1+</span>
-                        <span>2+</span>
-                        <span>3+</span>
-                        <span>4+</span>
-                        <span>5+</span>
-                        <span>6+</span>
-                        <span>7+</span>
-                        <span>8+</span>
-                        <span>9+</span>
-                        <span>10+</span>
-                      </span>
+                    <span className="hero-stat-value" id="partners-counter" suppressHydrationWarning={true}>
+                      +1
                     </span>
                     <span className="hero-stat-label">Partner Insurers</span>
                   </div>
@@ -559,9 +528,21 @@ export default function RootPage() {
                   (function initCounter() {
                     function startAnimation() {
                       const el = document.getElementById('partners-counter');
-                      if (el) {
-                        el.classList.add('animate');
-                      }
+                      if (!el) return;
+                      let count = 1;
+                      const target = 10;
+                      const duration = 1200;
+                      const stepTime = Math.floor(duration / target);
+                      
+                      const timer = setInterval(function() {
+                        count++;
+                        if (count >= target) {
+                          el.textContent = '+' + target;
+                          clearInterval(timer);
+                        } else {
+                          el.textContent = '+' + count;
+                        }
+                      }, stepTime);
                     }
                     if (document.readyState === 'complete') {
                       setTimeout(startAnimation, 500);
