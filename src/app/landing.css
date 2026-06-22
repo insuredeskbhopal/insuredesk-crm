@@ -5883,18 +5883,13 @@ body:has(.seo-page) {
   /* Bento Grid Mobile Layout */
   .landing-shell #solutions + section .grid {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: 1fr !important;
     gap: 16px !important;
   }
 
   .landing-shell #solutions + section .grid > div:nth-child(1),
   .landing-shell #solutions + section .grid > div:nth-child(2),
-  .landing-shell #solutions + section .grid > div:nth-child(5) {
-    grid-column: span 2 !important;
-  }
-
-  .landing-shell #solutions + section .grid > div:nth-child(3),
-  .landing-shell #solutions + section .grid > div:nth-child(4) {
+  .landing-shell #solutions + section .grid > div:nth-child(3) {
     grid-column: span 1 !important;
   }
 
@@ -5910,31 +5905,10 @@ body:has(.seo-page) {
     margin-bottom: 12px !important;
   }
 
-  /* Make header and paragraphs compact on half-width cards */
-  .landing-shell #solutions + section .grid > div:nth-child(3) h3,
-  .landing-shell #solutions + section .grid > div:nth-child(4) h3 {
-    font-size: 16px !important;
-    font-weight: 700 !important;
-    margin-bottom: 8px !important;
-  }
-
-  .landing-shell #solutions + section .grid > div:nth-child(3) p,
-  .landing-shell #solutions + section .grid > div:nth-child(4) p {
-    font-size: 13px !important;
-    line-height: 1.5 !important;
-    margin-bottom: 0 !important;
-  }
-
-  .landing-shell #solutions + section .grid > div:nth-child(3) .material-symbols-outlined,
-  .landing-shell #solutions + section .grid > div:nth-child(4) .material-symbols-outlined {
-    font-size: 32px !important;
-    margin-bottom: 12px !important;
-  }
-
-  /* Compact padding & typography on full-width bento cards */
+  /* Typography on all bento cards */
   .landing-shell #solutions + section .grid > div:nth-child(1) h3,
   .landing-shell #solutions + section .grid > div:nth-child(2) h3,
-  .landing-shell #solutions + section .grid > div:nth-child(5) h3 {
+  .landing-shell #solutions + section .grid > div:nth-child(3) h3 {
     font-size: 22px !important;
     font-weight: 700 !important;
     line-height: 1.25 !important;
@@ -5943,7 +5917,7 @@ body:has(.seo-page) {
 
   .landing-shell #solutions + section .grid > div:nth-child(1) p,
   .landing-shell #solutions + section .grid > div:nth-child(2) p,
-  .landing-shell #solutions + section .grid > div:nth-child(5) p {
+  .landing-shell #solutions + section .grid > div:nth-child(3) p {
     font-size: 15px !important;
     line-height: 1.55 !important;
     margin-bottom: 0 !important;
