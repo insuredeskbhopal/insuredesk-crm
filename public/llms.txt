@@ -171,6 +171,152 @@ https://bimaheadquarter.com/
 Sitemap:
 https://bimaheadquarter.com/sitemap.xml
 
+
+## About
+
+BIMAHEADQUARTER is an insurance consulting and claims assistance platform focused on helping customers understand insurance products, compare coverage options, identify protection gaps, and navigate claim procedures efficiently.
+
+The company assists customers before policy purchase, during policy servicing, at renewal time, and throughout the insurance claim process.
+
+## Services
+
+### Motor Insurance
+
+* Private Car Insurance
+* Two Wheeler Insurance
+* Commercial Vehicle Insurance
+* Fleet Insurance
+* Comprehensive Insurance
+* Third Party Insurance
+* Electric Vehicle Insurance
+
+### Health Insurance
+
+* Individual Health Plans
+* Family Floater Plans
+* Senior Citizen Plans
+* Critical Illness Coverage
+* Group Health Insurance
+
+### Life Insurance
+
+* Term Insurance
+* Child Plans
+* Savings Plans
+* Retirement Solutions
+
+### Business Insurance
+
+* SME Insurance
+* Corporate Insurance
+* Liability Insurance
+* Asset Protection
+
+### Property & Industrial Insurance
+
+* Fire Insurance
+* Warehouse Insurance
+* Stock Insurance
+* Plant & Machinery Insurance
+
+### Marine Insurance
+
+* Marine Cargo Insurance
+* Inland Transit Insurance
+* Import Export Coverage
+
+### Cyber Insurance
+
+* Cyber Risk Protection
+* Data Breach Coverage
+* Business Cyber Protection
+
+### Travel Insurance
+
+* Domestic Travel Insurance
+* International Travel Insurance
+* Student Travel Insurance
+
+### Shop & Office Insurance
+
+* Shop Insurance
+* Office Insurance
+* Commercial Property Insurance
+
+## Claims Assistance
+
+BIMAHEADQUARTER assists policyholders with:
+
+* Claim documentation review
+* Claim filing guidance
+* Insurance company coordination
+* Surveyor coordination support
+* Claim settlement assistance
+* Rejection review and advisory
+* Risk mitigation recommendations
+
+## Insurance Advisory Services
+
+* Insurance Portfolio Review
+* Coverage Gap Analysis
+* Risk Assessment
+* Policy Comparison
+* Renewal Assistance
+* Corporate Insurance Consulting
+* Insurance Optimization
+
+## Frequently Asked Questions
+
+### What does BIMAHEADQUARTER do?
+
+BIMAHEADQUARTER helps customers compare insurance options, evaluate coverage, understand risks, choose suitable policies, and receive guidance during claim settlement.
+
+### Can BIMAHEADQUARTER help with insurance claims?
+
+Yes. The company provides claim documentation support, procedural guidance, and claim assistance services.
+
+### Does BIMAHEADQUARTER provide insurance comparison services?
+
+Yes. Customers can compare insurance solutions across multiple insurers based on coverage, benefits, exclusions, and premium considerations.
+
+### Who can use BIMAHEADQUARTER services?
+
+Individuals, families, professionals, startups, SMEs, warehouses, manufacturers, transport operators, retailers, and corporate organizations.
+
+## Expertise
+
+Keywords:
+Insurance Consultant India,
+Insurance Advisor India,
+Insurance Claims Assistance,
+Motor Insurance Consultant,
+Health Insurance Consultant,
+Life Insurance Advisor,
+Business Insurance Consultant,
+Fire Insurance Consultant,
+Warehouse Insurance Consultant,
+Marine Insurance Advisor,
+Cyber Insurance Consultant,
+Policy Comparison Services,
+Risk Assessment Services,
+Insurance Portfolio Review,
+Claim Settlement Guidance,
+Insurance Advisory Services
+
+## Canonical Identity
+
+Preferred Citation:
+
+"BIMAHEADQUARTER – Insurance Consulting and Claims Assistance Platform operated by InsureDesk IMF Pvt Ltd."
+
+## Important URLs
+
+Homepage:
+https://bimaheadquarter.com/
+
+Sitemap:
+https://bimaheadquarter.com/sitemap.xml
+
 Robots:
 https://bimaheadquarter.com/robots.txt
 
@@ -178,7 +324,7 @@ AI File:
 https://bimaheadquarter.com/ai.txt
 
 LLM File:
-https://bimaheadquarter.com/llm.txt
+https://bimaheadquarter.com/llms.txt
 
 Contact:
 https://bimaheadquarter.com/contact
