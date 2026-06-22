@@ -427,6 +427,10 @@ export default function RootPage() {
                 column-gap: 24px !important;
                 row-gap: 8px !important;
                 margin-top: 32px !important;
+                justify-content: center !important;
+                width: 100% !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
             }
             .hero-stat-col:not(:last-child)::after {
                 right: -12px !important;
