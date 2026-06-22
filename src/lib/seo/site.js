@@ -8,17 +8,16 @@ export const SITE_DESCRIPTION =
   "BIMAHEADQUARTER helps individuals, families, businesses, warehouses, transporters, and institutions make informed insurance decisions with professional consulting and claim support. Headquartered in Bhopal, we assist clients across India with motor, health, life, marine, warehouse, and commercial insurance solutions.";
 
 export const BRAND_KEYWORDS = [
-  "BIMAHEADQUARTER",
-  "Bima Headquarter",
   "BimaHeadquarter",
-  "Bima Headquarter Bhopal",
-  "BIMAHEADQUARTER Bhopal",
-  "BimaHeadquarter India",
-  "InsureDesk",
-  "InsureDesk IMF",
-  "InsureDesk IMF Private Limited",
-  "Insuredesk insurance",
+  "Bima Headquarter",
+  "Bima Headquarters",
+  "Bima HQ",
+  "BimaHQ",
+  "BHQ",
+  "BHQ Insurance",
   "BimaHeadquarter by InsureDesk",
+  "InsureDesk IMF Private Limited",
+  "InsureDesk",
 ];
 
 export const CORE_SERVICE_KEYWORDS = [
@@ -32,7 +31,6 @@ export const CORE_SERVICE_KEYWORDS = [
   "policy renewal assistance",
   "risk advisory services",
   "commercial insurance consultant",
-  "business insurance consultant",
 ];
 
 export const INSURANCE_TYPE_KEYWORDS = [
@@ -51,16 +49,9 @@ export const INSURANCE_TYPE_KEYWORDS = [
   "godown insurance",
   "stock insurance",
   "marine insurance",
-  "marine cargo insurance",
   "transit insurance",
   "business insurance",
   "commercial insurance",
-  "cyber insurance",
-  "travel insurance",
-  "shop insurance",
-  "office insurance",
-  "factory insurance",
-  "plant and machinery insurance",
 ];
 
 export const CLAIM_ISSUE_KEYWORDS = [
@@ -76,10 +67,10 @@ export const CLAIM_ISSUE_KEYWORDS = [
   "marine cargo claim assistance",
   "commercial insurance claim help",
   "claim settlement consultant",
-  "claim follow up support",
   "claim documentation assistance",
   "rejected claim review",
   "insurance dispute assistance",
+  "car insurance claim rejected",
 ];
 
 export const PERSONA_KEYWORDS = [
@@ -91,20 +82,14 @@ export const PERSONA_KEYWORDS = [
   "insurance for factory owner",
   "insurance for MSME",
   "insurance for startup",
-  "insurance for contractor",
   "insurance for family",
   "insurance for parents",
-  "insurance for employees",
-  "insurance for import export business",
 ];
 
 export const INDUSTRY_KEYWORDS = [
   "warehouse stock insurance",
   "cold storage insurance",
   "rice mill insurance",
-  "dal mill insurance",
-  "factory insurance",
-  "manufacturing insurance",
   "logistics insurance",
   "transport business insurance",
   "fleet risk insurance",
@@ -112,9 +97,9 @@ export const INDUSTRY_KEYWORDS = [
   "retail shop insurance",
   "office package policy",
   "MSME insurance",
-  "commercial property insurance",
-  "burglary insurance for warehouse",
-  "fire insurance for stock",
+  "factory insurance",
+  "manufacturing insurance",
+  "godown stock protection",
 ];
 
 export const QUESTION_KEYWORDS = [
@@ -129,6 +114,7 @@ export const QUESTION_KEYWORDS = [
   "what is fire insurance for warehouse",
   "what is marine cargo insurance",
   "how to claim commercial vehicle insurance",
+  "insurance claim rejected what to do",
 ];
 
 export const LOCATION_KEYWORDS = [
@@ -145,17 +131,10 @@ export const LOCATION_KEYWORDS = [
   "motor insurance Bhopal",
   "health insurance Bhopal",
   "insurance consultant Indore",
-  "insurance consultant Ujjain",
   "insurance consultant Jabalpur",
   "insurance consultant Gwalior",
   "insurance consultant Delhi",
   "insurance consultant Mumbai",
-  "insurance consultant Pune",
-  "insurance consultant Jaipur",
-  "insurance consultant Ahmedabad",
-  "insurance consultant Chennai",
-  "insurance consultant Bangalore",
-  "insurance consultant Hyderabad",
 ];
 
 export const INSURER_KEYWORDS = [
@@ -201,7 +180,7 @@ export const LONG_TAIL_KEYWORDS = [
   "professional claim assistance for commercial losses",
 ];
 
-export const SITE_KEYWORDS = [
+export const SITE_KEYWORDS = [...new Set([
   ...BRAND_KEYWORDS,
   ...CORE_SERVICE_KEYWORDS,
   ...INSURANCE_TYPE_KEYWORDS,
@@ -213,7 +192,8 @@ export const SITE_KEYWORDS = [
   ...INSURER_KEYWORDS,
   ...COMMERCIAL_INTENT_KEYWORDS,
   ...LONG_TAIL_KEYWORDS,
-];
+])];
+
 
 
 export const MARKETING_PAGES = [
