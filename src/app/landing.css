@@ -5577,6 +5577,8 @@ body:has(.seo-page) {
 
   .landing-shell .landing-mobile-menu-toggle {
     display: inline-flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
     align-items: center !important;
     justify-content: center !important;
     justify-self: end !important;
@@ -6322,6 +6324,10 @@ body:has(.seo-page) {
 
 .landing-shell .landing-mobile-menu-toggle {
   display: none !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  align-items: center !important;
+  justify-content: center !important;
   width: 48px !important;
   min-width: 48px !important;
   padding: 0 !important;
@@ -6340,15 +6346,15 @@ body:has(.seo-page) {
 }
 
 .landing-shell .landing-mobile-menu-toggle span + span {
-  margin-left: -18px !important;
+  margin-left: 0 !important;
 }
 
 .landing-shell .landing-mobile-menu-toggle span:nth-child(1) {
-  transform: translateY(-6px) !important;
+  transform: none !important;
 }
 
 .landing-shell .landing-mobile-menu-toggle span:nth-child(3) {
-  transform: translateY(6px) !important;
+  transform: none !important;
 }
 
 .landing-shell .landing-mobile-menu-backdrop {

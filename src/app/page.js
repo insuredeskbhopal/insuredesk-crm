@@ -433,6 +433,14 @@ export default function RootPage() {
             .hero-stat-label {
                 font-size: 11px;
             }
+            .typing-headline {
+                font-size: 32px !important;
+                line-height: 1.15 !important;
+            }
+            .hero-content p {
+                font-size: 15px !important;
+                line-height: 1.55 !important;
+            }
         }
         @media (max-width: 480px) {
             .hero-stats-container {
@@ -446,6 +454,15 @@ export default function RootPage() {
             }
             .hero-stat-col:not(:last-child)::after {
                 display: none;
+            }
+            .typing-headline {
+                font-size: 28px !important;
+            }
+            .hero-content .flex-wrap {
+                width: 100% !important;
+            }
+            .hero-content .flex-wrap a {
+                width: 100% !important;
             }
         }
         .typing-headline {
