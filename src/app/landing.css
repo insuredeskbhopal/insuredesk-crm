@@ -6032,7 +6032,7 @@ body:has(.seo-page) {
   background: #031638 !important;
 }
 
-.landing-shell #solutions + section .grid > div:nth-child(2) > .material-symbols-outlined {
+.landing-shell #solutions + section .grid > div:nth-child(2) .material-symbols-outlined {
   flex: 0 0 auto !important;
   margin-bottom: 0 !important;
   color: #ffffff !important;
@@ -6092,7 +6092,7 @@ body:has(.seo-page) {
     border-radius: 20px !important;
   }
 
-  .landing-shell #solutions + section .grid > div:nth-child(2) > .material-symbols-outlined {
+  .landing-shell #solutions + section .grid > div:nth-child(2) .material-symbols-outlined {
     font-size: 30px !important;
     margin-bottom: 0 !important;
   }
