@@ -874,3 +874,37 @@ model ClaimDocument {
   @@index([uploadedById])
   @@map("claim_documents")
 }
+
+model BlogPost {
+  id         String        @id @default(uuid()) @db.Uuid
+  slug       String        @unique
+  title      String
+  excerpt    String        @db.Text
+  category   String
+  readTime   String        @map("read_time")
+  date       DateTime      @db.Timestamptz(6)
+  authorName String        @map("author_name")
+  authorRole String        @map("author_role")
+  coverImage String        @map("cover_image")
+  published  Boolean       @default(true)
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  sections   BlogSection[]
+
+  @@index([category])
+  @@index([published, date])
+  @@map("blog_posts")
+}
+
+model BlogSection {
+  id         String   @id @default(uuid()) @db.Uuid
+  blogPostId String   @map("blog_post_id") @db.Uuid
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  type       String
+  text       String?  @db.Text
+  items      Json?
+  order      Int      @default(0)
+
+  @@index([blogPostId, order])
+  @@map("blog_sections")
+}

@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed:setup": "node scripts/seed-master-data.cjs",
+    "seed:blogs": "node scripts/seed-blogs.cjs",
     "db:migrate-saas": "node scripts/migrate-saas.cjs",
     "start": "next start --hostname 127.0.0.1 --port 3000",
     "postinstall": "prisma generate"

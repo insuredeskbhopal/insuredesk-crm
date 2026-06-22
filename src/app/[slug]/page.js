@@ -9,7 +9,12 @@ function findPage(slug) {
 }
 
 export function generateStaticParams() {
-  return MARKETING_PAGES.map((page) => ({
+  return MARKETING_PAGES.filter((page) => {
+    const segments = page.path.split("/").filter(Boolean);
+    const isMultiSegment = segments.length > 1;
+    const isTopLevelFolderRoute = ["/blog", "/services"].includes(page.path);
+    return !isMultiSegment && !isTopLevelFolderRoute;
+  }).map((page) => ({
     slug: page.path.replace("/", ""),
   }));
 }
@@ -127,7 +132,7 @@ export default async function MarketingPage({ params }) {
         </div>
       </section>
       <section className="seo-page-content">
-        {page.sections.map((section) => (
+        {(page.sections || []).map((section) => (
           <article key={section}>
             <p>{section}</p>
           </article>
