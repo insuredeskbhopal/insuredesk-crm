@@ -422,16 +422,22 @@ export default function RootPage() {
         }
         @media (max-width: 640px) {
             .hero-stats-container {
-                column-gap: 32px;
+                display: flex !important;
+                flex-direction: row !important;
+                column-gap: 24px !important;
+                row-gap: 8px !important;
+                margin-top: 32px !important;
             }
             .hero-stat-col:not(:last-child)::after {
-                right: -16px;
+                right: -12px !important;
+                display: block !important;
             }
             .hero-stat-value {
-                font-size: 24px;
+                font-size: 20px !important;
             }
             .hero-stat-label {
-                font-size: 11px;
+                font-size: 10px !important;
+                margin-top: 4px !important;
             }
             .typing-headline {
                 font-size: 32px !important;
@@ -444,16 +450,17 @@ export default function RootPage() {
         }
         @media (max-width: 480px) {
             .hero-stats-container {
-                flex-direction: column;
-                gap: 16px;
-            }
-            .hero-stat-col {
-                border-left: 2px solid #c5c6cf;
-                padding-left: 12px;
-                padding-right: 0;
+                column-gap: 20px !important;
             }
             .hero-stat-col:not(:last-child)::after {
-                display: none;
+                right: -10px !important;
+            }
+            .hero-stat-value {
+                font-size: 18px !important;
+            }
+            .hero-stat-label {
+                font-size: 9px !important;
+                letter-spacing: 0.05em !important;
             }
             .typing-headline {
                 font-size: 28px !important;
