@@ -73,10 +73,10 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
                     <strong>
                       {record.vehicleNumber ||
                         record.registrationNumber ||
-                        (record.riskLocation
-                          ? (record.riskLocation.length > 20
-                              ? record.riskLocation.substring(0, 18) + "..."
-                              : record.riskLocation)
+                        (record.tehsil
+                          ? (record.tehsil.length > 20
+                              ? record.tehsil.substring(0, 18) + "..."
+                              : record.tehsil)
                           : record.policyType || "-")}
                     </strong>
                   </td>

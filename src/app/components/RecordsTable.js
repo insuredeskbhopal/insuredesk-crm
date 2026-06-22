@@ -123,7 +123,7 @@ function renderCell(record, column) {
   let rawValue = record[column.key] || (column.fallbackKey ? record[column.fallbackKey] : "");
   
   if (column.key === "vehicleNumber" && !rawValue) {
-    const fallbackValue = record.riskLocation || record.policyType || "";
+    const fallbackValue = record.tehsil || record.policyType || "";
     if (fallbackValue && fallbackValue.length > 30) {
       const truncated = fallbackValue.substring(0, 27) + "...";
       return <span title={fallbackValue}>{truncated}</span>;
