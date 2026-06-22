@@ -6649,7 +6649,7 @@ body:has(.seo-page) {
 .landing-shell .service-page-hero h1,
 .landing-shell .services-directory-heading h2,
 .landing-shell .service-directory-card h3 {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .landing-shell .service-directory-card {
