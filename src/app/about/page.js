@@ -3,7 +3,7 @@ import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import LandingEffects from "@/app/components/LandingEffects";
 import PublicFooter from "@/app/components/public/PublicFooter";
-import { BUSINESS_DETAILS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo/site";
+import { BUSINESS_DETAILS, LEADERSHIP, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -397,6 +397,75 @@ export default function AboutPage() {
                     </li>
                   </ul>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Our Leadership Section */}
+          <section className="py-24 bg-background">
+            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+              <div className="text-center mb-16 reveal">
+                <h2 className="font-headline-lg text-headline-lg text-primary mb-4 text-[32px] font-bold">
+                  Our Leadership
+                </h2>
+                <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto text-[18px]">
+                  Guided by industry veterans committed to transforming the insurance consulting landscape in India.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-12">
+                {LEADERSHIP.map((leader) => (
+                  <div
+                    key={leader.name}
+                    className="glass-card rounded-3xl p-8 md:p-12 border border-outline-variant/20 flex flex-col lg:flex-row gap-12 items-center reveal"
+                  >
+                    {/* Leader Image */}
+                    <div className="w-full lg:w-1/3 flex justify-center">
+                      <div className="relative rounded-2xl overflow-hidden border border-outline-variant/30 shadow-lg group max-w-[320px] aspect-square w-full bg-surface-container-low">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={leader.image}
+                          alt={leader.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Leader Copy */}
+                    <div className="w-full lg:w-2/3 flex flex-col justify-center text-left items-start">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[11px] mb-4 w-fit">
+                        {leader.education}
+                      </div>
+                      <h3 className="font-headline-lg text-primary text-[28px] font-bold mb-1">
+                        {leader.name}
+                      </h3>
+                      <p className="text-secondary font-semibold text-[16px] mb-6">
+                        {leader.role}, {leader.company}
+                      </p>
+                      <p className="text-on-surface-variant text-[16px] leading-relaxed mb-8">
+                        {leader.bio}
+                      </p>
+                      
+                      {leader.linkedin && (
+                        <a
+                          href={leader.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white hover:bg-primary/90 transition-all rounded-xl w-fit text-[14px] font-bold shadow-md hover:translate-y-[-2px]"
+                        >
+                          <svg
+                            className="w-5 h-5 fill-current"
+                            style={{ width: "20px", height: "20px", minWidth: "20px", flexShrink: 0 }}
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.8v8.37h2.8v-4.67c0-.25.02-.5.1-.68a1.14 1.14 0 0 1 1-.77c.76 0 1 .58 1 1.42v4.7zM6.5 8.37a1.37 1.37 0 1 0 0-2.75 1.37 1.37 0 0 0 0 2.75M8 18.5V10.13H5V18.5z"/>
+                          </svg>
+                          Connect on LinkedIn
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
