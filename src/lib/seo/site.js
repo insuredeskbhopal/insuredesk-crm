@@ -19,5 +19,5 @@ export {
   PUBLIC_ROUTE_PATHS,
 } from "@/content/seo";
 
-export { BUSINESS_DETAILS } from "@/content/business";
+export { BUSINESS_DETAILS, LEADERSHIP } from "@/content/business";
 export { MARKETING_PAGES } from "@/content/marketing";

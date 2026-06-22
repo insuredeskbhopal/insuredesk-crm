@@ -23,3 +23,15 @@ export const BUSINESS_DETAILS = {
   hours: "Monday – Saturday 9:00 AM – 6:00 PM",
   rating: "4.9/5 based on Google Reviews",
 };
+
+export const LEADERSHIP = [
+  {
+    name: "Anand Soni",
+    role: "Founder Director",
+    company: "InsureDesk IMF Pvt Ltd",
+    bio: "Anand Soni is the Founder Director of InsureDesk IMF Private Limited. Under his visionary leadership since 2015, the firm has grown into a trusted name for corporate risk advisory, claims assistance, and customized insurance consulting across India. Aligned with IRDAI guidelines, he has championed policyholder rights and transparency in insurance transactions, helping businesses and individuals secure their assets and claims with absolute confidence.",
+    image: "/Anand Soni.png",
+    linkedin: "https://www.linkedin.com/in/anand-soni-976b7024/",
+    education: "Pune University Alumnus",
+  },
+];
