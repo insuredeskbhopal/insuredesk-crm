@@ -63,7 +63,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : "/not-found", request.url));
   }
 
-  if (isAuthApi || isCronApi) {
+  const isPublicApi = pathname === "/api/contact";
+
+  if (isAuthApi || isCronApi || isPublicApi) {
     return NextResponse.next();
   }
 
