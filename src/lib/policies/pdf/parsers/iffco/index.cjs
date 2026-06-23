@@ -545,9 +545,22 @@ function splitIffcoMakeModel(makeModel = "") {
 
 // Start of extractIffcoWorkmenCompensation (Lines 7574-7647)
 function extractIffcoWorkmenCompensation(text) {
-  if (!/\bIFFCO[-\s]?TOKIO\b/i.test(text) || !/Workmen'?s\s+Compensation/i.test(text)) {
+  // Guard: reject if another insurer is the actual policy issuer
+  if (/Generali\s+Central\s+Insurance/i.test(text) || /Future\s+Generali/i.test(text)) {
     return { documentDetected: false };
   }
+
+  // Require IFFCO-TOKIO AND a strong WC policy signal (not just IMT-28 boilerplate)
+  const hasIffco = /\bIFFCO[-\s]?TOKIO\b/i.test(text);
+  const hasStrongWCSignal =
+    /Workmen'?s\s+Compensation\s+Policy\s+For\s/i.test(text) ||
+    (/Workmen'?s\s+Compensation/i.test(text) &&
+      (/Category\s+of\s+Employee/i.test(text) || /Total\s+Workers/i.test(text) ||
+       /Nature\s+of\s+Work/i.test(text) || /Place\s+of\s+Employment/i.test(text)));
+  if (!hasIffco || !hasStrongWCSignal) {
+    return { documentDetected: false };
+  }
+
 
   const policyNumber = matchGroup(text, /Policy\s+No\s*:?\s*([0-9]+)/i);
   const insuredName =

@@ -13,6 +13,16 @@ function extractGeneraliMotor(text) {
   const premiumBlock = sliceText(text, /INSURED'S DECLARED VALUE/i, /Class of Vehicle/i) || text;
   const vehicle = extractGeneraliVehicle(scheduleBlock);
 
+  // Extract vehicle details from both the table and the transcript
+  const transcriptBlock = sliceText(text, /TRANSCRIPT\/DECLARATION/i, /ENDORSEMENTS/i) || "";
+  const fuelType =
+    matchGroup(transcriptBlock, /\dFuel Type([A-Z]+)/i) ||
+    matchGroup(text, /\dFuel Type([A-Z]+)/i) ||
+    matchGroup(text, /Fuel\s+Type\s*:?\s*([A-Z]+)/i);
+  const variant = cleanHdfcValue(
+    matchGroup(transcriptBlock, /Make and Model of vehicle insured([\s\S]+?)\n\d+Registration/i) || "",
+  ).replace(/\n/g, " ");
+
   return {
     documentDetected: true,
     companyName: normalizeCompanyFromMaster("Generali Central Insurance Company Limited"),
@@ -33,6 +43,8 @@ function extractGeneraliMotor(text) {
     customerMobile: matchGroup(text, /Telephone\s*\(Mob,Off\)\s*:?\s*([0-9Xx*]{8,14})/i),
     customerEmail: matchGroup(text, /Email\s+Id\s*:?\s*([A-Z0-9*._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/i),
     panNumber: matchGroup(text, /(?:^|\n)\s*PAN Number\s*:?\s*([A-Z]{5}\d{4}[A-Z])/i),
+    fuelType: fuelType || "",
+    variant: variant || "",
     vehicleMake: vehicle.make,
     vehicleModel: vehicle.model,
     registrationNumber: vehicle.registrationNumber,
@@ -43,7 +55,7 @@ function extractGeneraliMotor(text) {
     seatingCapacity: vehicle.seatingCapacity,
     manufacturingYear: vehicle.manufacturingYear,
     bodyType: vehicle.bodyType,
-    totalIdv: extractGeneraliTotalIdv(premiumBlock),
+    totalIdv: extractGeneraliTotalIdv(premiumBlock, text),
     geographicalArea: matchGroup(text, /Geographical Area\s*:?\s*([A-Z][A-Z ]{2,40})/i),
     compulsoryDeductible: cleanGeneraliAmount(
       matchGroup(text, /Compulsory Deductible[\s\S]{0,100}?([0-9,]+\.\d{2})\s*\/-/i),
@@ -67,7 +79,9 @@ function extractGeneraliMotor(text) {
     totalPremium: extractGeneraliTotalPremium(text),
     previousPolicyNumber: matchGroup(text, /Previous Policy No\s*:?\s*([A-Z0-9/-]+)/i),
     ncbPercentage:
-      matchGroup(text, /No Claim Discount\s*\((\d{1,2}%)/i) || matchGroup(text, /\bNCB[^\d]*(\d{1,2}%)/i),
+      matchGroup(text, /Renewal NCB %(\d{1,2}%)/i) ||
+      matchGroup(text, /No Claim Discount\s*\((\d{1,2}%)/i) ||
+      matchGroup(text, /\bNCB[^\d]*(\d{1,2}%)/i),
     bankName: extractGeneraliFinancer(text),
     nomineeName: extractGeneraliNominee(text),
     financerName: extractGeneraliFinancer(text),
@@ -150,9 +164,13 @@ function extractGeneraliVehicle(text) {
     seatingCapacity: "",
   };
 
-  const vehicleMatch = text.match(
-    /\b([A-Z]{2}-\d{2}-[A-Z]{1,3}-\d{4}),\s*([A-Z ]+?)(MARUTI SUZUKI|MARUTI|HYUNDAI|HONDA|TATA|MAHINDRA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA)([\s\S]{0,120}?)\n\s*([A-Z0-9]{8,20})([A-Z0-9]{17})/i,
+  // Multi-word makes list (longest first for greedy matching)
+  const MAKES = "MAHINDRA AND MAHINDRA|MARUTI SUZUKI|MARUTI|HYUNDAI|HONDA|TATA MOTORS LTD\\.|TATA|MAHINDRA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA";
+  const vehicleRe = new RegExp(
+    `\\b([A-Z]{2}-\\d{2}-[A-Z]{1,3}-\\d{4}),\\s*([A-Z ]+?)(${MAKES})([\\s\\S]{0,200}?)\n\\s*([A-Z0-9]{8,20})([A-Z0-9]{17})`,
+    "i",
   );
+  const vehicleMatch = text.match(vehicleRe);
   if (vehicleMatch) {
     data.registrationNumber = vehicleMatch[1].trim();
     data.rto = cleanHdfcValue(vehicleMatch[2]);
@@ -160,6 +178,34 @@ function extractGeneraliVehicle(text) {
     data.model = cleanHdfcValue(vehicleMatch[4].replace(/\n/g, " "));
     data.engineNumber = vehicleMatch[5].trim();
     data.chassisNumber = vehicleMatch[6].trim();
+  }
+
+  // Fallback: extract from transcript section which has cleaner labeled fields
+  if (!data.engineNumber || !data.chassisNumber) {
+    data.engineNumber = data.engineNumber || matchGroup(text, /\dEngine No([A-Z0-9]+)/i) || "";
+    data.chassisNumber = data.chassisNumber || matchGroup(text, /\dChassis No([A-Z0-9]+)/i) || "";
+  }
+  if (!data.registrationNumber) {
+    data.registrationNumber = matchGroup(text, /\dRegistration No([A-Z0-9-]+)/i) || "";
+  }
+  if (!data.make || !data.model) {
+    const transcriptMakeModel = cleanHdfcValue(
+      matchGroup(text, /Make and Model of vehicle insured([\s\S]+?)\n\d+Registration/i) || "",
+    ).replace(/\n/g, " ");
+    if (transcriptMakeModel) {
+      // Split make from model using known make names
+      const makeRe = new RegExp(`^(${MAKES})\\s+`, "i");
+      const mm = transcriptMakeModel.match(makeRe);
+      if (mm) {
+        data.make = data.make || cleanHdfcValue(mm[1]);
+        data.model = data.model || cleanHdfcValue(transcriptMakeModel.slice(mm[0].length));
+      } else {
+        data.model = data.model || transcriptMakeModel;
+      }
+    }
+  }
+  if (!data.rto) {
+    data.rto = matchGroup(text, /RTO where vehicle is\/will be registered([A-Z]+)/i) || "";
   }
 
   const specMatch = text.match(/Premium\s*\n\s*(\d{4})(\d{3,4})([A-Z ]+?)(\d)([0-9,]+\.\d{2})/i);
@@ -170,12 +216,36 @@ function extractGeneraliVehicle(text) {
     data.seatingCapacity = specMatch[4];
   }
 
+  // Fallback: transcript fields for year/CC/seating
+  if (!data.manufacturingYear) {
+    data.manufacturingYear = matchGroup(text, /\dYear of Manufacturing(\d{4})/i) || "";
+  }
+  if (!data.cubicCapacity) {
+    data.cubicCapacity = matchGroup(text, /\dCubic Capacity(\d+)/i) || "";
+  }
+  if (!data.seatingCapacity) {
+    data.seatingCapacity = matchGroup(text, /\dSeating Capacity(\d+)/i) || "";
+  }
+
   return data;
 }
 
 // Start of extractGeneraliTotalIdv (Lines 2970-2976)
-function extractGeneraliTotalIdv(text) {
+function extractGeneraliTotalIdv(premiumBlock, fullText) {
+  const text = premiumBlock || "";
+  const searchText = fullText || text;
+
+  // Try explicit IDV label from transcript first (searches full text)
+  const transcriptIdv = matchGroup(searchText, /Vehicle IDV on Renewal\s*([0-9,]+\.\d{2})/i);
+  if (transcriptIdv) return cleanGeneraliAmount(transcriptIdv);
+
+  // Try INR amount from Customer Information Sheet (searches full text)
+  const cisIdv = matchGroup(searchText, /INR\s+([0-9,]+)/i);
+  if (cisIdv) return cleanGeneraliAmount(cisIdv);
+
+  // Fallback: last large amount before Year 1 IDV in the premium table
   const beforeYear = text.split(/Year\s*1\s*IDV/i)[0] || text;
+  // Match Indian-format amounts: 12,47,627.00 or 1,247,627.00
   const amounts = Array.from(beforeYear.matchAll(/\b\d{1,3}(?:,\d{2,3})+\.\d{2}\b/g)).map(
     (match) => match[0],
   );

@@ -34,7 +34,11 @@ function shouldKeepExtractedMotorVariant(data = {}, policyUnderstanding = {}, po
 
 // Start of shouldKeepExtractedMotorPartyFields (Lines 1856-1858)
 function shouldKeepExtractedMotorPartyFields(data = {}) {
-  return /\bTATA\s*AIG\b/i.test([data.insuranceCompany, data.companyName].filter(Boolean).join(" "));
+  const company = [data.insuranceCompany, data.companyName].filter(Boolean).join(" ");
+  return (
+    /\bTATA\s*AIG\b/i.test(company) ||
+    /Generali\s+Central|Future\s+Generali/i.test(company)
+  );
 }
 
 // Start of shouldKeepExtractedMotorFinancer (Lines 1860-1865)
@@ -42,7 +46,8 @@ function shouldKeepExtractedMotorFinancer(data = {}) {
   if (!data.financerName) return false;
   if (/^(?:NA|N\/A|NIL|NONE)(?:\b|Nominees?$)/i.test(data.financerName)) return false;
   if (/Nominees?$/i.test(data.financerName)) return false;
-  return /\b(Hypothecat|Hire\s+Purchase|Lease\s+Agreement)\b|Financier/i.test(data.sourceText || "");
+  // Note: no trailing \b after 'Hypothecat' so 'Hypothecation' is matched correctly
+  return /Hypothecat|Hire\s+Purchase|Lease\s+Agreement|Financier/i.test(data.sourceText || "");
 }
 
 // Start of normalizeInsuranceCompanyName (Lines 1867-1869)
