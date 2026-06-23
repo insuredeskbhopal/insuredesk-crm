@@ -46,6 +46,9 @@ function extractWithSchema(text = "", understanding = {}, schema = {}) {
 }
 
 function extractField(text, understanding, schemaField, mapEntry) {
+  if (schemaField.field === "gstin") {
+    return { value: null, confidence: 0, page: null, sourceLabel: "", sourceText: "" };
+  }
   const aliases = schemaField.aliases || [];
   const sectionText = mapEntry?.sectionMatch?.text || "";
   const sectionType = mapEntry?.sectionMatch?.type || "";
@@ -187,7 +190,15 @@ function isNoisyCandidate(candidate, field) {
   if (field.field === "policyNumber" && /previous/i.test(source)) return true;
   if (field.field === "customerMobile" && /claim|sms|contact us|customer care/i.test(source)) return true;
   if (field.field === "panNumber" && /GCI PAN|Company PAN|Insurer/i.test(source)) return true;
-  if (field.field === "gstin" && /Company\s+GST|GSTIN\s+Reg|Insurer|IL\s+GIC\s+GSTIN|BGIL\s+GST/i.test(source)) return true;
+  if (field.field === "gstin") {
+    if (/Company\s+GST|GSTIN\s+Reg|Insurer|IL\s+GIC\s+GSTIN|BGIL\s+GST/i.test(source)) return true;
+    const cleanedVal = value.replace(/[^A-Z0-9]/gi, "");
+    const isValidGstin = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{3}$/i.test(cleanedVal);
+    const isNa = /^(?:NA|N\/A)$/i.test(value.trim());
+    if (!isValidGstin && !isNa) return true;
+    const insurerGstins = ["23AAACI7904G1ZV", "23AAACI7573H1ZK", "23AABCR7106G1ZR"];
+    if (insurerGstins.includes(cleanedVal.toUpperCase())) return true;
+  }
   if (/legal|exclusion|disclaimer|terms and conditions/i.test(source) && field.required) return true;
   return false;
 }

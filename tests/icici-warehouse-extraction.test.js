@@ -40,7 +40,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("100626100636");
     expect(result.invoiceDate).toBe("02/06/2026");
-    expect(result.gstin).toBe("23AAACI7904G1ZV");
+    expect(result.gstin).toBe("");
     expect(result.placeOfSupply).toBe("MADHYA PRADESH");
     expect(result.hypothecationDetails).toBe("MPWLC");
     expect(result.bankChargeType).toBe("MPWLC - Hypothecation");
@@ -88,7 +88,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("10062618038");
     expect(result.invoiceDate).toBe("01/06/2026");
-    expect(result.gstin).toBe("23AAACI7904G1ZV");
+    expect(result.gstin).toBe("");
     expect(result.placeOfSupply).toBe("MADHYA PRADESH");
     expect(result.hypothecationDetails).toBe("None");
     expect(result.bankChargeType).toBe("");
@@ -132,7 +132,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("100626241789");
     expect(result.invoiceDate).toBe("01/06/2026");
-    expect(result.gstin).toBe("23AAACI7904G1ZV");
+    expect(result.gstin).toBe("");
     expect(result.placeOfSupply).toBe("MADHYA PRADESH");
     expect(result.hypothecationDetails).toBe("BANK OF BARODA");
     expect(result.bankChargeType).toBe("BANK OF BARODA - Hypothecation");
@@ -176,7 +176,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("100626110823");
     expect(result.invoiceDate).toBe("02/06/2026");
-    expect(result.gstin).toBe("23AAACI7904G1ZV");
+    expect(result.gstin).toBe("");
     expect(result.placeOfSupply).toBe("MADHYA PRADESH");
     expect(result.hypothecationDetails).toBe("MPWLC");
     expect(result.bankChargeType).toBe("MPWLC - Hypothecation");
@@ -224,7 +224,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("10062637927");
     expect(result.invoiceDate).toBe("01/06/2026");
-    expect(result.gstin).toBe("23AAACI7904G1ZV");
+    expect(result.gstin).toBe("");
     expect(result.placeOfSupply).toBe("MADHYA PRADESH");
     expect(result.hypothecationDetails).toBe("MPWLC");
     expect(result.bankChargeType).toBe("MPWLC - Hypothecation");
@@ -272,7 +272,7 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     expect(result.igst).toBe("0.00");
     expect(result.invoiceNumber).toBe("100626100636");
     expect(result.invoiceDate).toBe("02/06/2026");
-    expect(result.gstin).toBe("23AAACI7904G1ZV");
+    expect(result.gstin).toBe("");
     expect(result.placeOfSupply).toBe("MADHYA PRADESH");
     expect(result.hypothecationDetails).toBe("MPWLC");
     expect(result.bankChargeType).toBe("MPWLC - Hypothecation");

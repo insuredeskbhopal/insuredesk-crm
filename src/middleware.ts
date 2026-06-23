@@ -55,6 +55,7 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPage = pathname === ADMIN_LOGIN_PATH;
   const isAuthApi = pathname.startsWith("/api/auth");
+  const isCronApi = pathname.startsWith("/api/cron");
   const isBlogPage = pathname.startsWith("/blog");
   const isPublicPage = PUBLIC_ROUTE_PATHS.includes(pathname) || pathname === "/not-found" || isAuthPage || isBlogPage;
 
@@ -62,7 +63,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : "/not-found", request.url));
   }
 
-  if (isAuthApi) {
+  if (isAuthApi || isCronApi) {
     return NextResponse.next();
   }
 

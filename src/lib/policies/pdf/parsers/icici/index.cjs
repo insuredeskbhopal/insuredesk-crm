@@ -421,7 +421,6 @@ function extractIciciWarehouseMsmeLegacy(text) {
     sgst: premium.sgst,
     invoiceNumber: premium.invoiceNumber,
     invoiceDate: premium.invoiceDate,
-    gstin: "", // Client GSTIN not in policy PDF; premium.gstin is the insurer's GSTIN
     placeOfSupply: premium.placeOfSupply,
     hypothecationDetails: hypothecation.bankName,
     brokerCode: broker.brokerCode,
@@ -457,6 +456,7 @@ function extractIciciWarehouseMsmeLegacy(text) {
   return {
     documentDetected: true,
     ...required,
+    gstin: "",
     policyType: "Warehouse / MSME / Fire & Burglary package",
     sourceDocumentType: "ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1",
     bankChargeType: hypothecation.chargeType ? `${hypothecation.bankName} - ${hypothecation.chargeType}` : "",

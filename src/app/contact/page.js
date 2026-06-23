@@ -112,6 +112,7 @@ export default function ContactPage() {
     message: "",
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (event) => {
     setFormState((current) => ({
@@ -120,20 +121,37 @@ export default function ContactPage() {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!formState.name || !formState.phone || !formState.message) {
       window.alert("Please fill name, phone number, and message.");
       return;
     }
-    setIsSubmitted(true);
-    setFormState({
-      name: "",
-      phone: "",
-      email: "",
-      service: "",
-      message: "",
-    });
+    
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formState),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to submit request. Please try again.");
+      }
+      setIsSubmitted(true);
+      setFormState({
+        name: "",
+        phone: "",
+        email: "",
+        service: "",
+        message: "",
+      });
+    } catch (error) {
+      window.alert(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -286,8 +304,8 @@ export default function ContactPage() {
                         required
                       />
                     </label>
-                    <button type="submit" className="contact-submit-button">
-                      Submit Consultation Request
+                     <button type="submit" className="contact-submit-button" disabled={isSubmitting}>
+                      {isSubmitting ? "Submitting..." : "Submit Consultation Request"}
                     </button>
                   </form>
                 )}

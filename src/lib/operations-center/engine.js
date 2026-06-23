@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { getCustomerProfileScopedFilter, getTenantFilter } from "@/lib/auth/rbac";
+import { sendFollowUpReminderEmail } from "@/lib/email/mailer";
 
 const OPEN_TASK_STATUSES = [
   "DRAFT",
@@ -17,6 +18,7 @@ const REMINDER_OFFSETS = [7, 3, 1, 0];
 const SYNC_TTL_MS = 60_000;
 const DB_FRESHNESS_MS = 5 * 60_000;
 const MAX_SYNC_ROWS = 30;
+const CLOSED_RENEWAL_STATUSES = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"];
 
 function getSyncCache() {
   if (!globalThis.__bimaOperationsSyncCache) {
@@ -67,6 +69,18 @@ export function parseBusinessDate(value) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function dateKey(date) {
+  return startOfDay(date).toISOString().slice(0, 10);
+}
+
+function formatBusinessDate(date) {
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function formatRelativeTime(date) {
   const now = new Date();
   const diffMs = now - new Date(date);
@@ -115,6 +129,7 @@ export async function syncOperationsCenter(session) {
         renewalStatus: true,
         organizationId: true,
         createdById: true,
+        updatedById: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -195,6 +210,7 @@ export async function syncOperationsCenter(session) {
 
   for (const policy of policies) {
     await syncPolicyRenewal(policy, actorId);
+    await syncPolicyFollowUp(policy, actorId);
   }
   for (const claim of claims) {
     await syncClaimWork(claim, actorId);
@@ -227,6 +243,93 @@ export async function syncOperationsCenter(session) {
   }
 
   cache.set(cacheKey, Date.now());
+}
+
+function getPolicyPayload(policy) {
+  return policy.reviewedData || policy.data || {};
+}
+
+function getPolicyFollowUp(policy) {
+  const payload = getPolicyPayload(policy);
+  const followUp = payload.renewalFollowUp || {};
+  const dueAt = parseBusinessDate(followUp.nextFollowUpDate || payload.nextFollowUpDate);
+  if (!dueAt) return null;
+
+  const policyNumber = payload.policyNumber || payload["Policy Number"] || "";
+  const customerName =
+    payload.insuredName || payload.customerName || payload["Insured Name"] || "Unnamed customer";
+  const assignedToId = followUp.assignedToId || payload.assignedToId || policy.updatedById || policy.createdById;
+
+  return {
+    dueAt,
+    policyNumber,
+    customerName,
+    assignedToId,
+    status: followUp.followUpStatus || policy.renewalStatus || "Follow-up",
+    mode: followUp.followUpMode || "Follow-up",
+    nextAction: followUp.nextAction || "",
+  };
+}
+
+async function syncPolicyFollowUp(policy, actorId) {
+  if (CLOSED_RENEWAL_STATUSES.includes(policy.renewalStatus)) return;
+
+  const followUp = getPolicyFollowUp(policy);
+  if (!followUp) return;
+
+  const dueDay = startOfDay(followUp.dueAt);
+  const today = startOfDay();
+  const overdue = dueDay < today;
+  const dueToday = isSameDay(dueDay, today);
+  const userId = followUp.assignedToId || policy.createdById || actorId;
+  const actionUrl = `/customer-management/${encodeURIComponent(followUp.customerName)}/policy/${policy.id}`;
+  const title = `${overdue ? "Overdue" : "Follow-up"}: ${followUp.customerName}`;
+  const message = `${followUp.customerName}${followUp.policyNumber ? ` (${followUp.policyNumber})` : ""} has a follow-up ${overdue ? "pending since" : "scheduled for"} ${formatBusinessDate(dueDay)}.`;
+
+  await upsertTaskWithCalendar({
+    organizationId: policy.organizationId,
+    userId,
+    createdById: policy.updatedById || policy.createdById || actorId,
+    title,
+    description: followUp.nextAction || message,
+    type: "FOLLOW_UP",
+    priority: overdue ? "HIGH" : "MEDIUM",
+    module: "Renewals",
+    recordId: policy.id,
+    recordLabel: followUp.policyNumber || followUp.customerName,
+    customerName: followUp.customerName,
+    policyNumber: followUp.policyNumber,
+    dueAt: followUp.dueAt,
+    sourceKey: `policy:${policy.id}:scheduled-follow-up`,
+    actionUrl,
+    metadata: {
+      followUpDate: dueDay.toISOString(),
+      followUpStatus: followUp.status,
+      followUpMode: followUp.mode,
+    },
+  });
+
+  if (!dueToday && !overdue) return;
+
+  await upsertNotification({
+    organizationId: policy.organizationId,
+    userId,
+    createdById: policy.updatedById || policy.createdById || actorId,
+    category: "RENEWAL",
+    severity: overdue ? "WARNING" : "INFO",
+    title: overdue ? "Follow-up overdue" : "Follow-up pending",
+    message,
+    module: "Renewals",
+    recordId: policy.id,
+    recordLabel: followUp.policyNumber || followUp.customerName,
+    actionUrl,
+    sourceKey: `policy:${policy.id}:follow-up-due:${dateKey(dueDay)}`,
+    metadata: {
+      followUpDate: dueDay.toISOString(),
+      followUpStatus: followUp.status,
+      followUpMode: followUp.mode,
+    },
+  });
 }
 
 async function syncPolicyRenewal(policy, actorId) {
@@ -421,6 +524,143 @@ async function syncCustomerProfileWork(profile, actorId) {
     actionUrl: `/dashboard/manual-entry/customer-profiling/${profile.id}`,
     metadata: { status: profile.status },
   });
+
+  if (startOfDay(dueAt) <= startOfDay()) {
+    await upsertNotification({
+      organizationId: profile.organizationId,
+      userId: profile.createdById,
+      createdById: profile.updatedById || profile.createdById || actorId,
+      category: "CUSTOMER",
+      severity: startOfDay(dueAt) < startOfDay() ? "WARNING" : "INFO",
+      title: startOfDay(dueAt) < startOfDay() ? "Customer follow-up overdue" : "Customer follow-up pending",
+      message: `${profile.name} has a follow-up ${startOfDay(dueAt) < startOfDay() ? "pending since" : "scheduled for"} ${formatBusinessDate(dueAt)}.`,
+      module: "Customer Profiling",
+      recordId: profile.id,
+      recordLabel: profile.name,
+      actionUrl: `/dashboard/manual-entry/customer-profiling/${profile.id}`,
+      sourceKey: `customer-profile:${profile.id}:follow-up-due:${dateKey(dueAt)}`,
+      metadata: { followUpDate: startOfDay(dueAt).toISOString(), status: profile.status },
+    });
+  }
+}
+
+export async function syncDueFollowUpNotifications({ now = new Date(), limit = 1000 } = {}) {
+  const today = startOfDay(now);
+  const todayEnd = endOfDay(now);
+
+  const [policies, customerProfiles, claims] = await Promise.all([
+    prisma.policyRecord.findMany({
+      where: {
+        deletedAt: null,
+        isActivePolicy: true,
+        renewalStatus: { notIn: CLOSED_RENEWAL_STATUSES },
+      },
+      orderBy: { updatedAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        data: true,
+        reviewedData: true,
+        selectedCompany: true,
+        selectedPolicyType: true,
+        renewalStatus: true,
+        organizationId: true,
+        createdById: true,
+        updatedById: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.customerProfile.findMany({
+      where: {
+        deletedAt: null,
+        OR: [
+          { nextFollowUpDate: { lte: todayEnd } },
+          { followUpDate: { lte: todayEnd } },
+        ],
+      },
+      orderBy: { updatedAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        status: true,
+        nextFollowUpDate: true,
+        followUpDate: true,
+        followUpRemark: true,
+        organizationId: true,
+        createdById: true,
+        updatedById: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.claim.findMany({
+      where: {
+        deletedAt: null,
+        followUpDate: { lte: todayEnd },
+        NOT: [{ claimStatus: { contains: "closed", mode: "insensitive" } }],
+      },
+      orderBy: { updatedAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        claimNo: true,
+        insuredName: true,
+        mobileNo: true,
+        policyNo: true,
+        claimStatus: true,
+        followUpDate: true,
+        currentRemark: true,
+        organizationId: true,
+        createdById: true,
+        updatedById: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }),
+  ]);
+
+  let policiesSynced = 0;
+  for (const policy of policies) {
+    const followUp = getPolicyFollowUp(policy);
+    if (followUp && startOfDay(followUp.dueAt) <= today) {
+      await syncPolicyFollowUp(policy, policy.updatedById || policy.createdById || null);
+      policiesSynced++;
+    }
+  }
+
+  for (const profile of customerProfiles) {
+    await syncCustomerProfileWork(profile, profile.createdById);
+  }
+
+  for (const claim of claims) {
+    await syncClaimWork(claim, claim.updatedById || claim.createdById || null);
+    if (claim.followUpDate) {
+      await upsertNotification({
+        organizationId: claim.organizationId,
+        userId: claim.updatedById || claim.createdById || null,
+        createdById: claim.updatedById || claim.createdById || null,
+        category: "CLAIM",
+        severity: startOfDay(claim.followUpDate) < today ? "WARNING" : "INFO",
+        title: startOfDay(claim.followUpDate) < today ? "Claim follow-up overdue" : "Claim follow-up pending",
+        message: `Claim ${claim.claimNo} for ${claim.insuredName} needs follow-up on ${formatBusinessDate(claim.followUpDate)}.`,
+        module: "Claims Management",
+        recordId: claim.id,
+        recordLabel: claim.claimNo,
+        actionUrl: "/operations/claims-management",
+        sourceKey: `claim:${claim.id}:follow-up-due:${dateKey(claim.followUpDate)}`,
+        metadata: { followUpDate: startOfDay(claim.followUpDate).toISOString(), claimStatus: claim.claimStatus },
+      });
+    }
+  }
+
+  return {
+    policies: policiesSynced,
+    customerProfiles: customerProfiles.length,
+    claims: claims.length,
+  };
 }
 
 async function upsertTaskWithCalendar(input) {
@@ -803,6 +1043,106 @@ export async function markNotificationsRead(session, ids = []) {
   }
 
   return { marked: notifications.length };
+}
+
+export async function sendDueFollowUpEmails({ now = new Date(), limit = 100 } = {}) {
+  const todayEnd = endOfDay(now);
+  const todayKey = dateKey(now);
+  const openWhere = { archivedAt: null, status: { in: OPEN_TASK_STATUSES } };
+
+  const tasks = await prisma.task.findMany({
+    where: {
+      ...openWhere,
+      userId: { not: null },
+      type: { in: ["FOLLOW_UP", "CALL", "RENEWAL", "CLAIM"] },
+      dueAt: { lte: todayEnd },
+    },
+    orderBy: [{ dueAt: "asc" }, { updatedAt: "desc" }],
+    take: limit,
+    include: {
+      assignments: true,
+    },
+  });
+
+  let sent = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const task of tasks) {
+    const sourceKey = `email:follow-up:${task.id}:${todayKey}`;
+    const existing = await prisma.activityLog.findFirst({
+      where: { sourceKey },
+      select: { id: true },
+    });
+    if (existing) {
+      skipped++;
+      continue;
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { id: task.userId, deletedAt: null },
+      select: { id: true, email: true, name: true },
+    });
+    if (!user) {
+      skipped++;
+      continue;
+    }
+
+    let emailTo = user.email;
+    if (!emailTo || emailTo.endsWith("@example.com") || emailTo.endsWith(".local") || emailTo.endsWith(".test") || emailTo.endsWith("@localhost")) {
+      emailTo = "insuredeskbhopal@gmail.com";
+    }
+
+    const dueLabel = task.dueAt ? formatBusinessDate(task.dueAt) : "today";
+    const actionUrl = task.metadata?.actionUrl || "/work-center";
+    const title = task.dueAt && startOfDay(task.dueAt) < startOfDay(now) ? "Follow-up overdue" : "Follow-up pending";
+    const message = `${task.title} is due ${dueLabel}. Please open BIMAHEADQUARTER and complete the follow-up.`;
+
+    try {
+      const result = await sendFollowUpReminderEmail({
+        to: emailTo,
+        name: user.name || emailTo,
+        title,
+        message,
+        actionUrl,
+        type: task.type,
+        priority: task.priority,
+        module: task.module,
+        customerName: task.customerName,
+        customerMobile: task.customerMobile,
+        policyNumber: task.policyNumber,
+        amount: task.amount ? Number(task.amount) : null,
+      });
+
+      await upsertActivity({
+        organizationId: task.organizationId,
+        userId: user.id,
+        module: task.module,
+        recordId: task.recordId,
+        recordLabel: task.recordLabel,
+        action: result.sent ? "Follow-up Email Sent" : "Follow-up Email Skipped",
+        description: result.sent ? `[Sent to: ${emailTo}] ${message}` : result.reason || "Email was not sent.",
+        sourceKey,
+      });
+
+      if (result.sent) sent++;
+      else skipped++;
+    } catch (error) {
+      failed++;
+      await upsertActivity({
+        organizationId: task.organizationId,
+        userId: user.id,
+        module: task.module,
+        recordId: task.recordId,
+        recordLabel: task.recordLabel,
+        action: "Follow-up Email Failed",
+        description: error instanceof Error ? `[Attempted: ${emailTo}] ${error.message}` : `[Attempted: ${emailTo}] Email failed.`,
+        sourceKey,
+      });
+    }
+  }
+
+  return { checked: tasks.length, sent, skipped, failed };
 }
 
 export async function updateTaskStatus(session, taskId, status) {

@@ -1399,6 +1399,9 @@ function buildIntelligentResult(legacyData, policyUnderstanding, policySchema, s
     mergedData.companyName = standardCompany;
   }
 
+  // GSTIN is a manual-only field; do not automatically populate it from PDF text
+  mergedData.gstin = "";
+
   const validation = validateExtraction({
     legacyData: mergedData,
     schemaResult: schemaExtraction,

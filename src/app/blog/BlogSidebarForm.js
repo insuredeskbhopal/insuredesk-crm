@@ -9,19 +9,40 @@ export default function BlogSidebarForm({ defaultService }) {
     message: `I need consultation regarding ${defaultService || "Insurance"}.`,
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formState.name || !formState.phone) {
       window.alert("Please provide name and phone number.");
       return;
     }
-    setIsSubmitted(true);
-    setFormState({
-      name: "",
-      phone: "",
-      message: "",
-    });
+    
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formState,
+          service: defaultService || "Blog Consultation",
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to submit request. Please try again.");
+      }
+      setIsSubmitted(true);
+      setFormState({
+        name: "",
+        phone: "",
+        message: "",
+      });
+    } catch (error) {
+      window.alert(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -79,8 +100,8 @@ export default function BlogSidebarForm({ defaultService }) {
               onChange={handleChange}
             />
           </label>
-          <button type="submit">
-            Submit Request
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit Request"}
             <span className="material-symbols-outlined">send</span>
           </button>
         </form>
