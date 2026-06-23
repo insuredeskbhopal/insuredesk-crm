@@ -1143,10 +1143,13 @@
 }
 
 .portal-title p {
-  margin: 4px 0 0;
-  color: var(--on-surface-variant);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
+  margin: 6px 0 0;
+  color: #8a99ad;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding-left: 2px;
 }
 
 .side-nav nav {
