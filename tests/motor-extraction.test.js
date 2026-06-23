@@ -891,6 +891,39 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("extracts HDFC ERGO private car details for Ankur Rai", async () => {
+    const sourceFile = "tests/fixtures/ANKUR RAI_MP05CB8840_2026-27 POLICY.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "HDFC_ERGO_MOTOR_V1",
+      insuranceCompany: "HDFC ERGO General Insurance Company Limited",
+      policyType: "PRIVATE CAR COMPREHENSIVE POLICY",
+      policyCoverType: "Comprehensive",
+      insuredName: "MR ANKUR RAI",
+      policyNumber: "2302207468130301000",
+      startDate: "07/06/2026 00:01 hrs",
+      expiryDate: "06/06/2027 Midnight",
+      vehicleNumber: "MP-05-CB-8840",
+      registrationNumber: "MP-05-CB-8840",
+      makeModel: "MAHINDRA. XUV 700-AX 5 PETROL MT 5 STR ESP",
+      fuelType: "Petrol",
+      engineNumber: "ZEN4A49553",
+      chassisNumber: "MA1NE2ZEAN6A11606",
+      cubicCapacity: "1997",
+      manufacturingYear: "2022",
+      seatingCapacity: "5",
+      idv: "0978055.00",
+      premium: "21596.00",
+      totalPremium: "21596.00",
+      netPremium: "18302.00",
+      odPremium: "9780.00",
+      tpDriverOwner: "8522.00",
+    });
+  });
+
+
   it("preserves the exact Tata AIG policy type from the Auto Secure header", () => {
     const text = `
       Tata AIG General Insurance Company Limited General Insurance Company Limited

@@ -954,7 +954,12 @@ function extractPolicyFromText(text, sourceFile = "") {
     );
   const registrationNumber = vehicleNumber || extractMotorRegistrationNumber(sourceText);
 
-  const makeModel = newIndiaMotor.makeModel || motorVehicleTable.makeModel || extractMakeModel(sourceText);
+  const makeModel =
+    [hdfcErgoMotor.vehicleMake, hdfcErgoMotor.vehicleModel].filter(Boolean).join(" ") ||
+    [generaliMotor.vehicleMake, generaliMotor.vehicleModel].filter(Boolean).join(" ") ||
+    newIndiaMotor.makeModel ||
+    motorVehicleTable.makeModel ||
+    extractMakeModel(sourceText);
   const genericVehicleParts = splitGenericMakeModel(makeModel);
   const variant = matchGroup(sourceText, /\bVariant(?:\.|:)?\s*([A-Z0-9 /&().,-]{1,60})/i);
   const manufacturingYear = motorVehicleTable.manufacturingYear || extractMfgYear(sourceText);

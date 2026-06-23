@@ -261,6 +261,11 @@ function cleanHdfcPeriodValue(value) {
 
 // Start of extractHdfcInsuredName (Lines 3219-3230)
 function extractHdfcInsuredName(text) {
+  const emailAddrMatch = text.match(/Email\s*ID\s*:[^\n]*\r?\n\s*([A-Z\s.]+?)\s*\r?\n\s*Communication\s+Address:/i);
+  if (emailAddrMatch?.[1]) {
+    return cleanHdfcValue(emailAddrMatch[1]);
+  }
+
   const patterns = [
     /Customer\s+Name\s*(?:Block)?\s*[:.-]?\s*([^\n]{3,120})/i,
     /(?:Customer|Insured|Proposer)\s+Name\s*[:.-]?\s*([^\n]{3,120})/i,
