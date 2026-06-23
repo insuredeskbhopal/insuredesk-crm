@@ -523,9 +523,9 @@ export default function CustomerProfileDetailPage({ params }) {
               </div>
             </section>
 
-            {/* Associated Policy Interests Card */}
+            {/* Lead Follow-up Details Card */}
             <section className="customer-portfolio-card">
-              <h2>Associated Policy Interests</h2>
+              <h2>Lead Follow-up Details</h2>
               <div className="customer-portfolio-table-wrap">
                 <table className="customer-portfolio-table">
                   <thead>
@@ -546,12 +546,6 @@ export default function CustomerProfileDetailPage({ params }) {
                         <div
                           className="skeleton"
                           style={{ width: "90px", height: "12px", borderRadius: "2px" }}
-                        />
-                      </th>
-                      <th>
-                        <div
-                          className="skeleton"
-                          style={{ width: "60px", height: "12px", borderRadius: "2px" }}
                         />
                       </th>
                       <th>
@@ -605,12 +599,6 @@ export default function CustomerProfileDetailPage({ params }) {
                           <div
                             className="skeleton"
                             style={{ width: "80px", height: "14px", borderRadius: "3px" }}
-                          />
-                        </td>
-                        <td>
-                          <div
-                            className="skeleton"
-                            style={{ width: "50px", height: "14px", borderRadius: "3px" }}
                           />
                         </td>
                         <td>
@@ -875,11 +863,11 @@ export default function CustomerProfileDetailPage({ params }) {
             </div>
           </div>
 
-          {/* 4. POLICY */}
+          {/* 4. FOLLOW-UP */}
           <div className="sidebar-section-card">
             <div className="sidebar-section-header">
               <Shield size={15} />
-              <span>Policy</span>
+              <span>Follow-up</span>
             </div>
             <div className="sidebar-grid-row">
               <div className="sidebar-grid-cell">
@@ -887,17 +875,17 @@ export default function CustomerProfileDetailPage({ params }) {
                 <span className="sidebar-cell-value">{viewModel.companies.length}</span>
               </div>
               <div className="sidebar-grid-cell">
-                <span className="sidebar-cell-label">Total Premium Potential</span>
-                <span className="sidebar-cell-value">{formatMoney(viewModel.totalPremium)}</span>
+                <span className="sidebar-cell-label">Lead Status</span>
+                <span className="sidebar-cell-value">{profile.status || "-"}</span>
               </div>
             </div>
             <div className="sidebar-grid-row">
               <div className="sidebar-grid-cell">
-                <span className="sidebar-cell-label">Total Sum Insured</span>
-                <span className="sidebar-cell-value">{formatMoney(viewModel.totalSumInsured)}</span>
+                <span className="sidebar-cell-label">Next Follow-up</span>
+                <span className="sidebar-cell-value">{formatDate(profile.nextFollowUpDate)}</span>
               </div>
               <div className="sidebar-grid-cell">
-                <span className="sidebar-cell-label">Total Policy Interests</span>
+                <span className="sidebar-cell-label">Follow-up Items</span>
                 <span className="sidebar-cell-value">
                   {viewModel.policies.length} ({viewModel.dueCount} due)
                 </span>
@@ -935,17 +923,16 @@ export default function CustomerProfileDetailPage({ params }) {
           </section>
 
           <section className="customer-portfolio-card">
-            <h2>Associated Policy Interests</h2>
+            <h2>Lead Follow-up Details</h2>
             <div className="customer-portfolio-table-wrap">
               <table className="customer-portfolio-table">
                 <thead>
                   <tr>
-                    <th>Policy / Lead Ref</th>
-                    <th>Company Name</th>
-                    <th>Policy Type</th>
-                    <th>Premium</th>
-                    <th>Sum Insured</th>
-                    <th>Renewal / Follow-up</th>
+                    <th>Lead Ref</th>
+                    <th>Customer / Company</th>
+                    <th>Interested LOB</th>
+                    <th>Requirement Details</th>
+                    <th>Next Follow-up</th>
                     <th>Days Left</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -958,8 +945,7 @@ export default function CustomerProfileDetailPage({ params }) {
                         <td>{policy.policyNumber || "-"}</td>
                         <td>{policy.company || "-"}</td>
                         <td>{policy.policyType || "-"}</td>
-                        <td>{formatMoney(policy.premium)}</td>
-                        <td>{formatMoney(policy.sumInsured)}</td>
+                        <td>{policy.requirementSummary || "-"}</td>
                         <td>{formatDate(policy.renewalDate || profile.nextFollowUpDate)}</td>
                         <td>{formatDaysLeft(policy.renewalDate || profile.nextFollowUpDate)}</td>
                         <td>
@@ -973,15 +959,15 @@ export default function CustomerProfileDetailPage({ params }) {
                             className="customer-portfolio-table-action"
                             onClick={() => openRemarkModal(policy)}
                           >
-                            Add Remark
+                            Add Follow-up
                           </button>
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="customer-portfolio-empty-cell">
-                        No policy interests captured.
+                      <td colSpan={8} className="customer-portfolio-empty-cell">
+                        No follow-up details captured.
                       </td>
                     </tr>
                   )}
@@ -1289,6 +1275,7 @@ function buildProfileView(profile) {
       policyNumber: profile.sourcePolicyNumber || details.policyNumber || `Lead-${index + 1}`,
       company: profile.sourceCompany || details.companyName || details.insuranceCompany || profile.name,
       policyType: profile.sourcePolicyType || lob,
+      requirementSummary: formatPolicyDetails(lob, { [lob]: details }) || profile.remarks || "Discussion pending",
       premium,
       sumInsured,
       renewalDate: details.renewalDate || details.travelDate || profile.nextFollowUpDate,
@@ -1301,6 +1288,20 @@ function buildProfileView(profile) {
       policyNumber: profile.sourcePolicyNumber,
       company: profile.sourceCompany || profile.name,
       policyType: profile.sourcePolicyType || "Policy Interest",
+      requirementSummary: profile.remarks || "Discussion pending",
+      premium: 0,
+      sumInsured: 0,
+      renewalDate: profile.nextFollowUpDate,
+    });
+  }
+
+  if (!policies.length) {
+    policies.push({
+      id: "lead-follow-up",
+      policyNumber: profile.sourcePolicyNumber || `Lead-${String(profile.id || "").slice(0, 8) || "1"}`,
+      company: profile.sourceCompany || profile.businessType || profile.name,
+      policyType: profile.sourcePolicyType || "To be discussed",
+      requirementSummary: profile.remarks || profile.followUpRemark || "Discussion pending",
       premium: 0,
       sumInsured: 0,
       renewalDate: profile.nextFollowUpDate,
@@ -1466,15 +1467,6 @@ function formatDateTime(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
-}
-
-function formatMoney(value) {
-  const num = Number(value) || 0;
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  }).format(num);
 }
 
 function formatDaysLeft(value) {

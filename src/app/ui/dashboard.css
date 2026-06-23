@@ -2985,6 +2985,230 @@ label span em {
   border-color: rgba(220, 38, 38, 0.16);
 }
 
+.claims-add-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.claims-add-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(1860px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 26px 80px rgba(15, 23, 42, 0.2), 0 10px 28px rgba(15, 23, 42, 0.1);
+  animation: modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.claims-add-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 28px 24px 14px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+  background: #ffffff;
+}
+
+.claims-add-modal-header h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.claims-add-modal-header p {
+  margin: 0;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.claims-add-modal-header button {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  background: #ffffff;
+  color: #111827;
+  cursor: pointer;
+}
+
+.claims-add-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  padding: 18px 24px 0;
+}
+
+.claims-add-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 14px;
+}
+
+.claims-add-modal-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.claims-add-modal-field span {
+  color: #000000;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.claims-add-modal-field input,
+.claims-add-modal-field select,
+.claims-add-modal-field textarea,
+.claims-add-modal-upload input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 750;
+  outline: none;
+}
+
+.claims-add-modal-field input,
+.claims-add-modal-field select,
+.claims-add-modal-upload input {
+  padding: 0 12px;
+}
+
+.claims-add-modal-field textarea {
+  min-height: 88px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.claims-add-modal-field input:focus,
+.claims-add-modal-field select:focus,
+.claims-add-modal-field textarea:focus,
+.claims-add-modal-upload input:focus {
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.claims-add-modal-wide {
+  grid-column: 1 / -1;
+}
+
+.claims-add-modal-docs {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  background: #fbfdff;
+}
+
+.claims-add-modal-docs > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.claims-add-modal-docs span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.claims-add-modal-docs strong {
+  color: #111827;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.claims-add-modal-upload {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.claims-add-modal-upload label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 10px;
+  background: #eefaf5;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.claims-add-modal-upload label input {
+  display: none;
+}
+
+.claims-add-modal-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 0 -24px;
+  padding: 18px 24px 24px;
+  border-top: 1px solid rgba(226, 232, 240, 0.95);
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.claims-add-modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+}
+
+@media (max-width: 900px) {
+  .claims-add-modal-backdrop {
+    padding: 14px;
+  }
+
+  .claims-add-modal {
+    width: calc(100vw - 28px);
+    max-height: calc(100vh - 28px);
+    border-radius: 16px;
+  }
+
+  .claims-add-modal-grid,
+  .claims-add-modal-upload {
+    grid-template-columns: 1fr;
+  }
+}
+
 .claims-document-uploader {
   display: grid;
   gap: 12px;
@@ -3435,9 +3659,10 @@ label span em {
 }
 
 .claims-previous-remarks .claims-remark-list {
-  max-height: 190px;
+  max-height: min(260px, 34vh);
   overflow-y: auto;
   padding-right: 2px;
+  overscroll-behavior: contain;
 }
 
 .claims-delete-card p {
@@ -3464,6 +3689,10 @@ label span em {
 .claims-remark-list {
   display: grid;
   gap: 10px;
+  max-height: min(360px, 44vh);
+  overflow-y: auto;
+  padding-right: 4px;
+  overscroll-behavior: contain;
 }
 
 .claims-remark-item {
@@ -7105,9 +7334,11 @@ label.is-disabled textarea {
 }
 
 .customer-portfolio-timeline-scroll {
-  max-height: 400px;
+  max-height: min(420px, 46vh);
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 4px;
+  overscroll-behavior: contain;
 }
 
 .customer-portfolio-timeline-scroll::-webkit-scrollbar {
@@ -7127,8 +7358,8 @@ label.is-disabled textarea {
   flex-direction: column;
   gap: 20px;
   margin: 16px 18px 24px;
-  padding-left: 20px;
-  border-left: 2px solid #e2e8f0;
+  padding-left: 32px;
+  border-left: 2px solid #dbe4ef;
 }
 
 .customer-portfolio-timeline-item {
@@ -7137,13 +7368,15 @@ label.is-disabled textarea {
 
 .customer-portfolio-timeline-dot {
   position: absolute;
-  left: -27px;
-  top: 4px;
+  left: -40px;
+  top: 6px;
   width: 12px;
   height: 12px;
-  border: 2px solid #2563eb;
+  border: 3px solid #2563eb;
   border-radius: 999px;
   background: #ffffff;
+  box-shadow: 0 0 0 4px #ffffff;
+  box-sizing: border-box;
 }
 
 .customer-portfolio-timeline-content {
@@ -12330,13 +12563,15 @@ th {
    CLAIMS MANAGEMENT PAGE POLISHING & DEPTH
    ========================================== */
 
-/* 1. Table Action Button (Three Dots) Padding & Sizing Fix */
+/* 1. Table Action Button (Three Dots) Sizing Fix */
 .claims-register-table .claims-action-menu > button {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   width: 36px !important;
   height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
   padding: 0 !important;
   border: 1px solid rgba(25, 28, 29, 0.12) !important;
   border-radius: 8px !important;
@@ -12360,7 +12595,7 @@ th {
   stroke-width: 2.5 !important;
 }
 
-/* 2. Search Bar Layout Alignment & Prevent Wrapping */
+/* 2. Search Bar Layout Fix */
 .operations-search.claims-search {
   display: flex !important;
   flex-direction: row !important;
@@ -12403,7 +12638,7 @@ th {
   flex-shrink: 0 !important;
 }
 
-/* 3. Filter Grid Premium Active Shading & Depth */
+/* 3. Filter Cards Depth */
 .claims-filter-card {
   border: 1px solid rgba(15, 23, 42, 0.06) !important;
   background: #ffffff !important;
@@ -12423,7 +12658,6 @@ th {
   border-color: rgba(15, 23, 42, 0.15) !important;
 }
 
-/* Active background tint based on category color to give rich visual depth */
 .claims-filter-card.active.accent-orange {
   background: linear-gradient(135deg, #ffffff 0%, #fff7ed 100%) !important;
 }
@@ -12443,20 +12677,49 @@ th {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
 }
 
-/* 4. White Shades Layering & Depth on View More Page */
+/* 4. View More Page - Full Width Layout Fix */
 .customer-portfolio-page {
-  background: #f4f6f8 !important; /* Main page background */
+  background: #ffffff !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.customer-portfolio-page .customer-portfolio-layout {
+  display: grid !important;
+  grid-template-columns: 320px minmax(0, 1fr) !important;
+  gap: 24px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.customer-portfolio-page .customer-portfolio-sidebar {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.customer-portfolio-page .customer-portfolio-main {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  min-width: 0 !important;
+  width: 100% !important;
 }
 
 /* Base Card Depth Styling */
 .customer-portfolio-page .sidebar-section-card,
 .customer-portfolio-page .customer-portfolio-card {
-  border: 1px solid rgba(15, 23, 42, 0.05) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
   border-radius: 16px !important;
   background: #ffffff !important;
-  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.03), 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.035) !important;
   overflow: hidden !important;
-  margin-bottom: 20px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
 }
 
 /* Card Headers with soft gradient white shades */
@@ -12468,10 +12731,10 @@ th {
   font-weight: 700 !important;
 }
 
-/* Alternating inner field cell fills using white shades for structural depth */
+/* Sidebar grid rows */
 .customer-portfolio-page .sidebar-grid-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   border-bottom: 1px solid rgba(15, 23, 42, 0.04) !important;
 }
 
@@ -12481,17 +12744,18 @@ th {
 
 .customer-portfolio-page .sidebar-grid-cell {
   padding: 12px 18px !important;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+  word-break: break-word !important;
 }
 
-/* Shading grid cells alternatively */
 .customer-portfolio-page .sidebar-grid-cell:nth-child(odd) {
   background: #ffffff !important;
 }
 .customer-portfolio-page .sidebar-grid-cell:nth-child(even) {
-  background: #fafbfc !important; /* Soft cool white */
+  background: #fafbfc !important;
 }
 .customer-portfolio-page .sidebar-grid-cell:first-child {
   border-right: 1px solid rgba(15, 23, 42, 0.04) !important;
@@ -12500,18 +12764,37 @@ th {
 .customer-portfolio-page .sidebar-full-cell {
   padding: 12px 18px !important;
   border-bottom: 1px solid rgba(15, 23, 42, 0.04) !important;
+  min-width: 0 !important;
+  word-break: break-word !important;
 }
 
 .customer-portfolio-page .sidebar-full-cell:last-child {
   border-bottom: none !important;
 }
 
-/* Shading full rows alternatively */
 .customer-portfolio-page .sidebar-full-cell:nth-child(odd) {
   background: #ffffff !important;
 }
 .customer-portfolio-page .sidebar-full-cell:nth-child(even) {
   background: #fafbfc !important;
+}
+
+/* Cell label and value styling */
+.customer-portfolio-page .sidebar-cell-label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: #64748b !important;
+  display: block !important;
+}
+
+.customer-portfolio-page .sidebar-cell-value {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  display: block !important;
+  word-break: break-word !important;
 }
 
 /* Quick Actions buttons styling */
@@ -12539,15 +12822,39 @@ th {
   border-radius: 12px !important;
   padding: 16px 20px !important;
   color: #334155 !important;
+  word-break: break-word !important;
 }
 
-/* Timeline Timeline content card style */
+/* Timeline content card style */
+.customer-portfolio-page .customer-portfolio-timeline-scroll {
+  overflow-x: hidden !important;
+  padding-right: 0 !important;
+}
+
 .customer-portfolio-page .customer-portfolio-timeline-content {
-  background: #f8fafc !important; /* light shade contrast */
+  background: #f8fafc !important;
   border: 1px solid rgba(15, 23, 42, 0.05) !important;
   border-radius: 14px !important;
   padding: 16px 20px !important;
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.01) !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  word-break: break-word !important;
+}
+
+.customer-portfolio-page .customer-portfolio-timeline {
+  border-left: 2px solid #dbe4ef !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: calc(100% - 38px) !important;
+  box-sizing: border-box !important;
+}
+
+.customer-portfolio-page .customer-portfolio-timeline-item {
+  min-width: 0 !important;
+  width: 100% !important;
 }
 
 .customer-portfolio-page .customer-portfolio-timeline-dot {
@@ -12556,12 +12863,8 @@ th {
   box-shadow: 0 0 0 4px #ffffff, 0 2px 6px rgba(37, 99, 235, 0.2) !important;
   width: 14px !important;
   height: 14px !important;
-  left: -7px !important;
+  left: -40px !important;
   top: 6px !important;
-}
-
-.customer-portfolio-page .customer-portfolio-timeline {
-  border-left: 2px solid #e2e8f0 !important;
 }
 
 /* Action button shadows and rounded corners */
@@ -12591,33 +12894,33 @@ th {
 }
 
 .customer-portfolio-pill.tone-amber {
-  background: #fef3c7;
+  background: #fef3c7 !important;
   color: #92400e !important;
-  border: 1px solid #fcd34d;
+  border: 1px solid #fcd34d !important;
 }
 
 .customer-portfolio-pill.tone-blue {
-  background: #dbeafe;
+  background: #dbeafe !important;
   color: #1e40af !important;
-  border: 1px solid #93c5fd;
+  border: 1px solid #93c5fd !important;
 }
 
 .customer-portfolio-pill.tone-red {
-  background: #fee2e2;
+  background: #fee2e2 !important;
   color: #991b1b !important;
-  border: 1px solid #fca5a5;
+  border: 1px solid #fca5a5 !important;
 }
 
 .customer-portfolio-pill.tone-green {
-  background: #dcfce7;
+  background: #dcfce7 !important;
   color: #166534 !important;
-  border: 1px solid #86efac;
+  border: 1px solid #86efac !important;
 }
 
 .customer-portfolio-pill.tone-slate {
-  background: #f1f5f9;
+  background: #f1f5f9 !important;
   color: #475569 !important;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #cbd5e1 !important;
 }
 
 /* Search Bar Placeholder Fix */
@@ -12627,7 +12930,6 @@ th {
   opacity: 1 !important;
 }
 
-/* Search bar webkit search cancel button */
 .operations-search.claims-search input::-webkit-search-cancel-button {
   -webkit-appearance: none;
   appearance: none;
@@ -12659,4 +12961,76 @@ th {
   background: #fafbfc;
   border-color: rgba(15, 23, 42, 0.14);
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
+}
+
+/* Responsive layout for view more page */
+@media (max-width: 900px) {
+  .customer-portfolio-page .customer-portfolio-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Table register panel full width */
+.claims-register-panel {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.035) !important;
+}
+
+/* Claims table ensure proper overflow */
+.claims-table-wrap {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure claims page takes full width */
+.claims-management-page {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Claims detail grid in modal */
+.claims-detail-grid {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.claims-detail-grid > div {
+  min-width: 0 !important;
+  word-break: break-word !important;
+}
+
+.claims-timeline-scroll {
+  max-height: min(420px, 46vh) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-right: 4px !important;
+  overscroll-behavior: contain !important;
+}
+
+.customer-portfolio-page .customer-portfolio-timeline-scroll {
+  max-height: min(420px, 46vh) !important;
+}
+
+/* Shared soft depth for operations containers */
+.claims-document-uploader,
+.claims-detail-panel,
+.claims-remark-card,
+.claims-delete-card,
+.claims-filter-card,
+.renewal-selection-panel,
+.renewal-policy-row,
+.renewal-type-tabs button,
+.renewal-filter-row select,
+.renewal-search-box {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.045), 0 1px 4px rgba(15, 23, 42, 0.03) !important;
+}
+
+.claims-filter-card:hover,
+.renewal-type-tabs button:hover,
+.renewal-action-trigger:hover {
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.075), 0 2px 8px rgba(15, 23, 42, 0.04) !important;
 }

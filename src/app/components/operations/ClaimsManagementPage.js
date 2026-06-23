@@ -756,7 +756,7 @@ export default function ClaimsManagementPage() {
               </div>
               <div style={{ padding: "20px", background: "#ffffff" }}>
                 {selectedClaim.remarks && selectedClaim.remarks.length ? (
-                  <div className="customer-portfolio-timeline-scroll" style={{ maxHeight: "none" }}>
+                  <div className="customer-portfolio-timeline-scroll claims-timeline-scroll">
                     <div className="customer-portfolio-timeline">
                       {selectedClaim.remarks.map((item) => (
                         <div key={item.id} className="customer-portfolio-timeline-item" style={{ paddingLeft: "28px" }}>
@@ -1326,118 +1326,120 @@ export default function ClaimsManagementPage() {
         </section>
       ) : null}
 
-      {isFormOpen ? (
-        <section className="claims-register-panel claims-form-panel">
-          <div className="claims-register-head">
-            <div>
-              <span>
-                <FilePlus2 size={18} /> {editingId ? "Edit Claim" : "Add Claim"}
-              </span>
-              <strong>Enter generic claim details and upload named supporting documents.</strong>
-            </div>
-            <button
-              type="button"
-              className="claims-icon-action"
-              onClick={closeForm}
-              aria-label="Close claim form"
-            >
-              <X size={18} />
-            </button>
-          </div>
+      {typeof window !== "undefined" && isFormOpen
+        ? createPortal(
+            <div className="claims-add-modal-backdrop" onClick={closeForm}>
+              <section className="claims-add-modal" onClick={(event) => event.stopPropagation()}>
+                <div className="claims-add-modal-header">
+                  <div>
+                    <h2>
+                      <FilePlus2 size={18} /> {editingId ? "Edit Claim" : "Add Claim"}
+                    </h2>
+                    <p>Enter generic claim details and upload named supporting documents.</p>
+                  </div>
+                  <button type="button" onClick={closeForm} aria-label="Close claim form">
+                    <X size={20} />
+                  </button>
+                </div>
 
-          <form className="claims-entry-form" onSubmit={saveClaim}>
-            <div className="claims-form-grid">
-              {CLAIM_FIELDS.map((field) => (
-                <label key={field.key}>
-                  <span>
-                    {field.label}
-                    {field.required ? " *" : ""}
-                  </span>
-                  {field.type === "select" ? (
-                    <select
-                      value={claim[field.key]}
-                      onChange={(event) => updateClaim(field.key, event.target.value)}
-                    >
-                      {field.options.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type={field.type || "text"}
-                      inputMode={field.inputMode}
-                      value={claim[field.key]}
-                      placeholder={field.placeholder}
-                      required={field.required}
-                      onChange={(event) => updateClaim(field.key, event.target.value)}
+                <form className="claims-add-modal-form" onSubmit={saveClaim}>
+                  <div className="claims-add-modal-grid">
+                    {CLAIM_FIELDS.map((field) => (
+                      <label key={field.key} className="claims-add-modal-field">
+                        <span>
+                          {field.label}
+                          {field.required ? " *" : ""}
+                        </span>
+                        {field.type === "select" ? (
+                          <select
+                            value={claim[field.key]}
+                            onChange={(event) => updateClaim(field.key, event.target.value)}
+                          >
+                            {field.options.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type={field.type || "text"}
+                            inputMode={field.inputMode}
+                            value={claim[field.key]}
+                            placeholder={field.placeholder}
+                            required={field.required}
+                            onChange={(event) => updateClaim(field.key, event.target.value)}
+                          />
+                        )}
+                      </label>
+                    ))}
+                  </div>
+
+                  <label className="claims-add-modal-field claims-add-modal-wide">
+                    <span>Claim Description</span>
+                    <textarea
+                      value={claim.claimDescription}
+                      placeholder="Enter claim description"
+                      rows={3}
+                      onChange={(event) => updateClaim("claimDescription", event.target.value)}
                     />
-                  )}
-                </label>
-              ))}
-            </div>
+                  </label>
 
-            <label className="claims-wide-field">
-              <span>Claim Description</span>
-              <textarea
-                value={claim.claimDescription}
-                placeholder="Enter claim description"
-                rows={3}
-                onChange={(event) => updateClaim("claimDescription", event.target.value)}
-              />
-            </label>
+                  <label className="claims-add-modal-field claims-add-modal-wide">
+                    <span>Current Remark</span>
+                    <textarea
+                      value={claim.currentRemark}
+                      placeholder="Enter current remark or claim follow-up note"
+                      rows={3}
+                      onChange={(event) => updateClaim("currentRemark", event.target.value)}
+                    />
+                  </label>
 
-            <label className="claims-wide-field">
-              <span>Current Remark</span>
-              <textarea
-                value={claim.currentRemark}
-                placeholder="Enter current remark or claim follow-up note"
-                rows={3}
-                onChange={(event) => updateClaim("currentRemark", event.target.value)}
-              />
-            </label>
+                  <div className="claims-add-modal-docs">
+                    <div>
+                      <span>
+                        <Paperclip size={17} /> Supporting Documents
+                      </span>
+                      <strong>
+                        Name every file before upload, for example Aadhaar Card, PAN Card, FIR, claim form,
+                        invoice.
+                      </strong>
+                    </div>
+                    <div className="claims-add-modal-upload">
+                      <input
+                        type="text"
+                        value={documentName}
+                        placeholder="Document name"
+                        onChange={(event) => setDocumentName(event.target.value)}
+                      />
+                      <label>
+                        <Paperclip size={16} /> Upload
+                        <input
+                          type="file"
+                          accept=".pdf,image/*,.doc,.docx,.xls,.xlsx"
+                          onChange={uploadClaimDocument}
+                        />
+                      </label>
+                    </div>
+                    {documentError ? <p className="claims-document-error">{documentError}</p> : null}
+                    <DocumentList documents={claim.documents || []} onRemove={removeDraftDocument} />
+                  </div>
 
-            <div className="claims-document-uploader">
-              <div>
-                <span>
-                  <Paperclip size={17} /> Supporting Documents
-                </span>
-                <strong>
-                  Name every file before upload, for example Aadhaar Card, PAN Card, FIR, claim form, invoice.
-                </strong>
-              </div>
-              <div className="claims-document-controls">
-                <input
-                  type="text"
-                  value={documentName}
-                  placeholder="Document name"
-                  onChange={(event) => setDocumentName(event.target.value)}
-                />
-                <label>
-                  <Paperclip size={16} /> Upload
-                  <input
-                    type="file"
-                    accept=".pdf,image/*,.doc,.docx,.xls,.xlsx"
-                    onChange={uploadClaimDocument}
-                  />
-                </label>
-              </div>
-              {documentError ? <p className="claims-document-error">{documentError}</p> : null}
-              <DocumentList documents={claim.documents || []} onRemove={removeDraftDocument} />
-            </div>
-
-            <div className="claims-form-actions">
-              <button type="button" className="secondary-action" onClick={() => setClaim(EMPTY_CLAIM)}>
-                <RotateCcw size={17} /> Reset
-              </button>
-              <button type="submit" className="primary-action" disabled={isSaving}>
-                <FilePlus2 size={17} /> {isSaving ? "Saving..." : editingId ? "Update Claim" : "Save Claim"}
-              </button>
-            </div>
-          </form>
-        </section>
-      ) : null}
+                  <div className="claims-add-modal-actions">
+                    <button type="button" className="secondary-action" onClick={() => setClaim(EMPTY_CLAIM)}>
+                      <RotateCcw size={17} /> Reset
+                    </button>
+                    <button type="submit" className="primary-action" disabled={isSaving}>
+                      <FilePlus2 size={17} />{" "}
+                      {isSaving ? "Saving..." : editingId ? "Update Claim" : "Save Claim"}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            </div>,
+            document.body,
+          )
+        : null}
 
       <section className="claims-filter-grid">
         {FILTERS.map((filter) => (
