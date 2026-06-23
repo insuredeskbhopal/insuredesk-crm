@@ -218,6 +218,8 @@ function extractIffcoPolicyType(text) {
 
 // Start of isIffcoTokioMotorText (Lines 3362-3364)
 function isIffcoTokioMotorText(text = "") {
+  if (/tataaig\.com|customersupport@tataaig\.com/i.test(text)) return false;
+  if (/hdfcergo\.com|@hdfcergo\.com/i.test(text)) return false;
   return /\bIFFCO[\s-]*TOKIO\s+(?:GENERAL\s+INSURANCE|GEN\s+INSU)/i.test(text);
 }
 

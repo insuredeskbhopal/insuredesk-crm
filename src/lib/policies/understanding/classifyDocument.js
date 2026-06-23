@@ -59,7 +59,12 @@ function classifyDocument(text = "") {
       documentFormat: "IFFCO_TOKIO_MOTOR_V1",
       documentCategory: "Motor Insurance",
       policyType: "Motor Policy",
-      signals: [/IFFCO[- ]?TOKIO/i, /Policy\s+Schedule/i, /Registration\s+(?:No|Mark)/i, /Net\s+Premium/i],
+      signals: [
+        /IFFCO[- ]?TOKIO/i,
+        /Policy\s+Schedule/i,
+        /Registration\s+(?:No|Mark)/i,
+        /iffcotokio\.co\.in|P400/i,
+      ],
     },
     {
       company: "Generali Central Insurance Company Limited",
