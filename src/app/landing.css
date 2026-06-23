@@ -3148,10 +3148,30 @@ body:has(.seo-page) {
   margin-top: 18px;
 }
 
-.landing-shell .contact-submit-button:hover,
-.landing-shell .contact-success button:hover {
-  background: #157245;
-  transform: translateY(-2px);
+.landing-shell .contact-submit-button:hover:not(:disabled),
+.landing-shell .contact-success button:hover:not(:disabled) {
+  background: #157245 !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) !important;
+}
+
+.landing-shell .contact-submit-button:focus,
+.landing-shell .contact-submit-button:active,
+.landing-shell .contact-success button:focus,
+.landing-shell .contact-success button:active {
+  background: #0d1e3d !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 4px rgba(6, 26, 61, 0.25) !important;
+  transform: scale(0.98) !important;
+}
+
+.landing-shell .contact-submit-button:disabled,
+.landing-shell .contact-success button:disabled {
+  background: #cbd5e1 !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .landing-shell .contact-success {
@@ -5086,9 +5106,26 @@ body:has(.seo-page) {
   transition: background-color 0.22s ease, transform 0.22s ease;
 }
 
-.landing-shell .blog-sidebar-cta button:hover {
-  background: #061a3d;
-  transform: translateY(-2px);
+.landing-shell .blog-sidebar-cta button:hover:not(:disabled) {
+  background: #061a3d !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) !important;
+}
+
+.landing-shell .blog-sidebar-cta button:focus,
+.landing-shell .blog-sidebar-cta button:active {
+  background: #0d1e3d !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 4px rgba(6, 26, 61, 0.25) !important;
+  transform: scale(0.98) !important;
+}
+
+.landing-shell .blog-sidebar-cta button:disabled {
+  background: #cbd5e1 !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .landing-shell .blog-sidebar-cta button .material-symbols-outlined {
@@ -5128,6 +5165,31 @@ body:has(.seo-page) {
   color: #157245 !important;
   cursor: pointer;
   font-weight: 800;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.landing-shell .blog-sidebar-success button:hover:not(:disabled) {
+  background: rgba(20, 93, 56, 0.04) !important;
+  border-color: rgba(20, 93, 56, 0.28) !important;
+  color: #115030 !important;
+}
+
+.landing-shell .blog-sidebar-success button:focus,
+.landing-shell .blog-sidebar-success button:active {
+  background: rgba(20, 93, 56, 0.08) !important;
+  border-color: rgba(20, 93, 56, 0.36) !important;
+  color: #0e4428 !important;
+  box-shadow: 0 0 0 3px rgba(20, 93, 56, 0.12) !important;
+  transform: scale(0.98) !important;
+}
+
+.landing-shell .blog-sidebar-success button:disabled {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  border-color: #e2e8f0 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* Sidebar Info Box */
