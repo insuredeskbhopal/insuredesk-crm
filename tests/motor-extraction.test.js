@@ -1135,6 +1135,42 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("extracts Bajaj General private car package details for Primeone Work Force", async () => {
+    const sourceFile =
+      "tests/fixtures/PRIMEONE WORK FORCE PVT LTD_MP04CX2778_2026-27 policy.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "BAJAJ_ALLIANZ_MOTOR_V1",
+      insuranceCompany: "Bajaj Allianz General Insurance Company Limited",
+      policyType: "Private Car Package Policy",
+      policyCoverType: "Comprehensive",
+      insuredName: "PRIMEONE WORK FORCE PVT LTD",
+      policyNumber: "OG-27-2301-1801-00000239",
+      startDate: "25/06/2026",
+      expiryDate: "24/06/2027",
+      vehicleNumber: "MP04CX2778",
+      registrationNumber: "MP04CX2778",
+      makeModel: "HYUNDAI - VENUE",
+      fuelType: "PETROL",
+      engineNumber: "G3LCKM808840",
+      chassisNumber: "MALFC81AVKM021034",
+      cubicCapacity: "998",
+      manufacturingYear: "2019",
+      seatingCapacity: "5",
+      idv: "5,30,357.00",
+      premium: "9,908.00",
+      totalPremium: "9,908.00",
+      netPremium: "8,396.00",
+      odPremium: "5,752.00",
+      tpDriverOwner: "2,644.00",
+      ncb: "50%",
+      previousInsurer: "Future Generali India Insurance Company Limited..",
+      previousPolicyNumber: "VE063554",
+    });
+  });
+
   it("extracts Tata AIG engine number when the engine label wraps across lines", () => {
     const text = `
       Tata AIG General Insurance Company Limited General Insurance Company Limited

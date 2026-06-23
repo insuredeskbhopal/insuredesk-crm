@@ -1,7 +1,7 @@
 const { normalizeInsuranceCompanyName: normalizeCompanyFromMaster } = require("../../../../master/insurance-companies.cjs");
 const { matchGroup, escapeRegExp } = require("../../utils/regex.cjs");
 const { normalizeAmount, sumPlainAmounts } = require("../../utils/amounts.cjs");
-const { normalizeFuelType } = require("../../utils/motor.cjs");
+const { normalizeFuelType, isPlausibleEngineNumber } = require("../../utils/motor.cjs");
 const { cleanHdfcValue, cleanWarehouseBlock } = require("../../utils/text.cjs");
 const { localExtractLocationPart } = require("../../utils/locations.cjs");
 const { findIffcoEvidence } = require("../iffco/index.cjs");
@@ -180,6 +180,8 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
     .toUpperCase()
     .replace(/\s+/g, "");
 
+  const rtoLocation = matchGroup(text, /NameofRegistrationAuthority:\s*([A-Z0-9 -]+)/i) || "";
+
   const makeModel = extractBajajMakeModel(text);
   const makeParts = makeModel
     .split("-")
@@ -188,20 +190,100 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
   const make = makeParts[0] || "";
   const model = makeParts.slice(1).join(" - ") || "";
 
-  const variant =
-    matchGroup(text, /SubType\s*\n\s*([A-Z0-9 ./-]+)/i) ||
-    matchGroup(text, /Vehicle\s*Sub\s*Type\s*\n\s*([A-Z0-9 ./-]+)/i) ||
-    "";
+  // Improved variant extraction matching logic
+  let variant = "";
+  const subTypeRegex = /Sub\s*Type(?:Year|[\s\S]{0,60}?)\n\s*([A-Z0-9 ./-]+?)(?:\r?\n\s*([A-Z0-9 ./-]+?))?\s*(?=\s*\d{4}[-\s\d])/i;
+  const subTypeMatch = text.match(subTypeRegex);
+  if (subTypeMatch) {
+    const val = [subTypeMatch[1], subTypeMatch[2]].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+    if (val && !/seating|capacity|engine|chassis|registration|make|model/i.test(val)) {
+      variant = val;
+    }
+  }
 
+  if (!variant) {
+    const simpleMatch = matchGroup(text, /Vehicle\s*Sub\s*Type\s*\n\s*([A-Z0-9 ./-]+)/i) ||
+                        matchGroup(text, /SubType\s*\n\s*([A-Z0-9 ./-]+)/i);
+    if (simpleMatch && !/MP\d{2}/i.test(simpleMatch) && simpleMatch.length < 50) {
+      variant = simpleMatch.trim();
+    }
+  }
+
+  // Try layout-aware concatenated table rows for engine and chassis numbers
   let engineNumber = "";
   let chassisNumber = "";
-  const engineChassisMatch = text.match(
-    /Engine NumberChassis Number[\s\S]*?\n\s*([A-Z0-9]+)\s*\n\s*([A-Z0-9]+)\s*\n\s*(?:\d)/i,
-  );
-  if (engineChassisMatch) {
-    const combined = (engineChassisMatch[1] + engineChassisMatch[2]).replace(/\s+/g, "").toUpperCase();
-    chassisNumber = combined.slice(-17);
-    engineNumber = combined.slice(0, -17);
+  
+  if (registrationNumber) {
+    const lines = text.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const lineCleaned = lines[i].replace(/\s+/g, "");
+      if (lineCleaned.startsWith(registrationNumber)) {
+        // Concatenate this line and next 2 lines (removing spaces and hyphens)
+        let combined = lineCleaned;
+        if (lines[i + 1]) combined += lines[i + 1].replace(/\s+/g, "");
+        if (lines[i + 2]) combined += lines[i + 2].replace(/\s+/g, "");
+
+        const normalizedCombined = combined.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+
+        // Standard Indian chassis starts with MA, MB, MC, MD, ME, MZ, and is 17 characters long.
+        const vinMatch = normalizedCombined.match(/M[A-EZ][A-Z0-9]{15}/i);
+        if (vinMatch) {
+          const possibleChassis = vinMatch[0].toUpperCase();
+          chassisNumber = possibleChassis;
+
+          // Extract part of the string before the chassis number
+          const chassisIndex = normalizedCombined.indexOf(possibleChassis);
+          const beforeChassis = normalizedCombined.slice(0, chassisIndex);
+
+          // Strip registration number
+          const regIndex = beforeChassis.indexOf(registrationNumber);
+          if (regIndex !== -1) {
+            const afterReg = beforeChassis.slice(regIndex + registrationNumber.length);
+
+            // Dynamically strip the place of registration prefix if available
+            const rtoPrefix = rtoLocation ? (registrationNumber.slice(0, 4) + rtoLocation).replace(/[^A-Z0-9]/gi, "").toUpperCase() : "";
+            if (rtoPrefix && afterReg.startsWith(rtoPrefix)) {
+              const possibleEngine = afterReg.slice(rtoPrefix.length);
+              if (possibleEngine && isPlausibleEngineNumber(possibleEngine)) {
+                engineNumber = possibleEngine;
+              }
+            } else {
+              // Strip place of registration prefix starting with RTO code e.g. MP04 or MP39 using lookahead
+              const rtoMatch = afterReg.match(/^([A-Z]{2}\d{2}[A-Z]{2,15}?)(?=[A-Z]{0,1}\d)/i);
+              if (rtoMatch) {
+                const possibleEngine = afterReg.slice(rtoMatch[0].length);
+                if (possibleEngine && isPlausibleEngineNumber(possibleEngine)) {
+                  engineNumber = possibleEngine;
+                }
+              } else {
+                const simpleRto = afterReg.match(/^([A-Z]{2}\d{2})/i);
+                if (simpleRto) {
+                  const possibleEngine = afterReg.slice(simpleRto[0].length);
+                  if (possibleEngine && isPlausibleEngineNumber(possibleEngine)) {
+                    engineNumber = possibleEngine;
+                  }
+                }
+              }
+            }
+          }
+        }
+        if (engineNumber && chassisNumber) {
+          break;
+        }
+      }
+    }
+  }
+
+  // Fallback to the original matching logic if layout-aware extraction failed
+  if (!engineNumber || !chassisNumber) {
+    const engineChassisMatch = text.match(
+      /Engine NumberChassis Number[\s\S]*?\n\s*([A-Z0-9]+)\s*\n\s*([A-Z0-9]+)\s*\n\s*(?:\d)/i,
+    );
+    if (engineChassisMatch) {
+      const combined = (engineChassisMatch[1] + engineChassisMatch[2]).replace(/\s+/g, "").toUpperCase();
+      if (!chassisNumber) chassisNumber = combined.slice(-17);
+      if (!engineNumber) engineNumber = combined.slice(0, -17);
+    }
   }
 
   let cubicCapacity = "";
@@ -255,7 +337,6 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
     gstAmount = (parseFloat(sgst.replace(/,/g, "")) + parseFloat(cgst.replace(/,/g, ""))).toFixed(2);
   }
 
-  const rtoLocation = matchGroup(text, /NameofRegistrationAuthority:\s*([A-Z0-9 -]+)/i) || "";
   const customerMobile = matchGroup(text, /Proposer Mobile Number\s*[:.-]?\s*([0-9*]+)/i);
   const customerEmail = matchGroup(
     text,
