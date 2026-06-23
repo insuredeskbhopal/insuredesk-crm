@@ -376,6 +376,54 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("locks the New India Standalone Own Damage two wheeler contract for DADA GURU", async () => {
+    const sourceFile = "tests/fixtures/DADA GURU ENTERPRISES_MP04ZJ8775_2026-27.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      insuredName: "DADA GURU ENTERPRISES",
+      policyNumber: "45140031261800002383",
+      policyType: "Standalone Motor Own Damage Policy for Two Wheelers",
+      insuranceCompany: "The New India Assurance Company Limited",
+      contactNumber: "8818889660",
+      contactPerson: "DADA GURU ENTERPRISES",
+      vehicleNumber: "MP-04-ZJ-8775",
+      registrationNumber: "MP-04-ZJ-8775",
+      makeModel: "TVS/JUPITER",
+      variant: "MILLIONR",
+      manufacturingYear: "2023",
+      engineNumber: "5EP3106890",
+      chassisNumber: "MD626CG51P3E34345",
+      fuelType: "Petrol",
+      cubicCapacity: "109",
+      seatingCapacity: "2",
+      idv: "53622.00",
+      sumInsured: "53622.00",
+      premium: "569.00",
+      totalPremium: "569.00",
+      netPremium: "483.00",
+      tpDriverOwner: "0.00",
+      odPremium: "483.00",
+      startDate: "12/06/2026",
+      expiryDate: "11/06/2027",
+      duration: "12 months",
+      policyCoverType: "Own Damage",
+      riskLocation: "",
+      validIn: "",
+      nomineeName: "",
+      financerName: "",
+      basicOwnDamage: "35.00",
+      basicThirdPartyLiability: "",
+      netOwnDamagePremium: "483.00",
+      netLiabilityPremium: "0.00",
+      totalPackagePremium: "483.00",
+      zeroDepreciationCover: "157.27",
+      ncb: "35%",
+      ncbPercentage: "35%",
+    });
+  });
+
   it("extracts New India commercial vehicle package policy details", async () => {
     const sourceFile = "tests/fixtures/RAHUL   RAI_MP04HE6044_2026-27 POLICY.pdf";
     const parsed = await pdf(readFileSync(sourceFile));

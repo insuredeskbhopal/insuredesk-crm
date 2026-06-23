@@ -202,7 +202,11 @@ function extractNewIndiaMotorDetails(text = "") {
   if (ce) {
     const [chassis, engine] = ce.split("/");
     result.chassisNumber = cleanVehicleCode(chassis);
-    result.engineNumber = cleanVehicleCode(engine);
+    let cleanedEngine = cleanVehicleCode(engine);
+    if (cleanedEngine.startsWith("DG") && /^\d/.test(cleanedEngine.slice(2))) {
+      cleanedEngine = cleanedEngine.slice(2);
+    }
+    result.engineNumber = cleanedEngine;
   }
 
   result.makeModel = cleanHdfcValue(
@@ -283,12 +287,12 @@ function extractNewIndiaMotorDetails(text = "") {
 // Start of extractNewIndiaPolicyPeriod (Lines 4185-4197)
 function extractNewIndiaPolicyPeriod(text = "") {
   const bundled = text.match(
-    /Period\s+of\s+cover\s+OD\s+Cover\s+(\d{1,2}\/\d{1,2}\/\d{4})[\s\S]{0,80}?to\s+(\d{1,2}\/\d{1,2}\/\d{4})/i,
+    /Period\s+of\s+cover\s+OD\s+Cover\s*(\d{1,2}\/\d{1,2}\/\d{4})[\s\S]{0,80}?to\s+(\d{1,2}\/\d{1,2}\/\d{4})/i,
   );
   if (bundled) return { startDate: bundled[1], endDate: bundled[2] };
 
   const regular = text.match(
-    /Period\s+of\s+cover\s+(\d{1,2}\/\d{1,2}\/\d{4})[\s\S]{0,80}?to\s+(\d{1,2}\/\d{1,2}\/\d{4})/i,
+    /Period\s+of\s+cover\s*(\d{1,2}\/\d{1,2}\/\d{4})[\s\S]{0,80}?to\s*(\d{1,2}\/\d{1,2}\/\d{4})/i,
   );
   if (regular) return { startDate: regular[1], endDate: regular[2] };
 

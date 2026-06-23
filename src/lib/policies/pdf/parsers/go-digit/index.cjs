@@ -6,6 +6,13 @@ const { normalizeFuelType } = require("../../utils/motor.cjs");
 
 // Start of isGoDigitMotor (Lines 6780-6794)
 function isGoDigitMotor(text) {
+  if (
+    /\bTHE\s+NEW\s+INDIA\s+ASSURANCE\s+CO\.?\s+LTD\.?\b/i.test(text) ||
+    /\bNew\s+India\s+Assurance\b/i.test(text)
+  ) {
+    return false;
+  }
+
   const hasGoDigitCompanyMarker =
     /Go\s+Digit/i.test(text) || /godigit\.com/i.test(text) || /hello@godigit\.com/i.test(text);
 

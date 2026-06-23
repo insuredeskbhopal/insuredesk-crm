@@ -1,5 +1,4 @@
 param(
-param(
   [string]$BackupRoot = "C:\BimaBackups",
   [string]$RequiredHostFragment = "ep-gentle-king",
   [int]$RetentionDays = 30

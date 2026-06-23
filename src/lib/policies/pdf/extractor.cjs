@@ -1108,6 +1108,18 @@ function extractPolicyFromText(text, sourceFile = "") {
       newIndiaMotor.policyEndDate ||
       iffcoMotor.policyEndDate ||
       expiryDate,
+    policyStartDate:
+      hdfcErgoMotor.policyStartDate ||
+      generaliMotor.policyStartDate ||
+      newIndiaMotor.policyStartDate ||
+      iffcoMotor.policyStartDate ||
+      startDate,
+    policyEndDate:
+      hdfcErgoMotor.policyEndDate ||
+      generaliMotor.policyEndDate ||
+      newIndiaMotor.policyEndDate ||
+      iffcoMotor.policyEndDate ||
+      expiryDate,
     duration:
       buildDuration(
         hdfcErgoMotor.policyStartDate ||
