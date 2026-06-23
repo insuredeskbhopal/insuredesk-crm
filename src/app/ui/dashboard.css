@@ -2930,12 +2930,22 @@ label span em {
   display: inline-grid;
   place-items: center;
   width: 38px;
+  height: 38px;
   min-height: 38px;
+  padding: 0 !important;
   border: 1px solid rgba(25, 28, 29, 0.12);
   border-radius: 10px;
   background: #ffffff;
   color: #111827;
+  cursor: pointer;
 }
+
+.claims-icon-action:hover {
+  background: #f8fafc;
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
 
 .claims-register-panel {
   display: grid;
@@ -3235,27 +3245,37 @@ label span em {
 .claims-register-table .claims-action-menu > button {
   display: inline-grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: 1px solid rgba(25, 28, 29, 0.12);
   border-radius: 8px;
   background: #ffffff;
   color: #111827;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.claims-register-table .claims-action-menu > button:hover {
+  background: #f4f5f7;
+  border-color: rgba(25, 28, 29, 0.22);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
 }
 
 .claims-register-table .claims-action-menu > button svg {
   display: block;
   stroke: currentColor;
   stroke-width: 2.5;
+  width: 20px;
+  height: 20px;
 }
 
 .claims-action-popover {
   position: absolute;
   right: 8px;
-  top: 38px;
+  top: 42px;
   z-index: 20;
   display: grid;
-  width: 180px;
+  width: 200px;
   padding: 6px;
   border: 1px solid rgba(25, 28, 29, 0.12);
   border-radius: 12px;
@@ -12304,4 +12324,339 @@ th {
   .remark-checkbox-container {
     grid-template-columns: 1fr;
   }
+}
+
+/* ==========================================
+   CLAIMS MANAGEMENT PAGE POLISHING & DEPTH
+   ========================================== */
+
+/* 1. Table Action Button (Three Dots) Padding & Sizing Fix */
+.claims-register-table .claims-action-menu > button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(25, 28, 29, 0.12) !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.claims-register-table .claims-action-menu > button:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: rgba(25, 28, 29, 0.24) !important;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05) !important;
+}
+
+.claims-register-table .claims-action-menu > button svg {
+  width: 20px !important;
+  height: 20px !important;
+  display: block !important;
+  stroke-width: 2.5 !important;
+}
+
+/* 2. Search Bar Layout Alignment & Prevent Wrapping */
+.operations-search.claims-search {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 10px !important;
+  width: 100% !important;
+  max-width: 320px !important;
+  height: 40px !important;
+  padding: 0 14px !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.2s ease !important;
+}
+
+.operations-search.claims-search:focus-within {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+.operations-search.claims-search input {
+  flex: 1 !important;
+  height: 100% !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+}
+
+.operations-search.claims-search svg {
+  color: #64748b !important;
+  flex-shrink: 0 !important;
+}
+
+/* 3. Filter Grid Premium Active Shading & Depth */
+.claims-filter-card {
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02), 0 1px 2px rgba(15, 23, 42, 0.01) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.claims-filter-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05), 0 2px 4px rgba(15, 23, 42, 0.02) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+.claims-filter-card.active {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.02) !important;
+  border-color: rgba(15, 23, 42, 0.15) !important;
+}
+
+/* Active background tint based on category color to give rich visual depth */
+.claims-filter-card.active.accent-orange {
+  background: linear-gradient(135deg, #ffffff 0%, #fff7ed 100%) !important;
+}
+.claims-filter-card.active.accent-amber {
+  background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%) !important;
+}
+.claims-filter-card.active.accent-blue {
+  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%) !important;
+}
+.claims-filter-card.active.accent-red {
+  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%) !important;
+}
+.claims-filter-card.active.accent-green {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
+}
+.claims-filter-card.active.accent-slate {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+}
+
+/* 4. White Shades Layering & Depth on View More Page */
+.customer-portfolio-page {
+  background: #f4f6f8 !important; /* Main page background */
+}
+
+/* Base Card Depth Styling */
+.customer-portfolio-page .sidebar-section-card,
+.customer-portfolio-page .customer-portfolio-card {
+  border: 1px solid rgba(15, 23, 42, 0.05) !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.03), 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+  overflow: hidden !important;
+  margin-bottom: 20px !important;
+}
+
+/* Card Headers with soft gradient white shades */
+.customer-portfolio-page .sidebar-section-header,
+.customer-portfolio-page .customer-portfolio-card h2 {
+  background: linear-gradient(to bottom, #ffffff, #fafbfc) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05) !important;
+  padding: 14px 20px !important;
+  font-weight: 700 !important;
+}
+
+/* Alternating inner field cell fills using white shades for structural depth */
+.customer-portfolio-page .sidebar-grid-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid rgba(15, 23, 42, 0.04) !important;
+}
+
+.customer-portfolio-page .sidebar-grid-row:last-child {
+  border-bottom: none !important;
+}
+
+.customer-portfolio-page .sidebar-grid-cell {
+  padding: 12px 18px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Shading grid cells alternatively */
+.customer-portfolio-page .sidebar-grid-cell:nth-child(odd) {
+  background: #ffffff !important;
+}
+.customer-portfolio-page .sidebar-grid-cell:nth-child(even) {
+  background: #fafbfc !important; /* Soft cool white */
+}
+.customer-portfolio-page .sidebar-grid-cell:first-child {
+  border-right: 1px solid rgba(15, 23, 42, 0.04) !important;
+}
+
+.customer-portfolio-page .sidebar-full-cell {
+  padding: 12px 18px !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.04) !important;
+}
+
+.customer-portfolio-page .sidebar-full-cell:last-child {
+  border-bottom: none !important;
+}
+
+/* Shading full rows alternatively */
+.customer-portfolio-page .sidebar-full-cell:nth-child(odd) {
+  background: #ffffff !important;
+}
+.customer-portfolio-page .sidebar-full-cell:nth-child(even) {
+  background: #fafbfc !important;
+}
+
+/* Quick Actions buttons styling */
+.customer-portfolio-page .sidebar-action-btn {
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.03) !important;
+  border-radius: 10px !important;
+  transition: all 0.2s ease !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+}
+
+.customer-portfolio-page .sidebar-action-btn:hover {
+  background: #fafbfc !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* Description Well depth effect */
+.customer-portfolio-page .claim-desc-well {
+  background: linear-gradient(135deg, #f8fafc 0%, #fafbfc 100%) !important;
+  border: 1px solid rgba(15, 23, 42, 0.05) !important;
+  box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.02) !important;
+  border-radius: 12px !important;
+  padding: 16px 20px !important;
+  color: #334155 !important;
+}
+
+/* Timeline Timeline content card style */
+.customer-portfolio-page .customer-portfolio-timeline-content {
+  background: #f8fafc !important; /* light shade contrast */
+  border: 1px solid rgba(15, 23, 42, 0.05) !important;
+  border-radius: 14px !important;
+  padding: 16px 20px !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.01) !important;
+}
+
+.customer-portfolio-page .customer-portfolio-timeline-dot {
+  background: #ffffff !important;
+  border: 3px solid #2563eb !important;
+  box-shadow: 0 0 0 4px #ffffff, 0 2px 6px rgba(37, 99, 235, 0.2) !important;
+  width: 14px !important;
+  height: 14px !important;
+  left: -7px !important;
+  top: 6px !important;
+}
+
+.customer-portfolio-page .customer-portfolio-timeline {
+  border-left: 2px solid #e2e8f0 !important;
+}
+
+/* Action button shadows and rounded corners */
+.customer-portfolio-page .customer-portfolio-back {
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.2s ease !important;
+}
+
+.customer-portfolio-page .customer-portfolio-back:hover {
+  background: #fafbfc !important;
+  border-color: rgba(15, 23, 42, 0.15) !important;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Status Tone Pill Classes */
+.customer-portfolio-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.customer-portfolio-pill.tone-amber {
+  background: #fef3c7;
+  color: #92400e !important;
+  border: 1px solid #fcd34d;
+}
+
+.customer-portfolio-pill.tone-blue {
+  background: #dbeafe;
+  color: #1e40af !important;
+  border: 1px solid #93c5fd;
+}
+
+.customer-portfolio-pill.tone-red {
+  background: #fee2e2;
+  color: #991b1b !important;
+  border: 1px solid #fca5a5;
+}
+
+.customer-portfolio-pill.tone-green {
+  background: #dcfce7;
+  color: #166534 !important;
+  border: 1px solid #86efac;
+}
+
+.customer-portfolio-pill.tone-slate {
+  background: #f1f5f9;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1;
+}
+
+/* Search Bar Placeholder Fix */
+.operations-search.claims-search input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
+}
+
+/* Search bar webkit search cancel button */
+.operations-search.claims-search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'/%3E%3Cline x1='6' y1='6' x2='18' y2='18'/%3E%3C/svg%3E") center/contain no-repeat;
+  cursor: pointer;
+}
+
+/* Sidebar Action Button layout (Call/WhatsApp) */
+.sidebar-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a !important;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-action-btn:hover {
+  background: #fafbfc;
+  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
 }

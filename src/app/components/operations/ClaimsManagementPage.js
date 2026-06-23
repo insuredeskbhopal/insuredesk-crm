@@ -5,20 +5,25 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import {
+  ArrowLeft,
   ClipboardList,
   Download,
   Eye,
   FilePlus2,
+  LayoutGrid,
+  MessageSquare,
   MessageSquarePlus,
   MoreVertical,
   Paperclip,
   Pencil,
+  Phone,
   Plus,
   Printer,
   RotateCcw,
   Search,
   ShieldCheck,
   Trash2,
+  User,
   X,
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
@@ -519,6 +524,774 @@ export default function ClaimsManagementPage() {
     }
   }
 
+  if (selectedClaim) {
+    return (
+      <div
+        className="customer-profiling-page customer-portfolio-page"
+        style={{
+          background: "#f4f6f8",
+          padding: "28px 24px 36px",
+          margin: "-28px -24px -36px -24px",
+          minHeight: "calc(100vh - 48px)",
+        }}
+      >
+        {/* Back Link and Action Buttons */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+          <button
+            className="customer-portfolio-back"
+            type="button"
+            onClick={() => setSelectedClaimId("")}
+            style={{ boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)" }}
+          >
+            <ArrowLeft size={15} /> Back to Claims
+          </button>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              type="button"
+              className="customer-portfolio-back"
+              onClick={() => openEditForm(selectedClaim)}
+              style={{ boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)" }}
+            >
+              <Pencil size={14} /> Edit Claim
+            </button>
+            <button
+              type="button"
+              className="customer-portfolio-back"
+              onClick={() => handlePrint(selectedClaim)}
+              style={{ boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)" }}
+            >
+              <Printer size={14} /> Print
+            </button>
+            <button
+              type="button"
+              className="customer-portfolio-back"
+              style={{ borderColor: "#fee2e2", background: "#fef2f2", color: "#b91c1c", boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)" }}
+              onClick={() => setDeleteCandidate(selectedClaim)}
+            >
+              <Trash2 size={14} /> Delete
+            </button>
+          </div>
+        </div>
+
+        <div className="customer-portfolio-layout">
+          {/* Left Column (Sidebar) */}
+          <aside
+            className="customer-portfolio-sidebar"
+            style={{ border: "none", background: "transparent", boxShadow: "none", padding: 0 }}
+          >
+            {/* Header section with avatar, name, and badge */}
+            <div style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "8px" }}>
+              <div
+                style={{
+                  width: "56px",
+                  height: "56px",
+                  borderRadius: "50%",
+                  background: "#ffffff",
+                  border: "1px solid rgba(25, 28, 29, 0.08)",
+                  boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#64748b",
+                  fontWeight: "900",
+                  fontSize: "20px"
+                }}
+              >
+                {selectedClaim.insuredName
+                  ? selectedClaim.insuredName
+                      .split(" ")
+                      .map((w) => w[0])
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase()
+                  : "CL"}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <h1
+                  style={{
+                    fontSize: "20px",
+                    fontWeight: "700",
+                    color: "#0f172a",
+                    margin: 0,
+                    lineHeight: "1.2",
+                  }}
+                >
+                  {selectedClaim.insuredName || "Unnamed Claimant"}
+                </h1>
+                <span
+                  className={`customer-portfolio-pill ${getStatusTone(selectedClaim.claimStatus)}`}
+                  style={{
+                    textTransform: "uppercase",
+                    fontSize: "11px",
+                    fontWeight: "800",
+                    marginTop: "2px",
+                    width: "fit-content",
+                  }}
+                >
+                  {selectedClaim.claimStatus || "Open"}
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Action buttons (Call & WhatsApp) */}
+            {selectedClaim.mobileNo ? (
+              <div style={{ display: "flex", gap: "12px", marginBottom: "8px", marginTop: "8px" }}>
+                <button type="button" className="sidebar-action-btn" onClick={() => window.open(`tel:${selectedClaim.mobileNo}`)} style={{ background: "#ffffff", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
+                  <Phone size={16} /> Call
+                </button>
+                <button type="button" className="sidebar-action-btn" onClick={() => {
+                  const cleanPhone = selectedClaim.mobileNo.replace(/\D/g, "");
+                  window.open(`https://wa.me/${cleanPhone.startsWith("91") ? cleanPhone : "91" + cleanPhone}`, "_blank");
+                }} style={{ background: "#ffffff", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
+                  <MessageSquare size={16} /> WhatsApp
+                </button>
+              </div>
+            ) : null}
+
+            {/* 1. CLAIM INFORMATION CARD */}
+            <div className="sidebar-section-card" style={{ background: "#ffffff", boxShadow: "0 4px 16px rgba(15, 23, 42, 0.03)", border: "1px solid rgba(25, 28, 29, 0.08)" }}>
+              <div className="sidebar-section-header" style={{ background: "#fafbfc", borderBottom: "1px solid rgba(25, 28, 29, 0.06)" }}>
+                <LayoutGrid size={15} />
+                <span>Claim Information</span>
+              </div>
+              <div className="sidebar-grid-row">
+                <div className="sidebar-grid-cell" style={{ background: "#ffffff" }}>
+                  <span className="sidebar-cell-label">Claim Date</span>
+                  <span className="sidebar-cell-value">{formatDate(selectedClaim.claimDate)}</span>
+                </div>
+                <div className="sidebar-grid-cell" style={{ background: "#fafbfc" }}>
+                  <span className="sidebar-cell-label">Claim Type</span>
+                  <span className="sidebar-cell-value">{selectedClaim.claimType || "-"}</span>
+                </div>
+              </div>
+              <div className="sidebar-grid-row">
+                <div className="sidebar-grid-cell" style={{ background: "#fafbfc" }}>
+                  <span className="sidebar-cell-label">Policy No</span>
+                  <span className="sidebar-cell-value">{selectedClaim.policyNo || "-"}</span>
+                </div>
+                <div className="sidebar-grid-cell" style={{ background: "#ffffff" }}>
+                  <span className="sidebar-cell-label">Follow-up Date</span>
+                  <span className="sidebar-cell-value">{formatDate(selectedClaim.followUpDate)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. CONTACT INFORMATION CARD */}
+            <div className="sidebar-section-card" style={{ background: "#ffffff", boxShadow: "0 4px 16px rgba(15, 23, 42, 0.03)", border: "1px solid rgba(25, 28, 29, 0.08)" }}>
+              <div className="sidebar-section-header" style={{ background: "#fafbfc", borderBottom: "1px solid rgba(25, 28, 29, 0.06)" }}>
+                <User size={15} />
+                <span>Contact Information</span>
+              </div>
+              <div className="sidebar-full-cell" style={{ background: "#ffffff", borderBottom: "1px solid rgba(25, 28, 29, 0.04)" }}>
+                <span className="sidebar-cell-label">Mobile Number</span>
+                <span className="sidebar-cell-value">{selectedClaim.mobileNo || "-"}</span>
+              </div>
+              <div className="sidebar-full-cell" style={{ background: "#fafbfc", borderBottom: "1px solid rgba(25, 28, 29, 0.04)" }}>
+                <span className="sidebar-cell-label">Contact Person Name</span>
+                <span className="sidebar-cell-value">{selectedClaim.contactPerson || "-"}</span>
+              </div>
+              <div className="sidebar-full-cell" style={{ background: "#ffffff" }}>
+                <span className="sidebar-cell-label">Group Name</span>
+                <span className="sidebar-cell-value">{selectedClaim.groupName || "-"}</span>
+              </div>
+            </div>
+          </aside>
+
+          {/* Right Column (Main) */}
+          <main className="customer-portfolio-main">
+            {/* Card 1: Description */}
+            <section className="customer-portfolio-card" style={{ boxShadow: "0 4px 16px rgba(15, 23, 42, 0.03)", border: "1px solid rgba(25, 28, 29, 0.08)" }}>
+              <h2 style={{ background: "#fafbfc", borderBottom: "1px solid rgba(25, 28, 29, 0.06)" }}>Claim Description</h2>
+              <div style={{ padding: "20px", background: "#ffffff" }}>
+                <div
+                  className="claim-desc-well"
+                  style={{
+                    background: "#fafbfc",
+                    border: "1px solid rgba(25, 28, 29, 0.08)",
+                    padding: "16px 20px",
+                    borderRadius: "12px",
+                    color: "#334155",
+                    fontSize: "14px",
+                    lineHeight: "1.6",
+                    fontWeight: "600"
+                  }}
+                >
+                  {selectedClaim.claimDescription || "No description provided for this claim."}
+                </div>
+              </div>
+            </section>
+
+            {/* Card 2: Supporting Documents */}
+            <section className="customer-portfolio-card" style={{ boxShadow: "0 4px 16px rgba(15, 23, 42, 0.03)", border: "1px solid rgba(25, 28, 29, 0.08)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(25, 28, 29, 0.06)", background: "#fafbfc" }}>
+                <h2 style={{ borderBottom: "none" }}>Supporting Documents</h2>
+                <button
+                  type="button"
+                  className="customer-portfolio-back"
+                  onClick={() => openEditForm(selectedClaim)}
+                  style={{ minHeight: "30px", height: "30px", padding: "0 10px", margin: "10px 18px 10px 0", background: "#ffffff", boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)" }}
+                >
+                  <Paperclip size={13} /> Add / Manage Documents
+                </button>
+              </div>
+              <div style={{ padding: "20px", background: "#ffffff" }}>
+                <div className="claims-document-uploader view-only" style={{ border: "none", padding: 0, background: "transparent" }}>
+                  <DocumentList documents={selectedClaim.documents || []} />
+                </div>
+              </div>
+            </section>
+
+            {/* Card 3: Timeline & Remarks */}
+            <section className="customer-portfolio-card" style={{ boxShadow: "0 4px 16px rgba(15, 23, 42, 0.03)", border: "1px solid rgba(25, 28, 29, 0.08)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(25, 28, 29, 0.06)", background: "#fafbfc" }}>
+                <h2 style={{ borderBottom: "none" }}>Follow-up Timeline & Remarks</h2>
+                <button
+                  type="button"
+                  className="customer-portfolio-back"
+                  onClick={() => openRemarkForm(selectedClaim)}
+                  style={{ minHeight: "30px", height: "30px", padding: "0 10px", margin: "10px 18px 10px 0", background: "#ffffff", boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)" }}
+                >
+                  <MessageSquarePlus size={13} /> Add Remark
+                </button>
+              </div>
+              <div style={{ padding: "20px", background: "#ffffff" }}>
+                {selectedClaim.remarks && selectedClaim.remarks.length ? (
+                  <div className="customer-portfolio-timeline-scroll" style={{ maxHeight: "none" }}>
+                    <div className="customer-portfolio-timeline">
+                      {selectedClaim.remarks.map((item) => (
+                        <div key={item.id} className="customer-portfolio-timeline-item" style={{ paddingLeft: "28px" }}>
+                          <div className="customer-portfolio-timeline-dot" style={{ background: "#ffffff", border: "2px solid #2563eb", left: "-6px" }} />
+                          <div
+                            className="customer-portfolio-timeline-content"
+                            style={{
+                              background: "#f8fafc",
+                              border: "1px solid rgba(25, 28, 29, 0.08)",
+                              borderRadius: "12px",
+                              padding: "16px",
+                              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.01)"
+                            }}
+                          >
+                            <div className="customer-portfolio-timeline-head" style={{ marginBottom: "6px" }}>
+                              <strong>Agent</strong>
+                              <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "600" }}>{formatDate(item.createdAt)}</span>
+                            </div>
+                            <div className="customer-portfolio-timeline-body">
+                              <p style={{ margin: 0, fontSize: "14px", color: "#0f172a", lineHeight: "1.5" }}>{item.text}</p>
+                              {item.followUpDate ? (
+                                <em style={{ display: "block", marginTop: "8px", fontSize: "12px", color: "#92400e", fontWeight: "700" }}>
+                                  Next Follow-Up: {formatDate(item.followUpDate)}
+                                </em>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="customer-portfolio-empty">No remarks added yet.</p>
+                )}
+              </div>
+            </section>
+          </main>
+        </div>
+
+        {typeof window !== "undefined" &&
+          remarkTarget &&
+          createPortal(
+            <div
+              className="tb-modal-backdrop"
+              onClick={() => setRemarkTarget(null)}
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(15, 23, 42, 0.25)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                zIndex: 2100,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "24px",
+              }}
+            >
+              <form
+                className="claims-register-panel claims-remark-card"
+                onClick={(e) => e.stopPropagation()}
+                onSubmit={saveRemark}
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "24px",
+                  boxShadow:
+                    "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
+                  width: "100%",
+                  maxWidth: "560px",
+                  maxHeight: "85vh",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                  border: "none",
+                  animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both",
+                }}
+              >
+                {/* Modal Header */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "20px 24px",
+                    borderBottom: "1px solid #f1f5f9",
+                    backgroundColor: "#ffffff",
+                    color: "#0f172a",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    <MessageSquarePlus size={24} style={{ color: "#2563eb" }} />
+                    <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          textTransform: "uppercase",
+                          letterSpacing: "1px",
+                          color: "#64748b",
+                        }}
+                      >
+                        Add Remark
+                      </span>
+                      <h2 style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: "800", color: "#0f172a" }}>
+                        {remarkTarget.claimNo || "Claim Follow-up"}
+                      </h2>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setRemarkTarget(null)}
+                    aria-label="Close details"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.05)",
+                      border: "none",
+                      color: "#64748b",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      transition: "background-color 0.2s, color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.1)";
+                      e.currentTarget.style.color = "#0f172a";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.05)";
+                      e.currentTarget.style.color = "#64748b";
+                    }}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div
+                  style={{
+                    padding: "24px",
+                    overflowY: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "20px",
+                    backgroundColor: "#ffffff",
+                  }}
+                >
+                  <section
+                    className="claims-previous-remarks"
+                    style={{ border: "none", padding: 0, background: "transparent" }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          textTransform: "uppercase",
+                          color: "#64748b",
+                        }}
+                      >
+                        Previous Remarks
+                      </span>
+                      <strong style={{ fontSize: "12px", color: "#475569" }}>
+                        {(remarkTarget.remarks || []).length.toLocaleString("en-IN")} saved
+                      </strong>
+                    </div>
+                    <RemarkList remarks={remarkTarget.remarks || []} />
+                  </section>
+                  <label className="claims-wide-field">
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        textTransform: "uppercase",
+                        color: "#64748b",
+                      }}
+                    >
+                      Remark *
+                    </span>
+                    <textarea
+                      value={remarkDraft}
+                      required
+                      rows={3}
+                      placeholder="Enter claim follow-up remark"
+                      onChange={(event) => setRemarkDraft(event.target.value)}
+                    />
+                  </label>
+                  <label className="claims-wide-field">
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        textTransform: "uppercase",
+                        color: "#64748b",
+                      }}
+                    >
+                      Next Follow-up Date
+                    </span>
+                    <input
+                      type="date"
+                      value={followUpDraft}
+                      onChange={(event) => setFollowUpDraft(event.target.value)}
+                    />
+                  </label>
+                </div>
+
+                {/* Modal Footer */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "16px 24px",
+                    borderTop: "1px solid #f1f5f9",
+                    backgroundColor: "#ffffff",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setRemarkTarget(null)}
+                    style={{
+                      padding: "10px 24px",
+                      borderRadius: "12px",
+                      border: "1px solid #cbd5e1",
+                      backgroundColor: "#ffffff",
+                      color: "#475569",
+                      cursor: "pointer",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      transition: "background-color 0.2s, border-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f8fafc";
+                      e.currentTarget.style.borderColor = "#94a3b8";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#ffffff";
+                      e.currentTarget.style.borderColor = "#cbd5e1";
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    style={{
+                      padding: "10px 24px",
+                      borderRadius: "12px",
+                      border: "1px solid #cbd5e1",
+                      backgroundColor: "#2563eb",
+                      color: "#ffffff",
+                      cursor: "pointer",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      transition: "background-color 0.2s, border-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#1d4ed8";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#2563eb";
+                    }}
+                  >
+                    {isSaving ? "Saving..." : "Save Remark"}
+                  </button>
+                </div>
+              </form>
+            </div>,
+            document.body,
+          )}
+
+        {typeof window !== "undefined" &&
+          deleteCandidate &&
+          createPortal(
+            <div
+              className="tb-modal-backdrop"
+              onClick={() => {
+                setDeleteCandidate(null);
+                setDeleteConfirmText("");
+              }}
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(15, 23, 42, 0.25)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                zIndex: 2200,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "24px",
+              }}
+            >
+              <div
+                className="claims-register-panel claims-delete-card"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "24px",
+                  boxShadow:
+                    "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
+                  width: "100%",
+                  maxWidth: "560px",
+                  maxHeight: "85vh",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                  border: "none",
+                  animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both",
+                }}
+              >
+                {/* Modal Header */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "20px 24px",
+                    borderBottom: "1px solid #f1f5f9",
+                    backgroundColor: "#ffffff",
+                    color: "#0f172a",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    <Trash2 size={24} style={{ color: "#dc2626" }} />
+                    <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          textTransform: "uppercase",
+                          letterSpacing: "1px",
+                          color: "#64748b",
+                        }}
+                      >
+                        Delete Claim
+                      </span>
+                      <h2 style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: "800", color: "#0f172a" }}>
+                        Are you sure?
+                      </h2>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteCandidate(null);
+                      setDeleteConfirmText("");
+                    }}
+                    aria-label="Close details"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.05)",
+                      border: "none",
+                      color: "#64748b",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      transition: "background-color 0.2s, color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.1)";
+                      e.currentTarget.style.color = "#0f172a";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.05)";
+                      e.currentTarget.style.color = "#64748b";
+                    }}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    padding: "24px",
+                    backgroundColor: "#ffffff",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "16px",
+                  }}
+                >
+                  <p style={{ margin: 0, color: "#475569", fontSize: "14px", lineHeight: "1.6" }}>
+                    This will remove claim{" "}
+                    <strong>{deleteCandidate.claimNo || deleteCandidate.insuredName || "record"}</strong> from
+                    the database.
+                  </p>
+
+                  {((deleteCandidate.documents && deleteCandidate.documents.length > 0) ||
+                    (deleteCandidate.remarks && deleteCandidate.remarks.length > 0)) && (
+                    <div
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        backgroundColor: "#fff1f2",
+                        border: "1px solid #ffe4e6",
+                        color: "#991b1b",
+                        fontSize: "13px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                      }}
+                    >
+                      <strong style={{ fontWeight: "700" }}>
+                        Warning: This claim contains associated items that will also be deleted:
+                      </strong>
+                      <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                        {deleteCandidate.documents && deleteCandidate.documents.length > 0 && (
+                          <li>{deleteCandidate.documents.length} Supporting Document(s)</li>
+                        )}
+                        {deleteCandidate.remarks && deleteCandidate.remarks.length > 0 && (
+                          <li>{deleteCandidate.remarks.length} Remark & Follow-up History Record(s)</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
+                    <p style={{ margin: "0 0 8px", fontSize: "13px", fontWeight: "600", color: "#475569" }}>
+                      To confirm deletion, type <strong style={{ color: "#dc2626" }}>DELETE</strong> in the box
+                      below:
+                    </p>
+                    <input
+                      type="text"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      placeholder="Type DELETE"
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: "12px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        outline: "none",
+                        transition: "border-color 0.2s",
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = "#94a3b8";
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "#cbd5e1";
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "16px 24px",
+                    borderTop: "1px solid #f1f5f9",
+                    backgroundColor: "#ffffff",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteCandidate(null);
+                      setDeleteConfirmText("");
+                    }}
+                    style={{
+                      padding: "10px 24px",
+                      borderRadius: "12px",
+                      border: "1px solid #cbd5e1",
+                      backgroundColor: "#ffffff",
+                      color: "#475569",
+                      cursor: "pointer",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      transition: "background-color 0.2s, border-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f8fafc";
+                      e.currentTarget.style.borderColor = "#94a3b8";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#ffffff";
+                      e.currentTarget.style.borderColor = "#cbd5e1";
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSaving || deleteConfirmText !== "DELETE"}
+                    onClick={() => deleteClaim(deleteCandidate.id)}
+                    style={{
+                      padding: "10px 24px",
+                      borderRadius: "12px",
+                      border: "1px solid #cbd5e1",
+                      backgroundColor: deleteConfirmText === "DELETE" ? "#dc2626" : "#f1f5f9",
+                      color: deleteConfirmText === "DELETE" ? "#ffffff" : "#94a3b8",
+                      cursor: deleteConfirmText === "DELETE" ? "pointer" : "not-allowed",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      transition: "background-color 0.2s, color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (deleteConfirmText === "DELETE") {
+                        e.currentTarget.style.backgroundColor = "#b91c1c";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (deleteConfirmText === "DELETE") {
+                        e.currentTarget.style.backgroundColor = "#dc2626";
+                      }
+                    }}
+                  >
+                    {isSaving ? "Deleting..." : "Yes, Delete"}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )}
+      </div>
+    );
+  }
+
   return (
     <div className="operations-module-page claims-management-page">
       <OperationsBackLink />
@@ -745,7 +1518,7 @@ export default function ClaimsManagementPage() {
                           onClick={() => setOpenMenuId(openMenuId === item.id ? "" : item.id)}
                           aria-label="Open claim actions"
                         >
-                          <MoreVertical size={16} />
+                          <MoreVertical size={18} />
                         </button>
                         {openMenuId === item.id ? (
                           <div className="claims-action-popover">
@@ -769,9 +1542,7 @@ export default function ClaimsManagementPage() {
                             >
                               <Paperclip size={15} /> Upload Document
                             </button>
-                            <button type="button" onClick={() => openRemarkForm(item)}>
-                              <MessageSquarePlus size={15} /> Add Remark
-                            </button>
+
                             <button
                               type="button"
                               className="danger"
@@ -1641,6 +2412,16 @@ function matchesClaimFilter(item, filter) {
   if (filter === "settled") return status === "settled";
   if (filter === "rejected") return status === "rejected";
   return true;
+}
+
+function getStatusTone(status) {
+  const s = (status || "").toLowerCase();
+  if (s === "open") return "tone-amber";
+  if (s === "follow up") return "tone-blue";
+  if (s === "documents pending") return "tone-red";
+  if (s === "settled") return "tone-green";
+  if (s === "rejected") return "tone-slate";
+  return "tone-amber";
 }
 
 function getFilterCounts(claims) {
