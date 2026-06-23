@@ -92,6 +92,13 @@ function finalizeTataAigMotorFields(data, legacyData = {}) {
       .replace(/\bHYC\s+ROSS\b/i, "HYCROSS")
       .trim();
   }
+
+  if (data.engineNumber && !isPlausibleEngineNumber(data.engineNumber)) {
+    data.engineNumber = "";
+  }
+  if (data.chassisNumber && !/^[A-Z0-9]{10,25}$/i.test(data.chassisNumber.replace(/[^A-Z0-9]/gi, ""))) {
+    data.chassisNumber = "";
+  }
 }
 
 // Start of isTataAigMotor (Lines 5751-5778)
@@ -148,7 +155,7 @@ function extractTataInsuredName(text) {
 
 // Start of extractTataAigVehicleIdentifier (Lines 5810-5853)
 function extractTataAigVehicleIdentifier(text, type) {
-  const labelPattern = type === "engine" ? /Engine\s+Number|Motor\s+No\.?\s*\(for EV\)/i : /Chassis\s+No\.?/i;
+  const labelPattern = type === "engine" ? /Engine\s+(?:Number|No\.?)|Motor\s+No\.?\s*\(for EV\)/i : /Chassis\s+No\.?/i;
   const stopPattern =
     /^(?:Contract|Loan|Reference|Body\s+Type|CC\/KW|Mfg\.?\s*Year|Date\s+of\s+Registration|Hire\s+Purchase|Seating\s+Capacity|Zone\s+Details|RTO\s+Location|Fuel\s+Type|Make\s*\/\s*Model|Registration\s+No)/i;
   const lines = String(text || "")
