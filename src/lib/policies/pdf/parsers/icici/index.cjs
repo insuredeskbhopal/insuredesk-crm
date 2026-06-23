@@ -14,7 +14,7 @@ function extractIciciMotor(text, _sourceFile = "") {
   const riskLetterDetails = extractIciciRiskLetterVehicleDetails(text);
   const scheduleVehicle = extractIciciScheduleVehicleDetails(text);
   const premium = extractIciciPremiumDetails(text);
-  const period = extractIciciPolicyPeriod(text);
+  const period = extractIciciPolicyPeriod(text, riskLetterDetails);
   const communicationAddress = extractIciciAddress(text);
   const vehicleMake = riskLetterDetails.make || scheduleVehicle.make;
   const vehicleModel = riskLetterDetails.model || scheduleVehicle.model;
@@ -24,9 +24,9 @@ function extractIciciMotor(text, _sourceFile = "") {
     documentDetected: true,
     companyName: "ICICI Lombard General Insurance Company Limited",
     policyType: cleanHdfcValue(
-      matchGroup(text, /(Private Car Package Policy)/i) || "Private Car Package Policy",
+      matchGroup(text, /(Private Car Package Policy|Stand-Alone\s+Own\s+Damage\s+Two\s+wheeler\s+Insurance\s+Policy|Two\s+wheeler\s+Insurance\s+Policy)/i) || "Private Car Package Policy",
     ),
-    policyNumber: matchGroup(text, /Policy No\.?\s*(?:\n\s*:)?\s*([0-9]{4}\/[0-9]+\/[0-9]{2}\/[0-9]{3})/i),
+    policyNumber: matchGroup(text, /Policy No\.?\s*(?:\n\s*:)?\s*([0-9]{4}\/[A-Z0-9/-]+)/i),
     insuredName: cleanHdfcValue(
       matchGroup(text, /Insured Name\s*:?\s*([A-Z][A-Z .]+?)(?=Policy No|\n|$)/i) ||
         riskLetterDetails.insuredName,
@@ -60,7 +60,7 @@ function extractIciciMotor(text, _sourceFile = "") {
       matchGroup(text, /RTO Location\s*:?\s*([A-Z -]+?)(?=GSTIN|Hypothecated|Servicing|\n|$)/i) ||
         riskLetterDetails.rto,
     ),
-    fuelType: inferIciciFuelType(makeModel) || inferFuelType(text, makeModel),
+    fuelType: inferIciciFuelType(makeModel, text) || inferFuelType(text, makeModel),
     vehicleIdv: premium.vehicleIdv,
     totalIdv: premium.totalIdv,
     basicOwnDamage: premium.basicOwnDamage,
@@ -81,7 +81,7 @@ function extractIciciMotor(text, _sourceFile = "") {
     previousPolicyValidity: riskLetterDetails.previousPolicyValidity,
     previousInsurer: riskLetterDetails.previousInsurer,
     previousYearNcb: riskLetterDetails.previousYearNcb,
-    policyCoverType: "Package",
+    policyCoverType: /Stand-Alone\s+Own\s+Damage/i.test(text) ? "Own Damage Only" : "Package",
     nomineeName: "",
     financerName: "",
     geographicalArea: matchGroup(text, /Geographical Area:\s*([A-Za-z]+?)(?=Applicable|\s|$)/i),
@@ -97,7 +97,7 @@ function extractIciciMotor(text, _sourceFile = "") {
       matchGroup(text, /Servicing Branch Name\s*:?\s*([A-Za-z ]+?)(?=Invoice|\n|$)/i),
     ),
     servicingBranchAddress: cleanHdfcValue(
-      matchGroup(text, /Servicing Branch Address\s*:?\s*([\s\S]+?)(?=Are you|Registration No\.|$)/i),
+      matchGroup(text, /Servicing Branch Address\s*:?\s*([\s\S]+?)(?=Are you|Registration No\.|\b(?:yes|no)\b|$)/i),
     ),
     insurerGstin: matchGroup(text, /GSTIN Reg\.No\s*([0-9A-Z]{15})/i),
     hsnSacCode: cleanHdfcValue(
@@ -107,13 +107,11 @@ function extractIciciMotor(text, _sourceFile = "") {
   };
 }
 
-// Start of isIciciMotor (Lines 2004-2010)
 function isIciciMotor(text) {
-  return (
-    /ICICI\s+Lombard\s+General\s+Insurance\s+Company/i.test(text) &&
-    /Certificate\s+of\s+Insurance\s+cum\s+Policy\s+Schedule/i.test(text) &&
-    /Private\s+Car\s+Package\s+Policy|Registration No\.\s+MakeModelType of Body/i.test(text)
-  );
+  const isIcici = /ICICI\s*Lombard/i.test(text) && (/IRDAN115/i.test(text) || /customersupport@icicilombard\.com/i.test(text) || /www\.icicilombard\.com/i.test(text));
+  const isPolicy = /Certificate\s*of\s*Insurance|Risk\s*Assumption\s*Letter/i.test(text);
+  const isMotor = /Private\s*Car|Two\s*wheeler|Motor|Registration\s*No|MakeModelType/i.test(text);
+  return isIcici && isPolicy && isMotor;
 }
 
 function parseCroreLakh(text, sectionRegex) {
@@ -680,14 +678,98 @@ function extractIciciWarehouseSpecialConditions(text) {
   return [...new Set(conditions.filter(Boolean))];
 }
 
+// Start of parseHeaderValueList
+function parseHeaderValueList(text, knownHeaders) {
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  const valueStartIndex = lines.findIndex(line => {
+    return !knownHeaders.some(h => line.toLowerCase() === h.toLowerCase());
+  });
+  if (valueStartIndex === -1 || valueStartIndex === 0) return {};
+  
+  const headers = lines.slice(0, valueStartIndex);
+  const values = lines.slice(valueStartIndex);
+  
+  const result = {};
+  headers.forEach((header, idx) => {
+    if (idx < values.length) {
+      result[header.toLowerCase()] = values[idx];
+    }
+  });
+  return result;
+}
+
 // Start of extractIciciRiskLetterVehicleDetails (Lines 2324-2383)
 function extractIciciRiskLetterVehicleDetails(text) {
   const block = sliceText(text, /Insured\s*&\s*Vehicle\s*Details/i, /Previous\s+Policy\s+Details/i) || "";
+  const cleanBlock = block.replace(/Insured\s*&\s*Vehicle\s*Details/i, "").trim();
   const lines = block
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
   const ownershipIndex = lines.findIndex((line) => /^Ownership Serial Number$/i.test(line));
+
+  const previousBlock =
+    sliceText(
+      text,
+      /Previous\s+Policy\s+Details/i,
+      /Theinformationprovidedabove|Certificate\s+of\s+Insurance/i,
+    ) || "";
+  const cleanPrevious = previousBlock.replace(/Previous\s+Policy\s+Details/i, "").trim();
+
+  if (ownershipIndex === -1) {
+    const vehicleHeaders = [
+      "Name of the Insured",
+      "Period of Insurance - Own Damage",
+      "Vehicle Make / Model",
+      "RTO City",
+      "Vehicle Registration No.",
+      "Vehicle Registration Date",
+      "Engine No.",
+      "Chassis No.",
+      "Current Year NCB(%)"
+    ];
+    const parsedVehicle = parseHeaderValueList(cleanBlock, vehicleHeaders);
+    
+    const previousHeaders = [
+      "Previous Policy No.",
+      "Previous Policy Period",
+      "Previous Year NCB(%)",
+      "Claims Made Under Previous Policy",
+      "Previous Insurer Name",
+      "Previous Policy Type"
+    ];
+    const parsedPrevious = parseHeaderValueList(cleanPrevious, previousHeaders);
+
+    const rawMakeModel = parsedVehicle["vehicle make / model"] || "";
+    const makeParts = rawMakeModel.split("/").map(part => cleanHdfcValue(part)).filter(Boolean);
+    const regNumber = parsedVehicle["vehicle registration no."] || "";
+
+    return {
+      insuredName: parsedVehicle["name of the insured"] || "",
+      period: parsedVehicle["period of insurance - own damage"] || "",
+      make: makeParts[0] || "",
+      model: makeParts.slice(1).join(" / "),
+      rto: parsedVehicle["rto city"] || "",
+      registrationNumber: regNumber,
+      registrationDate: normalizeIciciDate(parsedVehicle["vehicle registration date"] || ""),
+      engineNumber: parsedVehicle["engine no."] || "",
+      chassisNumber: parsedVehicle["chassis no."] || "",
+      ncbPercentage: parsedVehicle["current year ncb(%)"] || "",
+      manufacturingYear: matchGroup(
+        text,
+        new RegExp(
+          `${escapeRegExp(regNumber || "")}[A-Z]*[\\s\\S]{0,300}?\\b(19\\d{2}|20\\d{2})\\b`,
+          "i",
+        ),
+      ),
+      previousPolicyNumber: parsedPrevious["previous policy no."] || "",
+      previousPolicyValidity: parsedPrevious["previous policy period"] || "",
+      previousYearNcb: parsedPrevious["previous year ncb(%)"] || "",
+      previousInsurer: parsedPrevious["previous insurer name"] || "",
+      _parsedVehicle: parsedVehicle
+    };
+  }
+
   const values = ownershipIndex === -1 ? [] : lines.slice(ownershipIndex + 1);
   const [
     insuredName,
@@ -704,12 +786,6 @@ function extractIciciRiskLetterVehicleDetails(text) {
     .split("/")
     .map((part) => cleanHdfcValue(part))
     .filter(Boolean);
-  const previousBlock =
-    sliceText(
-      text,
-      /Previous\s+Policy\s+Details/i,
-      /Theinformationprovidedabove|Certificate\s+of\s+Insurance/i,
-    ) || "";
   const previousLines = previousBlock
     .split("\n")
     .map((line) => line.trim())
@@ -747,25 +823,87 @@ function extractIciciScheduleVehicleDetails(text) {
   const match = text.match(
     /Registration No\.\s+MakeModelType of BodyCC\/KWMfg YrSeating CapacityChassis No\.Engine No\.\s*\n\s*([^\n]+)/i,
   );
-  if (!match?.[1]) return {};
+  if (match?.[1]) {
+    const row = match[1].replace(/\s+/g, "");
+    const parsed = row.match(
+      /^([A-Z]{2}\d{1,2}[A-Z]{1,3}\d{4})([A-Z]+)([A-Z0-9 .-]+?)(SUV|SEDAN|HATCHBACK|MUV|SALOON|OPEN|CLOSED)(\d{2,4})(19\d{2}|20\d{2})(\d{1,2})([A-Z0-9]{17})([A-Z0-9]{6,25})$/i,
+    );
+    if (parsed) {
+      return {
+        registrationNumber: parsed[1],
+        make: cleanHdfcValue(parsed[2]),
+        model: cleanHdfcValue(parsed[3]),
+        bodyType: cleanHdfcValue(parsed[4]),
+        cubicCapacity: parsed[5],
+        manufacturingYear: parsed[6],
+        seatingCapacity: parsed[7],
+        chassisNumber: parsed[8],
+        engineNumber: parsed[9],
+      };
+    }
+  }
 
-  const row = match[1].replace(/\s+/g, "");
-  const parsed = row.match(
-    /^([A-Z]{2}\d{1,2}[A-Z]{1,3}\d{4})([A-Z]+)([A-Z0-9 .-]+?)(SUV|SEDAN|HATCHBACK|MUV|SALOON|OPEN|CLOSED)(\d{2,4})(19\d{2}|20\d{2})(\d{1,2})([A-Z0-9]{17})([A-Z0-9]{6,25})$/i,
-  );
-  if (!parsed) return {};
+  // Fallback: Two-wheeler table layout
+  // Labels: Vehicle Registration \n No. \n MakeModelType of BodyCC/KWMfg YrSeating \n Capacity \n Chassis No.Engine No.
+  // Values: KA01JX3865TVSSCOOTY ZEST  Solo With Pillion10920232 \n MD626DG52P2F0085 \n 1 \n FG5FP2500841
+  if (/MakeModelType\s*of\s*BodyCC\/KW/i.test(text)) {
+    const regMatch = text.match(/\b([A-Z]{2}\d{1,2}[A-Z]{1,3}\d{4})(TVS|HERO|HONDA|BAJAJ|SUZUKI|YAMAHA|ROYAL\s*ENFIELD|MAHINDRA)([\s\S]+?)(?:Side\s*Car|$)/i);
+    if (regMatch) {
+      const reg = regMatch[1];
+      const make = regMatch[2];
+      const rest = regMatch[3];
+      const restLines = rest.split("\n").map(l => l.trim()).filter(Boolean);
+      
+      const ccYearSeatMatch = restLines[0].match(/(\d{2,4})(19\d{2}|20\d{2})(\d)$/);
+      let cc = "";
+      let year = "";
+      let seating = "";
+      let model = restLines[0];
+      if (ccYearSeatMatch) {
+        cc = ccYearSeatMatch[1];
+        year = ccYearSeatMatch[2];
+        seating = ccYearSeatMatch[3];
+        model = restLines[0].slice(0, -ccYearSeatMatch[0].length).trim();
+      }
+      
+      const bodyTypeMatch = model.match(/(Solo\s*With\s*Pillion|Solo|Pillion)/i);
+      let bodyType = "";
+      if (bodyTypeMatch) {
+        bodyType = bodyTypeMatch[0];
+        model = model.replace(bodyTypeMatch[0], "").trim();
+      }
 
-  return {
-    registrationNumber: parsed[1],
-    make: cleanHdfcValue(parsed[2]),
-    model: cleanHdfcValue(parsed[3]),
-    bodyType: cleanHdfcValue(parsed[4]),
-    cubicCapacity: parsed[5],
-    manufacturingYear: parsed[6],
-    seatingCapacity: parsed[7],
-    chassisNumber: parsed[8],
-    engineNumber: parsed[9],
-  };
+      let chassis = "";
+      let engine = "";
+      const detailsText = restLines.slice(1).join("").replace(/\s+/g, "");
+      const chassisMatch = detailsText.match(/\b[A-HJ-NPR-Z0-9]{17}\b/i) || detailsText.match(/[A-Z0-9]{17}/i);
+      if (chassisMatch) {
+        chassis = chassisMatch[0];
+        engine = detailsText.replace(chassis, "").trim();
+        engine = engine.split(/Vehicle|IDV|Side|Accessories|CNG|LPG/i)[0].trim();
+      } else {
+        const parts = restLines.slice(1);
+        if (parts.length >= 2) {
+          chassis = (parts[0] + (parts[1].length === 1 ? parts[1] : "")).trim();
+          engine = parts[2] || parts[1] || "";
+        }
+      }
+
+      return {
+        registrationNumber: reg,
+        make,
+        model,
+        bodyType,
+        cubicCapacity: cc,
+        manufacturingYear: year,
+        seatingCapacity: seating,
+        chassisNumber: chassis,
+        engineNumber: engine
+      };
+    }
+  }
+
+  return {};
 }
 
 // Start of extractIciciPremiumDetails (Lines 2410-2477)
@@ -788,11 +926,32 @@ function extractIciciPremiumDetails(text) {
     totalPremium: "",
   };
 
-  const idvDigits = matchGroup(text, /Total IDV\s*\(`\)\s*\n\s*([0-9]{6,})/i);
-  if (idvDigits) {
-    const parsedIdv = splitIciciDenseIdv(idvDigits);
-    result.vehicleIdv = normalizeAmount(parsedIdv.vehicleIdv);
-    result.totalIdv = normalizeAmount(parsedIdv.totalIdv);
+  const idvLine = matchGroup(text, /Total IDV\s*(?:\n\s*\(`\))?\s*\n\s*([^\n]+)/i);
+  if (idvLine) {
+    const cleanLine = idvLine.trim();
+    if (cleanLine.includes(".") || cleanLine.includes(",")) {
+      const firstMatch = cleanLine.match(/^([\d,]+\.\d{2})/);
+      const lastMatch = cleanLine.match(/([\d,]+\.\d{2})$/);
+      if (firstMatch) result.vehicleIdv = normalizeAmount(firstMatch[1]);
+      if (lastMatch) {
+        let rawLast = lastMatch[1];
+        if (/^0+[1-9]/.test(rawLast)) {
+          rawLast = rawLast.replace(/^0+/, "");
+        }
+        result.totalIdv = normalizeAmount(rawLast);
+      }
+    } else {
+      const parsedIdv = splitIciciDenseIdv(cleanLine.replace(/\D/g, ""));
+      result.vehicleIdv = normalizeAmount(parsedIdv.vehicleIdv);
+      result.totalIdv = normalizeAmount(parsedIdv.totalIdv);
+    }
+  } else {
+    const idvDigits = matchGroup(text, /Total IDV\s*\(`\)\s*\n\s*([0-9]{6,})/i);
+    if (idvDigits) {
+      const parsedIdv = splitIciciDenseIdv(idvDigits);
+      result.vehicleIdv = normalizeAmount(parsedIdv.vehicleIdv);
+      result.totalIdv = normalizeAmount(parsedIdv.totalIdv);
+    }
   }
 
   const premiumBlock =
@@ -809,6 +968,13 @@ function extractIciciPremiumDetails(text) {
     result.roadSideAssistance = normalizeAmount(ownDamageNumbers[1]);
   }
 
+  if (!result.basicOwnDamage) {
+    const basicOdMatch = premiumBlock.match(/Sub-Total\s+Deductions\s*\n\s*(\d+(?:\.\d{2})?)/i);
+    if (basicOdMatch) {
+      result.basicOwnDamage = normalizeAmount(basicOdMatch[1]);
+    }
+  }
+
   const liabilityNumbers = Array.from(
     (
       premiumBlock.match(
@@ -823,25 +989,25 @@ function extractIciciPremiumDetails(text) {
     result.unnamedPaCover = normalizeAmount(liabilityNumbers[4]);
   }
 
-  result.netOwnDamagePremium = normalizeAmount(matchGroup(text, /Total Own Damage Premium\(A\)\s*([0-9]+)/i));
-  result.netLiabilityPremium = normalizeAmount(matchGroup(text, /Total Liability Premium\(B\)\s*([0-9]+)/i));
+  result.netOwnDamagePremium = normalizeAmount(matchGroup(text, /Total Own Damage Premium\(A\)\s*([0-9,.]+)/i));
+  result.netLiabilityPremium = normalizeAmount(matchGroup(text, /Total Liability Premium\(B\)\s*([0-9,.]+)/i));
   result.totalPackagePremium = normalizeAmount(
-    matchGroup(text, /Total Package Premium\(A\+B\):\s*([0-9]+)/i),
-  );
+    matchGroup(text, /Total Package Premium\(A\+B\):\s*([0-9,.]+)/i),
+  ) || sumAmounts(result.netOwnDamagePremium, result.netLiabilityPremium);
   result.cgst = normalizeAmount(matchGroup(text, /CGST[\s\S]{0,30}?`\s*\n\s*([0-9.]+)/i));
   result.sgst = normalizeAmount(matchGroup(text, /SGST[\s\S]{0,30}?`\s*\n\s*([0-9.]+)/i));
   result.gstAmount =
-    normalizeAmount(matchGroup(text, /Total Tax Payable in `\s*([0-9]+)/i)) ||
+    normalizeAmount(matchGroup(text, /Total Tax Payable in `?\s*([0-9,.]+)/i)) ||
     sumAmounts(result.cgst, result.sgst);
-  result.totalPremium = normalizeAmount(matchGroup(text, /Total Premium Payable In `\s*([0-9]+)/i));
+  result.totalPremium = normalizeAmount(matchGroup(text, /Total Premium Payable In `?\s*([0-9,.]+)/i));
 
   return result;
 }
 
 // Start of extractIciciPolicyPeriod (Lines 2479-2499)
-function extractIciciPolicyPeriod(text) {
+function extractIciciPolicyPeriod(text, riskLetterDetails = {}) {
   const schedule = text.match(
-    /Period of Insurance\s*:?\s*([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4})\s*([0-9:]+)?\s*to\s*(?:Midnight of\s*)?([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4})/i,
+    /Period of Insurance\s*(?:-\s*(?:Own\s*Damage|Liability))?\s*:?\s*([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4})\s*([0-9:]+)?\s*to\s*(?:Midnight of\s*)?([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4})/i,
   );
   if (schedule) {
     const start = normalizeIciciDate(schedule[1]);
@@ -850,6 +1016,18 @@ function extractIciciPolicyPeriod(text) {
       start: schedule[2] ? `${start} ${schedule[2]}` : start,
       end,
     };
+  }
+
+  const riskPeriod = riskLetterDetails.period || riskLetterDetails["period of insurance - own damage"];
+  if (riskPeriod) {
+    const dates = riskPeriod.match(/([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4})\s*to\s*([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4})/i) ||
+                  riskPeriod.match(/(\d{2}-\d{2}-\d{4})\s*to\s*(\d{2}-\d{2}-\d{4})/i);
+    if (dates) {
+      return {
+        start: normalizeIciciDate(dates[1]),
+        end: normalizeIciciDate(dates[2]),
+      };
+    }
   }
 
   const riskLetter = text.match(
@@ -863,7 +1041,7 @@ function extractIciciPolicyPeriod(text) {
 
 // Start of extractIciciAddress (Lines 2501-2505)
 function extractIciciAddress(text) {
-  const match = text.match(/Address\s*:?\s*([\s\S]+?)\s*Tenure\s*:/i);
+  const match = text.match(/Address\s*:?\s*([\s\S]+?)\s*(?:Tenure|Period\s+of\s+Insurance|Telephone\s+No|Mobile\s+No)/i);
   if (!match?.[1]) return "";
   return cleanHdfcValue(match[1].replace(/\n/g, " "));
 }
@@ -915,10 +1093,12 @@ function cleanIciciRto(value = "") {
 }
 
 // Start of inferIciciFuelType (Lines 2551-2556)
-function inferIciciFuelType(makeModel = "") {
+function inferIciciFuelType(makeModel = "", fullText = "") {
   const text = String(makeModel || "").toUpperCase();
   if (/(CRDI|DIESEL|D-?TEC|TDI|DDIS|DICOR)/.test(text)) return "Diesel";
   if (/(PETROL|VVT|IVTEC|MPI|KAPPA)/.test(text)) return "Petrol";
+  if (/(SCOOTY|ZEST|JUPITER|ACTIVA|PULSAR|BULLET|CLASSIC|ACCESS|SHINE|APACHE|PLATINA|CT100|ROYAL ENFIELD)/.test(text)) return "Petrol";
+  if (/Two\s*wheeler|Stand-Alone\s+Own\s+Damage\s+Two\s+wheeler/i.test(fullText)) return "Petrol";
   return "";
 }
 
