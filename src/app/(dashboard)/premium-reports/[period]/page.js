@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { normalizeRecord } from "@/lib/records";
-import { loadScopedPolicyRecords } from "@/lib/records/scoped-data";
+import { loadScopedPolicyRecords, getCurrentSessionFromCookies } from "@/lib/records/scoped-data";
 import { formatMoney, parseMoney } from "@/lib/records/analytics";
 import { parsePolicyDate } from "@/app/lib/reporting/filters";
 
@@ -49,6 +50,11 @@ const REPORTS = {
 };
 
 export default async function PremiumReportPage({ params }) {
+  const session = await getCurrentSessionFromCookies();
+  if (!session || session.role === "VIEWER") {
+    redirect("/dashboard");
+  }
+
   const { period } = await params;
   const reportId = String(period || "").toLowerCase();
   const config = REPORTS[reportId];

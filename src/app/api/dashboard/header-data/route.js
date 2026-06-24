@@ -33,6 +33,32 @@ export async function GET(request) {
       return Response.json({ error: "Invalid or expired session", success: false }, { status: 401 });
     }
 
+    if (session.role === "VIEWER") {
+      return Response.json({
+        renewals: [],
+        notifications: [],
+        agentWise: [],
+        renewalCounts: {
+          eodPremium: 0,
+          eodCount: 0,
+          mtdPremium: 0,
+          mtdCount: 0,
+          ytdPremium: 0,
+          ytdCount: 0,
+          due10: 0,
+          due20: 0,
+          due30: 0,
+          expired: 0,
+          expiredPremium: 0,
+          renewed: 0,
+          renewedPremium: 0,
+          lost: 0,
+          lostPremium: 0,
+        },
+        success: true,
+      });
+    }
+
     const tenantFilter = getTenantFilter(session, "read");
 
     const isSuperAdmin = session.role === "SUPER_ADMIN";

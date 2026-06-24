@@ -1372,7 +1372,7 @@ export default function Dashboard({
 
       {alert ? <AlertCard alert={alert} onDismiss={() => setAlert(null)} /> : null}
 
-      {(activePage === "bulk-entry" || activePage === "dashboard") && (
+      {(activePage === "bulk-entry" || activePage === "dashboard") && currentUserRole !== "VIEWER" && (
         <>
           {/* Renewal Counters Grid */}
           <section
