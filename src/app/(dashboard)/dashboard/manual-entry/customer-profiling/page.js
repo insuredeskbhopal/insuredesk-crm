@@ -1233,6 +1233,40 @@ export default function CustomerProfilingPage() {
     });
   }
 
+  function deleteProfile(profile) {
+    if (!profile?.id) return;
+    const confirmed = window.confirm(
+      `Delete customer profiling lead for ${profile.name || profile.phone || "this customer"}?`,
+    );
+    if (!confirmed) return;
+
+    startTransition(async () => {
+      setAlert(null);
+      try {
+        const response = await fetch(`/api/customer-profiles/${profile.id}`, {
+          method: "DELETE",
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setAlert({ type: "error", message: payload.error || "Customer profile could not be deleted." });
+          return;
+        }
+        if (selectedExistingId === profile.id) {
+          setSelectedExistingId("");
+          setForm({
+            ...EMPTY_FORM,
+            assignedTo: currentUser?.name || currentUser?.email || "",
+          });
+        }
+        setSearchResults(EMPTY_SEARCH_RESULTS);
+        setAlert({ type: "success", message: "Customer profiling lead deleted." });
+        await loadProfiles();
+      } catch (error) {
+        setAlert({ type: "error", message: error.message || "Customer profile could not be deleted." });
+      }
+    });
+  }
+
   const generateMessageText = (profile, conversionType, handoffRemark) => {
     if (!profile) return "";
     let lines = [];
@@ -1728,6 +1762,8 @@ export default function CustomerProfilingPage() {
             <ProfileListingTable
               profiles={profiles}
               onEdit={(profile) => router.push(`/dashboard/manual-entry/customer-profiling/${profile.id}`)}
+              onDelete={deleteProfile}
+              canDelete={currentUser?.role === "SUPER_ADMIN"}
             />
 
             {/* Pagination Controls */}
@@ -2422,7 +2458,7 @@ function CounterCard({ label, value }) {
   );
 }
 
-function ProfileListingTable({ profiles, onEdit }) {
+function ProfileListingTable({ profiles, onEdit, onDelete, canDelete = false }) {
   return (
     <div className="existing-customer-table">
       <table>
@@ -2456,6 +2492,15 @@ function ProfileListingTable({ profiles, onEdit }) {
                     <button type="button" onClick={() => onEdit(profile)}>
                       View More
                     </button>
+                    {canDelete ? (
+                      <button
+                        type="button"
+                        className="danger-action"
+                        onClick={() => onDelete(profile)}
+                      >
+                        Delete
+                      </button>
+                    ) : null}
                   </div>
                 </td>
               </tr>

@@ -144,3 +144,60 @@ export async function PUT(request, { params }) {
     );
   }
 }
+
+export async function DELETE(request, { params }) {
+  try {
+    const token = request.cookies.get("token")?.value;
+    if (!token) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    const session = await verifyJWT(token);
+    if (!session || session.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Only Super Admin can delete customer profiling leads." }, { status: 403 });
+    }
+
+    const { id } = await params;
+    const existing = await prisma.customerProfile.findFirst({
+      where: {
+        id,
+        ...getCustomerProfileScopedFilter(session),
+      },
+    });
+
+    if (!existing || existing.deletedAt) {
+      return NextResponse.json({ error: "Customer profile not found." }, { status: 404 });
+    }
+
+    const actorId = session.userId || session.id;
+    const profile = await prisma.customerProfile.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        updatedById: actorId,
+      },
+      include: {
+        createdBy: { select: { name: true, email: true } },
+        updatedBy: { select: { name: true, email: true } },
+      },
+    });
+
+    const { ipAddress, userAgent } = getAuditMetadata(request);
+    await logAudit({
+      action: "CUSTOMER_PROFILE_DELETE",
+      entityType: "CustomerProfile",
+      entityId: profile.id,
+      severity: "WARNING",
+      source: "API",
+      ipAddress,
+      userAgent,
+      userId: actorId,
+      organizationId: session.organizationId,
+      metadata: { phone: profile.phone, selectedLOBs: profile.selectedLOBs },
+    });
+
+    return NextResponse.json({ success: true, profile: serializeCustomerProfile(profile) });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Customer profile could not be deleted." },
+      { status: 500 },
+    );
+  }
+}

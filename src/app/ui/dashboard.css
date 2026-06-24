@@ -8223,6 +8223,16 @@ label.is-disabled textarea {
   white-space: nowrap;
 }
 
+.profile-table-actions .danger-action {
+  border-color: #fecaca;
+  background: #fff5f5;
+  color: #b91c1c;
+}
+
+.profile-table-actions .danger-action:hover {
+  background: #fee2e2;
+}
+
 .table-muted {
   color: var(--on-surface-variant);
   font-size: var(--font-size-xs);
