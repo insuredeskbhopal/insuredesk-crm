@@ -1108,15 +1108,13 @@ export default function CustomerProfilingPage() {
     startTransition(async () => {
       setAlert(null);
       try {
-        if (form.phone) {
-          const normalized = normalizeIndianPhone(form.phone);
-          if (!normalized) {
-            setAlert({
-              type: "error",
-              message: "Please enter a valid 10-digit Indian mobile number (starting with 6-9).",
-            });
-            return;
-          }
+        const normalized = normalizeIndianPhone(form.phone);
+        if (!normalized) {
+          setAlert({
+            type: "error",
+            message: "Please enter a valid 10-digit Indian mobile number (starting with 6-9).",
+          });
+          return;
         }
         if (!selectedExistingId && searchResults.claimedByAnotherUser) {
           setAlert({
@@ -1341,7 +1339,7 @@ export default function CustomerProfilingPage() {
       ["Address", profile.address],
       ["Occupation", profile.occupation],
       ["Business Type", profile.businessType],
-      ["Assigned To", profile.assignedTo],
+      ["Created By", profile.createdBy || profile.assignedTo],
       ["Reference Source", profile.referenceSource],
       ["Status", "Converted"],
       ["Conversion Target LOB", conversionType],
@@ -1706,7 +1704,7 @@ export default function CustomerProfilingPage() {
                 value={filters.assignedTo}
                 onChange={(event) => updateFilter("assignedTo", event.target.value)}
               >
-                <option value="">All Assigned To</option>
+                <option value="">All Created By</option>
                 {filterOptions.assignedTo.map((name) => (
                   <option key={name} value={name}>
                     {name}
@@ -1835,6 +1833,11 @@ export default function CustomerProfilingPage() {
                     onChange={(value) => updateField("name", value)}
                   />
                   <Field
+                    label="Phone Number"
+                    value={form.phone}
+                    onChange={(value) => updateField("phone", value)}
+                  />
+                  <Field
                     label="Alternate Phone Number"
                     value={form.alternatePhone}
                     onChange={(value) => updateField("alternatePhone", value)}
@@ -1873,9 +1876,10 @@ export default function CustomerProfilingPage() {
                     onChange={(value) => updateField("referenceSource", value)}
                   />
                   <Field
-                    label="Assigned To"
+                    label="Created By"
                     value={form.assignedTo}
                     onChange={(value) => updateField("assignedTo", value)}
+                    readOnly
                   />
                   <Field
                     label="Address"
@@ -1904,7 +1908,7 @@ export default function CustomerProfilingPage() {
                   <div>
                     <h2>Customer Details</h2>
                     <p>
-                      {[form.phone, form.assignedTo].filter(Boolean).join(" / ") ||
+                      {[form.phone, form.createdBy || form.assignedTo].filter(Boolean).join(" / ") ||
                         "Selected customer details."}
                     </p>
                   </div>
@@ -1917,9 +1921,10 @@ export default function CustomerProfilingPage() {
                   />
                   <Field label="Phone" value={form.phone} onChange={(value) => updateField("phone", value)} />
                   <Field
-                    label="Assigned To"
+                    label="Created By"
                     value={form.assignedTo}
                     onChange={(value) => updateField("assignedTo", value)}
+                    readOnly
                   />
                   <Field
                     label="Remark"
@@ -2428,7 +2433,7 @@ function ProfileListingTable({ profiles, onEdit }) {
             <th>Customer Type</th>
             <th>Selected LOBs</th>
             <th>Status</th>
-            <th>Assigned To</th>
+            <th>Created By</th>
             <th>Follow-up Date</th>
             <th>Converted</th>
             <th>Actions</th>
@@ -2443,7 +2448,7 @@ function ProfileListingTable({ profiles, onEdit }) {
                 <td>{profile.customerType || "-"}</td>
                 <td>{(profile.selectedLOBs || []).join(", ") || "-"}</td>
                 <td>{profile.status || "-"}</td>
-                <td>{profile.assignedTo || "-"}</td>
+                <td>{profile.createdBy || profile.assignedTo || "-"}</td>
                 <td>{formatDate(profile.nextFollowUpDate || profile.followUpDate)}</td>
                 <td>{profile.convertedToCustomer ? "Yes" : "No"}</td>
                 <td>
@@ -2487,8 +2492,9 @@ function formatDateTime(value) {
 
 function canCurrentUserHandleProfile(profile, user) {
   if (!user) return false;
+  if (user.role === "SUPER_ADMIN") return true;
   const userTokens = [user.name, user.email].filter(Boolean).map((value) => value.toLowerCase());
-  const ownerTokens = [profile.assignedTo, profile.createdBy]
+  const ownerTokens = [profile.createdBy, profile.assignedTo]
     .filter(Boolean)
     .map((value) => value.toLowerCase());
   return ownerTokens.some((owner) => userTokens.includes(owner));
@@ -2504,7 +2510,7 @@ function ExistingCustomerTable({ profiles, policyMatches, onSelectProfile, onSel
             <th>Customer</th>
             <th>Phone</th>
             <th>Known Insurance / LOB</th>
-            <th>Assigned To</th>
+            <th>Created By</th>
             <th>Remarks</th>
             <th>Select</th>
           </tr>
@@ -2516,7 +2522,7 @@ function ExistingCustomerTable({ profiles, policyMatches, onSelectProfile, onSel
               <td>{profile.name}</td>
               <td>{profile.phone}</td>
               <td>{(profile.selectedLOBs || []).join(", ") || "-"}</td>
-              <td>{profile.assignedTo || profile.createdBy || "-"}</td>
+              <td>{profile.createdBy || profile.assignedTo || "-"}</td>
               <td>{profile.remarks || "-"}</td>
               <td>
                 <button type="button" onClick={() => onSelectProfile(profile)}>
@@ -2561,11 +2567,11 @@ function inferLobFromPolicyType(policyType = "") {
   return "Other";
 }
 
-function Field({ label, value, onChange, type = "text", wide = false }) {
+function Field({ label, value, onChange, type = "text", wide = false, readOnly = false }) {
   const input = wide ? (
-    <textarea value={value || ""} onChange={(event) => onChange(event.target.value)} />
+    <textarea value={value || ""} readOnly={readOnly} onChange={(event) => onChange(event.target.value)} />
   ) : (
-    <input type={type} value={value || ""} onChange={(event) => onChange(event.target.value)} />
+    <input type={type} value={value || ""} readOnly={readOnly} onChange={(event) => onChange(event.target.value)} />
   );
 
   return (

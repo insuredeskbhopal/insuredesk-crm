@@ -2991,31 +2991,31 @@ label span em {
   z-index: 100000;
   display: grid;
   place-items: center;
-  padding: 24px;
-  background: rgba(15, 23, 42, 0.3);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  padding: 28px;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .claims-add-modal {
   display: flex;
   flex-direction: column;
-  width: min(1860px, calc(100vw - 48px));
-  max-height: calc(100vh - 48px);
+  width: min(800px, calc(100vw - 56px));
+  max-height: min(805px, calc(100vh - 56px));
   overflow: hidden;
   border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 18px;
   background: #ffffff;
-  box-shadow: 0 26px 80px rgba(15, 23, 42, 0.2), 0 10px 28px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18), 0 8px 24px rgba(15, 23, 42, 0.08);
   animation: modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both;
 }
 
 .claims-add-modal-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 28px 24px 14px;
+  padding: 22px 24px 18px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.95);
   background: #ffffff;
 }
@@ -3023,55 +3023,108 @@ label span em {
 .claims-add-modal-header h2 {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin: 0 0 6px;
+  gap: 8px;
+  margin: 0 0 5px;
   color: #111827;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 900;
 }
 
 .claims-add-modal-header p {
   margin: 0;
-  color: #111827;
-  font-size: 13px;
+  color: #475569;
+  font-size: 12px;
   font-weight: 800;
 }
 
 .claims-add-modal-header button {
   display: inline-grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  border-radius: 12px;
-  background: #ffffff;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: #f8fafc;
   color: #111827;
   cursor: pointer;
+}
+
+.claims-add-modal-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.claims-add-modal-logo {
+  flex: 0 0 auto;
+  width: auto;
+  height: 64px;
+  object-fit: contain;
+}
+
+.claims-add-modal-titlecopy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding-left: 16px;
+  border-left: 1px solid #e2e8f0;
+}
+
+.claims-add-modal-titlecopy > span {
+  color: #0f172a;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .claims-add-modal-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   overflow-y: auto;
   padding: 18px 24px 0;
+  scrollbar-gutter: stable;
+}
+
+.claims-add-modal-section {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px 20px;
+  border: 1px solid rgba(203, 213, 225, 0.75);
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.claims-add-modal-section-head {
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+}
+
+.claims-add-modal-section-head h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
 }
 
 .claims-add-modal-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px 14px;
+  gap: 12px 12px;
 }
 
 .claims-add-modal-field {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
 .claims-add-modal-field span {
   color: #000000;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -3081,12 +3134,12 @@ label span em {
 .claims-add-modal-field textarea,
 .claims-add-modal-upload input {
   width: 100%;
-  min-height: 42px;
-  border: 1px solid rgba(15, 23, 42, 0.16);
-  border-radius: 10px;
-  background: #ffffff;
+  min-height: 34px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 8px;
+  background: #f8fafc;
   color: #111827;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 750;
   outline: none;
 }
@@ -3094,12 +3147,12 @@ label span em {
 .claims-add-modal-field input,
 .claims-add-modal-field select,
 .claims-add-modal-upload input {
-  padding: 0 12px;
+  padding: 0 11px;
 }
 
 .claims-add-modal-field textarea {
-  min-height: 88px;
-  padding: 12px;
+  min-height: 68px;
+  padding: 10px 11px;
   resize: vertical;
 }
 
@@ -3117,9 +3170,9 @@ label span em {
 
 .claims-add-modal-docs {
   display: grid;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 12px;
   background: #fbfdff;
 }
@@ -3134,13 +3187,13 @@ label span em {
   align-items: center;
   gap: 8px;
   color: #111827;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
 }
 
 .claims-add-modal-docs strong {
-  color: #111827;
-  font-size: 12px;
+  color: #475569;
+  font-size: 11px;
   font-weight: 800;
 }
 
@@ -3155,13 +3208,13 @@ label span em {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 42px;
-  padding: 0 16px;
+  min-height: 34px;
+  padding: 0 14px;
   border: 1px solid rgba(16, 185, 129, 0.22);
-  border-radius: 10px;
+  border-radius: 8px;
   background: #eefaf5;
   color: #111827;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
   cursor: pointer;
 }
@@ -3177,7 +3230,7 @@ label span em {
   justify-content: flex-end;
   gap: 12px;
   margin: 0 -24px;
-  padding: 18px 24px 24px;
+  padding: 16px 24px 20px;
   border-top: 1px solid rgba(226, 232, 240, 0.95);
   background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(8px);
@@ -3189,7 +3242,8 @@ label span em {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 42px;
+  min-height: 40px;
+  padding-inline: 16px;
 }
 
 @media (max-width: 900px) {
@@ -3206,6 +3260,39 @@ label span em {
   .claims-add-modal-grid,
   .claims-add-modal-upload {
     grid-template-columns: 1fr;
+  }
+
+  .claims-add-modal-header,
+  .claims-add-modal-form {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .claims-add-modal-actions {
+    margin-left: -18px;
+    margin-right: -18px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .claims-add-modal-titlebar {
+    gap: 12px;
+  }
+
+  .claims-add-modal-logo {
+    height: 48px;
+  }
+
+  .claims-add-modal-titlecopy {
+    padding-left: 12px;
+  }
+
+  .claims-add-modal-titlecopy p {
+    display: none;
+  }
+
+  .claims-add-modal-section {
+    padding: 14px;
   }
 }
 
@@ -3627,6 +3714,35 @@ label span em {
 .claims-remark-card {
   max-height: calc(100vh - 48px);
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.claims-remark-modal-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.claims-remark-modal-logo {
+  flex: 0 0 auto;
+  width: auto;
+  height: 54px;
+  object-fit: contain;
+}
+
+.claims-remark-modal-titlecopy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding-left: 14px;
+  border-left: 1px solid #e2e8f0;
+}
+
+.claims-remark-modal-titlecopy h2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .claims-previous-remarks {
@@ -3638,6 +3754,15 @@ label span em {
   background: #fbfdff;
 }
 
+.claims-recent-remarks {
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #dbe3ee;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  overflow: hidden;
+}
+
 .claims-previous-remarks > div {
   display: flex;
   align-items: center;
@@ -3645,24 +3770,177 @@ label span em {
   gap: 12px;
 }
 
-.claims-previous-remarks span {
+.claims-previous-remarks > div:first-child span {
   color: #111827;
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
 }
 
-.claims-previous-remarks strong {
+.claims-previous-remarks > div:first-child strong {
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 800;
 }
 
 .claims-previous-remarks .claims-remark-list {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
   max-height: min(260px, 34vh);
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 2px;
   overscroll-behavior: contain;
+}
+
+.claims-previous-remarks .claims-remark-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.claims-previous-remarks .claims-remark-list::-webkit-scrollbar-track {
+  background: #eef2f7;
+  border-radius: 999px;
+}
+
+.claims-previous-remarks .claims-remark-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.claims-previous-remarks .claims-remark-item {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+.claims-previous-remarks .claims-remark-item strong,
+.claims-previous-remarks .claims-remark-item span {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.claims-previous-remarks > .claims-recent-remark-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  justify-content: stretch;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  max-height: 210px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+  overscroll-behavior: contain;
+}
+
+.claims-previous-remarks > .claims-recent-remark-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.claims-previous-remarks > .claims-recent-remark-list::-webkit-scrollbar-track {
+  background: #eef2f7;
+  border-radius: 999px;
+}
+
+.claims-previous-remarks > .claims-recent-remark-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.claims-previous-remarks > .claims-recent-remark-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.claims-recent-remark-card {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.035);
+}
+
+.claims-recent-remark-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.claims-recent-remark-top span {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.claims-recent-remark-top time {
+  flex: 0 0 auto;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.claims-recent-remark-card p {
+  margin: 0;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.claims-recent-remark-card strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .claims-remark-modal-logo {
+    height: 42px;
+  }
+
+  .claims-remark-modal-titlebar {
+    gap: 10px;
+  }
+
+  .claims-remark-modal-titlecopy {
+    padding-left: 10px;
+  }
 }
 
 .claims-delete-card p {
@@ -7301,6 +7579,14 @@ label.is-disabled textarea {
 .customer-portfolio-empty-cell {
   padding: 22px !important;
   text-align: center !important;
+}
+
+.customer-portfolio-empty-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .customer-portfolio-timeline-filters {

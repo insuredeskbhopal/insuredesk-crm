@@ -5,6 +5,7 @@ import { getTenantFilter, getCustomerProfileScopedFilter } from "@/lib/auth/rbac
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import {
   normalizeProfilePhone,
+  normalizeIndianPhone,
   sanitizeCustomerProfilePayload,
   serializeCustomerProfile,
 } from "@/lib/customer-profiles/utils";
@@ -28,7 +29,7 @@ export async function GET(request) {
       const skip = (page - 1) * limit;
 
       const status = searchParams.get("status") || "";
-      const assignedTo = searchParams.get("assignedTo") || "";
+      const createdBy = searchParams.get("createdBy") || searchParams.get("assignedTo") || "";
       const lob = searchParams.get("lob") || "";
       const followUpDate = searchParams.get("followUpDate") || "";
       const q = searchParams.get("q") || "";
@@ -44,12 +45,12 @@ export async function GET(request) {
         where.status = status;
       }
 
-      if (assignedTo) {
+      if (createdBy) {
         andFilters.push({
           OR: [
-            { assignedTo: { contains: assignedTo, mode: "insensitive" } },
-            { createdBy: { name: { contains: assignedTo, mode: "insensitive" } } },
-            { createdBy: { email: { contains: assignedTo, mode: "insensitive" } } },
+            { createdBy: { name: { contains: createdBy, mode: "insensitive" } } },
+            { createdBy: { email: { contains: createdBy, mode: "insensitive" } } },
+            { assignedTo: { contains: createdBy, mode: "insensitive" } },
           ],
         });
       }
@@ -151,7 +152,7 @@ export async function GET(request) {
       const filterOptions = {
         assignedTo: unique(
           assignedToOptions.map(
-            (profile) => profile.assignedTo || profile.createdBy?.name || profile.createdBy?.email,
+            (profile) => profile.createdBy?.name || profile.createdBy?.email || profile.assignedTo,
           ),
         ),
         lobs: unique(lobRows.map((row) => row.lob)),
@@ -208,14 +209,17 @@ export async function GET(request) {
     ]);
 
     const serializedProfiles = profiles.map(serializeCustomerProfile);
-    const claimedByAnotherUser = await prisma.customerProfile.findFirst({
-      where: {
-        ...getCustomerProfileClaimFilter(user),
-        phone: { contains: phone },
-        NOT: { createdById: actorId },
-      },
-      select: { id: true },
-    });
+    const claimedByAnotherUser =
+      user.role === "SUPER_ADMIN"
+        ? null
+        : await prisma.customerProfile.findFirst({
+            where: {
+              ...getCustomerProfileClaimFilter(user),
+              phone: { contains: phone },
+              NOT: { createdById: actorId },
+            },
+            select: { id: true },
+          });
 
     if (claimedByAnotherUser && !serializedProfiles.length) {
       return NextResponse.json({
@@ -318,31 +322,36 @@ export async function POST(request) {
       ...data,
       assignedTo: data.assignedTo || creatorLabel,
     };
-    if (profileData.phone) {
-      const existing = await prisma.customerProfile.findFirst({
-        where: {
-          ...getCustomerProfileClaimFilter(user),
-          phone: { contains: profileData.phone },
-        },
-        include: {
-          createdBy: { select: { name: true, email: true } },
-          updatedBy: { select: { name: true, email: true } },
-        },
-      });
+    if (!profileData.phone || normalizeIndianPhone(profileData.phone) !== profileData.phone) {
+      return NextResponse.json(
+        { error: "Please enter a valid 10-digit Indian mobile number (starting with 6-9)." },
+        { status: 400 },
+      );
+    }
 
-      if (existing) {
-        const isOwnLead = existing.createdById === actorId;
-        return NextResponse.json(
-          {
-            error: isOwnLead
-              ? "This phone number already exists in your Customer Profiling leads."
-              : "This phone number is already claimed by another user in Customer Profiling.",
-            profile: isOwnLead ? serializeCustomerProfile(existing) : null,
-            claimedByAnotherUser: !isOwnLead,
-          },
-          { status: 409 },
-        );
-      }
+    const existing = await prisma.customerProfile.findFirst({
+      where: {
+        ...getCustomerProfileClaimFilter(user),
+        phone: profileData.phone,
+      },
+      include: {
+        createdBy: { select: { name: true, email: true } },
+        updatedBy: { select: { name: true, email: true } },
+      },
+    });
+
+    if (existing) {
+      const isOwnLead = existing.createdById === actorId;
+      return NextResponse.json(
+        {
+          error: isOwnLead
+            ? "This phone number already exists in your Customer Profiling leads."
+            : "This phone number is already claimed by another user in Customer Profiling.",
+          profile: isOwnLead ? serializeCustomerProfile(existing) : null,
+          claimedByAnotherUser: !isOwnLead,
+        },
+        { status: 409 },
+      );
     }
 
     const record = await prisma.customerProfile.create({

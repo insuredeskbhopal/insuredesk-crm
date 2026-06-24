@@ -61,6 +61,11 @@ export function canAccessCustomerProfile(user, action, profile) {
     return false;
   }
 
+  if (user.role === UserRole.SUPER_ADMIN) {
+    if (action === "read" || action === "write" || action === "delete") return true;
+    return false;
+  }
+
   if (profile.createdById !== userId) {
     return false;
   }
@@ -118,6 +123,7 @@ export function getTenantFilter(user, action = "read") {
 
 /**
  * Customer Profiling owner filter: organization + createdById = current user.
+ * Super admin can see all customer profiling leads in scope.
  */
 export function getCustomerProfileOwnerFilter(user) {
   const actorId = user?.userId || user?.id;
@@ -144,14 +150,9 @@ export function getCustomerProfileScopedFilter(user) {
   }
 
   if (user.role === UserRole.SUPER_ADMIN) {
-    const baseFilter = user.organizationId
+    return user.organizationId
       ? { organizationId: user.organizationId, deletedAt: null }
       : { deletedAt: null };
-    if (!actorId) return { id: "00000000-0000-0000-0000-000000000000" };
-    return {
-      ...baseFilter,
-      createdById: actorId,
-    };
   }
 
   if (!actorId) return { id: "00000000-0000-0000-0000-000000000000" };

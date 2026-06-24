@@ -3,7 +3,11 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { canAccessCustomerProfile, getCustomerProfileScopedFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
-import { sanitizeCustomerProfilePayload, serializeCustomerProfile } from "@/lib/customer-profiles/utils";
+import {
+  normalizeIndianPhone,
+  sanitizeCustomerProfilePayload,
+  serializeCustomerProfile,
+} from "@/lib/customer-profiles/utils";
 
 export const runtime = "nodejs";
 
@@ -70,6 +74,40 @@ export async function PUT(request, { params }) {
     const actorLabel = session.name || session.email || "";
 
     const actorId = session.userId || session.id;
+    if (!data.phone || normalizeIndianPhone(data.phone) !== data.phone) {
+      return NextResponse.json(
+        { error: "Please enter a valid 10-digit Indian mobile number (starting with 6-9)." },
+        { status: 400 },
+      );
+    }
+
+    const duplicate = await prisma.customerProfile.findFirst({
+      where: {
+        deletedAt: null,
+        phone: data.phone,
+        organizationId: existing.organizationId || null,
+        NOT: { id },
+      },
+      include: {
+        createdBy: { select: { name: true, email: true } },
+        updatedBy: { select: { name: true, email: true } },
+      },
+    });
+
+    if (duplicate) {
+      const isOwnLead = duplicate.createdById === actorId;
+      return NextResponse.json(
+        {
+          error: isOwnLead
+            ? "This phone number already exists in your Customer Profiling leads."
+            : "This phone number is already claimed by another user in Customer Profiling.",
+          profile: isOwnLead ? serializeCustomerProfile(duplicate) : null,
+          claimedByAnotherUser: !isOwnLead,
+        },
+        { status: 409 },
+      );
+    }
+
     const profile = await prisma.customerProfile.update({
       where: { id },
       data: {

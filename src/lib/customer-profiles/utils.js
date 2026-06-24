@@ -68,7 +68,7 @@ export function serializeCustomerProfile(profile) {
     businessType: profile.businessType || "",
     contactPersonName: profile.contactPersonName || "",
     customerType: profile.customerType,
-    assignedTo: profile.assignedTo || profile.createdBy?.name || profile.createdBy?.email || "",
+    assignedTo: profile.createdBy?.name || profile.createdBy?.email || profile.assignedTo || "",
     referenceSource: profile.referenceSource || "",
     sourcePolicyId: profile.sourcePolicyId || "",
     sourcePolicyNumber: profile.sourcePolicyNumber || "",

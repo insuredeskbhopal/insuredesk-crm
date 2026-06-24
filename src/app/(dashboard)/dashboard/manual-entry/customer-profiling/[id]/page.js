@@ -286,7 +286,7 @@ export default function CustomerProfileDetailPage({ params }) {
       policyDetails: remarkForm.policyDetails || {},
       status: convert ? "Converted" : remarkForm.status,
       createdAt: now,
-      createdBy: profile.assignedTo || profile.createdBy || "Agent",
+      createdBy: profile.createdBy || profile.assignedTo || "Agent",
     };
 
     const updatedLobDetails = { ...(profile.lobDetails || {}) };
@@ -893,15 +893,15 @@ export default function CustomerProfileDetailPage({ params }) {
             </div>
           </div>
 
-          {/* 5. ASSIGNMENT */}
+          {/* 5. CREATOR */}
           <div className="sidebar-section-card">
             <div className="sidebar-section-header">
               <User size={15} />
-              <span>Assignment</span>
+              <span>Creator</span>
             </div>
             <div className="sidebar-full-cell">
-              <span className="sidebar-cell-label">Assigned Agent</span>
-              <span className="sidebar-cell-value">{profile.assignedTo || profile.createdBy || "-"}</span>
+              <span className="sidebar-cell-label">Created By</span>
+              <span className="sidebar-cell-value">{profile.createdBy || profile.assignedTo || "-"}</span>
             </div>
           </div>
         </aside>
@@ -967,7 +967,16 @@ export default function CustomerProfileDetailPage({ params }) {
                   ) : (
                     <tr>
                       <td colSpan={8} className="customer-portfolio-empty-cell">
-                        No follow-up details captured.
+                        <div className="customer-portfolio-empty-action">
+                          <span>No follow-up details captured.</span>
+                          <button
+                            type="button"
+                            className="customer-portfolio-table-action"
+                            onClick={() => openRemarkModal(null)}
+                          >
+                            Add Policy Detail
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -1295,19 +1304,6 @@ function buildProfileView(profile) {
     });
   }
 
-  if (!policies.length) {
-    policies.push({
-      id: "lead-follow-up",
-      policyNumber: profile.sourcePolicyNumber || `Lead-${String(profile.id || "").slice(0, 8) || "1"}`,
-      company: profile.sourceCompany || profile.businessType || profile.name,
-      policyType: profile.sourcePolicyType || "To be discussed",
-      requirementSummary: profile.remarks || profile.followUpRemark || "Discussion pending",
-      premium: 0,
-      sumInsured: 0,
-      renewalDate: profile.nextFollowUpDate,
-    });
-  }
-
   const followUps = Array.isArray(lobDetails.followUps) ? lobDetails.followUps : [];
   const hasLatestFollowUpLog = followUps.some(
     (item) =>
@@ -1335,7 +1331,7 @@ function buildProfileView(profile) {
           title: profile.followUpOutcome || "Latest Follow-up",
           remark: profile.followUpRemark,
           createdAt: profile.lastFollowUpDate || profile.updatedAt,
-          createdBy: profile.assignedTo || profile.createdBy || "Agent",
+          createdBy: profile.createdBy || profile.assignedTo || "Agent",
           policyLabel: profile.sourcePolicyType
             ? `POLICY: ${profile.sourcePolicyType}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}`
             : "",
@@ -1349,7 +1345,7 @@ function buildProfileView(profile) {
           title: "General Remark",
           remark: profile.remarks,
           createdAt: profile.updatedAt,
-          createdBy: profile.assignedTo || profile.createdBy || "Agent",
+          createdBy: profile.createdBy || profile.assignedTo || "Agent",
           policyLabel: profile.sourcePolicyType
             ? `POLICY: ${profile.sourcePolicyType}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}`
             : "",

@@ -381,7 +381,6 @@ export default function ClaimsManagementPage() {
   function openEditForm(item) {
     setClaim({ ...EMPTY_CLAIM, ...item, documents: item.documents || [], remarks: item.remarks || [] });
     setEditingId(item.id);
-    setSelectedClaimId("");
     setDocumentName("");
     setDocumentError("");
     setOpenMenuId("");
@@ -523,6 +522,136 @@ export default function ClaimsManagementPage() {
       setIsSaving(false);
     }
   }
+
+  const claimFormPortal =
+    typeof window !== "undefined" && isFormOpen
+      ? createPortal(
+          <div className="claims-add-modal-backdrop" onClick={closeForm}>
+            <section className="claims-add-modal" onClick={(event) => event.stopPropagation()}>
+              <div className="claims-add-modal-header">
+                <div className="claims-add-modal-titlebar">
+                  <Image
+                    src="/brand/main-logo-wide.webp"
+                    alt="Bima Headquarter"
+                    width={133}
+                    height={74}
+                    className="claims-add-modal-logo"
+                  />
+                  <div className="claims-add-modal-titlecopy">
+                    <span>Claim Record Details</span>
+                    <h2>{editingId ? "Edit Claim" : "Add Claim"}</h2>
+                    <p>Enter claim details and upload supporting documents.</p>
+                  </div>
+                </div>
+                <button type="button" onClick={closeForm} aria-label="Close claim form">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form className="claims-add-modal-form" onSubmit={saveClaim}>
+                <div className="claims-add-modal-section">
+                  <div className="claims-add-modal-section-head">
+                    <h3>General Information</h3>
+                  </div>
+
+                  <div className="claims-add-modal-grid">
+                    {CLAIM_FIELDS.map((field) => (
+                      <label key={field.key} className="claims-add-modal-field">
+                        <span>
+                          {field.label}
+                          {field.required ? " *" : ""}
+                        </span>
+                        {field.type === "select" ? (
+                          <select
+                            value={claim[field.key]}
+                            onChange={(event) => updateClaim(field.key, event.target.value)}
+                          >
+                            {field.options.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type={field.type || "text"}
+                            inputMode={field.inputMode}
+                            value={claim[field.key]}
+                            placeholder={field.placeholder}
+                            required={field.required}
+                            onChange={(event) => updateClaim(field.key, event.target.value)}
+                          />
+                        )}
+                      </label>
+                    ))}
+                  </div>
+
+                  <label className="claims-add-modal-field claims-add-modal-wide">
+                    <span>Claim Description</span>
+                    <textarea
+                      value={claim.claimDescription}
+                      placeholder="Enter claim description"
+                      rows={2}
+                      onChange={(event) => updateClaim("claimDescription", event.target.value)}
+                    />
+                  </label>
+
+                  <label className="claims-add-modal-field claims-add-modal-wide">
+                    <span>Current Remark</span>
+                    <textarea
+                      value={claim.currentRemark}
+                      placeholder="Enter current remark or claim follow-up note"
+                      rows={2}
+                      onChange={(event) => updateClaim("currentRemark", event.target.value)}
+                    />
+                  </label>
+                </div>
+
+                <div className="claims-add-modal-docs">
+                  <div>
+                    <span>
+                      <Paperclip size={17} /> Supporting Documents
+                    </span>
+                    <strong>
+                      Name every file before upload, for example Aadhaar Card, PAN Card, FIR, claim form,
+                      invoice.
+                    </strong>
+                  </div>
+                  <div className="claims-add-modal-upload">
+                    <input
+                      type="text"
+                      value={documentName}
+                      placeholder="Document name"
+                      onChange={(event) => setDocumentName(event.target.value)}
+                    />
+                    <label>
+                      <Paperclip size={16} /> Upload
+                      <input
+                        type="file"
+                        accept=".pdf,image/*,.doc,.docx,.xls,.xlsx"
+                        onChange={uploadClaimDocument}
+                      />
+                    </label>
+                  </div>
+                  {documentError ? <p className="claims-document-error">{documentError}</p> : null}
+                  <DocumentList documents={claim.documents || []} onRemove={removeDraftDocument} />
+                </div>
+
+                <div className="claims-add-modal-actions">
+                  <button type="button" className="secondary-action" onClick={() => setClaim(EMPTY_CLAIM)}>
+                    <RotateCcw size={17} /> Reset
+                  </button>
+                  <button type="submit" className="primary-action" disabled={isSaving}>
+                    <FilePlus2 size={17} />{" "}
+                    {isSaving ? "Saving..." : editingId ? "Update Claim" : "Save Claim"}
+                  </button>
+                </div>
+              </form>
+            </section>
+          </div>,
+          document.body,
+        )
+      : null;
 
   if (selectedClaim) {
     return (
@@ -796,6 +925,8 @@ export default function ClaimsManagementPage() {
           </main>
         </div>
 
+        {claimFormPortal}
+
         {typeof window !== "undefined" &&
           remarkTarget &&
           createPortal(
@@ -849,9 +980,15 @@ export default function ClaimsManagementPage() {
                     color: "#0f172a",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                    <MessageSquarePlus size={24} style={{ color: "#2563eb" }} />
-                    <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
+                  <div className="claims-remark-modal-titlebar">
+                    <Image
+                      src="/brand/main-logo-wide.webp"
+                      alt="Bima Headquarter"
+                      width={133}
+                      height={74}
+                      className="claims-remark-modal-logo"
+                    />
+                    <div className="claims-remark-modal-titlecopy">
                       <span
                         style={{
                           fontSize: "11px",
@@ -861,7 +998,7 @@ export default function ClaimsManagementPage() {
                           color: "#64748b",
                         }}
                       >
-                        Add Remark
+                        Claim Follow-up
                       </span>
                       <h2 style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: "800", color: "#0f172a" }}>
                         {remarkTarget.claimNo || "Claim Follow-up"}
@@ -909,11 +1046,8 @@ export default function ClaimsManagementPage() {
                     backgroundColor: "#ffffff",
                   }}
                 >
-                  <section
-                    className="claims-previous-remarks"
-                    style={{ border: "none", padding: 0, background: "transparent" }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <section className="claims-previous-remarks claims-recent-remarks">
+                    <div>
                       <span
                         style={{
                           fontSize: "11px",
@@ -922,13 +1056,13 @@ export default function ClaimsManagementPage() {
                           color: "#64748b",
                         }}
                       >
-                        Previous Remarks
+                        Latest Remarks
                       </span>
                       <strong style={{ fontSize: "12px", color: "#475569" }}>
                         {(remarkTarget.remarks || []).length.toLocaleString("en-IN")} saved
                       </strong>
                     </div>
-                    <RemarkList remarks={remarkTarget.remarks || []} />
+                    <RecentRemarkList remarks={remarkTarget.remarks || []} />
                   </section>
                   <label className="claims-wide-field">
                     <span
@@ -939,13 +1073,13 @@ export default function ClaimsManagementPage() {
                         color: "#64748b",
                       }}
                     >
-                      Remark *
+                      Follow-up Remark *
                     </span>
                     <textarea
                       value={remarkDraft}
                       required
-                      rows={3}
-                      placeholder="Enter claim follow-up remark"
+                      rows={4}
+                      placeholder="Add today's update, pending document, insurer response, or next action"
                       onChange={(event) => setRemarkDraft(event.target.value)}
                     />
                   </label>
@@ -958,7 +1092,7 @@ export default function ClaimsManagementPage() {
                         color: "#64748b",
                       }}
                     >
-                      Next Follow-up Date
+                      Next Action Date
                     </span>
                     <input
                       type="date"
@@ -1326,120 +1460,7 @@ export default function ClaimsManagementPage() {
         </section>
       ) : null}
 
-      {typeof window !== "undefined" && isFormOpen
-        ? createPortal(
-            <div className="claims-add-modal-backdrop" onClick={closeForm}>
-              <section className="claims-add-modal" onClick={(event) => event.stopPropagation()}>
-                <div className="claims-add-modal-header">
-                  <div>
-                    <h2>
-                      <FilePlus2 size={18} /> {editingId ? "Edit Claim" : "Add Claim"}
-                    </h2>
-                    <p>Enter generic claim details and upload named supporting documents.</p>
-                  </div>
-                  <button type="button" onClick={closeForm} aria-label="Close claim form">
-                    <X size={20} />
-                  </button>
-                </div>
-
-                <form className="claims-add-modal-form" onSubmit={saveClaim}>
-                  <div className="claims-add-modal-grid">
-                    {CLAIM_FIELDS.map((field) => (
-                      <label key={field.key} className="claims-add-modal-field">
-                        <span>
-                          {field.label}
-                          {field.required ? " *" : ""}
-                        </span>
-                        {field.type === "select" ? (
-                          <select
-                            value={claim[field.key]}
-                            onChange={(event) => updateClaim(field.key, event.target.value)}
-                          >
-                            {field.options.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type={field.type || "text"}
-                            inputMode={field.inputMode}
-                            value={claim[field.key]}
-                            placeholder={field.placeholder}
-                            required={field.required}
-                            onChange={(event) => updateClaim(field.key, event.target.value)}
-                          />
-                        )}
-                      </label>
-                    ))}
-                  </div>
-
-                  <label className="claims-add-modal-field claims-add-modal-wide">
-                    <span>Claim Description</span>
-                    <textarea
-                      value={claim.claimDescription}
-                      placeholder="Enter claim description"
-                      rows={3}
-                      onChange={(event) => updateClaim("claimDescription", event.target.value)}
-                    />
-                  </label>
-
-                  <label className="claims-add-modal-field claims-add-modal-wide">
-                    <span>Current Remark</span>
-                    <textarea
-                      value={claim.currentRemark}
-                      placeholder="Enter current remark or claim follow-up note"
-                      rows={3}
-                      onChange={(event) => updateClaim("currentRemark", event.target.value)}
-                    />
-                  </label>
-
-                  <div className="claims-add-modal-docs">
-                    <div>
-                      <span>
-                        <Paperclip size={17} /> Supporting Documents
-                      </span>
-                      <strong>
-                        Name every file before upload, for example Aadhaar Card, PAN Card, FIR, claim form,
-                        invoice.
-                      </strong>
-                    </div>
-                    <div className="claims-add-modal-upload">
-                      <input
-                        type="text"
-                        value={documentName}
-                        placeholder="Document name"
-                        onChange={(event) => setDocumentName(event.target.value)}
-                      />
-                      <label>
-                        <Paperclip size={16} /> Upload
-                        <input
-                          type="file"
-                          accept=".pdf,image/*,.doc,.docx,.xls,.xlsx"
-                          onChange={uploadClaimDocument}
-                        />
-                      </label>
-                    </div>
-                    {documentError ? <p className="claims-document-error">{documentError}</p> : null}
-                    <DocumentList documents={claim.documents || []} onRemove={removeDraftDocument} />
-                  </div>
-
-                  <div className="claims-add-modal-actions">
-                    <button type="button" className="secondary-action" onClick={() => setClaim(EMPTY_CLAIM)}>
-                      <RotateCcw size={17} /> Reset
-                    </button>
-                    <button type="submit" className="primary-action" disabled={isSaving}>
-                      <FilePlus2 size={17} />{" "}
-                      {isSaving ? "Saving..." : editingId ? "Update Claim" : "Save Claim"}
-                    </button>
-                  </div>
-                </form>
-              </section>
-            </div>,
-            document.body,
-          )
-        : null}
+      {claimFormPortal}
 
       <section className="claims-filter-grid">
         {FILTERS.map((filter) => (
@@ -1908,9 +1929,15 @@ export default function ClaimsManagementPage() {
                   color: "#0f172a",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  <MessageSquarePlus size={24} style={{ color: "#2563eb" }} />
-                  <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
+                <div className="claims-remark-modal-titlebar">
+                  <Image
+                    src="/brand/main-logo-wide.webp"
+                    alt="Bima Headquarter"
+                    width={133}
+                    height={74}
+                    className="claims-remark-modal-logo"
+                  />
+                  <div className="claims-remark-modal-titlecopy">
                     <span
                       style={{
                         fontSize: "11px",
@@ -1920,7 +1947,7 @@ export default function ClaimsManagementPage() {
                         color: "#64748b",
                       }}
                     >
-                      Add Remark
+                      Claim Follow-up
                     </span>
                     <h2 style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: "800", color: "#0f172a" }}>
                       {remarkTarget.claimNo || "Claim Follow-up"}
@@ -1968,11 +1995,8 @@ export default function ClaimsManagementPage() {
                   backgroundColor: "#ffffff",
                 }}
               >
-                <section
-                  className="claims-previous-remarks"
-                  style={{ border: "none", padding: 0, background: "transparent" }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <section className="claims-previous-remarks claims-recent-remarks">
+                  <div>
                     <span
                       style={{
                         fontSize: "11px",
@@ -1981,13 +2005,13 @@ export default function ClaimsManagementPage() {
                         color: "#64748b",
                       }}
                     >
-                      Previous Remarks
+                      Latest Remarks
                     </span>
                     <strong style={{ fontSize: "12px", color: "#475569" }}>
                       {(remarkTarget.remarks || []).length.toLocaleString("en-IN")} saved
                     </strong>
                   </div>
-                  <RemarkList remarks={remarkTarget.remarks || []} />
+                  <RecentRemarkList remarks={remarkTarget.remarks || []} />
                 </section>
                 <label className="claims-wide-field">
                   <span
@@ -1998,13 +2022,13 @@ export default function ClaimsManagementPage() {
                       color: "#64748b",
                     }}
                   >
-                    Remark *
+                    Follow-up Remark *
                   </span>
                   <textarea
                     value={remarkDraft}
                     required
-                    rows={3}
-                    placeholder="Enter claim follow-up remark"
+                    rows={4}
+                    placeholder="Add today's update, pending document, insurer response, or next action"
                     onChange={(event) => setRemarkDraft(event.target.value)}
                   />
                 </label>
@@ -2017,7 +2041,7 @@ export default function ClaimsManagementPage() {
                       color: "#64748b",
                     }}
                   >
-                    Next Follow-up Date
+                    Next Action Date
                   </span>
                   <input
                     type="date"
@@ -2401,6 +2425,33 @@ function RemarkList({ remarks }) {
             {remark.followUpDate ? ` | Follow-up ${formatDate(remark.followUpDate)}` : ""}
           </span>
         </div>
+      ))}
+    </div>
+  );
+}
+
+function RecentRemarkList({ remarks }) {
+  const latestRemarks = (remarks || []).slice(0, 2);
+
+  if (!latestRemarks.length) {
+    return <p className="claims-document-empty">No remarks added yet.</p>;
+  }
+
+  return (
+    <div className="claims-recent-remark-list">
+      {latestRemarks.map((remark, index) => (
+        <article key={remark.id} className="claims-recent-remark-card">
+          <div className="claims-recent-remark-top">
+            <span>{index === 0 ? "Latest" : "Previous"}</span>
+            <time>{formatDate(remark.createdAt)}</time>
+          </div>
+          <p>{remark.text}</p>
+          {remark.followUpDate ? (
+            <strong>
+              <MessageSquarePlus size={13} /> Follow-up {formatDate(remark.followUpDate)}
+            </strong>
+          ) : null}
+        </article>
       ))}
     </div>
   );
