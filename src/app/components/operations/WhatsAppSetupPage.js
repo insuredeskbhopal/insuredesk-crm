@@ -885,6 +885,7 @@ export default function WhatsAppSetupPage() {
                   Next
                 </button>
               </div>
+            </div>
           </div>
         </div>
       </div>
