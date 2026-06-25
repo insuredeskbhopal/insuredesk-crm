@@ -1,0 +1,12 @@
+FROM openwa/wa-automate:latest
+USER root
+RUN rm -f /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get update && \
+    apt-get install -y procps && \
+    rm -rf /var/lib/apt/lists/*
+# Patch the start.sh script inside the image to correctly wrap node arguments in quotes
+RUN sed -i 's/exec node \$@/exec node "$@"/g' start.sh
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+USER owauser
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

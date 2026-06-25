@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  openwa-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.openwa
+    image: openwa-whatsapp-gateway-custom:latest
+    container_name: openwa-whatsapp-gateway
+    restart: always
+    ports:
+      - "127.0.0.1:8085:8085"
+    environment:
+      # Port the REST API will listen on inside the container
+      - PORT=8085
+      
+      # API Key authentication between CRM and OpenWA REST endpoints
+      # MUST match OPENWA_API_KEY in the CRM's .env file
+      - API_KEY=${OPENWA_API_KEY}
+      
+      # Chromium args for stable headless running inside Docker containers
+      - CHROMIUM_ARGS=--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage
+    command: ["--session-id", "insuredesk_session", "--screenshot-on-initialization-browser-error", "--custom-user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"]
+    volumes:
+      # Persists WhatsApp session sessions/auth tokens so scanning is only done once
+      - openwa_session_data:/sessions
+
+volumes:
+  openwa_session_data:
+    driver: local

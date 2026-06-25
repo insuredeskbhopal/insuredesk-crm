@@ -17,6 +17,8 @@ import {
   Search,
   ShieldCheck,
   Users,
+  Cake,
+  Smartphone,
 } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 import { OPERATIONS_MODULES, FUTURE_OPERATIONS_MODULES } from "@/app/lib/operations-modules";
@@ -30,6 +32,8 @@ const ICONS = {
   endorsements: FileEdit,
   "service-requests": Headphones,
   "lead-management": Handshake,
+  "birthday-management": Cake,
+  "whatsapp-setup": Smartphone,
 };
 
 const DEFAULT_METRICS = {
@@ -246,13 +250,13 @@ function OperationsCard({ module, metrics }) {
 
 function getModuleCount(id, metrics) {
   if (id === "work-center") return metrics.openActivities || 0;
-  if (id === "customer-profiling" || id === "lead-management") return metrics.customerProfiles || 0;
+  if (id === "customer-profiling" || id === "lead-management" || id === "birthday-management") return metrics.customerProfiles || 0;
   if (id === "manual-policy-entry") return metrics.policyRecords || 0;
   return 0;
 }
 
 function getLastActivityText(id, count, metrics) {
-  if (id === "customer-profiling" || id === "lead-management") {
+  if (id === "customer-profiling" || id === "lead-management" || id === "birthday-management") {
     return count > 0 && metrics.latestProfileActivity
       ? `Last activity ${metrics.latestProfileActivity}`
       : "No recent activity";

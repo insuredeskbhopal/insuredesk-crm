@@ -58,3 +58,7 @@ WhatsApp Image*.webp
 # backup schemas
 prisma/schema.prisma.bak
 prisma/schema.current.prisma
+
+# backups
+/archive/
+

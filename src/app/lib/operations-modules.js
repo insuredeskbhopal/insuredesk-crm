@@ -120,6 +120,38 @@ export const OPERATIONS_MODULES = [
       "Lost lead tracking",
     ],
   },
+  {
+    id: "birthday-management",
+    name: "Birthday Management",
+    description: "Track and manage client birthdays, download import templates, import/export birthday lists, and send greetings.",
+    route: "/operations/birthday-management",
+    buttonLabel: "Open Birthday Management",
+    accent: "pink",
+    functions: [
+      "Track upcoming birthdays",
+      "Download import template",
+      "Import client birthdays",
+      "Export birthday list",
+      "Filter by month/date range",
+      "WhatsApp greeting templates",
+    ],
+  },
+  {
+    id: "whatsapp-setup",
+    name: "WhatsApp Setup",
+    description: "Manage self-hosted OpenWA API connection status, QR code scanning, message queue, logs, and template editing.",
+    route: "/operations/whatsapp-setup",
+    buttonLabel: "Open WhatsApp Setup",
+    accent: "indigo",
+    functions: [
+      "OpenWA server status",
+      "QR code scanner",
+      "Template editor",
+      "Message logs",
+      "Test message tool",
+      "Queue manager",
+    ],
+  },
 ];
 
 export const FUTURE_OPERATIONS_MODULES = [

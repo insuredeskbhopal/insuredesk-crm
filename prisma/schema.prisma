@@ -123,6 +123,8 @@ model Organization {
   customerProfiles CustomerProfile[]
   claims        Claim[]
   endorsements  Endorsement[]
+  whatsAppTemplates WhatsAppTemplate[]
+  whatsAppMessageQueues WhatsAppMessageQueue[]
 
   @@map("organizations")
 }
@@ -398,6 +400,7 @@ model CustomerProfile {
   phone               String
   alternatePhone      String?      @map("alternate_phone")
   email               String?
+  dob                 DateTime?    @map("dob") @db.Timestamptz(6)
   address             String?
   city                String?
   state               String?
@@ -908,4 +911,46 @@ model BlogSection {
 
   @@index([blogPostId, order])
   @@map("blog_sections")
+}
+
+model WhatsAppTemplate {
+  id             String        @id @default(uuid()) @db.Uuid
+  name           String
+  body           String        @db.Text
+  mediaUrl       String?       @map("media_url") @db.Text
+  mediaType      String?       @map("media_type")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organizationId String?       @map("organization_id") @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("whatsapp_templates")
+}
+
+model WhatsAppMessageQueue {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  recipientPhone  String    @map("recipient_phone")
+  recipientName   String    @map("recipient_name")
+  messageType     String    @map("message_type")
+  messageBody     String    @map("message_body") @db.Text
+  mediaUrl        String?   @map("media_url") @db.Text
+  fileName        String?   @map("file_name")
+  caption         String?   @db.Text
+  status          String    @default("PENDING")
+  attempts        Int       @default(0)
+  errorMessage    String?   @map("error_message") @db.Text
+  scheduledAt     DateTime  @default(now()) @map("scheduled_at") @db.Timestamptz(6)
+  sentAt          DateTime? @map("sent_at") @db.Timestamptz(6)
+  openwaMessageId String?   @map("openwa_message_id")
+  uniqueKey       String?   @unique @map("unique_key")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([organizationId, status, scheduledAt])
+  @@index([status, scheduledAt])
+  @@map("whatsapp_message_queue")
 }
