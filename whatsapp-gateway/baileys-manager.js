@@ -123,9 +123,14 @@ export async function startConnection() {
         connectionState = "DISCONNECTED";
         sock = null;
         if (!shouldReconnect) {
-          console.log(
-            "[Baileys] Logged out by user. Session cleared. Manual re-scan required."
-          );
+          console.log("[Baileys] Logged out by user. Clearing session files...");
+          try {
+            const fs = await import("fs");
+            fs.rmSync(SESSIONS_DIR, { recursive: true, force: true });
+            console.log("[Baileys] Session files cleared successfully. Manual re-scan required.");
+          } catch (err) {
+            console.warn("[Baileys] Failed to clear session directory:", err.message);
+          }
         } else {
           console.error(
             "[Baileys] Max reconnection attempts reached. Manual restart required."
