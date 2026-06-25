@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/followup-notifications",
       "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/whatsapp-worker",
+      "schedule": "*/10 * * * *"
     }
   ]
 }

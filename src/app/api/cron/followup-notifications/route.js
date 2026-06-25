@@ -5,6 +5,8 @@ import {
 } from "@/lib/operations-center/engine";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
+import { triggerDailyBirthdays, triggerUpcomingRenewals } from "@/lib/whatsapp/automations";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -27,10 +29,25 @@ export async function GET(request) {
     const synced = await syncDueFollowUpNotifications();
     const email = await sendDueFollowUpEmails();
 
+    // Trigger WhatsApp Automations (birthdays and upcoming renewals scans)
+    let whatsappScans = null;
+    try {
+      console.log("Triggering daily WhatsApp automation scans from follow-up cron...");
+      const birthdays = await triggerDailyBirthdays();
+      const renewals = await triggerUpcomingRenewals();
+      whatsappScans = {
+        birthdaysQueued: birthdays.queuedCount,
+        renewalsQueued: renewals.queuedCount,
+      };
+    } catch (err) {
+      console.error("Failed to trigger WhatsApp automations in cron:", err);
+    }
+
     return NextResponse.json({
       success: true,
       synced,
       email,
+      whatsappScans,
     });
   } catch (error) {
     console.error("Follow-up notification cron failed:", error);

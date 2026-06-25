@@ -12,15 +12,24 @@ export async function POST(request) {
   return handleWorker(request);
 }
 
+function isAuthorized(request) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return true;
+
+  const authHeader = request.headers.get("authorization") || "";
+  const secretParam = new URL(request.url).searchParams.get("secret") || "";
+
+  return authHeader === `Bearer ${secret}` || secretParam === secret;
+}
+
 async function handleWorker(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const secret = searchParams.get("secret");
-
     // Secure the cron endpoint
-    if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
+    if (!isAuthorized(request)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
 
     const runScans = searchParams.get("runScans") === "true";
     let scansResult = null;
