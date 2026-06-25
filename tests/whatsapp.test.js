@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { compileTemplate } from "../src/lib/whatsapp/queue-manager.js";
-import { getOpenwaStatus } from "../src/lib/whatsapp/openwa-client.js";
+import { getWhatsAppStatus } from "../src/lib/whatsapp/whatsapp-client.js";
 
 // Mock global fetch for REST API tests
 global.fetch = vi.fn();
@@ -36,14 +36,14 @@ describe("WhatsApp Template Compiler", () => {
   });
 });
 
-describe("OpenWA REST Client Wrapper", () => {
+describe("WhatsApp Gateway REST Client Wrapper", () => {
   it("returns status object when server responds successfully", async () => {
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({ response: "CONNECTED" }),
+      json: () => Promise.resolve({ connected: true, state: "CONNECTED" }),
     });
 
-    const status = await getOpenwaStatus();
+    const status = await getWhatsAppStatus();
     expect(status.connected).toBe(true);
     expect(status.state).toBe("CONNECTED");
     expect(status.error).toBeUndefined();
@@ -52,7 +52,7 @@ describe("OpenWA REST Client Wrapper", () => {
   it("returns unreachable state when server fetch fails", async () => {
     fetch.mockRejectedValueOnce(new Error("Connection refused"));
 
-    const status = await getOpenwaStatus();
+    const status = await getWhatsAppStatus();
     expect(status.connected).toBe(false);
     expect(status.state).toBe("UNREACHABLE");
     expect(status.error).toBe("Connection refused");
