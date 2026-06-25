@@ -10,6 +10,7 @@ import {
   sanitizeEndorsementPayload,
   serializeEndorsement,
 } from "./utils";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 
@@ -85,7 +86,7 @@ export async function GET(request) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Endorsements could not be loaded." },
+      { error: getUserFacingErrorMessage(error, "Endorsements could not be loaded.") },
       { status: 500 },
     );
   }
@@ -138,7 +139,7 @@ export async function POST(request) {
     return NextResponse.json(serializeEndorsement(record), { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Endorsement could not be saved." },
+      { error: getUserFacingErrorMessage(error, "Endorsement could not be saved.") },
       { status: 500 },
     );
   }

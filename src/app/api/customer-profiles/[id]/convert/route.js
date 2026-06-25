@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { canAccessCustomerProfile, getCustomerProfileScopedFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 
@@ -65,7 +66,7 @@ export async function POST(request, { params }) {
     return NextResponse.json({ id: profile.id, status: profile.status, redirectUrl });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Customer profile could not be converted." },
+      { error: getUserFacingErrorMessage(error, "Customer profile could not be converted.") },
       { status: 500 },
     );
   }

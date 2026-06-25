@@ -27,57 +27,186 @@ import {
   X,
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
-const CLAIM_FIELDS = [
+const CLAIM_WIZARD_STEPS = ["Client Details", "Claim Details", "Surveyor Details", "Supporting Documents"];
+
+const CLAIM_TYPE_OPTIONS = [
+  "Motor",
+  "Health",
+  "Life",
+  "Warehouse / Fire",
+  "Marine",
+  "Engineering",
+  "Liability",
+  "Other",
+];
+
+const CLAIM_STATUS_OPTIONS = ["Open", "Follow Up", "Documents Pending", "Settled", "Rejected"];
+const CLAIM_PRIORITY_OPTIONS = ["Normal", "High", "Urgent"];
+const YES_NO_OPTIONS = ["No", "Yes"];
+
+const CLIENT_DETAIL_FIELDS = [
   { key: "insuredName", label: "Insured Name", placeholder: "Enter insured name", required: true },
-  { key: "mobileNo", label: "Mobile No.", placeholder: "Enter mobile number", inputMode: "tel" },
+  { key: "mobileNo", label: "Mobile Number", placeholder: "Enter mobile number", inputMode: "tel", required: true },
   { key: "contactPerson", label: "Contact Person", placeholder: "Enter contact person" },
-  { key: "policyNo", label: "Policy No.", placeholder: "Enter policy number" },
-  { key: "claimNo", label: "Claim No.", placeholder: "Enter claim number", required: true },
+  { key: "policyNo", label: "Policy Number", placeholder: "Enter policy number", required: true },
+  { key: "insuranceCompany", label: "Insurance Company", placeholder: "Enter insurance company", required: true },
   { key: "groupName", label: "Group Name", placeholder: "Enter group name" },
-  { key: "claimDate", label: "Claim Date", type: "date" },
-  {
-    key: "claimType",
-    label: "Claim Type",
-    type: "select",
-    options: ["Motor", "Health", "Life", "Fire", "Marine", "Travel", "Other"],
-  },
-  {
-    key: "claimStatus",
-    label: "Claim Status",
-    type: "select",
-    options: ["Open", "Follow Up", "Documents Pending", "Settled", "Rejected"],
-  },
+  { key: "claimType", label: "Claim Type", type: "select", options: CLAIM_TYPE_OPTIONS, required: true },
+  { key: "customerId", label: "Customer ID", readOnly: true },
+  { key: "assignedExecutive", label: "Assigned Executive", placeholder: "Enter assigned executive" },
+  { key: "branchOffice", label: "Branch Office", placeholder: "Enter branch office" },
+  { key: "policyStartDate", label: "Policy Start Date", type: "date" },
+  { key: "policyExpiryDate", label: "Policy Expiry Date", type: "date" },
+];
+
+const COMMON_CLAIM_FIELDS = [
+  { key: "claimNo", label: "Claim Number", placeholder: "Enter claim number", required: true },
+  { key: "claimDate", label: "Claim Date", type: "date", required: true },
+  { key: "dateOfLoss", label: "Date of Loss", type: "date", required: true },
+  { key: "claimStatus", label: "Claim Status", type: "select", options: CLAIM_STATUS_OPTIONS },
+  { key: "claimPriority", label: "Claim Priority", type: "select", options: CLAIM_PRIORITY_OPTIONS },
   { key: "followUpDate", label: "Follow-up Date", type: "date" },
+  { key: "claimDescription", label: "Claim Description", type: "textarea", placeholder: "Enter claim description" },
+  { key: "currentRemark", label: "Current Remark", type: "textarea", placeholder: "Enter current remark or claim follow-up note" },
+];
+
+const CLAIM_SPECIFIC_FIELDS = {
+  Motor: [
+    { key: "vehicleNumber", label: "Vehicle Number" },
+    { key: "driverName", label: "Driver Name" },
+    { key: "driverMobile", label: "Driver Mobile", inputMode: "tel" },
+    { key: "accidentLocation", label: "Accident Location" },
+    { key: "firNumber", label: "FIR Number" },
+    { key: "policeStation", label: "Police Station" },
+    { key: "garageName", label: "Garage Name" },
+  ],
+  Health: [
+    { key: "patientName", label: "Patient Name" },
+    { key: "hospitalName", label: "Hospital Name" },
+    { key: "admissionDate", label: "Admission Date", type: "date" },
+    { key: "dischargeDate", label: "Discharge Date", type: "date" },
+    { key: "diagnosis", label: "Diagnosis" },
+    { key: "cashlessReimbursement", label: "Cashless / Reimbursement", type: "select", options: ["Cashless", "Reimbursement"] },
+    { key: "tpaName", label: "TPA Name" },
+  ],
+  "Warehouse / Fire": [
+    { key: "propertyAddress", label: "Property Address" },
+    { key: "warehouseName", label: "Warehouse Name" },
+    { key: "causeOfLoss", label: "Cause of Loss" },
+    { key: "estimatedLoss", label: "Estimated Loss", inputMode: "decimal" },
+    { key: "stockDamaged", label: "Stock Damaged" },
+    { key: "fireBrigadeReportAvailable", label: "Fire Brigade Report Available", type: "select", options: YES_NO_OPTIONS },
+  ],
+  Marine: [
+    { key: "shipmentNumber", label: "Shipment Number" },
+    { key: "lrNumber", label: "LR Number" },
+    { key: "invoiceNumber", label: "Invoice Number" },
+    { key: "transporter", label: "Transporter" },
+    { key: "origin", label: "Origin" },
+    { key: "destination", label: "Destination" },
+    { key: "cargoDescription", label: "Cargo Description" },
+  ],
+  Life: [
+    { key: "nomineeName", label: "Nominee Name" },
+    { key: "dateOfDeathEvent", label: "Date of Death / Event", type: "date" },
+    { key: "causeOfClaim", label: "Cause of Claim" },
+    { key: "relationshipWithInsured", label: "Relationship with Insured" },
+  ],
+  Engineering: [
+    { key: "incidentLocation", label: "Incident Location" },
+    { key: "assetOrProject", label: "Asset / Project" },
+    { key: "causeOfIncident", label: "Cause of Incident" },
+    { key: "estimatedLoss", label: "Estimated Loss", inputMode: "decimal" },
+    { key: "thirdPartyInvolved", label: "Third Party Involved", type: "select", options: YES_NO_OPTIONS },
+  ],
+  Liability: [
+    { key: "incidentLocation", label: "Incident Location" },
+    { key: "claimantName", label: "Claimant Name" },
+    { key: "liabilityNature", label: "Nature of Liability" },
+    { key: "estimatedExposure", label: "Estimated Exposure", inputMode: "decimal" },
+    { key: "legalNoticeReceived", label: "Legal Notice Received", type: "select", options: YES_NO_OPTIONS },
+  ],
+  Other: [
+    { key: "incidentLocation", label: "Incident Location" },
+    { key: "incidentCategory", label: "Incident Category" },
+    { key: "causeOfIncident", label: "Cause of Incident" },
+    { key: "estimatedLoss", label: "Estimated Loss", inputMode: "decimal" },
+    { key: "additionalReference", label: "Additional Reference" },
+  ],
+};
+
+const SURVEYOR_FIELDS = [
+  { key: "surveyAssigned", label: "Survey Assigned", type: "select", options: YES_NO_OPTIONS },
+  { key: "surveyAssignedDate", label: "Survey Assigned Date", type: "date" },
+  { key: "surveyorName", label: "Surveyor Name" },
+  { key: "surveyorCompany", label: "Surveyor Company" },
+  { key: "irdaiLicenseNumber", label: "IRDAI License Number" },
+  { key: "surveyorMobile", label: "Mobile Number", inputMode: "tel" },
+  { key: "surveyorEmail", label: "Email Address", type: "email" },
+  { key: "surveyDate", label: "Survey Date", type: "date" },
+  { key: "surveyTime", label: "Survey Time", type: "time" },
+  { key: "surveyLocation", label: "Survey Location" },
+  { key: "surveyStatus", label: "Survey Status", type: "select", options: ["Not Assigned", "Assigned", "Scheduled", "Completed", "Report Awaited"] },
+  { key: "surveyEstimatedLoss", label: "Estimated Loss", inputMode: "decimal" },
+  { key: "recommendedSettlement", label: "Recommended Settlement", inputMode: "decimal" },
+  { key: "surveyRemarks", label: "Survey Remarks", type: "textarea" },
+  { key: "reportReceived", label: "Report Received", type: "select", options: YES_NO_OPTIONS },
+  { key: "reportSubmissionDate", label: "Report Submission Date", type: "date" },
 ];
 
 const EMPTY_CLAIM = {
+  internalClaimId: "",
+  customerId: "",
   insuredName: "",
   mobileNo: "",
   contactPerson: "",
   policyNo: "",
+  insuranceCompany: "",
   claimNo: "",
   groupName: "",
   claimDescription: "",
   claimDate: "",
   claimType: "Motor",
   claimStatus: "Open",
+  dateOfLoss: "",
+  claimPriority: "Normal",
   followUpDate: "",
   currentRemark: "",
+  assignedExecutive: "",
+  branchOffice: "",
+  policyStartDate: "",
+  policyExpiryDate: "",
+  claimDetails: {},
+  surveyorDetails: {
+    surveyAssigned: "No",
+    surveyStatus: "Not Assigned",
+    reportReceived: "No",
+  },
   remarks: [],
   documents: [],
 };
 
 const DETAIL_FIELDS = [
+  ["Internal Claim ID", "internalClaimId"],
+  ["Customer ID", "customerId"],
   ["Insured Name", "insuredName"],
   ["Mobile No.", "mobileNo"],
   ["Contact Person", "contactPerson"],
   ["Policy No.", "policyNo"],
+  ["Insurance Company", "insuranceCompany"],
+  ["Assigned Executive", "assignedExecutive"],
+  ["Branch Office", "branchOffice"],
+  ["Policy Start Date", "policyStartDate"],
+  ["Policy Expiry Date", "policyExpiryDate"],
   ["Claim No.", "claimNo"],
   ["Group Name", "groupName"],
   ["Claim Date", "claimDate"],
+  ["Date of Loss", "dateOfLoss"],
   ["Claim Type", "claimType"],
   ["Claim Status", "claimStatus"],
+  ["Claim Priority", "claimPriority"],
   ["Follow-up Date", "followUpDate"],
   ["Claim Description", "claimDescription"],
   ["Current Remark", "currentRemark"],
@@ -99,6 +228,7 @@ export default function ClaimsManagementPage() {
   const [claims, setClaims] = useState([]);
   const [query, setQuery] = useState(urlQuery);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formStep, setFormStep] = useState(0);
   const [editingId, setEditingId] = useState("");
   const [selectedClaimId, setSelectedClaimId] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
@@ -255,18 +385,27 @@ export default function ClaimsManagementPage() {
           </div>
           
           ${renderPrintSection("General Information", [
+            ["Internal Claim ID", record.internalClaimId],
+            ["Customer ID", record.customerId],
             ["Insured Name", record.insuredName],
             ["Mobile No.", record.mobileNo],
             ["Contact Person", record.contactPerson],
             ["Policy No.", record.policyNo],
+            ["Insurance Company", record.insuranceCompany],
             ["Claim No.", record.claimNo],
             ["Group Name", record.groupName],
+            ["Assigned Executive", record.assignedExecutive],
+            ["Branch Office", record.branchOffice],
+            ["Policy Start Date", formatDateLocal(record.policyStartDate)],
+            ["Policy Expiry Date", formatDateLocal(record.policyExpiryDate)],
           ])}
 
           ${renderPrintSection("Dates & Status", [
             ["Claim Date", formatDateLocal(record.claimDate)],
+            ["Date of Loss", formatDateLocal(record.dateOfLoss)],
             ["Claim Type", record.claimType],
             ["Claim Status", record.claimStatus],
+            ["Claim Priority", record.claimPriority],
             ["Follow-up Date", formatDateLocal(record.followUpDate)],
           ])}
 
@@ -274,6 +413,16 @@ export default function ClaimsManagementPage() {
             ["Claim Description", record.claimDescription],
             ["Current Remark", record.currentRemark],
           ])}
+
+          ${renderPrintSection("Claim Specific Details", getClaimSpecificFields(record.claimType).map((field) => [
+            field.label,
+            field.type === "date" ? formatDateLocal((record.claimDetails || {})[field.key]) : (record.claimDetails || {})[field.key],
+          ]))}
+
+          ${renderPrintSection("Surveyor Details", SURVEYOR_FIELDS.map((field) => [
+            field.label,
+            field.type === "date" ? formatDateLocal((record.surveyorDetails || {})[field.key]) : (record.surveyorDetails || {})[field.key],
+          ]))}
           
           ${
             record.remarks && record.remarks.length
@@ -369,7 +518,8 @@ export default function ClaimsManagementPage() {
   const selectedClaim = claims.find((item) => item.id === selectedClaimId) || null;
 
   function openAddForm() {
-    setClaim(EMPTY_CLAIM);
+    setClaim(createEmptyClaim());
+    setFormStep(0);
     setEditingId("");
     setSelectedClaimId("");
     setDocumentName("");
@@ -379,7 +529,17 @@ export default function ClaimsManagementPage() {
   }
 
   function openEditForm(item) {
-    setClaim({ ...EMPTY_CLAIM, ...item, documents: item.documents || [], remarks: item.remarks || [] });
+    setClaim({
+      ...createEmptyClaim(),
+      ...item,
+      internalClaimId: item.internalClaimId || item.id || createInternalId("CLM"),
+      customerId: item.customerId || createInternalId("CUST"),
+      claimDetails: item.claimDetails || {},
+      surveyorDetails: { ...EMPTY_CLAIM.surveyorDetails, ...(item.surveyorDetails || {}) },
+      documents: item.documents || [],
+      remarks: item.remarks || [],
+    });
+    setFormStep(0);
     setEditingId(item.id);
     setDocumentName("");
     setDocumentError("");
@@ -388,7 +548,8 @@ export default function ClaimsManagementPage() {
   }
 
   function closeForm() {
-    setClaim(EMPTY_CLAIM);
+    setClaim(createEmptyClaim());
+    setFormStep(0);
     setEditingId("");
     setDocumentName("");
     setDocumentError("");
@@ -399,6 +560,42 @@ export default function ClaimsManagementPage() {
     setClaim((current) => ({ ...current, [key]: value }));
   }
 
+  function updateClaimDetail(key, value) {
+    setClaim((current) => ({
+      ...current,
+      claimDetails: { ...(current.claimDetails || {}), [key]: value },
+    }));
+  }
+
+  function updateSurveyorDetail(key, value) {
+    setClaim((current) => ({
+      ...current,
+      surveyorDetails: { ...(current.surveyorDetails || {}), [key]: value },
+    }));
+  }
+
+  function resetDraftClaim() {
+    setClaim(createEmptyClaim());
+    setDocumentName("");
+    setDocumentError("");
+    setFormStep(0);
+  }
+
+  function goToPreviousStep() {
+    setErrorMessage("");
+    setFormStep((current) => Math.max(0, current - 1));
+  }
+
+  function goToNextStep() {
+    const missing = getMissingFieldsForStep(claim, formStep);
+    if (missing.length) {
+      setErrorMessage(`Please complete required fields: ${missing.join(", ")}.`);
+      return;
+    }
+    setErrorMessage("");
+    setFormStep((current) => Math.min(CLAIM_WIZARD_STEPS.length - 1, current + 1));
+  }
+
   async function loadClaims() {
     setIsLoading(true);
     setErrorMessage("");
@@ -407,7 +604,7 @@ export default function ClaimsManagementPage() {
       const payload = await readJsonResponse(response);
       setClaims(Array.isArray(payload.claims) ? payload.claims : []);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Claims could not be loaded from database.");
+      setErrorMessage(getUserFacingErrorMessage(error, "Claims could not be loaded. Please try again."));
       setClaims([]);
     } finally {
       setIsLoading(false);
@@ -416,6 +613,12 @@ export default function ClaimsManagementPage() {
 
   async function saveClaim(event) {
     event.preventDefault();
+    const missing = [0, 1].flatMap((step) => getMissingFieldsForStep(claim, step));
+    if (missing.length) {
+      setErrorMessage(`Please complete required fields: ${missing.join(", ")}.`);
+      setFormStep(missing.some((label) => ["Insured Name", "Mobile Number", "Policy Number", "Insurance Company", "Claim Type"].includes(label)) ? 0 : 1);
+      return;
+    }
     setIsSaving(true);
     setErrorMessage("");
     try {
@@ -431,7 +634,7 @@ export default function ClaimsManagementPage() {
       });
       closeForm();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Claim could not be saved to database.");
+      setErrorMessage(getUserFacingErrorMessage(error, "Claim could not be saved. Please try again."));
     } finally {
       setIsSaving(false);
     }
@@ -462,7 +665,7 @@ export default function ClaimsManagementPage() {
       setFollowUpDraft("");
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "Claim remark could not be saved to database.",
+        getUserFacingErrorMessage(error, "Claim remark could not be saved. Please try again."),
       );
     } finally {
       setIsSaving(false);
@@ -517,7 +720,7 @@ export default function ClaimsManagementPage() {
       setDeleteConfirmText("");
       setOpenMenuId("");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Claim could not be deleted from database.");
+      setErrorMessage(getUserFacingErrorMessage(error, "Claim could not be deleted. Please try again."));
     } finally {
       setIsSaving(false);
     }
@@ -540,7 +743,7 @@ export default function ClaimsManagementPage() {
                   <div className="claims-add-modal-titlecopy">
                     <span>Claim Record Details</span>
                     <h2>{editingId ? "Edit Claim" : "Add Claim"}</h2>
-                    <p>Enter claim details and upload supporting documents.</p>
+                    <p>{CLAIM_WIZARD_STEPS[formStep]}</p>
                   </div>
                 </div>
                 <button type="button" onClick={closeForm} aria-label="Close claim form">
@@ -548,65 +751,95 @@ export default function ClaimsManagementPage() {
                 </button>
               </div>
 
-              <form className="claims-add-modal-form" onSubmit={saveClaim}>
-                <div className="claims-add-modal-section">
-                  <div className="claims-add-modal-section-head">
-                    <h3>General Information</h3>
+              <form className="claims-add-modal-form" onSubmit={saveClaim} noValidate>
+                <div className="claims-add-modal-progress" aria-label="Claim creation progress">
+                  <div className="claims-add-modal-progress-top">
+                    <span>{CLAIM_WIZARD_STEPS[formStep]}</span>
+                    <strong>
+                      Step {formStep + 1} of {CLAIM_WIZARD_STEPS.length}
+                    </strong>
                   </div>
-
-                  <div className="claims-add-modal-grid">
-                    {CLAIM_FIELDS.map((field) => (
-                      <label key={field.key} className="claims-add-modal-field">
-                        <span>
-                          {field.label}
-                          {field.required ? " *" : ""}
-                        </span>
-                        {field.type === "select" ? (
-                          <select
-                            value={claim[field.key]}
-                            onChange={(event) => updateClaim(field.key, event.target.value)}
-                          >
-                            {field.options.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type={field.type || "text"}
-                            inputMode={field.inputMode}
-                            value={claim[field.key]}
-                            placeholder={field.placeholder}
-                            required={field.required}
-                            onChange={(event) => updateClaim(field.key, event.target.value)}
-                          />
-                        )}
-                      </label>
+                  <div className="claims-add-modal-progress-track">
+                    <div
+                      className="claims-add-modal-progress-fill"
+                      style={{ width: `${(formStep / (CLAIM_WIZARD_STEPS.length - 1)) * 100}%` }}
+                    />
+                    {CLAIM_WIZARD_STEPS.map((step, index) => (
+                      <span
+                        key={step}
+                        className={index <= formStep ? "is-active" : ""}
+                        style={{ left: `${(index / (CLAIM_WIZARD_STEPS.length - 1)) * 100}%` }}
+                        aria-hidden="true"
+                      />
                     ))}
                   </div>
-
-                  <label className="claims-add-modal-field claims-add-modal-wide">
-                    <span>Claim Description</span>
-                    <textarea
-                      value={claim.claimDescription}
-                      placeholder="Enter claim description"
-                      rows={2}
-                      onChange={(event) => updateClaim("claimDescription", event.target.value)}
-                    />
-                  </label>
-
-                  <label className="claims-add-modal-field claims-add-modal-wide">
-                    <span>Current Remark</span>
-                    <textarea
-                      value={claim.currentRemark}
-                      placeholder="Enter current remark or claim follow-up note"
-                      rows={2}
-                      onChange={(event) => updateClaim("currentRemark", event.target.value)}
-                    />
-                  </label>
+                  <div className="claims-add-modal-progress-steps">
+                    {CLAIM_WIZARD_STEPS.map((step, index) => (
+                      <span key={step} className={index <= formStep ? "is-active" : ""}>
+                        {step}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
+                <div className="claims-add-modal-section">
+                  <div className="claims-add-modal-section-head">
+                    <h3>{CLAIM_WIZARD_STEPS[formStep]}</h3>
+                  </div>
+
+                  {formStep === 0 ? (
+                    <div className="claims-add-modal-grid">
+                      {CLIENT_DETAIL_FIELDS.map((field) => (
+                        <ClaimField
+                          key={field.key}
+                          field={field}
+                          value={claim[field.key] || ""}
+                          onChange={(value) => updateClaim(field.key, value)}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {formStep === 1 ? (
+                    <>
+                      <div className="claims-add-modal-grid">
+                        {COMMON_CLAIM_FIELDS.map((field) => (
+                          <ClaimField
+                            key={field.key}
+                            field={field}
+                            value={claim[field.key] || ""}
+                            onChange={(value) => updateClaim(field.key, value)}
+                          />
+                        ))}
+                      </div>
+                      <div className="claims-add-modal-grid">
+                        {getClaimSpecificFields(claim.claimType).map((field) => (
+                          <ClaimField
+                            key={field.key}
+                            field={field}
+                            value={(claim.claimDetails || {})[field.key] || ""}
+                            onChange={(value) => updateClaimDetail(field.key, value)}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
+
+                  {formStep === 2 ? (
+                    <div className="claims-add-modal-grid">
+                      {SURVEYOR_FIELDS.map((field) => (
+                        <ClaimField
+                          key={field.key}
+                          field={field}
+                          value={(claim.surveyorDetails || {})[field.key] || ""}
+                          onChange={(value) => updateSurveyorDetail(field.key, value)}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+
+                {formStep === 3 ? (
                 <div className="claims-add-modal-docs">
                   <div>
                     <span>
@@ -636,15 +869,29 @@ export default function ClaimsManagementPage() {
                   {documentError ? <p className="claims-document-error">{documentError}</p> : null}
                   <DocumentList documents={claim.documents || []} onRemove={removeDraftDocument} />
                 </div>
+                ) : null}
 
                 <div className="claims-add-modal-actions">
-                  <button type="button" className="secondary-action" onClick={() => setClaim(EMPTY_CLAIM)}>
-                    <RotateCcw size={17} /> Reset
-                  </button>
-                  <button type="submit" className="primary-action" disabled={isSaving}>
-                    <FilePlus2 size={17} />{" "}
-                    {isSaving ? "Saving..." : editingId ? "Update Claim" : "Save Claim"}
-                  </button>
+                  {formStep > 0 ? (
+                    <button type="button" className="secondary-action" onClick={goToPreviousStep}>
+                      <ArrowLeft size={17} /> Back
+                    </button>
+                  ) : null}
+                  {formStep === 3 ? (
+                    <button type="button" className="secondary-action" onClick={resetDraftClaim}>
+                      <RotateCcw size={17} /> Reset
+                    </button>
+                  ) : null}
+                  {formStep < 3 ? (
+                    <button type="button" className="primary-action" onClick={goToNextStep}>
+                      Save & Next
+                    </button>
+                  ) : (
+                    <button type="submit" className="primary-action" disabled={isSaving}>
+                      <FilePlus2 size={17} />{" "}
+                      {isSaving ? "Saving..." : editingId ? "Update Claim" : "Save Claim"}
+                    </button>
+                  )}
                 </div>
               </form>
             </section>
@@ -1716,9 +1963,35 @@ export default function ClaimsManagementPage() {
                     <div key={key}>
                       <span>{label}</span>
                       <strong>
-                        {key === "claimDate" || key === "followUpDate"
+                        {["claimDate", "followUpDate", "dateOfLoss", "policyStartDate", "policyExpiryDate"].includes(key)
                           ? formatDate(selectedClaim[key])
                           : selectedClaim[key] || "-"}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="claims-detail-grid">
+                  {getClaimSpecificFields(selectedClaim.claimType).map((field) => (
+                    <div key={field.key}>
+                      <span>{field.label}</span>
+                      <strong>
+                        {field.type === "date"
+                          ? formatDate((selectedClaim.claimDetails || {})[field.key])
+                          : (selectedClaim.claimDetails || {})[field.key] || "-"}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="claims-detail-grid">
+                  {SURVEYOR_FIELDS.map((field) => (
+                    <div key={field.key}>
+                      <span>{field.label}</span>
+                      <strong>
+                        {field.type === "date"
+                          ? formatDate((selectedClaim.surveyorDetails || {})[field.key])
+                          : (selectedClaim.surveyorDetails || {})[field.key] || "-"}
                       </strong>
                     </div>
                   ))}
@@ -2375,6 +2648,80 @@ export default function ClaimsManagementPage() {
   );
 }
 
+function ClaimField({ field, value, onChange }) {
+  const className = `claims-add-modal-field${field.type === "textarea" ? " claims-add-modal-wide" : ""}`;
+
+  return (
+    <label className={className}>
+      <span>
+        {field.label}
+        {field.required ? " *" : ""}
+      </span>
+      {field.type === "select" ? (
+        <select value={value} onChange={(event) => onChange(event.target.value)}>
+          {(field.options || []).map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      ) : field.type === "textarea" ? (
+        <textarea
+          value={value}
+          placeholder={field.placeholder}
+          rows={2}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      ) : (
+        <input
+          type={field.type || "text"}
+          inputMode={field.inputMode}
+          value={value}
+          placeholder={field.placeholder}
+          readOnly={field.readOnly}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      )}
+    </label>
+  );
+}
+
+function createEmptyClaim() {
+  return {
+    ...EMPTY_CLAIM,
+    internalClaimId: createInternalId("CLM"),
+    customerId: createInternalId("CUST"),
+    claimDetails: {},
+    surveyorDetails: { ...EMPTY_CLAIM.surveyorDetails },
+    remarks: [],
+    documents: [],
+  };
+}
+
+function getClaimSpecificFields(claimType) {
+  return CLAIM_SPECIFIC_FIELDS[claimType] || CLAIM_SPECIFIC_FIELDS.Other;
+}
+
+function getMissingFieldsForStep(claim, step) {
+  if (step === 0) return getMissingLabels(CLIENT_DETAIL_FIELDS, claim);
+  if (step === 1) return getMissingLabels(COMMON_CLAIM_FIELDS, claim);
+  return [];
+}
+
+function getMissingLabels(fields, values) {
+  return fields
+    .filter((field) => field.required && !String(values[field.key] || "").trim())
+    .map((field) => field.label);
+}
+
+function createInternalId(prefix) {
+  const date = new Date();
+  const stamp = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+  return `${prefix}-${stamp}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+}
+
 function DocumentList({ documents, onRemove }) {
   if (!documents.length) {
     return <p className="claims-document-empty">No supporting documents uploaded.</p>;
@@ -2499,7 +2846,7 @@ function readFileAsDataUrl(file) {
 async function readJsonResponse(response) {
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload.error || "Database request failed.");
+    throw new Error(getUserFacingErrorMessage(payload.error, "Request could not be completed. Please try again."));
   }
   return payload;
 }

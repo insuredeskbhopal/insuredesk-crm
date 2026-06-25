@@ -15,6 +15,7 @@ import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dash
 import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/uploads/failure";
 import { UPLOAD_STATUS } from "@/lib/uploads/status";
 import { uploadFile } from "@/lib/storage";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 
@@ -180,12 +181,18 @@ export async function POST(request) {
     );
   } catch (error) {
     if (error instanceof UploadValidationError) {
-      return Response.json({ error: error.message, limitBytes: MAX_UPLOAD_BYTES }, { status: error.status });
+      return Response.json(
+        {
+          error: getUserFacingErrorMessage(error, "Upload could not be completed. Please check the file and try again."),
+          limitBytes: MAX_UPLOAD_BYTES,
+        },
+        { status: error.status },
+      );
     }
 
     console.error("PDF upload extraction failed:", error);
     return Response.json(
-      { error: error instanceof Error ? error.message : "Unknown upload error." },
+      { error: getUserFacingErrorMessage(error, "Upload could not be completed. Please try again.") },
       { status: 500 },
     );
   }

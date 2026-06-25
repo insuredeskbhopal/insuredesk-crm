@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/session";
 import { getOperationsSummary } from "@/lib/operations-center/engine";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ export async function GET(request) {
   } catch (error) {
     console.error("Failed to load work center:", error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Work center could not be loaded." },
+      { success: false, error: getUserFacingErrorMessage(error, "Work center could not be loaded.") },
       { status: 500 },
     );
   }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/session";
 import { getNotificationFeed, markNotificationsRead } from "@/lib/operations-center/engine";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Notifications could not be loaded.",
+        error: getUserFacingErrorMessage(error, "Notifications could not be loaded."),
       },
       { status: 500 },
     );
@@ -42,7 +43,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Notifications could not be updated.",
+        error: getUserFacingErrorMessage(error, "Notifications could not be updated."),
       },
       { status: 500 },
     );

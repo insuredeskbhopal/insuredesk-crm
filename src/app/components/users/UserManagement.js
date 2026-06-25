@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 import BrandLogo from "@/app/components/brand/BrandLogo";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import {
   AlertTriangle,
   Check,
@@ -204,12 +205,12 @@ export default function UserManagement() {
     try {
       const response = await fetch(`/api/users?page=${targetPage}&pageSize=10`, { cache: "no-store" });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Failed to load users");
+      if (!response.ok) throw new Error(getUserFacingErrorMessage(payload.error, "Users could not be loaded. Please try again."));
       setUsers(payload.data || []);
       setMeta(payload.meta || { total: 0, page: targetPage, pageSize: 10 });
       setPage(payload.meta?.page || targetPage);
     } catch (err) {
-      setError(err.message || "Failed to load users");
+      setError(getUserFacingErrorMessage(err, "Users could not be loaded. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -306,12 +307,12 @@ export default function UserManagement() {
         body: JSON.stringify(body),
       });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Unable to save user");
+      if (!response.ok) throw new Error(getUserFacingErrorMessage(payload.error, "User could not be saved. Please try again."));
       setMessage(editingUserId ? "User updated" : "User created");
       resetForm();
       await loadUsers(page);
     } catch (err) {
-      setError(err.message || "Unable to save user");
+      setError(getUserFacingErrorMessage(err, "User could not be saved. Please try again."));
     } finally {
       setIsSaving(false);
     }
@@ -332,12 +333,12 @@ export default function UserManagement() {
     try {
       const response = await fetch(`/api/users/${deleteTarget.id}`, { method: "DELETE" });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Unable to delete user");
+      if (!response.ok) throw new Error(getUserFacingErrorMessage(payload.error, "User could not be deleted. Please try again."));
       setMessage("User deleted");
       setDeleteTarget(null);
       await loadUsers(page);
     } catch (err) {
-      setError(err.message || "Unable to delete user");
+      setError(getUserFacingErrorMessage(err, "User could not be deleted. Please try again."));
     } finally {
       setIsDeleting(false);
     }

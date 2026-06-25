@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireSession, canWriteOperations } from "@/lib/auth/session";
 import { updateTaskStatus } from "@/lib/operations-center/engine";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 
@@ -40,7 +41,7 @@ export async function PATCH(request, context) {
   } catch (error) {
     console.error("Failed to update task:", error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Task could not be updated." },
+      { success: false, error: getUserFacingErrorMessage(error, "Task could not be updated.") },
       { status: 500 },
     );
   }

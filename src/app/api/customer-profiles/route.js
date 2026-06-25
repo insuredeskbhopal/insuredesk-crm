@@ -9,6 +9,7 @@ import {
   sanitizeCustomerProfilePayload,
   serializeCustomerProfile,
 } from "@/lib/customer-profiles/utils";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 
@@ -270,7 +271,7 @@ export async function GET(request) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to search customer profiles." },
+      { error: getUserFacingErrorMessage(error, "Failed to search customer profiles.") },
       { status: 500 },
     );
   }
@@ -385,7 +386,7 @@ export async function POST(request) {
     return NextResponse.json(serializeCustomerProfile(record), { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Customer profile could not be saved." },
+      { error: getUserFacingErrorMessage(error, "Customer profile could not be saved.") },
       { status: 500 },
     );
   }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import { canWriteClaim, claimInclude, getClaimWhere, requireClaimSession, serializeClaim } from "../../utils";
 
 export const runtime = "nodejs";
@@ -69,7 +70,7 @@ export async function POST(request, { params }) {
     return NextResponse.json(serializeClaim(claim), { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Claim remark could not be saved." },
+      { error: getUserFacingErrorMessage(error, "Claim remark could not be saved. Please try again.") },
       { status: 500 },
     );
   }

@@ -1,5 +1,6 @@
 import { createFieldSetup, getFieldSetupCatalog } from "@/lib/policies/field-setup";
 import { verifyJWT } from "@/lib/auth";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 async function requireAuthenticatedUser(request) {
   const token = request.cookies.get("token")?.value;
@@ -35,7 +36,7 @@ export async function POST(request) {
     return Response.json(schema, { status: 201 });
   } catch (error) {
     return Response.json(
-      { error: error instanceof Error ? error.message : "Field setup could not be saved." },
+      { error: getUserFacingErrorMessage(error, "Field setup could not be saved.") },
       { status: 400 },
     );
   }

@@ -15,6 +15,7 @@ import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/uploads/failure";
 import { buildUploadDetection } from "@/lib/uploads/detection";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 
@@ -220,11 +221,17 @@ export async function POST(request) {
     );
   } catch (error) {
     if (error instanceof UploadValidationError) {
-      return Response.json({ error: error.message, limitBytes: MAX_UPLOAD_BYTES }, { status: error.status });
+      return Response.json(
+        {
+          error: getUserFacingErrorMessage(error, "Upload could not be completed. Please check the file and try again."),
+          limitBytes: MAX_UPLOAD_BYTES,
+        },
+        { status: error.status },
+      );
     }
 
     return Response.json(
-      { error: error instanceof Error ? error.message : "Unknown upload error." },
+      { error: getUserFacingErrorMessage(error, "Upload could not be completed. Please try again.") },
       { status: 500 },
     );
   }

@@ -6,6 +6,7 @@ import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export async function GET(request) {
   try {
@@ -164,7 +165,7 @@ export async function GET(request) {
     });
   } catch (error) {
     return Response.json(
-      { error: error instanceof Error ? error.message : "Failed to retrieve records." },
+      { error: getUserFacingErrorMessage(error, "Failed to retrieve records.") },
       { status: 500 },
     );
   }
@@ -250,7 +251,7 @@ export async function POST(request) {
     );
   } catch (error) {
     return Response.json(
-      { error: error instanceof Error ? error.message : "Failed to create policy record" },
+      { error: getUserFacingErrorMessage(error, "Failed to create policy record") },
       { status: 500 },
     );
   }

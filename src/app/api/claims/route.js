@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import {
   claimInclude,
   getClaimWhere,
@@ -60,7 +61,7 @@ export async function GET(request) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Claims could not be loaded." },
+      { error: getUserFacingErrorMessage(error, "Claims could not be loaded. Please try again.") },
       { status: 500 },
     );
   }
@@ -74,8 +75,11 @@ export async function POST(request) {
 
     const payload = await request.json();
     const data = sanitizeClaimPayload(payload);
-    if (!data.insuredName || !data.claimNo) {
-      return NextResponse.json({ error: "Insured name and claim number are required." }, { status: 422 });
+    if (!data.insuredName || !data.mobileNo || !data.policyNo || !data.claimNo || !data.metadata.insuranceCompany) {
+      return NextResponse.json(
+        { error: "Insured name, mobile number, policy number, insurance company, and claim number are required." },
+        { status: 422 },
+      );
     }
 
     const actorId = session.userId || session.id || null;
@@ -109,7 +113,7 @@ export async function POST(request) {
     return NextResponse.json(serializeClaim(claim), { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Claim could not be saved." },
+      { error: getUserFacingErrorMessage(error, "Claim could not be saved. Please try again.") },
       { status: 500 },
     );
   }

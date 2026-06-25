@@ -8,6 +8,7 @@ import {
   sanitizeCustomerProfilePayload,
   serializeCustomerProfile,
 } from "@/lib/customer-profiles/utils";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 
@@ -39,7 +40,7 @@ export async function GET(request, { params }) {
     return NextResponse.json(serializeCustomerProfile(profile));
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Customer profile could not be loaded." },
+      { error: getUserFacingErrorMessage(error, "Customer profile could not be loaded.") },
       { status: 500 },
     );
   }
@@ -139,7 +140,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json(serializeCustomerProfile(profile));
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Customer profile could not be updated." },
+      { error: getUserFacingErrorMessage(error, "Customer profile could not be updated.") },
       { status: 500 },
     );
   }
@@ -196,7 +197,7 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ success: true, profile: serializeCustomerProfile(profile) });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Customer profile could not be deleted." },
+      { error: getUserFacingErrorMessage(error, "Customer profile could not be deleted.") },
       { status: 500 },
     );
   }

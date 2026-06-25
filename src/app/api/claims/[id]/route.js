@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import {
   canDeleteClaim,
   canWriteClaim,
@@ -30,7 +31,7 @@ export async function GET(request, { params }) {
     return NextResponse.json(serializeClaim(claim));
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Claim could not be loaded." },
+      { error: getUserFacingErrorMessage(error, "Claim could not be loaded. Please try again.") },
       { status: 500 },
     );
   }
@@ -52,8 +53,11 @@ export async function PUT(request, { params }) {
 
     const payload = await request.json();
     const data = sanitizeClaimPayload(payload);
-    if (!data.insuredName || !data.claimNo) {
-      return NextResponse.json({ error: "Insured name and claim number are required." }, { status: 422 });
+    if (!data.insuredName || !data.mobileNo || !data.policyNo || !data.claimNo || !data.metadata.insuranceCompany) {
+      return NextResponse.json(
+        { error: "Insured name, mobile number, policy number, insurance company, and claim number are required." },
+        { status: 422 },
+      );
     }
 
     const actorId = session.userId || session.id || null;
@@ -97,7 +101,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json(serializeClaim(claim));
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Claim could not be updated." },
+      { error: getUserFacingErrorMessage(error, "Claim could not be updated. Please try again.") },
       { status: 500 },
     );
   }
@@ -143,7 +147,7 @@ export async function DELETE(request, { params }) {
     return new Response(null, { status: 204 });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Claim could not be deleted." },
+      { error: getUserFacingErrorMessage(error, "Claim could not be deleted. Please try again.") },
       { status: 500 },
     );
   }

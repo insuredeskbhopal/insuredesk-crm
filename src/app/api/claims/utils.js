@@ -45,6 +45,7 @@ export function sanitizeClaimPayload(payload = {}) {
     claimStatus: stringValue(payload.claimStatus) || "Open",
     followUpDate: dateValue(payload.followUpDate),
     currentRemark: stringValue(payload.currentRemark),
+    metadata: sanitizeClaimMetadata(payload),
   };
 }
 
@@ -78,6 +79,17 @@ export function serializeClaim(claim) {
     claimStatus: claim.claimStatus || "Open",
     followUpDate: formatDateInput(claim.followUpDate),
     currentRemark: claim.currentRemark || "",
+    internalClaimId: claim.metadata?.internalClaimId || claim.id,
+    customerId: claim.metadata?.customerId || "",
+    insuranceCompany: claim.metadata?.insuranceCompany || "",
+    assignedExecutive: claim.metadata?.assignedExecutive || "",
+    branchOffice: claim.metadata?.branchOffice || "",
+    policyStartDate: claim.metadata?.policyStartDate || "",
+    policyExpiryDate: claim.metadata?.policyExpiryDate || "",
+    dateOfLoss: claim.metadata?.dateOfLoss || "",
+    claimPriority: claim.metadata?.claimPriority || "Normal",
+    claimDetails: isPlainObject(claim.metadata?.claimDetails) ? claim.metadata.claimDetails : {},
+    surveyorDetails: isPlainObject(claim.metadata?.surveyorDetails) ? claim.metadata.surveyorDetails : {},
     createdAt: claim.createdAt?.toISOString?.() || claim.createdAt,
     updatedAt: claim.updatedAt?.toISOString?.() || claim.updatedAt,
     createdBy: claim.createdBy ? { name: claim.createdBy.name, email: claim.createdBy.email } : null,
@@ -107,6 +119,36 @@ export const claimInclude = {
   documents: { orderBy: { uploadedAt: "desc" } },
 };
 
+function sanitizeClaimMetadata(payload = {}) {
+  return {
+    internalClaimId: stringValue(payload.internalClaimId),
+    customerId: stringValue(payload.customerId),
+    insuranceCompany: stringValue(payload.insuranceCompany),
+    assignedExecutive: stringValue(payload.assignedExecutive),
+    branchOffice: stringValue(payload.branchOffice),
+    policyStartDate: dateStringValue(payload.policyStartDate),
+    policyExpiryDate: dateStringValue(payload.policyExpiryDate),
+    dateOfLoss: dateStringValue(payload.dateOfLoss),
+    claimPriority: stringValue(payload.claimPriority) || "Normal",
+    claimDetails: sanitizeStringRecord(payload.claimDetails),
+    surveyorDetails: sanitizeStringRecord(payload.surveyorDetails),
+  };
+}
+
+function sanitizeStringRecord(value) {
+  if (!isPlainObject(value)) return {};
+  return Object.entries(value).reduce((record, [key, entry]) => {
+    const cleanKey = String(key || "").trim();
+    const cleanValue = String(entry || "").trim();
+    if (cleanKey && cleanValue) record[cleanKey] = cleanValue;
+    return record;
+  }, {});
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 function stringValue(value, required = false) {
   const text = String(value || "").trim();
   if (!text && required) return "";
@@ -118,6 +160,10 @@ function dateValue(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   return date;
+}
+
+function dateStringValue(value) {
+  return formatDateInput(dateValue(value));
 }
 
 function formatDateInput(value) {

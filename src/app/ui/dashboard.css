@@ -3089,6 +3089,103 @@ label span em {
   scrollbar-gutter: stable;
 }
 
+.claims-add-modal-progress {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(203, 213, 225, 0.75);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.claims-add-modal-progress-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.claims-add-modal-progress-top span,
+.claims-add-modal-progress-top strong,
+.claims-add-modal-progress-steps span {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.claims-add-modal-progress-top span {
+  color: #0f172a;
+}
+
+.claims-add-modal-progress-top strong,
+.claims-add-modal-progress-steps span {
+  color: #64748b;
+}
+
+.claims-add-modal-progress-track {
+  position: relative;
+  height: 18px;
+  border-radius: 999px;
+}
+
+.claims-add-modal-progress-track::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  transform: translateY(-50%);
+}
+
+.claims-add-modal-progress-fill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  z-index: 1;
+  height: 3px;
+  border-radius: 999px;
+  background: #2563eb;
+  transform: translateY(-50%);
+  transition: width 180ms ease;
+}
+
+.claims-add-modal-progress-track > span {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 11px;
+  height: 11px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px #ffffff;
+  transform: translate(-50%, -50%);
+}
+
+.claims-add-modal-progress-track > span.is-active {
+  border-color: #2563eb;
+  background: #2563eb;
+}
+
+.claims-add-modal-progress-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.claims-add-modal-progress-steps span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.claims-add-modal-progress-steps span.is-active {
+  color: #0f172a;
+}
+
 .claims-add-modal-section {
   display: grid;
   gap: 12px;
@@ -3258,7 +3355,8 @@ label span em {
   }
 
   .claims-add-modal-grid,
-  .claims-add-modal-upload {
+  .claims-add-modal-upload,
+  .claims-add-modal-progress-steps {
     grid-template-columns: 1fr;
   }
 

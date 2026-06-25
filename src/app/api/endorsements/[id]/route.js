@@ -10,6 +10,7 @@ import {
   sanitizeEndorsementPayload,
   serializeEndorsement,
 } from "../utils";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 
@@ -29,7 +30,7 @@ export async function GET(request, { params }) {
     return NextResponse.json(serializeEndorsement(record));
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Endorsement could not be loaded." },
+      { error: getUserFacingErrorMessage(error, "Endorsement could not be loaded.") },
       { status: 500 },
     );
   }
@@ -107,7 +108,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json(serializeEndorsement(record));
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Endorsement could not be updated." },
+      { error: getUserFacingErrorMessage(error, "Endorsement could not be updated.") },
       { status: 500 },
     );
   }
@@ -157,7 +158,7 @@ export async function DELETE(request, { params }) {
     return new Response(null, { status: 204 });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Endorsement could not be deleted." },
+      { error: getUserFacingErrorMessage(error, "Endorsement could not be deleted.") },
       { status: 500 },
     );
   }

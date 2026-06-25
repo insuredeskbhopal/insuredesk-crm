@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 const VIEWS = ["Agenda", "Day", "Week", "Month", "Timeline", "Team Workload"];
 const STATUS_LABELS = {
@@ -41,10 +42,12 @@ export default function WorkCenterPage() {
     try {
       const response = await fetch("/api/work-center", { cache: "no-store" });
       const payload = await response.json();
-      if (!response.ok || !payload.success) throw new Error(payload.error || "Work center failed to load.");
+      if (!response.ok || !payload.success) {
+        throw new Error(getUserFacingErrorMessage(payload.error, "Work center could not be loaded. Please try again."));
+      }
       setData(payload);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Work center failed to load.");
+      setError(getUserFacingErrorMessage(err, "Work center could not be loaded. Please try again."));
     } finally {
       setLoading(false);
     }

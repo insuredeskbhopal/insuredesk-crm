@@ -9,6 +9,7 @@ import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { UPLOAD_STATUS } from "@/lib/uploads/status";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 
@@ -229,7 +230,7 @@ export async function GET(request) {
     });
   } catch (error) {
     return Response.json(
-      { error: error instanceof Error ? error.message : "Failed to retrieve policy records." },
+      { error: getUserFacingErrorMessage(error, "Failed to retrieve policy records.") },
       { status: 500 },
     );
   }
@@ -414,7 +415,7 @@ export async function POST(request) {
     );
   } catch (error) {
     return Response.json(
-      { error: error instanceof Error ? error.message : "Policy record could not be saved." },
+      { error: getUserFacingErrorMessage(error, "Policy record could not be saved.") },
       { status: 400 },
     );
   }

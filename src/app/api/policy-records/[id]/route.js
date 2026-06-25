@@ -6,6 +6,7 @@ import { canAccessSharedResource, getTenantFilter, UserRole } from "@/lib/auth/r
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 const { normalizeInsuranceCompanyName } = insuranceCompanyMaster;
@@ -144,7 +145,7 @@ export async function PUT(request, { params }) {
     return Response.json(normalizeRecord(record));
   } catch (error) {
     return Response.json(
-      { error: error instanceof Error ? error.message : "Policy record could not be updated." },
+      { error: getUserFacingErrorMessage(error, "Policy record could not be updated.") },
       { status: 400 },
     );
   }

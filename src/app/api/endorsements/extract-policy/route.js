@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { verifyJWT } from "@/lib/auth";
 import { extractTextFromPdf } from "@/lib/policies/pdf/text";
 import { validatePdfFile, UploadValidationError } from "@/lib/uploads/validation";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 const require = createRequire(import.meta.url);
 const { extractPolicyFromText } = require("../../../../lib/policies/pdf/extractor.cjs");
@@ -45,11 +46,14 @@ export async function POST(request) {
     });
   } catch (error) {
     if (error instanceof UploadValidationError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        { error: getUserFacingErrorMessage(error, "Policy extraction could not be completed. Please try again.") },
+        { status: error.status },
+      );
     }
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Policy extraction failed.",
+        error: getUserFacingErrorMessage(error, "Policy details could not be read. Please try again."),
       },
       { status: 500 },
     );

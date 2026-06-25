@@ -3,6 +3,7 @@ import {
   sendDueFollowUpEmails,
   syncDueFollowUpNotifications,
 } from "@/lib/operations-center/engine";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,7 +37,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Follow-up notification job failed.",
+        error: getUserFacingErrorMessage(error, "Follow-up notification job failed."),
       },
       { status: 500 },
     );
