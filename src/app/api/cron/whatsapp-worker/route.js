@@ -24,7 +24,7 @@ function isAuthorized(request) {
 
 async function handleWorker(request) {
   try {
-    // Secure the cron endpoint
+    // Secure the cron endpoint.
     if (!isAuthorized(request)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
