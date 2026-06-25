@@ -467,14 +467,27 @@ export default function BirthdayManagementPage() {
   };
 
   // Send WhatsApp greeting
-  const handleSendGreeting = () => {
+  const handleSendGreeting = async () => {
     if (!greetingTarget || !customMessage) return;
     const cleanPhone = greetingTarget.phone.replace(/\D/g, "");
     const formattedPhone = cleanPhone.startsWith("91") && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone}`;
-    const url = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(customMessage)}`;
-    window.open(url, "_blank");
+    
+    try {
+      const res = await fetch("/api/operations/whatsapp/test-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: formattedPhone, message: customMessage }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast("success", `Birthday greeting sent successfully to ${greetingTarget.name}!`);
+      } else {
+        showToast("error", `Failed to send greeting: ${data.error || "Unknown error"}`);
+      }
+    } catch (err) {
+      showToast("error", "Failed to connect to the CRM WhatsApp API.");
+    }
     setIsGreetingModalOpen(false);
-    showToast("success", "Greeting draft opened in WhatsApp Web!");
   };
 
   // Get tab styles

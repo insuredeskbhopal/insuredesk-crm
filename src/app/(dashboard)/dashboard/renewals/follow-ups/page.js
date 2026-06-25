@@ -91,7 +91,7 @@ export default function FollowUpsPage() {
     }
   };
 
-  const handleWhatsApp = (policy) => {
+  const handleWhatsApp = async (policy) => {
     const phone = policy.contactNumber || "";
     if (phone) {
       const whatsappPhone = formatPhoneForWhatsapp(phone);
@@ -100,7 +100,21 @@ export default function FollowUpsPage() {
         return;
       }
       const message = `Hello ${policy.insuredName}, following up regarding your policy ${policy.policyNumber} renewal. Let us know if you need assistance.`;
-      window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`, "_blank");
+      try {
+        const res = await fetch("/api/operations/whatsapp/test-message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: whatsappPhone, message }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          window.alert(`WhatsApp message sent successfully to ${policy.insuredName}!`);
+        } else {
+          window.alert(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`);
+        }
+      } catch (err) {
+        window.alert("Failed to connect to the CRM WhatsApp API.");
+      }
     } else {
       window.alert("No contact number available.");
     }

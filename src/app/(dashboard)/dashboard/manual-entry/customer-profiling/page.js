@@ -2354,7 +2354,7 @@ export default function CustomerProfilingPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
                           const text = generateMessageText(
                             conversionModalData.profile,
                             conversionModalData.conversionType,
@@ -2362,12 +2362,23 @@ export default function CustomerProfilingPage() {
                           );
                           const whatsappPhone = formatPhoneForWhatsapp(conversionModalData.profile?.phone);
                           if (whatsappPhone) {
-                            window.open(
-                              `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(text)}`,
-                              "_blank",
-                            );
+                            try {
+                              const res = await fetch("/api/operations/whatsapp/test-message", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ phone: whatsappPhone, message: text }),
+                              });
+                              const data = await res.json();
+                              if (res.ok && data.success) {
+                                window.alert(`WhatsApp message sent successfully to ${conversionModalData.profile?.name || "Customer"}!`);
+                              } else {
+                                window.alert(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`);
+                              }
+                            } catch (err) {
+                              window.alert("Failed to connect to the CRM WhatsApp API.");
+                            }
                           } else {
-                            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                            window.alert("No valid mobile number available to send via API.");
                           }
                         }}
                         style={{

@@ -198,7 +198,7 @@ export default function CustomerProfileDetailPage({ params }) {
     window.open(`tel:${profile.phone}`);
   }
 
-  function whatsappCustomer() {
+  async function whatsappCustomer() {
     if (!profile?.phone) {
       window.alert("No mobile number available.");
       return;
@@ -209,7 +209,21 @@ export default function CustomerProfileDetailPage({ params }) {
       return;
     }
     const message = `Hello ${profile.name || "Customer"}, following up regarding your insurance requirement.`;
-    window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`, "_blank");
+    try {
+      const res = await fetch("/api/operations/whatsapp/test-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: whatsappPhone, message }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        window.alert(`WhatsApp message sent successfully to ${profile.name || "Customer"}!`);
+      } else {
+        window.alert(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`);
+      }
+    } catch (err) {
+      window.alert("Failed to connect to the CRM WhatsApp API.");
+    }
   }
 
   function openRemarkModal(policy) {

@@ -1015,9 +1015,25 @@ export default function ClaimsManagementPage() {
                 <button type="button" className="sidebar-action-btn" onClick={() => window.open(`tel:${selectedClaim.mobileNo}`)} style={{ background: "#ffffff", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
                   <Phone size={16} /> Call
                 </button>
-                <button type="button" className="sidebar-action-btn" onClick={() => {
+                <button type="button" className="sidebar-action-btn" onClick={async () => {
                   const cleanPhone = selectedClaim.mobileNo.replace(/\D/g, "");
-                  window.open(`https://wa.me/${cleanPhone.startsWith("91") ? cleanPhone : "91" + cleanPhone}`, "_blank");
+                  const formattedPhone = cleanPhone.startsWith("91") ? cleanPhone : "91" + cleanPhone;
+                  const message = `Hello ${selectedClaim.insuredName || "Customer"}, this is InsureDesk support. We are following up regarding your claim ${selectedClaim.claimNumber || ""}.`;
+                  try {
+                    const res = await fetch("/api/operations/whatsapp/test-message", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ phone: formattedPhone, message }),
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                      window.alert(`WhatsApp message sent successfully to ${selectedClaim.insuredName || "Customer"}!`);
+                    } else {
+                      window.alert(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`);
+                    }
+                  } catch (err) {
+                    window.alert("Failed to connect to the CRM WhatsApp API.");
+                  }
                 }} style={{ background: "#ffffff", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
                   <MessageSquare size={16} /> WhatsApp
                 </button>

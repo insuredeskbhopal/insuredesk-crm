@@ -645,20 +645,38 @@ export default function CustomerRenewalsPage() {
 
     try {
       // Log audit action
-      await fetch("/api/renewals/whatsapp-message", {
+      try {
+        await fetch("/api/renewals/whatsapp-message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: selectedCustomer.mobile,
+            logAudit: true,
+          }),
+        });
+      } catch (e) {
+        console.error("Failed to log WhatsApp audit:", e);
+      }
+
+      // Direct message send
+      const res = await fetch("/api/operations/whatsapp/test-message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: selectedCustomer.mobile,
-          logAudit: true,
+          phone: whatsappPhone,
+          message: editedWhatsAppMessage,
         }),
       });
-    } catch (e) {
-      console.error("Failed to log WhatsApp audit:", e);
+      const data = await res.json();
+      if (res.ok && data.success) {
+        window.alert(`WhatsApp message sent successfully to ${selectedCustomer.insuredName}!`);
+      } else {
+        window.alert(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`);
+      }
+    } catch (err) {
+      window.alert("Failed to connect to the CRM WhatsApp API.");
     }
 
-    const encoded = encodeURIComponent(editedWhatsAppMessage);
-    window.open(`https://wa.me/${whatsappPhone}?text=${encoded}`, "_blank");
     setWhatsAppPreviewOpen(false);
     await fetchCustomers();
   };
