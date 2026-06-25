@@ -17,10 +17,13 @@ import fs from "fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const gatewayEnvPath = path.join(__dirname, ".env");
+const parentEnvProdPath = path.join(__dirname, "..", ".env.production");
 const parentEnvPath = path.join(__dirname, "..", ".env");
 
 if (fs.existsSync(gatewayEnvPath)) {
   config({ path: gatewayEnvPath });
+} else if (fs.existsSync(parentEnvProdPath)) {
+  config({ path: parentEnvProdPath });
 } else if (fs.existsSync(parentEnvPath)) {
   config({ path: parentEnvPath });
 }
