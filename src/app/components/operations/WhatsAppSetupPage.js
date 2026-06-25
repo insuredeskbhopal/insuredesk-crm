@@ -39,6 +39,7 @@ export default function WhatsAppSetupPage() {
   const [statusError, setStatusError] = useState(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showDisconnectModal, setShowDisconnectModal] = useState(false);
 
   // Test message
   const [testPhone, setTestPhone] = useState("");
@@ -148,8 +149,8 @@ export default function WhatsAppSetupPage() {
   }
 
   async function handleLogout() {
-    if (!window.confirm("Are you sure you want to disconnect your WhatsApp session? This will stop all scheduled messages until you re-link.")) return;
     setIsLoggingOut(true);
+    setShowDisconnectModal(false);
     try {
       const res = await fetch("/api/operations/whatsapp/logout", {
         method: "POST",
@@ -436,7 +437,7 @@ export default function WhatsAppSetupPage() {
 
               {connected && (
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setShowDisconnectModal(true)}
                   disabled={isLoggingOut}
                   className="mt-3.5 px-3 py-1.5 bg-rose-50 border border-rose-250 text-rose-700 font-bold rounded-lg text-xs hover:bg-rose-100 hover:text-rose-800 transition shadow-sm disabled:opacity-50 flex items-center gap-1"
                 >
@@ -884,10 +885,47 @@ export default function WhatsAppSetupPage() {
                   Next
                 </button>
               </div>
-            </div>
           </div>
         </div>
       </div>
+
+      {/* DISCONNECT CONFIRMATION MODAL */}
+      {showDisconnectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+          <div 
+            className="bg-white rounded-2xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl text-center transform scale-100 transition-all"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto mb-4 text-rose-600">
+              <AlertTriangle className="w-6 h-6 animate-pulse" />
+            </div>
+            
+            <h3 className="text-base font-bold text-slate-900 mb-2">Disconnect WhatsApp?</h3>
+            <p className="text-xs text-slate-500 leading-relaxed mb-6 font-semibold">
+              Are you sure you want to disconnect your WhatsApp session? This will stop all scheduled messages until you re-link.
+            </p>
+            
+            <div className="flex gap-2.5 justify-center">
+              <button
+                type="button"
+                onClick={() => setShowDisconnectModal(false)}
+                className="px-4 py-2 border border-slate-350 rounded-lg text-xs font-semibold hover:bg-slate-50 text-slate-700 bg-white transition shadow-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="px-4 py-2 bg-gradient-to-r from-rose-600 to-red-650 hover:from-rose-700 hover:to-red-700 text-white font-bold rounded-lg text-xs shadow-md transition disabled:opacity-50"
+              >
+                {isLoggingOut ? "Disconnecting..." : "Disconnect"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
