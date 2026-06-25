@@ -26,6 +26,12 @@ const MAX_RECONNECT_ATTEMPTS = 10;
  * Returns the current connection state and QR code (if available).
  */
 export function getStatus() {
+  if (connectionState === "DISCONNECTED") {
+    console.log("[Baileys] Auto-starting connection from getStatus()...");
+    startConnection().catch((err) => {
+      console.error("[Baileys] Auto-start connection failed:", err);
+    });
+  }
   return {
     state: connectionState,
     connected: connectionState === "CONNECTED",
@@ -191,6 +197,7 @@ export function formatPhoneToJid(phone) {
  * Sends a text message via the active Baileys socket.
  */
 export async function sendText(to, content) {
+  getStatus();
   if (!sock || connectionState !== "CONNECTED") {
     throw new Error("WhatsApp is not connected");
   }
@@ -212,6 +219,7 @@ export async function sendText(to, content) {
  * @param {string} type - "image" or "document"
  */
 export async function sendMedia(to, mediaBase64, filename, caption, type) {
+  getStatus();
   if (!sock || connectionState !== "CONNECTED") {
     throw new Error("WhatsApp is not connected");
   }
