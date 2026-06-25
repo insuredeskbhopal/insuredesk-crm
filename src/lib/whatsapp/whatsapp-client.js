@@ -146,8 +146,24 @@ export async function sendWhatsAppFile(to, fileData, filename, caption) {
 // ── Backward-compatible aliases (old OpenWA names) ──────────────────
 // These allow any file still importing the old names to work without changes.
 
+export async function logoutWhatsApp() {
+  try {
+    const res = await callGateway("POST", "logout");
+    return {
+      success: res.success || false,
+      message: res.message || "Logged out successfully",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
 export const getOpenwaStatus = getWhatsAppStatus;
 export const getOpenwaQrCode = getWhatsAppQrCode;
 export const sendOpenwaText = sendWhatsAppText;
 export const sendOpenwaImage = sendWhatsAppImage;
 export const sendOpenwaFile = sendWhatsAppFile;
+export const logoutOpenwa = logoutWhatsApp;

@@ -38,6 +38,7 @@ export default function WhatsAppSetupPage() {
   const [lastChecked, setLastChecked] = useState(null);
   const [statusError, setStatusError] = useState(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Test message
   const [testPhone, setTestPhone] = useState("");
@@ -143,6 +144,24 @@ export default function WhatsAppSetupPage() {
       setLastChecked(new Date());
     } finally {
       if (!isSilent) setIsCheckingStatus(false);
+    }
+  }
+
+  async function handleLogout() {
+    if (!window.confirm("Are you sure you want to disconnect your WhatsApp session? This will stop all scheduled messages until you re-link.")) return;
+    setIsLoggingOut(true);
+    try {
+      const res = await fetch("/api/operations/whatsapp/logout", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to disconnect WhatsApp");
+      showToast("success", "Successfully disconnected WhatsApp session");
+      fetchStatus();
+    } catch (err) {
+      showToast("error", err.message || "Failed to disconnect WhatsApp");
+    } finally {
+      setIsLoggingOut(false);
     }
   }
 
@@ -414,6 +433,16 @@ export default function WhatsAppSetupPage() {
               <p className="text-xs text-slate-400 font-semibold mt-1">
                 Last checked: {lastChecked ? lastChecked.toLocaleTimeString("en-IN") : "Never"}
               </p>
+
+              {connected && (
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="mt-3.5 px-3 py-1.5 bg-rose-50 border border-rose-250 text-rose-700 font-bold rounded-lg text-xs hover:bg-rose-100 hover:text-rose-800 transition shadow-sm disabled:opacity-50 flex items-center gap-1"
+                >
+                  Disconnect Session
+                </button>
+              )}
 
               {statusError && !connected && (
                 <div className="mt-3 p-2 bg-rose-50 rounded text-[11px] text-rose-700 font-medium leading-relaxed max-w-full overflow-hidden break-words border border-rose-100">
