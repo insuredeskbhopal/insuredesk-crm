@@ -105,14 +105,14 @@ export default function WhatsAppSetupPage() {
 
   const startPollingStatus = () => {
     if (pollIntervalRef.current) return;
-    pollIntervalRef.current = setInterval(() => {
+    pollIntervalRef.current = window.setInterval(() => {
       fetchStatus(true);
     }, 5000);
   };
 
   const stopPollingStatus = () => {
     if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
+      window.clearInterval(pollIntervalRef.current);
       pollIntervalRef.current = null;
     }
   };

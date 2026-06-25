@@ -273,7 +273,7 @@ export default function BirthdayManagementPage() {
     setImportFile(file);
     setIsParsing(true);
     
-    const reader = new FileReader();
+    const reader = new window.FileReader();
     reader.onload = async (e) => {
       try {
         const XLSX = await import("xlsx");
