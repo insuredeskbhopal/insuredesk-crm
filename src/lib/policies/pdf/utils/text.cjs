@@ -71,7 +71,7 @@ function cleanText(text) {
 // Start of cleanMakeModel (Lines 3304-3319)
 function cleanMakeModel(text) {
   const patterns = [
-    /(?:BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL ENFIELD|KTM|HARLEY|JAWA|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA)\s+[A-Z0-9][A-Z0-9 /.,-]{2,60}/i,
+    /(?:BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL ENFIELD|KTM|HARLEY|JAWA|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA|FORCE)\s+[A-Z0-9][A-Z0-9 /.,-]{2,60}/i,
   ];
   for (const pattern of patterns) {
     const match = text.match(pattern);

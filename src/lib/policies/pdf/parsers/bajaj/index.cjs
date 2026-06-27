@@ -1,7 +1,7 @@
 const { normalizeInsuranceCompanyName: normalizeCompanyFromMaster } = require("../../../../master/insurance-companies.cjs");
 const { matchGroup, escapeRegExp } = require("../../utils/regex.cjs");
 const { normalizeAmount, sumPlainAmounts } = require("../../utils/amounts.cjs");
-const { normalizeFuelType, isPlausibleEngineNumber } = require("../../utils/motor.cjs");
+const { normalizeFuelType, isPlausibleEngineNumber, splitGenericMakeModel } = require("../../utils/motor.cjs");
 const { cleanHdfcValue, cleanWarehouseBlock } = require("../../utils/text.cjs");
 const { localExtractLocationPart } = require("../../utils/locations.cjs");
 const { findIffcoEvidence } = require("../iffco/index.cjs");
@@ -72,11 +72,20 @@ function normalizeBajajDate(dateStr) {
 
 // Start of extractBajajMakeModel (Lines 6529-6600)
 function extractBajajMakeModel(text) {
-  const lines = text
+  // Only look in text after B.VehicleDetails to avoid proposer name/address matches (e.g. MAHINDRA SHIKSHA SAMITI)
+  let searchSpace = text;
+  const vehicleDetailsIndex = text.search(/B\.VehicleDetails|VehicleDetails|Registration\s+Number/i);
+  if (vehicleDetailsIndex !== -1) {
+    searchSpace = text.slice(vehicleDetailsIndex);
+  }
+
+  const lines = searchSpace
     .split("\n")
     .map((l) => l.trim())
     .filter(Boolean);
   const knownMakes = [
+    "FORCE MOTORS",
+    "FORCE",
     "MARUTI",
     "HYUNDAI",
     "TATA",
@@ -114,9 +123,17 @@ function extractBajajMakeModel(text) {
 
     const make = knownMakes.find((m) => upper.startsWith(m));
     if (make) {
-      let collected = [line];
+      const makeIndex = upper.indexOf(make);
+      let firstLine = line.slice(makeIndex);
+      const vinMatch = firstLine.match(/M[A-EZ][A-Z0-9]{15}/i);
+      if (vinMatch) {
+        firstLine = firstLine.slice(0, firstLine.indexOf(vinMatch[0])).replace(/\d+$/, "");
+        return firstLine.trim();
+      }
+
+      let collected = [firstLine];
       let j = i + 1;
-      while (j < lines.length && j < i + 5) {
+      while (j < lines.length && j < i + 10) {
         const nextLine = lines[j];
         if (/NCB|Premium|Policy|Period|Limit|Address|Customer|Compulsory/i.test(nextLine)) break;
         if (/^\d{3,4}$/.test(nextLine)) break;
@@ -127,19 +144,92 @@ function extractBajajMakeModel(text) {
 
         if (knownMakes.some((m) => nextLine.toUpperCase().startsWith(m))) break;
         if (/^[A-Z]{2}\d{2}/i.test(nextLine)) break;
-
         if (/^\d+\.\d+/.test(nextLine)) break;
+
+        // Break if we hit the digit block prefixing the chassis number
+        if (/\b\d+M[A-EZ]/i.test(nextLine) || /^\d+M[A-EZ]/i.test(nextLine)) {
+          break;
+        }
+
+        const lineVinMatch = nextLine.match(/M[A-EZ][A-Z0-9]{15}/i);
+        if (lineVinMatch) {
+          let cleanedLine = nextLine.slice(0, nextLine.indexOf(lineVinMatch[0])).replace(/\d+$/, "");
+          if (cleanedLine.trim()) {
+            collected.push(cleanedLine);
+          }
+          break;
+        }
 
         collected.push(nextLine);
         j++;
       }
-      const full = collected
+      let full = collected
         .join(" ")
-        .replace(/\s+/g, " ")
-        .replace(/\s*-\s*/g, " - ")
-        .trim();
+        .replace(/\s+/g, " ");
+      full = full.replace(/(\w+)-\s+(\w+)/g, "$1$2");
+      full = full.replace(/\s*-\s*/g, " - ").trim();
       return full;
     }
+  }
+  return "";
+}
+
+function isPlausibleChassisNumber(value = "") {
+  const cleaned = String(value || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+  if (cleaned.length !== 17) return false;
+  if (!/\d/.test(cleaned) || !/[A-Z]/.test(cleaned)) return false;
+  if (/(?:BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|KIA|MG|SKODA|FORCE|WAGON|STING|VENUE|KAPPA)/i.test(cleaned)) {
+    return false;
+  }
+  return true;
+}
+
+function isPlausibleEngineForBajaj(value = "", rto = "", regNo = "") {
+  const cleaned = String(value || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+  if (!isPlausibleEngineNumber(cleaned)) return false;
+  if (/(?:AN|AP|AR|AS|BR|CG|CH|DD|DL|DN|GA|GJ|HR|HP|JH|JK|KA|KL|LA|LD|MH|ML|MN|MP|MZ|NL|OD|OR|PB|PY|RJ|SK|TG|TN|TR|TS|UA|UK|UP|UT|WB)\d{2}/i.test(cleaned)) {
+    if (/^(?:AN|AP|AR|AS|BR|CG|CH|DD|DL|DN|GA|GJ|HR|HP|JH|JK|KA|KL|LA|LD|MH|ML|MN|MP|MZ|NL|OD|OR|PB|PY|RJ|SK|TG|TN|TR|TS|UA|UK|UP|UT|WB)\d{2}$/i.test(cleaned)) {
+      return false;
+    }
+  }
+  if (/(?:BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|KIA|MG|SKODA|FORCE|WAGON|STING|VENUE|KAPPA|TRAVELLER|SCHOOL|BUS|PASSENGER|CAR|MOTOR|VEHICLE|PETROL|DIESEL|CNG|LPG|ELECTRIC|HYBRID|TURBO|GDIPETROL|DCTSX)/i.test(cleaned)) {
+    return false;
+  }
+  if (rto) {
+    const rtoClean = rto.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (cleaned.includes(rtoClean)) return false;
+  }
+  if (regNo) {
+    const regClean = regNo.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (regClean.includes(cleaned)) return false;
+  }
+  if (/(?:BHOPAL|INDORE|GWALIOR|JABALPUR|RAJGARH)/i.test(cleaned)) return false;
+  return true;
+}
+
+function extractSubEngine(block, rto = "", regNo = "") {
+  let cleaned = block.toUpperCase();
+  if (rto) {
+    const rtoClean = rto.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (cleaned.includes(rtoClean)) {
+      const parts = cleaned.split(rtoClean);
+      for (const p of parts) {
+        const sub = extractSubEngine(p, rto, regNo);
+        if (sub) return sub;
+      }
+    }
+  }
+  const stateCodeRegex = /(?:AN|AP|AR|AS|BR|CG|CH|DD|DL|DN|GA|GJ|HR|HP|JH|JK|KA|KL|LA|LD|MH|ML|MN|MP|MZ|NL|OD|OR|PB|PY|RJ|SK|TG|TN|TR|TS|UA|UK|UP|UT|WB)\d{2}/i;
+  const rtoPrefixMatch = cleaned.match(stateCodeRegex);
+  if (rtoPrefixMatch) {
+    const parts = cleaned.split(rtoPrefixMatch[0]);
+    for (const p of parts) {
+      const sub = extractSubEngine(p, rto, regNo);
+      if (sub) return sub;
+    }
+  }
+  if (isPlausibleEngineForBajaj(cleaned, rto, regNo)) {
+    return cleaned;
   }
   return "";
 }
@@ -153,13 +243,24 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
     matchGroup(text, /Policy\s*Number\s*[:.-]?\s*(OG-[0-9a-zA-Z/-]+)/i) ||
     matchGroup(text, /PolicyNumber\s*[:.-]?\s*(OG-[0-9a-zA-Z/-]+)/i);
 
-  const insuredName = (
-    matchGroup(text, /Insured\s*Name\s*[:.-]?\s*([A-Z\s]+?)(?:Insured|Address|\n|$)/i) ||
-    matchGroup(text, /Proposer\s*Name\s*[:.-]?\s*([A-Z\s]+?)(?:Address|\n|$)/i) ||
-    matchGroup(text, /Dear\s+([A-Z\s]+?),/i)
-  )
-    .replace(/\s+/g, " ")
-    .trim();
+  let insuredName = "";
+  const proposerNameMatch = matchGroup(text, /Proposer\s*Name(?!d)\s*[:.-]?\s*([A-Z0-9\s/.,&()-]+?)(?:Address|\n|$)/i);
+  if (proposerNameMatch && proposerNameMatch.trim().length > 3) {
+    insuredName = proposerNameMatch;
+  }
+  if (!insuredName) {
+    const dearMatch = matchGroup(text, /Dear\s+([A-Z0-9\s/.,&()-]+?)(?:,|\n|$)/i);
+    if (dearMatch && !/^(Customer|Policyholder|Sir|Madam|Insured|Valued|Proposer)$/i.test(dearMatch.trim()) && dearMatch.trim().length > 3) {
+      insuredName = dearMatch;
+    }
+  }
+  if (!insuredName) {
+    const insuredNameMatch = matchGroup(text, /Insured\s*Name(?!d)\s*[:.-]?\s*([A-Z0-9\s/.,&()-]+?)(?:Insured|Address|\n|$)/i);
+    if (insuredNameMatch && insuredNameMatch.trim().length > 3) {
+      insuredName = insuredNameMatch;
+    }
+  }
+  insuredName = insuredName.replace(/\s+/g, " ").trim();
 
   const startDateRaw =
     matchGroup(text, /From\s*:\s*(\d{1,2}-[A-Z]{3}-\d{4})/i) ||
@@ -180,15 +281,12 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
     .toUpperCase()
     .replace(/\s+/g, "");
 
-  const rtoLocation = matchGroup(text, /NameofRegistrationAuthority:\s*([A-Z0-9 -]+)/i) || "";
+  const rtoLocation = matchGroup(text, /(?:Name\s*of\s*Registration\s*Authority|NAMEOFREGISTRATIONAUTHORITY)\s*[:.-]?\s*([A-Z0-9 -]{3,30})/i) || "";
 
   const makeModel = extractBajajMakeModel(text);
-  const makeParts = makeModel
-    .split("-")
-    .map((p) => p.trim())
-    .filter(Boolean);
-  const make = makeParts[0] || "";
-  const model = makeParts.slice(1).join(" - ") || "";
+  const parsedMakeModel = splitGenericMakeModel(makeModel);
+  const make = parsedMakeModel.make || "";
+  const model = parsedMakeModel.model || "";
 
   // Improved variant extraction matching logic
   let variant = "";
@@ -212,57 +310,101 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
   // Try layout-aware concatenated table rows for engine and chassis numbers
   let engineNumber = "";
   let chassisNumber = "";
+  let cubicCapacity = "";
+  let manufacturingYear = "";
+  let seatingCapacity = "";
   
   if (registrationNumber) {
     const lines = text.split("\n");
     for (let i = 0; i < lines.length; i++) {
       const lineCleaned = lines[i].replace(/\s+/g, "");
       if (lineCleaned.startsWith(registrationNumber)) {
-        // Concatenate this line and next 2 lines (removing spaces and hyphens)
+        // Concatenate this line and next 8 lines (removing spaces and hyphens)
         let combined = lineCleaned;
-        if (lines[i + 1]) combined += lines[i + 1].replace(/\s+/g, "");
-        if (lines[i + 2]) combined += lines[i + 2].replace(/\s+/g, "");
+        for (let k = 1; k <= 8; k++) {
+          if (lines[i + k]) combined += lines[i + k].replace(/\s+/g, "");
+        }
 
         const normalizedCombined = combined.replace(/[^A-Z0-9]/gi, "").toUpperCase();
 
         // Standard Indian chassis starts with MA, MB, MC, MD, ME, MZ, and is 17 characters long.
         const vinMatch = normalizedCombined.match(/M[A-EZ][A-Z0-9]{15}/i);
         if (vinMatch) {
-          const possibleChassis = vinMatch[0].toUpperCase();
-          chassisNumber = possibleChassis;
-
-          // Extract part of the string before the chassis number
-          const chassisIndex = normalizedCombined.indexOf(possibleChassis);
-          const beforeChassis = normalizedCombined.slice(0, chassisIndex);
-
-          // Strip registration number
-          const regIndex = beforeChassis.indexOf(registrationNumber);
-          if (regIndex !== -1) {
-            const afterReg = beforeChassis.slice(regIndex + registrationNumber.length);
-
-            // Dynamically strip the place of registration prefix if available
-            const rtoPrefix = rtoLocation ? (registrationNumber.slice(0, 4) + rtoLocation).replace(/[^A-Z0-9]/gi, "").toUpperCase() : "";
-            if (rtoPrefix && afterReg.startsWith(rtoPrefix)) {
-              const possibleEngine = afterReg.slice(rtoPrefix.length);
-              if (possibleEngine && isPlausibleEngineNumber(possibleEngine)) {
-                engineNumber = possibleEngine;
-              }
-            } else {
-              // Strip place of registration prefix starting with RTO code e.g. MP04 or MP39 using lookahead
-              const rtoMatch = afterReg.match(/^([A-Z]{2}\d{2}[A-Z]{2,15}?)(?=[A-Z]{0,1}\d)/i);
-              if (rtoMatch) {
-                const possibleEngine = afterReg.slice(rtoMatch[0].length);
-                if (possibleEngine && isPlausibleEngineNumber(possibleEngine)) {
-                  engineNumber = possibleEngine;
-                }
+          const candidateChassis = vinMatch[0].toUpperCase();
+          if (isPlausibleChassisNumber(candidateChassis)) {
+            chassisNumber = candidateChassis;
+            
+            // Find engine number from normalizedCombined without overlapping the chassis number
+            const vinStartIndex = vinMatch.index;
+            const vinEndIndex = vinStartIndex + 17;
+            
+            const engineRegex = /[A-Z0-9]{6,35}/gi;
+            let match;
+            while ((match = engineRegex.exec(normalizedCombined)) !== null) {
+              const block = match[0];
+              const candStartIndex = match.index;
+              const candEndIndex = candStartIndex + block.length;
+              
+              let safeParts = [];
+              if (candStartIndex >= vinEndIndex || candEndIndex <= vinStartIndex) {
+                safeParts.push(block);
               } else {
-                const simpleRto = afterReg.match(/^([A-Z]{2}\d{2})/i);
-                if (simpleRto) {
-                  const possibleEngine = afterReg.slice(simpleRto[0].length);
-                  if (possibleEngine && isPlausibleEngineNumber(possibleEngine)) {
-                    engineNumber = possibleEngine;
+                if (candStartIndex < vinStartIndex) {
+                  safeParts.push(block.slice(0, vinStartIndex - candStartIndex));
+                }
+                if (candEndIndex > vinEndIndex) {
+                  safeParts.push(block.slice(vinEndIndex - candStartIndex));
+                }
+              }
+              
+              for (const part of safeParts) {
+                if (part.length >= 6) {
+                  const subEngine = extractSubEngine(part, rtoLocation, registrationNumber);
+                  if (subEngine) {
+                    engineNumber = subEngine;
+                    break;
                   }
                 }
+              }
+              if (engineNumber) break;
+            }
+
+            // Fallback: Now look at subsequent lines for a plausible engine number
+            if (!engineNumber) {
+              let currentLength = 0;
+              let vinEndLineIndex = i;
+              for (let k = 0; k <= 8; k++) {
+                if (lines[i + k]) {
+                  currentLength += lines[i + k].replace(/\s+/g, "").length;
+                  if (currentLength >= vinEndIndex) {
+                    vinEndLineIndex = i + k;
+                    break;
+                  }
+                }
+              }
+              for (let k = vinEndLineIndex + 1; k < Math.min(lines.length, i + 9); k++) {
+                if (lines[k]) {
+                  const possibleEngine = lines[k].replace(/[^A-Z0-9]/gi, "").trim().toUpperCase();
+                  if (isPlausibleEngineForBajaj(possibleEngine, rtoLocation, registrationNumber)) {
+                    engineNumber = possibleEngine;
+                    break;
+                  }
+                }
+              }
+            }
+
+            // Parse digits preceding the VIN
+            const vinIndexInCombined = normalizedCombined.indexOf(chassisNumber);
+            const beforeVin = normalizedCombined.slice(0, vinIndexInCombined);
+            const digitsBeforeVinMatch = beforeVin.match(/(\d+)$/);
+            if (digitsBeforeVinMatch) {
+              const digits = digitsBeforeVinMatch[1];
+              const yearMatch = digits.match(/(19\d{2}|20\d{2})/);
+              if (yearMatch) {
+                manufacturingYear = yearMatch[1];
+                const yearIndex = digits.indexOf(manufacturingYear);
+                cubicCapacity = digits.slice(0, yearIndex);
+                seatingCapacity = digits.slice(yearIndex + 4);
               }
             }
           }
@@ -286,44 +428,59 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
     }
   }
 
-  let cubicCapacity = "";
   let fuelType = "";
-  let manufacturingYear = "";
-  let seatingCapacity = "";
+  const fuelTypeMatch = text.match(/Fuel\s*Type\s*(?:Vehicle\s*IDV)?\s*(DIESEL|PETROL|CNG|LPG|ELECTRIC|EV|HYBRID)/i) ||
+                        text.match(/(DIESEL|PETROL|CNG|LPG|ELECTRIC|EV|HYBRID)\s*\d/i);
+  if (fuelTypeMatch) {
+    fuelType = normalizeFuelType(fuelTypeMatch[1]);
+  }
 
-  const concatRowMatch = text.match(
-    /(\d{3,4})\s*(Petrol|Diesel|CNG|Electric|EV|LPG|Hybrid)\s*(\d{4})\s*(\d{1,2})/i,
-  );
-  if (concatRowMatch) {
-    cubicCapacity = concatRowMatch[1];
-    fuelType = normalizeFuelType(concatRowMatch[2]);
-    manufacturingYear = concatRowMatch[3];
-    seatingCapacity = concatRowMatch[4];
-  } else {
-    const valueMatch = text.replace(/\s+/g, "").match(/(-45|-[0-9]{2})(\d{3,4})(\d)(\d{4})/);
-    if (valueMatch) {
-      cubicCapacity = valueMatch[2];
-      seatingCapacity = valueMatch[3];
-      manufacturingYear = valueMatch[4];
+  if (!cubicCapacity || !manufacturingYear || !seatingCapacity) {
+    const concatRowMatch = text.match(
+      /(\d{3,4})\s*(Petrol|Diesel|CNG|Electric|EV|LPG|Hybrid)\s*(\d{4})\s*(\d{1,2})/i,
+    );
+    if (concatRowMatch) {
+      if (!cubicCapacity) cubicCapacity = concatRowMatch[1];
+      if (!fuelType) fuelType = normalizeFuelType(concatRowMatch[2]);
+      if (!manufacturingYear) manufacturingYear = concatRowMatch[3];
+      if (!seatingCapacity) seatingCapacity = concatRowMatch[4];
+    } else {
+      const valueMatch = text.replace(/\s+/g, "").match(/(-45|-[0-9]{2})(\d{3,4})(\d)(\d{4})/);
+      if (valueMatch) {
+        if (!cubicCapacity) cubicCapacity = valueMatch[2];
+        if (!seatingCapacity) seatingCapacity = valueMatch[3];
+        if (!manufacturingYear) manufacturingYear = valueMatch[4];
+      }
     }
   }
 
   const idv = normalizeAmount(
-    matchGroup(text, /Total Value[\s\S]{0,100}?([0-9,]+\.\d{2})/i) ||
-      matchGroup(text, /Total IDV[\s\S]{0,100}?([0-9,]+\.\d{2})/i),
+    matchGroup(text, /Total\s*Sum\s*Insured[\s\S]{0,150}?\b(\d{1,3}(?:,\d{2,3})+(?:\.\d{2})?)/i) ||
+      matchGroup(text, /Vehicle\s*IDV[\s\S]{0,150}?\b(\d{1,3}(?:,\d{2,3})+(?:\.\d{2})?)/i) ||
+      matchGroup(text, /Total\s*Sum\s*Insured[\s\S]{0,150}?\b(\d{1,3}(?:,\d{2,3})*(?:\.\d{2})?)\b/i) ||
+      matchGroup(text, /Vehicle\s*IDV[\s\S]{0,150}?\b(\d{1,3}(?:,\d{2,3})*(?:\.\d{2})?)\b/i) ||
+      matchGroup(text, /Total\s*Sum\s*Insured[\s\S]{0,150}?\b(\d+)(?:\.\d{2})?\b/i) ||
+      matchGroup(text, /Vehicle\s*IDV[\s\S]{0,150}?\b(\d+)(?:\.\d{2})?\b/i) ||
+      matchGroup(text, /Total Value[\s\S]{0,100}?([0-9,]+(?:\.\d{2})?)/i) ||
+      matchGroup(text, /Total IDV[\s\S]{0,100}?([0-9,]+(?:\.\d{2})?)/i),
   );
 
   const odPremium = normalizeAmount(
-    matchGroup(text, /Total OD Premium\s*-\s*A\s*([0-9,.]+)/i) ||
+    matchGroup(text, /Total\s*Own\s*Damage\s*Premium\s*[:.-]?\s*([0-9,.]+)/i) ||
+      matchGroup(text, /Total OD Premium\s*-\s*A\s*([0-9,.]+)/i) ||
       matchGroup(text, /Own Damage Premium\s*([0-9,.]+)/i),
   );
 
   const netPremium = normalizeAmount(
-    matchGroup(text, /Total Premium\s*\(Net Premium\)\s*\(A\+B\)\s*([0-9,.]+)/i) ||
+    matchGroup(text, /Net\s*Premium\s*[:.-]?\s*([0-9,.]+)/i) ||
+      matchGroup(text, /Total Premium\s*\(Net Premium\)\s*\(A\+B\)\s*([0-9,.]+)/i) ||
       matchGroup(text, /Net Premium\s*\(A\+B\)\s*([0-9,.]+)/i),
   );
 
-  const tpDriverOwner = normalizeAmount(matchGroup(text, /Total Act Premium\s*-\s*B\s*([0-9,.]+)/i));
+  const tpDriverOwner = normalizeAmount(
+    matchGroup(text, /Total\s*Liability\s*Premium\s*[:.-]?\s*([0-9,.]+)/i) ||
+      matchGroup(text, /Total Act Premium\s*-\s*B\s*([0-9,.]+)/i)
+  );
 
   const totalPremium = normalizeAmount(
     matchGroup(text, /Final Premium[\s\S]{0,150}?\b([0-9,]+\.\d{2})/i) ||
@@ -354,12 +511,27 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
   )
     .replace(/\s+/g, " ")
     .trim();
+  
+  const financerName = cleanHdfcValue(
+    matchGroup(text, /HYPOTHECATED\s+WITH\s*[:.-]?\s*([A-Z0-9/&()., -]{2,80})/i) ||
+    matchGroup(text, /Financial\s+Institute\s+Name\s*\n?\s*1([^\n]+)/i) ||
+    matchGroup(text, /Name\s+of\s+the\s+financial\s+institution[^:]*:\s*([^\n]+)/i)
+  );
+
   // Client GSTIN is not present in policy PDFs; "Company GST No" is the insurer's GSTIN.
   const gstin = "";
 
   let ncbPercentage = matchGroup(text, /NCB\s*\(No\s*Claim\s*Bonus\)[\s\S]{0,200}?([0-9-]+)\s*%/i);
   if (ncbPercentage) {
     ncbPercentage = ncbPercentage.replace(/[^0-9]/g, "") + "%";
+  }
+
+  let policyType = "Private Car Package Policy";
+  const extractedProduct = matchGroup(text, /Product\s*([A-Za-z\s]{3,50}?(?:Package|Liability|Standard|Bundled)?\s*Policy)/i);
+  if (extractedProduct) {
+    policyType = extractedProduct;
+  } else if (/Commercial\s*Vehicle/i.test(text)) {
+    policyType = "Commercial Vehicle Package Policy";
   }
 
   return {
@@ -371,7 +543,7 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
     ),
     policyNumber,
     insuredName,
-    policyType: "Private Car Package Policy",
+    policyType,
     policyStartDate: startDate,
     policyEndDate: expiryDate,
     registrationNumber,
@@ -399,7 +571,7 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
     nomineeName,
     gstin,
     ncbPercentage,
-    policyCoverType: "Package",
+    financerName,
   };
 }
 

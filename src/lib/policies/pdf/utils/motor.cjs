@@ -282,7 +282,7 @@ function extractNewIndiaDenseIdv(text) {
 // Start of extractMakeModel (Lines 4769-4805)
 function extractMakeModel(text) {
   const manufacturerPattern =
-    /Make of Vehicle\s*\n?\s*(?:\d+(?:\.\d+)?\s*)?(?:Package|Comprehensive|Liability|Third Party)?\s*(?:[0-9,.]+\s*)?(?:[^\n]*\n)*?\s*((?:BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL ENFIELD|KTM|HARLEY|JAWA|BENELLI|APRILIA|KAWASAKI|BMW|DUCATI|TRIUMPH|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA)[A-Z0-9 /&.,-]+)/i;
+    /Make of Vehicle\s*\n?\s*(?:\d+(?:\.\d+)?\s*)?(?:Package|Comprehensive|Liability|Third Party)?\s*(?:[0-9,.]+\s*)?(?:[^\n]*\n)*?\s*((?:BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL ENFIELD|KTM|HARLEY|JAWA|BENELLI|APRILIA|KAWASAKI|BMW|DUCATI|TRIUMPH|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA|FORCE)[A-Z0-9 /&.,-]+)/i;
   const m1 = text.match(manufacturerPattern);
   let makeModel = "";
   if (m1?.[1]) {
@@ -443,7 +443,7 @@ function extractIffcoCompressedVehicleTable(block) {
 
   const beforeReg = lines.slice(Math.max(0, regIndex - 5), regIndex).reverse();
   const vehicleBeforeReg = beforeReg.find((line) =>
-    /^(?:ASHOK\s+LEYLAND|ASHOK\s+LEYL|BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL\s+ENFIELD|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA)\b/i.test(
+    /^(?:ASHOK\s+LEYLAND|ASHOK\s+LEYL|BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL\s+ENFIELD|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA|FORCE)\b/i.test(
       line,
     ),
   );
@@ -462,7 +462,7 @@ function extractIffcoCompressedVehicleTable(block) {
     const afterSpec = lines.slice(regIndex + 1, Math.min(lines.length, regIndex + 10));
     const makeChassisLine = afterSpec.find(
       (line) =>
-        /^(?:ASHOK\s+LEYLAND|ASHOK\s+LEYL|BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL\s+ENFIELD|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA)\b/i.test(
+        /^(?:ASHOK\s+LEYLAND|ASHOK\s+LEYL|BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL\s+ENFIELD|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA|FORCE)\b/i.test(
           line,
         ) && /[A-Z0-9]{17}$/i.test(line),
     );
@@ -478,7 +478,7 @@ function extractIffcoCompressedVehicleTable(block) {
       (line, index) =>
         index > chassisLabelIndex &&
         index < chassisLabelIndex + 8 &&
-        /^(?:ASHOK\s+LEYLAND|ASHOK\s+LEYL|BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL\s+ENFIELD|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA)\b/i.test(
+        /^(?:ASHOK\s+LEYLAND|ASHOK\s+LEYL|BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL\s+ENFIELD|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA|FORCE)\b/i.test(
           line,
         ),
     );
@@ -525,7 +525,7 @@ function extractIffcoCompressedVehicleTable(block) {
       }
       if (chassisNumber) continue;
       if (
-        /^(?:ASHOK\s+LEYLAND|ASHOK\s+LEYL|BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL\s+ENFIELD|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA)\b/i.test(
+        /^(?:ASHOK\s+LEYLAND|ASHOK\s+LEYL|BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL\s+ENFIELD|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA|FORCE)\b/i.test(
           line,
         )
       )
@@ -696,7 +696,7 @@ function extractIffcoStandaloneOdVehicleTable(block) {
       .trim();
     if (
       !prefix ||
-      !/^(?:ASHOK LEYLAND|MARUTI SUZUKI|ROYAL ENFIELD|MAHINDRA|HYUNDAI|BAJAJ|HONDA|HERO|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA|TVS|YAMAHA|SUZUKI)\b/i.test(
+      !/^(?:ASHOK LEYLAND|MARUTI SUZUKI|ROYAL ENFIELD|MAHINDRA|HYUNDAI|BAJAJ|HONDA|HERO|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA|TVS|YAMAHA|SUZUKI|FORCE)\b/i.test(
         prefix,
       )
     ) {
@@ -830,7 +830,7 @@ function extractMotorMakeModel(text) {
   if (makeIndex === -1) return "";
   const block = text.slice(makeIndex, makeIndex + 500);
   const makeMatch = block.match(
-    /\b(?:ASHOK\s+LEYLAND|ASHOK\s+LEYL|BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL ENFIELD|KTM|HARLEY|JAWA|BENELLI|APRILIA|KAWASAKI|BMW|DUCATI|TRIUMPH|MAHINDRA|MARUTI(?: SUZUKI)?|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA)[A-Z0-9 /&.,-]{2,100}/i,
+    /\b(?:ASHOK\s+LEYLAND|ASHOK\s+LEYL|BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL ENFIELD|KTM|HARLEY|JAWA|BENELLI|APRILIA|KAWASAKI|BMW|DUCATI|TRIUMPH|MAHINDRA|MARUTI(?: SUZUKI)?|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|VOLKSWAGEN|KIA|MG|SKODA|FORCE)[A-Z0-9 /&.,-]{2,100}/i,
   );
   if (!makeMatch?.[0]) return "";
   let makeModel = cleanHdfcValue(makeMatch[0])
@@ -862,6 +862,7 @@ function splitGenericMakeModel(makeModel = "") {
   const knownMakes = [
     "ASHOK LEYLAND",
     "ASHOK LEYL",
+    "FORCE",
     "MARUTI SUZUKI",
     "ROYAL ENFIELD",
     "MAHINDRA",
@@ -1026,7 +1027,7 @@ function isPlausibleEngineNumber(value = "") {
   if (!/\d/.test(cleaned) || !/[A-Z]/.test(cleaned)) return false;
   if (/\b[A-Z]{2}\d{1,2}[A-Z]{1,3}\d{4}(?:19\d{2}|20\d{2})?\b/i.test(cleaned)) return false;
   if (
-    /^(?:BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|KIA|MG|SKODA)\b/i.test(
+    /^(?:BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|MAHINDRA|MARUTI|HYUNDAI|TATA|TOYOTA|FORD|RENAULT|NISSAN|KIA|MG|SKODA|FORCE)\b/i.test(
       value,
     )
   )
@@ -1274,10 +1275,10 @@ function extractNominee(text) {
 // Start of extractFinancer (Lines 5737-5749)
 function extractFinancer(text) {
   const patterns = [
-    /\bHypothecated\/Lease Agreement with[ \t]*([A-Z0-9/&()., -]{2,80})/i,
-    /\bHypothecated with[ \t]*([A-Z0-9/&()., -]{2,80})/i,
-    /\bFinancier(?: Name)?(?:\.|:)?[ \t]*([A-Z0-9/&()., -]{3,160})/i,
-    /\bHypothecation(?:\.|:)?[ \t]*([A-Z0-9/&()., -]{3,160})/i,
+    /\bHypothecated\/Lease Agreement with(?:\.|:)?\s*([A-Z0-9/&()., -]{2,80})/i,
+    /\bHypothecated with(?:\.|:)?\s*([A-Z0-9/&()., -]{2,80})/i,
+    /\bFinancier(?: Name)?(?:\.|:)?\s*([A-Z0-9/&()., -]{3,160})/i,
+    /\bHypothecation(?:\.|:)?\s*([A-Z0-9/&()., -]{3,160})/i,
   ];
   for (const pattern of patterns) {
     const match = text.match(pattern);

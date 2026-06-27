@@ -570,7 +570,7 @@ function extractPolicyFromText(text, sourceFile = "") {
       policyCoverType: bajajAllianzMotor.policyCoverType,
       rtoLocation: bajajAllianzMotor.rtoLocation || "",
       nomineeName: bajajAllianzMotor.nomineeName || "",
-      financerName: "",
+      financerName: bajajAllianzMotor.financerName || "",
       companyName: bajajAllianzMotor.companyName,
       proposalNumber: "",
       invoiceNumber: "",
