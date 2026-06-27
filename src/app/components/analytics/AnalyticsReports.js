@@ -100,6 +100,11 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     return records.filter(isMotorRecord);
   }, [records]);
 
+  // Filter records by LOB family (Warehouse / Non-Motor only)
+  const warehouseRecords = useMemo(() => {
+    return records.filter((r) => !isMotorRecord(r));
+  }, [records]);
+
   // Extract unique agents from the list of records
   const uniqueAgents = useMemo(() => {
     const agents = new Set();
@@ -189,7 +194,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
 
   // Apply filters: tab, agent, and date presets/custom limits (filtering by upload date)
   const filteredRecords = useMemo(() => {
-    let list = motorRecords;
+    let list = activeTab === "warehouse-report" ? warehouseRecords : motorRecords;
 
     // Agent filter
     if (activeTab === "motor-individual" && selectedAgent !== "all") {
@@ -222,7 +227,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     }
 
     return list;
-  }, [activeTab, selectedAgent, motorRecords, datePreset, startDateFilter, endDateFilter]);
+  }, [activeTab, selectedAgent, motorRecords, warehouseRecords, datePreset, startDateFilter, endDateFilter]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -1159,6 +1164,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           {[
             { id: "motor-report", label: "Motor Report" },
             { id: "motor-individual", label: "Individual Motor Report" },
+            { id: "warehouse-report", label: "Warehouse Report" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1253,7 +1259,9 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
               <tr>
                 <th style={{ whiteSpace: "nowrap", minWidth: "110px" }}>Date</th>
                 <th>Insured Name</th>
-                <th style={{ whiteSpace: "nowrap" }}>Vehicle Number</th>
+                <th style={{ whiteSpace: "nowrap" }}>
+                  {activeTab === "warehouse-report" ? "Profile / Location" : "Vehicle Number"}
+                </th>
                 <th>Policy Type</th>
                 <th style={{ textAlign: "right", whiteSpace: "nowrap", minWidth: "120px" }}>Premium</th>
                 <th style={{ textAlign: "right", whiteSpace: "nowrap", minWidth: "120px" }}>Net Premium</th>
@@ -1265,7 +1273,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
               {paginatedRecords.length === 0 ? (
                 <tr>
                   <td colSpan={8} style={{ padding: "32px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "600" }}>
-                    No motor policy records found for this report filter.
+                    No {activeTab === "warehouse-report" ? "warehouse" : "motor"} policy records found for this report filter.
                   </td>
                 </tr>
               ) : (
@@ -1288,7 +1296,11 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                     >
                       <td style={{ whiteSpace: "nowrap" }}>{formatDate(displayDate)}</td>
                       <td style={{ fontWeight: "700" }}>{record.insuredName}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>{record.vehicleNumber || "N/A"}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        {activeTab === "warehouse-report"
+                          ? (record.warehouseProfileName || record.groupName || "N/A")
+                          : (record.vehicleNumber || "N/A")}
+                      </td>
                       <td>{record.policyType || "N/A"}</td>
                       <td style={{ textAlign: "right", fontWeight: "600", whiteSpace: "nowrap" }}>
                         {record.premium ? formatPremium(parsePremium(record.premium)) : "-"}
