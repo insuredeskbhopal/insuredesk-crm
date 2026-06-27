@@ -40,6 +40,7 @@ export const FIELD_GROUPS = [
       "duration",
       "policyCoverType",
       "pptMpwlc",
+      "newOrRenewal",
     ],
   },
   {
@@ -96,6 +97,7 @@ export const FIELD_SETUP = [
   ["Contact Number", "contactNumber"],
   ["WP Group Name", "whatsappGroupName"],
   ["Group Name", "groupName"],
+  ["New / Renewal", "newOrRenewal"],
   ["Policy Type", "policyType"],
   ["Premium", "premium"],
   ["Total Premium", "totalPremium"],
@@ -571,7 +573,7 @@ export function getReviewValidation(upload, options = {}) {
   const schemaVisibleFields = resolvedSchema?.fields?.length
     ? FIELD_SETUP.filter(([, key]) => resolvedSchema.fields.includes(key))
     : FIELD_SETUP;
-  const visibleFields = addFields(schemaVisibleFields, [...manualRequiredFields, ...COMMON_REVIEW_FIELDS]);
+  const visibleFields = addFields(schemaVisibleFields, [...manualRequiredFields, ...COMMON_REVIEW_FIELDS, "newOrRenewal"]);
   const requiredKeys = addUnique(
     resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : ["insuredName", "policyNumber"],
     manualRequiredFields,

@@ -58,6 +58,7 @@ export function sanitizeRecordPayload(payload = {}) {
     dueCollection: asText(payload.dueCollection, 80),
     collectedAmount: asText(payload.collectedAmount, 80),
     modeOfPayment: asText(payload.modeOfPayment, 80),
+    newOrRenewal: asText(payload.newOrRenewal, 40),
     remark: asText(payload.remark, TEXT_LIMIT),
     sumInsured: asText(payload.sumInsured, 80),
     startDate: asText(payload.startDate, 40),

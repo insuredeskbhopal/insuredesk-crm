@@ -64,6 +64,11 @@ const DASHBOARD_VIEW_KEY = "bimaheadquarter.dashboard.view";
 const FIELD_OPTIONS = {
   fuelType: FUEL_TYPE_OPTIONS,
   modeOfPayment: PAYMENT_MODE_OPTIONS,
+  newOrRenewal: [
+    { value: "", label: "Select New / Renewal" },
+    { value: "New", label: "New" },
+    { value: "Renewal", label: "Renewal" },
+  ],
 };
 
 export default function Dashboard({
@@ -222,7 +227,8 @@ export default function Dashboard({
         ([, key]) =>
           manualPolicy.fields.includes(key) ||
           MANUAL_REQUIRED_FIELDS.includes(key) ||
-          COMMON_REVIEW_FIELDS.includes(key),
+          COMMON_REVIEW_FIELDS.includes(key) ||
+          key === "newOrRenewal",
       )
     : FIELD_SETUP;
 

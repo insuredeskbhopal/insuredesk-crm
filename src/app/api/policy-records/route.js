@@ -584,6 +584,7 @@ function toLegacyPayload(data) {
     rtoLocation: data.rtoLocation,
     nomineeName: data.nomineeName,
     financerName: data.financerName,
+    newOrRenewal: data.newOrRenewal,
   };
 }
 
