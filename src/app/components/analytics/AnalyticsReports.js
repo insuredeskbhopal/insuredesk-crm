@@ -2,6 +2,24 @@
 
 import { useState, useMemo, useEffect } from "react";
 
+// Bezier Curve generator for smooth path strings
+function getBezierPath(points) {
+  if (points.length === 0) return "";
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const curr = points[i];
+    const next = points[i + 1];
+    const cp1x = curr.x + (next.x - curr.x) / 3;
+    const cp1y = curr.y;
+    const cp2x = curr.x + 2 * (next.x - curr.x) / 3;
+    const cp2y = next.y;
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${next.x} ${next.y}`;
+  }
+  return d;
+}
+
 export default function AnalyticsReports({ records = [], onEditRecord }) {
   const [activeTab, setActiveTab] = useState("motor-report");
   const [selectedAgent, setSelectedAgent] = useState("all");
@@ -176,6 +194,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       return {
         label: displayDate,
         value: dailyPremium[dateKey],
+        rawDate: dateKey, // YYYY-MM-DD format
       };
     });
   }, [filteredRecords]);
@@ -192,15 +211,12 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     return lineChartData.map((d, index) => {
       const x = graphPadding + index * stepX;
       const y = svgHeight - graphPadding - (d.value / maxVal) * (svgHeight - graphPadding * 2);
-      return { x, y, label: d.label, value: d.value };
+      return { x, y, label: d.label, value: d.value, rawDate: d.rawDate };
     });
   }, [lineChartData]);
 
   const linePathD = useMemo(() => {
-    if (graphPoints.length === 0) return "";
-    return graphPoints.reduce((path, p, idx) => {
-      return idx === 0 ? `M ${p.x} ${p.y}` : `${path} L ${p.x} ${p.y}`;
-    }, "");
+    return getBezierPath(graphPoints);
   }, [graphPoints]);
 
   const areaPathD = useMemo(() => {
@@ -210,6 +226,13 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     const groundY = svgHeight - graphPadding;
     return `${linePathD} L ${endX} ${groundY} L ${startX} ${groundY} Z`;
   }, [graphPoints, linePathD]);
+
+  // Click on a specific graph node to apply that date filter
+  const handlePointClick = (rawDate) => {
+    if (!rawDate) return;
+    setStartDateFilter(rawDate);
+    setEndDateFilter(rawDate);
+  };
 
   // --- Bar Chart Data Generation (Top Insurers by Premium) ---
   const barChartData = useMemo(() => {
@@ -280,12 +303,15 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           background: var(--surface-low, #fcfdfd);
         }
 
-        .tabs-wrapper {
+        .tabs-and-filters-wrapper {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          border-bottom: 2px solid var(--border-soft, #f1f5f9);
-          padding-bottom: 16px;
+          background: #ffffff;
+          padding: 16px 24px;
+          border: 1px solid var(--border-soft, #e2e8f0);
+          border-radius: 16px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
           flex-wrap: wrap;
           gap: 16px;
         }
@@ -320,17 +346,11 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
-        /* Filter Panel Styles */
-        .filter-panel {
+        .filters-row {
           display: flex;
           flex-wrap: wrap;
           gap: 16px;
           align-items: center;
-          background: #ffffff;
-          padding: 16px 20px;
-          border: 1px solid var(--border-soft, #e2e8f0);
-          border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
 
         .filter-group {
@@ -570,6 +590,65 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           overflow: visible;
         }
 
+        /* Premium path neon and draw animations */
+        @keyframes drawPath {
+          from {
+            stroke-dashoffset: 1000;
+          }
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @keyframes fadeArea {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .trend-path-glow {
+          opacity: 0.18;
+          stroke: #3b82f6;
+          stroke-width: 8px;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+
+        .trend-path {
+          stroke: #3b82f6;
+          stroke-width: 3px;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          stroke-dasharray: 1000;
+          stroke-dashoffset: 1000;
+          animation: drawPath 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .trend-area {
+          animation: fadeArea 2s ease-in-out forwards;
+        }
+
+        .graph-dot-group {
+          cursor: pointer;
+        }
+
+        .graph-dot-circle {
+          transition: r 0.2s cubic-bezier(0.4, 0, 0.2, 1), fill 0.2s;
+        }
+
+        .graph-dot-group:hover .graph-dot-circle {
+          r: 7.5px;
+          fill: #1d4ed8;
+        }
+
+        .graph-dot-group:hover text {
+          fill: #1d4ed8;
+          font-weight: 900;
+        }
+
         /* Table and Card shadow depth */
         .table-card {
           border: 1px solid var(--border-soft, #e2e8f0);
@@ -732,73 +811,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         }
       `}} />
 
-      {/* Tab bar switcher */}
-      <div className="tabs-wrapper">
-        <div className="segmented-control">
-          {[
-            { id: "motor-report", label: "Motor Report" },
-            { id: "motor-individual", label: "Individual Motor Report" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`tab-btn ${activeTab === tab.id ? "active" : ""}`}
-              type="button"
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Date & Agent Filter Panel */}
-      <div className="filter-panel">
-        {isIndividualTab && (
-          <div className="filter-group">
-            <span className="filter-label">Agent:</span>
-            <select
-              value={selectedAgent}
-              onChange={(e) => setSelectedAgent(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All Agents</option>
-              {uniqueAgents.map((agent) => (
-                <option key={agent} value={agent}>
-                  {agent}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <div className="filter-group">
-          <span className="filter-label">From:</span>
-          <input
-            type="date"
-            value={startDateFilter}
-            onChange={(e) => setStartDateFilter(e.target.value)}
-            className="filter-input"
-          />
-        </div>
-
-        <div className="filter-group">
-          <span className="filter-label">To:</span>
-          <input
-            type="date"
-            value={endDateFilter}
-            onChange={(e) => setEndDateFilter(e.target.value)}
-            className="filter-input"
-          />
-        </div>
-
-        {(startDateFilter || endDateFilter) && (
-          <button onClick={clearDateFilters} className="clear-btn" type="button">
-            Clear Dates
-          </button>
-        )}
-      </div>
-
-      {/* Interactive Charts Dashboard */}
+      {/* 1. Interactive Charts Dashboard (at the very top!) */}
       <div className="reports-charts-grid">
         {/* Line Graph (Daily Premium Trend) */}
         <div className="chart-card">
@@ -814,7 +827,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
               <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="chart-svg">
                 <defs>
                   <linearGradient id="line-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.22" />
                     <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
                   </linearGradient>
                 </defs>
@@ -834,13 +847,16 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                   );
                 })}
                 {/* Curve fill area */}
-                <path d={areaPathD} fill="url(#line-grad)" />
-                {/* Curve line */}
-                <path d={linePathD} fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" />
+                <path d={areaPathD} fill="url(#line-grad)" className="trend-area" />
+                {/* Double path for Glow */}
+                <path d={linePathD} fill="none" className="trend-path-glow" />
+                {/* Path line with drawing animation */}
+                <path d={linePathD} fill="none" className="trend-path" />
                 {/* Interactive Points */}
                 {graphPoints.map((p, idx) => (
-                  <g key={idx}>
-                    <circle cx={p.x} cy={p.y} r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="2.5" />
+                  <g key={idx} className="graph-dot-group" onClick={() => handlePointClick(p.rawDate)}>
+                    <title>Click to filter table by {formatDate(p.rawDate)}</title>
+                    <circle cx={p.x} cy={p.y} r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="2.5" className="graph-dot-circle" />
                     <text
                       x={p.x}
                       y={p.y - 12}
@@ -947,7 +963,72 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         </div>
       </div>
 
-      {/* Main Report Table Container */}
+      {/* 2. Tabs and Filters Toolbar (positioned below the charts!) */}
+      <div className="tabs-and-filters-wrapper">
+        <div className="segmented-control">
+          {[
+            { id: "motor-report", label: "Motor Report" },
+            { id: "motor-individual", label: "Individual Motor Report" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`tab-btn ${activeTab === tab.id ? "active" : ""}`}
+              type="button"
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="filters-row">
+          {isIndividualTab && (
+            <div className="filter-group">
+              <span className="filter-label">Agent:</span>
+              <select
+                value={selectedAgent}
+                onChange={(e) => setSelectedAgent(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">All Agents</option>
+                {uniqueAgents.map((agent) => (
+                  <option key={agent} value={agent}>
+                    {agent}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="filter-group">
+            <span className="filter-label">From:</span>
+            <input
+              type="date"
+              value={startDateFilter}
+              onChange={(e) => setStartDateFilter(e.target.value)}
+              className="filter-input"
+            />
+          </div>
+
+          <div className="filter-group">
+            <span className="filter-label">To:</span>
+            <input
+              type="date"
+              value={endDateFilter}
+              onChange={(e) => setEndDateFilter(e.target.value)}
+              className="filter-input"
+            />
+          </div>
+
+          {(startDateFilter || endDateFilter) && (
+            <button onClick={clearDateFilters} className="clear-btn" type="button">
+              Clear Dates
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Main Report Table Container */}
       <div className="table-card">
         <div className="report-table-wrapper">
           <table className="report-table">
