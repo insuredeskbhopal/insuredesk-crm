@@ -236,6 +236,46 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     return filteredRecords.slice(startIndex, startIndex + pageSize);
   }, [filteredRecords, currentPage]);
 
+  const pageNumbers = useMemo(() => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      
+      let start = Math.max(2, currentPage - 1);
+      let end = Math.min(totalPages - 1, currentPage + 1);
+      
+      if (currentPage <= 3) {
+        end = 4;
+      }
+      if (currentPage >= totalPages - 2) {
+        start = totalPages - 3;
+      }
+      
+      if (start > 2) {
+        pages.push("...");
+      }
+      
+      for (let i = start; i <= end; i++) {
+        if (!pages.includes(i)) {
+          pages.push(i);
+        }
+      }
+      
+      if (end < totalPages - 1) {
+        pages.push("...");
+      }
+      
+      if (!pages.includes(totalPages)) {
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  }, [currentPage, totalPages]);
+
   // Sum premium and net premium for the filtered list (entire filtered dataset)
   const totals = useMemo(() => {
     let premiumSum = 0;
@@ -904,8 +944,8 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         .page-nav-btn {
           padding: 6px 12px;
           border-radius: 8px;
-          border: 1px solid var(--border, #cbd5e1);
-          background: #ffffff;
+          border: none;
+          background: transparent;
           color: var(--text-primary, #0f172a);
           font-size: 13px;
           font-weight: 700;
@@ -929,8 +969,8 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           align-items: center;
           justify-content: center;
           border-radius: 8px;
-          border: 1px solid var(--border, #cbd5e1);
-          background: #ffffff;
+          border: none;
+          background: transparent;
           color: var(--text-primary, #0f172a);
           font-size: 13px;
           font-weight: 700;
@@ -945,7 +985,17 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         .page-number-btn.active {
           background: var(--accent, #3b82f6);
           color: #ffffff;
-          border-color: var(--accent, #3b82f6);
+        }
+
+        .pagination-ellipsis {
+          width: 32px;
+          height: 32px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-secondary, #64748b);
+          font-size: 13px;
+          font-weight: 700;
         }
       `}} />
 
@@ -1286,8 +1336,14 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
               >
                 Prev
               </button>
-              {Array.from({ length: totalPages }).map((_, idx) => {
-                const pageNum = idx + 1;
+              {pageNumbers.map((pageNum, idx) => {
+                if (pageNum === "...") {
+                  return (
+                    <span key={`ell-${idx}`} className="pagination-ellipsis">
+                      ...
+                    </span>
+                  );
+                }
                 return (
                   <button
                     key={pageNum}
