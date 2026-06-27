@@ -23,18 +23,25 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     );
   };
 
-  // Format date to DD-MM-YYYY
+  // Format date to DD/MM/YYYY
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
+    const cleanStr = String(dateStr).split(" ")[0];
     try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
+      if (cleanStr.includes("/")) {
+        const parts = cleanStr.split("/");
+        if (parts.length === 3 && parts[0].length <= 2 && parts[1].length <= 2 && parts[2].length === 4) {
+          return cleanStr;
+        }
+      }
+      const d = new Date(cleanStr);
+      if (isNaN(d.getTime())) return cleanStr;
       const day = String(d.getDate()).padStart(2, "0");
       const month = String(d.getMonth() + 1).padStart(2, "0");
       const year = d.getFullYear();
-      return `${day}-${month}-${year}`;
+      return `${day}/${month}/${year}`;
     } catch {
-      return dateStr;
+      return cleanStr;
     }
   };
 
@@ -101,26 +108,178 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
   const isIndividualTab = activeTab === "motor-individual";
 
   return (
-    <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "20px" }}>
+    <div className="reports-container">
       <style dangerouslySetInnerHTML={{ __html: `
-        .report-table-row:hover {
-          background-color: var(--border-soft, #f1f5f9) !important;
+        .reports-container {
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          background: var(--surface-low, #fcfdfd);
+        }
+
+        .tabs-wrapper {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 2px solid var(--border-soft, #f1f5f9);
+          padding-bottom: 16px;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+
+        .segmented-control {
+          display: flex;
+          background: var(--surface-variant, #f1f5f9);
+          padding: 4px;
+          border-radius: 12px;
+          box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        }
+
+        .tab-btn {
+          padding: 8px 20px;
+          border-radius: 10px;
+          border: none;
+          background: transparent;
+          color: var(--text-secondary, #64748b);
+          font-weight: 700;
+          font-size: 13px;
+          cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-btn:hover {
+          color: var(--text-primary, #0f172a);
+        }
+
+        .tab-btn.active {
+          background: #ffffff;
+          color: var(--text-primary, #0f172a);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .agent-select-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .agent-select-label {
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text-secondary, #64748b);
+        }
+
+        .agent-select {
+          padding: 8px 16px;
+          border-radius: 10px;
+          border: 1px solid var(--border, #cbd5e1);
+          background: #ffffff;
+          color: var(--text-primary, #0f172a);
+          font-size: 13px;
+          font-weight: 600;
+          outline: none;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+          transition: border-color 0.2s;
+        }
+
+        .agent-select:focus {
+          border-color: var(--accent, #3b82f6);
+        }
+
+        .table-card {
+          border: 1px solid var(--border-soft, #e2e8f0);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+          background: #ffffff;
+        }
+
+        .report-table-wrapper {
+          overflow-x: auto;
+        }
+
+        .report-table {
+          width: 100%;
+          border-collapse: collapse;
+          text-align: left;
+          font-size: 13px;
+        }
+
+        .report-table th {
+          background: #fef08a !important; /* Premium yellow */
+          color: #1e293b !important;
+          padding: 16px 20px;
+          font-weight: 800;
+          text-transform: uppercase;
+          font-size: 11px;
+          letter-spacing: 0.05em;
+          border-bottom: 2px solid #e2e8f0;
+        }
+
+        .report-table td {
+          padding: 16px 20px;
+          color: var(--text-primary, #334155);
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .report-table tr.report-table-row {
+          transition: background-color 0.15s ease;
+          cursor: pointer;
+        }
+
+        .report-table tr.report-table-row:hover {
+          background-color: rgba(254, 240, 138, 0.25) !important; /* Soft yellow highlight */
+        }
+
+        .report-table tr.report-table-row:nth-child(even) {
+          background-color: #fafbfc;
+        }
+
+        .report-table tr.report-table-row:nth-child(even):hover {
+          background-color: rgba(254, 240, 138, 0.25) !important;
+        }
+
+        .report-table tfoot tr td {
+          background: #fef08a !important; /* Premium yellow */
+          color: #1e293b !important;
+          font-weight: 800;
+          padding: 16px 20px;
+          border-top: 2px solid #cbd5e1;
+          font-size: 13px;
+        }
+
+        .badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 4px 10px;
+          border-radius: 9999px;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.02em;
+        }
+
+        .badge-new {
+          background: #dcfce7;
+          color: #15803d;
+        }
+
+        .badge-renewal {
+          background: #dbeafe;
+          color: #1d4ed8;
+        }
+
+        .badge-other {
+          background: #f3f4f6;
+          color: #4b5563;
         }
       `}} />
 
       {/* Tab bar header */}
-      <div 
-        style={{ 
-          display: "flex", 
-          flexWrap: "wrap", 
-          gap: "8px", 
-          borderBottom: "1px solid var(--border)", 
-          paddingBottom: "12px",
-          alignItems: "center",
-          justifyContent: "space-between"
-        }}
-      >
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+      <div className="tabs-wrapper">
+        <div className="segmented-control">
           {[
             { id: "motor-report", label: "Motor Report" },
             { id: "motor-individual", label: "Individual Motor Report" },
@@ -128,28 +287,8 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              style={{
-                padding: "8px 16px",
-                borderRadius: "8px",
-                border: "1px solid",
-                borderColor: activeTab === tab.id ? "var(--accent)" : "var(--border)",
-                background: activeTab === tab.id ? "var(--accent)" : "var(--surface)",
-                color: activeTab === tab.id ? "#ffffff" : "var(--text-primary)",
-                fontWeight: "700",
-                fontSize: "13px",
-                cursor: "pointer",
-                transition: "all 0.2s ease-in-out",
-              }}
-              onMouseEnter={(e) => {
-                if (activeTab !== tab.id) {
-                  e.currentTarget.style.backgroundColor = "var(--border-soft)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== tab.id) {
-                  e.currentTarget.style.backgroundColor = "var(--surface)";
-                }
-              }}
+              className={`tab-btn ${activeTab === tab.id ? "active" : ""}`}
+              type="button"
             >
               {tab.label}
             </button>
@@ -158,24 +297,12 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
 
         {/* Dropdown for Agent Selection (only shown for individual tabs) */}
         {isIndividualTab && (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-secondary)" }}>
-              Select Agent:
-            </span>
+          <div className="agent-select-wrapper">
+            <span className="agent-select-label">Select Agent:</span>
             <select
               value={selectedAgent}
               onChange={(e) => setSelectedAgent(e.target.value)}
-              style={{
-                padding: "8px 12px",
-                borderRadius: "8px",
-                border: "1px solid var(--border)",
-                background: "var(--surface)",
-                color: "var(--text-primary)",
-                fontSize: "13px",
-                fontWeight: "600",
-                outline: "none",
-                minWidth: "160px",
-              }}
+              className="agent-select"
             >
               {uniqueAgents.map((agent) => (
                 <option key={agent} value={agent}>
@@ -188,27 +315,19 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       </div>
 
       {/* Main Report Table Container */}
-      <div 
-        style={{ 
-          border: "1px solid var(--border)", 
-          borderRadius: "12px", 
-          overflow: "hidden", 
-          boxShadow: "var(--shadow-soft)",
-          background: "var(--surface)"
-        }}
-      >
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" }}>
+      <div className="table-card">
+        <div className="report-table-wrapper">
+          <table className="report-table">
             <thead>
-              <tr style={{ background: "#fef08a", color: "#1e293b", borderBottom: "2px solid #e2e8f0" }}>
-                <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase" }}>Date</th>
-                <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase" }}>Insured Name</th>
-                <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase" }}>Vehicle Number</th>
-                <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase" }}>Policy Type</th>
-                <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase", textAlign: "right" }}>Premium</th>
-                <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase", textAlign: "right" }}>Net Premium</th>
-                <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase" }}>Insurance Company</th>
-                <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase" }}>Line of Business</th>
+              <tr>
+                <th>Date</th>
+                <th>Insured Name</th>
+                <th>Vehicle Number</th>
+                <th>Policy Type</th>
+                <th style={{ textAlign: "right" }}>Premium</th>
+                <th style={{ textAlign: "right" }}>Net Premium</th>
+                <th>Insurance Company</th>
+                <th>Line of Business</th>
               </tr>
             </thead>
             <tbody>
@@ -220,30 +339,34 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                 </tr>
               ) : (
                 filteredRecords.map((record) => {
+                  const lobBadgeClass = 
+                    record.newOrRenewal === "New" 
+                      ? "badge badge-new" 
+                      : record.newOrRenewal === "Renewal" 
+                      ? "badge badge-renewal" 
+                      : "badge badge-other";
+
                   return (
                     <tr
                       key={record.id}
                       onClick={() => onEditRecord && onEditRecord(record)}
-                      style={{
-                        borderBottom: "1px solid var(--border-soft)",
-                        cursor: "pointer",
-                        transition: "background-color 0.15s ease-in-out",
-                      }}
                       className="report-table-row"
                     >
-                      <td style={{ padding: "12px 16px", color: "var(--text-primary)" }}>{formatDate(record.startDate)}</td>
-                      <td style={{ padding: "12px 16px", fontWeight: "700", color: "var(--text-primary)" }}>{record.insuredName}</td>
-                      <td style={{ padding: "12px 16px", color: "var(--text-primary)" }}>{record.vehicleNumber || "N/A"}</td>
-                      <td style={{ padding: "12px 16px", color: "var(--text-primary)" }}>{record.policyType || "N/A"}</td>
-                      <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: "600", color: "var(--text-primary)" }}>
+                      <td>{formatDate(record.startDate)}</td>
+                      <td style={{ fontWeight: "700" }}>{record.insuredName}</td>
+                      <td>{record.vehicleNumber || "N/A"}</td>
+                      <td>{record.policyType || "N/A"}</td>
+                      <td style={{ textAlign: "right", fontWeight: "600" }}>
                         {record.premium ? formatPremium(parsePremium(record.premium)) : "-"}
                       </td>
-                      <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: "600", color: "var(--text-primary)" }}>
+                      <td style={{ textAlign: "right", fontWeight: "600" }}>
                         {record.netPremium ? formatPremium(parsePremium(record.netPremium)) : "-"}
                       </td>
-                      <td style={{ padding: "12px 16px", color: "var(--text-primary)" }}>{record.insuranceCompany || "N/A"}</td>
-                      <td style={{ padding: "12px 16px", fontWeight: "700", color: record.newOrRenewal === "New" ? "#15803d" : "#0369a1" }}>
-                        {record.newOrRenewal || "N/A"}
+                      <td>{record.insuranceCompany || "N/A"}</td>
+                      <td>
+                        <span className={lobBadgeClass}>
+                          {record.newOrRenewal || "N/A"}
+                        </span>
                       </td>
                     </tr>
                   );
@@ -252,12 +375,12 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
             </tbody>
             {filteredRecords.length > 0 && (
               <tfoot>
-                <tr style={{ background: "#fef08a", color: "#1e293b", fontWeight: "800", borderTop: "2px solid #cbd5e1" }}>
-                  <td colSpan={3} style={{ padding: "12px 16px" }}></td>
-                  <td style={{ padding: "12px 16px", textTransform: "uppercase" }}>Total</td>
-                  <td style={{ padding: "12px 16px", textAlign: "right" }}>{formatPremium(totals.premium)}</td>
-                  <td style={{ padding: "12px 16px", textAlign: "right" }}>{formatPremium(totals.netPremium)}</td>
-                  <td colSpan={2} style={{ padding: "12px 16px" }}></td>
+                <tr>
+                  <td colSpan={3}></td>
+                  <td style={{ textTransform: "uppercase" }}>Total</td>
+                  <td style={{ textAlign: "right" }}>{formatPremium(totals.premium)}</td>
+                  <td style={{ textAlign: "right" }}>{formatPremium(totals.netPremium)}</td>
+                  <td colSpan={2}></td>
                 </tr>
               </tfoot>
             )}
