@@ -1,10 +1,18 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 export default function AnalyticsReports({ records = [], onEditRecord }) {
   const [activeTab, setActiveTab] = useState("motor-report");
   const [selectedAgent, setSelectedAgent] = useState("all");
+  
+  // Date Filters
+  const [startDateFilter, setStartDateFilter] = useState("");
+  const [endDateFilter, setEndDateFilter] = useState("");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   // Helper to determine if a record is Motor LOB
   const isMotorRecord = (record) => {
@@ -73,17 +81,50 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     return Array.from(agents).sort((a, b) => a.localeCompare(b));
   }, [records]);
 
-  // Determine active records based on selected tab and selected agent
+  // Apply filters: tab, agent, start date, and end date
   const filteredRecords = useMemo(() => {
     let list = motorRecords;
 
+    // Agent filter
     if (activeTab === "motor-individual" && selectedAgent !== "all") {
       list = list.filter((r) => (r.createdBy || r.assignedTo || "System") === selectedAgent);
     }
-    return list;
-  }, [activeTab, selectedAgent, motorRecords]);
 
-  // Sum premium and net premium
+    // Date range filters
+    if (startDateFilter) {
+      const startLimit = new Date(startDateFilter + "T00:00:00");
+      list = list.filter((r) => {
+        if (!r.startDate) return false;
+        const d = new Date(String(r.startDate).split(" ")[0]);
+        return !isNaN(d.getTime()) && d >= startLimit;
+      });
+    }
+
+    if (endDateFilter) {
+      const endLimit = new Date(endDateFilter + "T23:59:59");
+      list = list.filter((r) => {
+        if (!r.startDate) return false;
+        const d = new Date(String(r.startDate).split(" ")[0]);
+        return !isNaN(d.getTime()) && d <= endLimit;
+      });
+    }
+
+    return list;
+  }, [activeTab, selectedAgent, motorRecords, startDateFilter, endDateFilter]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, selectedAgent, startDateFilter, endDateFilter]);
+
+  // Pagination Logic
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
+  const paginatedRecords = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredRecords.slice(startIndex, startIndex + pageSize);
+  }, [filteredRecords, currentPage]);
+
+  // Sum premium and net premium for the filtered list (entire filtered dataset)
   const totals = useMemo(() => {
     let premiumSum = 0;
     let netPremiumSum = 0;
@@ -104,6 +145,127 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       setSelectedAgent(uniqueAgents[0]);
     }
   };
+
+  const clearDateFilters = () => {
+    setStartDateFilter("");
+    setEndDateFilter("");
+  };
+
+  // --- Line Chart Data Generation (Daily Premium Trend) ---
+  const lineChartData = useMemo(() => {
+    const dailyPremium = {};
+    filteredRecords.forEach((r) => {
+      if (!r.startDate) return;
+      const cleanDate = String(r.startDate).split(" ")[0];
+      let dateKey = cleanDate;
+      if (cleanDate.includes("/")) {
+        const parts = cleanDate.split("/");
+        if (parts.length === 3) {
+          dateKey = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+        }
+      }
+      dailyPremium[dateKey] = (dailyPremium[dateKey] || 0) + parsePremium(r.premium || r.totalPremium);
+    });
+
+    const sortedDates = Object.keys(dailyPremium).sort();
+    const last7Dates = sortedDates.slice(-7);
+
+    return last7Dates.map((dateKey) => {
+      const parts = dateKey.split("-");
+      const displayDate = parts.length === 3 ? `${parts[2]}/${parts[1]}` : dateKey;
+      return {
+        label: displayDate,
+        value: dailyPremium[dateKey],
+      };
+    });
+  }, [filteredRecords]);
+
+  const svgWidth = 500;
+  const svgHeight = 160;
+  const graphPadding = 30;
+
+  const graphPoints = useMemo(() => {
+    if (lineChartData.length === 0) return [];
+    const maxVal = Math.max(...lineChartData.map((d) => d.value), 1000);
+    const stepX = (svgWidth - graphPadding * 2) / Math.max(1, lineChartData.length - 1);
+
+    return lineChartData.map((d, index) => {
+      const x = graphPadding + index * stepX;
+      const y = svgHeight - graphPadding - (d.value / maxVal) * (svgHeight - graphPadding * 2);
+      return { x, y, label: d.label, value: d.value };
+    });
+  }, [lineChartData]);
+
+  const linePathD = useMemo(() => {
+    if (graphPoints.length === 0) return "";
+    return graphPoints.reduce((path, p, idx) => {
+      return idx === 0 ? `M ${p.x} ${p.y}` : `${path} L ${p.x} ${p.y}`;
+    }, "");
+  }, [graphPoints]);
+
+  const areaPathD = useMemo(() => {
+    if (graphPoints.length === 0) return "";
+    const startX = graphPoints[0].x;
+    const endX = graphPoints[graphPoints.length - 1].x;
+    const groundY = svgHeight - graphPadding;
+    return `${linePathD} L ${endX} ${groundY} L ${startX} ${groundY} Z`;
+  }, [graphPoints, linePathD]);
+
+  // --- Bar Chart Data Generation (Top Insurers by Premium) ---
+  const barChartData = useMemo(() => {
+    const insurerPremium = {};
+    filteredRecords.forEach((r) => {
+      const insurer = r.insuranceCompany || "Unknown";
+      insurerPremium[insurer] = (insurerPremium[insurer] || 0) + parsePremium(r.premium || r.totalPremium);
+    });
+
+    return Object.entries(insurerPremium)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  }, [filteredRecords]);
+
+  const maxInsurerPremium = useMemo(() => {
+    return Math.max(...barChartData.map((d) => d.value), 1);
+  }, [barChartData]);
+
+  // --- Donut Chart Data Generation (Policy Type Mix) ---
+  const donutChartData = useMemo(() => {
+    const typeCounts = {};
+    filteredRecords.forEach((r) => {
+      const type = r.policyType || "Unknown";
+      typeCounts[type] = (typeCounts[type] || 0) + 1;
+    });
+
+    const sorted = Object.entries(typeCounts)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+
+    const top3 = sorted.slice(0, 3);
+    const otherCount = sorted.slice(3).reduce((sum, item) => sum + item.value, 0);
+
+    if (otherCount > 0) {
+      top3.push({ label: "Others", value: otherCount });
+    }
+
+    return top3;
+  }, [filteredRecords]);
+
+  const donutGradient = useMemo(() => {
+    const total = donutChartData.reduce((sum, item) => sum + item.value, 0);
+    if (total === 0) return "conic-gradient(#cbd5e1 0 100%)";
+
+    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"];
+    let startPercent = 0;
+    const sections = donutChartData.map((item, index) => {
+      const endPercent = startPercent + (item.value / total) * 100;
+      const part = `${colors[index % colors.length]} ${startPercent}% ${endPercent}%`;
+      startPercent = endPercent;
+      return part;
+    });
+
+    return `conic-gradient(${sections.join(", ")})`;
+  }, [donutChartData]);
 
   const isIndividualTab = activeTab === "motor-individual";
 
@@ -158,19 +320,44 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
-        .agent-select-wrapper {
+        /* Filter Panel Styles */
+        .filter-panel {
           display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
           align-items: center;
-          gap: 12px;
+          background: #ffffff;
+          padding: 16px 20px;
+          border: 1px solid var(--border-soft, #e2e8f0);
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
 
-        .agent-select-label {
-          font-size: 13px;
+        .filter-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .filter-label {
+          font-size: 12px;
           font-weight: 700;
           color: var(--text-secondary, #64748b);
         }
 
-        .agent-select {
+        .filter-input {
+          padding: 8px 12px;
+          border-radius: 10px;
+          border: 1px solid var(--border, #cbd5e1);
+          background: #ffffff;
+          color: var(--text-primary, #0f172a);
+          font-size: 13px;
+          font-weight: 600;
+          outline: none;
+          min-width: 140px;
+        }
+
+        .filter-select {
           padding: 8px 16px;
           border-radius: 10px;
           border: 1px solid var(--border, #cbd5e1);
@@ -180,14 +367,210 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           font-weight: 600;
           outline: none;
           cursor: pointer;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-          transition: border-color 0.2s;
+          min-width: 160px;
         }
 
-        .agent-select:focus {
-          border-color: var(--accent, #3b82f6);
+        .clear-btn {
+          padding: 8px 16px;
+          border-radius: 10px;
+          border: 1px solid #e2e8f0;
+          background: #ffffff;
+          color: var(--text-secondary, #64748b);
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s;
         }
 
+        .clear-btn:hover {
+          background: #f1f5f9;
+          color: var(--text-primary, #0f172a);
+        }
+
+        /* Chart Dashboard Grid */
+        .reports-charts-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 20px;
+          margin-bottom: 8px;
+        }
+
+        .chart-card {
+          background: #ffffff;
+          border: 1px solid var(--border-soft, #e2e8f0);
+          border-radius: 16px;
+          padding: 20px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01), 0 2px 4px -2px rgba(0, 0, 0, 0.01);
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          min-height: 230px;
+        }
+
+        .chart-header-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .chart-title {
+          font-size: 13px;
+          font-weight: 800;
+          color: var(--text-primary, #0f172a);
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+        }
+
+        /* Donut Chart styles */
+        .donut-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 24px;
+          height: 100%;
+        }
+
+        .donut-chart-circle {
+          position: relative;
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+          flex-shrink: 0;
+        }
+
+        .donut-hole {
+          position: absolute;
+          width: 80px;
+          height: 80px;
+          background: #ffffff;
+          border-radius: 50%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .donut-hole strong {
+          font-size: 18px;
+          color: var(--text-primary, #0f172a);
+          font-weight: 800;
+        }
+
+        .donut-hole span {
+          font-size: 9px;
+          color: var(--text-secondary, #64748b);
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        .chart-legend {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          font-size: 11px;
+          flex: 1;
+        }
+
+        .legend-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+
+        .legend-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          overflow: hidden;
+        }
+
+        .legend-color {
+          width: 10px;
+          height: 10px;
+          border-radius: 2px;
+          flex-shrink: 0;
+        }
+
+        .legend-name {
+          font-weight: 600;
+          color: var(--text-secondary, #475569);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .legend-val {
+          font-weight: 700;
+          color: var(--text-primary, #0f172a);
+        }
+
+        /* Bar chart styles */
+        .bar-chart-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          height: 100%;
+          justify-content: center;
+        }
+
+        .bar-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 12px;
+        }
+
+        .bar-label {
+          width: 90px;
+          font-weight: 700;
+          color: var(--text-secondary, #475569);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .bar-track {
+          flex: 1;
+          height: 8px;
+          background: #f1f5f9;
+          border-radius: 9999px;
+          overflow: hidden;
+        }
+
+        .bar-fill {
+          height: 100%;
+          border-radius: 9999px;
+          transition: width 0.4s ease;
+        }
+
+        .bar-value {
+          width: 80px;
+          text-align: right;
+          font-weight: 700;
+          color: var(--text-primary, #0f172a);
+          white-space: nowrap;
+        }
+
+        /* Line SVG styles */
+        .line-chart-container {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .chart-svg {
+          width: 100%;
+          height: auto;
+          overflow: visible;
+        }
+
+        /* Table and Card shadow depth */
         .table-card {
           border: 1px solid var(--border-soft, #e2e8f0);
           border-radius: 16px;
@@ -208,7 +591,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         }
 
         .report-table th {
-          background: #f8fafc !important; /* Clean gray/white */
+          background: #f8fafc !important; 
           color: var(--text-secondary, #475569) !important;
           padding: 16px 20px;
           font-weight: 800;
@@ -243,7 +626,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         }
 
         .report-table tfoot tr td {
-          background: #f8fafc !important; /* Clean gray/white */
+          background: #f8fafc !important; 
           color: var(--text-primary, #0f172a) !important;
           font-weight: 800;
           padding: 16px 20px;
@@ -278,9 +661,78 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           background: #f3f4f6;
           color: #4b5563;
         }
+
+        /* Pagination Control Bar */
+        .pagination-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px 24px;
+          background: #ffffff;
+          border-top: 1px solid var(--border-soft, #f1f5f9);
+        }
+
+        .pagination-text {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-secondary, #64748b);
+        }
+
+        .pagination-buttons {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .page-nav-btn {
+          padding: 6px 12px;
+          border-radius: 8px;
+          border: 1px solid var(--border, #cbd5e1);
+          background: #ffffff;
+          color: var(--text-primary, #0f172a);
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .page-nav-btn:hover:not(:disabled) {
+          background: var(--border-soft, #f1f5f9);
+        }
+
+        .page-nav-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .page-number-btn {
+          width: 32px;
+          height: 32px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          border: 1px solid var(--border, #cbd5e1);
+          background: #ffffff;
+          color: var(--text-primary, #0f172a);
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .page-number-btn:hover {
+          background: var(--border-soft, #f1f5f9);
+        }
+
+        .page-number-btn.active {
+          background: var(--accent, #3b82f6);
+          color: #ffffff;
+          border-color: var(--accent, #3b82f6);
+        }
       `}} />
 
-      {/* Tab bar header */}
+      {/* Tab bar switcher */}
       <div className="tabs-wrapper">
         <div className="segmented-control">
           {[
@@ -297,16 +749,19 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Dropdown for Agent Selection (only shown for individual tabs) */}
+      {/* Date & Agent Filter Panel */}
+      <div className="filter-panel">
         {isIndividualTab && (
-          <div className="agent-select-wrapper">
-            <span className="agent-select-label">Select Agent:</span>
+          <div className="filter-group">
+            <span className="filter-label">Agent:</span>
             <select
               value={selectedAgent}
               onChange={(e) => setSelectedAgent(e.target.value)}
-              className="agent-select"
+              className="filter-select"
             >
+              <option value="all">All Agents</option>
               {uniqueAgents.map((agent) => (
                 <option key={agent} value={agent}>
                   {agent}
@@ -315,6 +770,181 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
             </select>
           </div>
         )}
+
+        <div className="filter-group">
+          <span className="filter-label">From:</span>
+          <input
+            type="date"
+            value={startDateFilter}
+            onChange={(e) => setStartDateFilter(e.target.value)}
+            className="filter-input"
+          />
+        </div>
+
+        <div className="filter-group">
+          <span className="filter-label">To:</span>
+          <input
+            type="date"
+            value={endDateFilter}
+            onChange={(e) => setEndDateFilter(e.target.value)}
+            className="filter-input"
+          />
+        </div>
+
+        {(startDateFilter || endDateFilter) && (
+          <button onClick={clearDateFilters} className="clear-btn" type="button">
+            Clear Dates
+          </button>
+        )}
+      </div>
+
+      {/* Interactive Charts Dashboard */}
+      <div className="reports-charts-grid">
+        {/* Line Graph (Daily Premium Trend) */}
+        <div className="chart-card">
+          <div className="chart-header-row">
+            <h3 className="chart-title">Daily Premium Trend</h3>
+          </div>
+          <div className="line-chart-container">
+            {graphPoints.length === 0 ? (
+              <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600" }}>
+                No trend data available for selected filters.
+              </span>
+            ) : (
+              <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="chart-svg">
+                <defs>
+                  <linearGradient id="line-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                {/* Horizontal reference lines */}
+                {[0, 0.5, 1].map((ratio, idx) => {
+                  const y = graphPadding + ratio * (svgHeight - graphPadding * 2);
+                  return (
+                    <line
+                      key={idx}
+                      x1={graphPadding}
+                      y1={y}
+                      x2={svgWidth - graphPadding}
+                      y2={y}
+                      stroke="#f1f5f9"
+                      strokeWidth="1.5"
+                    />
+                  );
+                })}
+                {/* Curve fill area */}
+                <path d={areaPathD} fill="url(#line-grad)" />
+                {/* Curve line */}
+                <path d={linePathD} fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" />
+                {/* Interactive Points */}
+                {graphPoints.map((p, idx) => (
+                  <g key={idx}>
+                    <circle cx={p.x} cy={p.y} r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="2.5" />
+                    <text
+                      x={p.x}
+                      y={p.y - 12}
+                      textAnchor="middle"
+                      fontSize="9"
+                      fontWeight="800"
+                      fill="#1e293b"
+                    >
+                      ₹{formatPremium(p.value)}
+                    </text>
+                    <text
+                      x={p.x}
+                      y={svgHeight - 10}
+                      textAnchor="middle"
+                      fontSize="9"
+                      fontWeight="700"
+                      fill="#64748b"
+                    >
+                      {p.label}
+                    </text>
+                  </g>
+                ))}
+              </svg>
+            )}
+          </div>
+        </div>
+
+        {/* Bar Chart (Insurer Premium Distribution) */}
+        <div className="chart-card">
+          <div className="chart-header-row">
+            <h3 className="chart-title">Insurers by Premium</h3>
+          </div>
+          <div className="bar-chart-list">
+            {barChartData.length === 0 ? (
+              <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600", textAlign: "center" }}>
+                No insurer data available.
+              </span>
+            ) : (
+              barChartData.map((item, index) => {
+                const colors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
+                const fillPercent = (item.value / maxInsurerPremium) * 100;
+                return (
+                  <div className="bar-row" key={item.label}>
+                    <span className="bar-label" title={item.label}>
+                      {item.label}
+                    </span>
+                    <div className="bar-track">
+                      <div
+                        className="bar-fill"
+                        style={{
+                          width: `${fillPercent}%`,
+                          backgroundColor: colors[index % colors.length],
+                        }}
+                      />
+                    </div>
+                    <span className="bar-value">₹{formatPremium(item.value)}</span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Donut Chart (Policy Type Mix) */}
+        <div className="chart-card">
+          <div className="chart-header-row">
+            <h3 className="chart-title">Policy Type Mix</h3>
+          </div>
+          <div className="donut-container">
+            {donutChartData.length === 0 ? (
+              <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600" }}>
+                No policy types recorded.
+              </span>
+            ) : (
+              <>
+                <div className="donut-chart-circle" style={{ background: donutGradient }}>
+                  <div className="donut-hole">
+                    <strong>{filteredRecords.length}</strong>
+                    <span>Policies</span>
+                  </div>
+                </div>
+                <div className="chart-legend">
+                  {donutChartData.map((item, index) => {
+                    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"];
+                    return (
+                      <div className="legend-item" key={item.label}>
+                        <div className="legend-left">
+                          <span
+                            className="legend-color"
+                            style={{ backgroundColor: colors[index % colors.length] }}
+                          />
+                          <span className="legend-name" title={item.label}>
+                            {item.label}
+                          </span>
+                        </div>
+                        <span className="legend-val">{item.value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Main Report Table Container */}
@@ -325,7 +955,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
               <tr>
                 <th style={{ whiteSpace: "nowrap", minWidth: "110px" }}>Date</th>
                 <th>Insured Name</th>
-                <th>Vehicle Number</th>
+                <th style={{ whiteSpace: "nowrap" }}>Vehicle Number</th>
                 <th>Policy Type</th>
                 <th style={{ textAlign: "right", whiteSpace: "nowrap", minWidth: "120px" }}>Premium</th>
                 <th style={{ textAlign: "right", whiteSpace: "nowrap", minWidth: "120px" }}>Net Premium</th>
@@ -334,14 +964,14 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
               </tr>
             </thead>
             <tbody>
-              {filteredRecords.length === 0 ? (
+              {paginatedRecords.length === 0 ? (
                 <tr>
                   <td colSpan={8} style={{ padding: "32px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "600" }}>
                     No motor policy records found for this report filter.
                   </td>
                 </tr>
               ) : (
-                filteredRecords.map((record) => {
+                paginatedRecords.map((record) => {
                   const lobBadgeClass = 
                     record.newOrRenewal === "New" 
                       ? "badge badge-new" 
@@ -389,6 +1019,46 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
             )}
           </table>
         </div>
+
+        {/* Pagination Toolbar */}
+        {filteredRecords.length > pageSize && (
+          <div className="pagination-container">
+            <span className="pagination-text">
+              Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredRecords.length)} of {filteredRecords.length} records
+            </span>
+            <div className="pagination-buttons">
+              <button
+                type="button"
+                className="page-nav-btn"
+                onClick={() => setCurrentPage((c) => Math.max(1, c - 1))}
+                disabled={currentPage === 1}
+              >
+                Prev
+              </button>
+              {Array.from({ length: totalPages }).map((_, idx) => {
+                const pageNum = idx + 1;
+                return (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    className={`page-number-btn ${currentPage === pageNum ? "active" : ""}`}
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                className="page-nav-btn"
+                onClick={() => setCurrentPage((c) => Math.min(totalPages, c + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
