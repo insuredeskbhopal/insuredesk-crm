@@ -381,6 +381,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       return part;
     });
 
+    return `conic-gradient(${sections.join(", ")})`;
   }, [donutChartData]);
 
   const isIndividualTab = activeTab === "motor-individual";
