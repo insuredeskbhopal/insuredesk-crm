@@ -192,7 +192,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           border: 1px solid var(--border-soft, #e2e8f0);
           border-radius: 16px;
           overflow: hidden;
-          box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
           background: #ffffff;
         }
 
@@ -208,14 +208,15 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         }
 
         .report-table th {
-          background: #fef08a !important; /* Premium yellow */
-          color: #1e293b !important;
+          background: #f8fafc !important; /* Clean gray/white */
+          color: var(--text-secondary, #475569) !important;
           padding: 16px 20px;
           font-weight: 800;
           text-transform: uppercase;
           font-size: 11px;
           letter-spacing: 0.05em;
           border-bottom: 2px solid #e2e8f0;
+          white-space: nowrap;
         }
 
         .report-table td {
@@ -230,7 +231,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         }
 
         .report-table tr.report-table-row:hover {
-          background-color: rgba(254, 240, 138, 0.25) !important; /* Soft yellow highlight */
+          background-color: var(--border-soft, #f1f5f9) !important;
         }
 
         .report-table tr.report-table-row:nth-child(even) {
@@ -238,16 +239,17 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         }
 
         .report-table tr.report-table-row:nth-child(even):hover {
-          background-color: rgba(254, 240, 138, 0.25) !important;
+          background-color: var(--border-soft, #f1f5f9) !important;
         }
 
         .report-table tfoot tr td {
-          background: #fef08a !important; /* Premium yellow */
-          color: #1e293b !important;
+          background: #f8fafc !important; /* Clean gray/white */
+          color: var(--text-primary, #0f172a) !important;
           font-weight: 800;
           padding: 16px 20px;
           border-top: 2px solid #cbd5e1;
           font-size: 13px;
+          white-space: nowrap;
         }
 
         .badge {
@@ -259,6 +261,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.02em;
+          white-space: nowrap;
         }
 
         .badge-new {
@@ -320,14 +323,14 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           <table className="report-table">
             <thead>
               <tr>
-                <th>Date</th>
+                <th style={{ whiteSpace: "nowrap", minWidth: "110px" }}>Date</th>
                 <th>Insured Name</th>
                 <th>Vehicle Number</th>
                 <th>Policy Type</th>
-                <th style={{ textAlign: "right" }}>Premium</th>
-                <th style={{ textAlign: "right" }}>Net Premium</th>
+                <th style={{ textAlign: "right", whiteSpace: "nowrap", minWidth: "120px" }}>Premium</th>
+                <th style={{ textAlign: "right", whiteSpace: "nowrap", minWidth: "120px" }}>Net Premium</th>
                 <th>Insurance Company</th>
-                <th>Line of Business</th>
+                <th style={{ whiteSpace: "nowrap" }}>New / Renewal</th>
               </tr>
             </thead>
             <tbody>
@@ -352,14 +355,14 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                       onClick={() => onEditRecord && onEditRecord(record)}
                       className="report-table-row"
                     >
-                      <td>{formatDate(record.startDate)}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{formatDate(record.startDate)}</td>
                       <td style={{ fontWeight: "700" }}>{record.insuredName}</td>
-                      <td>{record.vehicleNumber || "N/A"}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{record.vehicleNumber || "N/A"}</td>
                       <td>{record.policyType || "N/A"}</td>
-                      <td style={{ textAlign: "right", fontWeight: "600" }}>
+                      <td style={{ textAlign: "right", fontWeight: "600", whiteSpace: "nowrap" }}>
                         {record.premium ? formatPremium(parsePremium(record.premium)) : "-"}
                       </td>
-                      <td style={{ textAlign: "right", fontWeight: "600" }}>
+                      <td style={{ textAlign: "right", fontWeight: "600", whiteSpace: "nowrap" }}>
                         {record.netPremium ? formatPremium(parsePremium(record.netPremium)) : "-"}
                       </td>
                       <td>{record.insuranceCompany || "N/A"}</td>
@@ -378,8 +381,8 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                 <tr>
                   <td colSpan={3}></td>
                   <td style={{ textTransform: "uppercase" }}>Total</td>
-                  <td style={{ textAlign: "right" }}>{formatPremium(totals.premium)}</td>
-                  <td style={{ textAlign: "right" }}>{formatPremium(totals.netPremium)}</td>
+                  <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>{formatPremium(totals.premium)}</td>
+                  <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>{formatPremium(totals.netPremium)}</td>
                   <td colSpan={2}></td>
                 </tr>
               </tfoot>
