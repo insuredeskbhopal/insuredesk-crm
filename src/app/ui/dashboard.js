@@ -164,6 +164,7 @@ export default function Dashboard({
   const [editForm, setEditForm] = useState({});
   const [isSaving, startSaving] = useTransition();
   const [isUploading, startUploading] = useTransition();
+  const [isNavigating, startNavigation] = useTransition();
   const deferredQuery = useDeferredValue(query);
   const canExportRecords = ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(currentUserRole);
 
@@ -189,7 +190,9 @@ export default function Dashboard({
     if (pageVal > 1) params.set("page", pageVal);
     else params.delete("page");
 
-    router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+    startNavigation(() => {
+      router.push(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+    });
   };
 
   useEffect(() => {
@@ -1764,15 +1767,52 @@ export default function Dashboard({
               </button>
             ))}
           </div>
-          <RecordsTable
-            records={visiblePolicyRecordResults}
-            columns={recordViewColumns}
-            canEdit={canEditPolicyRecords}
-            onEdit={startEditRecord}
-            canDelete={canDeletePolicyRecords}
-            onDelete={deletePolicyRecord}
-            paginate={false}
-          />
+          <div style={{ position: "relative" }}>
+            {isNavigating && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(255, 255, 255, 0.4)",
+                  backdropFilter: "blur(4px)",
+                  zIndex: 10,
+                  borderRadius: "12px",
+                  transition: "all 0.2s ease-in-out",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "24px 36px",
+                    borderRadius: "16px",
+                    background: "var(--surface)",
+                    boxShadow: "var(--shadow-soft)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <LoaderCircle className="spin" size={36} style={{ color: "var(--accent)" }} />
+                  <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-primary)" }}>
+                    Loading policies...
+                  </span>
+                </div>
+              </div>
+            )}
+            <RecordsTable
+              records={visiblePolicyRecordResults}
+              columns={recordViewColumns}
+              canEdit={canEditPolicyRecords}
+              onEdit={startEditRecord}
+              canDelete={canDeletePolicyRecords}
+              onDelete={deletePolicyRecord}
+              paginate={false}
+            />
+          </div>
 
           {/* Pagination Controls */}
           {activePage === "records" && totalPages > 1 && (
