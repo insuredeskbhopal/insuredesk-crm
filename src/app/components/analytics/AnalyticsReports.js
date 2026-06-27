@@ -6,25 +6,21 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
   const [activeTab, setActiveTab] = useState("motor-report");
   const [selectedAgent, setSelectedAgent] = useState("all");
 
-  // Helper to determine line of business family
-  const getRecordFamily = (record) => {
+  // Helper to determine if a record is Motor LOB
+  const isMotorRecord = (record) => {
     const type = String(record.policyType || "").toLowerCase();
     const desc = String(record.description || "").toLowerCase();
     const file = String(record.sourceFile || "").toLowerCase();
     const comp = String(record.insuranceCompany || "").toLowerCase();
     const haystack = `${type} ${desc} ${file} ${comp}`;
 
-    const hasMotorSignals =
+    return (
       record.vehicleNumber ||
       record.registrationNumber ||
       record.engineNumber ||
       record.chassisNumber ||
-      /\b(motor|private car|two wheeler|bike|scooter|commercial vehicle|taxi|cab|bus|chassis|engine)\b/.test(haystack);
-    if (hasMotorSignals) return "motor";
-
-    if (/\b(sfsp|fire|burglary|msme|warehouse|stock|property|contents)\b/.test(haystack)) return "fire";
-
-    return "non-motor";
+      /\b(motor|private car|two wheeler|bike|scooter|commercial vehicle|taxi|cab|bus|chassis|engine)\b/.test(haystack)
+    );
   };
 
   // Format date to DD-MM-YYYY
@@ -55,24 +51,9 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     return Math.round(value).toLocaleString("en-IN");
   };
 
-  // Filter records by LOB family
-  const recordsByFamily = useMemo(() => {
-    const motor = [];
-    const fire = [];
-    const nonMotor = [];
-
-    records.forEach((record) => {
-      const family = getRecordFamily(record);
-      if (family === "motor") {
-        motor.push(record);
-      } else if (family === "fire") {
-        fire.push(record);
-      } else {
-        nonMotor.push(record);
-      }
-    });
-
-    return { motor, fire, nonMotor };
+  // Filter records by LOB family (Motor only)
+  const motorRecords = useMemo(() => {
+    return records.filter(isMotorRecord);
   }, [records]);
 
   // Extract unique agents from the list of records
@@ -87,20 +68,13 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
 
   // Determine active records based on selected tab and selected agent
   const filteredRecords = useMemo(() => {
-    let list = [];
-    if (activeTab.startsWith("motor")) {
-      list = recordsByFamily.motor;
-    } else if (activeTab.startsWith("fire")) {
-      list = recordsByFamily.fire;
-    } else {
-      list = recordsByFamily.nonMotor;
-    }
+    let list = motorRecords;
 
-    if (activeTab.endsWith("-individual") && selectedAgent !== "all") {
+    if (activeTab === "motor-individual" && selectedAgent !== "all") {
       list = list.filter((r) => (r.createdBy || r.assignedTo || "System") === selectedAgent);
     }
     return list;
-  }, [activeTab, selectedAgent, recordsByFamily]);
+  }, [activeTab, selectedAgent, motorRecords]);
 
   // Sum premium and net premium
   const totals = useMemo(() => {
@@ -119,12 +93,12 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
   // Reset agent dropdown filter if tab changes to individual
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
-    if (tabName.endsWith("-individual") && selectedAgent === "all" && uniqueAgents.length > 0) {
+    if (tabName === "motor-individual" && selectedAgent === "all" && uniqueAgents.length > 0) {
       setSelectedAgent(uniqueAgents[0]);
     }
   };
 
-  const isIndividualTab = activeTab.endsWith("-individual");
+  const isIndividualTab = activeTab === "motor-individual";
 
   return (
     <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -150,10 +124,6 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           {[
             { id: "motor-report", label: "Motor Report" },
             { id: "motor-individual", label: "Individual Motor Report" },
-            { id: "fire-report", label: "Fire Report" },
-            { id: "fire-individual", label: "Individual Fire Report" },
-            { id: "non-motor-report", label: "Non-Motor Report" },
-            { id: "non-motor-individual", label: "Individual Non-Motor Report" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -233,13 +203,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
               <tr style={{ background: "#fef08a", color: "#1e293b", borderBottom: "2px solid #e2e8f0" }}>
                 <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase" }}>Date</th>
                 <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase" }}>Insured Name</th>
-                <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase" }}>
-                  {activeTab.startsWith("motor") 
-                    ? "Vehicle Number" 
-                    : activeTab.startsWith("fire") 
-                    ? "Risk Location" 
-                    : "Policy Number"}
-                </th>
+                <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase" }}>Vehicle Number</th>
                 <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase" }}>Policy Type</th>
                 <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase", textAlign: "right" }}>Premium</th>
                 <th style={{ padding: "12px 16px", fontWeight: "800", textTransform: "uppercase", textAlign: "right" }}>Net Premium</th>
@@ -251,17 +215,11 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
               {filteredRecords.length === 0 ? (
                 <tr>
                   <td colSpan={8} style={{ padding: "32px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "600" }}>
-                    No policy records found for this report filter.
+                    No motor policy records found for this report filter.
                   </td>
                 </tr>
               ) : (
                 filteredRecords.map((record) => {
-                  const displayVehicleOrLocation = activeTab.startsWith("motor") 
-                    ? record.vehicleNumber || "N/A" 
-                    : activeTab.startsWith("fire") 
-                    ? record.riskLocation || "N/A" 
-                    : record.policyNumber || "N/A";
-
                   return (
                     <tr
                       key={record.id}
@@ -275,7 +233,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                     >
                       <td style={{ padding: "12px 16px", color: "var(--text-primary)" }}>{formatDate(record.startDate)}</td>
                       <td style={{ padding: "12px 16px", fontWeight: "700", color: "var(--text-primary)" }}>{record.insuredName}</td>
-                      <td style={{ padding: "12px 16px", color: "var(--text-primary)" }}>{displayVehicleOrLocation}</td>
+                      <td style={{ padding: "12px 16px", color: "var(--text-primary)" }}>{record.vehicleNumber || "N/A"}</td>
                       <td style={{ padding: "12px 16px", color: "var(--text-primary)" }}>{record.policyType || "N/A"}</td>
                       <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: "600", color: "var(--text-primary)" }}>
                         {record.premium ? formatPremium(parsePremium(record.premium)) : "-"}
