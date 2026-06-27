@@ -62,13 +62,19 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
     const cleanStr = String(dateStr).split(" ")[0];
-    try {
-      if (cleanStr.includes("/")) {
-        const parts = cleanStr.split("/");
-        if (parts.length === 3 && parts[0].length <= 2 && parts[1].length <= 2 && parts[2].length === 4) {
-          return cleanStr;
-        }
+    if (cleanStr.includes("-")) {
+      const parts = cleanStr.split("-");
+      if (parts.length === 3 && parts[0].length === 4) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
       }
+    }
+    if (cleanStr.includes("/")) {
+      const parts = cleanStr.split("/");
+      if (parts.length === 3 && parts[2].length === 4) {
+        return `${parts[0].padStart(2, "0")}/${parts[1].padStart(2, "0")}/${parts[2]}`;
+      }
+    }
+    try {
       const d = new Date(cleanStr);
       if (isNaN(d.getTime())) return cleanStr;
       const day = String(d.getDate()).padStart(2, "0");
@@ -949,7 +955,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                 {/* Interactive Points */}
                 {graphPoints.map((p, idx) => (
                   <g key={idx} className="graph-dot-group" onClick={() => handlePointClick(p.rawDate)}>
-                    <title>Click to filter table by {formatDate(p.rawDate)}</title>
+                    <title suppressHydrationWarning>{`Click to filter table by ${formatDate(p.rawDate)}`}</title>
                     <circle cx={p.x} cy={p.y} r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="2.5" className="graph-dot-circle" />
                     <text
                       x={p.x}
