@@ -824,11 +824,18 @@ function normalizeTataDate(dateStr) {
 
 // Start of extractTataWarehouse (Lines 7044-7112)
 function extractTataWarehouse(text) {
-  if (!/\bTATA\s*AIG\b/i.test(text) || !/Business\s+Guard\s+(?:Laghu|Sookshma)\s+Package\s+Policy/i.test(text)) {
+  const isTata = /\bTATA\s*AIG\b/i.test(text);
+  const isWarehouseType = /Business\s+Guard|Laghu|Sookshma|Fire\s+(?:and|&)\s+Special\s+Perils|Standard\s+Fire|Occupancy|Risk\s+Location/i.test(text);
+  const isMotorSignals = /Auto\s*Secure/i.test(text) || (/Chassis\s*(?:No|Number)/i.test(text) && /Engine\s*(?:No|Number)/i.test(text));
+  if (!isTata || !isWarehouseType || isMotorSignals) {
     return { documentDetected: false };
   }
 
-  const productName = cleanHdfcValue(matchGroup(text, /(Business\s+Guard\s+(?:Laghu|Sookshma)\s+Package\s+Policy)/i));
+  const productName = cleanHdfcValue(
+    matchGroup(text, /(Business\s+Guard\s+(?:Laghu|Sookshma)(?:\s+Package)?\s+Policy)/i) ||
+    matchGroup(text, /(Standard\s+Fire\s+(?:and|&)\s+Special\s+Perils\s+Policy)/i) ||
+    "Business Guard Laghu Package Policy"
+  );
   const policyNumber = matchGroup(text, /POLICY\s+NO\.?\s*[:\s]*([0-9]{10})/i) || matchGroup(text, /POLICY\s+NO\s*:\s*([0-9]+)/i);
   let rawInsuredName = matchGroup(text, /INSURED\s+NAME\s*:\s*([\s\S]+?)(?=\s*(?:CUSTOMER\s+MOBILE|CUSTOMER\s+EMAIL|COMMUNICATION\s+ADDRESS|PLACE\s+OF\s+SUPPLY|$))/i) ||
                        matchGroup(text, /Name of Assured\s*\n\s*and Address\s*:\s*\n\s*([^\n]+)/i) ||

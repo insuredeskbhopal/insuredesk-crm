@@ -107,9 +107,8 @@ function classifyDocument(text = "") {
       policyType: "Business Guard Laghu Package Policy",
       signals: [
         /\bTATA\s*AIG\b/i,
-        /Business\s+Guard\s+(?:Laghu|Sookshma)/i,
-        /occupancy/i,
-        /risk\s+location/i,
+        /Business\s+Guard|Laghu|Sookshma|Standard\s+Fire|Occupancy/i,
+        /risk\s+location|Location of Risk|Risk Address/i,
       ],
     },
     {
