@@ -2,6 +2,18 @@ import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { enqueueMessage } from "./queue-manager";
 
+const INTERNAL_AUTOMATION_PHONE = process.env.INTERNAL_WHATSAPP_ALERT_PHONE || "8818889660";
+const OPEN_TASK_STATUSES = [
+  "DRAFT",
+  "OPEN",
+  "ASSIGNED",
+  "IN_PROGRESS",
+  "WAITING_CUSTOMER",
+  "WAITING_INSURANCE_COMPANY",
+  "WAITING_DOCUMENTS",
+  "ESCALATED",
+];
+
 // Helper to format dates nicely for messages (DD-MM-YYYY)
 function formatDate(dateStr) {
   if (!dateStr) return 'N/A';
@@ -73,6 +85,7 @@ export async function triggerDailyBirthdays() {
       // It's this customer's birthday!
       const orgId = customer.organizationId;
       if (!orgId) continue; // Must belong to an organization to resolve settings/branding
+      if (!customer.phone) continue; // Birthday wishes are client-facing, so a client phone is required
 
       // Get organization name
       const org = await prisma.organization.findUnique({
@@ -134,9 +147,10 @@ export async function triggerDailyBirthdays() {
   return { queuedCount };
 }
 
-// Triggers upcoming renewals scan
+// Triggers upcoming renewals scan. These automated renewal alerts are internal only;
+// agents can still manually send WhatsApp reminders to clients from the UI.
 export async function triggerUpcomingRenewals() {
-  console.log('Running upcoming renewals scan...');
+  console.log('Running internal upcoming renewals scan...');
 
   const now = new Date();
   const utc = now.getTime() + now.getTimezoneOffset() * 60000;
@@ -181,62 +195,31 @@ export async function triggerUpcomingRenewals() {
     const daysLeft = calculateDaysLeft(expiryDate);
     if (daysLeft === null || !thresholds.includes(daysLeft)) continue;
 
-    const contactPhone = policy.contactNumber || policy.customerMobile || '';
-    if (!contactPhone) continue;
-
-    // Get organization name
-    const org = await prisma.organization.findUnique({
-      where: { id: orgId },
-      select: { name: true },
-    });
-    const companyName = org?.name || 'BimaHeadquarter';
-
-    // Load template
-    const template = await prisma.whatsAppTemplate.findFirst({
-      where: {
-        name: 'renewal_reminder',
-        OR: [
-          { organizationId: orgId },
-          { organizationId: null },
-        ],
-      },
-      orderBy: { organizationId: 'desc' },
-    });
-
     const customerDisplayName = policy.contactPerson || policy.insuredName || 'Valued Customer';
-
-    // Compile variables
-    const templateBody = template?.body || 'Dear {{customerName}},\n\nYour {{policyType}} (Policy No: {{policyNumber}}) with {{companyName}} is due for renewal on {{expiryDate}} ({{daysLeft}} days left).\n\nPlease connect with us to ensure continuous coverage.\n\nRegards,\n{{companyName}}';
-
     const daysLeftText = daysLeft === 0 ? 'today' : `${daysLeft} days`;
+    const bodyText = [
+      "Internal confidential CRM alert.",
+      "",
+      `Renewal follow-up pending for ${customerDisplayName}.`,
+      `Policy: ${policy.policyNumber || 'N/A'}`,
+      `Type: ${policy.policyType || rawPolicy.selectedPolicyType || 'insurance'}`,
+      `Expiry: ${formatDate(expiryDate)} (${daysLeftText})`,
+      policy.assignedTo ? `Assigned to: ${policy.assignedTo}` : null,
+      "",
+      "Do not forward this automated internal update to the client.",
+    ].filter(Boolean).join("\n");
 
-    const variables = {
-      customerName: customerDisplayName,
-      companyName: companyName,
-      policyNumber: policy.policyNumber || 'N/A',
-      policyType: policy.policyType || rawPolicy.selectedPolicyType || 'insurance',
-      expiryDate: formatDate(expiryDate),
-      agentName: policy.assignedTo || '',
-      daysLeft: daysLeftText,
-    };
-
-    let bodyText = templateBody;
-    for (const [key, val] of Object.entries(variables)) {
-      const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g');
-      bodyText = bodyText.replace(regex, val);
-    }
-
-    const uniqueKey = `renewal:${rawPolicy.id}:${daysLeft}days:${todayStr}`;
+    const uniqueKey = `internal-renewal:${rawPolicy.id}:${daysLeft}days:${todayStr}`;
 
     const enqueueResult = await enqueueMessage({
       organizationId: orgId,
-      recipientPhone: contactPhone,
-      recipientName: customerDisplayName,
-      messageType: template?.mediaUrl ? 'IMAGE' : 'TEXT',
+      recipientPhone: INTERNAL_AUTOMATION_PHONE,
+      recipientName: 'Internal Operations',
+      messageType: 'TEXT',
       messageBody: bodyText,
-      mediaUrl: template?.mediaUrl || null,
-      fileName: 'renewal_notice.png',
-      caption: bodyText,
+      mediaUrl: null,
+      fileName: null,
+      caption: null,
       uniqueKey,
     });
 
@@ -245,6 +228,93 @@ export async function triggerUpcomingRenewals() {
     }
   }
 
-  console.log(`Renewal notice scan complete. Queued ${queuedCount} messages.`);
+  console.log(`Internal renewal notice scan complete. Queued ${queuedCount} messages.`);
+  return { queuedCount };
+}
+
+export async function triggerInternalOperationsDigest() {
+  console.log('Running internal operations WhatsApp digest scan...');
+
+  const now = new Date();
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+  const todayStr = now.toISOString().slice(0, 10);
+
+  const tasks = await prisma.task.findMany({
+    where: {
+      archivedAt: null,
+      status: { in: OPEN_TASK_STATUSES },
+      type: { in: ['FOLLOW_UP', 'CALL', 'RENEWAL', 'CLAIM'] },
+      dueAt: { lte: todayEnd },
+      organizationId: { not: null },
+    },
+    orderBy: [{ dueAt: 'asc' }, { updatedAt: 'desc' }],
+    take: 200,
+    select: {
+      id: true,
+      organizationId: true,
+      title: true,
+      type: true,
+      priority: true,
+      module: true,
+      customerName: true,
+      policyNumber: true,
+      dueAt: true,
+    },
+  });
+
+  const tasksByOrg = new Map();
+  for (const task of tasks) {
+    if (!tasksByOrg.has(task.organizationId)) tasksByOrg.set(task.organizationId, []);
+    tasksByOrg.get(task.organizationId).push(task);
+  }
+
+  let queuedCount = 0;
+
+  for (const [organizationId, orgTasks] of tasksByOrg.entries()) {
+    const counts = orgTasks.reduce(
+      (acc, task) => {
+        acc[task.type] = (acc[task.type] || 0) + 1;
+        return acc;
+      },
+      { FOLLOW_UP: 0, CALL: 0, RENEWAL: 0, CLAIM: 0 }
+    );
+
+    const taskLines = orgTasks.slice(0, 12).map((task, index) => {
+      const due = task.dueAt ? formatDate(task.dueAt) : 'N/A';
+      const customer = task.customerName ? ` - ${task.customerName}` : '';
+      const policy = task.policyNumber ? ` (${task.policyNumber})` : '';
+      return `${index + 1}. [${task.type}] ${task.title}${customer}${policy} | Due: ${due} | ${task.priority}`;
+    });
+
+    const bodyText = [
+      "Internal confidential CRM digest.",
+      "",
+      `Pending work due up to ${formatDate(now)}:`,
+      `Follow-ups: ${counts.FOLLOW_UP + counts.CALL}`,
+      `Renewals: ${counts.RENEWAL}`,
+      `Claims: ${counts.CLAIM}`,
+      "",
+      ...taskLines,
+      orgTasks.length > taskLines.length ? `...and ${orgTasks.length - taskLines.length} more.` : null,
+      "",
+      "Do not forward this automated internal update to clients.",
+    ].filter(Boolean).join("\n");
+
+    const enqueueResult = await enqueueMessage({
+      organizationId,
+      recipientPhone: INTERNAL_AUTOMATION_PHONE,
+      recipientName: 'Internal Operations',
+      messageType: 'TEXT',
+      messageBody: bodyText,
+      uniqueKey: `internal-operations-digest:${organizationId}:${todayStr}`,
+    });
+
+    if (enqueueResult.success) {
+      queuedCount++;
+    }
+  }
+
+  console.log(`Internal operations digest scan complete. Queued ${queuedCount} messages.`);
   return { queuedCount };
 }

@@ -32,7 +32,7 @@ describe("generic motor policy extraction", () => {
         .toUpperCase();
 
       expect(registrationNumber, fileName).toMatch(
-        /(?:[A-Z]{2}[\-\s]?\d{1,2}[\-\s]?[A-Z]{1,3}[\-\s]?\d{4}|[A-Z]{2}[\-\s]\d{1,2}[\-\s]\d{4}|[A-Z]{2}[\-\s]\d{1,2})/i,
+        /(?:[A-Z]{2}[-\s]?\d{1,2}[-\s]?[A-Z]{1,3}[-\s]?\d{4}|[A-Z]{2}[-\s]\d{1,2}[-\s]\d{4}|[A-Z]{2}[-\s]\d{1,2})/i,
       );
       expect(compactEngine, fileName).not.toBe(compactRegistration);
       expect(compactEngine, fileName).not.toContain(compactRegistration);

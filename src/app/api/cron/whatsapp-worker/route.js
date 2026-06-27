@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { triggerDailyBirthdays, triggerUpcomingRenewals } from "@/lib/whatsapp/automations";
+import {
+  triggerDailyBirthdays,
+  triggerInternalOperationsDigest,
+  triggerUpcomingRenewals,
+} from "@/lib/whatsapp/automations";
 import { processQueueBatch } from "@/lib/whatsapp/queue-manager";
 
 export const runtime = "nodejs";
@@ -39,9 +43,11 @@ async function handleWorker(request) {
       console.log("Triggering daily WhatsApp automation scans...");
       const birthdays = await triggerDailyBirthdays();
       const renewals = await triggerUpcomingRenewals();
+      const internalDigest = await triggerInternalOperationsDigest();
       scansResult = {
         birthdaysQueued: birthdays.queuedCount,
         renewalsQueued: renewals.queuedCount,
+        internalDigestQueued: internalDigest.queuedCount,
       };
     }
 

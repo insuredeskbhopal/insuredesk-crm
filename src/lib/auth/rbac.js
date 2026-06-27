@@ -41,7 +41,7 @@ export function canAccessSharedResource(user, action, resourceOrgId) {
 
 /**
  * Customer Profiling is the only restricted module.
- * Agents can access only their own profiles; Manager/Admin/Super Admin can access all profiles in scope.
+ * Every role can access only their own customer profiling records.
  */
 export function canAccessCustomerProfile(user, action, profile) {
   if (!user || !user.role || !profile) return false;
@@ -58,11 +58,6 @@ export function canAccessCustomerProfile(user, action, profile) {
     profile.organizationId &&
     profile.organizationId !== user.organizationId
   ) {
-    return false;
-  }
-
-  if (user.role === UserRole.SUPER_ADMIN) {
-    if (action === "read" || action === "write" || action === "delete") return true;
     return false;
   }
 
@@ -123,7 +118,6 @@ export function getTenantFilter(user, action = "read") {
 
 /**
  * Customer Profiling owner filter: organization + createdById = current user.
- * Super admin can see all customer profiling leads in scope.
  */
 export function getCustomerProfileOwnerFilter(user) {
   const actorId = user?.userId || user?.id;
@@ -147,12 +141,6 @@ export function getCustomerProfileScopedFilter(user) {
   const actorId = user?.userId || user?.id;
   if (!user || !user.role) {
     return { id: "00000000-0000-0000-0000-000000000000" };
-  }
-
-  if (user.role === UserRole.SUPER_ADMIN) {
-    return user.organizationId
-      ? { organizationId: user.organizationId, deletedAt: null }
-      : { deletedAt: null };
   }
 
   if (!actorId) return { id: "00000000-0000-0000-0000-000000000000" };
