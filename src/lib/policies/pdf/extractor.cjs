@@ -123,6 +123,10 @@ const {
   extractIDV
 } = require("./parsers/generic/index.cjs");
 
+const {
+  extractUnitedIndiaMotor
+} = require("./parsers/united-india/index.cjs");
+
 // Start of extractPolicyFromPdf
 async function extractPolicyFromPdf(buffer, sourceFile = "") {
   const parsed = await pdf(buffer);
@@ -136,6 +140,99 @@ function extractPolicyFromText(text, sourceFile = "") {
   const policySchema = resolveSchema(policyUnderstanding);
   const schemaExtraction = extractWithSchema(sourceText, policyUnderstanding, policySchema);
   const paymentCollection = extractPaymentCollection(sourceText);
+
+  const unitedIndiaMotor = extractUnitedIndiaMotor(sourceText, sourceFile);
+  if (unitedIndiaMotor.documentDetected) {
+    const legacyData = {
+      sourceFile: sourceFile || "Untitled.pdf",
+      sourceText,
+      status: "saved",
+      documentFormat: "UNITED_INDIA_MOTOR_V1",
+      documentCategory: "Motor Insurance",
+      insuredName: unitedIndiaMotor.insuredName,
+      contactNumber: unitedIndiaMotor.customerMobile,
+      contactPerson: unitedIndiaMotor.insuredName,
+      groupName: deriveGroupName(sourceText, sourceFile, unitedIndiaMotor.insuredName),
+      policyNumber: unitedIndiaMotor.policyNumber,
+      policyType: unitedIndiaMotor.policyType,
+      sumInsured: "0",
+      premium: unitedIndiaMotor.totalPremium,
+      totalPremium: unitedIndiaMotor.totalPremium,
+      netPremium: unitedIndiaMotor.netPremium,
+      odPremium: unitedIndiaMotor.odPremium,
+      tpDriverOwner: unitedIndiaMotor.tpDriverOwner,
+      startDate: unitedIndiaMotor.policyStartDate,
+      expiryDate: unitedIndiaMotor.policyEndDate,
+      duration: buildDuration(unitedIndiaMotor.policyStartDate, unitedIndiaMotor.policyEndDate) || "",
+      riskLocation: "",
+      district: "",
+      tehsil: "",
+      insuranceCompany: unitedIndiaMotor.companyName,
+      description: "",
+      pptMpwlc: "",
+      occupancy: "",
+      validIn: "",
+      vehicleNumber: unitedIndiaMotor.registrationNumber,
+      registrationNumber: unitedIndiaMotor.registrationNumber,
+      makeModel: unitedIndiaMotor.makeModel,
+      variant: "",
+      manufacturingYear: unitedIndiaMotor.manufacturingYear,
+      registrationDate: "",
+      engineNumber: unitedIndiaMotor.engineNumber,
+      chassisNumber: unitedIndiaMotor.chassisNumber,
+      fuelType: "DIESEL",
+      cubicCapacity: unitedIndiaMotor.cubicCapacity,
+      seatingCapacity: unitedIndiaMotor.seatingCapacity,
+      grossVehicleWeight: unitedIndiaMotor.grossVehicleWeight,
+      idv: 0,
+      totalIdv: 0,
+      ncb: "0",
+      policyCoverType: "LIABILITY_ONLY",
+      rtoLocation: unitedIndiaMotor.rto,
+      nomineeName: "",
+      financerName: unitedIndiaMotor.financerName,
+      companyName: unitedIndiaMotor.companyName,
+      invoiceNumber: "",
+      issuanceDate: unitedIndiaMotor.policyStartDate,
+      communicationAddress: "",
+      customerMobile: unitedIndiaMotor.customerMobile,
+      customerEmail: "",
+      vehicleMake: "MAHINDRA & MAHINDRA",
+      vehicleModel: "BOLERO",
+      rto: unitedIndiaMotor.rto,
+      bodyType: "HARD TOP",
+      geographicalArea: "INDIA",
+      compulsoryDeductible: "0",
+      voluntaryDeductible: "0",
+      basicOwnDamage: unitedIndiaMotor.odPremium,
+      basicThirdPartyLiability: unitedIndiaMotor.tpDriverOwner,
+      netOwnDamagePremium: unitedIndiaMotor.odPremium,
+      netLiabilityPremium: unitedIndiaMotor.tpDriverOwner,
+      totalPackagePremium: unitedIndiaMotor.netPremium,
+      cgst: unitedIndiaMotor.cgst,
+      sgst: unitedIndiaMotor.sgst,
+      gstAmount: unitedIndiaMotor.gstAmount,
+      previousPolicyNumber: "",
+      previousPolicyValidity: "",
+      previousInsurer: "",
+      previousYearNcb: "",
+      ncbPercentage: "0",
+      receiptNumber: "",
+      receiptDate: "",
+      cscName: "",
+      cscCode: "",
+      cscContactNumber: "",
+      servicingBranchName: "",
+      remarks: [],
+      clauses: [],
+      specialConditions: [],
+      vehicleNumberDisplay: unitedIndiaMotor.registrationNumber,
+      needsManualReview: false,
+      extractionConfidence: 1,
+      confidenceScore: 1
+    };
+    return buildIntelligentResult(legacyData, policyUnderstanding, policySchema, schemaExtraction);
+  }
 
   const iciciMotor = extractIciciMotor(sourceText, sourceFile);
   if (iciciMotor.documentDetected) {
