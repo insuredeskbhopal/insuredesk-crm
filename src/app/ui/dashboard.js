@@ -381,16 +381,16 @@ export default function Dashboard({
   }, [policyRecordResults]);
   const recordViewOptions = useMemo(() => {
     if (activePage === "records" && tabCounts) {
+      const dynamicTabs = (tabCounts.categories || []).map((cat) => ({
+        key: cat.key,
+        label: cat.label,
+        count: cat.count,
+      }));
       return [
         { key: "all", label: "All Records", count: tabCounts.all || 0 },
         { key: "duplicates", label: "Duplicate Policies", count: tabCounts.duplicates || 0 },
-        { key: "motor", label: "Motor Policy", count: tabCounts.motor || 0 },
-        { key: "health", label: "Health Policy", count: tabCounts.health || 0 },
-        { key: "fire", label: "Fire Policy", count: tabCounts.fire || 0 },
-        { key: "life", label: "Life Policy", count: tabCounts.life || 0 },
-        { key: "home", label: "Home Policy", count: tabCounts.home || 0 },
-        { key: "cyber", label: "Cyber Policy", count: tabCounts.cyber || 0 },
-      ].filter((opt) => opt.key === "all" || opt.key === "duplicates" || opt.count > 0);
+        ...dynamicTabs,
+      ];
     }
 
     const categories = new Map();

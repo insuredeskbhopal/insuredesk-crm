@@ -40,12 +40,7 @@ export default async function PolicyRecordsPage(props) {
   const {
     totalAll,
     totalDuplicates,
-    motorCount,
-    healthCount,
-    fireCount,
-    lifeCount,
-    homeCount,
-    cyberCount,
+    categories,
     error: countsError,
   } = countsPayload;
 
@@ -54,12 +49,7 @@ export default async function PolicyRecordsPage(props) {
   const tabCounts = {
     all: totalAll,
     duplicates: totalDuplicates,
-    motor: motorCount,
-    health: healthCount,
-    fire: fireCount,
-    life: lifeCount,
-    home: homeCount,
-    cyber: cyberCount,
+    categories,
   };
 
   return (
@@ -104,68 +94,51 @@ async function loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId,
         )
     `;
 
-    const [totalAll, totalDuplicates, motorCount, healthCount, fireCount, lifeCount, homeCount, cyberCount] =
-      await Promise.all([
-        prisma.policyRecord.count({ where: basePolicyWhere }),
-        prisma.$queryRawUnsafe(duplicateCountQuery, isSuperAdmin, orgId).then((res) => res[0]?.count || 0),
-        prisma.policyRecord.count({
-          where: withPolicyTypeTerms(basePolicyWhere, [
-            "motor",
-            "vehicle",
-            "private car",
-            "two wheeler",
-            "bike",
-            "scooter",
-            "commercial vehicle",
-            "taxi",
-            "school bus",
-            "goods carrying",
-            "passenger carrying",
-            "auto secure",
-          ]),
-        }),
-        prisma.policyRecord.count({
-          where: withPolicyTypeTerms(basePolicyWhere, ["health", "mediclaim", "hospital", "family floater"]),
-        }),
-        prisma.policyRecord.count({
-          where: withPolicyTypeTerms(basePolicyWhere, [
-            "fire",
-            "sfsp",
-            "burglary",
-            "msme",
-            "warehouse",
-            "stock",
-            "property",
-            "business guard",
-            "laghu",
-            "sookshma",
-          ]),
-        }),
-        prisma.policyRecord.count({
-          where: withPolicyTypeTerms(basePolicyWhere, [
-            "life assured",
-            "life policy",
-            "term life",
-            "endowment",
-          ]),
-        }),
-        prisma.policyRecord.count({
-          where: withPolicyTypeTerms(basePolicyWhere, ["home building", "home contents", "home policy"]),
-        }),
-        prisma.policyRecord.count({
-          where: withPolicyTypeTerms(basePolicyWhere, ["cyber", "ransomware", "data breach"]),
-        }),
-      ]);
+    const dynamicTypesQuery = `
+      SELECT 
+        LOWER(TRIM(COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', 'General'))) as type_raw,
+        COUNT(*)::integer as count
+      FROM pdf_records
+      WHERE deleted_at IS NULL
+        AND ($1::boolean OR organization_id = $2::uuid)
+      GROUP BY LOWER(TRIM(COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', 'General')))
+    `;
+
+    const [totalAll, totalDuplicatesResult, dynamicCounts] = await Promise.all([
+      prisma.policyRecord.count({ where: basePolicyWhere }),
+      prisma.$queryRawUnsafe(duplicateCountQuery, isSuperAdmin, orgId),
+      prisma.$queryRawUnsafe(dynamicTypesQuery, isSuperAdmin, orgId),
+    ]);
+
+    const totalDuplicates = totalDuplicatesResult[0]?.count || 0;
+
+    const categories = [];
+    (dynamicCounts || []).forEach((row) => {
+      const typeRaw = String(row.type_raw || "").trim();
+      if (!typeRaw) return;
+
+      let label = typeRaw
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+
+      if (!/\b(policy|insurance|guarantee)\b/i.test(label)) {
+        label = label + " Policy";
+      }
+
+      categories.push({
+        key: typeRaw,
+        label,
+        count: row.count,
+      });
+    });
+
+    categories.sort((a, b) => b.count - a.count);
 
     return {
       totalAll,
       totalDuplicates,
-      motorCount,
-      healthCount,
-      fireCount,
-      lifeCount,
-      homeCount,
-      cyberCount,
+      categories,
       error: "",
     };
   } catch (error) {
@@ -173,12 +146,7 @@ async function loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId,
     return {
       totalAll: 0,
       totalDuplicates: 0,
-      motorCount: 0,
-      healthCount: 0,
-      fireCount: 0,
-      lifeCount: 0,
-      homeCount: 0,
-      cyberCount: 0,
+      categories: [],
       error:
         "Policy records could not be loaded from the database. Please try again after database access is restored.",
     };

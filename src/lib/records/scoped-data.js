@@ -191,6 +191,14 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
         ],
       }));
       andFilters.push({ OR: ors.flatMap((o) => o.OR) });
+    } else {
+      andFilters.push({
+        OR: [
+          { selectedPolicyType: { equals: viewCategory, mode: "insensitive" } },
+          { reviewedData: { path: ["policyType"], string_contains: viewCategory, mode: "insensitive" } },
+          { data: { path: ["policyType"], string_contains: viewCategory, mode: "insensitive" } },
+        ],
+      });
     }
   }
 
