@@ -1,10 +1,19 @@
 export const dynamic = "force-dynamic";
 
-import { ReportIndexPage } from "@/app/components/reports/ReportingCenter";
-import { loadReportingCenterData } from "@/app/lib/reporting/business-intelligence";
+import { normalizeRecord } from "@/lib/records";
+import Dashboard from "@/app/ui/dashboard";
+import { loadScopedPolicyRecords } from "@/lib/records/scoped-data";
 
 export default async function BusinessIntelligenceIndexPage(props) {
   const searchParams = await props.searchParams;
-  const data = await loadReportingCenterData({ category: "executive", searchParams });
-  return <ReportIndexPage modules={data.modules} lastUpdated={data.lastUpdated} />;
+  const q = searchParams.q || "";
+  const records = await loadScopedPolicyRecords({ q });
+  
+  return (
+    <Dashboard 
+      initialRecords={records.map(normalizeRecord)} 
+      activePage="analytics" 
+      initialQ={q} 
+    />
+  );
 }
