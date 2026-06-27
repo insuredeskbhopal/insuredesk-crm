@@ -2584,7 +2584,7 @@ export default function Dashboard({
       )}
 
       {activePage === "analytics" && (
-        <AnalyticsReports analytics={analytics} agentWiseStats={agentWiseStats} onSelectReport={handleSelectReport} />
+        <AnalyticsReports records={records} onEditRecord={startEditRecord} />
       )}
 
       {activePage === "settings" && (
