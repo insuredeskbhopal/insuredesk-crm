@@ -146,17 +146,30 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
     const motorTerms = [
       "motor",
       "vehicle",
-      "car",
+      "private car",
       "two wheeler",
       "bike",
       "scooter",
       "commercial vehicle",
       "taxi",
-      "cab",
-      "bus",
+      "school bus",
+      "goods carrying",
+      "passenger carrying",
+      "auto secure",
     ];
     const healthTerms = ["health", "mediclaim", "hospital", "family floater"];
-    const fireTerms = ["fire", "sfsp", "burglary", "msme", "warehouse", "stock", "property"];
+    const fireTerms = [
+      "fire",
+      "sfsp",
+      "burglary",
+      "msme",
+      "warehouse",
+      "stock",
+      "property",
+      "business guard",
+      "laghu",
+      "sookshma",
+    ];
     const lifeTerms = ["life assured", "life policy", "term life", "endowment"];
     const homeTerms = ["home building", "home contents", "home policy"];
     const cyberTerms = ["cyber", "ransomware", "data breach"];
