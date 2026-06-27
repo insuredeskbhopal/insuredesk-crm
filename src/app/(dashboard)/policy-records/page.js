@@ -94,46 +94,52 @@ async function loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId,
         )
     `;
 
-    const dynamicTypesQuery = `
-      SELECT 
-        LOWER(TRIM(COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', 'General'))) as type_raw,
-        COUNT(*)::integer as count
-      FROM pdf_records
-      WHERE deleted_at IS NULL
-        AND ($1::boolean OR organization_id = $2::uuid)
-      GROUP BY LOWER(TRIM(COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', 'General')))
-    `;
+    const motorTerms = [
+      "motor", "vehicle", "private car", "two wheeler", "bike", "scooter",
+      "commercial vehicle", "taxi", "school bus", "goods carrying",
+      "passenger carrying", "auto secure", "liability only", "comprehensive", "own damage"
+    ];
+    const healthTerms = ["health", "mediclaim", "hospital", "family floater"];
+    const warehouseTerms = [
+      "fire", "sfsp", "burglary", "msme", "warehouse", "stock", "property",
+      "business guard", "laghu", "sookshma", "fidelity", "guarantee", "house breaking"
+    ];
 
-    const [totalAll, totalDuplicatesResult, dynamicCounts] = await Promise.all([
+    const [totalAll, totalDuplicatesResult, motorCount, warehouseCount, healthCount] = await Promise.all([
       prisma.policyRecord.count({ where: basePolicyWhere }),
       prisma.$queryRawUnsafe(duplicateCountQuery, isSuperAdmin, orgId),
-      prisma.$queryRawUnsafe(dynamicTypesQuery, isSuperAdmin, orgId),
+      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, motorTerms) }),
+      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, warehouseTerms) }),
+      prisma.policyRecord.count({ where: withPolicyTypeTerms(basePolicyWhere, healthTerms) }),
     ]);
 
     const totalDuplicates = totalDuplicatesResult[0]?.count || 0;
 
-    const categories = [];
-    (dynamicCounts || []).forEach((row) => {
-      const typeRaw = String(row.type_raw || "").trim();
-      if (!typeRaw) return;
-
-      let label = typeRaw
-        .split(" ")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" ");
-
-      if (!/\b(policy|insurance|guarantee)\b/i.test(label)) {
-        label = label + " Policy";
-      }
-
-      categories.push({
-        key: typeRaw,
-        label,
-        count: row.count,
-      });
+    // "Other" LOB counts are those that don't match motor, health, or warehouse
+    const otherCount = await prisma.policyRecord.count({
+      where: {
+        ...basePolicyWhere,
+        NOT: [
+          withPolicyTypeTerms({}, motorTerms),
+          withPolicyTypeTerms({}, warehouseTerms),
+          withPolicyTypeTerms({}, healthTerms),
+        ],
+      },
     });
 
-    categories.sort((a, b) => b.count - a.count);
+    const categories = [];
+    if (motorCount > 0) {
+      categories.push({ key: "motor", label: "Motor Policy", count: motorCount });
+    }
+    if (warehouseCount > 0) {
+      categories.push({ key: "warehouse", label: "Warehouse Policy", count: warehouseCount });
+    }
+    if (healthCount > 0) {
+      categories.push({ key: "health", label: "Health Policy", count: healthCount });
+    }
+    if (otherCount > 0) {
+      categories.push({ key: "other", label: "Other Policy", count: otherCount });
+    }
 
     return {
       totalAll,

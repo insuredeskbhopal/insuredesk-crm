@@ -156,9 +156,12 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
       "goods carrying",
       "passenger carrying",
       "auto secure",
+      "liability only",
+      "comprehensive",
+      "own damage"
     ];
     const healthTerms = ["health", "mediclaim", "hospital", "family floater"];
-    const fireTerms = [
+    const warehouseTerms = [
       "fire",
       "sfsp",
       "burglary",
@@ -169,21 +172,13 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
       "business guard",
       "laghu",
       "sookshma",
+      "fidelity",
+      "guarantee",
+      "house breaking"
     ];
-    const lifeTerms = ["life assured", "life policy", "term life", "endowment"];
-    const homeTerms = ["home building", "home contents", "home policy"];
-    const cyberTerms = ["cyber", "ransomware", "data breach"];
 
-    let terms = [];
-    if (group === "motor") terms = motorTerms;
-    else if (group === "health") terms = healthTerms;
-    else if (group === "fire") terms = fireTerms;
-    else if (group === "life") terms = lifeTerms;
-    else if (group === "home") terms = homeTerms;
-    else if (group === "cyber") terms = cyberTerms;
-
-    if (terms.length > 0) {
-      const ors = terms.map((term) => ({
+    if (group === "motor") {
+      const ors = motorTerms.map((term) => ({
         OR: [
           { selectedPolicyType: { contains: term, mode: "insensitive" } },
           { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
@@ -191,6 +186,35 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
         ],
       }));
       andFilters.push({ OR: ors.flatMap((o) => o.OR) });
+    } else if (group === "health") {
+      const ors = healthTerms.map((term) => ({
+        OR: [
+          { selectedPolicyType: { contains: term, mode: "insensitive" } },
+          { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+          { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+        ],
+      }));
+      andFilters.push({ OR: ors.flatMap((o) => o.OR) });
+    } else if (group === "warehouse" || group === "fire") {
+      const ors = warehouseTerms.map((term) => ({
+        OR: [
+          { selectedPolicyType: { contains: term, mode: "insensitive" } },
+          { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+          { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+        ],
+      }));
+      andFilters.push({ OR: ors.flatMap((o) => o.OR) });
+    } else if (group === "other") {
+      const excludeTerms = [...motorTerms, ...healthTerms, ...warehouseTerms];
+      excludeTerms.forEach((term) => {
+        andFilters.push({
+          NOT: [
+            { selectedPolicyType: { contains: term, mode: "insensitive" } },
+            { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+            { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+          ],
+        });
+      });
     } else {
       andFilters.push({
         OR: [
