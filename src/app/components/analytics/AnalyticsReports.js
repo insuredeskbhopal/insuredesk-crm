@@ -61,28 +61,24 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
   // Format date to DD/MM/YYYY
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
-    const cleanStr = String(dateStr).split(" ")[0];
-    if (cleanStr.includes("-")) {
-      const parts = cleanStr.split("-");
-      if (parts.length === 3 && parts[0].length === 4) {
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
-      }
+    const str = String(dateStr).trim();
+    const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
     }
-    if (cleanStr.includes("/")) {
-      const parts = cleanStr.split("/");
-      if (parts.length === 3 && parts[2].length === 4) {
-        return `${parts[0].padStart(2, "0")}/${parts[1].padStart(2, "0")}/${parts[2]}`;
-      }
+    const slashMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (slashMatch) {
+      return `${slashMatch[1].padStart(2, "0")}/${slashMatch[2].padStart(2, "0")}/${slashMatch[3]}`;
     }
     try {
-      const d = new Date(cleanStr);
-      if (isNaN(d.getTime())) return cleanStr;
+      const d = new Date(str);
+      if (isNaN(d.getTime())) return str;
       const day = String(d.getDate()).padStart(2, "0");
       const month = String(d.getMonth() + 1).padStart(2, "0");
       const year = d.getFullYear();
       return `${day}/${month}/${year}`;
     } catch {
-      return cleanStr;
+      return str;
     }
   };
 
@@ -267,36 +263,78 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     setEndDateFilter("");
   };
 
-  // --- Line Chart Data Generation (Daily Upload Premium Trend) ---
+  const uniqueDatesCount = useMemo(() => {
+    const dates = new Set();
+    filteredRecords.forEach((r) => {
+      const uploadDate = r.uploadedAt || r.savedAt || r.createdAt;
+      if (uploadDate) {
+        dates.add(formatDate(uploadDate));
+      }
+    });
+    return dates.size;
+  }, [filteredRecords]);
+
+  // --- Line Chart Data Generation (Daily or Hourly Upload Premium Trend) ---
   const lineChartData = useMemo(() => {
+    if (filteredRecords.length === 0) return [];
+
+    // If all records are from a single unique upload date, generate hourly trend
+    if (uniqueDatesCount === 1) {
+      const hourlyPremium = {};
+      filteredRecords.forEach((r) => {
+        const uploadDate = getUploadDate(r);
+        if (!uploadDate) return;
+        const hour = uploadDate.getHours();
+        hourlyPremium[hour] = (hourlyPremium[hour] || 0) + parsePremium(r.premium || r.totalPremium);
+      });
+
+      const activeHours = Object.keys(hourlyPremium).map(Number).sort((a, b) => a - b);
+      let hoursToShow = [];
+      if (activeHours.length > 0) {
+        const minH = Math.max(0, activeHours[0] - 1);
+        const maxH = Math.min(23, activeHours[activeHours.length - 1] + 1);
+        for (let h = minH; h <= maxH; h++) {
+          hoursToShow.push(h);
+        }
+      } else {
+        hoursToShow = [9, 11, 13, 15, 17, 19];
+      }
+
+      return hoursToShow.map((h) => {
+        const displayHour = h === 0 ? "12 AM" : h === 12 ? "12 PM" : h > 12 ? `${h - 12} PM` : `${h} AM`;
+        return {
+          label: displayHour,
+          value: hourlyPremium[h] || 0,
+          rawDate: null,
+        };
+      });
+    }
+
+    // Otherwise, generate daily trend
     const dailyPremium = {};
     filteredRecords.forEach((r) => {
       const uploadDate = r.uploadedAt || r.savedAt || r.createdAt;
       if (!uploadDate) return;
-      const cleanDate = String(uploadDate).split(" ")[0];
-      let dateKey = cleanDate;
-      if (cleanDate.includes("/")) {
-        const parts = cleanDate.split("/");
-        if (parts.length === 3) {
-          dateKey = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
-        }
-      }
-      dailyPremium[dateKey] = (dailyPremium[dateKey] || 0) + parsePremium(r.premium || r.totalPremium);
+      
+      const cleanDate = formatDate(uploadDate);
+      const parts = cleanDate.split("/");
+      const sortKey = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : cleanDate;
+      dailyPremium[sortKey] = (dailyPremium[sortKey] || 0) + parsePremium(r.premium || r.totalPremium);
     });
 
-    const sortedDates = Object.keys(dailyPremium).sort();
-    const last7Dates = sortedDates.slice(-7);
+    const sortedSortKeys = Object.keys(dailyPremium).sort();
+    const last7Keys = sortedSortKeys.slice(-7);
 
-    return last7Dates.map((dateKey) => {
-      const parts = dateKey.split("-");
-      const displayDate = parts.length === 3 ? `${parts[2]}/${parts[1]}` : dateKey;
+    return last7Keys.map((sortKey) => {
+      const parts = sortKey.split("-");
+      const displayLabel = parts.length === 3 ? `${parts[2]}/${parts[1]}` : sortKey;
       return {
-        label: displayDate,
-        value: dailyPremium[dateKey],
-        rawDate: dateKey,
+        label: displayLabel,
+        value: dailyPremium[sortKey],
+        rawDate: sortKey,
       };
     });
-  }, [filteredRecords]);
+  }, [filteredRecords, uniqueDatesCount]);
 
   const svgWidth = 500;
   const svgHeight = 160;
@@ -916,7 +954,9 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         {/* Line Graph (Daily Upload Premium Trend) */}
         <div className="chart-card">
           <div className="chart-header-row">
-            <h3 className="chart-title">Daily Premium Trend</h3>
+            <h3 className="chart-title">
+              {uniqueDatesCount === 1 ? "Hourly Premium Trend" : "Daily Premium Trend"}
+            </h3>
           </div>
           <div className="line-chart-container">
             {graphPoints.length === 0 ? (
