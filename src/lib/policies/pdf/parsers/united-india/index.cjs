@@ -7,7 +7,7 @@ function parseAmount(val) {
   return parseFloat(clean) || 0;
 }
 
-function extractUnitedIndiaMotor(text, sourceFile = "") {
+function extractUnitedIndiaMotor(text, _sourceFile = "") {
   const isUnitedIndia = /UNITED\s+INDIA\s+INSURANCE/i.test(text) && /uiic\.co\.in/i.test(text);
   const isMotor = /MOTOR\s+INSURANCE/i.test(text) || /VEHICLE\s+DETAILS/i.test(text);
 
@@ -23,7 +23,7 @@ function extractUnitedIndiaMotor(text, sourceFile = "") {
 
   // 2. Insured Name
   let insuredNameRaw =
-    matchGroup(text, /Insured Name\/ID\s*:\s*([A-Z\s.\/0-9]+)/i) ||
+    matchGroup(text, /Insured Name\/ID\s*:\s*([A-Z\s./0-9]+)/i) ||
     matchGroup(text, /Name of the Insured\s*([A-Z\s.-]+?)(?:W NO|COURT ROAD|Address of the Insured|$)/i) ||
     "";
   let insuredName = insuredNameRaw.split("/")[0].trim();
@@ -36,8 +36,8 @@ function extractUnitedIndiaMotor(text, sourceFile = "") {
 
   // 4. Policy Type
   let policyType = "";
-  const policyTypeMatch = matchGroup(text, /(MOTOR INSURANCE\s*-\s*GCV[A-Z0-9\s\-]+?POLICY)/i) ||
-                           matchGroup(text, /(MOTOR INSURANCE\s*-\s*[A-Z0-9\s\-]+?POLICY)/i);
+  const policyTypeMatch = matchGroup(text, /(MOTOR INSURANCE\s*-\s*GCV[A-Z0-9\s-]+?POLICY)/i) ||
+                           matchGroup(text, /(MOTOR INSURANCE\s*-\s*[A-Z0-9\s-]+?POLICY)/i);
   if (policyTypeMatch) {
     policyType = policyTypeMatch.replace(/\s+/g, " ").trim();
   } else {
@@ -56,8 +56,8 @@ function extractUnitedIndiaMotor(text, sourceFile = "") {
 
   // 6. Vehicle Details
   let registrationNumberRaw =
-    matchGroup(text, /Registration Number\s*([A-Z0-9\s\-]+?)\s*(?:Obsolete|Chassis|Engine|$)/i) ||
-    matchGroup(text, /Registration No\.\s*([A-Z0-9\s\-]+?)\s*(?:Obsolete|Chassis|Engine|$)/i) ||
+    matchGroup(text, /Registration Number\s*([A-Z0-9\s-]+?)\s*(?:Obsolete|Chassis|Engine|$)/i) ||
+    matchGroup(text, /Registration No\.\s*([A-Z0-9\s-]+?)\s*(?:Obsolete|Chassis|Engine|$)/i) ||
     "";
   const registrationNumber = registrationNumberRaw.replace(/\s+/g, "").replace(/-+/g, "-").trim();
 
