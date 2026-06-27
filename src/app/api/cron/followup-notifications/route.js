@@ -10,6 +10,7 @@ import {
   triggerInternalOperationsDigest,
   triggerUpcomingRenewals,
 } from "@/lib/whatsapp/automations";
+import { processQueueBatch } from "@/lib/whatsapp/queue-manager";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,11 +36,13 @@ export async function GET(request) {
 
     // Trigger WhatsApp Automations (birthdays and upcoming renewals scans)
     let whatsappScans = null;
+    let whatsappBatch = null;
     try {
       console.log("Triggering daily WhatsApp automation scans from follow-up cron...");
       const birthdays = await triggerDailyBirthdays();
       const renewals = await triggerUpcomingRenewals();
       const internalDigest = await triggerInternalOperationsDigest();
+      whatsappBatch = await processQueueBatch(5);
       whatsappScans = {
         birthdaysQueued: birthdays.queuedCount,
         renewalsQueued: renewals.queuedCount,
@@ -54,6 +57,7 @@ export async function GET(request) {
       synced,
       email,
       whatsappScans,
+      whatsappBatch,
     });
   } catch (error) {
     console.error("Follow-up notification cron failed:", error);
