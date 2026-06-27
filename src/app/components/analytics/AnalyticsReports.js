@@ -25,6 +25,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
   const [selectedAgent, setSelectedAgent] = useState("all");
   
   // Date Filters
+  const [datePreset, setDatePreset] = useState("all");
   const [startDateFilter, setStartDateFilter] = useState("");
   const [endDateFilter, setEndDateFilter] = useState("");
 
@@ -47,6 +48,14 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       record.chassisNumber ||
       /\b(motor|private car|two wheeler|bike|scooter|commercial vehicle|taxi|cab|bus|chassis|engine)\b/.test(haystack)
     );
+  };
+
+  // Helper to extract upload/created date object safely
+  const getUploadDate = (record) => {
+    const dateStr = record.uploadedAt || record.savedAt || record.createdAt;
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
   };
 
   // Format date to DD/MM/YYYY
@@ -99,7 +108,84 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     return Array.from(agents).sort((a, b) => a.localeCompare(b));
   }, [records]);
 
-  // Apply filters: tab, agent, start date, and end date
+  // Generate range boundaries based on preset value
+  const getPresetRange = (preset) => {
+    const now = new Date();
+    const start = new Date(now);
+    const end = new Date(now);
+
+    switch (preset) {
+      case "today":
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      case "yesterday":
+        start.setDate(now.getDate() - 1);
+        start.setHours(0, 0, 0, 0);
+        end.setDate(now.getDate() - 1);
+        end.setHours(23, 59, 59, 999);
+        break;
+      case "last-3-days":
+        start.setDate(now.getDate() - 2);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      case "this-week": {
+        const day = now.getDay();
+        start.setDate(now.getDate() - day);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      }
+      case "last-week": {
+        const day = now.getDay();
+        start.setDate(now.getDate() - day - 7);
+        start.setHours(0, 0, 0, 0);
+        end.setDate(now.getDate() - day - 1);
+        end.setHours(23, 59, 59, 999);
+        break;
+      }
+      case "this-month":
+        start.setDate(1);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      case "last-month":
+        start.setMonth(now.getMonth() - 1);
+        start.setDate(1);
+        start.setHours(0, 0, 0, 0);
+        end.setMonth(now.getMonth());
+        end.setDate(0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      case "last-3-months":
+        start.setMonth(now.getMonth() - 3);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      case "last-6-months":
+        start.setMonth(now.getMonth() - 6);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      case "this-year":
+        start.setMonth(0, 1);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      case "last-year":
+        start.setFullYear(now.getFullYear() - 1, 0, 1);
+        start.setHours(0, 0, 0, 0);
+        end.setFullYear(now.getFullYear() - 1, 11, 31);
+        end.setHours(23, 59, 59, 999);
+        break;
+      default:
+        return null;
+    }
+    return { start, end };
+  };
+
+  // Apply filters: tab, agent, and date presets/custom limits (filtering by upload date)
   const filteredRecords = useMemo(() => {
     let list = motorRecords;
 
@@ -108,32 +194,38 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       list = list.filter((r) => (r.createdBy || r.assignedTo || "System") === selectedAgent);
     }
 
-    // Date range filters
-    if (startDateFilter) {
-      const startLimit = new Date(startDateFilter + "T00:00:00");
-      list = list.filter((r) => {
-        if (!r.startDate) return false;
-        const d = new Date(String(r.startDate).split(" ")[0]);
-        return !isNaN(d.getTime()) && d >= startLimit;
-      });
-    }
+    // Date range filter
+    if (datePreset !== "all") {
+      let startLimit = null;
+      let endLimit = null;
 
-    if (endDateFilter) {
-      const endLimit = new Date(endDateFilter + "T23:59:59");
+      if (datePreset === "custom") {
+        if (startDateFilter) startLimit = new Date(startDateFilter + "T00:00:00");
+        if (endDateFilter) endLimit = new Date(endDateFilter + "T23:59:59");
+      } else {
+        const range = getPresetRange(datePreset);
+        if (range) {
+          startLimit = range.start;
+          endLimit = range.end;
+        }
+      }
+
       list = list.filter((r) => {
-        if (!r.startDate) return false;
-        const d = new Date(String(r.startDate).split(" ")[0]);
-        return !isNaN(d.getTime()) && d <= endLimit;
+        const uploadDate = getUploadDate(r);
+        if (!uploadDate) return false;
+        if (startLimit && uploadDate < startLimit) return false;
+        if (endLimit && uploadDate > endLimit) return false;
+        return true;
       });
     }
 
     return list;
-  }, [activeTab, selectedAgent, motorRecords, startDateFilter, endDateFilter]);
+  }, [activeTab, selectedAgent, motorRecords, datePreset, startDateFilter, endDateFilter]);
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeTab, selectedAgent, startDateFilter, endDateFilter]);
+  }, [activeTab, selectedAgent, datePreset, startDateFilter, endDateFilter]);
 
   // Pagination Logic
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
@@ -169,12 +261,13 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     setEndDateFilter("");
   };
 
-  // --- Line Chart Data Generation (Daily Premium Trend) ---
+  // --- Line Chart Data Generation (Daily Upload Premium Trend) ---
   const lineChartData = useMemo(() => {
     const dailyPremium = {};
     filteredRecords.forEach((r) => {
-      if (!r.startDate) return;
-      const cleanDate = String(r.startDate).split(" ")[0];
+      const uploadDate = r.uploadedAt || r.savedAt || r.createdAt;
+      if (!uploadDate) return;
+      const cleanDate = String(uploadDate).split(" ")[0];
       let dateKey = cleanDate;
       if (cleanDate.includes("/")) {
         const parts = cleanDate.split("/");
@@ -194,7 +287,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       return {
         label: displayDate,
         value: dailyPremium[dateKey],
-        rawDate: dateKey, // YYYY-MM-DD format
+        rawDate: dateKey,
       };
     });
   }, [filteredRecords]);
@@ -230,6 +323,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
   // Click on a specific graph node to apply that date filter
   const handlePointClick = (rawDate) => {
     if (!rawDate) return;
+    setDatePreset("custom");
     setStartDateFilter(rawDate);
     setEndDateFilter(rawDate);
   };
@@ -289,8 +383,6 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
 
     return `conic-gradient(${sections.join(", ")})`;
   }, [donutChartData]);
-
-  const isIndividualTab = activeTab === "motor-individual";
 
   return (
     <div className="reports-container">
@@ -811,9 +903,9 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         }
       `}} />
 
-      {/* 1. Interactive Charts Dashboard (at the very top!) */}
+      {/* 1. Interactive Charts Dashboard (at the very top) */}
       <div className="reports-charts-grid">
-        {/* Line Graph (Daily Premium Trend) */}
+        {/* Line Graph (Daily Upload Premium Trend) */}
         <div className="chart-card">
           <div className="chart-header-row">
             <h3 className="chart-title">Daily Premium Trend</h3>
@@ -963,7 +1055,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         </div>
       </div>
 
-      {/* 2. Tabs and Filters Toolbar (positioned below the charts!) */}
+      {/* 2. Tabs and Filters Toolbar (positioned below the charts) */}
       <div className="tabs-and-filters-wrapper">
         <div className="segmented-control">
           {[
@@ -1001,29 +1093,56 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           )}
 
           <div className="filter-group">
-            <span className="filter-label">From:</span>
-            <input
-              type="date"
-              value={startDateFilter}
-              onChange={(e) => setStartDateFilter(e.target.value)}
-              className="filter-input"
-            />
+            <span className="filter-label">Date Filter:</span>
+            <select
+              value={datePreset}
+              onChange={(e) => setDatePreset(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="last-3-days">Last 3 Days</option>
+              <option value="this-week">This Week</option>
+              <option value="last-week">Last Week</option>
+              <option value="this-month">This Month</option>
+              <option value="last-month">Last Month</option>
+              <option value="last-3-months">Last 3 Months</option>
+              <option value="last-6-months">Last 6 Months</option>
+              <option value="this-year">This Year</option>
+              <option value="last-year">Last Year</option>
+              <option value="custom">Custom Range</option>
+            </select>
           </div>
 
-          <div className="filter-group">
-            <span className="filter-label">To:</span>
-            <input
-              type="date"
-              value={endDateFilter}
-              onChange={(e) => setEndDateFilter(e.target.value)}
-              className="filter-input"
-            />
-          </div>
+          {datePreset === "custom" && (
+            <>
+              <div className="filter-group">
+                <span className="filter-label">From:</span>
+                <input
+                  type="date"
+                  value={startDateFilter}
+                  onChange={(e) => setStartDateFilter(e.target.value)}
+                  className="filter-input"
+                />
+              </div>
 
-          {(startDateFilter || endDateFilter) && (
-            <button onClick={clearDateFilters} className="clear-btn" type="button">
-              Clear Dates
-            </button>
+              <div className="filter-group">
+                <span className="filter-label">To:</span>
+                <input
+                  type="date"
+                  value={endDateFilter}
+                  onChange={(e) => setEndDateFilter(e.target.value)}
+                  className="filter-input"
+                />
+              </div>
+
+              {(startDateFilter || endDateFilter) && (
+                <button onClick={clearDateFilters} className="clear-btn" type="button">
+                  Clear
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -1060,13 +1179,16 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                       ? "badge badge-renewal" 
                       : "badge badge-other";
 
+                  // Display the Upload Date in the DATE column
+                  const displayDate = record.uploadedAt || record.savedAt || record.createdAt;
+
                   return (
                     <tr
                       key={record.id}
                       onClick={() => onEditRecord && onEditRecord(record)}
                       className="report-table-row"
                     >
-                      <td style={{ whiteSpace: "nowrap" }}>{formatDate(record.startDate)}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{formatDate(displayDate)}</td>
                       <td style={{ fontWeight: "700" }}>{record.insuredName}</td>
                       <td style={{ whiteSpace: "nowrap" }}>{record.vehicleNumber || "N/A"}</td>
                       <td>{record.policyType || "N/A"}</td>
