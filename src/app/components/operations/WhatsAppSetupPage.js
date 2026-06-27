@@ -61,6 +61,8 @@ export default function WhatsAppSetupPage() {
   const [queueStatusFilter, setQueueStatusFilter] = useState("");
   const [isLoadingQueue, setIsLoadingQueue] = useState(false);
   const [isRetryingQueue, setIsRetryingQueue] = useState(false);
+  const [isRunningAutomations, setIsRunningAutomations] = useState(false);
+  const [automationResult, setAutomationResult] = useState(null);
 
   // Global Alerts
   const [toast, setToast] = useState(null);
@@ -311,6 +313,33 @@ export default function WhatsAppSetupPage() {
       showToast("error", err.message || "Failed to retry messages");
     } finally {
       setIsRetryingQueue(false);
+    }
+  };
+
+  const handleRunAutomations = async () => {
+    setIsRunningAutomations(true);
+    setAutomationResult(null);
+    try {
+      const res = await fetch("/api/operations/whatsapp/run-automations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ batchLimit: 5 }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to run WhatsApp automation");
+
+      setAutomationResult(data);
+      const scans = data.scans || {};
+      const sent = data.batch?.processedCount || 0;
+      showToast(
+        "success",
+        `Automation completed. Queued ${scans.birthdaysQueued || 0} birthdays, ${scans.renewalsQueued || 0} renewals, ${scans.internalDigestQueued || 0} internal digests. Sent ${sent}.`
+      );
+      fetchQueue();
+    } catch (err) {
+      showToast("error", err.message || "Failed to run WhatsApp automation");
+    } finally {
+      setIsRunningAutomations(false);
     }
   };
 
@@ -734,6 +763,20 @@ export default function WhatsAppSetupPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRunAutomations}
+                  disabled={isRunningAutomations || !connected}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 border border-emerald-650 text-white font-bold rounded text-xs hover:bg-emerald-700 transition shadow-sm disabled:opacity-50 disabled:hover:bg-emerald-600"
+                  title={
+                    connected
+                      ? "Queue birthday wishes and internal CRM alerts, then send one safe batch"
+                      : "Connect WhatsApp before sending automation messages"
+                  }
+                >
+                  <Send size={12} className={isRunningAutomations ? "animate-pulse" : ""} />
+                  {isRunningAutomations ? "Running..." : "Run & Send"}
+                </button>
+
                 <select
                   value={queueStatusFilter}
                   onChange={(e) => handleStatusFilterChange(e.target.value)}
@@ -757,6 +800,18 @@ export default function WhatsAppSetupPage() {
                 </button>
               </div>
             </div>
+
+            {automationResult && (
+              <div className="mx-4 mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900">
+                <div className="font-bold">Last manual automation run</div>
+                <div className="mt-1 grid grid-cols-2 md:grid-cols-4 gap-2 font-semibold">
+                  <span>Birthdays queued: {automationResult.scans?.birthdaysQueued || 0}</span>
+                  <span>Renewals queued: {automationResult.scans?.renewalsQueued || 0}</span>
+                  <span>Internal digests: {automationResult.scans?.internalDigestQueued || 0}</span>
+                  <span>Sent now: {automationResult.batch?.processedCount || 0}</span>
+                </div>
+              </div>
+            )}
 
             {isLoadingQueue ? (
               <div className="flex flex-col items-center justify-center py-12 bg-white">

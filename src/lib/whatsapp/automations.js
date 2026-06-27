@@ -48,7 +48,7 @@ function calculateDaysLeft(dateStr) {
 }
 
 // Triggers daily birthday wishes queueing
-export async function triggerDailyBirthdays() {
+export async function triggerDailyBirthdays({ organizationId = null } = {}) {
   console.log('Running daily birthday automation scan...');
 
   // Get current date in IST (UTC + 5:30)
@@ -66,6 +66,7 @@ export async function triggerDailyBirthdays() {
     where: {
       deletedAt: null,
       dob: { not: null },
+      ...(organizationId ? { organizationId } : {}),
     },
     select: {
       id: true,
@@ -149,7 +150,7 @@ export async function triggerDailyBirthdays() {
 
 // Triggers upcoming renewals scan. These automated renewal alerts are internal only;
 // agents can still manually send WhatsApp reminders to clients from the UI.
-export async function triggerUpcomingRenewals() {
+export async function triggerUpcomingRenewals({ organizationId = null } = {}) {
   console.log('Running internal upcoming renewals scan...');
 
   const now = new Date();
@@ -166,6 +167,7 @@ export async function triggerUpcomingRenewals() {
     where: {
       deletedAt: null,
       isActivePolicy: true,
+      ...(organizationId ? { organizationId } : {}),
       renewalStatus: {
         notIn: ['RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE'],
       },
@@ -232,7 +234,7 @@ export async function triggerUpcomingRenewals() {
   return { queuedCount };
 }
 
-export async function triggerInternalOperationsDigest() {
+export async function triggerInternalOperationsDigest({ organizationId = null } = {}) {
   console.log('Running internal operations WhatsApp digest scan...');
 
   const now = new Date();
@@ -246,7 +248,7 @@ export async function triggerInternalOperationsDigest() {
       status: { in: OPEN_TASK_STATUSES },
       type: { in: ['FOLLOW_UP', 'CALL', 'RENEWAL', 'CLAIM'] },
       dueAt: { lte: todayEnd },
-      organizationId: { not: null },
+      ...(organizationId ? { organizationId } : { organizationId: { not: null } }),
     },
     orderBy: [{ dueAt: 'asc' }, { updatedAt: 'desc' }],
     take: 200,
