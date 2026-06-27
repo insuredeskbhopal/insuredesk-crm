@@ -287,4 +287,36 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     ]);
     expect(result.needsManualReview).toBe(false);
   });
+
+  it("locks the GANGA SAGAR WAREHOUSE AC MPWLC - POLICY.pdf extraction contract", async () => {
+    const file = "tests/Warehouse/ICICI/GANGA SAGAR WAREHOUSE AC MPWLC - POLICY.pdf";
+    const parsed = await pdf(fs.readFileSync(file));
+    const result = extractPolicyFromText(parsed.text, file);
+
+    expect(result.documentFormat).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
+    expect(result.sourceDocumentType).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
+    expect(result.insuranceCompany).toBe("ICICI Lombard General Insurance Company Limited");
+    expect(result.policyNumber).toBe("1030/444535824/00/000");
+    expect(result.insuredName).toBe("GANGA SAGAR WAREHOUSE A/C MPWLC");
+    expect(result.riskLocation).toBe(
+      "PROP. JYOTI GUPTA, GODOWN NO 2 AND 3, KHASRA NO. 252/1 253/2, PH NO. 12/28, VILLAGE CHHIDGAO MEL, TEHSIL TIMARNI, DISTRICT HARDA, MADHYA PRADESH, HARDA, 461228",
+    );
+    expect(result.district).toBe("HARDA");
+    expect(result.tehsil).toBe("TIMARNI");
+    expect(result.startDate).toBe("16/06/2026");
+    expect(result.expiryDate).toBe("15/06/2027");
+    expect(result.businessDescription).toBe("Storage of Non-hazardous goods / godown or warehouse");
+    expect(result.premiumIncludingGst).toBe("9,621.00");
+    expect(result.netPremium).toBe("8153.00");
+    expect(result.gstAmount).toBe("1467.54");
+    expect(result.cgst).toBe("733.77");
+    expect(result.sgst).toBe("733.77");
+    expect(result.hypothecationDetails).toBe("MPWLC");
+    expect(result.coverages).toEqual([
+      { sectionName: "MSME Suraksha Kavach - Contents", sumInsured: "3,06,00,000.00" },
+      { sectionName: "Burglary", sumInsured: "3,06,00,000.00" },
+      { sectionName: "Fidelity", sumInsured: "30,60,000.00" },
+    ]);
+    expect(result.needsManualReview).toBe(false);
+  });
 });

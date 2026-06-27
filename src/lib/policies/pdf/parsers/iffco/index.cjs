@@ -1271,8 +1271,16 @@ function extractIffcoWarehouse(text, filename = "") {
     } else if (isBurglary) {
       burglarySumInsured = normalizeIffcoWarehouseAmount(matchGroup(text, /Stocks\s*([\d,.]+)/i)) || sumInsured;
     }
-    
-    businessDescription = cleanHdfcValue(matchGroup(text, /Location Description\s*([\s\S]+?)\s*Occupancy/i)) || "Storage of Non-hazardous goods";
+    const rawDesc = matchGroup(text, /Location Description\s*([\s\S]+?)\s*Occupancy/i);
+    businessDescription = cleanHdfcValue(rawDesc) || "Storage of Non-hazardous goods";
+    if (businessDescription) {
+      businessDescription = businessDescription
+        .replace(/www\.iffcotokio\.co\.in\s*Toll\s*Free\s*No\.?\s*\d+\s*Page\s*\d+\s*of\s*\d+\s*IFFCO-Tokio\s*-\s*[\s\S]+?UIN\s*:\s*[A-Z0-9]+/gi, "")
+        .replace(/www\.iffcotokio[\s\S]+?Page\s*\d+\s*of\s*\d+/gi, "")
+        .replace(/IFFCO-Tokio\s*-\s*[\s\S]+?Policy\s+Schedule/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
   }
   
   if (!policyNumber && text.includes("KISHAN WAREHOUSE")) {
