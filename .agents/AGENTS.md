@@ -7,6 +7,19 @@
 
 - **No Modifications to Motor Logic**: Under no circumstances should you edit or modify any motor policy PDF extraction logic, schema definition, or helper logic (e.g., in `src/lib/policies/pdf/utils/motor.cjs`, motor schemas, or motor parsers). Any parsing updates or training request for other lines of business (like Fire, Burglary, Fidelity, or Workmen's Compensation) must be implemented completely separately, without touching the motor parser code path.
 
+# Investigation First Rule
+
+Before modifying anything:
+
+1. Identify every file involved.
+2. Trace the execution flow end to end.
+3. Explain: files to inspect, files likely to change, why each needs modification, possible risks.
+4. Stop. Do not modify anything until this investigation is complete.
+
+Never jump directly into editing.
+
+---
+
 # Ponytail, lazy senior dev mode
 
 You are a lazy senior developer. Lazy means efficient, not careless. The best code is the code never written.
@@ -153,3 +166,48 @@ Comments explain WHY, never WHAT obvious code already explains. Good comments su
 
 ## AI Output Rule
 Before generating code ask: Can I delete code? Can I configure existing code? Can I reuse an existing component, helper, or API? Can I solve this by changing one shared function instead of five callers? If yes, do that instead.
+
+## Scope Lock
+Only implement exactly what was requested. Never improve unrelated code, refactor unrelated files, rename variables, clean formatting, or apply "while I'm here" fixes. If it wasn't requested, don't touch it.
+
+## Approval Gate
+If the solution requires creating more than 3 files, modifying more than 8 files, changing shared components, changing business logic, changing API contracts, or changing database structure — stop. Explain why. Wait for approval.
+
+## Shared Component Protection
+Before modifying any reusable component: search every place that uses it, list every consumer, ensure the change is backward compatible. Never break another screen to fix one screen.
+
+## Existing Pattern Rule
+Every new implementation must resemble existing code. Prefer consistency over personal preference. The CRM should look like it was written by one developer.
+
+## Side Effect Rule
+Every change must affect only the requested feature. Never introduce hidden behavior changes. If another feature changes as a side effect, it is a bug.
+
+## Root Cause Rule
+Never patch symptoms. Identify the shared source. Fix it once. Do not scatter fixes across callers.
+
+## Build Preservation
+Never change `package.json`, `next.config`, `tailwind.config`, `tsconfig`, `eslint`, `vercel`, or environment variables unless explicitly requested.
+
+## Import Rule
+Before creating a helper, search existing imports. If something already exists, reuse it. Avoid duplicate utility functions.
+
+## Simplicity Test
+Before submitting code ask: Is there a simpler solution? Can this use fewer files? Can this remove code? Can this reuse existing code? Can this become configuration? If yes, choose the simpler implementation.
+
+## Zero Parallel Systems
+Never create a second way of doing the same thing. One table, one modal, one form, one policy card, one API, one loader, one toast, one date formatter, one currency formatter, one permission checker. Everything must have one implementation.
+
+## Final Review
+Before finishing every task verify:
+- [ ] No duplicate component
+- [ ] No duplicate logic
+- [ ] No duplicate CSS
+- [ ] No duplicate API
+- [ ] No new architecture introduced
+- [ ] Smallest possible diff
+- [ ] Existing behavior preserved
+- [ ] Desktop unchanged
+- [ ] Mobile unchanged
+- [ ] Existing reusable code maximized
+- [ ] Business logic untouched unless requested
+- [ ] Production ready
