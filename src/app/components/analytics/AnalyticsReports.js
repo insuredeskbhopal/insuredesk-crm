@@ -33,6 +33,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
   // Monthly Report States
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedPolicyType, setSelectedPolicyType] = useState("");
+  const [monthlyCurrentPage, setMonthlyCurrentPage] = useState(1);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -531,6 +532,57 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       return true;
     });
   }, [records, selectedMonth, selectedPolicyType]);
+
+  // Reset monthly page when filters change
+  useEffect(() => {
+    setMonthlyCurrentPage(1);
+  }, [selectedMonth, selectedPolicyType]);
+
+  const monthlyTotalPages = Math.max(1, Math.ceil(monthlyFilteredRecords.length / pageSize));
+  const paginatedMonthlyRecords = useMemo(() => {
+    const startIndex = (monthlyCurrentPage - 1) * pageSize;
+    return monthlyFilteredRecords.slice(startIndex, startIndex + pageSize);
+  }, [monthlyFilteredRecords, monthlyCurrentPage]);
+
+  const monthlyPageNumbers = useMemo(() => {
+    const pages = [];
+    if (monthlyTotalPages <= 7) {
+      for (let i = 1; i <= monthlyTotalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      
+      let start = Math.max(2, monthlyCurrentPage - 1);
+      let end = Math.min(monthlyTotalPages - 1, monthlyCurrentPage + 1);
+      
+      if (monthlyCurrentPage <= 3) {
+        end = 4;
+      }
+      if (monthlyCurrentPage >= monthlyTotalPages - 2) {
+        start = monthlyTotalPages - 3;
+      }
+      
+      if (start > 2) {
+        pages.push("...");
+      }
+      
+      for (let i = start; i <= end; i++) {
+        if (!pages.includes(i)) {
+          pages.push(i);
+        }
+      }
+      
+      if (end < monthlyTotalPages - 1) {
+        pages.push("...");
+      }
+      
+      if (!pages.includes(monthlyTotalPages)) {
+        pages.push(monthlyTotalPages);
+      }
+    }
+    return pages;
+  }, [monthlyCurrentPage, monthlyTotalPages]);
 
   const monthlyTotals = useMemo(() => {
     let totalNet = 0;
@@ -1873,7 +1925,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {monthlyFilteredRecords.map((record) => {
+                      {paginatedMonthlyRecords.map((record) => {
                         const isMotor = isMotorRecord(record);
                         const displayDate = record.uploadedAt || record.savedAt || record.createdAt;
                         
@@ -1923,6 +1975,52 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Monthly Pagination Toolbar */}
+                {monthlyFilteredRecords.length > pageSize && (
+                  <div className="pagination-container">
+                    <span className="pagination-text">
+                      Showing {(monthlyCurrentPage - 1) * pageSize + 1} - {Math.min(monthlyCurrentPage * pageSize, monthlyFilteredRecords.length)} of {monthlyFilteredRecords.length} records
+                    </span>
+                    <div className="pagination-buttons">
+                      <button
+                        type="button"
+                        className="page-nav-btn"
+                        onClick={() => setMonthlyCurrentPage((c) => Math.max(1, c - 1))}
+                        disabled={monthlyCurrentPage === 1}
+                      >
+                        Prev
+                      </button>
+                      {monthlyPageNumbers.map((pageNum, idx) => {
+                        if (pageNum === "...") {
+                          return (
+                            <span key={`ell-monthly-${idx}`} className="pagination-ellipsis">
+                              ...
+                            </span>
+                          );
+                        }
+                        return (
+                          <button
+                            key={pageNum}
+                            type="button"
+                            className={`page-number-btn ${monthlyCurrentPage === pageNum ? "active" : ""}`}
+                            onClick={() => setMonthlyCurrentPage(pageNum)}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        className="page-nav-btn"
+                        onClick={() => setMonthlyCurrentPage((c) => Math.min(monthlyTotalPages, c + 1))}
+                        disabled={monthlyCurrentPage === monthlyTotalPages}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
