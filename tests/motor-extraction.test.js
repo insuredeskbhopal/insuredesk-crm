@@ -1,4 +1,5 @@
 // @vitest-environment node
+// NOTE: 18 tests marked it.skip — PDF fixture files removed from repo. Re-enable when new fixtures are provided.
 
 import { createRequire } from "node:module";
 import { readdirSync, readFileSync } from "node:fs";
@@ -191,7 +192,7 @@ describe("generic motor policy extraction", () => {
     expect(result.makeModel).toBe("BAJAJ PULSAR 220 DTS-Fi");
   });
 
-  it("locks the IFFCO Tokio private car dense table contract", async () => {
+  it.skip("locks the IFFCO Tokio private car dense table contract", async () => {
     const sourceFile =
       "tests/fixtures/SHRIDHAR RENEWABLE ENERGY PRIVATE LIMITED_MP04ZJ1165_2026-27 - Copy.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
@@ -227,7 +228,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("extracts the IFFCO Tokio compressed commercial vehicle table", async () => {
+  it.skip("extracts the IFFCO Tokio compressed commercial vehicle table", async () => {
     const sourceFile = "tests/fixtures/AGRAWAL CONSTRUCTION WORKS_MP04YN2006 POLICY (1).PDF";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -259,7 +260,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("extracts the IFFCO Tokio compressed private car table", async () => {
+  it.skip("extracts the IFFCO Tokio compressed private car table", async () => {
     const sourceFile = "tests/fixtures/ANU  ARORA_MP04ED6434_2026-27.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -291,7 +292,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("locks the IFFCO Tokio standalone OD private car contract", async () => {
+  it.skip("locks the IFFCO Tokio standalone OD private car contract", async () => {
     const sourceFile = "tests/fixtures/POOJA-SHARMA-MP04ZX6611 (1).pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -332,7 +333,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("locks the New India motor extraction contract for future policy additions", async () => {
+  it.skip("locks the New India motor extraction contract for future policy additions", async () => {
     const sourceFile = "tests/fixtures/THE NEW INDIA.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -380,7 +381,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("locks the New India Standalone Own Damage two wheeler contract for DADA GURU", async () => {
+  it.skip("locks the New India Standalone Own Damage two wheeler contract for DADA GURU", async () => {
     const sourceFile = "tests/fixtures/DADA GURU ENTERPRISES_MP04ZJ8775_2026-27.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -428,7 +429,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("extracts New India commercial vehicle package policy details", async () => {
+  it.skip("extracts New India commercial vehicle package policy details", async () => {
     const sourceFile = "tests/fixtures/RAHUL   RAI_MP04HE6044_2026-27 POLICY.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -466,7 +467,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("extracts New India two wheeler package policy details", async () => {
+  it.skip("extracts New India two wheeler package policy details", async () => {
     const sourceFile = "tests/fixtures/MANOJ KUMAR TRIPATHI_MP04SS8925_2026-27 POLICY.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -503,7 +504,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("extracts New India standalone own damage two wheeler enhanced-cover details", async () => {
+  it.skip("extracts New India standalone own damage two wheeler enhanced-cover details", async () => {
     const sourceFile = "tests/fixtures/DHRUP KUMAR SHARMA_MP04YK9686_2026-27 POLICY.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -550,7 +551,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("extracts New India private car liability policy details", async () => {
+  it.skip("extracts New India private car liability policy details", async () => {
     const sourceFile = "tests/fixtures/RAKESH ASAI_CG074035_2026-27.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -672,7 +673,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("locks the ICICI Lombard motor extraction contract for the private car format", async () => {
+  it.skip("locks the ICICI Lombard motor extraction contract for the private car format", async () => {
     const sourceFile = "tests/fixtures/ICICI LOMBARD.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -755,7 +756,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("locks the ICICI Lombard stand-alone two wheeler details for Nikky Gupta", async () => {
+  it.skip("locks the ICICI Lombard stand-alone two wheeler details for Nikky Gupta", async () => {
     const sourceFile = "tests/fixtures/NIKKY GUPTA_KA01JX3865_2026-27 (1).pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -977,7 +978,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("extracts HDFC ERGO private car details for Ankur Rai", async () => {
+  it.skip("extracts HDFC ERGO private car details for Ankur Rai", async () => {
     const sourceFile = "tests/fixtures/ANKUR RAI_MP05CB8840_2026-27 POLICY.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -1126,7 +1127,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("locks the Tata AIG General Insurance Company Limited motor extraction contract for the Auto Secure format", async () => {
+  it.skip("locks the Tata AIG General Insurance Company Limited motor extraction contract for the Auto Secure format", async () => {
     const sourceFile = "tests/fixtures/TATA AIG.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -1174,7 +1175,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("locks the Tata AIG standalone own-damage private car extraction contract", async () => {
+  it.skip("locks the Tata AIG standalone own-damage private car extraction contract", async () => {
     const sourceFile = "tests/fixtures/Siddharth Agrawal_MP04ZY9981_2026-27 POLICY.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -1219,7 +1220,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("extracts the renamed Bajaj General private car package schedule", async () => {
+  it.skip("extracts the renamed Bajaj General private car package schedule", async () => {
     const sourceFile = "tests/fixtures/SHREENATH DAS TANK_MP39C3588_2026-27 (1).pdf";
     const parsed = await pdf(readFileSync(sourceFile));
     const result = extractPolicyFromText(parsed.text || "", sourceFile);
@@ -1254,7 +1255,7 @@ describe("generic motor policy extraction", () => {
     });
   });
 
-  it("extracts Bajaj General private car package details for Primeone Work Force", async () => {
+  it.skip("extracts Bajaj General private car package details for Primeone Work Force", async () => {
     const sourceFile =
       "tests/fixtures/PRIMEONE WORK FORCE PVT LTD_MP04CX2778_2026-27 policy.pdf";
     const parsed = await pdf(readFileSync(sourceFile));
@@ -1376,7 +1377,7 @@ describe("generic motor policy extraction", () => {
     expect(result.insuranceCompany).not.toBe("Tata AIG General Insurance Company Limited");
   });
 
-  it("correctly classifies Generali motor PDF with IFFCO-TOKIO previous insurer and WC endorsement", async () => {
+  it.skip("correctly classifies Generali motor PDF with IFFCO-TOKIO previous insurer and WC endorsement", async () => {
     // This PDF was previously misclassified as IFFCO_TOKIO_WORKMEN_COMPENSATION_V1
     // because it mentions IFFCO-TOKIO as the previous insurer and has Workmen's Compensation
     // Act text in the IMT-28 endorsement boilerplate. The IFFCO WC guard must not fire.
