@@ -2197,13 +2197,15 @@ label span em {
 
 .records-panel .search-box {
   min-height: 42px;
+  max-width: 720px;
 }
 
 .records-search-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(280px, 720px) auto;
   gap: 10px;
   align-items: center;
+  justify-content: space-between;
 }
 
 .record-filter-toggle {
@@ -2223,7 +2225,7 @@ label span em {
 
 .record-filter-panel {
   display: grid;
-  grid-template-columns: minmax(180px, 0.8fr) minmax(220px, 1fr) minmax(160px, 0.7fr) auto auto;
+  grid-template-columns: minmax(170px, 0.9fr) minmax(220px, 1.1fr) minmax(150px, 0.8fr) minmax(120px, 0.6fr) auto auto;
   gap: 12px;
   align-items: end;
   border: 1px solid rgba(25, 28, 29, 0.12);

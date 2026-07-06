@@ -2,6 +2,7 @@ import { normalizeRecord } from "@/lib/records";
 import { prisma } from "@/lib/db/prisma";
 import { getCustomerProfileScopedFilter, getTenantFilter } from "@/lib/auth/rbac";
 import { getCurrentSessionFromCookies } from "@/lib/records/scoped-data";
+import { withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
 import { parseMoney } from "@/app/lib/reporting/totals";
 import { parsePolicyDate, startOfDay } from "@/app/lib/reporting/filters";
 
@@ -925,6 +926,7 @@ function getDateRange(range = "this_month", from = "", to = "") {
 }
 
 function applyPolicyFilters(where, filters, dateRange) {
+  Object.assign(where, withoutManualRenewalSources(where));
   where.savedAt = { gte: dateRange.start, lte: dateRange.end };
   const and = [];
   if (filters.company) {

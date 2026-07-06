@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { getCustomerProfileScopedFilter, getTenantFilter } from "@/lib/auth/rbac";
 import { sendFollowUpReminderEmail } from "@/lib/email/mailer";
+import { withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
 
 const OPEN_TASK_STATUSES = [
   "DRAFT",
@@ -117,7 +118,7 @@ export async function syncOperationsCenter(session) {
 
   const [policies, claims, endorsements, customerProfiles, uploads] = await Promise.all([
     prisma.policyRecord.findMany({
-      where: { ...tenantFilter, deletedAt: null, isActivePolicy: true },
+      where: withoutManualRenewalSources({ ...tenantFilter, deletedAt: null, isActivePolicy: true }),
       orderBy: { updatedAt: "desc" },
       take: MAX_SYNC_ROWS,
       select: {

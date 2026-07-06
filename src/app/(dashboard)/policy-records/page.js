@@ -5,6 +5,7 @@ import Dashboard from "@/app/ui/dashboard";
 import { loadScopedPolicyRecords, getCurrentSessionFromCookies } from "@/lib/records/scoped-data";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/db/prisma";
+import { MANUAL_RENEWAL_SQL_EXCLUSION, withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
 
 export default async function PolicyRecordsPage(props) {
   const searchParams = await props.searchParams;
@@ -29,6 +30,7 @@ export default async function PolicyRecordsPage(props) {
     ...tenantFilter,
     deletedAt: null,
   };
+  const policyRecordWhere = withoutManualRenewalSources(basePolicyWhere);
   const dataPayload = await loadScopedPolicyRecords({
     includeInactive: true,
     page,
@@ -42,7 +44,12 @@ export default async function PolicyRecordsPage(props) {
     endDate,
     datePreset,
   });
-  const countsPayload = await loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId, session });
+  const countsPayload = await loadPolicyRecordTabCounts({
+    basePolicyWhere: policyRecordWhere,
+    isSuperAdmin,
+    orgId,
+    session,
+  });
   const {
     totalAll,
     totalDuplicates,
@@ -92,11 +99,13 @@ async function loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId,
       SELECT COUNT(*)::integer as count FROM pdf_records
       WHERE deleted_at IS NULL
         AND ($1::boolean OR organization_id = $2::uuid)
+        ${MANUAL_RENEWAL_SQL_EXCLUSION}
         AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (
           SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
           FROM pdf_records
           WHERE deleted_at IS NULL
             AND ($1::boolean OR organization_id = $2::uuid)
+            ${MANUAL_RENEWAL_SQL_EXCLUSION}
             AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
           GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
           HAVING COUNT(*) > 1

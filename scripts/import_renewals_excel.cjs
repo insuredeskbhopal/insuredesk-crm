@@ -1,13 +1,11 @@
 const { PrismaClient } = require("@prisma/client");
 const XLSX = require("xlsx");
 const { randomUUID } = require("crypto");
+const path = require("path");
 
 const prisma = new PrismaClient();
-const excelPath = "c:\\Users\\Wim11\\Desktop\\bimaheadquarter\\storage\\samples\\Renewal Page data.xlsx";
-
-// Default fallback IDs
-const DEFAULT_ORG_ID = "00000000-0000-4000-8000-000000000001";
-const DEFAULT_USER_ID = "8da47c4c-ee67-45dc-bcb3-af7758f31129";
+const excelPath = process.argv[2] || path.join(process.cwd(), "storage", "Non_Motor_July_2026_Renewal_Data (1).xlsx");
+const MANUAL_RENEWAL_IMPORT_METHOD = "renewal_excel_import";
 
 // Convert Excel serial date to YYYY-MM-DD
 function excelDateToString(excelDate) {
@@ -49,9 +47,20 @@ function excelDateToString(excelDate) {
   }
 }
 
+function buildCustomerId(name, mobile) {
+  const namePart = String(name || "")
+    .replace(/^(m\/s|mr|mrs|ms)\.?\s+/i, "")
+    .replace(/[^a-z0-9]/gi, "")
+    .slice(0, 4)
+    .toUpperCase();
+  const digits = String(mobile || "").replace(/\D/g, "");
+  return `${namePart}${digits.slice(-4)}`;
+}
+
 async function main() {
   console.log("Loading Excel workbook...");
   const workbook = XLSX.readFile(excelPath);
+  const sourceFileName = path.basename(excelPath);
   const firstSheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
 
@@ -59,28 +68,16 @@ async function main() {
   const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
   console.log(`Loaded ${rawRows.length} raw rows from sheet "${firstSheetName}".`);
 
-  // Dynamically import ESM helpers from workspace
-  console.log("Importing sanitizeRecordPayload ESM helper...");
-  const validationModule = await import("../lib/records/validation.js");
-  const sanitizeRecordPayload = validationModule.sanitizeRecordPayload;
-
-  console.log("Importing buildCustomerId helper...");
-  const recordsModule = await import("../lib/records/index.js");
-  const buildCustomerId = recordsModule.buildCustomerId;
-
-  // Retrieve default Organization and User to avoid hardcoded fallbacks failing constraints
+  // Manual renewal data is not a user-created policy entry.
   const dbOrg = await prisma.organization.findFirst();
-  const dbUser = await prisma.user.findFirst();
-  const organizationId = dbOrg ? dbOrg.id : DEFAULT_ORG_ID;
-  const createdById = dbUser ? dbUser.id : DEFAULT_USER_ID;
+  const organizationId = dbOrg ? dbOrg.id : null;
 
   console.log(`Using Organization ID: ${organizationId}`);
-  console.log(`Using User ID: ${createdById}`);
 
   // Clear previous imports to remain idempotent
-  console.log("Clearing previous imports from 'Renewal Page data.xlsx'...");
+  console.log(`Clearing previous imports from '${sourceFileName}'...`);
   const deleteResult = await prisma.policyRecord.deleteMany({
-    where: { sourceFile: "Renewal Page data.xlsx" },
+    where: { sourceFile: sourceFileName },
   });
   console.log(`Deleted ${deleteResult.count} existing records.`);
 
@@ -91,15 +88,16 @@ async function main() {
 
     // Map Excel columns to our database and schema properties
     // Headers: Product, Insured/Proposer Name, Policy Number, End Date, Status, Expiring Policy Sum Insured, Expiring Policy Premium, MOB, REMARK
-    const product = String(row["Product"] || "").trim();
-    const name = String(row["Insured/Proposer Name"] || "").trim();
-    const policyNo = String(row["Policy Number"] || "").trim();
-    const endDateRaw = row["End Date"];
+    const product = String(row["Product"] || row["LOB"] || "").trim();
+    const name = String(row["Insured/Proposer Name"] || row["Name"] || "").trim();
+    const policyNo = String(row["Policy Number"] || row["PolicyNo"] || "").trim();
+    const endDateRaw = row["End Date"] || row["ExpiryDate"];
     const status = String(row["Status"] || "").trim();
-    const sumInsuredRaw = row["Expiring Policy Sum Insured"];
-    const premiumRaw = row["Expiring Policy Premium"];
-    const mob = String(row["MOB"] || "").trim();
+    const sumInsuredRaw = row["Expiring Policy Sum Insured"] || row["SUM INSURED"];
+    const premiumRaw = row["Expiring Policy Premium"] || row["PREMIUM"];
+    const mob = String(row["MOB"] || row["MOB NO"] || "").trim();
     const remark = String(row["REMARK"] || "").trim();
+    const insuranceCompany = String(row["Insurance company"] || row["Insurance Company"] || "").trim();
 
     if (!name && !policyNo) {
       console.log(`[${i + 1}/${rawRows.length}] Skipping empty row`);
@@ -120,7 +118,10 @@ async function main() {
       contactNumber: mob,
       customerMobile: mob,
       remark: remark,
-      sourceFile: "Renewal Page data.xlsx",
+      insuranceCompany,
+      companyName: insuranceCompany,
+      sourceFile: sourceFileName,
+      manualRenewalSource: true,
     };
 
     // Build customer ID
@@ -130,7 +131,7 @@ async function main() {
     }
     payload.customerId = customerId;
 
-    const sanitizedData = sanitizeRecordPayload(payload);
+    const sanitizedData = payload;
 
     // Map the Status column to renewalStatus and isActivePolicy
     const statusLower = status.toLowerCase();
@@ -153,27 +154,28 @@ async function main() {
       createdAt: recordDate,
       updatedAt: recordDate,
       data: sanitizedData,
-      pdfFileName: "Renewal Page data.xlsx",
+      pdfFileName: sourceFileName,
       pdfMimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      sourceFile: "Renewal Page data.xlsx",
+      sourceFile: sourceFileName,
       rawText: "",
       detectedBankSource: "",
-      detectedCompany: "",
+      detectedCompany: insuranceCompany,
       detectedServiceCategory: "",
       detectedPolicyType: product,
       selectedBankSource: "",
-      selectedCompany: "",
+      selectedCompany: insuranceCompany,
       selectedServiceCategory: "",
       selectedPolicyType: product,
       confidenceScore: 1.0,
       extractedData: sanitizedData,
       reviewedData: sanitizedData,
-      extractionMethod: "excel_import",
+      extractionMethod: MANUAL_RENEWAL_IMPORT_METHOD,
       extractionQuality: {},
       extractionLog: {},
       schemaVersion: 1,
-      organization: organizationId ? { connect: { id: organizationId } } : undefined,
-      createdBy: createdById ? { connect: { id: createdById } } : undefined,
+      organizationId,
+      createdById: null,
+      updatedById: null,
 
       // Renewal specific fields
       renewalStatus: renewalStatus,

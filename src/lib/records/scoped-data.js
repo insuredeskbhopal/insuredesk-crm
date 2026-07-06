@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
+import { MANUAL_RENEWAL_SQL_EXCLUSION, withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
 
 export const POLICY_RECORD_SELECT = {
   id: true,
@@ -89,6 +90,9 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
     deletedAt: null,
     ...(options.includeInactive ? {} : { isActivePolicy: true }),
   };
+  if (options.excludeRenewalSources !== false) {
+    Object.assign(where, withoutManualRenewalSources(where));
+  }
   const andFilters = [];
 
   // 1. Search Query (q)
@@ -246,6 +250,7 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
             FROM pdf_records
             WHERE deleted_at IS NULL
               AND ($1::boolean OR organization_id = $2::uuid)
+              ${options.excludeRenewalSources !== false ? MANUAL_RENEWAL_SQL_EXCLUSION : ""}
               AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
             GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
             HAVING COUNT(*) > 1
@@ -261,6 +266,7 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
         q,
         pdfFilter,
         savedAtFilter,
+        excludeRenewalSources: options.excludeRenewalSources !== false,
         page,
         limit,
         skip,
@@ -297,7 +303,17 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
   });
 }
 
-async function loadDuplicatePolicyRecords({ session, q, pdfFilter, savedAtFilter, page, limit, skip, select }) {
+async function loadDuplicatePolicyRecords({
+  session,
+  q,
+  pdfFilter,
+  savedAtFilter,
+  excludeRenewalSources,
+  page,
+  limit,
+  skip,
+  select,
+}) {
   const isSuperAdmin = session.role === "SUPER_ADMIN";
   const orgId = session.organizationId || null;
   const queryParams = [isSuperAdmin, orgId];
@@ -347,12 +363,14 @@ async function loadDuplicatePolicyRecords({ session, q, pdfFilter, savedAtFilter
   }
 
   const extraWhere = filters.length ? `AND ${filters.join(" AND ")}` : "";
+  const renewalSourceWhere = excludeRenewalSources ? MANUAL_RENEWAL_SQL_EXCLUSION : "";
   const duplicateBase = `
     WITH duplicate_keys AS (
         SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') AS policy_number
       FROM pdf_records
       WHERE deleted_at IS NULL
         AND ($1::boolean OR organization_id = $2::uuid)
+        ${renewalSourceWhere}
         AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
       GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
       HAVING COUNT(*) > 1
@@ -362,6 +380,7 @@ async function loadDuplicatePolicyRecords({ session, q, pdfFilter, savedAtFilter
       FROM pdf_records
       WHERE deleted_at IS NULL
         AND ($1::boolean OR organization_id = $2::uuid)
+        ${renewalSourceWhere}
         AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (SELECT policy_number FROM duplicate_keys)
         ${extraWhere}
     )

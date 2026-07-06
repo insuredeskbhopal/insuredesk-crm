@@ -11,6 +11,7 @@ import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dash
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import { getSavedAtDateFilter } from "@/lib/records/scoped-data";
+import { withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
 
 export const runtime = "nodejs";
 
@@ -55,6 +56,7 @@ export async function GET(request) {
       ...tenantFilter,
       deletedAt: null,
     };
+    Object.assign(where, withoutManualRenewalSources(where));
     const andFilters = [];
 
     if (q.trim()) {

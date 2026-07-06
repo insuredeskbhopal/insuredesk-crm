@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
+import { MANUAL_RENEWAL_SQL_EXCLUSION } from "@/lib/records/manual-renewal-source";
 
 export const dynamic = "force-dynamic";
 
@@ -170,6 +171,7 @@ export async function GET(request) {
         FROM pdf_records
         WHERE deleted_at IS NULL
           AND ($1::boolean OR organization_id = $2::uuid)
+          ${MANUAL_RENEWAL_SQL_EXCLUSION}
       ),
       dated AS (
         SELECT 
@@ -235,6 +237,7 @@ export async function GET(request) {
         FROM pdf_records
         WHERE deleted_at IS NULL
           AND ($1::boolean OR organization_id = $2::uuid)
+          ${MANUAL_RENEWAL_SQL_EXCLUSION}
       ),
       dated AS (
         SELECT 

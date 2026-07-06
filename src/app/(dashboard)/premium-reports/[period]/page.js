@@ -74,7 +74,7 @@ export default async function PremiumReportPage({ params }) {
     );
   }
 
-  const rawRecords = await loadScopedPolicyRecords({ includeInactive: true, excludeRenewalSources: false });
+  const rawRecords = await loadScopedPolicyRecords({ includeInactive: true });
   const records = rawRecords.map(normalizeRecord);
   const now = new Date();
   const filteredRecords = filterPremiumRecords(records, reportId, now);
