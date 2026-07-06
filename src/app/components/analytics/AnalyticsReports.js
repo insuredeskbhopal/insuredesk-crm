@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Calendar, Briefcase, Car, TrendingUp, Layers, X, AlertCircle } from "lucide-react";
+import { Calendar, Briefcase, Car, Layers, AlertCircle } from "lucide-react";
 
 // Bezier Curve generator for smooth path strings
 function getBezierPath(points) {
@@ -30,8 +30,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
   const [startDateFilter, setStartDateFilter] = useState("");
   const [endDateFilter, setEndDateFilter] = useState("");
 
-  // Monthly Report Modal States
-  const [isMonthlyModalOpen, setIsMonthlyModalOpen] = useState(false);
+  // Monthly Report States
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedPolicyType, setSelectedPolicyType] = useState("");
 
@@ -1243,31 +1242,10 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       `}} />
 
       {/* 1. Interactive Charts Dashboard (at the very top) */}
-      <div className="reports-charts-grid">
-        {/* Monthly Performance Report Trigger Card */}
-        <div className="chart-card monthly-report-trigger-card" onClick={() => setIsMonthlyModalOpen(true)} style={{ cursor: "pointer" }}>
-          <div className="chart-header-row">
-            <h3 className="chart-title" style={{ display: "flex", alignItems: "center", gap: "8px", textTransform: "uppercase" }}>
-              <Calendar size={18} style={{ color: "#3b82f6" }} />
-              Monthly Report
-            </h3>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", justifyContent: "center", height: "100%", alignItems: "center", textAlign: "center", padding: "12px 0" }}>
-             <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "16px", borderRadius: "50%", color: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center", width: "56px", height: "56px" }}>
-               <TrendingUp size={26} />
-             </div>
-             <div>
-               <strong style={{ fontSize: "14px", color: "var(--text-primary, #0f172a)", display: "block" }}>Monthly Report Center</strong>
-               <p style={{ fontSize: "11px", color: "var(--text-secondary, #64748b)", marginTop: "4px", lineHeight: "1.4" }}>Consolidated overview of motor & warehouse policies by month, LOB comparison, and data audit.</p>
-             </div>
-             <button type="button" className="primary-action" style={{ padding: "8px 16px", fontSize: "12px", borderRadius: "8px", width: "100%", marginTop: "4px", cursor: "pointer" }}>
-               Generate Monthly Report
-             </button>
-          </div>
-        </div>
-
-        {/* Line Graph (Daily Upload Premium Trend) */}
-        <div className="chart-card">
+      {activeTab !== "monthly-report" && (
+        <div className="reports-charts-grid">
+          {/* Line Graph (Daily Upload Premium Trend) */}
+          <div className="chart-card">
           <div className="chart-header-row">
             <h3 className="chart-title">
               {uniqueDatesCount === 1 ? "Hourly Premium Trend" : "Daily Premium Trend"}
@@ -1417,6 +1395,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           </div>
         </div>
       </div>
+      )}
 
       {/* 2. Tabs and Filters Toolbar (positioned below the charts) */}
       <div className="tabs-and-filters-wrapper">
@@ -1425,6 +1404,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
             { id: "motor-report", label: "Motor Report" },
             { id: "motor-individual", label: "Individual Motor Report" },
             { id: "warehouse-report", label: "Warehouse Report" },
+            { id: "monthly-report", label: "Monthly Performance Report" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1438,73 +1418,109 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         </div>
 
         <div className="filters-row">
-          {isIndividualTab && (
-            <div className="filter-group">
-              <span className="filter-label">Agent:</span>
-              <select
-                value={selectedAgent}
-                onChange={(e) => setSelectedAgent(e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">All Agents</option>
-                {uniqueAgents.map((agent) => (
-                  <option key={agent} value={agent}>
-                    {agent}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div className="filter-group">
-            <span className="filter-label">Date Filter:</span>
-            <select
-              value={datePreset}
-              onChange={(e) => setDatePreset(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="last-3-days">Last 3 Days</option>
-              <option value="this-week">This Week</option>
-              <option value="last-week">Last Week</option>
-              <option value="this-month">This Month</option>
-              <option value="last-month">Last Month</option>
-              <option value="last-3-months">Last 3 Months</option>
-              <option value="last-6-months">Last 6 Months</option>
-              <option value="this-year">This Year</option>
-              <option value="last-year">Last Year</option>
-              <option value="custom">Custom Range</option>
-            </select>
-          </div>
-
-          {datePreset === "custom" && (
+          {activeTab === "monthly-report" ? (
             <>
               <div className="filter-group">
-                <span className="filter-label">From:</span>
-                <input
-                  type="date"
-                  value={startDateFilter}
-                  onChange={(e) => setStartDateFilter(e.target.value)}
-                  className="filter-input"
-                />
+                <span className="filter-label">Month:</span>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="">Choose Month...</option>
+                  {monthOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="filter-group">
-                <span className="filter-label">To:</span>
-                <input
-                  type="date"
-                  value={endDateFilter}
-                  onChange={(e) => setEndDateFilter(e.target.value)}
-                  className="filter-input"
-                />
+                <span className="filter-label">Policy Type:</span>
+                <select
+                  value={selectedPolicyType}
+                  onChange={(e) => setSelectedPolicyType(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="">Choose Type...</option>
+                  <option value="all">All Policies (Motor & Warehouse)</option>
+                  <option value="motor">Motor Policies Only</option>
+                  <option value="warehouse">Warehouse Policies Only</option>
+                </select>
+              </div>
+            </>
+          ) : (
+            <>
+              {isIndividualTab && (
+                <div className="filter-group">
+                  <span className="filter-label">Agent:</span>
+                  <select
+                    value={selectedAgent}
+                    onChange={(e) => setSelectedAgent(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="all">All Agents</option>
+                    {uniqueAgents.map((agent) => (
+                      <option key={agent} value={agent}>
+                        {agent}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="filter-group">
+                <span className="filter-label">Date Filter:</span>
+                <select
+                  value={datePreset}
+                  onChange={(e) => setDatePreset(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="last-3-days">Last 3 Days</option>
+                  <option value="this-week">This Week</option>
+                  <option value="last-week">Last Week</option>
+                  <option value="this-month">This Month</option>
+                  <option value="last-month">Last Month</option>
+                  <option value="last-3-months">Last 3 Months</option>
+                  <option value="last-6-months">Last 6 Months</option>
+                  <option value="this-year">This Year</option>
+                  <option value="last-year">Last Year</option>
+                  <option value="custom">Custom Range</option>
+                </select>
               </div>
 
-              {(startDateFilter || endDateFilter) && (
-                <button onClick={clearDateFilters} className="clear-btn" type="button">
-                  Clear
-                </button>
+              {datePreset === "custom" && (
+                <>
+                  <div className="filter-group">
+                    <span className="filter-label">From:</span>
+                    <input
+                      type="date"
+                      value={startDateFilter}
+                      onChange={(e) => setStartDateFilter(e.target.value)}
+                      className="filter-input"
+                    />
+                  </div>
+
+                  <div className="filter-group">
+                    <span className="filter-label">To:</span>
+                    <input
+                      type="date"
+                      value={endDateFilter}
+                      onChange={(e) => setEndDateFilter(e.target.value)}
+                      className="filter-input"
+                    />
+                  </div>
+
+                  {(startDateFilter || endDateFilter) && (
+                    <button onClick={clearDateFilters} className="clear-btn" type="button">
+                      Clear
+                    </button>
+                  )}
+                </>
               )}
             </>
           )}
@@ -1512,7 +1528,8 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       </div>
 
       {/* 3. Main Report Table Container */}
-      <div className="table-card">
+      {activeTab !== "monthly-report" && (
+        <div className="table-card">
         <div className="report-table-wrapper">
           <table className="report-table">
             <thead>
@@ -1639,320 +1656,276 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
           </div>
         )}
       </div>
+      )}
 
-      {/* Monthly Performance Report Modal Overlay */}
-      {isMonthlyModalOpen && (
-        <div className="tb-modal-backdrop" onClick={() => setIsMonthlyModalOpen(false)}>
-          <div className="tb-modal-card monthly-report-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="tb-modal-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ fontSize: "18px", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px", margin: 0, color: "var(--text-primary, #0f172a)" }}>
-                <Calendar size={22} style={{ color: "#3b82f6" }} />
-                Monthly Performance Report Center
-              </h2>
-              <button type="button" className="tb-modal-close" onClick={() => setIsMonthlyModalOpen(false)} style={{ border: "none", background: "none", cursor: "pointer" }}>
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="monthly-report-filters" style={{ display: "flex", gap: "16px", background: "#f8fafc", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1 }}>
-                <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Select Month</span>
-                <select 
-                  value={selectedMonth} 
-                  onChange={(e) => setSelectedMonth(e.target.value)} 
-                  className="filter-select"
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
-                >
-                  <option value="">Choose Month...</option>
-                  {monthOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1 }}>
-                <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>Policy Type / LOB</span>
-                <select 
-                  value={selectedPolicyType} 
-                  onChange={(e) => setSelectedPolicyType(e.target.value)} 
-                  className="filter-select"
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
-                >
-                  <option value="">Choose Policy Type...</option>
-                  <option value="all">All Policies (Motor & Warehouse)</option>
-                  <option value="motor">Motor Policies Only</option>
-                  <option value="warehouse">Warehouse Policies Only</option>
-                </select>
+      {/* Monthly Performance Report Page View */}
+      {activeTab === "monthly-report" && (
+        <div className="monthly-report-page-container" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {!selectedMonth || !selectedPolicyType ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "350px", color: "#94a3b8", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", gap: "12px", padding: "40px" }}>
+              <Calendar size={48} style={{ strokeWidth: "1.5", color: "#94a3b8" }} />
+              <div style={{ textAlign: "center" }}>
+                <h3 style={{ fontWeight: "700", color: "#64748b" }}>Report Ready to Generate</h3>
+                <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>Select a month and a policy type from the toolbar filters above to load the report.</p>
               </div>
             </div>
+          ) : monthlyFilteredRecords.length === 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "350px", color: "#94a3b8", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", gap: "12px", padding: "40px" }}>
+              <AlertCircle size={48} style={{ color: "#ef4444", strokeWidth: "1.5" }} />
+              <div style={{ textAlign: "center" }}>
+                <h3 style={{ fontWeight: "700", color: "#64748b" }}>No Policy Records Found</h3>
+                <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>There are no policy records matching the selected month and policy type filter.</p>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              {/* KPI Row */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+                <div className="metric-card" style={{ display: "flex", flexDirection: "column", gap: "4px", background: "#ffffff", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>TOTAL POLICIES</span>
+                  <strong style={{ fontSize: "24px", color: "#0f172a" }}>{monthlyTotals.count}</strong>
+                  <small style={{ color: "#10b981", fontWeight: "600" }}>Active for LOB selection</small>
+                </div>
+                <div className="metric-card" style={{ display: "flex", flexDirection: "column", gap: "4px", background: "#ffffff", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>NET PREMIUM</span>
+                  <strong style={{ fontSize: "24px", color: "#3b82f6" }}>₹{formatPremium(monthlyTotals.netPremium)}</strong>
+                  <small style={{ color: "#3b82f6", fontWeight: "600" }}>Excluding GST / taxes</small>
+                </div>
+                <div className="metric-card" style={{ display: "flex", flexDirection: "column", gap: "4px", background: "#ffffff", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>GROSS PREMIUM</span>
+                  <strong style={{ fontSize: "24px", color: "#f59e0b" }}>₹{formatPremium(monthlyTotals.grossPremium)}</strong>
+                  <small style={{ color: "#f59e0b", fontWeight: "600" }}>Including GST / levies</small>
+                </div>
+              </div>
 
-            <div className="monthly-report-body" style={{ flex: 1, overflowY: "auto", minHeight: "350px", maxHeight: "65vh", paddingRight: "4px" }}>
-              {!selectedMonth || !selectedPolicyType ? (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", minHeight: "300px", color: "#94a3b8", gap: "12px" }}>
-                  <Calendar size={48} style={{ strokeWidth: "1.5", color: "#94a3b8" }} />
-                  <div style={{ textAlign: "center" }}>
-                    <h3 style={{ fontWeight: "700", color: "#64748b" }}>Report Ready to Generate</h3>
-                    <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>Select a month and a policy type from the filters above to load analytics.</p>
+              {/* Relative LOB Comparison Card */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                <div style={{ padding: "20px", border: "1px solid #e2e8f0", borderRadius: "12px", background: "linear-gradient(135deg, #eff6ff 0%, #ffffff 100%)", boxShadow: "0 2px 4px rgba(0,0,0,0.01)" }}>
+                  <h4 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: "800", color: "#1d4ed8", textTransform: "uppercase", margin: "0 0 12px 0" }}>
+                    <Car size={18} />
+                    Motor LOB Summary
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
+                      <span style={{ color: "#64748b" }}>Policies Count:</span>
+                      <strong style={{ color: "#0f172a" }}>{relativeAnalysis.motor.count}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
+                      <span style={{ color: "#64748b" }}>Total Net Premium:</span>
+                      <strong style={{ color: "#0f172a" }}>₹{formatPremium(relativeAnalysis.motor.netPremium)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
+                      <span style={{ color: "#64748b" }}>Avg Premium/Policy:</span>
+                      <strong style={{ color: "#0f172a" }}>₹{formatPremium(relativeAnalysis.motor.avgNet)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#64748b" }}>Key Insurers:</span>
+                      <strong style={{ color: "#0f172a", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", maxWidth: "200px" }} title={relativeAnalysis.motor.companies}>{relativeAnalysis.motor.companies}</strong>
+                    </div>
                   </div>
                 </div>
-              ) : monthlyFilteredRecords.length === 0 ? (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", minHeight: "300px", color: "#94a3b8", gap: "12px" }}>
-                  <AlertCircle size={48} style={{ color: "#ef4444", strokeWidth: "1.5" }} />
-                  <div style={{ textAlign: "center" }}>
-                    <h3 style={{ fontWeight: "700", color: "#64748b" }}>No Policy Records Found</h3>
-                    <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>There are no policy records matching the selected month and policy type filter.</p>
+
+                <div style={{ padding: "20px", border: "1px solid #e2e8f0", borderRadius: "12px", background: "linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%)", boxShadow: "0 2px 4px rgba(0,0,0,0.01)" }}>
+                  <h4 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: "800", color: "#047857", textTransform: "uppercase", margin: "0 0 12px 0" }}>
+                    <Briefcase size={18} />
+                    Warehouse LOB Summary
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
+                      <span style={{ color: "#64748b" }}>Policies Count:</span>
+                      <strong style={{ color: "#0f172a" }}>{relativeAnalysis.warehouse.count}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
+                      <span style={{ color: "#64748b" }}>Total Net Premium:</span>
+                      <strong style={{ color: "#0f172a" }}>₹{formatPremium(relativeAnalysis.warehouse.netPremium)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
+                      <span style={{ color: "#64748b" }}>Avg Premium/Policy:</span>
+                      <strong style={{ color: "#0f172a" }}>₹{formatPremium(relativeAnalysis.warehouse.avgNet)}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#64748b" }}>Key Insurers:</span>
+                      <strong style={{ color: "#0f172a", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", maxWidth: "200px" }} title={relativeAnalysis.warehouse.companies}>{relativeAnalysis.warehouse.companies}</strong>
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                  {/* KPI Row */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-                    <div className="metric-card" style={{ display: "flex", flexDirection: "column", gap: "4px", background: "#ffffff", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                      <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>TOTAL POLICIES</span>
-                      <strong style={{ fontSize: "24px", color: "#0f172a" }}>{monthlyTotals.count}</strong>
-                      <small style={{ color: "#10b981", fontWeight: "600" }}>Active for LOB selection</small>
-                    </div>
-                    <div className="metric-card" style={{ display: "flex", flexDirection: "column", gap: "4px", background: "#ffffff", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                      <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>NET PREMIUM</span>
-                      <strong style={{ fontSize: "24px", color: "#3b82f6" }}>₹{formatPremium(monthlyTotals.netPremium)}</strong>
-                      <small style={{ color: "#3b82f6", fontWeight: "600" }}>Excluding GST / taxes</small>
-                    </div>
-                    <div className="metric-card" style={{ display: "flex", flexDirection: "column", gap: "4px", background: "#ffffff", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                      <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>GROSS PREMIUM</span>
-                      <strong style={{ fontSize: "24px", color: "#f59e0b" }}>₹{formatPremium(monthlyTotals.grossPremium)}</strong>
-                      <small style={{ color: "#f59e0b", fontWeight: "600" }}>Including GST / levies</small>
-                    </div>
-                  </div>
+              </div>
 
-                  {/* Relative LOB Comparison Card */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-                    <div style={{ padding: "20px", border: "1px solid #e2e8f0", borderRadius: "12px", background: "linear-gradient(135deg, #eff6ff 0%, #ffffff 100%)", boxShadow: "0 2px 4px rgba(0,0,0,0.01)" }}>
-                      <h4 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: "800", color: "#1d4ed8", textTransform: "uppercase", margin: "0 0 12px 0" }}>
-                        <Car size={18} />
-                        Motor LOB Summary
-                      </h4>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
-                          <span style={{ color: "#64748b" }}>Policies Count:</span>
-                          <strong style={{ color: "#0f172a" }}>{relativeAnalysis.motor.count}</strong>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
-                          <span style={{ color: "#64748b" }}>Total Net Premium:</span>
-                          <strong style={{ color: "#0f172a" }}>₹{formatPremium(relativeAnalysis.motor.netPremium)}</strong>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
-                          <span style={{ color: "#64748b" }}>Avg Premium/Policy:</span>
-                          <strong style={{ color: "#0f172a" }}>₹{formatPremium(relativeAnalysis.motor.avgNet)}</strong>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                          <span style={{ color: "#64748b" }}>Key Insurers:</span>
-                          <strong style={{ color: "#0f172a", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", maxWidth: "200px" }} title={relativeAnalysis.motor.companies}>{relativeAnalysis.motor.companies}</strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ padding: "20px", border: "1px solid #e2e8f0", borderRadius: "12px", background: "linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%)", boxShadow: "0 2px 4px rgba(0,0,0,0.01)" }}>
-                      <h4 style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: "800", color: "#047857", textTransform: "uppercase", margin: "0 0 12px 0" }}>
-                        <Briefcase size={18} />
-                        Warehouse LOB Summary
-                      </h4>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
-                          <span style={{ color: "#64748b" }}>Policies Count:</span>
-                          <strong style={{ color: "#0f172a" }}>{relativeAnalysis.warehouse.count}</strong>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
-                          <span style={{ color: "#64748b" }}>Total Net Premium:</span>
-                          <strong style={{ color: "#0f172a" }}>₹{formatPremium(relativeAnalysis.warehouse.netPremium)}</strong>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed rgba(226, 232, 240, 0.6)", paddingBottom: "6px" }}>
-                          <span style={{ color: "#64748b" }}>Avg Premium/Policy:</span>
-                          <strong style={{ color: "#0f172a" }}>₹{formatPremium(relativeAnalysis.warehouse.avgNet)}</strong>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                          <span style={{ color: "#64748b" }}>Key Insurers:</span>
-                          <strong style={{ color: "#0f172a", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", maxWidth: "200px" }} title={relativeAnalysis.warehouse.companies}>{relativeAnalysis.warehouse.companies}</strong>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Field Completeness / Quality Audit */}
-                  <div className="glass-panel" style={{ border: "1px solid #e2e8f0", borderRadius: "12px", background: "#ffffff" }}>
-                    <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0" }}>
-                      <h4 style={{ fontSize: "13px", fontWeight: "800", color: "#0f172a", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
-                        <Layers size={18} style={{ color: "#8b5cf6" }} />
-                        Data Quality & Extraction Field Completeness
-                      </h4>
-                      <p style={{ fontSize: "11px", color: "#64748b", margin: "4px 0 0 0" }}>Check field fill rates to identify missing metadata (what more is needed) in database entries.</p>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", padding: "20px" }}>
-                      <div>
-                        <h5 style={{ fontSize: "11px", fontWeight: "800", color: "#1d4ed8", margin: "0 0 12px 0", textTransform: "uppercase" }}>Motor LOB Field Audit</h5>
-                        {fieldCompleteness.motor.length === 0 ? (
-                          <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>No Motor policies for this month to audit.</p>
-                        ) : (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                            {fieldCompleteness.motor.map(item => (
-                              <div key={item.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: "700" }}>
-                                  <span style={{ color: "#475569" }}>{item.name}</span>
-                                  <span style={{ color: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444" }}>{item.fillRate}% ({item.filledCount}/{item.totalCount})</span>
-                                </div>
-                                <div style={{ height: "6px", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
-                                  <div style={{ height: "100%", width: `${item.fillRate}%`, background: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444", borderRadius: "999px" }} />
-                                </div>
-                              </div>
-                            ))}
+              {/* Field Completeness / Quality Audit */}
+              <div className="glass-panel" style={{ border: "1px solid #e2e8f0", borderRadius: "12px", background: "#ffffff" }}>
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0" }}>
+                  <h4 style={{ fontSize: "13px", fontWeight: "800", color: "#0f172a", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+                    <Layers size={18} style={{ color: "#8b5cf6" }} />
+                    Data Quality & Extraction Field Completeness
+                  </h4>
+                  <p style={{ fontSize: "11px", color: "#64748b", margin: "4px 0 0 0" }}>Check field fill rates to identify missing metadata (what more is needed) in database entries.</p>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", padding: "20px" }}>
+                  <div>
+                    <h5 style={{ fontSize: "11px", fontWeight: "800", color: "#1d4ed8", margin: "0 0 12px 0", textTransform: "uppercase" }}>Motor LOB Field Audit</h5>
+                    {fieldCompleteness.motor.length === 0 ? (
+                      <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>No Motor policies for this month to audit.</p>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        {fieldCompleteness.motor.map(item => (
+                          <div key={item.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: "700" }}>
+                              <span style={{ color: "#475569" }}>{item.name}</span>
+                              <span style={{ color: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444" }}>{item.fillRate}% ({item.filledCount}/{item.totalCount})</span>
+                            </div>
+                            <div style={{ height: "6px", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: `${item.fillRate}%`, background: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444", borderRadius: "999px" }} />
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
+                    )}
+                  </div>
 
-                      <div>
-                        <h5 style={{ fontSize: "11px", fontWeight: "800", color: "#047857", margin: "0 0 12px 0", textTransform: "uppercase" }}>Warehouse LOB Field Audit</h5>
-                        {fieldCompleteness.warehouse.length === 0 ? (
-                          <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>No Warehouse policies for this month to audit.</p>
-                        ) : (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                            {fieldCompleteness.warehouse.map(item => (
-                              <div key={item.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: "700" }}>
-                                  <span style={{ color: "#475569" }}>{item.name}</span>
-                                  <span style={{ color: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444" }}>{item.fillRate}% ({item.filledCount}/{item.totalCount})</span>
-                                </div>
-                                <div style={{ height: "6px", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
-                                  <div style={{ height: "100%", width: `${item.fillRate}%`, background: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444", borderRadius: "999px" }} />
-                                </div>
-                              </div>
-                            ))}
+                  <div>
+                    <h5 style={{ fontSize: "11px", fontWeight: "800", color: "#047857", margin: "0 0 12px 0", textTransform: "uppercase" }}>Warehouse LOB Field Audit</h5>
+                    {fieldCompleteness.warehouse.length === 0 ? (
+                      <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>No Warehouse policies for this month to audit.</p>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        {fieldCompleteness.warehouse.map(item => (
+                          <div key={item.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: "700" }}>
+                              <span style={{ color: "#475569" }}>{item.name}</span>
+                              <span style={{ color: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444" }}>{item.fillRate}% ({item.filledCount}/{item.totalCount})</span>
+                            </div>
+                            <div style={{ height: "6px", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: `${item.fillRate}%`, background: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444", borderRadius: "999px" }} />
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
-                    </div>
+                    )}
                   </div>
+                </div>
+              </div>
 
-                  {/* Insurer wise table */}
-                  <div className="table-card" style={{ marginTop: "8px" }}>
-                    <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0" }}>
-                      <h3 style={{ fontSize: "13px", fontWeight: "800", color: "#0f172a", textTransform: "uppercase", margin: 0 }}>INSURANCE COMPANY WISE REPORT</h3>
-                    </div>
-                    <div className="report-table-wrapper">
-                      <table className="report-table">
-                        <thead>
-                          <tr>
-                            <th>Insurance Company</th>
-                            <th style={{ textAlign: "center" }}>Policy Count</th>
-                            <th style={{ textAlign: "right" }}>Total Net Premium</th>
-                            <th style={{ textAlign: "right" }}>Total Gross Premium</th>
-                            <th style={{ textAlign: "right" }}>Avg Net Premium</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {companySummary.map((item) => (
-                            <tr key={item.name} className="report-table-row">
-                              <td style={{ fontWeight: "700" }}>{item.name}</td>
-                              <td style={{ textAlign: "center", fontWeight: "600" }}>{item.count}</td>
-                              <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(item.netPremium)}</td>
-                              <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(item.grossPremium)}</td>
-                              <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(item.count > 0 ? Math.round(item.netPremium / item.count) : 0)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+              {/* Insurer wise table */}
+              <div className="table-card" style={{ marginTop: "8px" }}>
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0" }}>
+                  <h3 style={{ fontSize: "13px", fontWeight: "800", color: "#0f172a", textTransform: "uppercase", margin: 0 }}>INSURANCE COMPANY WISE REPORT</h3>
+                </div>
+                <div className="report-table-wrapper">
+                  <table className="report-table">
+                    <thead>
+                      <tr>
+                        <th>Insurance Company</th>
+                        <th style={{ textAlign: "center" }}>Policy Count</th>
+                        <th style={{ textAlign: "right" }}>Total Net Premium</th>
+                        <th style={{ textAlign: "right" }}>Total Gross Premium</th>
+                        <th style={{ textAlign: "right" }}>Avg Net Premium</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {companySummary.map((item) => (
+                        <tr key={item.name} className="report-table-row">
+                          <td style={{ fontWeight: "700" }}>{item.name}</td>
+                          <td style={{ textAlign: "center", fontWeight: "600" }}>{item.count}</td>
+                          <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(item.netPremium)}</td>
+                          <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(item.grossPremium)}</td>
+                          <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(item.count > 0 ? Math.round(item.netPremium / item.count) : 0)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-                  {/* Detailed policies list */}
-                  <div className="table-card" style={{ marginTop: "8px" }}>
-                    <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0" }}>
-                      <h3 style={{ fontSize: "13px", fontWeight: "800", color: "#0f172a", textTransform: "uppercase", margin: 0 }}>DETAILED POLICIES LIST</h3>
-                    </div>
-                    <div className="report-table-wrapper">
-                      <table className="report-table">
-                        <thead>
-                          <tr>
-                            <th>Date</th>
-                            <th>Insured Name</th>
-                            <th>Insurer</th>
+              {/* Detailed policies list */}
+              <div className="table-card" style={{ marginTop: "8px" }}>
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0" }}>
+                  <h3 style={{ fontSize: "13px", fontWeight: "800", color: "#0f172a", textTransform: "uppercase", margin: 0 }}>DETAILED POLICIES LIST</h3>
+                </div>
+                <div className="report-table-wrapper">
+                  <table className="report-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Insured Name</th>
+                        <th>Insurer</th>
+                        {selectedPolicyType === "motor" ? (
+                          <>
+                            <th>Vehicle No.</th>
+                            <th>Make & Model</th>
+                            <th>IDV</th>
+                            <th>NCB</th>
+                          </>
+                        ) : selectedPolicyType === "warehouse" ? (
+                          <>
+                            <th>Risk Location</th>
+                            <th>Sum Insured</th>
+                            <th>Occupancy</th>
+                          </>
+                        ) : (
+                          <>
+                            <th>Type</th>
+                            <th>Vehicle / Location</th>
+                            <th>Sum Insured / IDV</th>
+                          </>
+                        )}
+                        <th style={{ textAlign: "right" }}>Net Premium</th>
+                        <th style={{ textAlign: "right" }}>Gross Premium</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {monthlyFilteredRecords.map((record) => {
+                        const isMotor = isMotorRecord(record);
+                        const displayDate = record.uploadedAt || record.savedAt || record.createdAt;
+                        
+                        return (
+                          <tr key={record.id} className="report-table-row" onClick={() => onEditRecord && onEditRecord(record)} style={{ cursor: "pointer" }}>
+                            <td style={{ whiteSpace: "nowrap" }}>{formatDate(displayDate)}</td>
+                            <td style={{ fontWeight: "700" }}>{record.insuredName}</td>
+                            <td>{record.insuranceCompany || "N/A"}</td>
+                            
                             {selectedPolicyType === "motor" ? (
                               <>
-                                <th>Vehicle No.</th>
-                                <th>Make & Model</th>
-                                <th>IDV</th>
-                                <th>NCB</th>
+                                <td style={{ fontWeight: "600" }}>{record.vehicleNumber || "N/A"}</td>
+                                <td>{record.makeModel || "N/A"}</td>
+                                <td>{record.idv ? `₹${formatPremium(parsePremium(record.idv))}` : "N/A"}</td>
+                                <td>{record.ncb || "N/A"}</td>
                               </>
                             ) : selectedPolicyType === "warehouse" ? (
                               <>
-                                <th>Risk Location</th>
-                                <th>Sum Insured</th>
-                                <th>Occupancy</th>
+                                <td title={record.premisesAddress || record.riskLocation} style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {record.premisesAddress || record.riskLocation || "N/A"}
+                                </td>
+                                <td>{record.sumInsured ? `₹${formatPremium(parsePremium(record.sumInsured))}` : "N/A"}</td>
+                                <td>{record.occupancy || "N/A"}</td>
                               </>
                             ) : (
                               <>
-                                <th>Type</th>
-                                <th>Vehicle / Location</th>
-                                <th>Sum Insured / IDV</th>
+                                <td>
+                                  <span className={`badge ${isMotor ? 'badge-new' : 'badge-renewal'}`} style={{ textTransform: "uppercase" }}>
+                                    {isMotor ? 'Motor' : 'Warehouse'}
+                                  </span>
+                                </td>
+                                <td style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={isMotor ? record.vehicleNumber : (record.premisesAddress || record.riskLocation)}>
+                                  {isMotor ? (record.vehicleNumber || "N/A") : (record.premisesAddress || record.riskLocation || "N/A")}
+                                </td>
+                                <td>
+                                  {isMotor 
+                                    ? (record.idv ? `₹${formatPremium(parsePremium(record.idv))}` : "N/A")
+                                    : (record.sumInsured ? `₹${formatPremium(parsePremium(record.sumInsured))}` : "N/A")}
+                                </td>
                               </>
                             )}
-                            <th style={{ textAlign: "right" }}>Net Premium</th>
-                            <th style={{ textAlign: "right" }}>Gross Premium</th>
+                            <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(parsePremium(record.netPremium))}</td>
+                            <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(parsePremium(record.premium || record.totalPremium))}</td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {monthlyFilteredRecords.map((record) => {
-                            const isMotor = isMotorRecord(record);
-                            const displayDate = record.uploadedAt || record.savedAt || record.createdAt;
-                            
-                            return (
-                              <tr key={record.id} className="report-table-row" onClick={() => { setIsMonthlyModalOpen(false); onEditRecord && onEditRecord(record); }} style={{ cursor: "pointer" }}>
-                                <td style={{ whiteSpace: "nowrap" }}>{formatDate(displayDate)}</td>
-                                <td style={{ fontWeight: "700" }}>{record.insuredName}</td>
-                                <td>{record.insuranceCompany || "N/A"}</td>
-                                
-                                {selectedPolicyType === "motor" ? (
-                                  <>
-                                    <td style={{ fontWeight: "600" }}>{record.vehicleNumber || "N/A"}</td>
-                                    <td>{record.makeModel || "N/A"}</td>
-                                    <td>{record.idv ? `₹${formatPremium(parsePremium(record.idv))}` : "N/A"}</td>
-                                    <td>{record.ncb || "N/A"}</td>
-                                  </>
-                                ) : selectedPolicyType === "warehouse" ? (
-                                  <>
-                                    <td title={record.premisesAddress || record.riskLocation} style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                      {record.premisesAddress || record.riskLocation || "N/A"}
-                                    </td>
-                                    <td>{record.sumInsured ? `₹${formatPremium(parsePremium(record.sumInsured))}` : "N/A"}</td>
-                                    <td>{record.occupancy || "N/A"}</td>
-                                  </>
-                                ) : (
-                                  <>
-                                    <td>
-                                      <span className={`badge ${isMotor ? 'badge-new' : 'badge-renewal'}`} style={{ textTransform: "uppercase" }}>
-                                        {isMotor ? 'Motor' : 'Warehouse'}
-                                      </span>
-                                    </td>
-                                    <td style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={isMotor ? record.vehicleNumber : (record.premisesAddress || record.riskLocation)}>
-                                      {isMotor ? (record.vehicleNumber || "N/A") : (record.premisesAddress || record.riskLocation || "N/A")}
-                                    </td>
-                                    <td>
-                                      {isMotor 
-                                        ? (record.idv ? `₹${formatPremium(parsePremium(record.idv))}` : "N/A")
-                                        : (record.sumInsured ? `₹${formatPremium(parsePremium(record.sumInsured))}` : "N/A")}
-                                    </td>
-                                  </>
-                                )}
-                                <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(parsePremium(record.netPremium))}</td>
-                                <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(parsePremium(record.premium || record.totalPremium))}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>
