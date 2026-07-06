@@ -86,4 +86,70 @@ After every implementation, verify:
 - [ ] Reused maximum existing code
 - [ ] Smallest possible diff achieved
 
+# Master Principle
 
+BimaHeadquarter is a mature production CRM.
+
+Every implementation must leave the codebase simpler than it was found.
+
+Measure success by: fewer components, fewer files, fewer helpers, fewer duplicate styles, fewer duplicate APIs, fewer duplicate business rules, smaller diffs, zero regressions.
+
+The highest quality implementation is the one that solves the problem by reusing and simplifying the existing system rather than expanding it.
+
+---
+
+# BimaHeadquarter Extended Production Rules
+
+## CSS Rule
+Before writing any CSS: search for an existing utility class or shared style first. Reuse existing component classes second. Create new CSS only if no reusable solution exists. Never duplicate spacing, colors, radius, shadows, or animations.
+
+## Component Extension Rule
+Never create a new component if an existing one can be extended with props, variants, configuration, render functions, or slots. Extend before creating.
+
+## Modal Rule
+There is one reusable modal system. Never create multiple modal implementations. All dialogs must reuse the existing modal wrapper — animations, backdrop, keyboard handling, focus management, and close behavior come from one place.
+
+## Policy UI Rule
+All policy detail views must use the same reusable component. Never create `MotorDetailCard`, `HealthDetailCard`, `WarehouseDetailCard`. Use one generic Policy Detail component configured by policy type.
+
+## Extraction Isolation Rule
+Each Line of Business must remain isolated. Changes to one LOB must never affect another. Motor extraction must never be modified while implementing Fire, Burglary, Fidelity, WC, Marine, or Engineering. Isolation is mandatory.
+
+## Shared Business Logic Rule
+Business rules must exist only once. Renewal calculation, status calculation, premium formatting, date formatting, currency formatting, claim status, customer display — never duplicate business rules.
+
+## API Rule
+Never create an endpoint that returns duplicated data. Prefer extending the existing API response over introducing another endpoint serving nearly identical information.
+
+## Loading Rule
+Every async action must reuse the existing loading pattern. Do not invent new spinners, loaders, skeletons, or progress indicators.
+
+## Error Handling Rule
+Reuse existing error components. Do not create unique error UIs for each page. Errors should feel identical across the CRM.
+
+## Empty State Rule
+Empty states must use the shared design language: same spacing, same illustration style, same typography, same CTA positioning. Consistency over customization.
+
+## Icons Rule
+Reuse existing icon mappings. Never import another icon for the same meaning. One icon per concept.
+
+## Form Rule
+If two forms share more than 70% of their fields, they must become one configurable form. Configuration determines fields, not separate implementations.
+
+## Table Rule
+Never create another table implementation. Use the shared table with column config, cell renderer, actions renderer, visibility config, and permission config.
+
+## Search Before Install Rule
+Before installing any package ask: Can the browser do this? Can JavaScript do this? Can React or Next.js do this? Does the project already contain something similar? Only install dependencies as the absolute final option.
+
+## File Size Rule
+Do not split files simply because they are large. Split only when responsibilities are clearly different, code becomes reusable, or readability clearly improves. Large but cohesive is better than fragmented.
+
+## Naming Rule
+Names must describe purpose. Never use: `Helper2`, `UtilsNew`, `Temp`, `Final`, `Latest`, `New`, `Old`, `Test`, `Copy`. Every name must remain meaningful years later.
+
+## Comment Rule
+Comments explain WHY, never WHAT obvious code already explains. Good comments survive refactoring.
+
+## AI Output Rule
+Before generating code ask: Can I delete code? Can I configure existing code? Can I reuse an existing component, helper, or API? Can I solve this by changing one shared function instead of five callers? If yes, do that instead.
