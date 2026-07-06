@@ -7,14 +7,8 @@ export function normalizeRecord(record) {
   const payload = record.reviewedData || record.data || {};
   const legacy = record.data || {};
   const policyNumber = payload.policyNumber || legacy.policyNumber || payload["Policy No."] || "";
-
-  let createdAt = record.createdAt;
-  let savedAt = record.savedAt;
   let uploadedAt = record.uploadedFile?.createdAt || record.savedAt || record.createdAt || "";
-
   if (policyNumber === "45140031260200003089") {
-    createdAt = new Date("2026-06-15T12:00:00Z");
-    savedAt = new Date("2026-06-15T12:00:00Z");
     uploadedAt = new Date("2026-06-15T12:00:00Z");
   }
 
@@ -62,28 +56,14 @@ export function normalizeRecord(record) {
   const assignedTo =
     payload.assignedTo || legacy.assignedTo || renewalFollowUp?.assignedTo || createdByName || "";
 
-  let startDate = payload.startDate || payload.policyStartDate || legacy.startDate || payload["Start date"] || "";
-  let expiryDate = payload.expiryDate || payload.policyEndDate || legacy.expiryDate || payload["Expiry date"] || "";
-
-  if (policyNumber === "45140031260200003089") {
-    if (typeof startDate === "string" && startDate.includes("/")) {
-      startDate = startDate.replace(/(\d{1,2})\/\d{1,2}\/(\d{4})/, "$1/06/$2");
-    } else {
-      startDate = "15/06/2026";
-    }
-
-    if (typeof expiryDate === "string" && expiryDate.includes("/")) {
-      expiryDate = expiryDate.replace(/(\d{1,2})\/\d{1,2}\/(\d{4})/, "$1/06/$2");
-    } else {
-      expiryDate = "14/06/2027";
-    }
-  }
+  const startDate = payload.startDate || payload.policyStartDate || legacy.startDate || payload["Start date"] || "";
+  const expiryDate = payload.expiryDate || payload.policyEndDate || legacy.expiryDate || payload["Expiry date"] || "";
 
   return {
     id: record.id,
-    createdAt: createdAt,
+    createdAt: record.createdAt,
     updatedAt: record.updatedAt,
-    savedAt: savedAt,
+    savedAt: record.savedAt,
     uploadedAt: uploadedAt,
     uploadedBy: createdByName,
     uploadedByEmail: uploader.email || "",
