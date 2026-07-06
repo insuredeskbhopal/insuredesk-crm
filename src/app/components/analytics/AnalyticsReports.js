@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Calendar, Briefcase, Car, Layers, AlertCircle } from "lucide-react";
+import { Calendar, Briefcase, Car, AlertCircle } from "lucide-react";
 
 // Bezier Curve generator for smooth path strings
 function getBezierPath(points) {
@@ -670,53 +670,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     };
   }, [monthlyFilteredRecords]);
 
-  const fieldCompleteness = useMemo(() => {
-    const motorRecordsFiltered = monthlyFilteredRecords.filter(isMotorRecord);
-    const warehouseRecordsFiltered = monthlyFilteredRecords.filter((r) => !isMotorRecord(r));
 
-    const motorFieldsList = [
-      { name: "Vehicle Number", key: "vehicleNumber" },
-      { name: "Make / Model", key: "makeModel" },
-      { name: "Engine Number", key: "engineNumber" },
-      { name: "Chassis Number", key: "chassisNumber" },
-      { name: "IDV (Sum Insured)", key: "idv" },
-      { name: "NCB (%)", key: "ncb" },
-      { name: "Fuel Type", key: "fuelType" },
-    ];
-
-    const warehouseFieldsList = [
-      { name: "Risk Location (Premises)", key: "premisesAddress" },
-      { name: "Business Description", key: "businessDescription" },
-      { name: "Sum Insured", key: "sumInsured" },
-      { name: "Occupancy Type", key: "occupancy" },
-      { name: "Burglary Sum Insured", key: "burglarySumInsured" },
-      { name: "Fidelity Sum Insured", key: "fidelitySumInsured" },
-    ];
-
-    const calculateFillRate = (recordsList, fieldsList) => {
-      if (recordsList.length === 0) return [];
-      return fieldsList.map(field => {
-        let filledCount = 0;
-        recordsList.forEach(r => {
-          const val = r[field.key];
-          if (val && String(val).trim() !== "" && String(val) !== "N/A" && String(val) !== "0") {
-            filledCount++;
-          }
-        });
-        return {
-          name: field.name,
-          fillRate: Math.round((filledCount / recordsList.length) * 100),
-          filledCount,
-          totalCount: recordsList.length
-        };
-      });
-    };
-
-    return {
-      motor: calculateFillRate(motorRecordsFiltered, motorFieldsList),
-      warehouse: calculateFillRate(warehouseRecordsFiltered, warehouseFieldsList)
-    };
-  }, [monthlyFilteredRecords]);
 
   const isIndividualTab = activeTab === "motor-individual";
 
@@ -1803,59 +1757,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                 </div>
               </div>
 
-              {/* Field Completeness / Quality Audit */}
-              <div className="glass-panel" style={{ border: "1px solid #e2e8f0", borderRadius: "12px", background: "#ffffff" }}>
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e2e8f0" }}>
-                  <h4 style={{ fontSize: "13px", fontWeight: "800", color: "#0f172a", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
-                    <Layers size={18} style={{ color: "#8b5cf6" }} />
-                    Data Quality & Extraction Field Completeness
-                  </h4>
-                  <p style={{ fontSize: "11px", color: "#64748b", margin: "4px 0 0 0" }}>Check field fill rates to identify missing metadata (what more is needed) in database entries.</p>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", padding: "20px" }}>
-                  <div>
-                    <h5 style={{ fontSize: "11px", fontWeight: "800", color: "#1d4ed8", margin: "0 0 12px 0", textTransform: "uppercase" }}>Motor LOB Field Audit</h5>
-                    {fieldCompleteness.motor.length === 0 ? (
-                      <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>No Motor policies for this month to audit.</p>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        {fieldCompleteness.motor.map(item => (
-                          <div key={item.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: "700" }}>
-                              <span style={{ color: "#475569" }}>{item.name}</span>
-                              <span style={{ color: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444" }}>{item.fillRate}% ({item.filledCount}/{item.totalCount})</span>
-                            </div>
-                            <div style={{ height: "6px", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
-                              <div style={{ height: "100%", width: `${item.fillRate}%`, background: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444", borderRadius: "999px" }} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
 
-                  <div>
-                    <h5 style={{ fontSize: "11px", fontWeight: "800", color: "#047857", margin: "0 0 12px 0", textTransform: "uppercase" }}>Warehouse LOB Field Audit</h5>
-                    {fieldCompleteness.warehouse.length === 0 ? (
-                      <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>No Warehouse policies for this month to audit.</p>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        {fieldCompleteness.warehouse.map(item => (
-                          <div key={item.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: "700" }}>
-                              <span style={{ color: "#475569" }}>{item.name}</span>
-                              <span style={{ color: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444" }}>{item.fillRate}% ({item.filledCount}/{item.totalCount})</span>
-                            </div>
-                            <div style={{ height: "6px", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
-                              <div style={{ height: "100%", width: `${item.fillRate}%`, background: item.fillRate > 75 ? "#10b981" : item.fillRate > 40 ? "#f59e0b" : "#ef4444", borderRadius: "999px" }} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
 
               {/* Insurer wise table */}
               <div className="table-card" style={{ marginTop: "8px" }}>
