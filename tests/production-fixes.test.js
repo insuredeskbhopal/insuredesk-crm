@@ -174,5 +174,28 @@ describe("Production Fixes Audit Test Suite", () => {
       expect(result.cubicCapacity).toBe("0");
     });
   });
+
+  describe("Shriram General Insurance Commercial Vehicle Liability Policy Extraction", () => {
+    it("extracts companyName, policyNumber, policyType, insuredName, chassisNumber, engineNumber, vehicleNumber, year, and seatingCapacity correctly", () => {
+      const ocrPath = path.join(__dirname, "shriram_cv_ocr.txt");
+      const ocrText = fs.readFileSync(ocrPath, "utf8");
+      const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
+      const result = extractPolicyFromText(ocrText, "shriram_cv.pdf");
+
+      expect(result.documentFormat).toBe("SHRIRAM_MOTOR_V1");
+      expect(result.documentCategory).toBe("Motor Insurance");
+      expect(result.insuranceCompany).toBe("SHRIRAM GENERAL INSURANCE COMPANY LIMITED");
+      expect(result.policyNumber).toBe("209040/31/27/000523");
+      expect(result.policyType).toBe("MOTOR COMMERCIAL VEHICLE (LIABILITY ONLY POLICY)");
+      expect(result.insuredName).toBe("M/S. MS MAHAKAL TRANSPORTN AND CO");
+      expect(result.chassisNumber).toBe("MAT447220F1K24434");
+      expect(result.engineNumber).toBe("B591803251K63472202");
+      expect(result.registrationNumber).toBe("RJ-21-GB-6122");
+      expect(result.vehicleNumber).toBe("RJ-21-GB-6122");
+      expect(result.manufacturingYear).toBe("2015");
+      expect(result.seatingCapacity).toBe("3");
+    });
+  });
 });
+
 

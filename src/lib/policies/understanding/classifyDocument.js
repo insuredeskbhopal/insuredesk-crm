@@ -123,6 +123,17 @@ function classifyDocument(text = "") {
         /Registration\s+No/i,
       ],
     },
+    {
+      company: "Shriram General Insurance Company Limited",
+      documentFormat: "SHRIRAM_MOTOR_V1",
+      documentCategory: "Motor Insurance",
+      policyType: "Motor Policy",
+      signals: [
+        /Shriram\s+General\s+Insurance/i,
+        /UIN\s+No\.?IRDAN137/i,
+        /209040\/\d{2}\/\d{2}\/\d{6}/i,
+      ],
+    },
   ];
 
   let best = {

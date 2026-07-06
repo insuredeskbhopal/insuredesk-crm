@@ -6,7 +6,7 @@
   "fields": [
     {
       "field": "insuredName",
-      "aliases": ["Name of Insured", "Insured Name", "Name of Insured/Proposer", "Customer Name"],
+      "aliases": ["Name of Insured", "Insured Name", "Name of Insured/Proposer", "Customer Name", "Insured's Code/ Name", "Insured's Code/Name"],
       "section": "insured_details",
       "type": "string",
       "required": true

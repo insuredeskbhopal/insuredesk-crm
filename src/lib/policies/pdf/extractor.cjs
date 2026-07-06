@@ -1470,6 +1470,9 @@ function buildIntelligentResult(legacyData, policyUnderstanding, policySchema, s
   }
 
   if (isMotorExtraction(mergedData, policyUnderstanding)) {
+    if (mergedData.documentFormat === "SHRIRAM_MOTOR_V1") {
+      finalizeShriramMotorFields(mergedData);
+    }
     if (isNewIndiaAssuranceText(mergedData.sourceText) && /cover note/i.test(mergedData.financerName || "")) {
       mergedData.financerName = "";
     }
@@ -1548,6 +1551,50 @@ function buildIntelligentResult(legacyData, policyUnderstanding, policySchema, s
     },
     fieldConfidence: validation.fieldConfidence,
   };
+}
+
+function finalizeShriramMotorFields(data) {
+  const text = data.sourceText || "";
+  
+  const insuredIndex = text.indexOf("Insured's Code/ Name");
+  const gstinIndex = text.indexOf("GSTIN No. Of Insured");
+  if (insuredIndex !== -1 && gstinIndex !== -1 && gstinIndex > insuredIndex) {
+    const rawNameSegment = text.slice(insuredIndex + "Insured's Code/ Name".length, gstinIndex);
+    const cleanedSegment = rawNameSegment.replace(/IN-\d+\s*\/\s*/i, "").replace(/\s+/g, " ").trim();
+    if (cleanedSegment) {
+      data.insuredName = cleanedSegment;
+      data.contactPerson = cleanedSegment;
+    }
+  }
+
+  const typeMatch = text.match(/([^\n]+)\s*\n\s*UIN\s*No\.?IRDAN137/i);
+  if (typeMatch) {
+    data.policyType = typeMatch[1].replace(/[-–\s]+$/, "").replace(/\s+/g, " ").trim();
+  }
+
+  const engChassisMatch = text.match(/([A-Z0-9]{6,25})\s*&\s*(M[A-Z0-9]{16})/i);
+  if (engChassisMatch) {
+    data.engineNumber = engChassisMatch[1].toUpperCase();
+    data.chassisNumber = engChassisMatch[2].toUpperCase();
+  }
+
+  const regMatch = text.match(/([A-Z]{2}\s*[-–\s]?\s*\d{2}\s*[-–\s]?\s*[A-Z]{1,3}\s*[-–\s]?\s*\d{4})/gi);
+  if (regMatch) {
+    const formattedReg = regMatch[0].replace(/\s+/g, " ").replace(/\s*-\s*/g, "-").trim().toUpperCase();
+    data.registrationNumber = formattedReg;
+    data.vehicleNumber = formattedReg;
+  }
+
+  const yearMatch = text.match(/1\s*\/\s*0\s*\/\s*(\d{4})/i);
+  if (yearMatch) {
+    data.manufacturingYear = yearMatch[1];
+  }
+
+  const seatMatch = text.match(/(\d+)\s*\+\s*(\d+)/i);
+  if (seatMatch) {
+    const totalSeats = parseInt(seatMatch[1], 10) + parseInt(seatMatch[2], 10);
+    data.seatingCapacity = String(totalSeats);
+  }
 }
 
 module.exports = {
