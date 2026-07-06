@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 import { GET as whatsappWorkerGET } from "../src/app/api/cron/whatsapp-worker/route.js";
 import { calculateDaysLeft, calculateRenewalStatus, parseRenewalDate } from "../src/lib/renewals/dates.js";
 import { normalizeIndianPhone, sanitizeCustomerProfilePayload } from "../src/lib/customer-profiles/utils.js";
+import { extractBajajAllianzMotor } from "../src/lib/policies/pdf/parsers/bajaj/index.cjs";
+
 
 // Mock WhatsApp workers dependencies to avoid DB/external network calls
 vi.mock("../src/lib/whatsapp/automations", () => ({
@@ -153,4 +157,22 @@ describe("Production Fixes Audit Test Suite", () => {
       expect(validateAltPhone(null)).toBe(true); // allowed to be null
     });
   });
+
+  describe("Bajaj Allianz Commercial Vehicle Package Policy Extraction", () => {
+    it("extracts chassis number, engine number, policy type, manufacturing year, and seating capacity correctly from OCR text", () => {
+      const ocrPath = path.join(__dirname, "bajaj_cv_ocr.txt");
+      const ocrText = fs.readFileSync(ocrPath, "utf8");
+      const result = extractBajajAllianzMotor(ocrText, "bajaj_cv.pdf");
+
+      expect(result.documentDetected).toBe(true);
+      expect(result.chassisNumber).toBe("MA1GH2CNHS3A10994");
+      expect(result.engineNumber).toBe("CNS4A10059");
+      expect(result.policyType).toBe("Commercial Vehicle Package Policy");
+      expect(result.manufacturingYear).toBe("2025");
+      expect(result.seatingCapacity).toBe("50");
+      expect(result.fuelType).toBe("DIESEL");
+      expect(result.cubicCapacity).toBe("0");
+    });
+  });
 });
+

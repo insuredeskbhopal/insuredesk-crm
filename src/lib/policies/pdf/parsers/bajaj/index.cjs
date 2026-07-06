@@ -328,87 +328,111 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
         const normalizedCombined = combined.replace(/[^A-Z0-9]/gi, "").toUpperCase();
 
         // Standard Indian chassis starts with MA, MB, MC, MD, ME, MZ, and is 17 characters long.
-        const vinMatch = normalizedCombined.match(/M[A-EZ][A-Z0-9]{15}/i);
-        if (vinMatch) {
+        const vinRegex = /M[A-EZ][A-Z0-9]{15}/gi;
+        let vinMatch;
+        let vinStartIndex = -1;
+        while ((vinMatch = vinRegex.exec(normalizedCombined)) !== null) {
           const candidateChassis = vinMatch[0].toUpperCase();
           if (isPlausibleChassisNumber(candidateChassis)) {
             chassisNumber = candidateChassis;
-            
-            // Find engine number from normalizedCombined without overlapping the chassis number
-            const vinStartIndex = vinMatch.index;
-            const vinEndIndex = vinStartIndex + 17;
-            
-            const engineRegex = /[A-Z0-9]{6,35}/gi;
-            let match;
-            while ((match = engineRegex.exec(normalizedCombined)) !== null) {
-              const block = match[0];
-              const candStartIndex = match.index;
-              const candEndIndex = candStartIndex + block.length;
-              
-              let safeParts = [];
-              if (candStartIndex >= vinEndIndex || candEndIndex <= vinStartIndex) {
-                safeParts.push(block);
-              } else {
-                if (candStartIndex < vinStartIndex) {
-                  safeParts.push(block.slice(0, vinStartIndex - candStartIndex));
-                }
-                if (candEndIndex > vinEndIndex) {
-                  safeParts.push(block.slice(vinEndIndex - candStartIndex));
-                }
-              }
-              
-              for (const part of safeParts) {
-                if (part.length >= 6) {
-                  const subEngine = extractSubEngine(part, rtoLocation, registrationNumber);
-                  if (subEngine) {
-                    engineNumber = subEngine;
-                    break;
-                  }
-                }
-              }
-              if (engineNumber) break;
-            }
+            vinStartIndex = vinMatch.index;
+            break;
+          }
+        }
 
-            // Fallback: Now look at subsequent lines for a plausible engine number
-            if (!engineNumber) {
-              let currentLength = 0;
-              let vinEndLineIndex = i;
-              for (let k = 0; k <= 8; k++) {
-                if (lines[i + k]) {
-                  currentLength += lines[i + k].replace(/\s+/g, "").length;
-                  if (currentLength >= vinEndIndex) {
-                    vinEndLineIndex = i + k;
-                    break;
-                  }
-                }
+        if (chassisNumber && vinStartIndex !== -1) {
+          const vinEndIndex = vinStartIndex + 17;
+          
+          const engineRegex = /[A-Z0-9]{6,35}/gi;
+          let match;
+          while ((match = engineRegex.exec(normalizedCombined)) !== null) {
+            const block = match[0];
+            const candStartIndex = match.index;
+            const candEndIndex = candStartIndex + block.length;
+            
+            let safeParts = [];
+            if (candStartIndex >= vinEndIndex || candEndIndex <= vinStartIndex) {
+              safeParts.push(block);
+            } else {
+              if (candStartIndex < vinStartIndex) {
+                safeParts.push(block.slice(0, vinStartIndex - candStartIndex));
               }
-              for (let k = vinEndLineIndex + 1; k < Math.min(lines.length, i + 9); k++) {
-                if (lines[k]) {
-                  const possibleEngine = lines[k].replace(/[^A-Z0-9]/gi, "").trim().toUpperCase();
-                  if (isPlausibleEngineForBajaj(possibleEngine, rtoLocation, registrationNumber)) {
-                    engineNumber = possibleEngine;
-                    break;
-                  }
+              if (candEndIndex > vinEndIndex) {
+                safeParts.push(block.slice(vinEndIndex - candStartIndex));
+              }
+            }
+            
+            for (const part of safeParts) {
+              if (part.length >= 6) {
+                const subEngine = extractSubEngine(part, rtoLocation, registrationNumber);
+                if (subEngine) {
+                  engineNumber = subEngine;
+                  break;
                 }
               }
             }
+            if (engineNumber) break;
+          }
 
-            // Parse digits preceding the VIN
-            const vinIndexInCombined = normalizedCombined.indexOf(chassisNumber);
-            const beforeVin = normalizedCombined.slice(0, vinIndexInCombined);
-            const digitsBeforeVinMatch = beforeVin.match(/(\d+)$/);
-            if (digitsBeforeVinMatch) {
-              const digits = digitsBeforeVinMatch[1];
-              const yearMatch = digits.match(/(19\d{2}|20\d{2})/);
-              if (yearMatch) {
-                manufacturingYear = yearMatch[1];
-                const yearIndex = digits.indexOf(manufacturingYear);
-                cubicCapacity = digits.slice(0, yearIndex);
-                seatingCapacity = digits.slice(yearIndex + 4);
+          // Fallback: Now look at subsequent lines for a plausible engine number
+          if (!engineNumber) {
+            let currentLength = 0;
+            let vinEndLineIndex = i;
+            for (let k = 0; k <= 8; k++) {
+              if (lines[i + k]) {
+                currentLength += lines[i + k].replace(/\s+/g, "").length;
+                if (currentLength >= vinEndIndex) {
+                  vinEndLineIndex = i + k;
+                  break;
+                }
+              }
+            }
+            for (let k = vinEndLineIndex + 1; k < Math.min(lines.length, i + 9); k++) {
+              if (lines[k]) {
+                const possibleEngine = lines[k].replace(/[^A-Z0-9]/gi, "").trim().toUpperCase();
+                if (isPlausibleEngineForBajaj(possibleEngine, rtoLocation, registrationNumber)) {
+                  engineNumber = possibleEngine;
+                  break;
+                }
               }
             }
           }
+
+          // If engine number not found, try to extract a plausible engine prefix from afterVin
+          if (!engineNumber) {
+            const afterVin = normalizedCombined.slice(vinEndIndex);
+            let cutoffIndex = afterVin.length;
+            const headerKeywords = ["FUEL", "VEHICLE", "IDV", "ELEC", "ACC", "NON", "TRAILER", "CNG", "LPG", "LNG", "TOTAL", "SUM", "INSURED"];
+            for (const kw of headerKeywords) {
+              const idx = afterVin.indexOf(kw);
+              if (idx !== -1 && idx < cutoffIndex) {
+                cutoffIndex = idx;
+              }
+            }
+            const candidate = afterVin.slice(0, cutoffIndex);
+            if (isPlausibleEngineForBajaj(candidate, rtoLocation, registrationNumber)) {
+              engineNumber = candidate;
+            }
+          }
+
+
+
+          // Parse digits preceding the VIN
+          const vinIndexInCombined = normalizedCombined.indexOf(chassisNumber);
+          const beforeVin = normalizedCombined.slice(0, vinIndexInCombined);
+          const digitsBeforeVinMatch = beforeVin.match(/(\d+)$/);
+          if (digitsBeforeVinMatch) {
+            const digits = digitsBeforeVinMatch[1];
+            const yearMatch = digits.match(/(19\d{2}|20\d{2})/);
+            if (yearMatch) {
+              manufacturingYear = yearMatch[1];
+              const yearIndex = digits.indexOf(manufacturingYear);
+              cubicCapacity = digits.slice(0, yearIndex);
+              seatingCapacity = digits.slice(yearIndex + 4);
+            }
+          }
         }
+
         if (engineNumber && chassisNumber) {
           break;
         }
