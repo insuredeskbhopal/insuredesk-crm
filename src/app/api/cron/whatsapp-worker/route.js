@@ -18,7 +18,8 @@ export async function POST(request) {
 
 function isAuthorized(request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return true;
+  if (!secret && process.env.NODE_ENV !== "production") return true;
+  if (!secret) return false;
 
   const authHeader = request.headers.get("authorization") || "";
   const secretParam = new URL(request.url).searchParams.get("secret") || "";

@@ -81,6 +81,12 @@ export async function PUT(request, { params }) {
         { status: 400 },
       );
     }
+    if (data.alternatePhone && normalizeIndianPhone(data.alternatePhone) !== data.alternatePhone) {
+      return NextResponse.json(
+        { error: "Please enter a valid 10-digit Indian mobile number (starting with 6-9) for alternate phone." },
+        { status: 400 },
+      );
+    }
 
     const duplicate = await prisma.customerProfile.findFirst({
       where: {

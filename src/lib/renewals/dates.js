@@ -1,25 +1,58 @@
-import { startOfDay } from "@/app/lib/reporting/filters";
+
+const REPORT_TIME_ZONE = "Asia/Kolkata";
+const INDIA_TIME_OFFSET = "+05:30";
+
+export function getIndiaDateParts(date) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: REPORT_TIME_ZONE,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  });
+  const formatted = formatter.format(date);
+  const [month, day, year] = formatted.split("/").map(Number);
+  return { year, month, day };
+}
+
+export function makeIndiaDate(year, month, day) {
+  return new Date(
+    `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00${INDIA_TIME_OFFSET}`
+  );
+}
 
 export function parseRenewalDate(value) {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    const parts = getIndiaDateParts(value);
+    return makeIndiaDate(parts.year, parts.month, parts.day);
+  }
+
   const text = String(value || "").trim();
   if (!text) return null;
+
   const dmy = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
   if (dmy) {
     const [, day, month, year] = dmy;
     const fullYear = year.length === 2 ? `20${year}` : year;
     const date = new Date(Number(fullYear), Number(month) - 1, Number(day));
     if (
+      Number.isNaN(date.getTime()) ||
       date.getFullYear() !== Number(fullYear) ||
       date.getMonth() !== Number(month) - 1 ||
       date.getDate() !== Number(day)
     ) {
       return null;
     }
-    return startOfDay(date);
+    return makeIndiaDate(Number(fullYear), Number(month), Number(day));
   }
-  const date = new Date(text);
-  if (Number.isNaN(date.getTime())) return null;
-  return startOfDay(date);
+
+  const parsedDate = new Date(text);
+  if (Number.isNaN(parsedDate.getTime())) return null;
+
+  const parts = getIndiaDateParts(parsedDate);
+  return makeIndiaDate(parts.year, parts.month, parts.day);
 }
 
 export function getExpiryState(value) {
@@ -41,21 +74,19 @@ export function getDaysStatus(value) {
   return `${diffDays} Day${diffDays === 1 ? "" : "s"} Left`;
 }
 
-export function calculateDaysLeft(expiryDate) {
+export function calculateDaysLeft(expiryDate, referenceDate = new Date()) {
   if (!expiryDate) return null;
 
   const expiry = parseRenewalDate(expiryDate);
   if (!expiry) return null;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const todayParts = getIndiaDateParts(referenceDate);
+  const today = makeIndiaDate(todayParts.year, todayParts.month, todayParts.day);
 
-  expiry.setHours(0, 0, 0, 0);
-
-  return Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+  return Math.round((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-export function calculateRenewalStatus(expiryDate, manualStatus = "") {
+export function calculateRenewalStatus(expiryDate, manualStatus = "", referenceDate = new Date()) {
   const manual = String(manualStatus || "")
     .toLowerCase()
     .trim();
@@ -68,12 +99,10 @@ export function calculateRenewalStatus(expiryDate, manualStatus = "") {
   const expiry = parseRenewalDate(expiryDate);
   if (!expiry) return "unknown";
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const todayParts = getIndiaDateParts(referenceDate);
+  const today = makeIndiaDate(todayParts.year, todayParts.month, todayParts.day);
 
-  expiry.setHours(0, 0, 0, 0);
-
-  const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+  const diffDays = Math.round((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) return "expired";
   if (diffDays <= 30) return "expiry_soon";

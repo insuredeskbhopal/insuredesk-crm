@@ -20,7 +20,7 @@ export function sanitizeCustomerProfilePayload(payload = {}) {
   return {
     name: asText(payload.name, 220),
     phone: normalizePhone(payload.phone),
-    alternatePhone: normalizePhone(payload.alternatePhone),
+    alternatePhone: payload.alternatePhone ? normalizePhone(payload.alternatePhone) : "",
     email: asText(payload.email, 180),
     dob: payload.dob ? (isNaN(new Date(payload.dob).getTime()) ? null : new Date(payload.dob)) : null,
     address: asText(payload.address, 2000),
