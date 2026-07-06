@@ -85,6 +85,9 @@ export default function Dashboard({
   initialFilterValue = "",
   initialPdfFilter = "all",
   initialViewCategory = "all",
+  initialStartDate = "",
+  initialEndDate = "",
+  initialDatePreset = "all",
   tabCounts = null,
   serverLoadError = "",
 }) {
@@ -164,6 +167,9 @@ export default function Dashboard({
   const [recordFilterValue, setRecordFilterValue] = useState(initialFilterValue);
   const [recordPdfFilter, setRecordPdfFilter] = useState(initialPdfFilter);
   const [recordViewCategory, setRecordViewCategory] = useState(initialViewCategory);
+  const [recordStartDate, setRecordStartDate] = useState(initialStartDate);
+  const [recordEndDate, setRecordEndDate] = useState(initialEndDate);
+  const [recordDatePreset, setRecordDatePreset] = useState(initialDatePreset);
   const [currentUserRole, setCurrentUserRole] = useState("");
   const [editingRecord, setEditingRecord] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -180,6 +186,9 @@ export default function Dashboard({
     const valueVal = newParams.filterValue !== undefined ? newParams.filterValue : recordFilterValue;
     const pdfVal = newParams.pdfFilter !== undefined ? newParams.pdfFilter : recordPdfFilter;
     const catVal = newParams.viewCategory !== undefined ? newParams.viewCategory : recordViewCategory;
+    const startVal = newParams.startDate !== undefined ? newParams.startDate : recordStartDate;
+    const endVal = newParams.endDate !== undefined ? newParams.endDate : recordEndDate;
+    const presetVal = newParams.datePreset !== undefined ? newParams.datePreset : recordDatePreset;
     const pageVal = newParams.page !== undefined ? newParams.page : 1;
 
     if (qVal.trim()) params.set("q", qVal.trim());
@@ -192,6 +201,12 @@ export default function Dashboard({
     else params.delete("pdfFilter");
     if (catVal && catVal !== "all") params.set("viewCategory", catVal);
     else params.delete("viewCategory");
+    if (startVal) params.set("startDate", startVal);
+    else params.delete("startDate");
+    if (endVal) params.set("endDate", endVal);
+    else params.delete("endDate");
+    if (presetVal && presetVal !== "all") params.set("datePreset", presetVal);
+    else params.delete("datePreset");
     if (pageVal > 1) params.set("page", pageVal);
     else params.delete("page");
 
@@ -292,6 +307,18 @@ export default function Dashboard({
   useEffect(() => {
     setRecordPdfFilter(initialPdfFilter);
   }, [initialPdfFilter]);
+
+  useEffect(() => {
+    setRecordStartDate(initialStartDate);
+  }, [initialStartDate]);
+
+  useEffect(() => {
+    setRecordEndDate(initialEndDate);
+  }, [initialEndDate]);
+
+  useEffect(() => {
+    setRecordDatePreset(initialDatePreset);
+  }, [initialDatePreset]);
 
   useEffect(() => {
     if (serverLoadError) {
@@ -502,7 +529,11 @@ export default function Dashboard({
       }));
   }, [recordViewCategory, recordsWithSchema]);
   const activeRecordFilterCount =
-    (recordFilterField && recordFilterValue.trim() ? 1 : 0) + (recordPdfFilter !== "all" ? 1 : 0);
+    (recordFilterField && recordFilterValue.trim() ? 1 : 0) +
+    (recordPdfFilter !== "all" ? 1 : 0) +
+    (recordDatePreset !== "all" ? 1 : 0) +
+    (recordDatePreset === "custom" && recordStartDate ? 1 : 0) +
+    (recordDatePreset === "custom" && recordEndDate ? 1 : 0);
   const clientProfiles = buildClientProfiles(filteredRecords, parseMoney);
   const CUSTOMERS_PER_PAGE = 12;
   const customerPageCount = Math.max(1, Math.ceil(clientProfiles.length / CUSTOMERS_PER_PAGE));
@@ -1260,6 +1291,9 @@ export default function Dashboard({
     if (recordFilterValue.trim()) params.set("filterValue", recordFilterValue.trim());
     if (recordPdfFilter && recordPdfFilter !== "all") params.set("pdfFilter", recordPdfFilter);
     if (recordViewCategory && recordViewCategory !== "all") params.set("viewCategory", recordViewCategory);
+    if (recordDatePreset && recordDatePreset !== "all") params.set("datePreset", recordDatePreset);
+    if (recordDatePreset === "custom" && recordStartDate) params.set("startDate", recordStartDate);
+    if (recordDatePreset === "custom" && recordEndDate) params.set("endDate", recordEndDate);
     return params;
   }
 
@@ -1725,13 +1759,84 @@ export default function Dashboard({
                   <option value="missing">Missing PDF</option>
                 </select>
               </label>
+              <label>
+                <span>Date Filter</span>
+                <select
+                  value={recordDatePreset}
+                  onChange={(event) => {
+                    setRecordDatePreset(event.target.value);
+                    const isCustom = event.target.value === "custom";
+                    if (!isCustom) {
+                      setRecordStartDate("");
+                      setRecordEndDate("");
+                    }
+                    updateRecordQueryParams({
+                      datePreset: event.target.value,
+                      startDate: isCustom ? recordStartDate : "",
+                      endDate: isCustom ? recordEndDate : "",
+                      page: 1,
+                    });
+                  }}
+                >
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="last-3-days">Last 3 Days</option>
+                  <option value="this-week">This Week</option>
+                  <option value="last-week">Last Week</option>
+                  <option value="this-month">This Month</option>
+                  <option value="last-month">Last Month</option>
+                  <option value="last-3-months">Last 3 Months</option>
+                  <option value="last-6-months">Last 6 Months</option>
+                  <option value="this-year">This Year</option>
+                  <option value="last-year">Last Year</option>
+                  <option value="custom">Custom Range</option>
+                </select>
+              </label>
+              {recordDatePreset === "custom" && (
+                <>
+                  <label>
+                    <span>Start Date</span>
+                    <input
+                      type="date"
+                      value={recordStartDate}
+                      onChange={(event) => {
+                        setRecordStartDate(event.target.value);
+                        updateRecordQueryParams({ startDate: event.target.value, page: 1 });
+                      }}
+                    />
+                  </label>
+                  <label>
+                    <span>End Date</span>
+                    <input
+                      type="date"
+                      value={recordEndDate}
+                      onChange={(event) => {
+                        setRecordEndDate(event.target.value);
+                        updateRecordQueryParams({ endDate: event.target.value, page: 1 });
+                      }}
+                    />
+                  </label>
+                </>
+              )}
               <button
                 type="button"
                 onClick={() => {
                   setRecordFilterField("");
                   setRecordFilterValue("");
                   setRecordPdfFilter("all");
-                  updateRecordQueryParams({ filterField: "", filterValue: "", pdfFilter: "all", page: 1 });
+                  setRecordStartDate("");
+                  setRecordEndDate("");
+                  setRecordDatePreset("all");
+                  updateRecordQueryParams({
+                    filterField: "",
+                    filterValue: "",
+                    pdfFilter: "all",
+                    startDate: "",
+                    endDate: "",
+                    datePreset: "all",
+                    page: 1,
+                  });
                 }}
               >
                 Clear

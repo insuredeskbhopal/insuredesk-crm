@@ -15,6 +15,9 @@ export default async function PolicyRecordsPage(props) {
   const filterValue = searchParams.filterValue || "";
   const pdfFilter = searchParams.pdfFilter || "all";
   const viewCategory = searchParams.viewCategory || "all";
+  const startDate = searchParams.startDate || "";
+  const endDate = searchParams.endDate || "";
+  const datePreset = searchParams.datePreset || "all";
 
   const session = await getCurrentSessionFromCookies();
   const tenantFilter = session
@@ -35,6 +38,9 @@ export default async function PolicyRecordsPage(props) {
     filterValue,
     pdfFilter,
     viewCategory,
+    startDate,
+    endDate,
+    datePreset,
   });
   const countsPayload = await loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId, session });
   const {
@@ -65,6 +71,9 @@ export default async function PolicyRecordsPage(props) {
       initialFilterValue={filterValue}
       initialPdfFilter={pdfFilter}
       initialViewCategory={viewCategory}
+      initialStartDate={startDate}
+      initialEndDate={endDate}
+      initialDatePreset={datePreset}
       tabCounts={tabCounts}
       serverLoadError={
         countsError ||

@@ -5,7 +5,7 @@ import { GET as whatsappWorkerGET } from "../src/app/api/cron/whatsapp-worker/ro
 import { calculateDaysLeft, calculateRenewalStatus, parseRenewalDate } from "../src/lib/renewals/dates.js";
 import { normalizeIndianPhone, sanitizeCustomerProfilePayload } from "../src/lib/customer-profiles/utils.js";
 import { extractBajajAllianzMotor } from "../src/lib/policies/pdf/parsers/bajaj/index.cjs";
-
+import { getPresetDates } from "../src/lib/records/scoped-data.js";
 
 // Mock WhatsApp workers dependencies to avoid DB/external network calls
 vi.mock("../src/lib/whatsapp/automations", () => ({
@@ -194,6 +194,33 @@ describe("Production Fixes Audit Test Suite", () => {
       expect(result.vehicleNumber).toBe("RJ-21-GB-6122");
       expect(result.manufacturingYear).toBe("2015");
       expect(result.seatingCapacity).toBe("3");
+    });
+  });
+
+  describe("Date Presets Filter Helper", () => {
+    it("correctly generates date ranges for today, yesterday, this-week, last-week, this-month, last-month, and this-year", () => {
+      const todayRange = getPresetDates("today");
+      expect(todayRange).not.toBeNull();
+      expect(todayRange.start.getHours()).toBe(0);
+      expect(todayRange.end.getHours()).toBe(23);
+
+      const yesterdayRange = getPresetDates("yesterday");
+      expect(yesterdayRange).not.toBeNull();
+
+      const thisMonthRange = getPresetDates("this-month");
+      expect(thisMonthRange).not.toBeNull();
+      expect(thisMonthRange.start.getDate()).toBe(1);
+
+      const lastMonthRange = getPresetDates("last-month");
+      expect(lastMonthRange).not.toBeNull();
+      expect(lastMonthRange.start.getDate()).toBe(1);
+
+      const thisYearRange = getPresetDates("this-year");
+      expect(thisYearRange).not.toBeNull();
+      expect(thisYearRange.start.getMonth()).toBe(0);
+      expect(thisYearRange.start.getDate()).toBe(1);
+
+      expect(getPresetDates("invalid")).toBeNull();
     });
   });
 });

@@ -10,6 +10,7 @@ import { UPLOAD_STATUS } from "@/lib/uploads/status";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
+import { getSavedAtDateFilter } from "@/lib/records/scoped-data";
 
 export const runtime = "nodejs";
 
@@ -43,6 +44,9 @@ export async function GET(request) {
     const filterValue = searchParams.get("filterValue") || "";
     const pdfFilter = searchParams.get("pdfFilter") || "all";
     const viewCategory = searchParams.get("viewCategory") || "all";
+    const startDate = searchParams.get("startDate") || "";
+    const endDate = searchParams.get("endDate") || "";
+    const datePreset = searchParams.get("datePreset") || "all";
 
     // Fetch tenant-scoped and RBAC-authorized filter
     const tenantFilter = getTenantFilter(user, "read");
@@ -135,6 +139,11 @@ export async function GET(request) {
       });
     } else if (pdfFilter === "missing") {
       andFilters.push({ pdfFileName: null, pdfBytes: null });
+    }
+
+    const savedAtFilter = getSavedAtDateFilter({ startDate, endDate, datePreset });
+    if (savedAtFilter) {
+      andFilters.push({ savedAt: savedAtFilter });
     }
 
     if (viewCategory !== "all" && viewCategory !== "duplicates") {
