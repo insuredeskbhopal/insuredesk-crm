@@ -18,7 +18,6 @@ import {
   CheckCircle,
   Download,
   FileText,
-  Pencil,
   X,
   SlidersHorizontal,
   LoaderCircle,
@@ -59,6 +58,7 @@ import FieldSetupPanel from "@/app/components/field-setup/FieldSetupPanel";
 import ClientProfile from "@/app/components/customers/ClientProfile";
 import PolicyDetail from "@/app/components/policies/PolicyDetail";
 import AnalyticsReports from "@/app/components/analytics/AnalyticsReports";
+import PolicyDetailCard from "@/app/components/shared/PolicyDetailCard";
 
 const DASHBOARD_VIEW_KEY = "bimaheadquarter.dashboard.view";
 const FIELD_OPTIONS = {
@@ -532,17 +532,6 @@ export default function Dashboard({
         extractedData: editForm,
       }),
     [editingRecord, editForm],
-  );
-  const editFieldGroups = useMemo(
-    () =>
-      FIELD_GROUPS.map((group) => {
-        const fieldsInGroup = editValidation.visibleFields.filter(([, key]) => group.fields.includes(key));
-        return {
-          title: group.title,
-          fields: fieldsInGroup,
-        };
-      }).filter((group) => group.fields.length > 0),
-    [editValidation.visibleFields],
   );
 
   const handleSelectReport = (report) => {
@@ -2214,84 +2203,17 @@ export default function Dashboard({
           document.body,
         )}
 
-      {editingRecord ? (
-        <div className="record-edit-backdrop" onClick={() => setEditingRecord(null)}>
-          <section
-            className="record-edit-modal"
-            onClick={(event) => event.stopPropagation()}
-            aria-modal="true"
-            role="dialog"
-          >
-            <div className="record-edit-head">
-              <div>
-                <p className="eyebrow">
-                  {editValidation.resolvedSchema
-                    ? `${editValidation.resolvedSchema.groupLabel} / ${editValidation.resolvedSchema.policyName}`
-                    : "Policy Record"}
-                </p>
-                <h2>
-                  <Pencil size={18} /> Edit lead data
-                </h2>
-              </div>
-              <button
-                aria-label="Close edit form"
-                className="record-edit-close"
-                type="button"
-                onClick={() => setEditingRecord(null)}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div className="record-edit-body">
-              <div className="preview-form-grouped">
-                {editFieldGroups.map((group) => (
-                  <fieldset key={group.title} className="preview-fieldset">
-                    <legend className="preview-legend">{group.title}</legend>
-                    <div className="preview-form">
-                      {group.fields.map(([label, key]) => {
-                        const contactPersonError = validateContactPerson(editForm.contactPerson);
-                        const isContactNumber = key === "contactNumber";
-                        const error =
-                          key === "contactPerson"
-                            ? contactPersonError
-                            : isContactNumber
-                              ? validateContactNumber(editForm.contactNumber)
-                              : "";
-                        return (
-                          <PreviewField
-                            key={key}
-                            label={label}
-                            value={editForm[key] || ""}
-                            onChange={(value) => updateEditField(key, value)}
-                            options={FIELD_OPTIONS[key]}
-                            wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
-                            error={error}
-                            disabled={isContactNumber && Boolean(contactPersonError)}
-                          />
-                        );
-                      })}
-                    </div>
-                  </fieldset>
-                ))}
-              </div>
-            </div>
-            <div className="record-edit-actions">
-              <button type="button" onClick={() => setEditingRecord(null)} disabled={isSaving}>
-                Cancel
-              </button>
-              <button
-                className="secondary-action"
-                type="button"
-                onClick={saveEditedRecord}
-                disabled={isSaving}
-              >
-                {isSaving ? <LoaderCircle size={18} className="spin" /> : <CheckCircle size={18} />}
-                Save Changes
-              </button>
-            </div>
-          </section>
-        </div>
-      ) : null}
+      {editingRecord && (
+        <PolicyDetailCard
+          mode="edit"
+          record={editingRecord}
+          editForm={editForm}
+          updateEditField={updateEditField}
+          onClose={() => setEditingRecord(null)}
+          onSave={saveEditedRecord}
+          isSaving={isSaving}
+        />
+      )}
 
       {activePage === "field-setup" && <FieldSetupPanel />}
 
