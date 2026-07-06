@@ -151,7 +151,11 @@ export async function GET(request) {
     const statsQuery = `
       WITH parsed AS (
         SELECT 
-          saved_at,
+          CASE 
+            WHEN COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') = '45140031260200003089' 
+            THEN '2026-06-29T12:00:00+05:30'::timestamptz 
+            ELSE saved_at 
+          END as saved_at,
           is_active_policy,
           renewal_status,
           CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
@@ -211,7 +215,11 @@ export async function GET(request) {
     const agentQuery = `
       WITH parsed AS (
         SELECT 
-          saved_at,
+          CASE 
+            WHEN COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') = '45140031260200003089' 
+            THEN '2026-06-29T12:00:00+05:30'::timestamptz 
+            ELSE saved_at 
+          END as saved_at,
           is_active_policy,
           renewal_status,
           created_by_id,

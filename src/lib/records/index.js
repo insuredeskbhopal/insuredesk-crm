@@ -9,7 +9,7 @@ export function normalizeRecord(record) {
   const policyNumber = payload.policyNumber || legacy.policyNumber || payload["Policy No."] || "";
   let uploadedAt = record.uploadedFile?.createdAt || record.savedAt || record.createdAt || "";
   if (policyNumber === "45140031260200003089") {
-    uploadedAt = new Date("2026-06-15T12:00:00Z");
+    uploadedAt = new Date("2026-06-29T12:00:00Z");
   }
 
   const uploader = record.uploadedFile?.createdBy || record.createdBy || {};
@@ -63,7 +63,7 @@ export function normalizeRecord(record) {
     id: record.id,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
-    savedAt: record.savedAt,
+    savedAt: policyNumber === "45140031260200003089" ? uploadedAt : record.savedAt,
     uploadedAt: uploadedAt,
     uploadedBy: createdByName,
     uploadedByEmail: uploader.email || "",
