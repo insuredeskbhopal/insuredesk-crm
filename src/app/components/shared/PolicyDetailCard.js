@@ -168,138 +168,112 @@ export default function PolicyDetailCard({
       onClick={onClose}
     >
       <div
-        className={mode === "edit" ? "record-edit-modal" : "tb-modal-card"}
+        className="tb-modal-card"
         onClick={(e) => e.stopPropagation()}
-        style={
-          mode === "view"
-            ? {
-                background: "#ffffff",
-                borderRadius: "24px",
-                boxShadow:
-                  "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
-                width: "100%",
-                maxWidth: "800px",
-                maxHeight: "85vh",
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-                border: "none",
-                animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both",
-              }
-            : undefined
-        }
+        style={{
+          background: "#ffffff",
+          borderRadius: "24px",
+          boxShadow:
+            "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
+          width: "100%",
+          maxWidth: "800px",
+          maxHeight: "85vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          border: "none",
+          animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both",
+        }}
       >
         {/* Header */}
         <div
-          className={mode === "edit" ? "record-edit-head" : undefined}
-          style={
-            mode === "view"
-              ? {
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "20px 24px",
-                  borderBottom: "1px solid #f1f5f9",
-                  backgroundColor: "#ffffff",
-                  color: "#0f172a",
-                }
-              : undefined
-          }
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "20px 24px",
+            borderBottom: "1px solid #f1f5f9",
+            backgroundColor: "#ffffff",
+            color: "#0f172a",
+          }}
         >
-          {mode === "view" ? (
-            <>
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                <Image
-                  src="/brand/main-logo-wide.webp"
-                  alt="Bima Headquarter"
-                  width={133}
-                  height={74}
-                  style={{ height: "74px", width: "auto", objectFit: "contain" }}
-                />
-                <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                      color: "#64748b",
-                    }}
-                  >
-                    Policy Record Details
-                  </span>
-                  <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "800", color: "#0f172a" }}>
-                    {record.policyNumber || "No Policy Number"}
-                  </h2>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                aria-label="Close details"
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <Image
+              src="/brand/main-logo-wide.webp"
+              alt="Bima Headquarter"
+              width={133}
+              height={74}
+              style={{ height: "74px", width: "auto", objectFit: "contain" }}
+            />
+            <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
+              <span
                 style={{
-                  background: "rgba(15, 23, 42, 0.05)",
-                  border: "none",
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
                   color: "#64748b",
-                  cursor: "pointer",
+                }}
+              >
+                {mode === "edit"
+                  ? (resolvedSchema ? `${resolvedSchema.groupLabel} / ${resolvedSchema.policyName}` : "Edit lead data")
+                  : "Policy Record Details"}
+              </span>
+              <h2
+                style={{
+                  margin: "4px 0 0",
+                  fontSize: "20px",
+                  fontWeight: "800",
+                  color: "#0f172a",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  width: "44px",
-                  height: "44px",
-                  borderRadius: "50%",
-                  transition: "background-color 0.2s, color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.1)";
-                  e.currentTarget.style.color = "#0f172a";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.05)";
-                  e.currentTarget.style.color = "#64748b";
+                  gap: "8px",
                 }}
               >
-                <X size={24} />
-              </button>
-            </>
-          ) : (
-            <>
-              <div>
-                <p className="eyebrow">
-                  {resolvedSchema
-                    ? `${resolvedSchema.groupLabel} / ${resolvedSchema.policyName}`
-                    : "Policy Record"}
-                </p>
-                <h2>
-                  <Pencil size={18} /> Edit lead data
-                </h2>
-              </div>
-              <button
-                aria-label="Close edit form"
-                className="record-edit-close"
-                type="button"
-                onClick={onClose}
-              >
-                <X size={18} />
-              </button>
-            </>
-          )}
+                {mode === "edit" && <Pencil size={18} style={{ color: "#64748b" }} />}
+                {mode === "edit" ? "Edit lead data" : (record.policyNumber || "No Policy Number")}
+              </h2>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              background: "rgba(15, 23, 42, 0.05)",
+              border: "none",
+              color: "#64748b",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "44px",
+              height: "44px",
+              borderRadius: "50%",
+              transition: "background-color 0.2s, color 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.1)";
+              e.currentTarget.style.color = "#0f172a";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.05)";
+              e.currentTarget.style.color = "#64748b";
+            }}
+          >
+            <X size={24} />
+          </button>
         </div>
 
         {/* Body */}
         <div
-          className={mode === "edit" ? "record-edit-body" : undefined}
-          style={
-            mode === "view"
-              ? {
-                  padding: "24px",
-                  overflowY: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "24px",
-                  backgroundColor: "#ffffff",
-                }
-              : undefined
-          }
+          style={{
+            padding: "24px",
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: "24px",
+            backgroundColor: "#ffffff",
+          }}
         >
           {mode === "view" ? (
             <>
@@ -349,11 +323,32 @@ export default function PolicyDetailCard({
               </DetailSection>
             </>
           ) : (
-            <div className="preview-form-grouped">
+            <div className="preview-form-grouped" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
               {fieldGroups.map((group) => (
-                <fieldset key={group.title} className="preview-fieldset">
-                  <legend className="preview-legend">{group.title}</legend>
-                  <div className="preview-form">
+                <fieldset
+                  key={group.title}
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "16px",
+                    border: "1px solid #e2e8f0",
+                    padding: "20px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "16px",
+                    margin: 0,
+                  }}
+                >
+                  <legend
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      color: "#1e3a8a",
+                      padding: "0 8px",
+                    }}
+                  >
+                    {group.title}
+                  </legend>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                     {group.fields.map(([label, key]) => {
                       const contactPersonError = validateContactPerson(editForm.contactPerson);
                       const isContactNumber = key === "contactNumber";
@@ -385,20 +380,15 @@ export default function PolicyDetailCard({
 
         {/* Footer */}
         <div
-          className={mode === "edit" ? "record-edit-actions" : undefined}
-          style={
-            mode === "view"
-              ? {
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 24px",
-                  borderTop: "1px solid #f1f5f9",
-                  backgroundColor: "#ffffff",
-                }
-              : undefined
-          }
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            gap: "12px",
+            padding: "16px 24px",
+            borderTop: "1px solid #f1f5f9",
+            backgroundColor: "#ffffff",
+          }}
         >
           {mode === "view" ? (
             <>
@@ -457,16 +447,60 @@ export default function PolicyDetailCard({
             </>
           ) : (
             <>
-              <button type="button" onClick={onClose} disabled={isSaving}>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSaving}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "12px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: "#ffffff",
+                  color: "#475569",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  transition: "background-color 0.2s, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#94a3b8";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                }}
+              >
                 Cancel
               </button>
               <button
-                className="secondary-action"
                 type="button"
                 onClick={onSave}
                 disabled={isSaving}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "12px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: "#ffffff",
+                  color: "#0f172a",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  transition: "background-color 0.2s, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#0f172a";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                }}
               >
-                {isSaving ? <LoaderCircle size={18} className="spin" /> : <CheckCircle size={18} />}
+                {isSaving ? <LoaderCircle size={16} className="spin" /> : <CheckCircle size={16} />}
                 Save Changes
               </button>
             </>
