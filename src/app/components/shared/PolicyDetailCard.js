@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { X, Printer, Pencil, LoaderCircle, CheckCircle } from "lucide-react";
 import {
@@ -130,6 +131,11 @@ export default function PolicyDetailCard({
   // View mode specific props:
   onPrint,
 }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const validation = useMemo(() => {
     return getReviewValidation({
       sourceFile: record?.sourceFile || "",
@@ -147,11 +153,11 @@ export default function PolicyDetailCard({
     }).filter((group) => group.fields.length > 0);
   }, [validation.visibleFields]);
 
-  if (!record) return null;
+  if (!mounted || !record) return null;
 
   const resolvedSchema = validation.resolvedSchema;
 
-  return (
+  return createPortal(
     <div
       style={{
         position: "fixed",
@@ -507,6 +513,7 @@ export default function PolicyDetailCard({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
