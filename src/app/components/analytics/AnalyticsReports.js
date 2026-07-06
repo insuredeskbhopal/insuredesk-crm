@@ -1778,7 +1778,23 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                     <tbody>
                       {companySummary.map((item) => (
                         <tr key={item.name} className="report-table-row">
-                          <td style={{ fontWeight: "700" }}>{item.name}</td>
+                          <td style={{ fontWeight: "700" }}>
+                            <span 
+                              style={{ 
+                                color: "#2563eb", 
+                                cursor: "pointer",
+                                borderBottom: "1px dashed transparent",
+                                transition: "border-color 0.15s ease"
+                              }} 
+                              onClick={() => {
+                                window.location.href = `/policy-records?q=${encodeURIComponent(item.name)}`;
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.borderBottomColor = "#2563eb"}
+                              onMouseLeave={(e) => e.currentTarget.style.borderBottomColor = "transparent"}
+                            >
+                              {item.name}
+                            </span>
+                          </td>
                           <td style={{ textAlign: "center", fontWeight: "600" }}>{item.count}</td>
                           <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(item.netPremium)}</td>
                           <td style={{ textAlign: "right", fontWeight: "600" }}>₹{formatPremium(item.grossPremium)}</td>
