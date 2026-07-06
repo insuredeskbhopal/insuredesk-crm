@@ -211,3 +211,45 @@ Before finishing every task verify:
 - [ ] Existing reusable code maximized
 - [ ] Business logic untouched unless requested
 - [ ] Production ready
+
+---
+
+## Change Verification
+Before making any modification: identify what behavior is expected to remain unchanged, identify what behavior should change, verify only the requested behavior is affected. If any unrelated behavior changes, the implementation is incorrect.
+
+## Existing Flow Protection
+Before modifying a shared function: list every known flow that depends on it. Verify the change remains compatible with every existing flow. Never optimize one workflow at the expense of another.
+
+## Data Safety
+Never modify existing customer data, extracted policy data, stored documents, uploaded files, or historical records unless explicitly requested. New features must remain compatible with existing data.
+
+## Backward Compatibility
+Every change should be backward compatible by default. Never rename response fields, remove props, remove exports, remove constants, remove routes, or change existing APIs unless explicitly requested.
+
+## Consistency
+If the same feature exists elsewhere, the implementation should look and behave the same. Users should never wonder why one page works differently from another.
+
+## Code Quality
+Prefer: simple, predictable, readable, maintainable. Avoid: clever code, deep nesting, duplicate conditions, over-engineering, future abstractions. Write code another developer can understand in one reading.
+
+## Merge Before Create
+Whenever two implementations solve nearly the same problem, merge them into one configurable implementation instead of maintaining both.
+
+## Documentation
+When changing an important workflow, update the existing documentation if needed. Never create duplicate documentation.
+
+## Feature Isolation
+Every feature must remain isolated. A change inside Claims, Renewals, OCR, Customer, Dashboard, Reports, or Endorsements must never unexpectedly modify another module.
+
+## Final Delivery
+Every completed task must satisfy:
+- [ ] Smallest possible diff
+- [ ] Maximum reuse
+- [ ] No regressions
+- [ ] No duplicate code
+- [ ] No duplicate components
+- [ ] No duplicate business logic
+- [ ] No unnecessary files
+- [ ] Production ready
+- [ ] Backward compatible
+- [ ] Easy for the next developer to understand
