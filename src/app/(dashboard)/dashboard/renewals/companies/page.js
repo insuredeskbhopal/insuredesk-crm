@@ -27,7 +27,7 @@ export default function CompaniesViewPage() {
     const fetchCompanies = async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/renewals/companies");
+        const res = await fetch("/api/renewals/companies", { cache: "no-store" });
         const data = await res.json();
         if (res.ok && data.companyStats) {
           // Normalize and map results

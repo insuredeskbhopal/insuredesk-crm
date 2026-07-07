@@ -243,7 +243,7 @@ export default function CustomerProfilePage(props) {
   const fetchCustomerProfile = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/renewals/customers/${phone}`);
+      const res = await fetch(`/api/renewals/customers/${phone}`, { cache: "no-store" });
       const data = await res.json();
       if (res.ok && data.success) {
         setProfile(data.profile);

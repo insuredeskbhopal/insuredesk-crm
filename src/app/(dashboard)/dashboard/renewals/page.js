@@ -37,7 +37,7 @@ export default function RenewalsDashboard() {
       try {
         setLoading(true);
         // Fetch stats from main policies route
-        const policiesRes = await fetch("/api/renewals/policies?tab=upcoming&limit=1");
+        const policiesRes = await fetch("/api/renewals/policies?tab=upcoming&limit=1", { cache: "no-store" });
         const policiesData = await policiesRes.json();
 
         if (policiesData.summaryCounts) {

@@ -54,7 +54,7 @@ export default function PolicyTypesViewPage() {
     const fetchTypes = async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/renewals/policy-types");
+        const res = await fetch("/api/renewals/policy-types", { cache: "no-store" });
         const data = await res.json();
         if (res.ok && data.typeStats) {
           // Normalize and map results

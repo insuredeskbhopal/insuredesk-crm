@@ -56,14 +56,14 @@ export default function DailyWorkPage() {
       setLoading(true);
 
       // 1. Fetch Today's Work stats/activities from API
-      const workRes = await fetch("/api/renewals/today-work");
+      const workRes = await fetch("/api/renewals/today-work", { cache: "no-store" });
       const workData = await workRes.json();
 
       // 2. Fetch policies for today's grid
       // We will pull:
       // - Upcoming policies (limit 100)
       // - Overdue followups
-      const policiesRes = await fetch("/api/renewals/policies?tab=all&limit=100");
+      const policiesRes = await fetch("/api/renewals/policies?tab=all&limit=100", { cache: "no-store" });
       const policiesData = await policiesRes.json();
 
       if (policiesRes.ok && policiesData.policies) {

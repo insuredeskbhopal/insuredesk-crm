@@ -13,7 +13,7 @@ export default function LostPage() {
   const fetchLostPolicies = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/renewals/policies?tab=lost&page=${page}&limit=10`);
+      const res = await fetch(`/api/renewals/policies?tab=lost&page=${page}&limit=10`, { cache: "no-store" });
       const data = await res.json();
       if (res.ok && data.policies) {
         setPolicies(data.policies);
