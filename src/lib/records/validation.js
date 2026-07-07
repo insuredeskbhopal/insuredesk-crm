@@ -37,7 +37,7 @@ export function sanitizeRecordPayload(payload = {}) {
     cgst: asText(payload.cgst, 80),
     sgst: asText(payload.sgst, 80),
     igst: asText(payload.igst, 80),
-    invoiceDate: asText(payload.invoiceDate, 40),
+    invoiceDate: normalizeDateToYMD(payload.invoiceDate || ""),
     placeOfSupply: asText(payload.placeOfSupply, 120),
     hypothecationDetails: asText(payload.hypothecationDetails, 220),
     bankChargeType: asText(payload.bankChargeType, 220),
@@ -61,8 +61,8 @@ export function sanitizeRecordPayload(payload = {}) {
     newOrRenewal: asText(payload.newOrRenewal, 40),
     remark: asText(payload.remark, TEXT_LIMIT),
     sumInsured: asText(payload.sumInsured, 80),
-    startDate: asText(payload.startDate, 40),
-    expiryDate: asText(payload.expiryDate, 40),
+    startDate: normalizeDateToYMD(payload.startDate || ""),
+    expiryDate: normalizeDateToYMD(payload.expiryDate || ""),
     duration: asText(payload.duration, 60),
     riskLocation: asText(payload.riskLocation, TEXT_LIMIT),
     district: asText(payload.district, 120),
@@ -77,7 +77,7 @@ export function sanitizeRecordPayload(payload = {}) {
     makeModel: asText(payload.makeModel, 220),
     variant: asText(payload.variant, 180),
     manufacturingYear: asText(payload.manufacturingYear, 20),
-    registrationDate: asText(payload.registrationDate, 40),
+    registrationDate: normalizeDateToYMD(payload.registrationDate || ""),
     engineNumber: asText(payload.engineNumber, 120),
     chassisNumber: asText(payload.chassisNumber, 120),
     fuelType: asText(payload.fuelType, 60),
@@ -95,7 +95,7 @@ export function sanitizeRecordPayload(payload = {}) {
     companyName: asText(standardInsuranceCompany || payload.companyName, 220),
     proposalNumber: asText(payload.proposalNumber, 120),
     invoiceNumber: asText(payload.invoiceNumber, 120),
-    issuanceDate: asText(payload.issuanceDate, 40),
+    issuanceDate: normalizeDateToYMD(payload.issuanceDate || ""),
     customerId: asText(payload.customerId, 120),
     communicationAddress: asText(payload.communicationAddress, TEXT_LIMIT),
     customerMobile: asText(payload.customerMobile, 40),
@@ -187,4 +187,48 @@ export function validateContactNumber(value) {
   }
 
   return "Contact Number must be exactly 10 digits or a masked policy contact number.";
+}
+
+export function normalizeDateToYMD(dateStr) {
+  if (!dateStr || typeof dateStr !== "string") return "";
+  let cleanStr = dateStr.trim();
+  if (!cleanStr) return "";
+
+  // Remove prefixes like "00:00 of ", "00:00 of the "
+  cleanStr = cleanStr.replace(/^[0-9]{2}:[0-9]{2}(?:\s+of\s+the|\s+of)?\s+/i, "");
+
+  // If already YYYY-MM-DD
+  if (/^\d{4}-(?:0[1-9]|1[0-2])-(?:[0-2][0-9]|3[0-1])$/.test(cleanStr)) {
+    return cleanStr;
+  }
+
+  // DD/MM/YYYY or DD-MM-YYYY
+  const dmYMatch = cleanStr.match(/^([0-2]?[0-9]|3[0-1])[/-](0?[1-9]|1[0-2])[/-](\d{4})$/);
+  if (dmYMatch) {
+    const d = dmYMatch[1].padStart(2, "0");
+    const m = dmYMatch[2].padStart(2, "0");
+    const y = dmYMatch[3];
+    return `${y}-${m}-${d}`;
+  }
+
+  // DD/MM/YY or DD-MM-YY
+  const dmY2Match = cleanStr.match(/^([0-2]?[0-9]|3[0-1])[/-](0?[1-9]|1[0-2])[/-](\d{2})$/);
+  if (dmY2Match) {
+    const d = dmY2Match[1].padStart(2, "0");
+    const m = dmY2Match[2].padStart(2, "0");
+    const yShort = dmY2Match[3];
+    const y = Number(yShort) > 50 ? `19${yShort}` : `20${yShort}`;
+    return `${y}-${m}-${d}`;
+  }
+
+  const parsed = Date.parse(cleanStr);
+  if (!isNaN(parsed)) {
+    const dateObj = new Date(parsed);
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const d = String(dateObj.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  return dateStr.trim();
 }
