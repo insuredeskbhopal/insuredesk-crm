@@ -166,14 +166,53 @@ export default function RenewalsLayout({ children }) {
       {/* Bulk Import Modal */}
       {showImportModal && typeof window !== "undefined" && createPortal(
         <div className="tb-modal-backdrop" onClick={() => !importing && setShowImportModal(false)}>
-          <div className="tb-modal-card" onClick={(e) => e.stopPropagation()} style={{ width: "500px", padding: "24px", borderRadius: "12px" }}>
-            <div className="tb-modal-header" style={{ marginBottom: "16px", borderBottom: "1px solid var(--rn-border-light)", paddingBottom: "12px", display: "flex", alignItems: "center", gap: "12px" }}>
-              <img
-                src="/brand/main-logo-wide.webp"
-                alt="Bima Headquarter"
-                style={{ height: "30px", width: "auto" }}
-              />
-              <h3 className="tb-modal-title" style={{ fontSize: "18px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>Bulk Import Renewals</h3>
+          <div className="tb-modal-card" onClick={(e) => e.stopPropagation()} style={{ width: "540px", padding: "28px", borderRadius: "16px" }}>
+            <div className="tb-modal-header" style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderBottom: "1px solid var(--rn-border-light)",
+              paddingBottom: "16px",
+              marginBottom: "20px"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <img
+                  src="/brand/main-logo-wide.webp"
+                  alt="Bima Headquarter"
+                  style={{ height: "36px", width: "auto" }}
+                />
+                <div style={{ width: "1px", height: "30px", backgroundColor: "#e5e7eb" }} />
+                <div>
+                  <div style={{ fontSize: "10px", fontWeight: "600", color: "#6b7280", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                    Bulk Import
+                  </div>
+                  <div style={{ fontSize: "16px", fontWeight: "700", color: "#111827" }}>
+                    Renewals
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => !importing && setShowImportModal(false)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  backgroundColor: "#f3f4f6",
+                  border: "none",
+                  color: "#4b5563",
+                  fontSize: "18px",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s"
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#e5e7eb")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
+              >
+                &times;
+              </button>
             </div>
             <div className="tb-modal-body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <p style={{ fontSize: "14px", color: "var(--rn-text-secondary)", margin: 0, lineHeight: "1.5" }}>
@@ -240,7 +279,7 @@ export default function RenewalsLayout({ children }) {
                   setSelectedFile(null);
                 }}
                 className="tb-modal-done-btn"
-                style={{ background: "#f3f4f6", color: "#374151", border: "1px solid #d1d5db", padding: "8px 16px", borderRadius: "6px", fontSize: "14px", fontWeight: "500", cursor: "pointer" }}
+                style={{ background: "#ffffff", color: "#374151", border: "1px solid #d1d5db", padding: "8px 16px", borderRadius: "6px", fontSize: "14px", fontWeight: "500", cursor: "pointer" }}
                 disabled={importing}
               >
                 Close
