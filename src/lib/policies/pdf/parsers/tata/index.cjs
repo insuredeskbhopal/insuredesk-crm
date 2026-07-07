@@ -134,8 +134,9 @@ function isTataAigMotor(text) {
 // Start of extractTataInsuredName (Lines 5789-5808)
 function extractTataInsuredName(text) {
   const patterns = [
-    /Name\s*\(Registered owner of the Motor Vehicle\)\s*[:.-]?\s*([A-Z][A-Z\s]+?)(?=\s*(?:\d|Address|Contact|$))/i,
-    /Name\s*([A-Z][A-Z\s]+?)(?=\s*Address)/,
+    /Name\s*\(Registered owner of the Motor Vehicle\)\s*[:.-]?\s*([A-Za-z.\s]+?)(?=\s*(?:\d|Address|Contact|$))/i,
+    /Insured Name\s*[:.-]?\s*([A-Za-z.\s]+?)(?=\s*(?:Premium|Registration|Address|$))/i,
+    /Name\s*([A-Za-z.\s]+?)(?=\s*Address)/,
   ];
   for (const pattern of patterns) {
     const match = text.match(pattern);
@@ -447,10 +448,12 @@ function extractTataAigMotor(text, _sourceFile = "") {
   const startDateRaw =
     matchGroup(text, /Own Damage Cover\s*(\d{2}\/\d{2}\/\d{4})/i) ||
     matchGroup(text, /TP Cover Period\s*[:.-]?\s*(\d{2}\/\d{2}\/\d{4})/i) ||
+    matchGroup(text, /Third-Party Cover(?:[\s\S]*?(?:From|Cover))?\s*(\d{2}\/\d{2}\/\d{4})/i) ||
     "";
   const expiryDateRaw =
     matchGroup(text, /Own Damage Cover\s*\d{2}\/\d{2}\/\d{4}[^\n]*?(\d{2}\/\d{2}\/\d{4})/i) ||
     matchGroup(text, /TP Cover Period\s*[:.-]?\s*\d{2}\/\d{2}\/\d{4}[^\n]*?to\s*(\d{2}\/\d{2}\/\d{4})/i) ||
+    matchGroup(text, /Third-Party Cover(?:[\s\S]*?(?:From|Cover))?\s*\d{2}\/\d{2}\/\d{4}[\s\S]*?To\s*(\d{2}\/\d{2}\/\d{4})/i) ||
     "";
   const startDate = normalizeTataDate(startDateRaw);
   const expiryDate = normalizeTataDate(expiryDateRaw);
