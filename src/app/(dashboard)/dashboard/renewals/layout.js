@@ -127,9 +127,9 @@ export default function RenewalsLayout({ children }) {
             onClick={() => setShowImportModal(true)}
             className="renewals-nav-link"
             style={{
-              backgroundColor: "var(--rn-primary)",
-              color: "#ffffff",
-              borderColor: "var(--rn-primary)",
+              backgroundColor: "#ffffff",
+              color: "var(--rn-text-secondary)",
+              borderColor: "var(--rn-border)",
               display: "inline-flex",
               alignItems: "center",
               gap: "8px",
