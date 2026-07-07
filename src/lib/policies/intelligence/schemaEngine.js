@@ -16,6 +16,8 @@ const FORMAT_TO_SCHEMA = {
   ICICI_WAREHOUSE_V1: "icici_warehouse.json",
   IFFCO_TOKIO_WAREHOUSE_V1: "iffco_warehouse.json",
   LIBERTY_MOTOR_V1: "liberty_motor.json",
+  ROYAL_SUNDARAM_MOTOR_V1: "royal_sundaram_motor.json",
+  SHRIRAM_MOTOR_V1: "shriram_motor.json",
   GENERIC_POLICY_V1: "generic_policy.json",
 };
 

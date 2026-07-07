@@ -13,7 +13,8 @@ function extractHdfcErgoMotor(text) {
     documentDetected: true,
     companyName: normalizeCompanyFromMaster("HDFC ERGO"),
     policyType: cleanHdfcValue(
-      matchGroup(text, /(PRIVATE CAR COMPREHENSIVE POLICY)/i) ||
+      matchGroup(text, /(Standalone Motor Own Damage Cover - Private Car)/i) ||
+        matchGroup(text, /(PRIVATE CAR COMPREHENSIVE POLICY)/i) ||
         matchGroup(text, /(Private Car Comprehensive Policy)/i) ||
         matchGroup(
           text,
@@ -97,6 +98,9 @@ function extractHdfcErgoMotor(text) {
   if (!data.policyType && /private\s+car\s+comprehensive\s+policy/i.test(text)) {
     data.policyType = "Private Car Comprehensive Policy";
   }
+  if (!data.policyType && /standalone\s+motor\s+own\s+damage\s+cover/i.test(text)) {
+    data.policyType = "Standalone Motor Own Damage Cover - Private Car";
+  }
 
   return data;
 }
@@ -105,7 +109,7 @@ function extractHdfcErgoMotor(text) {
 function isHdfcErgoMotor(text) {
   const hasCompany =
     /HDFC\s+ERGO\s+General\s+Insurance\s+Company\s+Limited/i.test(text) || /\bHDFC\s+ERGO\b/i.test(text);
-  const hasExactPolicyTitle = /PRIVATE\s+CAR\s+COMPREHENSIVE\s+POLICY/i.test(text);
+  const hasExactPolicyTitle = /PRIVATE\s+CAR\s+COMPREHENSIVE\s+POLICY|Standalone\s+Motor\s+Own\s+Damage\s+Cover/i.test(text);
 
   if (!hasCompany) return false;
 

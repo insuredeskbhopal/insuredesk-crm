@@ -36,7 +36,10 @@ function normalizeHdfcTypedValue(value, type) {
   if (!text) return "";
 
   if (type === "amount") {
-    return normalizeAmount(matchGroup(text, /([0-9][0-9,]*(?:\.\d{1,2})?)/) || text);
+    const matched = matchGroup(text, /([0-9][0-9,]*(?:\.\d{1,2})?)/);
+    if (matched) return normalizeAmount(matched);
+    if (/[0-9]/.test(text)) return normalizeAmount(text);
+    return "";
   }
   if (type === "number") {
     return matchGroup(text, /([0-9]+(?:\.\d+)?)/) || "";

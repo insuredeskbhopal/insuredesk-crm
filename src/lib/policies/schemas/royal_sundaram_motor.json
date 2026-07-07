@@ -1,0 +1,132 @@
+{
+  "name": "Royal Sundaram Motor",
+  "version": 1,
+  "expectedSections": [
+    "policy_details",
+    "insured_details",
+    "vehicle_details",
+    "premium_details"
+  ],
+  "expectedTables": ["vehicle_details_table", "premium_table"],
+  "fields": [
+    {
+      "field": "policyNumber",
+      "aliases": ["Certificate of Insurance and Policy No.", "Policy No", "Policy Number"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "issuanceDate",
+      "aliases": ["Date of Issue", "Policy Issued on", "Invoice Date"],
+      "section": "policy_details",
+      "type": "date",
+      "required": false
+    },
+    {
+      "field": "insuredName",
+      "aliases": ["Name of the Insured", "Name of Insured", "Insured Name"],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "communicationAddress",
+      "aliases": ["Address of insured", "Address"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "customerMobile",
+      "aliases": ["Contact Number", "Mobile No.", "Mobile", "Contact"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "registrationNumber",
+      "aliases": ["Registration Number", "Registration No"],
+      "section": "vehicle_details",
+      "type": "registration",
+      "required": true
+    },
+    {
+      "field": "vehicleMake",
+      "aliases": ["Make of the Vehicle", "Make"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "vehicleModel",
+      "aliases": ["Model Description", "Model"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "rto",
+      "aliases": ["Registration Authority", "RTO Location", "RTO"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "chassisNumber",
+      "aliases": ["Chassis Number", "Chassis No"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "engineNumber",
+      "aliases": ["Engine Number", "Engine No"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "cubicCapacity",
+      "aliases": ["CC / KW", "CC", "Cubic Capacity"],
+      "section": "vehicle_details",
+      "type": "number",
+      "required": false
+    },
+    {
+      "field": "seatingCapacity",
+      "aliases": ["Seating Capacity", "Seating Capacity (including Driver)"],
+      "section": "vehicle_details",
+      "type": "number",
+      "required": false
+    },
+    {
+      "field": "manufacturingYear",
+      "aliases": ["Year of Manufacture", "Mfg. Year"],
+      "section": "vehicle_details",
+      "type": "number",
+      "required": false
+    },
+    {
+      "field": "netPremium",
+      "aliases": ["Net Premium", "TOTAL LIABILITY PREMIUM (B)", "TOTAL OWN DAMAGE PREMIUM (A)"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "gstAmount",
+      "aliases": ["IGST", "GST", "ADD:SGST", "ADD:CGST"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "totalPremium",
+      "aliases": ["TOTAL PREMIUM PAYABLE", "Total Premium", "TOTAL PREMIUM"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    }
+  ]
+}

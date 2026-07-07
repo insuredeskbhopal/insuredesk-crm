@@ -113,6 +113,10 @@ const {
 } = require("./parsers/royal-sundaram/index.cjs");
 
 const {
+  extractShriramMotor
+} = require("./parsers/shriram/index.cjs");
+
+const {
   extractGoDigitMotor
 } = require("./parsers/go-digit/index.cjs");
 
@@ -696,6 +700,77 @@ function extractPolicyFromText(text, sourceFile = "") {
       collectedAmount: paymentCollection.collectedAmount,
       receiptNumber: royalSundaramMotor.receiptNumber,
       receiptDate: royalSundaramMotor.receiptDate,
+    };
+    return buildIntelligentResult(legacyData, policyUnderstanding, policySchema, schemaExtraction);
+  }
+
+  const shriramMotor = extractShriramMotor(sourceText, sourceFile);
+  if (shriramMotor.documentDetected) {
+    const legacyData = {
+      sourceFile: sourceFile || "Untitled.pdf",
+      sourceText,
+      status: "saved",
+      documentFormat: "SHRIRAM_MOTOR_V1",
+      documentCategory: "Motor Insurance",
+      insuredName: shriramMotor.insuredName,
+      contactNumber: shriramMotor.contactNumber,
+      contactPerson: shriramMotor.insuredName,
+      groupName: deriveGroupName(sourceText, sourceFile, shriramMotor.insuredName),
+      policyNumber: shriramMotor.policyNumber,
+      policyType: shriramMotor.policyType,
+      sumInsured: "0",
+      premium: shriramMotor.totalPremium,
+      totalPremium: shriramMotor.totalPremium,
+      netPremium: shriramMotor.netLiabilityPremium || "",
+      tpDriverOwner: shriramMotor.netLiabilityPremium || "",
+      odPremium: "0.00",
+      startDate: shriramMotor.policyStartDate,
+      expiryDate: shriramMotor.policyEndDate,
+      duration: buildDuration(shriramMotor.policyStartDate, shriramMotor.policyEndDate) || "",
+      riskLocation: "",
+      district: "",
+      tehsil: "",
+      insuranceCompany: shriramMotor.companyName,
+      description: "",
+      pptMpwlc: "",
+      occupancy: "",
+      validIn: "",
+      vehicleNumber: shriramMotor.registrationNumber,
+      registrationNumber: shriramMotor.registrationNumber,
+      makeModel: shriramMotor.makeModel,
+      variant: "",
+      manufacturingYear: shriramMotor.manufacturingYear,
+      registrationDate: shriramMotor.registrationDate,
+      engineNumber: shriramMotor.engineNumber,
+      chassisNumber: shriramMotor.chassisNumber,
+      fuelType: shriramMotor.fuelType,
+      cubicCapacity: shriramMotor.cubicCapacity,
+      seatingCapacity: shriramMotor.seatingCapacity,
+      grossVehicleWeight: shriramMotor.grossVehicleWeight,
+      idv: "0.00",
+      totalIdv: "0.00",
+      ncb: "0%",
+      policyCoverType: shriramMotor.policyCoverType,
+      rtoLocation: shriramMotor.rtoLocation,
+      nomineeName: "",
+      financerName: "",
+      companyName: shriramMotor.companyName,
+      customerMobile: shriramMotor.contactNumber,
+      gstin: shriramMotor.gstin,
+      panNumber: shriramMotor.panNumber,
+      vehicleMake: shriramMotor.vehicleMake,
+      vehicleModel: shriramMotor.vehicleModel,
+      bodyType: shriramMotor.bodyType,
+      geographicalArea: shriramMotor.geographicalArea,
+      basicThirdPartyLiability: shriramMotor.basicThirdPartyLiability,
+      netLiabilityPremium: shriramMotor.netLiabilityPremium,
+      sgst: shriramMotor.sgst,
+      cgst: shriramMotor.cgst,
+      gstAmount: shriramMotor.gstAmount || "",
+      dueCollection: paymentCollection.dueCollection,
+      collectedAmount: paymentCollection.collectedAmount,
+      receiptNumber: "",
+      receiptDate: "",
     };
     return buildIntelligentResult(legacyData, policyUnderstanding, policySchema, schemaExtraction);
   }

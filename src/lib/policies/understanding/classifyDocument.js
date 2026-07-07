@@ -135,6 +135,17 @@ function classifyDocument(text = "") {
       ],
     },
     {
+      company: "Royal Sundaram General Insurance Co. Limited",
+      documentFormat: "ROYAL_SUNDARAM_MOTOR_V1",
+      documentCategory: "Motor Insurance",
+      policyType: "Motor Policy",
+      signals: [
+        /Royal\s+Sundaram/i,
+        /Certificate\s*of\s*Insurance|CERTIFICATEOFINSURANCE/i,
+        /Registration Number|Vehicle Details|Motor Vehicles Act/i,
+      ],
+    },
+    {
       company: "Liberty General Insurance Limited",
       documentFormat: "LIBERTY_MOTOR_V1",
       documentCategory: "Motor Insurance",

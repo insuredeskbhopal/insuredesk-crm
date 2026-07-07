@@ -1,0 +1,132 @@
+{
+  "name": "Shriram Motor",
+  "version": 1,
+  "expectedSections": [
+    "policy_details",
+    "insured_details",
+    "vehicle_details",
+    "premium_details"
+  ],
+  "expectedTables": ["vehicle_details_table", "premium_table"],
+  "fields": [
+    {
+      "field": "policyNumber",
+      "aliases": ["Policy No", "Policy Number"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "issuanceDate",
+      "aliases": ["Prop Issue Date", "Date of Issue", "Policy Issued on"],
+      "section": "policy_details",
+      "type": "date",
+      "required": false
+    },
+    {
+      "field": "insuredName",
+      "aliases": ["Insured's Code/ Name", "Name of Insured", "Insured Name"],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "communicationAddress",
+      "aliases": ["Insured Address", "Insured Address and Contact Details", "Address"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "customerMobile",
+      "aliases": ["Mob-", "Contact Number", "Mobile", "Contact"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "registrationNumber",
+      "aliases": ["Registration Mark & Place", "Registration No", "Registration Number"],
+      "section": "vehicle_details",
+      "type": "registration",
+      "required": true
+    },
+    {
+      "field": "vehicleMake",
+      "aliases": ["MAKE - MODEL", "Make"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "vehicleModel",
+      "aliases": ["MODEL", "Model"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "rto",
+      "aliases": ["RTO Location", "RTO"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "chassisNumber",
+      "aliases": ["Chassis No", "Chassis Number"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "engineNumber",
+      "aliases": ["Engine No", "Engine Number"],
+      "section": "vehicle_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "cubicCapacity",
+      "aliases": ["CUBIC CAPACITY / WATT", "CC", "Cubic Capacity"],
+      "section": "vehicle_details",
+      "type": "number",
+      "required": false
+    },
+    {
+      "field": "seatingCapacity",
+      "aliases": ["SEAT CAP.", "Seating Capacity"],
+      "section": "vehicle_details",
+      "type": "number",
+      "required": false
+    },
+    {
+      "field": "manufacturingYear",
+      "aliases": ["YEAR OF MANF.", "Mfg. Year", "Year of Manufacture"],
+      "section": "vehicle_details",
+      "type": "number",
+      "required": false
+    },
+    {
+      "field": "netPremium",
+      "aliases": ["Net Premium", "BASIC TP COVER", "TP TOTAL", "Gross Premium"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "gstAmount",
+      "aliases": ["IGST", "GST", "ADD: IGST 18.00%", "ADD:IGST 5.00%"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "totalPremium",
+      "aliases": ["PREMIUM AMOUNT", "Total Premium", "TOTAL PREMIUM", "Total"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    }
+  ]
+}
