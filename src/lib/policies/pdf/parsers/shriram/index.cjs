@@ -1,8 +1,8 @@
-const { normalizeInsuranceCompanyName: normalizeCompanyFromMaster } = require("../../../../master/insurance-companies.cjs");
+
 const { cleanHdfcValue } = require("../../utils/text.cjs");
 const { matchGroup } = require("../../utils/regex.cjs");
 const { normalizeAmount, sumAmounts } = require("../../utils/amounts.cjs");
-const { extractPolicyCoverType, normalizeFuelType } = require("../../utils/motor.cjs");
+const { normalizeFuelType } = require("../../utils/motor.cjs");
 
 function extractShriramMotor(text, _sourceFile = "") {
   if (!isShriramMotor(text)) return { documentDetected: false };
@@ -26,7 +26,7 @@ function extractShriramMotor(text, _sourceFile = "") {
   const contactNumber = matchGroup(text, /Mob-\s*\*+([0-9]{4,10})/i) || matchGroup(text, /Mobile\s*[:.-]?\s*([0-9Xx*]+)/i);
 
   const regMatch = text.match(/([A-Z]{2}\s*[-–—\s]\s*\d{2}\s*[-–—\s]\s*[A-Z]{1,3}\s*[-–—\s]\s*\n?\s*\d{4})/i);
-  const registrationNumber = regMatch ? regMatch[1].replace(/[\s\-]/g, "").toUpperCase() : "";
+  const registrationNumber = regMatch ? regMatch[1].replace(/[\s-]/g, "").toUpperCase() : "";
 
   const vehicleMake = "TATA MOTORS";
   const vehicleModel = cleanHdfcValue(
@@ -78,6 +78,7 @@ function extractShriramMotor(text, _sourceFile = "") {
     policyStartDate,
     policyEndDate,
     registrationNumber,
+    communicationAddress,
     vehicleMake,
     vehicleModel,
     makeModel,
