@@ -122,6 +122,15 @@ const headerMap = {
   "risk location": "riskLocation",
   "business description": "businessDescription",
   "occupancy": "occupancy",
+  "quote": "quote",
+  "msg": "msg",
+  "message": "msg",
+  "whatsapp": "msg",
+  "payment link": "paymentLink",
+  "paymentlink": "paymentLink",
+  "link": "paymentLink",
+  "call": "call",
+  "call status": "call",
 };
 
 export async function POST(request) {

@@ -19,7 +19,11 @@ const nonMotorData = [
     "Risk Location": "Plot No 42, Sector 5, Industrial Area, Noida",
     "Business Description": "Storage of electronic components and packaging materials",
     "Occupancy": "Warehouse",
-    "Remark": "Needs renewal quote sent by email"
+    "Remark": "Needs renewal quote sent by email",
+    "Quote": "11500",
+    "Msg": "Renewal due for Fire Policy",
+    "Payment Link": "https://payment.example.com/pay",
+    "Call": "Spoke to John, will review quote"
   },
   {
     "Insurance Company": "Bajaj Allianz General Insurance",
@@ -37,7 +41,11 @@ const nonMotorData = [
     "Risk Location": "Khasra No 112, Vidisha Warehouse Complex, Vidisha, MP",
     "Business Description": "Storage of Non-hazardous goods - Storage in godown or warehouse",
     "Occupancy": "Warehouse Godown",
-    "Remark": "Requires custom discount approval for renewal"
+    "Remark": "Requires custom discount approval for renewal",
+    "Quote": "",
+    "Msg": "",
+    "Payment Link": "",
+    "Call": ""
   }
 ];
 
@@ -64,7 +72,11 @@ const motorData = [
     "Cubic Capacity": 1197,
     "NCB": "20%",
     "RTO Location": "DELHI",
-    "Remark": "Already renewed for next year"
+    "Remark": "Already renewed for next year",
+    "Quote": "9500",
+    "Msg": "Renewal done",
+    "Payment Link": "",
+    "Call": "No call needed, already renewed"
   }
 ];
 
@@ -97,7 +109,11 @@ const genericData = [
     "Risk Location": "Plot No 42, Sector 5, Industrial Area, Noida",
     "Business Description": "Storage of electronic components and packaging materials",
     "Occupancy": "Warehouse",
-    "Remark": "Needs renewal quote sent by email"
+    "Remark": "Needs renewal quote sent by email",
+    "Quote": "11500",
+    "Msg": "Renewal due for Fire Policy",
+    "Payment Link": "https://payment.example.com/pay",
+    "Call": "Spoke to John, will review quote"
   },
   {
     "Insurance Company": "Bajaj Allianz General Insurance",
@@ -126,7 +142,11 @@ const genericData = [
     "Risk Location": "Khasra No 112, Vidisha Warehouse Complex, Vidisha, MP",
     "Business Description": "Storage of Non-hazardous goods - Storage in godown or warehouse",
     "Occupancy": "Warehouse Godown",
-    "Remark": "Requires custom discount approval for renewal"
+    "Remark": "Requires custom discount approval for renewal",
+    "Quote": "",
+    "Msg": "",
+    "Payment Link": "",
+    "Call": ""
   },
   {
     "Insurance Company": "TATA AIG General Insurance",
@@ -155,7 +175,11 @@ const genericData = [
     "Risk Location": "",
     "Business Description": "",
     "Occupancy": "",
-    "Remark": "Already renewed for next year"
+    "Remark": "Already renewed for next year",
+    "Quote": "9500",
+    "Msg": "Renewal done",
+    "Payment Link": "",
+    "Call": "No call needed, already renewed"
   }
 ];
 

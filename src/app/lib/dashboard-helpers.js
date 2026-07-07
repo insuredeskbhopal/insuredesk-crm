@@ -41,6 +41,10 @@ export const FIELD_GROUPS = [
       "policyCoverType",
       "pptMpwlc",
       "newOrRenewal",
+      "quote",
+      "msg",
+      "paymentLink",
+      "call",
     ],
   },
   {
@@ -140,6 +144,10 @@ export const FIELD_SETUP = [
   ["Nominee Name", "nomineeName"],
   ["Financer Name", "financerName"],
   ["GST Number", "gstin"],
+  ["Quote", "quote"],
+  ["Message Detail", "msg"],
+  ["Payment Link", "paymentLink"],
+  ["Call Detail", "call"],
 ];
 
 const MOTOR_COMMON_FIELDS = [
@@ -174,6 +182,10 @@ const MOTOR_COMMON_FIELDS = [
   "collectedAmount",
   "modeOfPayment",
   "remark",
+  "quote",
+  "msg",
+  "paymentLink",
+  "call",
 ];
 
 export const POLICY_SCHEMA_LIBRARY = [

@@ -133,6 +133,10 @@ export function sanitizeRecordPayload(payload = {}) {
     policyUnderstanding: asJson(payload.policyUnderstanding),
     schemaExtraction: asJson(payload.schemaExtraction),
     fieldConfidence: asJson(payload.fieldConfidence),
+    quote: asText(payload.quote, 500),
+    msg: asText(payload.msg, 1000),
+    paymentLink: asText(payload.paymentLink, 1000),
+    call: asText(payload.call, 500),
   };
 }
 
