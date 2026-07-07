@@ -57,18 +57,82 @@ function buildCustomerId(name, mobile) {
   return `${namePart}${digits.slice(-4)}`;
 }
 
+const headerMap = {
+  // General/Policy Fields
+  "insured name": "insuredName",
+  "insured/proposer name": "insuredName",
+  "name": "insuredName",
+
+  "policy number": "policyNumber",
+  "policyno": "policyNumber",
+
+  "policy type": "policyType",
+  "product": "policyType",
+  "lob": "policyType",
+
+  "premium": "premium",
+  "expiring policy premium": "premium",
+  "total premium": "totalPremium",
+  "net premium": "netPremium",
+  "od premium": "odPremium",
+  "premium including gst": "premiumIncludingGst",
+  "premiumincludinggst": "premiumIncludingGst",
+
+  "sum insured": "sumInsured",
+  "expiring policy sum insured": "sumInsured",
+
+  "start date": "startDate",
+  "expiry date": "expiryDate",
+  "end date": "expiryDate",
+  "expirydate": "expiryDate",
+
+  "duration": "duration",
+
+  "insurance company": "insuranceCompany",
+  "insurancecompany": "insuranceCompany",
+
+  "cover type": "policyCoverType",
+  "policy cover type": "policyCoverType",
+
+  // Motor Fields
+  "vehicle number": "vehicleNumber",
+  "vehiclenumber": "vehicleNumber",
+  "registration number": "registrationNumber",
+  "registrationnumber": "registrationNumber",
+
+  "make / model": "makeModel",
+  "make": "vehicleMake",
+  "model": "vehicleModel",
+  "variant": "variant",
+  "manufacturing year": "manufacturingYear",
+  "registration date": "registrationDate",
+  "engine number": "engineNumber",
+  "chassis number": "chassisNumber",
+  "fuel type": "fuelType",
+  "cubic capacity": "cubicCapacity",
+  "idv": "idv",
+  "ncb": "ncb",
+  "rto location": "rtoLocation",
+
+  // Contact / Remark / Status / Non-Motor specific
+  "contact number": "contactNumber",
+  "mob": "contactNumber",
+  "mob no": "contactNumber",
+  "mobile": "contactNumber",
+  "contact person": "contactPerson",
+  "whatsapp group name": "whatsappGroupName",
+  "remark": "remark",
+  "status": "status",
+  "risk location": "riskLocation",
+  "business description": "businessDescription",
+  "occupancy": "occupancy",
+};
+
 async function main() {
   console.log("Loading Excel workbook...");
   const workbook = XLSX.readFile(excelPath);
   const sourceFileName = path.basename(excelPath);
-  const firstSheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[firstSheetName];
 
-  // Parse rows as raw JSON objects
-  const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-  console.log(`Loaded ${rawRows.length} raw rows from sheet "${firstSheetName}".`);
-
-  // Manual renewal data is not a user-created policy entry.
   const dbOrg = await prisma.organization.findFirst();
   const organizationId = dbOrg ? dbOrg.id : null;
 
@@ -83,112 +147,127 @@ async function main() {
 
   let insertedCount = 0;
 
-  for (let i = 0; i < rawRows.length; i++) {
-    const row = rawRows[i];
+  for (const sheetName of workbook.SheetNames) {
+    const worksheet = workbook.Sheets[sheetName];
+    // Parse rows as raw JSON objects
+    const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+    console.log(`Loaded ${rawRows.length} raw rows from sheet "${sheetName}".`);
 
-    // Map Excel columns to our database and schema properties
-    // Headers: Product, Insured/Proposer Name, Policy Number, End Date, Status, Expiring Policy Sum Insured, Expiring Policy Premium, MOB, REMARK
-    const product = String(row["Product"] || row["LOB"] || "").trim();
-    const name = String(row["Insured/Proposer Name"] || row["Name"] || "").trim();
-    const policyNo = String(row["Policy Number"] || row["PolicyNo"] || "").trim();
-    const endDateRaw = row["End Date"] || row["ExpiryDate"];
-    const status = String(row["Status"] || "").trim();
-    const sumInsuredRaw = row["Expiring Policy Sum Insured"] || row["SUM INSURED"];
-    const premiumRaw = row["Expiring Policy Premium"] || row["PREMIUM"];
-    const mob = String(row["MOB"] || row["MOB NO"] || "").trim();
-    const remark = String(row["REMARK"] || "").trim();
-    const insuranceCompany = String(row["Insurance company"] || row["Insurance Company"] || "").trim();
+    for (let i = 0; i < rawRows.length; i++) {
+      const row = rawRows[i];
+      const payload = {};
 
-    if (!name && !policyNo) {
-      console.log(`[${i + 1}/${rawRows.length}] Skipping empty row`);
-      continue;
+      // Map each cell in the row using the dynamic headerMap
+      for (const [key, val] of Object.entries(row)) {
+        const cleanKey = key.trim().toLowerCase();
+        const mappedKey = headerMap[cleanKey];
+        if (mappedKey) {
+          let cleanVal = val;
+          if (typeof val === "string") {
+            cleanVal = val.trim();
+          }
+
+          // Handle dates conversion
+          if (["startDate", "expiryDate", "registrationDate"].includes(mappedKey)) {
+            cleanVal = excelDateToString(val);
+          }
+
+          payload[mappedKey] = cleanVal;
+        }
+      }
+
+      // Set source file and manual flag
+      payload.sourceFile = sourceFileName;
+      payload.manualRenewalSource = true;
+
+      // Standardize key fallbacks
+      payload.premium = payload.premium || payload.totalPremium || payload.netPremium || "";
+      payload.totalPremium = payload.totalPremium || payload.premium || "";
+      payload.sumInsured = payload.sumInsured || payload.idv || "";
+      payload.customerMobile = payload.customerMobile || payload.contactNumber || "";
+      payload.contactNumber = payload.contactNumber || payload.customerMobile || "";
+      payload.companyName = payload.companyName || payload.insuranceCompany || "";
+      payload.insuranceCompany = payload.insuranceCompany || payload.companyName || "";
+
+      const name = payload.insuredName || "";
+      const policyNo = payload.policyNumber || "";
+      const product = payload.policyType || "";
+      const insuranceCompany = payload.insuranceCompany || "";
+      const expiryDate = payload.expiryDate || "";
+      const mob = payload.contactNumber || "";
+      const status = payload.status || "";
+
+      if (!name && !policyNo) {
+        console.log(`[${sheetName}] [${i + 1}/${rawRows.length}] Skipping empty row`);
+        continue;
+      }
+
+      // Build customer ID
+      let customerId = "";
+      if (name && mob) {
+        customerId = buildCustomerId(name, mob);
+      }
+      payload.customerId = customerId;
+
+      const sanitizedData = payload;
+
+      // Map status column to DB properties
+      const statusLower = String(status || "").trim().toLowerCase();
+      let renewalStatus = "ACTIVE";
+      let isActivePolicy = true;
+
+      if (statusLower === "renewed") {
+        renewalStatus = "RENEWED";
+        isActivePolicy = false;
+      } else if (statusLower === "lost") {
+        renewalStatus = "LOST";
+        isActivePolicy = false;
+      }
+
+      const recordDate = new Date();
+
+      const policyRecordPayload = {
+        id: randomUUID(),
+        savedAt: recordDate,
+        createdAt: recordDate,
+        updatedAt: recordDate,
+        data: sanitizedData,
+        pdfFileName: sourceFileName,
+        pdfMimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        sourceFile: sourceFileName,
+        rawText: "",
+        detectedBankSource: "",
+        detectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
+        detectedServiceCategory: "",
+        detectedPolicyType: sanitizedData.policyType || product,
+        selectedBankSource: "",
+        selectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
+        selectedServiceCategory: "",
+        selectedPolicyType: sanitizedData.policyType || product,
+        confidenceScore: 1.0,
+        extractedData: sanitizedData,
+        reviewedData: sanitizedData,
+        extractionMethod: MANUAL_RENEWAL_IMPORT_METHOD,
+        extractionQuality: {},
+        extractionLog: {},
+        schemaVersion: 1,
+        organizationId,
+        createdById: null,
+        updatedById: null,
+
+        // Renewal specific fields
+        renewalStatus: renewalStatus,
+        isActivePolicy: isActivePolicy,
+      };
+
+      console.log(
+        `[${sheetName}] [${i + 1}/${rawRows.length}] Saving Policy Record for "${sanitizedData.insuredName}" (Status: ${renewalStatus})`,
+      );
+      await prisma.policyRecord.create({
+        data: policyRecordPayload,
+      });
+      insertedCount++;
     }
-
-    const expiryDate = excelDateToString(endDateRaw);
-
-    // Build payload to feed into sanitizeRecordPayload
-    const payload = {
-      insuredName: name,
-      policyNumber: policyNo,
-      policyType: product,
-      expiryDate: expiryDate,
-      sumInsured: sumInsuredRaw ? String(sumInsuredRaw).trim() : "",
-      premium: premiumRaw ? String(premiumRaw).trim() : "",
-      totalPremium: premiumRaw ? String(premiumRaw).trim() : "",
-      contactNumber: mob,
-      customerMobile: mob,
-      remark: remark,
-      insuranceCompany,
-      companyName: insuranceCompany,
-      sourceFile: sourceFileName,
-      manualRenewalSource: true,
-    };
-
-    // Build customer ID
-    let customerId = "";
-    if (name && mob) {
-      customerId = buildCustomerId(name, mob);
-    }
-    payload.customerId = customerId;
-
-    const sanitizedData = payload;
-
-    // Map the Status column to renewalStatus and isActivePolicy
-    const statusLower = status.toLowerCase();
-    let renewalStatus = "ACTIVE";
-    let isActivePolicy = true;
-
-    if (statusLower === "renewed") {
-      renewalStatus = "RENEWED";
-      isActivePolicy = false;
-    } else if (statusLower === "lost") {
-      renewalStatus = "LOST";
-      isActivePolicy = false;
-    }
-
-    const recordDate = new Date();
-
-    const policyRecordPayload = {
-      id: randomUUID(),
-      savedAt: recordDate,
-      createdAt: recordDate,
-      updatedAt: recordDate,
-      data: sanitizedData,
-      pdfFileName: sourceFileName,
-      pdfMimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      sourceFile: sourceFileName,
-      rawText: "",
-      detectedBankSource: "",
-      detectedCompany: insuranceCompany,
-      detectedServiceCategory: "",
-      detectedPolicyType: product,
-      selectedBankSource: "",
-      selectedCompany: insuranceCompany,
-      selectedServiceCategory: "",
-      selectedPolicyType: product,
-      confidenceScore: 1.0,
-      extractedData: sanitizedData,
-      reviewedData: sanitizedData,
-      extractionMethod: MANUAL_RENEWAL_IMPORT_METHOD,
-      extractionQuality: {},
-      extractionLog: {},
-      schemaVersion: 1,
-      organizationId,
-      createdById: null,
-      updatedById: null,
-
-      // Renewal specific fields
-      renewalStatus: renewalStatus,
-      isActivePolicy: isActivePolicy,
-    };
-
-    console.log(
-      `[${i + 1}/${rawRows.length}] Saving Policy Record for "${sanitizedData.insuredName}" (Status: ${renewalStatus})`,
-    );
-    await prisma.policyRecord.create({
-      data: policyRecordPayload,
-    });
-    insertedCount++;
   }
 
   console.log(`\nImport Completed: Successfully inserted ${insertedCount} policy records.`);
