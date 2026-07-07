@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -163,10 +164,15 @@ export default function RenewalsLayout({ children }) {
       <div className="renewals-content-pane">{children}</div>
 
       {/* Bulk Import Modal */}
-      {showImportModal && (
+      {showImportModal && typeof window !== "undefined" && createPortal(
         <div className="tb-modal-backdrop" onClick={() => !importing && setShowImportModal(false)}>
           <div className="tb-modal-card" onClick={(e) => e.stopPropagation()} style={{ width: "500px", padding: "24px", borderRadius: "12px" }}>
-            <div className="tb-modal-header" style={{ marginBottom: "16px", borderBottom: "1px solid var(--rn-border-light)", paddingBottom: "12px" }}>
+            <div className="tb-modal-header" style={{ marginBottom: "16px", borderBottom: "1px solid var(--rn-border-light)", paddingBottom: "12px", display: "flex", alignItems: "center", gap: "12px" }}>
+              <img
+                src="/brand/main-logo-wide.webp"
+                alt="Bima Headquarter"
+                style={{ height: "30px", width: "auto" }}
+              />
               <h3 className="tb-modal-title" style={{ fontSize: "18px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>Bulk Import Renewals</h3>
             </div>
             <div className="tb-modal-body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -249,7 +255,8 @@ export default function RenewalsLayout({ children }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
