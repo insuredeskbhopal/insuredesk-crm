@@ -134,6 +134,17 @@ function classifyDocument(text = "") {
         /209040\/\d{2}\/\d{2}\/\d{6}/i,
       ],
     },
+    {
+      company: "Liberty General Insurance Limited",
+      documentFormat: "LIBERTY_MOTOR_V1",
+      documentCategory: "Motor Insurance",
+      policyType: "Motor Policy",
+      signals: [
+        /Liberty\s+General\s+Insurance/i,
+        /TWO\s+WHEELER\s+LIABILITY\s+POLICY/i,
+        /LGI\s+Branch\s+GSTIN/i,
+      ],
+    },
   ];
 
   let best = {

@@ -96,6 +96,16 @@ const INSURANCE_COMPANY_MASTER = [
     ],
     active: true,
   },
+  {
+    name: "Liberty General Insurance Limited",
+    aliases: [
+      "Liberty",
+      "Liberty General Insurance",
+      "Liberty General Insurance Ltd",
+      "Liberty General Insurance Co. Ltd",
+    ],
+    active: true,
+  },
 ];
 
 function normalizeCompanyToken(value = "") {

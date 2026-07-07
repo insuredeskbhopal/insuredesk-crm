@@ -1,4 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
+ const { PrismaClient } = require("@prisma/client");
 const XLSX = require("xlsx");
 const { randomUUID } = require("crypto");
 const path = require("path");
