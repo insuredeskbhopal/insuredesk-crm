@@ -58,6 +58,7 @@ export default function CustomerRenewalsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [tabCounts, setTabCounts] = useState({ all: 0, motor: 0, warehouse: 0, other: 0 });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -222,6 +223,29 @@ export default function CustomerRenewalsPage() {
         setTotalPages(data.pages || 1);
         setTotalCount(data.totalCount || 0);
       }
+
+      // Fetch LOB Category counts in parallel
+      const qEncoded = encodeURIComponent(q);
+      const companyEncoded = encodeURIComponent(activeCompanyFilter);
+      const [allRes, motorRes, fireRes, otherRes] = await Promise.all([
+        fetch(`/api/renewals/customers?q=${qEncoded}&status=${statusFilter}&page=1&limit=1&company=${companyEncoded}&policyType=All`),
+        fetch(`/api/renewals/customers?q=${qEncoded}&status=${statusFilter}&page=1&limit=1&company=${companyEncoded}&policyType=Motor`),
+        fetch(`/api/renewals/customers?q=${qEncoded}&status=${statusFilter}&page=1&limit=1&company=${companyEncoded}&policyType=Fire`),
+        fetch(`/api/renewals/customers?q=${qEncoded}&status=${statusFilter}&page=1&limit=1&company=${companyEncoded}&policyType=Other`),
+      ]);
+      const [allData, motorData, fireData, otherData] = await Promise.all([
+        allRes.json(),
+        motorRes.json(),
+        fireRes.json(),
+        otherRes.json(),
+      ]);
+      setTabCounts({
+        all: allData.totalCount || 0,
+        motor: motorData.totalCount || 0,
+        warehouse: fireData.totalCount || 0,
+        other: otherData.totalCount || 0,
+      });
+
     } catch (error) {
       console.error("Failed to load customer renewals:", error);
     } finally {
@@ -824,6 +848,64 @@ export default function CustomerRenewalsPage() {
           <h3 style={{ fontSize: "15px", fontWeight: "600", color: "var(--rn-text-primary)", margin: 0 }}>
             Contact Portfolios
           </h3>
+        </div>
+
+        {/* LOB Category filter tabs */}
+        <div
+          className="record-view-tabs"
+          style={{
+            padding: "12px 16px",
+            borderBottom: "1px solid var(--rn-border)",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "10px",
+            alignItems: "center",
+          }}
+        >
+          <button
+            className={activePolicyTypeFilter === "All" ? "active" : ""}
+            type="button"
+            onClick={() => {
+              setPage(1);
+              setActivePolicyTypeFilter("All");
+            }}
+          >
+            All Portfolios
+            <span>{tabCounts.all}</span>
+          </button>
+          <button
+            className={activePolicyTypeFilter === "Motor" ? "active" : ""}
+            type="button"
+            onClick={() => {
+              setPage(1);
+              setActivePolicyTypeFilter("Motor");
+            }}
+          >
+            Motor Policy
+            <span>{tabCounts.motor}</span>
+          </button>
+          <button
+            className={activePolicyTypeFilter === "Fire" ? "active" : ""}
+            type="button"
+            onClick={() => {
+              setPage(1);
+              setActivePolicyTypeFilter("Fire");
+            }}
+          >
+            Warehouse Policy
+            <span>{tabCounts.warehouse}</span>
+          </button>
+          <button
+            className={activePolicyTypeFilter === "Other" ? "active" : ""}
+            type="button"
+            onClick={() => {
+              setPage(1);
+              setActivePolicyTypeFilter("Other");
+            }}
+          >
+            Other Policies
+            <span>{tabCounts.other}</span>
+          </button>
         </div>
 
         {loading ? (
