@@ -631,6 +631,12 @@ export default function CustomerRenewalsPage() {
 
   // WhatsApp combined message generator
   const handleWhatsApp = async (cust) => {
+    const cleanPhone = cust.mobile ? String(cust.mobile).replace(/[^0-9]/g, "") : "";
+    if (!cleanPhone || cleanPhone.length < 10) {
+      window.alert("No valid phone number available for this customer.");
+      return;
+    }
+
     setSelectedCustomer(cust);
     setWhatsAppPhone("");
     setWhatsAppTemplates(null);

@@ -592,6 +592,12 @@ export default function CustomerProfilePage(props) {
 
   // WhatsApp Combined Message
   const handleWhatsApp = async (policy = null) => {
+    const cleanPhone = profile?.phone ? String(profile.phone).replace(/[^0-9]/g, "") : "";
+    if (!cleanPhone || cleanPhone.length < 10) {
+      window.alert("No valid phone number available for this customer.");
+      return;
+    }
+
     setWhatsAppPhone("");
     setWhatsAppTemplates(null);
     setSelectedTemplateType("due_soon");
