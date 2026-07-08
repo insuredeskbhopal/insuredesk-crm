@@ -11768,7 +11768,7 @@ th {
   .endorsement-filter-bar,
   .endorsement-field-grid,
   .manual-selectors {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
   }
 
   .metric-grid,
@@ -13986,7 +13986,7 @@ th {
   }
 
   .customer-profile-filters {
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
     gap: 8px !important;
   }
 
@@ -13996,7 +13996,7 @@ th {
 
   .customer-profile-grid,
   .compact-profile-form .customer-profile-grid {
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
     gap: 8px !important;
   }
 
@@ -14069,12 +14069,12 @@ th {
   }
 
   .customer-portfolio-update-grid {
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
     gap: 8px !important;
   }
 
   .customer-portfolio-timeline-filters {
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
     gap: 8px !important;
   }
 
