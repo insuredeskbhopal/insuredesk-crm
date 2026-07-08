@@ -14161,15 +14161,15 @@ th {
 }
 
 .rn-lob-tabs button:hover {
-  background: var(--rn-border-light) !important;
-  color: var(--rn-text-primary) !important;
-  border-color: rgba(25, 28, 29, 0.14) !important;
+  background: #f5f6f7 !important;
+  color: #1b1f22 !important;
+  border-color: rgba(25, 28, 29, 0.18) !important;
 }
 
 .rn-lob-tabs button.active {
-  border-color: var(--rn-primary) !important;
-  background: var(--rn-border-light) !important;
-  color: var(--rn-primary) !important;
+  border-color: #1b1f22 !important;
+  background: #f5f6f7 !important;
+  color: #1b1f22 !important;
   font-weight: 700 !important;
 }
 
@@ -14180,15 +14180,15 @@ th {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: var(--rn-border-light);
-  color: var(--rn-text-secondary);
+  background: #eef0f2;
+  color: #575c61;
   font-size: 11px;
   font-weight: 700;
   padding: 0 6px;
 }
 
 .rn-lob-tabs button.active span {
-  background: var(--rn-primary);
+  background: #1b1f22;
   color: #ffffff;
 }
 
