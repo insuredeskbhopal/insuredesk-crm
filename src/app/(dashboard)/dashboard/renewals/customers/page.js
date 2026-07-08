@@ -318,7 +318,8 @@ export default function CustomerRenewalsPage() {
   const fetchAndSelectPolicy = async (cust, callback) => {
     try {
       setActionLoading(true);
-      const res = await fetch(`/api/renewals/customers/${cust.mobile}`);
+      const url = `/api/renewals/customers/${cust.mobile}${cust.nearest_due_policy_id ? `?policyId=${cust.nearest_due_policy_id}` : ""}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (res.ok && data.success) {
         const policy = data.policies.find((p) => p.id === cust.nearest_due_policy_id) || data.policies[0];

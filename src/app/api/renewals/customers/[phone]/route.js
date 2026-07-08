@@ -91,7 +91,27 @@ export async function GET(request, props) {
       .filter((policy) => isRenewalWindowPolicy(policy))
       .sort(sortByDaysLeftAscending);
     // Fall back to all policies if none match the renewal window
-    const policies = windowPolicies.length > 0 ? windowPolicies : allPolicies.sort(sortByDaysLeftAscending);
+    let policies = windowPolicies.length > 0 ? windowPolicies : allPolicies.sort(sortByDaysLeftAscending);
+
+    // Fallback: if phone search found nothing, try fetching by explicit policyId
+    if (policies.length === 0) {
+      const fallbackId = new URL(request.url).searchParams.get("policyId");
+      if (fallbackId) {
+        const fallbackRecord = await prisma.policyRecord.findFirst({
+          where: { id: fallbackId, deletedAt: null, ...(isSuperAdmin ? {} : { organizationId: orgId }) },
+          select: {
+            id: true, savedAt: true, data: true, reviewedData: true, renewalStatus: true,
+            previousPolicyId: true, renewedPolicyId: true, renewalDate: true, lostReason: true,
+            isActivePolicy: true, selectedCompany: true, selectedPolicyType: true, pdfFileName: true,
+            createdAt: true, updatedAt: true, createdBy: { select: { name: true, email: true } },
+          },
+        });
+        if (fallbackRecord) {
+          const normalized = withRenewalPolicyDisplay(normalizeRecord(fallbackRecord));
+          policies = [withRenewalWindowDisplay(normalized)];
+        }
+      }
+    }
 
     // 3. Compute stats
     let totalPremium = 0;
