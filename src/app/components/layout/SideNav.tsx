@@ -5,6 +5,7 @@ import BrandLogo from "@/app/components/brand/BrandLogo";
 import { cachedJson } from "@/app/lib/client-api";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 const ROUTE_MAP = {
   dashboard: "/dashboard",
@@ -100,13 +101,13 @@ export default function SideNav({
         </div>
 
         <nav>
-          <button
+          <Link
             className={activePage === "dashboard" ? "active" : ""}
-            type="button"
-            onClick={() => handleNavigate("dashboard")}
+            href={ROUTE_MAP["dashboard"]}
+            onClick={() => { if (onCloseSidebar) onCloseSidebar(); }}
           >
             <LayoutDashboard size={20} /> Dashboard
-          </button>
+          </Link>
           {navItems
             .filter((item) => {
               if (item.roles) return item.roles.includes(userRole);
@@ -117,30 +118,45 @@ export default function SideNav({
               const Icon = item.icon;
               const isParentActive =
                 activePage === item.id || item.children?.some((child) => child.id === activePage);
+
+              if (item.children?.length) {
+                return (
+                  <div className="side-nav-group" key={item.id}>
+                    <button
+                      className={isParentActive ? "active" : ""}
+                      type="button"
+                      onClick={() => handleNavigate(item.id)}
+                    >
+                      <Icon size={20} /> {item.label}
+                      <ChevronDown className="side-nav-chevron" size={14} />
+                    </button>
+                    {isParentActive ? (
+                      <div className="side-nav-submenu">
+                        {item.children.map((child) => (
+                          <Link
+                            className={activePage === child.id ? "active" : ""}
+                            key={child.id}
+                            href={ROUTE_MAP[child.id] || "/dashboard"}
+                            onClick={() => { if (onCloseSidebar) onCloseSidebar(); }}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              }
+
               return (
                 <div className="side-nav-group" key={item.id}>
-                  <button
-                    className={isParentActive ? "active" : ""}
-                    type="button"
-                    onClick={() => handleNavigate(item.id)}
+                  <Link
+                    className={activePage === item.id ? "active" : ""}
+                    href={ROUTE_MAP[item.id] || "/dashboard"}
+                    onClick={() => { if (onCloseSidebar) onCloseSidebar(); }}
                   >
                     <Icon size={20} /> {item.label}
-                    {item.children?.length ? <ChevronDown className="side-nav-chevron" size={14} /> : null}
-                  </button>
-                  {item.children?.length && isParentActive ? (
-                    <div className="side-nav-submenu">
-                      {item.children.map((child) => (
-                        <button
-                          className={activePage === child.id ? "active" : ""}
-                          type="button"
-                          key={child.id}
-                          onClick={() => handleNavigate(child.id)}
-                        >
-                          {child.label}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
+                  </Link>
                 </div>
               );
             })}

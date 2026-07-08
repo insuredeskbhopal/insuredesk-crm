@@ -920,6 +920,7 @@
 .top-brand nav,
 .global-search,
 .side-nav button,
+.side-nav a,
 .preview-head,
 .preview-actions,
 .panel-head,
@@ -1160,7 +1161,8 @@
   gap: 8px;
 }
 
-.side-nav button {
+.side-nav button,
+.side-nav a {
   justify-content: flex-start;
   width: 100%;
   min-height: 40px;
@@ -1173,21 +1175,25 @@
   padding: 0 12px;
   border-radius: 8px;
   box-shadow: none !important;
+  text-decoration: none;
   transition:
     background var(--motion-fast),
     color var(--motion-fast),
     transform var(--motion-fast);
 }
 
-.side-nav button:hover {
+.side-nav button:hover,
+.side-nav a:hover {
   border: 0 !important;
   background: rgba(25, 28, 29, 0.04) !important;
   color: #000000;
   transform: translateX(1px);
   box-shadow: none !important;
+  text-decoration: none;
 }
 
-.side-nav button.active {
+.side-nav button.active,
+.side-nav a.active {
   border: 0 !important;
   background: rgba(25, 28, 29, 0.06) !important;
   color: var(--primary);
@@ -1197,7 +1203,10 @@
 
 .side-nav button:active,
 .side-nav button:focus,
-.side-nav button:focus-visible {
+.side-nav button:focus-visible,
+.side-nav a:active,
+.side-nav a:focus,
+.side-nav a:focus-visible {
   border: 0 !important;
   outline: 0;
   background: #ffffff !important;
@@ -1205,7 +1214,8 @@
   box-shadow: none !important;
 }
 
-.side-nav button svg {
+.side-nav button svg,
+.side-nav a svg {
   color: #999999;
   flex: 0 0 auto;
   transition:
@@ -1214,11 +1224,14 @@
 }
 
 .side-nav button:hover svg,
-.side-nav button.active svg {
+.side-nav button.active svg,
+.side-nav a:hover svg,
+.side-nav a.active svg {
   color: #000000;
 }
 
-.side-nav button:hover svg {
+.side-nav button:hover svg,
+.side-nav a:hover svg {
   transform: translateX(1px);
 }
 
@@ -1241,7 +1254,8 @@
   border-left: 1px solid rgba(15, 23, 42, 0.12);
 }
 
-.side-nav-submenu button {
+.side-nav-submenu button,
+.side-nav-submenu a {
   min-height: 34px;
   padding: 8px 10px;
   font-size: var(--font-size-sm);
