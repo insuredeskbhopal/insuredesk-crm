@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { AlertCircle, MoreVertical, Eye, CheckCircle, XCircle, PlusCircle } from "lucide-react";
@@ -14,6 +14,7 @@ export default function DailyWorkPage() {
   const [activeCardFilter, setActiveCardFilter] = useState("all_work"); // all_work, due_today, followup_today, overdue_followup, completed_today
   const [activeDropdownRowId, setActiveDropdownRowId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState(null);
+  const [activeLobFilter, setActiveLobFilter] = useState("all");
 
   // Counters
   const [counts, setCounts] = useState({
@@ -148,8 +149,31 @@ export default function DailyWorkPage() {
     setDropdownPosition(null);
   };
 
+  // Reset LOB filter when card selection changes
+  useEffect(() => {
+    setActiveLobFilter("all");
+  }, [activeCardFilter]);
+
+  // Helper to categorize policy LOB
+  const getPolicyCategory = (policy) => {
+    const type = String(policy.displayPolicyType || policy.policyType || "").toLowerCase();
+    const motorTerms = [
+      "motor", "vehicle", "private car", "two wheeler", "bike", "scooter",
+      "commercial vehicle", "taxi", "school bus", "goods carrying",
+      "passenger carrying", "auto secure", "liability only", "comprehensive", "own damage"
+    ];
+    const warehouseTerms = [
+      "fire", "sfsp", "burglary", "msme", "warehouse", "stock", "property",
+      "business guard", "laghu", "sookshma", "fidelity", "guarantee", "house breaking"
+    ];
+
+    if (motorTerms.some((term) => type.includes(term))) return "motor";
+    if (warehouseTerms.some((term) => type.includes(term))) return "warehouse";
+    return "other";
+  };
+
   // Filter policies based on active card selection
-  const getFilteredPolicies = () => {
+  const activeCardPolicies = useMemo(() => {
     const todayStr = new Date().toISOString().split("T")[0];
 
     return policies.filter((p) => {
@@ -167,11 +191,9 @@ export default function DailyWorkPage() {
         return !isClosed && p.nextFollowUpDate && p.nextFollowUpDate < todayStr;
       }
       if (activeCardFilter === "completed_today") {
-        // Show recently updated policies (renewed or lost today)
         return isClosed && p.renewalDate && p.renewalDate.startsWith(todayStr);
       }
 
-      // Default: all open daily tasks (due today, followups today, overdue followups)
       return (
         !isClosed &&
         ((p.expiryDate && p.expiryDate.startsWith(todayStr)) ||
@@ -179,7 +201,34 @@ export default function DailyWorkPage() {
           (p.nextFollowUpDate && p.nextFollowUpDate < todayStr))
       );
     });
-  };
+  }, [policies, activeCardFilter]);
+
+  // Compute LOB counts from the active card policies
+  const lobCounts = useMemo(() => {
+    let motor = 0;
+    let warehouse = 0;
+    let other = 0;
+
+    activeCardPolicies.forEach((p) => {
+      const cat = getPolicyCategory(p);
+      if (cat === "motor") motor++;
+      else if (cat === "warehouse") warehouse++;
+      else other++;
+    });
+
+    return {
+      all: activeCardPolicies.length,
+      motor,
+      warehouse,
+      other,
+    };
+  }, [activeCardPolicies]);
+
+  // Get final filtered list to display in the table
+  const finalFilteredPolicies = useMemo(() => {
+    if (activeLobFilter === "all") return activeCardPolicies;
+    return activeCardPolicies.filter((p) => getPolicyCategory(p) === activeLobFilter);
+  }, [activeCardPolicies, activeLobFilter]);
 
   // Actions
   const handleViewProfile = (policy) => {
@@ -302,7 +351,7 @@ export default function DailyWorkPage() {
     }
   };
 
-  const filtered = getFilteredPolicies();
+  const filtered = finalFilteredPolicies;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -384,6 +433,52 @@ export default function DailyWorkPage() {
           <span style={{ fontSize: "12px", color: "var(--rn-text-secondary)" }}>
             {filtered.length} records found
           </span>
+        </div>
+
+        {/* LOB Category filter tabs */}
+        <div
+          className="record-view-tabs"
+          style={{
+            padding: "12px 16px",
+            borderBottom: "1px solid var(--rn-border)",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "10px",
+            alignItems: "center",
+          }}
+        >
+          <button
+            className={activeLobFilter === "all" ? "active" : ""}
+            type="button"
+            onClick={() => setActiveLobFilter("all")}
+          >
+            All Tasks
+            <span>{lobCounts.all}</span>
+          </button>
+          <button
+            className={activeLobFilter === "motor" ? "active" : ""}
+            type="button"
+            onClick={() => setActiveLobFilter("motor")}
+          >
+            Motor Policy
+            <span>{lobCounts.motor}</span>
+          </button>
+          <button
+            className={activeLobFilter === "warehouse" ? "active" : ""}
+            type="button"
+            onClick={() => setActiveLobFilter("warehouse")}
+          >
+            Warehouse Policy
+            <span>{lobCounts.warehouse}</span>
+          </button>
+          <button
+            className={activeLobFilter === "other" ? "active" : ""}
+            type="button"
+            onClick={() => setActiveLobFilter("other")}
+          >
+            Other Policies
+            <span>{lobCounts.other}</span>
+          </button>
         </div>
 
         {loading ? (
