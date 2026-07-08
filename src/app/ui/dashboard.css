@@ -14161,14 +14161,14 @@ th {
 }
 
 .rn-lob-tabs button:hover {
-  background: #f5f6f7 !important;
+  background: #ffffff !important;
   color: #1b1f22 !important;
   border-color: rgba(25, 28, 29, 0.18) !important;
 }
 
 .rn-lob-tabs button.active {
   border-color: #1b1f22 !important;
-  background: #f5f6f7 !important;
+  background: #ffffff !important;
   color: #1b1f22 !important;
   font-weight: 700 !important;
 }
