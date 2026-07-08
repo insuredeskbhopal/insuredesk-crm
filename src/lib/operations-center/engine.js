@@ -1008,6 +1008,7 @@ export async function getNotificationFeed(session, limit = 10) {
     unreadCount,
     notifications: notifications.map((item) => ({
       id: item.id,
+      userId: item.userId,
       category: item.category,
       severity: item.severity,
       title: item.title,

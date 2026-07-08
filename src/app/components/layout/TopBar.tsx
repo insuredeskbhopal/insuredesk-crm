@@ -34,13 +34,14 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [calendarTasks, setCalendarTasks] = useState([]);
+  const [activeTab, setActiveTab] = useState("general");
 
   const [showDiagnosticsModal, setShowDiagnosticsModal] = useState(false);
   const [diagnosticsData, setDiagnosticsData] = useState(null);
   const [loadingDiagnostics, setLoadingDiagnostics] = useState(false);
   const [toast, setToast] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [user, setUser] = useState({ name: "BIMAHEADQUARTER Admin", email: "admin@bimaheadquarter.com" });
+  const [user, setUser] = useState({ id: "", name: "BIMAHEADQUARTER Admin", email: "admin@bimaheadquarter.com" });
 
   const fetchHeaderData = async () => {
     try {
@@ -75,6 +76,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
         const data = await cachedJson("/api/auth/me", { ttlMs: 10000 });
         if (data.success && data.user) {
           setUser({
+            id: data.user.id,
             name: data.user.name || data.user.email.split("@")[0],
             email: data.user.email,
           });
@@ -282,54 +284,77 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
           >
             <Bell size={19} />
           </button>
-          {showNotifications && (
-            <div className="tb-dropdown">
-              <div className="tb-item-header tb-notif-header">
-                <h4 className="tb-dropdown-title tb-m-0">Recent Activity</h4>
-                <button type="button" onClick={markAllRead} className="tb-clear-btn">
-                  Mark all read
-                </button>
-              </div>
-              {unreadCount > 0 ? (
-                <p className="tb-unread-count">
-                  {unreadCount} unread notification{unreadCount === 1 ? "" : "s"}
-                </p>
-              ) : null}
-              <div className="tb-dropdown-list">
-                {notifications.length ? (
-                  notifications.map((n) => {
-                    const href = n.actionUrl || "/work-center";
+              {showNotifications && (() => {
+                const generalNotifs = notifications.filter((n) => !n.userId);
+                const personalNotifs = notifications.filter((n) => n.userId);
+                const displayedNotifs = activeTab === "general" ? generalNotifs : personalNotifs;
+                const generalUnread = generalNotifs.filter((n) => !n.read).length;
+                const personalUnread = personalNotifs.filter((n) => !n.read).length;
 
-                    return (
-                      <Link
-                        key={n.id}
-                        href={href}
-                        onClick={() => setShowNotifications(false)}
-                        className={n.read ? "tb-notif-item" : "tb-notif-item unread"}
+                return (
+                  <div className="tb-dropdown" onClick={(e) => e.stopPropagation()}>
+                    <div className="tb-item-header tb-notif-header">
+                      <h4 className="tb-dropdown-title tb-m-0">Recent Activity</h4>
+                      <button type="button" onClick={markAllRead} className="tb-clear-btn">
+                        Mark all read
+                      </button>
+                    </div>
+
+                    <div className="tb-notif-tabs">
+                      <button
+                        type="button"
+                        className={`tb-notif-tab ${activeTab === "general" ? "active" : ""}`}
+                        onClick={() => setActiveTab("general")}
                       >
-                        <span className="tb-notif-icon-wrap">{getNotificationIcon(n.severity)}</span>
-                        <div>
-                          <p className="tb-notif-text">{n.title}</p>
-                          <small className="tb-item-small">{n.message}</small>
-                          <small className="tb-notif-time">{n.time}</small>
-                        </div>
+                        General {generalUnread > 0 ? `(${generalUnread})` : ""}
+                      </button>
+                      <button
+                        type="button"
+                        className={`tb-notif-tab ${activeTab === "personal" ? "active" : ""}`}
+                        onClick={() => setActiveTab("personal")}
+                      >
+                        My Updates {personalUnread > 0 ? `(${personalUnread})` : ""}
+                      </button>
+                    </div>
+
+                    <div className="tb-dropdown-list">
+                      {displayedNotifs.length ? (
+                        displayedNotifs.map((n) => {
+                          const href = n.actionUrl || "/work-center";
+
+                          return (
+                            <Link
+                              key={n.id}
+                              href={href}
+                              onClick={() => setShowNotifications(false)}
+                              className={n.read ? "tb-notif-item" : "tb-notif-item unread"}
+                            >
+                              <span className="tb-notif-icon-wrap">{getNotificationIcon(n.severity)}</span>
+                              <div>
+                                <p className="tb-notif-text">{n.title}</p>
+                                <small className="tb-item-small">{n.message}</small>
+                                <small className="tb-notif-time">{n.time}</small>
+                              </div>
+                            </Link>
+                          );
+                        })
+                      ) : (
+                        <p className="tb-empty-text">
+                          {activeTab === "general" ? "No new activity logs." : "No tasks or follow-up notifications."}
+                        </p>
+                      )}
+                    </div>
+                    <div className="tb-dropdown-actions">
+                      <Link href="/work-center" onClick={() => setShowNotifications(false)}>
+                        Filter Notifications
                       </Link>
-                    );
-                  })
-                ) : (
-                  <p className="tb-empty-text">No new activity logs.</p>
-                )}
-              </div>
-              <div className="tb-dropdown-actions">
-                <Link href="/work-center" onClick={() => setShowNotifications(false)}>
-                  Filter Notifications
-                </Link>
-                <Link href="/work-center" onClick={() => setShowNotifications(false)}>
-                  View All
-                </Link>
-              </div>
-            </div>
-          )}
+                      <Link href="/work-center" onClick={() => setShowNotifications(false)}>
+                        View All
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })()}
         </div>
 
         {/* Profile Avatar */}

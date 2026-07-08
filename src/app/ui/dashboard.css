@@ -14208,3 +14208,40 @@ th {
     padding: 0 4px !important;
   }
 }
+
+/* ==========================================
+   TOPBAR NOTIFICATION TABS STYLES
+   ========================================== */
+.tb-notif-tabs {
+  display: flex;
+  background-color: #f1f3f5;
+  padding: 4px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  gap: 4px;
+}
+
+.tb-notif-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #495057;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  text-align: center;
+}
+
+.tb-notif-tab.active {
+  background-color: #ffffff;
+  color: #1b1f22;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tb-notif-tab:hover:not(.active) {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
