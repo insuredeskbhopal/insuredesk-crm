@@ -7,6 +7,20 @@ import { getTenantFilter } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/db/prisma";
 import { MANUAL_RENEWAL_SQL_EXCLUSION, withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
 
+// Simple in-memory cache for slow dashboard tab counts (30 seconds TTL)
+const countsCache = new Map();
+
+async function getCachedTabCounts({ key, fetcher }) {
+  const now = Date.now();
+  const cached = countsCache.get(key);
+  if (cached && (now - cached.timestamp < 30000)) {
+    return cached.data;
+  }
+  const data = await fetcher();
+  countsCache.set(key, { data, timestamp: now });
+  return data;
+}
+
 export default async function PolicyRecordsPage(props) {
   const searchParams = await props.searchParams;
   const page = parseInt(searchParams.page || "1", 10);
@@ -44,11 +58,16 @@ export default async function PolicyRecordsPage(props) {
     endDate,
     datePreset,
   });
-  const countsPayload = await loadPolicyRecordTabCounts({
-    basePolicyWhere: policyRecordWhere,
-    isSuperAdmin,
-    orgId,
-    session,
+
+  const cacheKey = `${orgId || "global"}_${isSuperAdmin}`;
+  const countsPayload = await getCachedTabCounts({
+    key: cacheKey,
+    fetcher: () => loadPolicyRecordTabCounts({
+      basePolicyWhere: policyRecordWhere,
+      isSuperAdmin,
+      orgId,
+      session,
+    })
   });
   const {
     totalAll,
