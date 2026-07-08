@@ -1,3 +1,5 @@
+
+
 Service Branch Address:
 3rd Floor, Alankar Complex,Plo t# 11, Zone-II,MP Nagar,D2-Bhopal ,BHOPAL - 462011.
 Jul 03, 2026
@@ -18,30 +20,52 @@ From 00:00:00 hours on 04/07/2026 To Midnight of 03/07/2027
 Dear Customer,
 Thank you for choosing Royal Sundaram as the Insurer of your vehicle. We are delighted to have you as our customer.Please find enclosed
 Goods Carrying Vehicle Policy No. VGC1573257000100 which has been issued based on the details mentioned below:
-Name of the Insured: Mr.SHIVAM RAI
-Mobile No.: 88xxxxxx60 Email ID: INS**************@GMAIL.COM
-Make of the Vehicle: Tata Motors Ltd. Model Description: Tata LPT 3118 TC
-Engine No.: B591803111F63142692 Chassis No.: MAT466404B2F13207
-Premium Amount (Rs.) 49,075.08 Add-on Covers Opted : No
-Previous Policy No. 214021/31/26/000552
-Previous Policy Insurance Co. SHRIRAM GENERAL INSURANCE CO. LTD.
+Name of the Insured:Mr.SHIVAM RAI
+Mobile No.:88xxxxxx60Email ID:INS**************@GMAIL.COM
+Make of the Vehicle:Tata Motors Ltd.Model Description:Tata LPT 3118 TC
+Engine No.:B591803111F63142692Chassis No.:MAT466404B2F13207
+Premium Amount (Rs.)49,075.08Add-on Covers Opted :No
+Previous Policy No.214021/31/26/000552
+Previous Policy Insurance Co.SHRIRAM GENERAL INSURANCE CO. LTD.
 Based On your declaration on No claim being made in expiring policy, we have extended next slab of no claim discount in
 your policy (0 %)
 Does the vehicle have valid Pollution Under Control (PUC) Certificate: Yes
 Pollution Certificate Number (PUC) :
-PUC expiry date : CKYC No.:
+PUC expiry date :CKYC No.:
 *In line with the Central Motor Vehicle Act, 1989 and as per the directive of Hon'ble Supreme Court of India, it is mandated that insured must
 produce a valid "Pollution Under control" Certificate as and when asked by the insurer and it is the responsibility of the insured to renew the
 same before expiry of the validity of the PUC certificate. Absence of Valid certificate may lead to cancellation of insurance
 CPA Status
 Waived off -Waiver details- The registered owner driver, have other vehicles policy along with CPA cover
+The  policy  is  processed  based  on  the  information  declared  by  you.  While  the  information  regarding  the  vehicle,  insured
+(yourselves),  detail  of  covers  and  terms/conditions  could  be  ascertained  from  the  Certificate  of  Insurance  and  Policy
+Schedule  (Enclosed),  some  of  the  very  critical  ones  like  No  Claim  Bonus  extended,  KYC  Details,  status  of  Compulsory
+Personal Accident (CPA) Cover and details regarding Vehicle Inspection if any etc. are furnished above.
+Coverage  of  risk  is  subject  to  realization  of  the  full  premium,  post  which,  insurance  coverage  under  the  policy  would
+commence. In-case the premium is not received by us due to cheque dishonor or any other reason or misrepresentation of
+any information, the insurance cover shall be void ab-initio.
+Please  check  all  the  information  printed  in  these  pages  for  its  correctness  and  should  there  be  a  discrepancy,  reach  us
+(Contact details provided below) for suitable rectification. In case there is no response within 15 days of policy inception, it will
+be deemed that all information provided are correct and all future transactions would be based on such information only.
+The above information is to be read in conjunction with the policy certificate of issuance and policy schedule and shall be
+considered null and void without the same.
+To read the “policy” & “add on” terms, conditions, exceptions and applicable endorsement, please log on to our
+website www.royalsundaram.in. Should you have any queries, please contact our Customer Service helpline number
+1860-425-0000,1860-258-0000. You may also write to customer.services@royalsundaram.in
+Assuring you of our best services at all times.
+Yours sincerely,
+Authorized Signatory
+ba3ce7ceeb25aaf7f5db795bc4e5ebd3
+Note: To download the claim form and to know more about Royal Sundaram products please log on to www.royalsundaram.in
+Registered Office: 21, Patullos Road, Chennai - 600002 | IRDAI Reg. No.102 | CIN: U67200TN2000PLC045611
+Customer Care 1860 425 0000,1860 258 0000 | Email: customer.services@royalsundaram.in | Visit: www.royalsundaram.in
 
 Service Branch Address:
 3rd Floor, Alankar Complex,Plo t# 11, Zone-II,MP Nagar,D2-Bhopal ,BHOPAL - 462011.
 Jul 03, 2026
-Mr.SHIVAM RAI
-S/O BHARAT SINGH RAI
-GRAM REHLI TEH UDAYPURA
+Mr.SHIVAM  RAI
+S/O  BHARAT SINGH RAI
+GRAM REHIL TEH UDAYPURA
 RAISEN MADHYA PRADESH
 INDORE MADHYA PRADESH
 452001
@@ -53,29 +77,35 @@ OA505019
 Intermediary
 Name:
 Lila .
-Contact: 9981667989
+Contact:9981667989
 -
-CERTIFICATE OF INSURANCE & POLICY SCHEDULE
+CERTIFICATEOFINSURANCE&POLICYSCHEDULE
 (See Form 51 of The Central Motor Vehicles Rules, 1989) Motor Vehicles Act, 1988
-Goods Carrying Vehicle Policy [Reprint]
+Goods Carrying Vehicle Policy   [Reprint]
 Certificate of Insurance and Policy No.
 VGC1573257000100
 Policy Period:Period of insurance
-From 00:00:00 hours on 04/07/2026 To Midnight of 03/07/2027
+From  00:00:00 hours on 04/07/2026 To Midnight of 03/07/2027
 INSURED DETAILS
-Name of Insured Insured Date
+Name of Insured
+Insured Date
 of Birth
 Geographical
-Area Business/Profession Registration
+Area
+Business/Profession
+Registration
 Authority
 Registration
 Date
-Mr.SHIVAM RAI 30/04/1998 India INDORE 18/07/2011
+Mr.SHIVAM  RAI30/04/1998IndiaINDORE
+18/07/2011
 INSURED'S DECLARED VALUE (IDV) (in Rs.)
 For the
 Vehicle
 For
-Trailers Non Electrical Accessories Electrical / Electronic
+Trailers
+Non Electrical Accessories
+Electrical / Electronic
 Accessories
 Value
 of
@@ -85,58 +115,100 @@ Total IDV
 Invoice
 Price
 Value
-800,000 0 0 0 0 800,000 0
+800,0000000800,0000
 VEHICLE DETAILS
-Registration Number MP09HG6001 Type of Body OPEN
-Engine Number B591803111F63142692 Public Carrier/Private Carrier Public Carrier
-Chassis Number MAT466404B2F13207 Year of Manufacture 2011
-Make of the Vehicle Tata Motors Ltd. Gross Vehicle Weight (Kgs) 3,50,00
-Model Description Tata LPT 3118 TC Total Premium (in Rs.) 49,075
-Fuel Type Diesel
+Registration NumberMP09HG6001Type of BodyOPEN
+Engine NumberB591803111F63142692Public Carrier/Private CarrierPublic Carrier
+Chassis NumberMAT466404B2F13207Year of Manufacture2011
+Make of the VehicleTata Motors Ltd.Gross Vehicle Weight (Kgs)3,50,00
+Model DescriptionTata LPT 3118 TC
+Total Premium (in Rs.)49,075
+Fuel TypeDiesel
+LIMITATIONS AS TO USE: As per Motor Vehicles Rules, 1989
+The Policy covers use only under a Permit within the meaning of the
+Motor Vehicles Act, 1988 or such a carriage falling under Sub-section 3
+of Section 66 of the Motor Vehicles Act, 1988.
+The Policy does not cover use for
+a) Organised racing   b) Pace Making    c) Speed testing
+d) Reliability Trials
+Persons or Classes of Persons entitled to Drive:
+Any person including the Insured
+•Provided that a person driving holds an effective driving licence at
+the time of the accident and is not disqualified from holding or
+obtaining such a License.
+•Provided also that the person holding an effective learner's license
+may also drive the vehicle when not used for the transport of goods at
+the time of the accident and that such a person satisfies the
+requirements of Rule 3 of The Central Motor Vehicles Rules 1989.
+LIMITS OF LIABILITY:
+Under Section II-1 (i) of the Policy - Death of or bodily injury - Such amount as is necessary to meet the requirements of the Motor Vehicles Act,
+1988.
+Under Section II-1 (ii) of the Policy - Damage to Third Party Property - Rs 750000 (as per IMT 20) - In respect of any one claim or series of claims
+arising out of one event.
+Personal Accident cover for Owner - Driver under section IV: CSI - Rs.0
+Note: Warranted that at no time the gross laden weight of the vehicle exceeds the gross vehicle weight mentioned in the schedule of the policy.
+Deductible under Section -I : In respect of each and every claim. (Compulsory Deductible [ Rs.1,500] and Imposed Deductible [Rs. 0])
+Document Code:
+Certificate of insurance & policy schedule continued in Page 2
+ba3ce7ceeb25aaf7f5db795bc4e5ebd3
+You can reach us through the details given below Mon - Sat 8.00am to 9.00pm and Sunday up to 5.00pm
+Call:1860 425 0000,1860 258 0000SMS:type <MOTORCLAIMS> and send to 567675
+E-Mail:customer.services@royalsundaram.inwww.royalsundaram.in
 
-CERTIFICATE OF INSURANCE & POLICY SCHEDULE (CONTINUED)
+CERTIFICATEOFINSURANCE&POLICYSCHEDULE(CONTINUED)
 (See Form 51 of The Central Motor Vehicles Rules, 1989) Motor Vehicles Act, 1988
 Goods Carrying Vehicle Policy [Reprint]
 Policy No. VGC1573257000100
-A - OWN DAMAGE Premium in
-Rs. B - LIABILITY Premium in
+A - OWN DAMAGE
+Premium in
 Rs.
-1.a) Basic premium on Vehicle 1,449.60 1. Basic premium including premium for TPPD 43,950.00
-b) Non-Electrical Accessories 0.00 2. Reduction in TPPD to Rs.6000/- 0.00
-2. Additional GVW over 12,000 Kgs 621.00 3. Trailers Endt. IMT-30 0.00
-3. Electrical & Electronic Accessories @ 4% (IMT 24) 0.00 4. Bi – Fuel Kit (CNG/LPG) IMT-25 0.00
-4. Bi-Fuel Kit (CNG/LPG) @ 4% (IMT 25) 0.00
-ADD: ADD::
-5. Trailer 0.00 Personal Accident Benefits
-6. Overturning Risk 0.00 5. Geographical Area Extn. Endt.IMT-1 0.00
-7. Geographical Area Extn.Endt.IMT-1 0.00 6. Under Section IV- Rs.0 0.00
-8. Cover for Lamps, Bumpers, etc. Endt. IMT – 23 310.59 7. PA to Paid Driver/ Cleaners Endt. IMT-17 0.00
-8. Indemnity to Hirer IMT-44 0.00
-9. Fibre Glass Tanks 0.00 9. Enhanced PA cover , Owner Driver, CSI Rs.0 0.00
-10. Enhanced PA cover, Paid Driver, CSI Rs.0.00 0.00
-10. Additional Towing Charges. Rs.0 0.00 Legal Liability:
-11. 60% on OD Premium for Driving Tuition 0.00 11. To Paid Driver/Cleaner(not exceeding 7 persons)
-12. Usage of Commercial and Private Purpose - IMT 34 0.00 Endt. IMT-28 100.00
-13. for any other extra 0.00
-LESS: 12. To Paid Driver/Cleaner/Coolies(exceeding 7 persons)
-Endt. IMT-39A 0.00
-14. 50% Discount for vehicles specially designed/modified 13. To Coolies Endt. IMT-39 0.00
+B - LIABILITY
+Premium in
+Rs.
+1.a) Basic premium on Vehicle
+1,449.60
+1. Basic premium including premium for TPPD
+43,950.00
+b) Non-Electrical Accessories0.002. Reduction in TPPD to Rs.6000/-0.00
+2. Additional GVW over 12,000 Kgs621.003. Trailers Endt. IMT-300.00
+3. Electrical & Electronic Accessories @ 4% (IMT 24)0.004. Bi – Fuel Kit (CNG/LPG) IMT-250.00
+4. Bi-Fuel Kit (CNG/LPG) @ 4% (IMT 25)0.00
+ADD:ADD::
+5. Trailer0.00Personal Accident Benefits
+6. Overturning Risk0.005. Geographical Area Extn. Endt.IMT-10.00
+7. Geographical Area Extn.Endt.IMT-10.006. Under Section IV- Rs.00.00
+8. Cover for Lamps, Bumpers, etc. Endt. IMT – 23310.597. PA to Paid Driver/ Cleaners Endt. IMT-170.00
+8. Indemnity to Hirer IMT-440.00
+9. Fibre Glass Tanks0.009. Enhanced PA cover , Owner Driver, CSI Rs.00.00
+10. Enhanced PA cover, Paid Driver, CSI Rs.0.000.00
+10. Additional Towing Charges. Rs.00.00Legal Liability:
+11. 60% on OD Premium for Driving Tuition0.0011. To Paid Driver/Cleaner(not exceeding 7 persons)
+12. Usage of Commercial and Private Purpose - IMT 340.00Endt. IMT-28100.00
+13. for any other extra0.00
+LESS:
+12. To Paid Driver/Cleaner/Coolies(exceeding 7 persons)
+Endt. IMT-39A
+0.00
+14. 50% Discount for vehicles specially designed/modified13. To Coolies Endt. IMT-390.00
 for blind, handicapped and mentally challenged
 persons
-0.00 14. NFPP - Employees Endt. IMT-37 0.00
-15. Discount for Anti-theft Devices Endt. IMT-10 0.00 15. NFPP Other than Employees Endt. IMT-37A 0.00
-16. Discount for vehicles plying within insured own premises 0.00 16. Usage of Commercial and Private Purpose - IMT 34 0.00
-17. 0% NCB 0.00 17. TOTAL LIABILITY PREMIUM (B) 44,050.00
-18. ADD: Underwriting Loading% 0.00
-19. Confined to own sites 0.00
-20. Total Premium (A+B) 46,431.00
+0.00
+14. NFPP - Employees Endt. IMT-370.00
+15. Discount for Anti-theft Devices Endt. IMT-100.0015. NFPP Other than Employees Endt. IMT-37A0.00
+16. Discount for vehicles plying within insured own premises0.00  16. Usage of Commercial and Private Purpose - IMT 340.00
+17. 0% NCB0.0017. TOTAL LIABILITY PREMIUM (B)44,050.00
+18. ADD: Underwriting Loading%0.00
+19. Confined to own sites
+0.00
+20. Total Premium (A+B)
+46,431.00
 Add: Additional Cover for Package Policies
 18. Depreciation Waiver Clause
 (IRDAN102RP0005V03201617/A0028V01202526)
-0.00 ADD: SGST 1,322.04
+0.00ADD:SGST1,322.04
 19. Windshield Glass (
 IRDAN102RP0005V03201617/A0002V01201011)
-0.00 ADD: CGST 1,322.04
+0.00ADD:CGST1,322.04
 20. EMI Protector Clause (
 IRDAN102RP0005V03201617/A0003V01202021)
 Limit. Rs.0.00
@@ -147,11 +219,11 @@ Limit in Rs.0.00 Duration: 0 months
 0.00
 22. Engine Protector Cover (
 IRDAN102RP0005V03201617/A0059V01202627)
-0.00 ADD: CGST 1,322.04
+0.00ADD:CGST1,322.04
 23. Return to Invoice Cover (
 IRDAN102RP0005V03201617/A0060V01202627)
-0.00 ADD: CGST 1,322.04
-24. TOTAL OWN DAMAGE PREMIUM (A) 2,381.00 24. TOTAL PREMIUM PAYABLE 49,075.08
+0.00ADD:CGST1,322.04
+24. TOTAL OWN DAMAGE PREMIUM (A)2,381.0024. TOTAL PREMIUM PAYABLE49,075.08
 No Claim Bonus:
 a) No Claim Bonus will only be allowed provided the policy is renewed within 90 days of the expiry date of the previous year. b) The insured is entitled for a No Claim Bonus (NCB)
 on the Own Damage Section of the policy, if no claim is made or pending during the preceding year(s), as per the details given below:

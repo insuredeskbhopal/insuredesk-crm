@@ -39,8 +39,8 @@ function extractRoyalSundaramMotor(text, _sourceFile = "") {
     matchGroup(text, /Gross Vehicle Weight\s*\(Kgs\)\s*([0-9,]+)/i) ||
       matchGroup(text, /Gross Vehicle Weight\(Kgs\)\s*([0-9,]+)/i),
   );
-  const engineNumber = matchGroup(text, /Engine Number\s*([A-Z0-9]{8,30})/i);
-  const chassisNumber = matchGroup(text, /Chassis Number\s*([A-Z0-9]{8,30})/i);
+  const engineNumber = matchGroup(text, /Engine Number\s*([A-Z0-9]+?)(?=\s|[A-Z][a-z]|$)/) || matchGroup(text, /Engine Number\s*([A-Z0-9]{8,30})/i);
+  const chassisNumber = matchGroup(text, /Chassis Number\s*([A-Z0-9]+?)(?=\s|[A-Z][a-z]|$)/) || matchGroup(text, /Chassis Number\s*([A-Z0-9]{8,30})/i);
   const bodyType = cleanHdfcValue(matchGroup(text, /Type of Body\s*([^\n]+)/i));
   const seatingCapacity = matchGroup(text, /Seating Capacity\s*\(including Driver\)\s*([0-9]+)/i);
   const fuelType = normalizeFuelType(matchGroup(text, /Fuel Type\s*([A-Za-z]+)/i));
@@ -48,7 +48,7 @@ function extractRoyalSundaramMotor(text, _sourceFile = "") {
   const registrationDate =
     matchGroup(
       text,
-      /Name of Insured[\s\S]{0,240}?\d{1,2}\/\d{1,2}\/\d{4}\s*India[A-Z ]+?(\d{1,2}\/\d{1,2}\/\d{4})/i,
+      /Name of Insured[\s\S]{0,280}?\d{1,2}\/\d{1,2}\/\d{4}\s*India\s*[A-Z\s]+?\s*(\d{1,2}\/\d{1,2}\/\d{4})/i,
     ) || matchGroup(text, /Registration\s*Date[\s\S]{80,180}?(\d{1,2}\/\d{1,2}\/\d{4})/i);
   const totalPremium = normalizeAmount(
     matchGroup(text, /TOTAL PREMIUM\s*([0-9,]+\.\d{2})/i) ||
@@ -98,12 +98,12 @@ function extractRoyalSundaramMotor(text, _sourceFile = "") {
       : extractPolicyCoverType(text, policyType),
     rtoLocation: matchGroup(
       text,
-      /Registration\s*Authority\s*Registration\s*Date[\s\S]{0,120}?India([A-Z ]+?)\d{1,2}\/\d{1,2}\/\d{4}/i,
+      /Registration\s*Authority\s*Registration\s*Date[\s\S]{0,150}?India\s*([A-Z ]+?)\s*(?:\d{1,2}\/\d{1,2}\/\d{4}|$)/i,
     ),
     contactNumber: matchGroup(text, /Contact:\s*([6-9]\d{9})/i) || matchGroup(text, /Mobile:\s*([^\n]+)/i),
     gstin: matchGroup(text, /GSTIN\s*:?\s*([A-Z0-9]{15})/i),
     panNumber: matchGroup(text, /PAN Number\s*:?\s*([A-Z0-9]+)/i),
-    geographicalArea: matchGroup(text, /Name of Insured[\s\S]{0,200}?\b(India)\b/i),
+    geographicalArea: matchGroup(text, /Name of Insured[\s\S]{0,250}?(India)/i),
     basicThirdPartyLiability,
     netLiabilityPremium,
     sgst,

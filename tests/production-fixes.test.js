@@ -215,6 +215,7 @@ describe("Production Fixes Audit Test Suite", () => {
       expect(result.registrationNumber).toBe("MP09HG6001");
       expect(result.vehicleNumber).toBe("MP09HG6001");
       expect(result.manufacturingYear).toBe("2011");
+      expect(result.registrationDate).toBe("18/07/2011");
       expect(result.startDate).toBe("04/07/2026");
       expect(result.expiryDate).toBe("03/07/2027");
       expect(result.premium).toBe("49,075.00");
