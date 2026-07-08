@@ -87,9 +87,11 @@ export async function GET(request, props) {
       const normalized = withRenewalPolicyDisplay(normalizeRecord(record));
       return withRenewalWindowDisplay(normalized);
     });
-    const policies = allPolicies
+    const windowPolicies = allPolicies
       .filter((policy) => isRenewalWindowPolicy(policy))
       .sort(sortByDaysLeftAscending);
+    // Fall back to all policies if none match the renewal window
+    const policies = windowPolicies.length > 0 ? windowPolicies : allPolicies.sort(sortByDaysLeftAscending);
 
     // 3. Compute stats
     let totalPremium = 0;
