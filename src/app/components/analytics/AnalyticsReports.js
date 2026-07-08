@@ -670,7 +670,70 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
     };
   }, [monthlyFilteredRecords]);
 
+  // 1. User Policy Updates Chart data
+  const userPerformanceData = useMemo(() => {
+    const userMap = {};
+    monthlyFilteredRecords.forEach((r) => {
+      const user = r.createdBy || r.assignedTo || "System";
+      userMap[user] = (userMap[user] || 0) + 1;
+    });
+    return Object.entries(userMap)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [monthlyFilteredRecords]);
 
+  const maxUserPolicies = useMemo(() => {
+    return Math.max(...userPerformanceData.map((d) => d.value), 1);
+  }, [userPerformanceData]);
+
+  // 2. Insurer distribution data for Monthly Report
+  const insurerMonthlyData = useMemo(() => {
+    const companyMap = {};
+    monthlyFilteredRecords.forEach((r) => {
+      const company = r.insuranceCompany || "Unknown Insurer";
+      companyMap[company] = (companyMap[company] || 0) + parsePremium(r.premium || r.totalPremium);
+    });
+    return Object.entries(companyMap)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5); // top 5
+  }, [monthlyFilteredRecords]);
+
+  const maxInsurerMonthlyPremium = useMemo(() => {
+    return Math.max(...insurerMonthlyData.map((d) => d.value), 1);
+  }, [insurerMonthlyData]);
+
+  // 3. Policy Type Mix for Monthly Report
+  const policyTypeMonthlyData = useMemo(() => {
+    const typeMap = {};
+    monthlyFilteredRecords.forEach((r) => {
+      const isMotor = isMotorRecord(r);
+      const category = isMotor ? "Motor" : "Warehouse";
+      typeMap[category] = (typeMap[category] || 0) + 1;
+    });
+    return Object.entries(typeMap)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [monthlyFilteredRecords]);
+
+  // Donut chart gradients & paths logic
+  const donutMonthlyGradient = useMemo(() => {
+    if (policyTypeMonthlyData.length === 0) return "";
+    let accumulated = 0;
+    const total = monthlyFilteredRecords.length;
+    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"];
+    const segments = [];
+
+    policyTypeMonthlyData.forEach((item, index) => {
+      const percent = (item.value / total) * 100;
+      const start = accumulated;
+      const end = accumulated + percent;
+      accumulated = end;
+      segments.push(`${colors[index % colors.length]} ${start}% ${end}%`);
+    });
+
+    return `conic-gradient(${segments.join(", ")})`;
+  }, [policyTypeMonthlyData, monthlyFilteredRecords.length]);
 
   const isIndividualTab = activeTab === "motor-individual";
 
@@ -1701,6 +1764,123 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
                   <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>GROSS PREMIUM</span>
                   <strong style={{ fontSize: "24px", color: "#f59e0b" }}>₹{formatPremium(monthlyTotals.grossPremium)}</strong>
                   <small style={{ color: "#f59e0b", fontWeight: "600" }}>Including GST / levies</small>
+                </div>
+              </div>
+
+              {/* Monthly Report Charts Dashboard */}
+              <div className="reports-charts-grid">
+                {/* 1. Agent Policy Updates Chart */}
+                <div className="chart-card">
+                  <div className="chart-header-row">
+                    <h3 className="chart-title">Policy Updates by Agent</h3>
+                  </div>
+                  <div className="bar-chart-list">
+                    {userPerformanceData.length === 0 ? (
+                      <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600", textAlign: "center" }}>
+                        No agent updates recorded.
+                      </span>
+                    ) : (
+                      userPerformanceData.map((item, index) => {
+                        const colors = ["#8b5cf6", "#3b82f6", "#10b981", "#f59e0b", "#ec4899"];
+                        const fillPercent = (item.value / maxUserPolicies) * 100;
+                        return (
+                          <div className="bar-row" key={item.label}>
+                            <span className="bar-label" title={item.label}>
+                              {item.label}
+                            </span>
+                            <div className="bar-track">
+                              <div
+                                className="bar-fill"
+                                style={{
+                                  width: `${fillPercent}%`,
+                                  backgroundColor: colors[index % colors.length],
+                                }}
+                              />
+                            </div>
+                            <span className="bar-value">{item.value} {item.value === 1 ? 'policy' : 'policies'}</span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. Insurer Share Chart */}
+                <div className="chart-card">
+                  <div className="chart-header-row">
+                    <h3 className="chart-title">Insurer Share by Premium</h3>
+                  </div>
+                  <div className="bar-chart-list">
+                    {insurerMonthlyData.length === 0 ? (
+                      <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600", textAlign: "center" }}>
+                        No insurer premium data available.
+                      </span>
+                    ) : (
+                      insurerMonthlyData.map((item, index) => {
+                        const colors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
+                        const fillPercent = (item.value / maxInsurerMonthlyPremium) * 100;
+                        return (
+                          <div className="bar-row" key={item.label}>
+                            <span className="bar-label" title={item.label}>
+                              {item.label}
+                            </span>
+                            <div className="bar-track">
+                              <div
+                                className="bar-fill"
+                                style={{
+                                  width: `${fillPercent}%`,
+                                  backgroundColor: colors[index % colors.length],
+                                }}
+                              />
+                            </div>
+                            <span className="bar-value">₹{formatPremium(item.value)}</span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. LOB Policy Mix Donut Chart */}
+                <div className="chart-card">
+                  <div className="chart-header-row">
+                    <h3 className="chart-title">LOB Policy Mix</h3>
+                  </div>
+                  <div className="donut-container">
+                    {policyTypeMonthlyData.length === 0 ? (
+                      <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600" }}>
+                        No LOB data recorded.
+                      </span>
+                    ) : (
+                      <>
+                        <div className="donut-chart-circle" style={{ background: donutMonthlyGradient }}>
+                          <div className="donut-hole">
+                            <strong>{monthlyFilteredRecords.length}</strong>
+                            <span>Policies</span>
+                          </div>
+                        </div>
+                        <div className="chart-legend">
+                          {policyTypeMonthlyData.map((item, index) => {
+                            const colors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"];
+                            return (
+                              <div className="legend-item" key={item.label}>
+                                <div className="legend-left">
+                                  <span
+                                    className="legend-color"
+                                    style={{ backgroundColor: colors[index % colors.length] }}
+                                  />
+                                  <span className="legend-name" title={item.label}>
+                                    {item.label}
+                                  </span>
+                                </div>
+                                <span className="legend-val">{item.value}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
