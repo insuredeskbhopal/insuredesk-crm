@@ -87,6 +87,7 @@ function DetailSection({ title, children }) {
 
   return (
     <div
+      className="tb-detail-section"
       style={{
         background: "#ffffff",
         borderRadius: "16px",
@@ -112,7 +113,7 @@ function DetailSection({ title, children }) {
       >
         {title}
       </h3>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+      <div className="tb-detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
         {children}
       </div>
     </div>
@@ -159,6 +160,7 @@ export default function PolicyDetailCard({
 
   return createPortal(
     <div
+      className="tb-modal-overlay"
       style={{
         position: "fixed",
         inset: 0,
@@ -193,6 +195,7 @@ export default function PolicyDetailCard({
       >
         {/* Header */}
         <div
+          className="tb-modal-header"
           style={{
             display: "flex",
             justifyContent: "space-between",
@@ -203,15 +206,16 @@ export default function PolicyDetailCard({
             color: "#0f172a",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div className="tb-modal-header-content" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <Image
+              className="tb-modal-logo"
               src="/brand/main-logo-wide.webp"
               alt="Bima Headquarter"
               width={133}
               height={74}
               style={{ height: "74px", width: "auto", objectFit: "contain" }}
             />
-            <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
+            <div className="tb-modal-header-text" style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
               <span
                 style={{
                   fontSize: "11px",
@@ -272,6 +276,7 @@ export default function PolicyDetailCard({
 
         {/* Body */}
         <div
+          className="tb-modal-body"
           style={{
             padding: "24px",
             overflowY: "auto",
@@ -333,6 +338,7 @@ export default function PolicyDetailCard({
               {fieldGroups.map((group) => (
                 <fieldset
                   key={group.title}
+                  className="tb-edit-fieldset"
                   style={{
                     background: "#ffffff",
                     borderRadius: "16px",
@@ -354,7 +360,7 @@ export default function PolicyDetailCard({
                   >
                     {group.title}
                   </legend>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div className="tb-edit-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                     {group.fields.map(([label, key]) => {
                       const contactPersonError = validateContactPerson(editForm.contactPerson);
                       const isContactNumber = key === "contactNumber";
@@ -386,6 +392,7 @@ export default function PolicyDetailCard({
 
         {/* Footer */}
         <div
+          className="tb-modal-footer"
           style={{
             display: "flex",
             justifyContent: "flex-end",
