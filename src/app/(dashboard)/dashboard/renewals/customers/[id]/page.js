@@ -1270,37 +1270,50 @@ export default function CustomerProfilePage(props) {
 
                       {/* 10. Renewal Status */}
                       <td style={{ width: colWidths[9] + "px" }}>
-                        <span
-                          className={`rn-badge ${
-                            p.renewalStatus === "RENEWED" || p.renewalStatus === "renewed"
-                              ? "rn-badge-success"
-                              : [
-                                    "LOST",
-                                    "lost",
-                                    "NOT_INTERESTED",
-                                    "WRONG_NUMBER",
-                                    "RENEWED_ELSEWHERE",
-                                  ].includes(p.renewalStatus)
-                                ? "rn-badge-danger"
-                                : p.renewalStatus === "Follow-Up" || p.renewalStatus === "expiry_soon"
-                                  ? "rn-badge-warning"
-                                  : p.renewalStatus === "EXPIRED" || p.renewalStatus === "expired"
-                                    ? "rn-badge-danger"
-                                    : "rn-badge-active"
-                          }`}
-                        >
-                          {p.renewalStatus === "expiry_soon"
-                            ? "Expiry Soon"
-                            : p.renewalStatus === "expired"
-                              ? "Expired"
-                              : p.renewalStatus === "renewed"
-                                ? "Renewed"
-                                : p.renewalStatus === "lost"
-                                  ? "Lost"
-                                  : p.renewalStatus === "active"
-                                    ? "Active"
-                                    : p.renewalStatus || "ACTIVE"}
-                        </span>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                          <span
+                            className={`rn-badge ${
+                              p.renewalStatus === "RENEWED" || p.renewalStatus === "renewed"
+                                ? "rn-badge-success"
+                                : [
+                                      "LOST",
+                                      "lost",
+                                      "NOT_INTERESTED",
+                                      "WRONG_NUMBER",
+                                      "RENEWED_ELSEWHERE",
+                                    ].includes(p.renewalStatus)
+                                  ? "rn-badge-danger"
+                                  : p.renewalStatus === "Follow-Up" || p.renewalStatus === "expiry_soon"
+                                    ? "rn-badge-warning"
+                                    : p.renewalStatus === "EXPIRED" || p.renewalStatus === "expired"
+                                      ? "rn-badge-danger"
+                                      : "rn-badge-active"
+                            }`}
+                            style={{ alignSelf: "flex-start" }}
+                          >
+                            {p.renewalStatus === "expiry_soon"
+                              ? "Expiry Soon"
+                              : p.renewalStatus === "expired"
+                                ? "Expired"
+                                : p.renewalStatus === "renewed"
+                                  ? "Renewed"
+                                  : p.renewalStatus === "lost"
+                                    ? "Lost"
+                                    : p.renewalStatus === "active"
+                                      ? "Active"
+                                      : p.renewalStatus || "ACTIVE"}
+                          </span>
+                          {p.renewedDetails && (
+                            <div style={{ display: "flex", flexDirection: "column", fontSize: "11px", color: "var(--rn-text-muted)", marginTop: "2px", gap: "2px" }}>
+                              <span style={{ whiteSpace: "nowrap" }}>
+                                📅 Expiry: {formatDate(p.renewedDetails.expiryDate)}
+                              </span>
+                              <span style={{ fontWeight: "600", color: "#2e7d32" }}>
+                                💰 Prem: {formatPremium(p.renewedDetails.premium)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </td>
 
                       {/* 11. Actions (3-dot dropdown) */}

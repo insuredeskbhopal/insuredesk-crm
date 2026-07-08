@@ -83,10 +83,35 @@ export async function GET(request, props) {
       },
     });
 
-    const allPolicies = rawPolicies.map((record) => {
-      const normalized = withRenewalPolicyDisplay(normalizeRecord(record));
-      return withRenewalWindowDisplay(normalized);
-    });
+    const enrichPolicy = async (policy) => {
+      if (policy.renewedPolicyId) {
+        let renewedRec = rawPolicies.find((r) => r.id === policy.renewedPolicyId);
+        if (!renewedRec) {
+          renewedRec = await prisma.policyRecord.findUnique({
+            where: { id: policy.renewedPolicyId },
+            select: { data: true, reviewedData: true },
+          });
+        }
+        if (renewedRec) {
+          const renewedNorm = normalizeRecord(renewedRec);
+          policy.renewedDetails = {
+            policyNumber: renewedNorm.policyNumber || renewedNorm.policyNo,
+            expiryDate: renewedNorm.expiryDate,
+            premium: renewedNorm.premium || renewedNorm.totalPremium || renewedNorm.netPremium,
+          };
+        }
+      }
+      return policy;
+    };
+
+    const allPolicies = await Promise.all(
+      rawPolicies.map(async (record) => {
+        const normalized = withRenewalPolicyDisplay(normalizeRecord(record));
+        const withWindow = withRenewalWindowDisplay(normalized);
+        return enrichPolicy(withWindow);
+      })
+    );
+
     const windowPolicies = allPolicies
       .filter((policy) => isRenewalWindowPolicy(policy))
       .sort(sortByDaysLeftAscending);
@@ -108,7 +133,8 @@ export async function GET(request, props) {
         });
         if (fallbackRecord) {
           const normalized = withRenewalPolicyDisplay(normalizeRecord(fallbackRecord));
-          policies = [withRenewalWindowDisplay(normalized)];
+          const withWindow = withRenewalWindowDisplay(normalized);
+          policies = [await enrichPolicy(withWindow)];
         }
       }
     }
