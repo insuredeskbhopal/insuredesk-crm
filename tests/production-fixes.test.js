@@ -197,6 +197,37 @@ describe("Production Fixes Audit Test Suite", () => {
     });
   });
 
+  describe("Royal Sundaram General Insurance Commercial Vehicle Liability Policy Extraction (New Layout)", () => {
+    it("extracts policyNumber, insuredName, chassisNumber, engineNumber, registrationNumber, manufacturingYear, start/expiry dates, premiums, and taxes correctly", () => {
+      const ocrPath = path.join(__dirname, "royal_sundaram_cv_ocr.txt");
+      const ocrText = fs.readFileSync(ocrPath, "utf8");
+      const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
+      const result = extractPolicyFromText(ocrText, "royal_sundaram_cv.pdf");
+
+      expect(result.documentFormat).toBe("ROYAL_SUNDARAM_MOTOR_V1");
+      expect(result.documentCategory).toBe("Motor Insurance");
+      expect(result.insuranceCompany).toBe("Royal Sundaram General Insurance Company Limited");
+      expect(result.policyNumber).toBe("VGC1573257000100");
+      expect(result.policyType).toBe("Goods Carrying Vehicle Policy");
+      expect(result.insuredName).toBe("Mr.SHIVAM RAI");
+      expect(result.chassisNumber).toBe("MAT466404B2F13207");
+      expect(result.engineNumber).toBe("B591803111F63142692");
+      expect(result.registrationNumber).toBe("MP09HG6001");
+      expect(result.vehicleNumber).toBe("MP09HG6001");
+      expect(result.manufacturingYear).toBe("2011");
+      expect(result.startDate).toBe("04/07/2026");
+      expect(result.expiryDate).toBe("03/07/2027");
+      expect(result.premium).toBe("49,075.00");
+      expect(result.totalPremium).toBe("49,075.00");
+      expect(result.netPremium).toBe("44,050.00");
+      expect(result.gstAmount).toBe("2,644.08");
+      expect(result.cgst).toBe("1,322.04");
+      expect(result.sgst).toBe("1,322.04");
+      expect(result.panNumber).toBe("AABCR7106G");
+      expect(result.policyCoverType).toBe("Comprehensive");
+    });
+  });
+
   describe("Date Presets Filter Helper", () => {
     it("correctly generates date ranges for today, yesterday, this-week, last-week, this-month, last-month, and this-year", () => {
       const todayRange = getPresetDates("today");
