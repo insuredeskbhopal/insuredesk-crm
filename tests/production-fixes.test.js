@@ -226,6 +226,9 @@ describe("Production Fixes Audit Test Suite", () => {
       expect(result.sgst).toBe("1,322.04");
       expect(result.panNumber).toBe("AABCR7106G");
       expect(result.policyCoverType).toBe("Comprehensive");
+      expect(result.idv).toBe("800,000.00");
+      expect(result.sumInsured).toBe("800,000.00");
+      expect(result.cubicCapacity).toBe(" ");
     });
   });
 

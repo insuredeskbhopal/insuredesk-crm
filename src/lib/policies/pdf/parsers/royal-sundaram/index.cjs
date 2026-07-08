@@ -71,6 +71,9 @@ function extractRoyalSundaramMotor(text, _sourceFile = "") {
   const gstAmount = sumAmounts(sgst, cgst);
   const receiptNumber = matchGroup(text, /Receipt No\.\s*([A-Z0-9]+)/i);
   const receiptDate = matchGroup(text, /signed at [A-Za-z ]+ on (\d{1,2}\/\d{1,2}\/\d{4})/i);
+  const idv = normalizeAmount(matchGroup(text, /Total IDV[\s\S]{0,100}?\b([1-9]\d{0,2}(?:,\d{2,3})*(?:,\d{3}))/i));
+  const sumInsured = idv;
+  const cubicCapacity = " ";
 
   return {
     documentDetected: true,
@@ -111,6 +114,10 @@ function extractRoyalSundaramMotor(text, _sourceFile = "") {
     gstAmount,
     receiptNumber,
     receiptDate,
+    idv,
+    totalIdv: idv,
+    sumInsured: idv,
+    cubicCapacity,
   };
 }
 
