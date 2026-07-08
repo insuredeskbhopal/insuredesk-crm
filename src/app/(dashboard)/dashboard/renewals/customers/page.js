@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
@@ -212,9 +212,11 @@ export default function CustomerRenewalsPage() {
     setDropdownPosition(null);
   };
 
-  const fetchCustomers = async () => {
+  const isFirstLoadRef = useRef(true);
+
+  const fetchCustomers = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const url = `/api/renewals/customers?q=${encodeURIComponent(q)}&status=${statusFilter}&page=${page}&limit=10&company=${encodeURIComponent(activeCompanyFilter)}&policyType=${encodeURIComponent(activePolicyTypeFilter)}`;
       const res = await fetch(url, { cache: "no-store" });
       const data = await res.json();
@@ -254,7 +256,13 @@ export default function CustomerRenewalsPage() {
   };
 
   useEffect(() => {
-    fetchCustomers();
+    const isFirst = isFirstLoadRef.current;
+    if (isFirst) {
+      isFirstLoadRef.current = false;
+      fetchCustomers(false);
+    } else {
+      fetchCustomers(true);
+    }
   }, [page, statusFilter, activeCompanyFilter, activePolicyTypeFilter]);
 
   useEffect(() => {
@@ -399,7 +407,7 @@ export default function CustomerRenewalsPage() {
       });
       if (res.ok) {
         setRemarkModalOpen(false);
-        await fetchCustomers();
+        await fetchCustomers(true);
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to submit remark.");
@@ -485,7 +493,7 @@ export default function CustomerRenewalsPage() {
       });
       if (res.ok) {
         setEditModalOpen(false);
-        await fetchCustomers();
+        await fetchCustomers(true);
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to update renewal policy.");
@@ -537,7 +545,7 @@ export default function CustomerRenewalsPage() {
       });
       if (res.ok) {
         setRenewModalOpen(false);
-        await fetchCustomers();
+        await fetchCustomers(true);
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to renew policy.");
@@ -573,7 +581,7 @@ export default function CustomerRenewalsPage() {
       });
       if (res.ok) {
         setLostModalOpen(false);
-        await fetchCustomers();
+        await fetchCustomers(true);
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to mark policy as lost.");
@@ -610,7 +618,7 @@ export default function CustomerRenewalsPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setReassignModalOpen(false);
-        await fetchCustomers();
+        await fetchCustomers(true);
       } else {
         window.alert(data.error || "Failed to reassign portfolio.");
       }
@@ -702,7 +710,7 @@ export default function CustomerRenewalsPage() {
     }
 
     setWhatsAppPreviewOpen(false);
-    await fetchCustomers();
+    await fetchCustomers(true);
   };
 
   const handleCall = (cust) => {
@@ -851,17 +859,7 @@ export default function CustomerRenewalsPage() {
         </div>
 
         {/* LOB Category filter tabs */}
-        <div
-          className="record-view-tabs"
-          style={{
-            padding: "12px 16px",
-            borderBottom: "1px solid var(--rn-border)",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "10px",
-            alignItems: "center",
-          }}
-        >
+        <div className="rn-lob-tabs">
           <button
             className={activePolicyTypeFilter === "All" ? "active" : ""}
             type="button"

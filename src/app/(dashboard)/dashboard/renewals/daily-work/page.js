@@ -52,9 +52,9 @@ export default function DailyWorkPage() {
   const [actionLoading, setActionLoading] = useState(false);
 
   // Fetch all daily work components
-  const fetchDailyWork = async () => {
+  const fetchDailyWork = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
 
       // 1. Fetch Today's Work stats/activities from API
       const workRes = await fetch("/api/renewals/today-work", { cache: "no-store" });
@@ -270,7 +270,7 @@ export default function DailyWorkPage() {
           priority: "Normal",
           nextAction: "",
         });
-        await fetchDailyWork();
+        await fetchDailyWork(true);
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to submit remark.");
@@ -309,7 +309,7 @@ export default function DailyWorkPage() {
       if (res.ok) {
         setRenewModalOpen(false);
         setRenewForm({ policyNumber: "", startDate: "", expiryDate: "", premium: "", remark: "" });
-        await fetchDailyWork();
+        await fetchDailyWork(true);
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to renew policy.");
@@ -339,7 +339,7 @@ export default function DailyWorkPage() {
       if (res.ok) {
         setLostModalOpen(false);
         setLostForm({ lostReason: "Premium High", remarks: "" });
-        await fetchDailyWork();
+        await fetchDailyWork(true);
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to mark policy as lost.");
@@ -436,17 +436,7 @@ export default function DailyWorkPage() {
         </div>
 
         {/* LOB Category filter tabs */}
-        <div
-          className="record-view-tabs"
-          style={{
-            padding: "12px 16px",
-            borderBottom: "1px solid var(--rn-border)",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "10px",
-            alignItems: "center",
-          }}
-        >
+        <div className="rn-lob-tabs">
           <button
             className={activeLobFilter === "all" ? "active" : ""}
             type="button"
