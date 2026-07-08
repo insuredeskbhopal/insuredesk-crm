@@ -253,3 +253,165 @@ Every completed task must satisfy:
 - [ ] Production ready
 - [ ] Backward compatible
 - [ ] Easy for the next developer to understand
+
+---
+
+# Renewal Module Rules
+
+* **Renewals are NOT policy records.**
+* A renewal is a workflow/task linked to an existing policy, not a new policy issuance.
+* Renewal records must never be stored in the primary policy table.
+* Renewals should appear only in the **Renewal Module/Section** until the policy is actually issued.
+* Only after successful policy issuance should a new policy record be created.
+
+# Dashboard Calculation Rules
+
+Never include renewal records in business production calculations.
+
+Exclude renewals from:
+* EOD (End of Day)
+* MTD (Month to Date)
+* YTD (Year to Date)
+* Revenue
+* Premium Collection
+* Policy Count
+* Company Production
+* Employee Production
+* Branch Performance
+* Commission Reports
+* Sales Analytics
+* Charts
+* Leaderboards
+
+Renewals should have their own dashboard showing:
+* Upcoming Renewals
+* Overdue Renewals
+* Renewal Pipeline
+* Renewal Success Rate
+* Renewal Premium
+* Lost Renewals
+
+# Data Protection Rules
+
+**Data safety is the highest priority.**
+
+Never:
+* Delete existing user data.
+* Overwrite uploaded documents.
+* Replace policy PDFs.
+* Replace claim documents.
+* Remove attachments during updates.
+* Delete records because a new upload exists.
+
+Instead:
+* Create a new version.
+* Preserve every uploaded file.
+* Keep complete history.
+* Maintain audit logs.
+
+# PDF Handling Rules
+
+Uploaded PDFs are source documents.
+
+Always:
+* Store the original file unchanged.
+* Never modify the original PDF.
+* Never overwrite an uploaded document.
+* Create extracted data separately.
+* Allow re-extraction without replacing the original.
+* Allow multiple PDFs for one policy.
+
+The original uploaded PDF must always remain recoverable.
+
+# Update Rules
+
+Updating a policy should only modify fields that changed.
+
+Never:
+* Reset blank fields.
+* Delete existing values.
+* Remove attachments.
+* Remove remarks.
+* Remove claims.
+* Remove endorsements.
+* Remove renewal history.
+
+Only update fields explicitly provided.
+
+# Database Safety Rules
+
+Never perform destructive operations unless explicitly confirmed.
+
+Avoid:
+* DELETE
+* TRUNCATE
+* DROP
+* Mass UPDATE
+
+Prefer:
+* Soft Delete
+* Archive
+* Versioning
+* Change Logs
+
+# File Storage Rules
+
+Every uploaded file must have:
+* Unique filename
+* Timestamp
+* Original filename
+* Upload user
+* Upload date
+* File checksum/hash
+
+Never reuse filenames.
+
+# Audit Trail Rules
+
+Every modification must record:
+* Who changed it
+* When it changed
+* Previous value
+* New value
+* IP/User
+* Change reason (if applicable)
+
+Nothing should become untraceable.
+
+# Extraction Rules
+
+PDF extraction must never overwrite manually entered data.
+
+Priority:
+1. Manual user data (highest)
+2. Approved extracted data
+3. Newly extracted data (pending review)
+
+Show differences and let the user approve changes before applying them.
+
+# Backup Rules
+
+Before any update:
+* Preserve current record.
+* Preserve all attachments.
+* Preserve extracted JSON.
+* Preserve OCR output.
+
+Allow rollback if needed.
+
+# General Development Rules
+
+* Never break existing working functionality.
+* Never modify unrelated modules.
+* Preserve backward compatibility.
+* Do not refactor stable code unless explicitly requested.
+* Make the smallest possible change.
+* Prefer additive changes over replacing existing logic.
+* Never assume missing data should be deleted.
+* Null values must not overwrite existing values.
+* Every major change should be reversible.
+
+## Golden Rule
+
+> **Data integrity is more important than new features. Every user upload, policy, document, attachment, remark, and history record must be preserved. Never delete or overwrite user data unless the user explicitly requests it. All updates must be incremental, auditable, and reversible.**
+
