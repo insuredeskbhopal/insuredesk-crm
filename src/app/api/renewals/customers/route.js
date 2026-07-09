@@ -187,8 +187,12 @@ export async function GET(request) {
         WHERE 
           -- Renewal list stays within the renewal window even when searching.
           (
-            days_left BETWEEN -30 AND 30
-            OR renewal_status IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE')
+            ($4 IN ('All', 'Due Soon', 'Expired')
+              AND is_active_policy = true
+              AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE')
+              AND days_left BETWEEN -30 AND 30)
+            OR ($4 = 'Renewed' AND renewal_status = 'RENEWED')
+            OR ($4 = 'Lost' AND renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE'))
           )
           -- Company Filter
           AND (
@@ -273,7 +277,7 @@ export async function GET(request) {
       customer_groups AS (
         SELECT 
           active_renewals.contact_number AS mobile,
-          STRING_AGG(DISTINCT NULLIF(insured_name, ''), ', ' ORDER BY NULLIF(insured_name, '')) AS company_names,
+          STRING_AGG(DISTINCT NULLIF(active_renewals.insured_name, ''), ', ' ORDER BY NULLIF(active_renewals.insured_name, '')) AS company_names,
           COALESCE(best_insured_names.insured_name, '') AS customer_name,
           COALESCE(best_contact_names.contact_person, '') AS contact_person,
           COALESCE(
@@ -288,13 +292,13 @@ export async function GET(request) {
           -- Count of ALL policies for this contact in the DB
           COUNT(*)::integer AS total_policies,
           -- Count of policies due (active and pending in window, excluding Renewed/Lost)
-          COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND days_left BETWEEN -30 AND 30 THEN 1 END)::integer AS policies_due,
-          MIN(expiry_date) AS nearest_expiry,
-          MIN(days_left) AS nearest_days_left,
-          COALESCE(NULLIF(MAX(cpc.profile_assigned_to), ''), MAX(assigned_to)) AS assigned_user,
+          COUNT(CASE WHEN active_renewals.is_active_policy = true AND active_renewals.renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND active_renewals.days_left BETWEEN -30 AND 30 THEN 1 END)::integer AS policies_due,
+          MIN(active_renewals.expiry_date) AS nearest_expiry,
+          MIN(active_renewals.days_left) AS nearest_days_left,
+          COALESCE(NULLIF(MAX(cpc.profile_assigned_to), ''), MAX(active_renewals.assigned_to)) AS assigned_user,
           -- Reference Policy ID for customer level actions
           COALESCE(
-            (SELECT id FROM parsed_policies_with_days p3 
+            (SELECT id FROM active_renewals p3 
              WHERE p3.contact_number = active_renewals.contact_number 
                AND p3.is_active_policy = true 
                AND p3.renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE')
@@ -305,17 +309,17 @@ export async function GET(request) {
           ) AS nearest_due_policy_id,
           -- Customer status aggregation
           (CASE
-            WHEN COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND days_left BETWEEN -30 AND 30 THEN 1 END) > 0 THEN
+            WHEN COUNT(CASE WHEN active_renewals.is_active_policy = true AND active_renewals.renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND active_renewals.days_left BETWEEN -30 AND 30 THEN 1 END) > 0 THEN
               -- There are due policies
               CASE 
-                WHEN MIN(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND days_left BETWEEN -30 AND 30 THEN days_left END) < 0 THEN 'expired'
+                WHEN MIN(CASE WHEN active_renewals.is_active_policy = true AND active_renewals.renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND active_renewals.days_left BETWEEN -30 AND 30 THEN active_renewals.days_left END) < 0 THEN 'expired'
                 ELSE 'expiry_soon'
               END
             ELSE
               -- No due policies in window
               CASE
-                WHEN COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END) > 0 THEN 'renewed'
-                WHEN COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END) > 0 THEN 'lost'
+                WHEN COUNT(CASE WHEN active_renewals.renewal_status = 'RENEWED' THEN 1 END) > 0 THEN 'renewed'
+                WHEN COUNT(CASE WHEN active_renewals.renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END) > 0 THEN 'lost'
                 ELSE 'active'
               END
           END) AS customer_status
