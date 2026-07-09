@@ -75,8 +75,14 @@ export default function CustomerRenewalsPage() {
       const params = new window.URLSearchParams(window.location.search);
       const comp = params.get("company") || "All";
       const pol = params.get("policyType") || "All";
+      const search = params.get("q") || "";
+      const status = params.get("status") || "All";
+      const urlPage = Math.max(1, parseInt(params.get("page") || "1", 10) || 1);
+      setQ(search);
+      setStatusFilter(status);
       setActiveCompanyFilter(comp);
       setActivePolicyTypeFilter(pol);
+      setPage(urlPage);
     }
   }, []);
 
@@ -224,6 +230,36 @@ export default function CustomerRenewalsPage() {
 
   const isFirstLoadRef = useRef(true);
 
+  const syncUrl = (updates = {}) => {
+    if (typeof window === "undefined") return;
+    const next = {
+      q,
+      status: statusFilter,
+      company: activeCompanyFilter,
+      policyType: activePolicyTypeFilter,
+      page,
+      ...updates,
+    };
+    const params = new window.URLSearchParams();
+    if (next.q) params.set("q", next.q);
+    if (next.status && next.status !== "All") params.set("status", next.status);
+    if (next.company && next.company !== "All") params.set("company", next.company);
+    if (next.policyType && next.policyType !== "All") params.set("policyType", next.policyType);
+    if (Number(next.page) > 1) params.set("page", String(next.page));
+    const query = params.toString();
+    router.replace(query ? `${window.location.pathname}?${query}` : window.location.pathname, { scroll: false });
+  };
+
+  const updateFilters = (updates = {}) => {
+    const nextPage = updates.page ?? page;
+    if (updates.q !== undefined) setQ(updates.q);
+    if (updates.status !== undefined) setStatusFilter(updates.status);
+    if (updates.company !== undefined) setActiveCompanyFilter(updates.company);
+    if (updates.policyType !== undefined) setActivePolicyTypeFilter(updates.policyType);
+    if (updates.page !== undefined) setPage(updates.page);
+    syncUrl({ ...updates, page: nextPage });
+  };
+
   const fetchCustomers = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
@@ -292,8 +328,8 @@ export default function CustomerRenewalsPage() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    setPage(1);
-    fetchCustomers();
+    updateFilters({ q: q.trim(), page: 1 });
+    if (page === 1) fetchCustomers(false);
   };
 
   // Hover Events
@@ -755,8 +791,7 @@ export default function CustomerRenewalsPage() {
           className="rn-input"
           value={statusFilter}
           onChange={(e) => {
-            setStatusFilter(e.target.value);
-            setPage(1);
+            updateFilters({ status: e.target.value, page: 1 });
           }}
         >
           <option value="All">All Customer Statuses</option>
@@ -802,10 +837,7 @@ export default function CustomerRenewalsPage() {
                 borderRadius: "6px",
               }}
               onClick={() => {
-                setActiveCompanyFilter("All");
-                const params = new window.URLSearchParams(window.location.search);
-                params.delete("company");
-                router.replace(`${window.location.pathname}?${params.toString()}`);
+                updateFilters({ company: "All", page: 1 });
               }}
             >
               Company: {activeCompanyFilter}
@@ -826,10 +858,7 @@ export default function CustomerRenewalsPage() {
                 borderRadius: "6px",
               }}
               onClick={() => {
-                setActivePolicyTypeFilter("All");
-                const params = new window.URLSearchParams(window.location.search);
-                params.delete("policyType");
-                router.replace(`${window.location.pathname}?${params.toString()}`);
+                updateFilters({ policyType: "All", page: 1 });
               }}
             >
               Policy Type: {activePolicyTypeFilter}
@@ -849,9 +878,7 @@ export default function CustomerRenewalsPage() {
               padding: "4px",
             }}
             onClick={() => {
-              setActiveCompanyFilter("All");
-              setActivePolicyTypeFilter("All");
-              router.replace(window.location.pathname);
+              updateFilters({ company: "All", policyType: "All", page: 1 });
             }}
           >
             Clear All
@@ -873,8 +900,7 @@ export default function CustomerRenewalsPage() {
             className={activePolicyTypeFilter === "All" ? "active" : ""}
             type="button"
             onClick={() => {
-              setPage(1);
-              setActivePolicyTypeFilter("All");
+              updateFilters({ policyType: "All", page: 1 });
             }}
           >
             All Portfolios
@@ -884,8 +910,7 @@ export default function CustomerRenewalsPage() {
             className={activePolicyTypeFilter === "Motor" ? "active" : ""}
             type="button"
             onClick={() => {
-              setPage(1);
-              setActivePolicyTypeFilter("Motor");
+              updateFilters({ policyType: "Motor", page: 1 });
             }}
           >
             Motor Policy
@@ -895,8 +920,7 @@ export default function CustomerRenewalsPage() {
             className={activePolicyTypeFilter === "Fire" ? "active" : ""}
             type="button"
             onClick={() => {
-              setPage(1);
-              setActivePolicyTypeFilter("Fire");
+              updateFilters({ policyType: "Fire", page: 1 });
             }}
           >
             Warehouse Policy
@@ -906,8 +930,7 @@ export default function CustomerRenewalsPage() {
             className={activePolicyTypeFilter === "Other" ? "active" : ""}
             type="button"
             onClick={() => {
-              setPage(1);
-              setActivePolicyTypeFilter("Other");
+              updateFilters({ policyType: "Other", page: 1 });
             }}
           >
             Other Policies
@@ -1196,13 +1219,13 @@ export default function CustomerRenewalsPage() {
             Page {page} of {totalPages} ({totalCount} customer portfolios)
           </span>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button className="rn-btn" disabled={page <= 1 || loading} onClick={() => setPage(page - 1)}>
+            <button className="rn-btn" disabled={page <= 1 || loading} onClick={() => updateFilters({ page: page - 1 })}>
               Previous
             </button>
             <button
               className="rn-btn"
               disabled={page >= totalPages || loading}
-              onClick={() => setPage(page + 1)}
+              onClick={() => updateFilters({ page: page + 1 })}
             >
               Next
             </button>
