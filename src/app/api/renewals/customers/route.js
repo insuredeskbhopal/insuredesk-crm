@@ -15,11 +15,16 @@ function isUsefulContactName(contactName = "", companyName = "") {
   const contact = String(contactName || "")
     .replace(/\s+/g, " ")
     .trim();
-  const company = String(companyName || "")
+  const companyText = String(companyName || "")
     .replace(/\s+/g, " ")
     .trim();
   if (!contact) return false;
-  if (company && contact.toLowerCase() === company.toLowerCase()) return false;
+  const normalizedContact = contact.toLowerCase();
+  const companyNames = companyText
+    .split(",")
+    .map((name) => name.trim().toLowerCase())
+    .filter(Boolean);
+  if (companyNames.includes(normalizedContact)) return false;
   return true;
 }
 
@@ -368,9 +373,11 @@ export async function GET(request) {
       const policyContact = contactByMobile.get(String(row.mobile || ""));
       const resolvedContact = isUsefulContactName(row.contact_person_name, row.company_names)
         ? row.contact_person_name
-        : isUsefulContactName(row.contact_person, row.company_names)
+        : isUsefulContactName(policyContact, row.company_names)
+          ? policyContact
+          : isUsefulContactName(row.contact_person, row.company_names)
           ? row.contact_person
-          : policyContact || "";
+          : "";
 
       const nearestDaysLeft = calculateDaysLeft(row.nearest_expiry);
       const computedStatus = calculateRenewalStatus(row.nearest_expiry, row.customer_status);
