@@ -68,8 +68,9 @@ export default function RenewedPage() {
                 <th>Insurance Company</th>
                 <th>Old Policy Number</th>
                 <th>New Policy Number</th>
+                <th>Renewed Insurance Company</th>
                 <th>Renewed Date</th>
-                <th>Premium</th>
+                <th>New Premium</th>
               </tr>
             </thead>
             <tbody>
@@ -87,12 +88,12 @@ export default function RenewedPage() {
                   <td style={{ fontWeight: "600", color: "var(--rn-success)" }}>
                     {p.newPolicyNumber || "Pending Number"}
                   </td>
+                  <td>{p.renewedInsuranceCompany || p.insuranceCompany || "-"}</td>
                   <td>{p.renewalDate ? new Date(p.renewalDate).toLocaleDateString("en-IN") : "-"}</td>
                   <td>
-                    ₹
-                    {(
-                      parseFloat(String(p.premium || p.totalPremium || "0").replace(/[^0-9.]/g, "")) || 0
-                    ).toLocaleString("en-IN")}
+                    {p.newPremium
+                      ? `₹${(parseFloat(String(p.newPremium).replace(/[^0-9.]/g, "")) || 0).toLocaleString("en-IN")}`
+                      : "-"}
                   </td>
                 </tr>
               ))}

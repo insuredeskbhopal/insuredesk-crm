@@ -359,11 +359,18 @@ export async function GET(request) {
       if (renewedPolicyIds.length > 0) {
         const renewedPolicies = await prisma.policyRecord.findMany({
           where: { id: { in: renewedPolicyIds } },
-          select: { id: true, data: true, reviewedData: true },
+          select: { id: true, data: true, reviewedData: true, selectedCompany: true, savedAt: true, createdAt: true },
         });
         renewedPolicies.forEach((p) => {
           const payload = p.reviewedData || p.data || {};
-          renewedPolicyMap[p.id] = payload.policyNumber || "";
+          const ic = payload.insuranceCompany || payload.insurerName || p.selectedCompany || "";
+          const tp = payload.totalPremium || payload.premium || "";
+          renewedPolicyMap[p.id] = {
+            policyNumber: payload.policyNumber || "",
+            insuranceCompany: ic,
+            totalPremium: tp,
+            savedAt: p.savedAt || p.createdAt || null,
+          };
         });
       }
 
@@ -374,8 +381,12 @@ export async function GET(request) {
         normalized.renewalStatus = calculateRenewalStatus(normalized.expiryDate, record.renewalStatus);
         normalized.expiryState = getExpiryState(normalized.expiryDate);
         normalized.daysStatus = getDaysStatus(normalized.expiryDate);
-        if (record.renewedPolicyId && renewedPolicyMap[record.renewedPolicyId]) {
-          normalized.newPolicyNumber = renewedPolicyMap[record.renewedPolicyId];
+        const renewedInfo = renewedPolicyMap[record.renewedPolicyId];
+        normalized.renewalDate = record.renewalDate || (renewedInfo ? renewedInfo.savedAt : null) || null;
+        if (renewedInfo) {
+          normalized.newPolicyNumber = renewedInfo.policyNumber;
+          normalized.renewedInsuranceCompany = renewedInfo.insuranceCompany;
+          normalized.newPremium = renewedInfo.totalPremium;
         }
         return normalized;
       });
