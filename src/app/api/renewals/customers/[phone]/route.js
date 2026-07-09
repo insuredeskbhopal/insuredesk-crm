@@ -132,7 +132,20 @@ export async function GET(request, props) {
       })
     );
 
-    let policies = [...allPolicies].sort(sortByDaysLeftAscending);
+    const isOpenRenewalPolicy = (policy) => {
+      const isClosed = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(
+        policy.renewalStatus,
+      );
+      return (
+        policy.isActivePolicy &&
+        !isClosed &&
+        Number.isFinite(Number(policy.daysRemaining)) &&
+        policy.daysRemaining >= -30 &&
+        policy.daysRemaining <= 30
+      );
+    };
+
+    let policies = allPolicies.filter(isOpenRenewalPolicy).sort(sortByDaysLeftAscending);
 
     // Fallback: if phone search found nothing, try fetching by explicit policyId
     if (policies.length === 0) {
@@ -150,7 +163,7 @@ export async function GET(request, props) {
         if (fallbackRecord) {
           const normalized = withRenewalPolicyDisplay(normalizeRecord(fallbackRecord));
           const withWindow = withRenewalWindowDisplay(normalized);
-          policies = [await enrichPolicy(withWindow)];
+          policies = isOpenRenewalPolicy(withWindow) ? [await enrichPolicy(withWindow)] : [];
         }
       }
     }
