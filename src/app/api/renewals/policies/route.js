@@ -224,7 +224,7 @@ export async function GET(request) {
             OR ($4 = 'priority_high' AND LOWER(priority) IN ('high', 'urgent'))
             OR ($4 = 'priority_medium' AND LOWER(priority) IN ('medium', 'normal'))
             OR ($4 = 'priority_low' AND LOWER(priority) = 'low')
-            OR ($4 = 'all')
+            OR ($4 = 'all' AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND (expiry_date - $3::date) >= -30 AND (expiry_date - $3::date) <= 30)
           )
           -- Company Filter
           AND (

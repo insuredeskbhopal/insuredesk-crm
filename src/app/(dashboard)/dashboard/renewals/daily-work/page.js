@@ -5,6 +5,23 @@ import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { AlertCircle, MoreVertical, Eye, CheckCircle, XCircle, PlusCircle } from "lucide-react";
 
+const CLOSED_RENEWAL_STATUSES = new Set([
+  "RENEWED",
+  "LOST",
+  "NOT_INTERESTED",
+  "WRONG_NUMBER",
+  "RENEWED_ELSEWHERE",
+]);
+
+function isClosedRenewalStatus(status) {
+  return CLOSED_RENEWAL_STATUSES.has(
+    String(status || "")
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, "_"),
+  );
+}
+
 export default function DailyWorkPage() {
   const router = useRouter();
 
@@ -78,9 +95,7 @@ export default function DailyWorkPage() {
       let overdueFollowUp = 0;
 
       policiesData.policies.forEach((p) => {
-        const isClosed = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(
-          p.renewalStatus,
-        );
+        const isClosed = isClosedRenewalStatus(p.renewalStatus);
         if (!isClosed) {
           // Due Today
           if (p.expiryDate && p.expiryDate.startsWith(todayStr)) {
@@ -177,9 +192,7 @@ export default function DailyWorkPage() {
     const todayStr = new Date().toISOString().split("T")[0];
 
     return policies.filter((p) => {
-      const isClosed = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(
-        p.renewalStatus,
-      );
+      const isClosed = isClosedRenewalStatus(p.renewalStatus);
 
       if (activeCardFilter === "due_today") {
         return !isClosed && p.expiryDate && p.expiryDate.startsWith(todayStr);
