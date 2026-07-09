@@ -185,11 +185,10 @@ export async function GET(request) {
           *
         FROM parsed_policies_with_days
         WHERE 
-          -- Standard expiry window, plus closed renewal records and manual search results.
+          -- Renewal list stays within the renewal window even when searching.
           (
             days_left BETWEEN -30 AND 30
             OR renewal_status IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE')
-            OR $5 <> ''
           )
           -- Company Filter
           AND (
@@ -214,7 +213,7 @@ export async function GET(request) {
           LOWER(SPLIT_PART(regexp_replace(TRIM(contact_person), '\\s+', ' ', 'g'), ' ', 1)) AS contact_key,
           COUNT(*) AS contact_count,
           MAX(saved_at) AS latest_saved_at
-        FROM active_renewals
+        FROM parsed_policies_with_days
         WHERE NULLIF(TRIM(contact_person), '') IS NOT NULL
         GROUP BY contact_number, LOWER(SPLIT_PART(regexp_replace(TRIM(contact_person), '\\s+', ' ', 'g'), ' ', 1))
       ),
@@ -246,7 +245,7 @@ export async function GET(request) {
                 COUNT(*) DESC,
                 MAX(active_renewals.saved_at) DESC
             ) AS rn
-          FROM active_renewals
+          FROM parsed_policies_with_days active_renewals
           INNER JOIN best_contact_keys
             ON best_contact_keys.contact_number = active_renewals.contact_number
            AND best_contact_keys.contact_key = LOWER(SPLIT_PART(regexp_replace(TRIM(active_renewals.contact_person), '\\s+', ' ', 'g'), ' ', 1))
@@ -285,7 +284,7 @@ export async function GET(request) {
             'Unknown Contact'
           ) AS contact_person_name,
           -- Count of unique company/insured names for this contact
-          (SELECT COUNT(DISTINCT NULLIF(p2.insured_name, ''))::integer FROM parsed_policies_with_days p2 WHERE p2.contact_number = active_renewals.contact_number) AS total_companies,
+          (SELECT COUNT(DISTINCT NULLIF(p2.insured_name, ''))::integer FROM active_renewals p2 WHERE p2.contact_number = active_renewals.contact_number) AS total_companies,
           -- Count of ALL policies for this contact in the DB
           COUNT(*)::integer AS total_policies,
           -- Count of policies due (active and pending in window, excluding Renewed/Lost)
@@ -300,7 +299,7 @@ export async function GET(request) {
                AND p3.is_active_policy = true 
                AND p3.renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE')
              ORDER BY p3.days_left ASC LIMIT 1),
-            (SELECT id FROM parsed_policies_with_days p4 
+            (SELECT id FROM active_renewals p4 
              WHERE p4.contact_number = active_renewals.contact_number 
              ORDER BY p4.days_left ASC NULLS LAST, p4.saved_at DESC LIMIT 1)
           ) AS nearest_due_policy_id,
