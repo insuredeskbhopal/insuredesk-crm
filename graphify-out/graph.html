@@ -36,6 +36,7 @@
   .legend-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .legend-count { color: #666; font-size: 11px; }
   #stats { padding: 10px 14px; border-top: 1px solid #2a2a4e; font-size: 11px; color: #555; }
+  #graph { background: radial-gradient(circle at 50% 50%, rgba(78,121,167,0.15), rgba(15,15,26,0) 42%); }
   #legend-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 4px 0; }
   #legend-controls label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; color: #aaa; user-select: none; }
   #legend-controls label:hover { color: #e0e0e0; }
@@ -95,19 +96,24 @@ const edgesDS = new vis.DataSet(RAW_EDGES.map((e, i) => ({
 })));
 
 const container = document.getElementById('graph');
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
   physics: {
     enabled: true,
     solver: 'forceAtlas2Based',
+    timestep: 0.35,
+    minVelocity: 0.08,
+    maxVelocity: 12,
+    adaptiveTimestep: false,
     forceAtlas2Based: {
-      gravitationalConstant: -60,
-      centralGravity: 0.005,
-      springLength: 120,
-      springConstant: 0.08,
-      damping: 0.4,
+      gravitationalConstant: -45,
+      centralGravity: 0.012,
+      springLength: 135,
+      springConstant: 0.045,
+      damping: 0.72,
       avoidOverlap: 0.8,
     },
-    stabilization: { iterations: 200, fit: true },
+    stabilization: { iterations: 180, fit: true },
   },
   interaction: {
     hover: true,
@@ -121,8 +127,60 @@ const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
 });
 
 network.once('stabilizationIterationsDone', () => {
-  network.setOptions({ physics: { enabled: false } });
+  if (prefersReducedMotion) {
+    network.setOptions({ physics: { enabled: false } });
+    return;
+  }
+
+  network.setOptions({
+    physics: {
+      enabled: true,
+      stabilization: false,
+      timestep: 0.25,
+      minVelocity: 0.03,
+      maxVelocity: 6,
+    },
+  });
+  network.startSimulation();
 });
+
+const roamingNodeIds = RAW_NODES.map(n => n.id);
+let roamIndex = 0;
+
+function nodeSeed(id) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i += 1) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return hash / 4294967295;
+}
+
+function roamNodes() {
+  if (prefersReducedMotion || !roamingNodeIds.length) return;
+  const batchSize = 90;
+  const ids = [];
+  for (let i = 0; i < batchSize; i += 1) {
+    ids.push(roamingNodeIds[(roamIndex + i) % roamingNodeIds.length]);
+  }
+  roamIndex = (roamIndex + batchSize) % roamingNodeIds.length;
+
+  const positions = network.getPositions(ids);
+  const now = performance.now() / 1000;
+  ids.forEach((id, offset) => {
+    const node = nodesDS.get(id);
+    const pos = positions[id];
+    if (!pos || node?.hidden) return;
+    const seed = nodeSeed(id);
+    const angle = now * (0.8 + seed * 0.7) + seed * Math.PI * 2;
+    const wave = now * (0.45 + seed * 0.35) + offset * 0.08;
+    const dx = Math.cos(angle) * 0.38 + Math.sin(wave) * 0.18;
+    const dy = Math.sin(angle * 1.17) * 0.38 + Math.cos(wave) * 0.18;
+    network.moveNode(id, pos.x + dx, pos.y + dy);
+  });
+  network.startSimulation();
+}
+
+if (!prefersReducedMotion) {
+  setInterval(roamNodes, 140);
+}
 
 function showInfo(nodeId) {
   const n = nodesDS.get(nodeId);
@@ -267,6 +325,37 @@ LEGEND.forEach(c => {
 <script>
 // Render hyperedges as shaded regions
 const hyperedges = [];
+network.on('beforeDrawing', function(ctx) {
+    if (prefersReducedMotion) return;
+    const now = performance.now() / 1000;
+    const positions = network.getPositions(roamingNodeIds);
+    roamingNodeIds.forEach(id => {
+        const node = nodesDS.get(id);
+        const pos = positions[id];
+        if (!node || node.hidden || !pos) return;
+        const color = node.color && node.color.background ? node.color.background : '#4E79A7';
+        const seed = nodeSeed(id);
+        const pulse = 0.5 + 0.5 * Math.sin(now * (1.2 + seed) + seed * Math.PI * 2);
+        const radius = Math.max(7, (node.size || 10) * (1.15 + pulse * 0.28));
+        ctx.save();
+        ctx.globalAlpha = 0.08 + pulse * 0.16;
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 18 + pulse * 14;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    });
+});
+
+function breathe() {
+    if (prefersReducedMotion) return;
+    network.redraw();
+    requestAnimationFrame(breathe);
+}
+requestAnimationFrame(breathe);
+
 // afterDrawing passes ctx already transformed to network coordinate space.
 // Draw node positions raw — no manual pan/zoom/DPR math needed.
 network.on('afterDrawing', function(ctx) {
