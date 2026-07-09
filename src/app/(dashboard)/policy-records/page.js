@@ -9,6 +9,7 @@ import { MANUAL_RENEWAL_SQL_EXCLUSION, withoutManualRenewalSources } from "@/lib
 
 // Simple in-memory cache for slow dashboard tab counts (30 seconds TTL)
 const countsCache = new Map();
+const POLICY_RECORD_HIDDEN_SOURCE_FILES = ["generic_renewal_template.xlsx"];
 
 async function getCachedTabCounts({ key, fetcher }) {
   const now = Date.now();
@@ -45,8 +46,10 @@ export default async function PolicyRecordsPage(props) {
     deletedAt: null,
   };
   const policyRecordWhere = withoutManualRenewalSources(basePolicyWhere);
+  addHiddenPolicyRecordSources(policyRecordWhere);
   const dataPayload = await loadScopedPolicyRecords({
     includeInactive: true,
+    excludeSourceFiles: POLICY_RECORD_HIDDEN_SOURCE_FILES,
     page,
     limit,
     q,
@@ -111,6 +114,16 @@ export default async function PolicyRecordsPage(props) {
   );
 }
 
+function addHiddenPolicyRecordSources(where) {
+  const existingAnd = where.AND ? (Array.isArray(where.AND) ? where.AND : [where.AND]) : [];
+  where.AND = [
+    ...existingAnd,
+    { OR: [{ sourceFile: { notIn: POLICY_RECORD_HIDDEN_SOURCE_FILES } }, { sourceFile: null }] },
+    { OR: [{ pdfFileName: { notIn: POLICY_RECORD_HIDDEN_SOURCE_FILES } }, { pdfFileName: null }] },
+  ];
+  return where;
+}
+
 async function loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId, session }) {
   try {
     void session;
@@ -119,12 +132,16 @@ async function loadPolicyRecordTabCounts({ basePolicyWhere, isSuperAdmin, orgId,
       WHERE deleted_at IS NULL
         AND ($1::boolean OR organization_id = $2::uuid)
         ${MANUAL_RENEWAL_SQL_EXCLUSION}
+        AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+        AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
         AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (
           SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
           FROM pdf_records
           WHERE deleted_at IS NULL
             AND ($1::boolean OR organization_id = $2::uuid)
             ${MANUAL_RENEWAL_SQL_EXCLUSION}
+            AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+            AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
             AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
           GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
           HAVING COUNT(*) > 1

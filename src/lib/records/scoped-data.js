@@ -95,6 +95,13 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
   }
   const andFilters = [];
 
+  if (Array.isArray(options.excludeSourceFiles) && options.excludeSourceFiles.length > 0) {
+    andFilters.push(
+      { OR: [{ sourceFile: { notIn: options.excludeSourceFiles } }, { sourceFile: null }] },
+      { OR: [{ pdfFileName: { notIn: options.excludeSourceFiles } }, { pdfFileName: null }] },
+    );
+  }
+
   // 1. Search Query (q)
   if (q.trim()) {
     const searchTerms = q.trim().toLowerCase();
@@ -236,7 +243,8 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
   }
 
   if (andFilters.length > 0) {
-    where.AND = andFilters;
+    const existingAnd = where.AND ? (Array.isArray(where.AND) ? where.AND : [where.AND]) : [];
+    where.AND = [...existingAnd, ...andFilters];
   }
 
   if (viewCategory === "duplicates") {
@@ -267,6 +275,7 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
         pdfFilter,
         savedAtFilter,
         excludeRenewalSources: options.excludeRenewalSources !== false,
+        excludeSourceFiles: options.excludeSourceFiles,
         page,
         limit,
         skip,
@@ -309,6 +318,7 @@ async function loadDuplicatePolicyRecords({
   pdfFilter,
   savedAtFilter,
   excludeRenewalSources,
+  excludeSourceFiles,
   page,
   limit,
   skip,
@@ -364,6 +374,10 @@ async function loadDuplicatePolicyRecords({
 
   const extraWhere = filters.length ? `AND ${filters.join(" AND ")}` : "";
   const renewalSourceWhere = excludeRenewalSources ? MANUAL_RENEWAL_SQL_EXCLUSION : "";
+  const sourceFileWhere = Array.isArray(excludeSourceFiles) && excludeSourceFiles.length > 0
+    ? `AND COALESCE(source_file, '') NOT IN (${excludeSourceFiles.map((file) => `'${String(file).replace(/'/g, "''")}'`).join(", ")})
+       AND COALESCE(pdf_file_name, '') NOT IN (${excludeSourceFiles.map((file) => `'${String(file).replace(/'/g, "''")}'`).join(", ")})`
+    : "";
   const duplicateBase = `
     WITH duplicate_keys AS (
         SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') AS policy_number
@@ -371,6 +385,7 @@ async function loadDuplicatePolicyRecords({
       WHERE deleted_at IS NULL
         AND ($1::boolean OR organization_id = $2::uuid)
         ${renewalSourceWhere}
+        ${sourceFileWhere}
         AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
       GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
       HAVING COUNT(*) > 1
@@ -381,6 +396,7 @@ async function loadDuplicatePolicyRecords({
       WHERE deleted_at IS NULL
         AND ($1::boolean OR organization_id = $2::uuid)
         ${renewalSourceWhere}
+        ${sourceFileWhere}
         AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (SELECT policy_number FROM duplicate_keys)
         ${extraWhere}
     )

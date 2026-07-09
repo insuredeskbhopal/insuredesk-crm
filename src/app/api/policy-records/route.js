@@ -18,6 +18,7 @@ export const runtime = "nodejs";
 const require = createRequire(import.meta.url);
 const { saveCorrection } = require("../../../lib/policies/intelligence/trainingMemory.js");
 const { normalizeInsuranceCompanyName } = insuranceCompanyMaster;
+const POLICY_RECORD_HIDDEN_SOURCE_FILES = ["generic_renewal_template.xlsx"];
 
 export async function GET(request) {
   try {
@@ -58,6 +59,10 @@ export async function GET(request) {
     };
     Object.assign(where, withoutManualRenewalSources(where));
     const andFilters = [];
+    andFilters.push(
+      { OR: [{ sourceFile: { notIn: POLICY_RECORD_HIDDEN_SOURCE_FILES } }, { sourceFile: null }] },
+      { OR: [{ pdfFileName: { notIn: POLICY_RECORD_HIDDEN_SOURCE_FILES } }, { pdfFileName: null }] },
+    );
 
     if (q.trim()) {
       const searchTerms = q.trim().toLowerCase();
