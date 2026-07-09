@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
   Phone,
@@ -97,7 +97,10 @@ const getRenewalToneClass = (value = "") => {
 export default function CustomerProfilePage(props) {
   const params = use(props.params);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const phone = params.id;
+  const returnTo = searchParams.get("returnTo") || "/dashboard/renewals/customers";
+  const goBackToPortfolios = () => router.push(returnTo);
 
   // Data state
   const [profile, setProfile] = useState(null);
@@ -1012,7 +1015,7 @@ export default function CustomerProfilePage(props) {
       <div>
         <button
           className="rn-btn"
-          onClick={() => router.push("/dashboard/renewals/customers")}
+          onClick={goBackToPortfolios}
           style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
         >
           <ArrowLeft size={14} /> Back to Portfolios

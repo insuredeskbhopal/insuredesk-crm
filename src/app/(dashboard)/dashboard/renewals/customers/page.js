@@ -260,6 +260,16 @@ export default function CustomerRenewalsPage() {
     syncUrl({ ...updates, page: nextPage });
   };
 
+  const openCustomerDetail = (cust) => {
+    if (!cust?.mobile || typeof window === "undefined") return;
+    const returnTo = `${window.location.pathname}${window.location.search}`;
+    window.sessionStorage.setItem("rn-customer-return-url", returnTo);
+    window.sessionStorage.setItem("rn-customer-scroll-y", String(window.scrollY || 0));
+    router.push(
+      `/dashboard/renewals/customers/${encodeURIComponent(cust.mobile)}?returnTo=${encodeURIComponent(returnTo)}`,
+    );
+  };
+
   const fetchCustomers = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
@@ -310,6 +320,17 @@ export default function CustomerRenewalsPage() {
       fetchCustomers(true);
     }
   }, [page, statusFilter, activeCompanyFilter, activePolicyTypeFilter]);
+
+  useEffect(() => {
+    if (loading || typeof window === "undefined") return;
+    const savedUrl = window.sessionStorage.getItem("rn-customer-return-url");
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (savedUrl !== currentUrl) return;
+    const savedScroll = Number(window.sessionStorage.getItem("rn-customer-scroll-y") || "0");
+    window.sessionStorage.removeItem("rn-customer-return-url");
+    window.sessionStorage.removeItem("rn-customer-scroll-y");
+    if (savedScroll > 0) window.requestAnimationFrame(() => window.scrollTo({ top: savedScroll }));
+  }, [loading, customers.length]);
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -994,9 +1015,7 @@ export default function CustomerRenewalsPage() {
                         <div className="rn-contact-copy">
                           <span
                             className="rn-cell-link"
-                            onClick={() =>
-                              router.push(`/dashboard/renewals/customers/${encodeURIComponent(cust.mobile)}`)
-                            }
+                            onClick={() => openCustomerDetail(cust)}
                           >
                             {cust.contact_person_name || cust.contact_person || "Contact not available"}
                           </span>
@@ -1109,9 +1128,7 @@ export default function CustomerRenewalsPage() {
                                   className="rn-dropdown-item"
                                   onClick={() => {
                                     setActiveDropdownRowId(null);
-                                    router.push(
-                                      `/dashboard/renewals/customers/${encodeURIComponent(cust.mobile)}`,
-                                    );
+                                    openCustomerDetail(cust);
                                   }}
                                 >
                                   <Eye size={14} /> View Profile
@@ -1165,9 +1182,7 @@ export default function CustomerRenewalsPage() {
                                   className="rn-dropdown-item"
                                   onClick={() => {
                                     setActiveDropdownRowId(null);
-                                    router.push(
-                                      `/dashboard/renewals/customers/${encodeURIComponent(cust.mobile)}`,
-                                    );
+                                    openCustomerDetail(cust);
                                   }}
                                 >
                                   <FileText size={14} /> View Policies
