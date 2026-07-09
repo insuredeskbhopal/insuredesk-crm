@@ -142,8 +142,8 @@ export default function CustomerRenewalsPage() {
   const [actionLoading, setActionLoading] = useState(false);
 
   // Resizable columns
-  const STORAGE_KEY = "rn-customer-col-widths";
-  const DEFAULT_WIDTHS = [180, 130, 110, 110, 110, 130, 130, 130, 60];
+  const STORAGE_KEY = "rn-customer-col-widths-v2";
+  const DEFAULT_WIDTHS = [260, 130, 120, 120, 120, 160, 150, 140, 64];
   const [colWidths, setColWidths] = useState(() => {
     if (typeof window === "undefined") return DEFAULT_WIDTHS;
     try {
@@ -964,22 +964,11 @@ export default function CustomerRenewalsPage() {
                       onMouseEnter={(e) => handleHoverEnter(cust, e)}
                       onMouseLeave={handleHoverLeave}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <div
-                          style={{
-                            width: "32px",
-                            height: "32px",
-                            borderRadius: "50%",
-                            backgroundColor: "var(--rn-border-light)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "var(--rn-text-secondary)",
-                          }}
-                        >
+                      <div className="rn-contact-cell">
+                        <div className="rn-contact-avatar">
                           <User size={16} />
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column" }}>
+                        <div className="rn-contact-copy">
                           <span
                             className="rn-cell-link"
                             onClick={() =>
@@ -989,9 +978,7 @@ export default function CustomerRenewalsPage() {
                             {cust.contact_person_name || cust.contact_person || "Contact not available"}
                           </span>
                           {cust.company_names && (
-                            <span
-                              style={{ fontSize: "11px", color: "var(--rn-text-muted)", marginTop: "2px" }}
-                            >
+                            <span className="rn-contact-companies" title={cust.company_names}>
                               {cust.company_names}
                             </span>
                           )}
