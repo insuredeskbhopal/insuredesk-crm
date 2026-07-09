@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { normalizeRecord } from "@/lib/records";
 import { loadScopedPolicyRecords, getCurrentSessionFromCookies } from "@/lib/records/scoped-data";
-import { MANUAL_RENEWAL_IMPORT_METHOD, MANUAL_RENEWAL_SOURCE_FILE } from "@/lib/records/manual-renewal-source";
+import { MANUAL_RENEWAL_IMPORT_METHOD, MANUAL_RENEWAL_SOURCE_FILES } from "@/lib/records/manual-renewal-source";
 import { formatMoney, parseMoney } from "@/lib/records/analytics";
 import { parsePolicyDate } from "@/app/lib/reporting/filters";
 
@@ -281,8 +281,8 @@ function filterRenewedPremiumRecords(records, now) {
 function isManualRenewalSource(record) {
   return (
     record.extractionMethod === MANUAL_RENEWAL_IMPORT_METHOD ||
-    record.sourceFile === MANUAL_RENEWAL_SOURCE_FILE ||
-    record.pdfFileName === MANUAL_RENEWAL_SOURCE_FILE
+    MANUAL_RENEWAL_SOURCE_FILES.includes(record.sourceFile) ||
+    MANUAL_RENEWAL_SOURCE_FILES.includes(record.pdfFileName)
   );
 }
 
