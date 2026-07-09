@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { normalizeRecord } from "@/lib/records";
 import { loadScopedPolicyRecords, getCurrentSessionFromCookies } from "@/lib/records/scoped-data";
+import { MANUAL_RENEWAL_IMPORT_METHOD, MANUAL_RENEWAL_SOURCE_FILE } from "@/lib/records/manual-renewal-source";
 import { formatMoney, parseMoney } from "@/lib/records/analytics";
 import { parsePolicyDate } from "@/app/lib/reporting/filters";
 
@@ -38,7 +39,7 @@ const REPORTS = {
   renewed: {
     title: "Renewed Premium",
     eyebrow: "Renewed Policy Report",
-    description: "Policies marked as renewed.",
+    description: "Policies marked as renewed this month.",
     grouping: "records",
   },
   lost: {
@@ -74,10 +75,14 @@ export default async function PremiumReportPage({ params }) {
     );
   }
 
-  const rawRecords = await loadScopedPolicyRecords({ includeInactive: true });
+  const rawRecords = await loadScopedPolicyRecords({
+    includeInactive: true,
+    excludeRenewalSources: reportId !== "renewed",
+  });
   const records = rawRecords.map(normalizeRecord);
   const now = new Date();
-  const filteredRecords = filterPremiumRecords(records, reportId, now);
+  const filteredRecords =
+    reportId === "renewed" ? filterRenewedPremiumRecords(records, now) : filterPremiumRecords(records, reportId, now);
   const pivotRows = buildPivotRows(filteredRecords, config.grouping);
   const totalPremium = filteredRecords.reduce((sum, record) => sum + getPremium(record), 0);
   const latestRecord = filteredRecords[0];
@@ -235,7 +240,6 @@ function filterPremiumRecords(records, reportId, now) {
       if (reportId === "eod") return savedDate && savedDate >= startToday;
       if (reportId === "mtd") return savedDate && savedDate >= startMonth;
       if (reportId === "ytd") return savedDate && savedDate >= startYear;
-      if (reportId === "renewed") return record.renewalStatus === "RENEWED";
       if (reportId === "lost") return record.renewalStatus === "LOST";
       if (reportId === "expired") {
         if (!record.isActivePolicy || record.renewalStatus !== "ACTIVE") return false;
@@ -245,6 +249,41 @@ function filterPremiumRecords(records, reportId, now) {
       return false;
     })
     .sort((a, b) => (getSavedDate(b)?.getTime() || 0) - (getSavedDate(a)?.getTime() || 0));
+}
+
+function filterRenewedPremiumRecords(records, now) {
+  const startMonth = startOfIndiaMonth(now);
+  const startNextMonth = startOfNextIndiaMonth(now);
+  const recordsById = new Map(records.filter((record) => !isManualRenewalSource(record)).map((record) => [record.id, record]));
+  const renewedRecords = new Map();
+
+  for (const record of records) {
+    if (record.renewalStatus !== "RENEWED") continue;
+    const renewalDate = getRenewalActivityDate(record);
+    if (!renewalDate || renewalDate < startMonth || renewalDate >= startNextMonth) continue;
+
+    const linkedRecord = record.renewedPolicyId ? recordsById.get(record.renewedPolicyId) : null;
+    const displayRecord = linkedRecord || (!isManualRenewalSource(record) ? record : null);
+    if (displayRecord) {
+      renewedRecords.set(displayRecord.id, {
+        ...displayRecord,
+        savedAt: renewalDate,
+        uploadedAt: renewalDate,
+      });
+    }
+  }
+
+  return Array.from(renewedRecords.values()).sort(
+    (a, b) => (getSavedDate(b)?.getTime() || 0) - (getSavedDate(a)?.getTime() || 0),
+  );
+}
+
+function isManualRenewalSource(record) {
+  return (
+    record.extractionMethod === MANUAL_RENEWAL_IMPORT_METHOD ||
+    record.sourceFile === MANUAL_RENEWAL_SOURCE_FILE ||
+    record.pdfFileName === MANUAL_RENEWAL_SOURCE_FILE
+  );
 }
 
 function buildPivotRows(records, grouping) {
@@ -293,6 +332,13 @@ function getSavedDate(record) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function getRenewalActivityDate(record) {
+  const value = record.renewalDate || record.savedAt || record.uploadedAt;
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function getPremium(record) {
   return parseMoney(record.netPremium || record.totalPremium || record.premium);
 }
@@ -324,6 +370,13 @@ function startOfIndiaDay(date) {
 function startOfIndiaMonth(date) {
   const parts = getIndiaDateParts(date);
   return makeIndiaDate(parts.year, parts.month, 1);
+}
+
+function startOfNextIndiaMonth(date) {
+  const parts = getIndiaDateParts(date);
+  const nextMonth = parts.month === 12 ? 1 : parts.month + 1;
+  const year = parts.month === 12 ? parts.year + 1 : parts.year;
+  return makeIndiaDate(year, nextMonth, 1);
 }
 
 function startOfIndiaYear(date) {

@@ -138,6 +138,11 @@ export async function GET(request) {
 
     const startOfToday = makeIndiaDate(todayParts.year, todayParts.month, todayParts.day);
     const startOfThisMonth = makeIndiaDate(todayParts.year, todayParts.month, 1);
+    const startOfNextMonth = makeIndiaDate(
+      todayParts.month === 12 ? todayParts.year + 1 : todayParts.year,
+      todayParts.month === 12 ? 1 : todayParts.month + 1,
+      1,
+    );
     const startOfThisYear = makeIndiaDate(todayParts.year, 1, 1);
 
     const statsParams = [
@@ -147,6 +152,7 @@ export async function GET(request) {
       startOfToday.toISOString(),
       startOfThisMonth.toISOString(),
       startOfThisYear.toISOString(),
+      startOfNextMonth.toISOString(),
     ];
 
     const statsQuery = `
@@ -157,6 +163,7 @@ export async function GET(request) {
             THEN '2026-06-29T12:00:00+05:30'::timestamptz 
             ELSE saved_at 
           END as saved_at,
+          COALESCE(renewal_date, saved_at) as renewal_activity_at,
           is_active_policy,
           renewal_status,
           CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
@@ -176,6 +183,7 @@ export async function GET(request) {
       dated AS (
         SELECT 
           saved_at,
+          renewal_activity_at,
           is_active_policy,
           renewal_status,
           premium,
@@ -187,6 +195,29 @@ export async function GET(request) {
             ELSE NULL
            END) AS expiry_date
         FROM parsed
+      ),
+      renewed_matched AS (
+        SELECT DISTINCT
+          p.id,
+          CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
+            NULLIF(p.reviewed_data->>'netPremium', ''),
+            NULLIF(p.data->>'netPremium', ''),
+            NULLIF(p.reviewed_data->>'totalPremium', ''),
+            NULLIF(p.reviewed_data->>'premium', ''),
+            NULLIF(p.data->>'totalPremium', ''),
+            NULLIF(p.data->>'premium', '')
+          ), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium
+        FROM pdf_records marker
+        JOIN pdf_records p ON p.id = marker.renewed_policy_id
+        WHERE marker.deleted_at IS NULL
+          AND p.deleted_at IS NULL
+          AND marker.renewal_status = 'RENEWED'
+          AND marker.extraction_method = 'renewal_excel_import'
+          AND COALESCE(marker.renewal_date, marker.saved_at) >= $5::timestamptz
+          AND COALESCE(marker.renewal_date, marker.saved_at) < $7::timestamptz
+          AND ($1::boolean OR marker.organization_id = $2::uuid)
+          AND ($1::boolean OR p.organization_id = $2::uuid)
+          AND COALESCE(p.extraction_method, '') != 'renewal_excel_import'
       )
       SELECT 
         -- EOD
@@ -199,8 +230,8 @@ export async function GET(request) {
         COUNT(CASE WHEN saved_at >= $6::timestamptz THEN 1 END)::integer as ytd_count,
         SUM(CASE WHEN saved_at >= $6::timestamptz THEN premium ELSE 0 END)::numeric as ytd_premium,
         -- Renewed
-        COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END)::integer as renewed_count,
-        SUM(CASE WHEN renewal_status = 'RENEWED' THEN premium ELSE 0 END)::numeric as renewed_premium,
+        (SELECT COUNT(*) FROM renewed_matched)::integer as renewed_count,
+        (SELECT COALESCE(SUM(premium), 0) FROM renewed_matched)::numeric as renewed_premium,
         -- Lost
         COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END)::integer as lost_count,
         SUM(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN premium ELSE 0 END)::numeric as lost_premium,
@@ -222,6 +253,7 @@ export async function GET(request) {
             THEN '2026-06-29T12:00:00+05:30'::timestamptz 
             ELSE saved_at 
           END as saved_at,
+          COALESCE(renewal_date, saved_at) as renewal_activity_at,
           is_active_policy,
           renewal_status,
           created_by_id,
@@ -242,6 +274,7 @@ export async function GET(request) {
       dated AS (
         SELECT 
           saved_at,
+          renewal_activity_at,
           is_active_policy,
           renewal_status,
           created_by_id,
@@ -254,6 +287,30 @@ export async function GET(request) {
             ELSE NULL
            END) AS expiry_date
         FROM parsed
+      ),
+      renewed_matched AS (
+        SELECT DISTINCT
+          p.id,
+          p.created_by_id,
+          CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
+            NULLIF(p.reviewed_data->>'netPremium', ''),
+            NULLIF(p.data->>'netPremium', ''),
+            NULLIF(p.reviewed_data->>'totalPremium', ''),
+            NULLIF(p.reviewed_data->>'premium', ''),
+            NULLIF(p.data->>'totalPremium', ''),
+            NULLIF(p.data->>'premium', '')
+          ), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium
+        FROM pdf_records marker
+        JOIN pdf_records p ON p.id = marker.renewed_policy_id
+        WHERE marker.deleted_at IS NULL
+          AND p.deleted_at IS NULL
+          AND marker.renewal_status = 'RENEWED'
+          AND marker.extraction_method = 'renewal_excel_import'
+          AND COALESCE(marker.renewal_date, marker.saved_at) >= $5::timestamptz
+          AND COALESCE(marker.renewal_date, marker.saved_at) < $7::timestamptz
+          AND ($1::boolean OR marker.organization_id = $2::uuid)
+          AND ($1::boolean OR p.organization_id = $2::uuid)
+          AND COALESCE(p.extraction_method, '') != 'renewal_excel_import'
       )
       SELECT 
         u.id as agent_id,
@@ -265,8 +322,8 @@ export async function GET(request) {
         SUM(CASE WHEN saved_at >= $5::timestamptz THEN premium ELSE 0 END)::numeric as mtd_premium,
         COUNT(CASE WHEN saved_at >= $6::timestamptz THEN 1 END)::integer as ytd_count,
         SUM(CASE WHEN saved_at >= $6::timestamptz THEN premium ELSE 0 END)::numeric as ytd_premium,
-        COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END)::integer as renewed_count,
-        SUM(CASE WHEN renewal_status = 'RENEWED' THEN premium ELSE 0 END)::numeric as renewed_premium,
+        (SELECT COUNT(*) FROM renewed_matched rm WHERE rm.created_by_id IS NOT DISTINCT FROM u.id)::integer as renewed_count,
+        (SELECT COALESCE(SUM(rm.premium), 0) FROM renewed_matched rm WHERE rm.created_by_id IS NOT DISTINCT FROM u.id)::numeric as renewed_premium,
         COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END)::integer as lost_count,
         SUM(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN premium ELSE 0 END)::numeric as lost_premium,
         COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date < $3::date AND expiry_date >= $3::date - 30 THEN 1 END)::integer as expired_count,
