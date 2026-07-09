@@ -2,7 +2,11 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
-import { MANUAL_RENEWAL_SQL_EXCLUSION } from "@/lib/records/manual-renewal-source";
+import {
+  MANUAL_RENEWAL_IMPORT_METHOD,
+  MANUAL_RENEWAL_SOURCE_FILE,
+  MANUAL_RENEWAL_SQL_EXCLUSION,
+} from "@/lib/records/manual-renewal-source";
 
 export const dynamic = "force-dynamic";
 
@@ -197,27 +201,50 @@ export async function GET(request) {
         FROM parsed
       ),
       renewed_matched AS (
-        SELECT DISTINCT
-          p.id,
-          CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
-            NULLIF(p.reviewed_data->>'netPremium', ''),
-            NULLIF(p.data->>'netPremium', ''),
-            NULLIF(p.reviewed_data->>'totalPremium', ''),
-            NULLIF(p.reviewed_data->>'premium', ''),
-            NULLIF(p.data->>'totalPremium', ''),
-            NULLIF(p.data->>'premium', '')
-          ), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium
-        FROM pdf_records marker
-        JOIN pdf_records p ON p.id = marker.renewed_policy_id
-        WHERE marker.deleted_at IS NULL
-          AND p.deleted_at IS NULL
-          AND marker.renewal_status = 'RENEWED'
-          AND marker.extraction_method = 'renewal_excel_import'
-          AND COALESCE(marker.renewal_date, marker.saved_at) >= $5::timestamptz
-          AND COALESCE(marker.renewal_date, marker.saved_at) < $7::timestamptz
-          AND ($1::boolean OR marker.organization_id = $2::uuid)
-          AND ($1::boolean OR p.organization_id = $2::uuid)
-          AND COALESCE(p.extraction_method, '') != 'renewal_excel_import'
+        SELECT DISTINCT ON (id) id, premium
+        FROM (
+          SELECT
+            p.id,
+            CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
+              NULLIF(p.reviewed_data->>'netPremium', ''),
+              NULLIF(p.data->>'netPremium', ''),
+              NULLIF(p.reviewed_data->>'totalPremium', ''),
+              NULLIF(p.reviewed_data->>'premium', ''),
+              NULLIF(p.data->>'totalPremium', ''),
+              NULLIF(p.data->>'premium', '')
+            ), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium
+          FROM pdf_records marker
+          JOIN pdf_records p ON p.id = marker.renewed_policy_id
+          WHERE marker.deleted_at IS NULL
+            AND p.deleted_at IS NULL
+            AND marker.renewal_status = 'RENEWED'
+            AND marker.extraction_method = '${MANUAL_RENEWAL_IMPORT_METHOD}'
+            AND COALESCE(marker.renewal_date, marker.saved_at) >= $5::timestamptz
+            AND COALESCE(marker.renewal_date, marker.saved_at) < $7::timestamptz
+            AND ($1::boolean OR marker.organization_id = $2::uuid)
+            AND ($1::boolean OR p.organization_id = $2::uuid)
+            AND COALESCE(p.extraction_method, '') != '${MANUAL_RENEWAL_IMPORT_METHOD}'
+          UNION ALL
+          SELECT
+            p.id,
+            CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
+              NULLIF(p.reviewed_data->>'netPremium', ''),
+              NULLIF(p.data->>'netPremium', ''),
+              NULLIF(p.reviewed_data->>'totalPremium', ''),
+              NULLIF(p.reviewed_data->>'premium', ''),
+              NULLIF(p.data->>'totalPremium', ''),
+              NULLIF(p.data->>'premium', '')
+            ), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium
+          FROM pdf_records p
+          WHERE p.deleted_at IS NULL
+            AND p.saved_at >= $5::timestamptz
+            AND p.saved_at < $7::timestamptz
+            AND ($1::boolean OR p.organization_id = $2::uuid)
+            AND regexp_replace(lower(COALESCE(p.reviewed_data->>'newOrRenewal', p.data->>'newOrRenewal', p.reviewed_data->>'New / Renewal', p.data->>'New / Renewal', '')), '[^a-z]', '', 'g') = 'renewal'
+            AND COALESCE(p.extraction_method, '') != '${MANUAL_RENEWAL_IMPORT_METHOD}'
+            AND COALESCE(p.source_file, '') != '${MANUAL_RENEWAL_SOURCE_FILE}'
+            AND COALESCE(p.pdf_file_name, '') != '${MANUAL_RENEWAL_SOURCE_FILE}'
+        ) renewed_sources
       )
       SELECT 
         -- EOD
@@ -289,28 +316,52 @@ export async function GET(request) {
         FROM parsed
       ),
       renewed_matched AS (
-        SELECT DISTINCT
-          p.id,
-          p.created_by_id,
-          CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
-            NULLIF(p.reviewed_data->>'netPremium', ''),
-            NULLIF(p.data->>'netPremium', ''),
-            NULLIF(p.reviewed_data->>'totalPremium', ''),
-            NULLIF(p.reviewed_data->>'premium', ''),
-            NULLIF(p.data->>'totalPremium', ''),
-            NULLIF(p.data->>'premium', '')
-          ), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium
-        FROM pdf_records marker
-        JOIN pdf_records p ON p.id = marker.renewed_policy_id
-        WHERE marker.deleted_at IS NULL
-          AND p.deleted_at IS NULL
-          AND marker.renewal_status = 'RENEWED'
-          AND marker.extraction_method = 'renewal_excel_import'
-          AND COALESCE(marker.renewal_date, marker.saved_at) >= $5::timestamptz
-          AND COALESCE(marker.renewal_date, marker.saved_at) < $7::timestamptz
-          AND ($1::boolean OR marker.organization_id = $2::uuid)
-          AND ($1::boolean OR p.organization_id = $2::uuid)
-          AND COALESCE(p.extraction_method, '') != 'renewal_excel_import'
+        SELECT DISTINCT ON (id) id, created_by_id, premium
+        FROM (
+          SELECT
+            p.id,
+            p.created_by_id,
+            CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
+              NULLIF(p.reviewed_data->>'netPremium', ''),
+              NULLIF(p.data->>'netPremium', ''),
+              NULLIF(p.reviewed_data->>'totalPremium', ''),
+              NULLIF(p.reviewed_data->>'premium', ''),
+              NULLIF(p.data->>'totalPremium', ''),
+              NULLIF(p.data->>'premium', '')
+            ), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium
+          FROM pdf_records marker
+          JOIN pdf_records p ON p.id = marker.renewed_policy_id
+          WHERE marker.deleted_at IS NULL
+            AND p.deleted_at IS NULL
+            AND marker.renewal_status = 'RENEWED'
+            AND marker.extraction_method = '${MANUAL_RENEWAL_IMPORT_METHOD}'
+            AND COALESCE(marker.renewal_date, marker.saved_at) >= $5::timestamptz
+            AND COALESCE(marker.renewal_date, marker.saved_at) < $7::timestamptz
+            AND ($1::boolean OR marker.organization_id = $2::uuid)
+            AND ($1::boolean OR p.organization_id = $2::uuid)
+            AND COALESCE(p.extraction_method, '') != '${MANUAL_RENEWAL_IMPORT_METHOD}'
+          UNION ALL
+          SELECT
+            p.id,
+            p.created_by_id,
+            CAST(COALESCE(NULLIF(regexp_replace(COALESCE(
+              NULLIF(p.reviewed_data->>'netPremium', ''),
+              NULLIF(p.data->>'netPremium', ''),
+              NULLIF(p.reviewed_data->>'totalPremium', ''),
+              NULLIF(p.reviewed_data->>'premium', ''),
+              NULLIF(p.data->>'totalPremium', ''),
+              NULLIF(p.data->>'premium', '')
+            ), '[^0-9.]', '', 'g'), ''), '0') AS NUMERIC) as premium
+          FROM pdf_records p
+          WHERE p.deleted_at IS NULL
+            AND p.saved_at >= $5::timestamptz
+            AND p.saved_at < $7::timestamptz
+            AND ($1::boolean OR p.organization_id = $2::uuid)
+            AND regexp_replace(lower(COALESCE(p.reviewed_data->>'newOrRenewal', p.data->>'newOrRenewal', p.reviewed_data->>'New / Renewal', p.data->>'New / Renewal', '')), '[^a-z]', '', 'g') = 'renewal'
+            AND COALESCE(p.extraction_method, '') != '${MANUAL_RENEWAL_IMPORT_METHOD}'
+            AND COALESCE(p.source_file, '') != '${MANUAL_RENEWAL_SOURCE_FILE}'
+            AND COALESCE(p.pdf_file_name, '') != '${MANUAL_RENEWAL_SOURCE_FILE}'
+        ) renewed_sources
       )
       SELECT 
         u.id as agent_id,

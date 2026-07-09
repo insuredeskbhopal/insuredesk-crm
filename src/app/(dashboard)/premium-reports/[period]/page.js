@@ -273,9 +273,29 @@ function filterRenewedPremiumRecords(records, now) {
     }
   }
 
+  for (const record of records) {
+    if (!isDirectRenewalUpload(record)) continue;
+    const savedDate = getSavedDate(record);
+    if (!savedDate || savedDate < startMonth || savedDate >= startNextMonth) continue;
+
+    renewedRecords.set(record.id, record);
+  }
+
   return Array.from(renewedRecords.values()).sort(
     (a, b) => (getSavedDate(b)?.getTime() || 0) - (getSavedDate(a)?.getTime() || 0),
   );
+}
+
+function isDirectRenewalUpload(record) {
+  if (isManualRenewalSource(record)) return false;
+  return normalizeRenewalText(record.newOrRenewal) === "renewal";
+}
+
+function normalizeRenewalText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z]/g, "");
 }
 
 function isManualRenewalSource(record) {
@@ -412,7 +432,7 @@ function getBasisLabel(reportId) {
   if (reportId === "mtd") return "Saved this month";
   if (reportId === "ytd") return "Saved this year";
   if (reportId === "expired") return "Expiry date";
-  if (reportId === "renewed") return "Renewal status";
+  if (reportId === "renewed") return "Renewal status / renewal upload";
   if (reportId === "lost") return "Lost status";
   return "Policy records";
 }
