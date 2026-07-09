@@ -208,17 +208,80 @@ export async function GET(request) {
             OR ($9 = 'Office' AND (LOWER(raw_policy_type) LIKE '%office%' OR LOWER(policy_family) = 'commercial'))
           )
       ),
+      contact_name_clusters AS (
+        SELECT
+          contact_number,
+          LOWER(SPLIT_PART(regexp_replace(TRIM(contact_person), '\\s+', ' ', 'g'), ' ', 1)) AS contact_key,
+          COUNT(*) AS contact_count,
+          MAX(saved_at) AS latest_saved_at
+        FROM active_renewals
+        WHERE NULLIF(TRIM(contact_person), '') IS NOT NULL
+        GROUP BY contact_number, LOWER(SPLIT_PART(regexp_replace(TRIM(contact_person), '\\s+', ' ', 'g'), ' ', 1))
+      ),
+      best_contact_keys AS (
+        SELECT contact_number, contact_key
+        FROM (
+          SELECT
+            contact_number,
+            contact_key,
+            ROW_NUMBER() OVER (
+              PARTITION BY contact_number
+              ORDER BY contact_count DESC, latest_saved_at DESC
+            ) AS rn
+          FROM contact_name_clusters
+        ) ranked_contact_keys
+        WHERE rn = 1
+      ),
+      best_contact_names AS (
+        SELECT contact_number, contact_person
+        FROM (
+          SELECT
+            active_renewals.contact_number,
+            TRIM(active_renewals.contact_person) AS contact_person,
+            ROW_NUMBER() OVER (
+              PARTITION BY active_renewals.contact_number
+              ORDER BY
+                CASE WHEN TRIM(active_renewals.contact_person) ~* '\\m(sir|madam|maam)\\M' THEN 1 ELSE 0 END ASC,
+                LENGTH(TRIM(active_renewals.contact_person)) DESC,
+                COUNT(*) DESC,
+                MAX(active_renewals.saved_at) DESC
+            ) AS rn
+          FROM active_renewals
+          INNER JOIN best_contact_keys
+            ON best_contact_keys.contact_number = active_renewals.contact_number
+           AND best_contact_keys.contact_key = LOWER(SPLIT_PART(regexp_replace(TRIM(active_renewals.contact_person), '\\s+', ' ', 'g'), ' ', 1))
+          WHERE NULLIF(TRIM(active_renewals.contact_person), '') IS NOT NULL
+          GROUP BY active_renewals.contact_number, TRIM(active_renewals.contact_person)
+        ) ranked_contacts
+        WHERE rn = 1
+      ),
+      best_insured_names AS (
+        SELECT contact_number, insured_name
+        FROM (
+          SELECT
+            contact_number,
+            TRIM(insured_name) AS insured_name,
+            ROW_NUMBER() OVER (
+              PARTITION BY contact_number
+              ORDER BY COUNT(*) DESC, MAX(saved_at) DESC
+            ) AS rn
+          FROM active_renewals
+          WHERE NULLIF(TRIM(insured_name), '') IS NOT NULL
+          GROUP BY contact_number, TRIM(insured_name)
+        ) ranked_insured
+        WHERE rn = 1
+      ),
       customer_groups AS (
         SELECT 
-          contact_number AS mobile,
+          active_renewals.contact_number AS mobile,
           STRING_AGG(DISTINCT NULLIF(insured_name, ''), ', ' ORDER BY NULLIF(insured_name, '')) AS company_names,
-          MAX(insured_name) AS customer_name,
-          MAX(contact_person) AS contact_person,
+          COALESCE(best_insured_names.insured_name, '') AS customer_name,
+          COALESCE(best_contact_names.contact_person, '') AS contact_person,
           COALESCE(
+            NULLIF(best_contact_names.contact_person, ''),
             NULLIF(MAX(cpc.profile_contact_person), ''),
             NULLIF(MAX(cpc.profile_name), ''),
-            NULLIF(MAX(contact_person), ''),
-            MAX(insured_name),
+            NULLIF(best_insured_names.insured_name, ''),
             'Unknown Contact'
           ) AS contact_person_name,
           -- Count of unique company/insured names for this contact
@@ -260,7 +323,11 @@ export async function GET(request) {
         FROM active_renewals
         LEFT JOIN customer_profile_contacts cpc
           ON cpc.mobile = active_renewals.contact_number
-        GROUP BY contact_number
+        LEFT JOIN best_contact_names
+          ON best_contact_names.contact_number = active_renewals.contact_number
+        LEFT JOIN best_insured_names
+          ON best_insured_names.contact_number = active_renewals.contact_number
+        GROUP BY active_renewals.contact_number, best_contact_names.contact_person, best_insured_names.insured_name
       ),
       filtered_groups AS (
         SELECT *
