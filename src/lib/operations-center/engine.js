@@ -53,9 +53,10 @@ export function parseBusinessDate(value) {
   const raw = String(value).trim();
   if (!raw) return null;
 
-  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}))?/);
   if (iso) {
-    const date = new Date(`${iso[1]}-${iso[2]}-${iso[3]}T09:00:00`);
+    const timePart = iso[4] && iso[5] ? `${iso[4]}:${iso[5]}:00` : "09:00:00";
+    const date = new Date(`${iso[1]}-${iso[2]}-${iso[3]}T${timePart}`);
     return Number.isNaN(date.getTime()) ? null : date;
   }
 

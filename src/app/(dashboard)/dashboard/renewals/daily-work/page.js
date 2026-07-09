@@ -702,7 +702,7 @@ export default function DailyWorkPage() {
                   <div className="customer-meta-item">
                     <label className="customer-meta-label">Next Follow-Up Date</label>
                     <input
-                      type="date"
+                      type="datetime-local"
                       className="rn-input"
                       value={remarkForm.nextFollowUpDate}
                       onChange={(e) => setRemarkForm({ ...remarkForm, nextFollowUpDate: e.target.value })}

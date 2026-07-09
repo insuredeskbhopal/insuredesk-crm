@@ -39,7 +39,17 @@ const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return `${String(d.getDate()).padStart(2, "0")}-${months[d.getMonth()]}-${d.getFullYear()}`;
+    const baseDate = `${String(d.getDate()).padStart(2, "0")}-${months[d.getMonth()]}-${d.getFullYear()}`;
+    const hasTime = String(dateStr).includes(":") || (String(dateStr).includes("T") && String(dateStr).length > 10);
+    if (hasTime) {
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return `${baseDate} ${String(hours).padStart(2, "0")}:${minutes} ${ampm}`;
+    }
+    return baseDate;
   } catch {
     return dateStr;
   }
@@ -1522,7 +1532,7 @@ export default function CustomerRenewalsPage() {
                     <div>
                       <label className="customer-meta-label">Follow-up Date</label>
                       <input
-                        type="date"
+                        type="datetime-local"
                         className="rn-input"
                         style={{ width: "100%", marginTop: "4px" }}
                         value={remarkForm.nextFollowUpDate}
