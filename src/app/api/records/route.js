@@ -7,6 +7,7 @@ import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
+import { withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
 
 export async function GET(request) {
   try {
@@ -38,6 +39,7 @@ export async function GET(request) {
       ...tenantFilter,
       deletedAt: null,
     };
+    Object.assign(where, withoutManualRenewalSources(where));
     const andFilters = [];
 
     if (q.trim()) {
@@ -107,7 +109,8 @@ export async function GET(request) {
     }
 
     if (andFilters.length > 0) {
-      where.AND = andFilters;
+      const existingAnd = where.AND ? (Array.isArray(where.AND) ? where.AND : [where.AND]) : [];
+      where.AND = [...existingAnd, ...andFilters];
     }
 
     const selectOptions = {

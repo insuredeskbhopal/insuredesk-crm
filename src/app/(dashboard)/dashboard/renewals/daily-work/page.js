@@ -285,10 +285,6 @@ export default function DailyWorkPage() {
   // Mark policy as renewed
   const submitRenew = async (e) => {
     e.preventDefault();
-    if (!renewForm.policyNumber || !renewForm.startDate || !renewForm.expiryDate || !renewForm.premium) {
-      window.alert("All fields are required.");
-      return;
-    }
 
     try {
       setActionLoading(true);
@@ -298,10 +294,6 @@ export default function DailyWorkPage() {
         body: JSON.stringify({
           previousPolicyId: selectedPolicy.id,
           renewedData: {
-            policyNumber: renewForm.policyNumber,
-            startDate: renewForm.startDate,
-            expiryDate: renewForm.expiryDate,
-            premium: renewForm.premium,
             remark: renewForm.remark,
           },
         }),
@@ -309,7 +301,7 @@ export default function DailyWorkPage() {
       if (res.ok) {
         setRenewModalOpen(false);
         setRenewForm({ policyNumber: "", startDate: "", expiryDate: "", premium: "", remark: "" });
-        await fetchDailyWork(true);
+        router.push("/bulk-upload");
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to renew policy.");
@@ -784,54 +776,7 @@ export default function DailyWorkPage() {
                 style={{ display: "flex", flexDirection: "column", gap: "16px" }}
               >
                 <div style={{ fontSize: "13px", color: "var(--rn-text-secondary)" }}>
-                  Creating renewal policy for <strong>{selectedPolicy.insuredName}</strong> (Old Policy:{" "}
-                  {selectedPolicy.policyNumber})
-                </div>
-                <div className="customer-meta-item">
-                  <label className="customer-meta-label">New Policy Number *</label>
-                  <input
-                    type="text"
-                    className="rn-input"
-                    style={{ width: "100%" }}
-                    value={renewForm.policyNumber}
-                    onChange={(e) => setRenewForm({ ...renewForm, policyNumber: e.target.value })}
-                    placeholder="Enter new policy number..."
-                    required
-                  />
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <div className="customer-meta-item">
-                    <label className="customer-meta-label">Start Date *</label>
-                    <input
-                      type="date"
-                      className="rn-input"
-                      value={renewForm.startDate}
-                      onChange={(e) => setRenewForm({ ...renewForm, startDate: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="customer-meta-item">
-                    <label className="customer-meta-label">Expiry Date *</label>
-                    <input
-                      type="date"
-                      className="rn-input"
-                      value={renewForm.expiryDate}
-                      onChange={(e) => setRenewForm({ ...renewForm, expiryDate: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="customer-meta-item">
-                  <label className="customer-meta-label">New Premium *</label>
-                  <input
-                    type="text"
-                    className="rn-input"
-                    style={{ width: "100%" }}
-                    value={renewForm.premium}
-                    onChange={(e) => setRenewForm({ ...renewForm, premium: e.target.value })}
-                    placeholder="e.g. 15450"
-                    required
-                  />
+                  Mark <strong>{selectedPolicy.insuredName}</strong> as renewed, then upload the renewed policy PDF.
                 </div>
                 <div className="customer-meta-item">
                   <label className="customer-meta-label">Renewal Remark / Note</label>
@@ -841,7 +786,7 @@ export default function DailyWorkPage() {
                     style={{ width: "100%" }}
                     value={renewForm.remark}
                     onChange={(e) => setRenewForm({ ...renewForm, remark: e.target.value })}
-                    placeholder="e.g. Renewed with 10% NCB benefit"
+                    placeholder="e.g. Customer confirmed renewal"
                   />
                 </div>
               </div>
@@ -853,7 +798,7 @@ export default function DailyWorkPage() {
                   Cancel
                 </button>
                 <button type="submit" className="rn-btn rn-btn-primary" disabled={actionLoading}>
-                  {actionLoading ? "Processing..." : "Complete Renewal"}
+                  {actionLoading ? "Processing..." : "Mark Renewed & Upload PDF"}
                 </button>
               </div>
             </form>

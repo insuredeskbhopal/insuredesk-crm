@@ -495,10 +495,6 @@ export default function CustomerProfilePage(props) {
 
   const submitRenew = async (e) => {
     e.preventDefault();
-    if (!renewForm.policyNumber || !renewForm.startDate || !renewForm.expiryDate || !renewForm.premium) {
-      window.alert("All fields are required.");
-      return;
-    }
 
     try {
       setActionLoading(true);
@@ -508,17 +504,13 @@ export default function CustomerProfilePage(props) {
         body: JSON.stringify({
           previousPolicyId: selectedPolicy.id,
           renewedData: {
-            policyNumber: renewForm.policyNumber,
-            startDate: renewForm.startDate,
-            expiryDate: renewForm.expiryDate,
-            premium: renewForm.premium,
             remark: renewForm.remark,
           },
         }),
       });
       if (res.ok) {
         setRenewModalOpen(false);
-        await fetchCustomerProfile();
+        router.push("/bulk-upload");
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to renew policy.");
@@ -2107,54 +2099,8 @@ export default function CustomerProfilePage(props) {
               </div>
               <form onSubmit={submitRenew}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "16px" }}>
-                  <div>
-                    <label className="customer-meta-label">New Policy Number *</label>
-                    <input
-                      type="text"
-                      className="rn-input"
-                      style={{ width: "100%", marginTop: "4px" }}
-                      placeholder="Enter new policy number"
-                      value={renewForm.policyNumber}
-                      onChange={(e) => setRenewForm({ ...renewForm, policyNumber: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                    <div>
-                      <label className="customer-meta-label">Start Date *</label>
-                      <input
-                        type="date"
-                        className="rn-input"
-                        style={{ width: "100%", marginTop: "4px" }}
-                        value={renewForm.startDate}
-                        onChange={(e) => setRenewForm({ ...renewForm, startDate: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="customer-meta-label">Expiry Date *</label>
-                      <input
-                        type="date"
-                        className="rn-input"
-                        style={{ width: "100%", marginTop: "4px" }}
-                        value={renewForm.expiryDate}
-                        onChange={(e) => setRenewForm({ ...renewForm, expiryDate: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px" }}>
-                    <div>
-                      <label className="customer-meta-label">New Premium Amount *</label>
-                      <input
-                        type="number"
-                        className="rn-input"
-                        style={{ width: "100%", marginTop: "4px" }}
-                        value={renewForm.premium}
-                        onChange={(e) => setRenewForm({ ...renewForm, premium: e.target.value })}
-                        required
-                      />
-                    </div>
+                  <div style={{ fontSize: "13px", color: "var(--rn-text-secondary)" }}>
+                    Mark this renewal entry as renewed, then upload the renewed policy PDF.
                   </div>
                   <div>
                     <label className="customer-meta-label">Remarks</label>
@@ -2162,7 +2108,7 @@ export default function CustomerProfilePage(props) {
                       type="text"
                       className="rn-input"
                       style={{ width: "100%", marginTop: "4px" }}
-                      placeholder="e.g. customer negotiated well"
+                      placeholder="e.g. Customer confirmed renewal"
                       value={renewForm.remark}
                       onChange={(e) => setRenewForm({ ...renewForm, remark: e.target.value })}
                     />
@@ -2191,7 +2137,7 @@ export default function CustomerProfilePage(props) {
                     }}
                     disabled={actionLoading}
                   >
-                    {actionLoading ? "Processing..." : "Complete Renewal"}
+                    {actionLoading ? "Processing..." : "Mark Renewed & Upload PDF"}
                   </button>
                 </div>
               </form>

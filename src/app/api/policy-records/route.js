@@ -11,7 +11,7 @@ import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dash
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import { getSavedAtDateFilter } from "@/lib/records/scoped-data";
-import { withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
+import { MANUAL_RENEWAL_IMPORT_METHOD, withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
 
 export const runtime = "nodejs";
 
@@ -195,7 +195,8 @@ export async function GET(request) {
     }
 
     if (andFilters.length > 0) {
-      where.AND = andFilters;
+      const existingAnd = where.AND ? (Array.isArray(where.AND) ? where.AND : [where.AND]) : [];
+      where.AND = [...existingAnd, ...andFilters];
     }
 
     const selectOptions = {
@@ -380,6 +381,12 @@ export async function POST(request) {
         createdById: actorId,
       },
     });
+    const renewalMatch = await linkRenewalMarkerToPolicy({
+      policyRecordId: record.id,
+      policyData: legacyPayload,
+      user,
+      actorId,
+    });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
     await saveHumanCorrections({
@@ -421,12 +428,13 @@ export async function POST(request) {
       userAgent,
       userId: actorId,
       organizationId: user.organizationId,
-      metadata: { sourceFile: record.sourceFile },
+      metadata: { sourceFile: record.sourceFile, renewedFromId: renewalMatch?.id || null },
     });
 
     return Response.json(
       normalizeRecord({
         ...record,
+        previousPolicyId: renewalMatch?.id || record.previousPolicyId,
         createdBy: { name: user.name, email: user.email },
         uploadedFile: uploadedFile
           ? {
@@ -443,6 +451,77 @@ export async function POST(request) {
       { status: 400 },
     );
   }
+}
+
+async function linkRenewalMarkerToPolicy({ policyRecordId, policyData, user, actorId }) {
+  const vehicle = normalizeLookup(policyData.vehicleNumber || policyData.registrationNumber);
+  const phone = normalizePhone(policyData.contactNumber || policyData.customerMobile || policyData.phone);
+  const name = normalizeLookup(policyData.insuredName || policyData.customerName);
+  if (!vehicle && !phone && !name) return null;
+
+  const markers = await prisma.policyRecord.findMany({
+    where: {
+      deletedAt: null,
+      ...(user.role === "SUPER_ADMIN" ? {} : { organizationId: user.organizationId }),
+      extractionMethod: MANUAL_RENEWAL_IMPORT_METHOD,
+      renewalStatus: "RENEWED",
+      renewedPolicyId: null,
+    },
+    select: {
+      id: true,
+      data: true,
+      reviewedData: true,
+    },
+    orderBy: [{ renewalDate: "desc" }, { updatedAt: "desc" }],
+    take: 250,
+  });
+
+  let best = null;
+  let bestScore = 0;
+  for (const marker of markers) {
+    const markerData = marker.reviewedData || marker.data || {};
+    let score = 0;
+    if (vehicle && vehicle === normalizeLookup(markerData.vehicleNumber || markerData.registrationNumber)) score += 4;
+    if (phone && phone === normalizePhone(markerData.contactNumber || markerData.customerMobile || markerData.phone)) score += 3;
+    if (name && name === normalizeLookup(markerData.insuredName || markerData.customerName)) score += 2;
+    if (score > bestScore) {
+      best = marker;
+      bestScore = score;
+    }
+  }
+
+  if (!best || bestScore < 3) return null;
+
+  await prisma.$transaction([
+    prisma.policyRecord.update({
+      where: { id: best.id },
+      data: {
+        renewedPolicyId: policyRecordId,
+        renewalDate: new Date(),
+        updatedById: actorId,
+      },
+    }),
+    prisma.policyRecord.update({
+      where: { id: policyRecordId },
+      data: {
+        previousPolicyId: best.id,
+        updatedById: actorId,
+      },
+    }),
+  ]);
+
+  return best;
+}
+
+function normalizeLookup(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function normalizePhone(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  return digits.length > 10 ? digits.slice(-10) : digits;
 }
 
 async function saveHumanCorrections({ uploadedFile, reviewedData, userId, organizationId }) {
