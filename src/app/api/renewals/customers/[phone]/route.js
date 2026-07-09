@@ -3,7 +3,6 @@ import { verifyJWT } from "@/lib/auth";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
 import {
-  isRenewalWindowPolicy,
   sortByDaysLeftAscending,
   withRenewalWindowDisplay,
 } from "@/lib/renewals/dates";
@@ -133,11 +132,7 @@ export async function GET(request, props) {
       })
     );
 
-    const windowPolicies = allPolicies
-      .filter((policy) => isRenewalWindowPolicy(policy))
-      .sort(sortByDaysLeftAscending);
-    // Fall back to all policies if none match the renewal window
-    let policies = windowPolicies.length > 0 ? windowPolicies : allPolicies.sort(sortByDaysLeftAscending);
+    let policies = [...allPolicies].sort(sortByDaysLeftAscending);
 
     // Fallback: if phone search found nothing, try fetching by explicit policyId
     if (policies.length === 0) {
@@ -243,8 +238,8 @@ export async function GET(request, props) {
     remarks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     // 5. Aggregate Customer Summary with Auto-Enrichment Scan from Policy Records
-    const latestPolicy = allPolicies[0] || {};
-    const uniqueCompanies = Array.from(new Set(allPolicies.map((p) => p.insuredName).filter(Boolean)));
+    const latestPolicy = policies[0] || {};
+    const uniqueCompanies = Array.from(new Set(policies.map((p) => p.insuredName).filter(Boolean)));
     const totalCompanies = uniqueCompanies.length;
 
     let enrichedContactPerson = "";
@@ -254,7 +249,7 @@ export async function GET(request, props) {
     let enrichedCity = "";
     let enrichedName = "";
 
-    for (const p of allPolicies) {
+    for (const p of policies) {
       if (!enrichedContactPerson && p.contactPerson) enrichedContactPerson = p.contactPerson;
       if (!enrichedEmail && p.email) enrichedEmail = p.email;
       if (!enrichedName && p.insuredName) enrichedName = p.insuredName;
