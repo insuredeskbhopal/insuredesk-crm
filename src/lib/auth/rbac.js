@@ -15,7 +15,7 @@ export function canAccessSharedResource(user, action, resourceOrgId) {
 
   if (user.role === UserRole.SUPER_ADMIN) return true;
 
-  if (resourceOrgId && resourceOrgId !== user.organizationId) {
+  if ((resourceOrgId || null) !== (user.organizationId || null)) {
     return false;
   }
 

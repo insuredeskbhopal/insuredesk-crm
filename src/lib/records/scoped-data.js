@@ -252,12 +252,12 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
       const dupQuery = `
         SELECT id FROM pdf_records
         WHERE deleted_at IS NULL
-          AND ($1::boolean OR organization_id = $2::uuid)
+          AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
           AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (
             SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
             FROM pdf_records
             WHERE deleted_at IS NULL
-              AND ($1::boolean OR organization_id = $2::uuid)
+              AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
               ${options.excludeRenewalSources !== false ? MANUAL_RENEWAL_SQL_EXCLUSION : ""}
               AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
             GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
@@ -383,7 +383,7 @@ async function loadDuplicatePolicyRecords({
         SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') AS policy_number
       FROM pdf_records
       WHERE deleted_at IS NULL
-        AND ($1::boolean OR organization_id = $2::uuid)
+        AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
         ${renewalSourceWhere}
         ${sourceFileWhere}
         AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
@@ -394,7 +394,7 @@ async function loadDuplicatePolicyRecords({
       SELECT id, saved_at
       FROM pdf_records
       WHERE deleted_at IS NULL
-        AND ($1::boolean OR organization_id = $2::uuid)
+        AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
         ${renewalSourceWhere}
         ${sourceFileWhere}
         AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (SELECT policy_number FROM duplicate_keys)

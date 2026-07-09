@@ -107,7 +107,7 @@ export async function GET(request) {
           ) AS search_text
         FROM pdf_records
         WHERE deleted_at IS NULL
-          AND ($1::boolean OR organization_id = $2::uuid)
+          AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
       ),
       parsed_policies AS (
         SELECT 
@@ -218,7 +218,7 @@ export async function GET(request) {
                   AND action IN ('RENEWAL_REMARK_ADDED', 'POLICY_RENEWED', 'POLICY_MARK_LOST', 'RENEWAL_REASSIGNED', 'WHATSAPP_REMINDER_SENT')
                   AND created_at >= $3::date::timestamp
                   AND created_at < ($3::date + INTERVAL '1 day')
-                  AND ($1::boolean OR organization_id = $2::uuid)
+                  AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
               )
             ))
             OR ($4 = 'priority_high' AND LOWER(priority) IN ('high', 'urgent'))
@@ -275,7 +275,7 @@ export async function GET(request) {
                 AND action IN ('RENEWAL_REMARK_ADDED', 'POLICY_RENEWED', 'POLICY_MARK_LOST', 'RENEWAL_REASSIGNED', 'WHATSAPP_REMINDER_SENT')
                 AND created_at >= $3::date::timestamp
                 AND created_at < ($3::date + INTERVAL '1 day')
-                AND ($1::boolean OR organization_id = $2::uuid)
+                AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
             )
           ) THEN id
         END)::integer AS today_work

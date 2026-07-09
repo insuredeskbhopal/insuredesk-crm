@@ -114,7 +114,7 @@ export async function GET(request) {
           ) AS policy_haystack
         FROM pdf_records
         WHERE deleted_at IS NULL
-          AND ($1::boolean OR organization_id = $2::uuid)
+          AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
       ),
       parsed_policies AS (
         SELECT
@@ -177,7 +177,7 @@ export async function GET(request) {
         FROM customer_profiles
         WHERE deleted_at IS NULL
           AND LENGTH(regexp_replace(phone, '[^0-9]', '', 'g')) >= 10
-          AND ($1::boolean OR organization_id = $2::uuid)
+          AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
         GROUP BY RIGHT(regexp_replace(phone, '[^0-9]', '', 'g'), 10)
       ),
       active_renewals AS (

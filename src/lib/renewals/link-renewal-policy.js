@@ -10,7 +10,7 @@ export async function linkRenewalMarkerToPolicy({ policyRecordId, policyData, us
   const markers = await prisma.policyRecord.findMany({
     where: {
       deletedAt: null,
-      ...(user.organizationId ? { organizationId: user.organizationId } : {}),
+      ...(user.role === "SUPER_ADMIN" && !user.organizationId ? {} : { organizationId: user.organizationId || null }),
       extractionMethod: MANUAL_RENEWAL_IMPORT_METHOD,
       renewalStatus: "RENEWED",
       renewedPolicyId: null,

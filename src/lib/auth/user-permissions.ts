@@ -37,9 +37,7 @@ export function getVisibleUserWhere(actor: { role?: string | null; organizationI
   };
 
   if (actor.role !== "SUPER_ADMIN") {
-    if (actor.organizationId) {
-      where.organizationId = actor.organizationId;
-    }
+    where.organizationId = actor.organizationId ?? null;
 
     if (actor.role === "ADMIN") {
       where.role = { in: getAssignableRoles(actor.role) };

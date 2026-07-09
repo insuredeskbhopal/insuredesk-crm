@@ -34,7 +34,7 @@ export async function GET(request) {
           COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry
         FROM pdf_records
         WHERE deleted_at IS NULL
-          AND ($1::boolean OR organization_id = $2::uuid)
+          AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
       ),
       parsed_policies AS (
         SELECT

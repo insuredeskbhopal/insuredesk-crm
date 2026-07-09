@@ -10,6 +10,7 @@ import {
   applyLOBRestriction,
   getLOBFilterSQL,
 } from "../src/lib/auth/rbac";
+import { getVisibleUserWhere } from "../src/lib/auth/user-permissions";
 
 describe("SaaS Multi-Tenancy & RBAC Tests", () => {
   const orgA = "org-aaaa-aaaa-aaaa-aaaa";
@@ -86,6 +87,16 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(canAccessSharedResource(session, "write", orgA)).toBe(false);
       expect(canAccessSharedResource(session, "delete", orgA)).toBe(false);
       expect(canAccessSharedResource(session, "read", orgB)).toBe(false);
+    });
+
+    it("treats null organization as a real tenant boundary for legacy renewal data", () => {
+      const nullOrgAgent = { id: user1, role: UserRole.AGENT, organizationId: null };
+      const orgAgent = { id: user2, role: UserRole.AGENT, organizationId: orgA };
+
+      expect(canAccessSharedResource(nullOrgAgent, "read", null)).toBe(true);
+      expect(canAccessSharedResource(nullOrgAgent, "write", null)).toBe(true);
+      expect(canAccessSharedResource(nullOrgAgent, "read", orgA)).toBe(false);
+      expect(canAccessSharedResource(orgAgent, "read", null)).toBe(false);
     });
   });
 
@@ -171,6 +182,29 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       const filter = getTenantFilter(session, "write");
 
       expect(filter.id).toBe("00000000-0000-0000-0000-000000000000");
+    });
+
+    it("scopes null-organization agents to null organization shared CRM records", () => {
+      const session = { id: user1, role: UserRole.AGENT, organizationId: null };
+      const filter = getTenantFilter(session, "read");
+
+      expect(filter).toEqual({ organizationId: null, deletedAt: null });
+    });
+  });
+
+  describe("getVisibleUserWhere", () => {
+    it("keeps null-organization managers inside the null organization team", () => {
+      const session = { id: user1, role: UserRole.MANAGER, organizationId: null };
+      const filter = getVisibleUserWhere(session);
+
+      expect(filter).toEqual({ deletedAt: null, organizationId: null });
+    });
+
+    it("keeps organization users scoped to their own team", () => {
+      const session = { id: user1, role: UserRole.MANAGER, organizationId: orgA };
+      const filter = getVisibleUserWhere(session);
+
+      expect(filter).toEqual({ deletedAt: null, organizationId: orgA });
     });
   });
 

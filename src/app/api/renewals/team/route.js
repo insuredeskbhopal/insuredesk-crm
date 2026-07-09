@@ -15,11 +15,10 @@ export async function GET(request) {
       return Response.json({ error: "Invalid session" }, { status: 401 });
     }
 
-    const where = user.organizationId
-      ? { organizationId: user.organizationId, role: { not: "VIEWER" } }
-      : user.role === "SUPER_ADMIN"
+    const where =
+      user.role === "SUPER_ADMIN" && !user.organizationId
         ? { role: { not: "VIEWER" } }
-        : { id: "00000000-0000-0000-0000-000000000000" };
+        : { organizationId: user.organizationId || null, role: { not: "VIEWER" } };
 
     const users = await prisma.user.findMany({
       where,

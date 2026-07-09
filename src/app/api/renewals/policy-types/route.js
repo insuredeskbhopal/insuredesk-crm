@@ -43,7 +43,7 @@ export async function GET(request) {
           ) AS policy_haystack
         FROM pdf_records
         WHERE deleted_at IS NULL
-          AND ($1::boolean OR organization_id = $2::uuid)
+          AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
       ),
       parsed_policies AS (
         SELECT
