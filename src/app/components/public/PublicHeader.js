@@ -66,6 +66,41 @@ export default function PublicHeader() {
                 margin-left: -50px !important;
             }
         }
+        .landing-floating-consultation {
+            position: fixed !important;
+            bottom: 24px !important;
+            left: 24px !important;
+            z-index: 90 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 12px 24px !important;
+            border-radius: 999px !important;
+            background: linear-gradient(135deg, #031638, #102b5f) !important;
+            color: #ffffff !important;
+            font-size: 14px !important;
+            font-weight: 900 !important;
+            text-decoration: none !important;
+            box-shadow: 0 12px 28px rgba(3, 22, 56, 0.25) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease !important;
+        }
+        .landing-floating-consultation:hover {
+            transform: translateY(-2px) scale(1.02) !important;
+            box-shadow: 0 16px 32px rgba(3, 22, 56, 0.35) !important;
+            background: linear-gradient(135deg, #102b5f, #031638) !important;
+        }
+        .landing-floating-consultation .material-symbols-outlined {
+            font-size: 20px !important;
+        }
+        @media (max-width: 640px) {
+            .landing-floating-consultation {
+                bottom: 16px !important;
+                left: 16px !important;
+                padding: 10px 18px !important;
+                font-size: 13px !important;
+            }
+        }
       `,
         }}
       />
@@ -102,8 +137,8 @@ export default function PublicHeader() {
               <span className="landing-nav-phone-label">{BUSINESS_DETAILS.phone}</span>
             </a>
 
-            <Link href="/contact" className="landing-nav-cta">
-              Free Consultation
+            <Link href="/login" className="landing-nav-cta">
+              Login
             </Link>
 
             <button
@@ -174,11 +209,18 @@ export default function PublicHeader() {
             </span>
             Call {BUSINESS_DETAILS.phone}
           </a>
-          <Link href="/contact" className="landing-mobile-menu-cta">
-            Get Free Consultation
+          <Link href="/login" className="landing-mobile-menu-cta">
+            Login
           </Link>
         </div>
       </aside>
+
+      <Link href="/contact" className="landing-floating-consultation" aria-label="Get Consultation">
+        <span className="material-symbols-outlined" aria-hidden="true">
+          support_agent
+        </span>
+        <span>Get Consultation</span>
+      </Link>
     </>
   );
 }

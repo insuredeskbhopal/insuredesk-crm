@@ -152,6 +152,21 @@ export const OPERATIONS_MODULES = [
       "Queue manager",
     ],
   },
+  {
+    id: "client-management",
+    name: "Client Management",
+    description: "Manage client access portals, view Client IDs, configure Client MPINs, and manage credentials.",
+    route: "/operations/client-management",
+    buttonLabel: "Open Client Management",
+    accent: "emerald",
+    functions: [
+      "View Client ID",
+      "Configure Client MPIN",
+      "Create new client login",
+      "Search client list",
+      "Update profile phone/email",
+    ],
+  },
 ];
 
 export const FUTURE_OPERATIONS_MODULES = [

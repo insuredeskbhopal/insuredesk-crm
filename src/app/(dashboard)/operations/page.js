@@ -34,6 +34,7 @@ const ICONS = {
   "lead-management": Handshake,
   "birthday-management": Cake,
   "whatsapp-setup": Smartphone,
+  "client-management": BadgeCheck,
 };
 
 const DEFAULT_METRICS = {

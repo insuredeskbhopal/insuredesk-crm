@@ -613,3 +613,17 @@ tbody tr:hover {
     transition-duration: 1ms !important;
   }
 }
+
+/* Client Portal Color Overrides to bypass global black text constraints */
+.force-white {
+  color: #ffffff !important;
+}
+.force-mint {
+  color: #CFEFE4 !important;
+}
+.force-emerald-light {
+  color: #A7F3D0 !important;
+}
+.force-slate-light {
+  color: #E2E8F0 !important;
+}

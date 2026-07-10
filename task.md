@@ -1,0 +1,4 @@
+- [x] Implement client portal page `src/app/client/portal/page.js`
+- [x] Harden `src/middleware.ts` with client vs staff checks
+- [x] Update redirect target in `src/app/(auth)/crm/admin/login/page.js` based on role
+- [x] Run linter and tests to verify correctness

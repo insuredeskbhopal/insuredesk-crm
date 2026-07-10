@@ -32,3 +32,8 @@ Rules:
 - No boilerplate nobody asked for.
 - Deletion over addition. Boring over clever. Fewest files possible.
 - Shortest working diff wins, but only once you understand the problem. The smallest change in the wrong place is a bug.
+
+# Public vs CRM Path Guidelines (Strict Security)
+
+- **Hide CRM Routes**: Under no circumstances should any link, CTA button, form, or redirection in the public-facing area of the website expose or point to the internal CRM routes (such as `/crm/*` or `/crm/admin/login`).
+- **Public Login Access**: Public/client entry points must always point to `/login` (or equivalent clean public routes). Staff know the secret `/crm/admin/login` path manually.

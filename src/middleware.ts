@@ -44,14 +44,21 @@ export async function middleware(request: NextRequest) {
   }
 
   let isAuthenticated = false;
+  let userRole = "";
   if (token) {
     try {
-      await jwtVerify(token, encodedSecret);
+      const { payload } = await jwtVerify(token, encodedSecret);
       isAuthenticated = true;
+      userRole = (payload.role as string) || "";
     } catch {
       isAuthenticated = false;
     }
   }
+
+  const isClientRoute = pathname.startsWith("/client");
+  const isStaffRoute = PROTECTED_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
 
   const isAuthPage = pathname === ADMIN_LOGIN_PATH;
   const isAuthApi = pathname.startsWith("/api/auth");
@@ -59,35 +66,53 @@ export async function middleware(request: NextRequest) {
   const isBlogPage = pathname.startsWith("/blog");
   const isPublicPage = PUBLIC_ROUTE_PATHS.includes(pathname) || pathname === "/not-found" || isAuthPage || isBlogPage;
 
-  if (pathname === "/login" || pathname === "/signup") {
-    return NextResponse.redirect(new URL(isAuthenticated ? "/dashboard" : "/not-found", request.url));
+  // Handle client / staff API access security
+  if (pathname.startsWith("/api/") && !isAuthApi && !isCronApi && pathname !== "/api/contact" && !pathname.startsWith("/api/client/")) {
+    if (!isAuthenticated) {
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+    }
+    if (userRole === "CLIENT") {
+      return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
+    }
   }
 
-  const isPublicApi = pathname === "/api/contact";
-
-  if (isAuthApi || isCronApi || isPublicApi) {
+  // Handle Login & Signup paths redirection based on role
+  if (pathname === "/login" || pathname === "/signup") {
+    if (isAuthenticated) {
+      return NextResponse.redirect(
+        new URL(userRole === "CLIENT" ? "/client/portal" : "/dashboard", request.url),
+      );
+    }
     return NextResponse.next();
   }
 
-  if (!isAuthenticated && !isPublicPage) {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
-    }
-
-    const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some(
-      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-    );
-    if (!isProtectedRoute) {
-      return NextResponse.next();
-    }
-
-    const notFoundUrl = new URL("/not-found", request.url);
-    return NextResponse.redirect(notFoundUrl);
+  if (isAuthApi || isCronApi || pathname === "/api/contact") {
+    return NextResponse.next();
   }
 
-  if (isAuthenticated && isAuthPage) {
-    const dashboardUrl = new URL("/dashboard", request.url);
-    return NextResponse.redirect(dashboardUrl);
+  // Guest rules (not logged in)
+  if (!isAuthenticated) {
+    if (isClientRoute) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+    if (isStaffRoute || !isPublicPage) {
+      return NextResponse.rewrite(new URL("/not-found", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // Logged-in client rules
+  if (userRole === "CLIENT") {
+    if (isStaffRoute || isAuthPage) {
+      return NextResponse.redirect(new URL("/client/portal", request.url));
+    }
+  }
+
+  // Logged-in staff rules
+  if (userRole !== "CLIENT") {
+    if (isClientRoute || isAuthPage) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
   }
 
   return NextResponse.next();
