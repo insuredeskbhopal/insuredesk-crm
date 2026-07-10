@@ -445,10 +445,13 @@ model CustomerProfile {
   @@index([organizationId, nextFollowUpDate])
   @@index([organizationId, createdAt])
   @@index([createdById, deletedAt, updatedAt])
+  googleEmail         String?      @unique @map("google_email")
+
   @@index([phone, deletedAt])
   @@index([status, deletedAt])
   @@index([createdById])
   @@index([deletedAt])
+  @@index([googleEmail])
   @@map("customer_profiles")
 }
 

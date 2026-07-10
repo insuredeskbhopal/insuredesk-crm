@@ -1,4 +1,3 @@
-/* global localStorage */
 "use client";
 
 import { useState } from "react";
@@ -16,7 +15,7 @@ export default function ClientLoginPage() {
 
   // Google Login flow states
   const [loginMode, setLoginMode] = useState("regular"); // "regular" or "google"
-  const [googleStage, setGoogleStage] = useState("select_account"); // "select_account", "verify_link", "verify_mpin"
+  const [googleStage, setGoogleStage] = useState("verify_link"); // "verify_link" (only stage needed for unlinked accounts)
   const [googleEmail, setGoogleEmail] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [mpin, setMpin] = useState("");
@@ -79,16 +78,26 @@ export default function ClientLoginPage() {
                 const selectedEmail = userInfo.email;
 
                 setGoogleEmail(selectedEmail);
-                setLoginMode("google");
 
-                const linkedId = localStorage.getItem(`linked_customer_id_${selectedEmail}`);
-                if (linkedId) {
-                  setCustomerId(linkedId);
-                  setGoogleStage("verify_mpin");
-                } else {
-                  setCustomerId("");
-                  setGoogleStage("verify_link");
+                // Check if this Google email is already linked in DB
+                const checkRes = await fetch("/api/auth/client/google-mpin-login", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ googleEmail: selectedEmail }),
+                });
+                const checkData = await checkRes.json();
+
+                if (checkData.success && checkData.linked) {
+                  // Already linked — auto-login, skip everything
+                  setSuccess("Verified. Redirecting to portal...");
+                  setTimeout(() => { window.location.href = "/client/portal"; }, 800);
+                  return;
                 }
+
+                // Not linked yet — show one-time verification form
+                setLoginMode("google");
+                setGoogleStage("verify_link");
+                setCustomerId("");
               } catch (err) {
                 setError(err.message);
               } finally {
@@ -120,55 +129,6 @@ export default function ClientLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/client/verify-mpin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customerId, mpin }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Invalid verification details.");
-      }
-
-      localStorage.setItem(`linked_customer_id_${googleEmail}`, customerId);
-
-      const loginRes = await fetch("/api/auth/client/google-mpin-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ googleEmail, customerId, mpin }),
-      });
-
-      const loginData = await loginRes.json();
-      if (!loginRes.ok || !loginData.success) {
-        throw new Error(loginData.error || "Failed to establish session.");
-      }
-
-      setSuccess(`Account verified & linked. Redirecting...`);
-
-      setTimeout(() => {
-        window.location.href = "/client/portal";
-      }, 1200);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyMpinOnly = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (!mpin) {
-      setError("MPIN is required.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
       const res = await fetch("/api/auth/client/google-mpin-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -177,10 +137,10 @@ export default function ClientLoginPage() {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Incorrect MPIN.");
+        throw new Error(data.error || "Invalid verification details.");
       }
 
-      setSuccess("Logged in successfully. Redirecting...");
+      setSuccess("Account linked successfully. Redirecting...");
 
       setTimeout(() => {
         window.location.href = "/client/portal";
@@ -754,11 +714,7 @@ export default function ClientLoginPage() {
               <p>
                 {loginMode === "regular"
                   ? "Access coverages using your registered credentials"
-                  : googleStage === "select_account"
-                  ? "Select a Google identity profile"
-                  : googleStage === "verify_link"
-                  ? "Verify credentials to link Google session"
-                  : "Verify security code to view portal"}
+                  : "Verify credentials to link your Google account"}
               </p>
             </div>
 
@@ -938,72 +894,7 @@ export default function ClientLoginPage() {
                   </form>
                 )}
 
-                {/* STAGE 4: RETURN LOGIN MPIN CHECK */}
-                {loginMode === "google" && googleStage === "verify_mpin" && (
-                  <form onSubmit={handleVerifyMpinOnly} className="space-y-4">
-                    <div className="info-pill text-center">
-                      Signed in as <strong className="text-slate-800">{googleEmail}</strong>
-                    </div>
 
-                    <div className="input-group">
-                      <span>Client ID</span>
-                      <div className="input-container">
-                        <input
-                          type="text"
-                          className="input-field text-slate-500 bg-slate-50/50"
-                          value={customerId}
-                          readOnly
-                          disabled
-                        />
-                      </div>
-                    </div>
-
-                    <div className="input-group">
-                      <span>Enter Client MPIN</span>
-                      <div className="input-container">
-                        <KeyRound size={16} className="input-icon" />
-                        <input
-                          type="password"
-                          maxLength={4}
-                          placeholder="••••"
-                          className="input-field text-center tracking-widest text-lg"
-                          value={mpin}
-                          onChange={(e) => setMpin(e.target.value)}
-                          required
-                          disabled={loading}
-                        />
-                      </div>
-                    </div>
-
-                    <button type="submit" className="submit-btn" disabled={loading}>
-                      {loading ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        <LogIn size={16} />
-                      )}
-                      <span>Verify Code & Enter</span>
-                    </button>
-
-                    <div className="flex flex-col gap-1 items-center">
-                      <button
-                        type="button"
-                        onClick={handleGoogleStart}
-                        className="back-action-btn"
-                      >
-                        <ArrowLeft size={13} />
-                        <span>Switch Google Profile</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={resetFlow}
-                        className="back-action-btn mt-1"
-                      >
-                        <ArrowLeft size={13} />
-                        <span>Back to normal Sign In</span>
-                      </button>
-                    </div>
-                  </form>
-                )}
               </>
             )}
 
