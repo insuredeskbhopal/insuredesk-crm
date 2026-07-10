@@ -18,6 +18,8 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  AlertTriangle,
+  CalendarDays,
 } from "lucide-react";
 
 
@@ -339,7 +341,7 @@ export default function ClientPortal() {
                   onClick={() => setActiveTab("policies")}
                   className="bg-white/75 backdrop-blur-md border border-white/50 p-6 rounded-2xl shadow-sm hover:shadow-md active:scale-98 transition-all flex items-center gap-4 text-left cursor-pointer"
                 >
-                  <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-sm">
+                  <div className="h-12 w-12 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-200 shadow-sm">
                     <FileText size={22} />
                   </div>
                   <div>
@@ -352,7 +354,7 @@ export default function ClientPortal() {
                   onClick={() => setActiveTab("claims")}
                   className="bg-white/75 backdrop-blur-md border border-white/50 p-6 rounded-2xl shadow-sm hover:shadow-md active:scale-98 transition-all flex items-center gap-4 text-left cursor-pointer"
                 >
-                  <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-sm">
+                  <div className="h-12 w-12 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-200 shadow-sm">
                     <Shield size={22} />
                   </div>
                   <div>
@@ -362,7 +364,7 @@ export default function ClientPortal() {
                 </div>
 
                 <div className="bg-gradient-to-tr from-emerald-50/70 to-teal-50/70 border border-emerald-100/85 p-6 rounded-2xl shadow-sm flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-white text-emerald-600 flex items-center justify-center border border-emerald-250/20 shadow-sm">
+                  <div className="h-12 w-12 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-200 shadow-sm">
                     <Phone size={20} />
                   </div>
                   <div>
@@ -377,7 +379,7 @@ export default function ClientPortal() {
                 {/* Emergency Triage Checklist */}
                 <div className="bg-white/75 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm">
                   <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
-                    <span>🚨</span> Accident & Emergency Triage
+                    <AlertTriangle size={14} /> Accident & Emergency Triage
                   </h3>
                   <p className="text-xs text-slate-500 leading-relaxed mb-4">
                     In the event of an accident or loss, follow this procedure to secure your coverage claims:
@@ -402,7 +404,7 @@ export default function ClientPortal() {
                 <div className="bg-white/75 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
                   <div>
                     <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
-                      <span>📅</span> Policy Renewal Timelines
+                      <CalendarDays size={14} /> Policy Renewal Timelines
                     </h3>
                     {policies.length === 0 ? (
                       <p className="text-xs text-slate-400 py-6 text-center">No active policies tracked.</p>
@@ -952,7 +954,7 @@ export default function ClientPortal() {
                   onClick={() => setActiveTab("policies")}
                   className="bg-white border border-slate-200/50 p-4 rounded-2xl shadow-sm active:scale-95 transition-all flex items-center gap-3 h-20 cursor-pointer"
                 >
-                  <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shrink-0 shadow-sm">
+                  <div className="h-10 w-10 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-200 shrink-0 shadow-sm">
                     <FileText size={20} />
                   </div>
                   <div className="min-w-0">
@@ -965,7 +967,7 @@ export default function ClientPortal() {
                   onClick={() => setActiveTab("claims")}
                   className="bg-white border border-slate-200/50 p-4 rounded-2xl shadow-sm active:scale-95 transition-all flex items-center gap-3 h-20 cursor-pointer"
                 >
-                  <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shrink-0 shadow-sm">
+                  <div className="h-10 w-10 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-200 shrink-0 shadow-sm">
                     <Shield size={20} />
                   </div>
                   <div className="min-w-0">
@@ -985,7 +987,7 @@ export default function ClientPortal() {
               {/* Policy Expiries list */}
               <div className="bg-white border border-slate-200/50 rounded-2xl p-4 shadow-sm space-y-3.5">
                 <h4 className="text-[10px] font-semibold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                  <span>📅</span> Policy Renewal Expiries
+                  <CalendarDays size={12} /> Policy Renewal Expiries
                 </h4>
                 {policies.length === 0 ? (
                   <p className="text-[10px] text-slate-400 py-3 text-center">No active policies tracked.</p>
@@ -1019,7 +1021,7 @@ export default function ClientPortal() {
               {/* Accident Emergency Guide */}
               <div className="bg-white border border-slate-200/50 rounded-2xl p-4 shadow-sm space-y-3">
                 <h4 className="text-[10px] font-semibold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                  <span>🚨</span> Accident & Loss Emergency Guide
+                  <AlertTriangle size={12} /> Accident & Loss Emergency Guide
                 </h4>
                 <p className="text-[10px] text-slate-500 leading-relaxed">
                   In case of vehicle accidents or emergency property damage:
