@@ -1,7 +1,7 @@
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 import { validateContactPerson, validateContactNumber } from "@/lib/records/validation";
 
-export const MANUAL_REQUIRED_FIELDS = ["contactPerson", "contactNumber"];
+export const MANUAL_REQUIRED_FIELDS = ["contactPerson", "contactNumber", "clientId"];
 export const MOTOR_MANUAL_REQUIRED_FIELDS = [];
 export const COMMON_REVIEW_FIELDS = ["whatsappGroupName"];
 
