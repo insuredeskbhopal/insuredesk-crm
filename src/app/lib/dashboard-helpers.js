@@ -65,7 +65,7 @@ export const FIELD_GROUPS = [
   },
   {
     title: "Contact & Parties",
-    fields: ["contactPerson", "contactNumber", "whatsappGroupName"],
+    fields: ["contactPerson", "contactNumber", "whatsappGroupName", "clientId"],
   },
   {
     title: "Payment",
@@ -89,6 +89,7 @@ export const FIELD_GROUPS = [
 ];
 
 export const FIELD_SETUP = [
+  ["Client ID", "clientId"],
   ["Customer ID", "customerId"],
   ["Source File", "sourceFile"],
   ["Insured Name", "insuredName"],

@@ -171,6 +171,9 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
                           onApplySuggestion={(suggestion) =>
                             applyAiSuggestionToReviewField({ fieldKey: key, suggestion, onFieldChange })
                           }
+                          insuredName={getPreviewValue("insuredName")}
+                          contactNumber={getPreviewValue("contactNumber")}
+                          email={getPreviewValue("email")}
                         />
                       );
                     })}

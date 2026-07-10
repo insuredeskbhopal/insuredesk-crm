@@ -47,6 +47,7 @@ export async function POST(request) {
       customerId: customer.id,
       email: customer.email,
       name: customer.name,
+      phone: cleanDbPhone,
       organizationId: customer.organizationId
     });
 

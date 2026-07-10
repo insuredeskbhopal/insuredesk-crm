@@ -965,6 +965,21 @@ export default function Dashboard({
         setAlert(null);
         const isDynamicPolicySave =
           (activePage === "bulk-entry" || activePage === "dashboard") && selectedUpload?.id;
+
+        const targetClientId = isDynamicPolicySave
+          ? (selectedUpload?.reviewedData?.clientId || selectedUpload?.extractedData?.clientId)
+          : form.clientId;
+
+        if (!targetClientId) {
+          setAlert({
+            type: "error",
+            title: "Client ID Required",
+            message: "You must link this policy to a Client ID before saving. Please use the search assistant under 'Client ID' to link an existing client, or request the admin to create a new client first.",
+          });
+          setToast("Client ID is required");
+          return;
+        }
+
         if ((activePage === "bulk-entry" || activePage === "dashboard") && !selectedUpload?.id) {
           setAlert({
             type: "info",
@@ -2372,6 +2387,9 @@ export default function Dashboard({
                         wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
                         error={error}
                         disabled={isContactNumber && Boolean(contactPersonError)}
+                        insuredName={form.insuredName}
+                        contactNumber={form.contactNumber}
+                        email={form.email}
                       />
                     );
                   })}
