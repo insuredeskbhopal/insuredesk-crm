@@ -791,6 +791,15 @@ export default function Dashboard({
     startSaving(async () => {
       try {
         setAlert(null);
+        if (!editForm.clientId) {
+          setAlert({
+            type: "error",
+            title: "Client ID Required",
+            message: "You must link this policy to a Client ID before saving. Please use the search assistant under 'Client ID' to link an existing client, or request the admin to create a new client first.",
+          });
+          setToast("Client ID is required");
+          return;
+        }
         if (!editValidation.valid) {
           const message = formatReviewValidationError(
             editValidation.missingRequired,

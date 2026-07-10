@@ -380,6 +380,9 @@ export default function PolicyDetailCard({
                           wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
                           error={error}
                           disabled={isContactNumber && Boolean(contactPersonError)}
+                          insuredName={editForm.insuredName}
+                          contactNumber={editForm.contactNumber}
+                          email={editForm.email}
                         />
                       );
                     })}
