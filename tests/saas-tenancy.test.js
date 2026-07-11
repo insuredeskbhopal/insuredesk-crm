@@ -229,7 +229,7 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
   });
 
   describe("getCustomerProfileScopedFilter", () => {
-    it("scopes agents to their own customer profiling records", () => {
+    it("scopes agents to their own lead generation records", () => {
       const session = { userId: user1, role: UserRole.AGENT, organizationId: orgA };
       const filter = getCustomerProfileScopedFilter(session);
 
@@ -240,7 +240,7 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       });
     });
 
-    it("scopes managers, admins, and viewers to their own customer profiling records", () => {
+    it("scopes managers, admins, and viewers to their own lead generation records", () => {
       for (const role of [UserRole.MANAGER, UserRole.ADMIN, UserRole.VIEWER]) {
         const session = { userId: user1, role, organizationId: orgA };
         const filter = getCustomerProfileScopedFilter(session);
@@ -253,7 +253,7 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       }
     });
 
-    it("scopes super admin to their own customer profiling records", () => {
+    it("scopes super admin to their own lead generation records", () => {
       const session = { userId: user1, role: UserRole.SUPER_ADMIN, organizationId: orgA };
       const filter = getCustomerProfileScopedFilter(session);
 

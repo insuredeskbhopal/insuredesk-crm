@@ -17,7 +17,7 @@ export async function GET(request) {
     const orgId = session.organizationId;
     const customerId = session.customerId;
 
-    const customer = await prisma.customerProfile.findFirst({
+    const customer = await prisma.clientAccount.findFirst({
       where: {
         id: customerId,
         organizationId: orgId,

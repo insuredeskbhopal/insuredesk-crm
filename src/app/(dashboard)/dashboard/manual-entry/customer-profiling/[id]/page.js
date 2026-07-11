@@ -293,7 +293,7 @@ export default function CustomerProfileDetailPage({ params }) {
       remark: text,
       rawRemark: text,
       outcome: convert ? "Converted" : remarkForm.outcome,
-      mode: "Customer Profiling",
+      mode: "Lead Generation",
       priority: "Normal",
       nextFollowUpDate: remarkForm.nextFollowUpDate,
       policyInterest: remarkForm.policyInterests.join(", "),
@@ -737,7 +737,7 @@ export default function CustomerProfileDetailPage({ params }) {
         <button
           className="customer-portfolio-back"
           type="button"
-          onClick={() => router.push("/dashboard/manual-entry/customer-profiling")}
+          onClick={() => router.push("/dashboard/manual-entry/lead-generation")}
         >
           <ArrowLeft size={15} /> Back to Profiles
         </button>
@@ -754,7 +754,7 @@ export default function CustomerProfileDetailPage({ params }) {
       <button
         className="customer-portfolio-back"
         type="button"
-        onClick={() => router.push("/dashboard/manual-entry/customer-profiling")}
+        onClick={() => router.push("/dashboard/manual-entry/lead-generation")}
       >
         <ArrowLeft size={15} /> Back to Profiles
       </button>

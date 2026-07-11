@@ -1051,7 +1051,7 @@ export default function CustomerProfilingPage() {
     });
     setAlert({
       type: "success",
-      message: "Policy customer loaded with saved details. Save Profile to add it to Customer Profiling.",
+      message: "Policy customer loaded with saved details. Save Lead to add it to Lead Generation.",
     });
   }
 
@@ -1119,7 +1119,7 @@ export default function CustomerProfilingPage() {
         if (!selectedExistingId && searchResults.claimedByAnotherUser) {
           setAlert({
             type: "error",
-            message: "This phone number is already claimed by another user in Customer Profiling.",
+            message: "This phone number is already claimed by another user in Lead Generation.",
           });
           return;
         }
@@ -1236,7 +1236,7 @@ export default function CustomerProfilingPage() {
   function deleteProfile(profile) {
     if (!profile?.id) return;
     const confirmed = window.confirm(
-      `Delete customer profiling lead for ${profile.name || profile.phone || "this customer"}?`,
+      `Delete lead generation record for ${profile.name || profile.phone || "this customer"}?`,
     );
     if (!confirmed) return;
 
@@ -1625,7 +1625,7 @@ export default function CustomerProfilingPage() {
     <div className="customer-profiling-page">
       <PageHeader
         eyebrow="Manual Entry"
-        title="Customer Profiling"
+        title="Lead Generation"
         subtitle="Create cross-sell and follow-up profiles before converting them into policy work."
       />
 
@@ -1674,7 +1674,7 @@ export default function CustomerProfilingPage() {
             <div>
               <strong>
                 {isClaimedByAnotherUser
-                  ? "This phone number is already claimed in Customer Profiling."
+                  ? "This phone number is already claimed in Lead Generation."
                   : hasExternalMatches
                     ? "This phone number is being handled by another user."
                     : "This phone number has matching records."}
@@ -1715,7 +1715,7 @@ export default function CustomerProfilingPage() {
         <section className="customer-profile-card customer-profile-list-panel">
           <div className="customer-profile-section-head">
             <div>
-              <h2>Saved Customer Profiles</h2>
+              <h2>Saved Lead Profiles</h2>
               <p>Review added clients, open profiles, or add follow-up remarks from the action column.</p>
             </div>
           </div>
@@ -1761,7 +1761,7 @@ export default function CustomerProfilingPage() {
             </div>
             <ProfileListingTable
               profiles={profiles}
-              onEdit={(profile) => router.push(`/dashboard/manual-entry/customer-profiling/${profile.id}`)}
+              onEdit={(profile) => router.push(`/dashboard/manual-entry/lead-generation/${profile.id}`)}
               onDelete={deleteProfile}
               canDelete={currentUser?.role === "SUPER_ADMIN"}
             />
@@ -2519,7 +2519,7 @@ function ProfileListingTable({ profiles, onEdit, onDelete, canDelete = false }) 
           ) : (
             <tr>
               <td colSpan={9} className="empty">
-                No customer profiles found.
+                No lead profiles found.
               </td>
             </tr>
           )}

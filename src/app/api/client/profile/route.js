@@ -14,7 +14,7 @@ export async function GET(request) {
       return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
     }
 
-    const customer = await prisma.customerProfile.findFirst({
+    const customer = await prisma.clientAccount.findFirst({
       where: {
         id: session.customerId,
         organizationId: session.organizationId,
@@ -25,11 +25,6 @@ export async function GET(request) {
         name: true,
         phone: true,
         email: true,
-        dob: true,
-        address: true,
-        city: true,
-        state: true,
-        customerType: true,
         createdAt: true,
       },
     });

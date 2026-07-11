@@ -13965,7 +13965,7 @@ th {
     padding: 4px 10px !important;
   }
 
-  /* Customer Profiling Mobile Adjustments */
+  /* Lead Generation Mobile Adjustments */
   .profile-counter-grid {
     grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
@@ -14244,4 +14244,3 @@ th {
 .tb-notif-tab:hover:not(.active) {
   background-color: rgba(0, 0, 0, 0.04);
 }
-

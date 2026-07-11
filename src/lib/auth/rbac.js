@@ -40,8 +40,8 @@ export function canAccessSharedResource(user, action, resourceOrgId) {
 }
 
 /**
- * Customer Profiling is the only restricted module.
- * Every role can access only their own customer profiling records.
+ * Lead Generation is the only restricted module.
+ * Every role can access only their own lead generation records.
  */
 export function canAccessCustomerProfile(user, action, profile) {
   if (!user || !user.role || !profile) return false;
@@ -117,7 +117,7 @@ export function getTenantFilter(user, action = "read") {
 }
 
 /**
- * Customer Profiling owner filter: organization + createdById = current user.
+ * Lead Generation owner filter: organization + createdById = current user.
  */
 export function getCustomerProfileOwnerFilter(user) {
   const actorId = user?.userId || user?.id;

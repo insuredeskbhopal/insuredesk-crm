@@ -13,7 +13,7 @@ export async function POST(request) {
 
     // ── AUTO-LOGIN: Check if this Google email is already linked to a profile ──
     if (!customerId && !mpin) {
-      const linked = await prisma.customerProfile.findFirst({
+      const linked = await prisma.clientAccount.findFirst({
         where: { googleEmail: normalizedGoogleEmail, deletedAt: null },
         select: { id: true, name: true, email: true, phone: true, organizationId: true },
       });
@@ -22,14 +22,14 @@ export async function POST(request) {
         return createClientLoginResponse(linked, "Auto-logged in via linked Google account");
       }
 
-      const matchingProfiles = await prisma.customerProfile.findMany({
+      const matchingProfiles = await prisma.clientAccount.findMany({
         where: { email: { equals: normalizedGoogleEmail, mode: "insensitive" }, deletedAt: null },
         take: 2,
         select: { id: true, name: true, email: true, phone: true, organizationId: true },
       });
 
       if (matchingProfiles.length === 1) {
-        const matched = await prisma.customerProfile.update({
+        const matched = await prisma.clientAccount.update({
           where: { id: matchingProfiles[0].id },
           data: { googleEmail: normalizedGoogleEmail },
           select: { id: true, name: true, email: true, phone: true, organizationId: true },
@@ -62,13 +62,13 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "MPIN must be a 4-digit code" }, { status: 400 });
     }
 
-    const customer = await prisma.customerProfile.findUnique({
+    const customer = await prisma.clientAccount.findUnique({
       where: { id: customerId },
       select: { id: true, name: true, email: true, phone: true, organizationId: true, deletedAt: true, googleEmail: true },
     });
 
     if (!customer || customer.deletedAt) {
-      return NextResponse.json({ success: false, error: "Customer profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Client account not found" }, { status: 404 });
     }
 
     if (!customer.phone) {
@@ -80,7 +80,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Incorrect MPIN details" }, { status: 401 });
     }
 
-    const existingGoogleLink = await prisma.customerProfile.findFirst({
+    const existingGoogleLink = await prisma.clientAccount.findFirst({
       where: {
         googleEmail: normalizedGoogleEmail,
         deletedAt: null,
@@ -96,9 +96,9 @@ export async function POST(request) {
       );
     }
 
-    // Persist/update the Google email link on the CustomerProfile (one-time setup)
+    // Persist/update the Google email link on the client account (one-time setup)
     if (customer.googleEmail !== normalizedGoogleEmail) {
-      await prisma.customerProfile.update({
+      await prisma.clientAccount.update({
         where: { id: customer.id },
         data: { googleEmail: normalizedGoogleEmail },
       });

@@ -110,7 +110,7 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
 
   useEffect(() => {
     if (value && value.length === 36) {
-      fetch(`/api/customer-profiles/${value}`)
+      fetch(`/api/client-accounts/${value}`)
         .then((res) => res.json())
         .then((data) => {
           if (data?.name) {
@@ -149,11 +149,12 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
 
       try {
         for (const term of searchTerms) {
-          const res = await fetch(`/api/customer-profiles?page=1&limit=1&q=${encodeURIComponent(term)}`);
+          const res = await fetch(`/api/client-accounts?page=1&limit=1&q=${encodeURIComponent(term)}`);
           if (res.ok) {
             const data = await res.json();
-            if (data.profiles && data.profiles.length > 0) {
-              setAutoSuggestedClient(data.profiles[0]);
+            const matches = data.accounts || data.profiles || [];
+            if (matches.length > 0) {
+              setAutoSuggestedClient(matches[0]);
               break;
             }
           }
@@ -175,10 +176,10 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
     }
     setSearching(true);
     try {
-      const res = await fetch(`/api/customer-profiles?page=1&limit=5&q=${encodeURIComponent(val)}`);
+      const res = await fetch(`/api/client-accounts?page=1&limit=5&q=${encodeURIComponent(val)}`);
       if (res.ok) {
         const data = await res.json();
-        setResults(data.profiles || []);
+        setResults(data.accounts || data.profiles || []);
       }
     } catch (err) {
       console.error(err);

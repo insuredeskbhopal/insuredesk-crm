@@ -29,7 +29,7 @@ CREATE INDEX IF NOT EXISTS "uploaded_files_organization_id_deleted_at_created_at
 CREATE INDEX IF NOT EXISTS "uploaded_files_organization_id_status_created_at_idx" ON "uploaded_files"("organization_id", "status", "created_at");
 CREATE INDEX IF NOT EXISTS "uploaded_files_created_by_id_deleted_at_created_at_idx" ON "uploaded_files"("created_by_id", "deleted_at", "created_at");
 
--- JSON key expression indexes used by policy records, renewals, dashboard, and customer profiling.
+-- JSON key expression indexes used by policy records, renewals, dashboard, and lead generation.
 CREATE INDEX IF NOT EXISTS "pdf_records_policy_number_expr_idx" ON "pdf_records" ((lower(coalesce("reviewed_data"->>'policyNumber', "data"->>'policyNumber', ''))));
 CREATE INDEX IF NOT EXISTS "pdf_records_insured_name_expr_idx" ON "pdf_records" ((lower(coalesce("reviewed_data"->>'insuredName', "data"->>'insuredName', ''))));
 CREATE INDEX IF NOT EXISTS "pdf_records_company_expr_idx" ON "pdf_records" ((lower(coalesce("selected_company", "reviewed_data"->>'insuranceCompany', "reviewed_data"->>'Insurance Company', "data"->>'insuranceCompany', "data"->>'Insurance Company', ''))));

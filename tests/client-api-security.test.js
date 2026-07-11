@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 const { prismaMock, verifyJWTMock } = vi.hoisted(() => ({
   prismaMock: {
     $queryRaw: vi.fn(),
-    customerProfile: {
+    clientAccount: {
       findFirst: vi.fn(),
     },
     policyRecord: {
@@ -35,12 +35,12 @@ describe("client API data isolation", () => {
 
   it("does not return a profile unless the customer belongs to the token organization", async () => {
     const { GET } = await import("../src/app/api/client/profile/route.js");
-    prismaMock.customerProfile.findFirst.mockResolvedValueOnce(null);
+    prismaMock.clientAccount.findFirst.mockResolvedValueOnce(null);
 
     const response = await GET(nextRequest("http://localhost/api/client/profile"));
 
     expect(response.status).toBe(404);
-    expect(prismaMock.customerProfile.findFirst).toHaveBeenCalledWith(
+    expect(prismaMock.clientAccount.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: "client-1", organizationId: "org-1", deletedAt: null },
       }),
@@ -49,7 +49,7 @@ describe("client API data isolation", () => {
 
   it("returns portal-safe policy fields without raw CRM data", async () => {
     const { GET } = await import("../src/app/api/client/policies/route.js");
-    prismaMock.customerProfile.findFirst.mockResolvedValueOnce({ id: "client-1" });
+    prismaMock.clientAccount.findFirst.mockResolvedValueOnce({ id: "client-1" });
     prismaMock.$queryRaw.mockResolvedValueOnce([{ id: "policy-1" }]);
     prismaMock.policyRecord.findMany.mockResolvedValueOnce([
       {
@@ -91,7 +91,7 @@ describe("client API data isolation", () => {
 
   it("does not create a client claim for a policy outside the client account", async () => {
     const { POST } = await import("../src/app/api/client/claims/route.js");
-    prismaMock.customerProfile.findFirst.mockResolvedValueOnce({
+    prismaMock.clientAccount.findFirst.mockResolvedValueOnce({
       name: "Client One",
       phone: "9876543210",
     });
@@ -112,7 +112,7 @@ describe("client API data isolation", () => {
 
   it("fetches client claims only for policy numbers linked to the client account", async () => {
     const { GET } = await import("../src/app/api/client/claims/route.js");
-    prismaMock.customerProfile.findFirst.mockResolvedValueOnce({
+    prismaMock.clientAccount.findFirst.mockResolvedValueOnce({
       phone: "9876543210",
     });
     prismaMock.$queryRaw.mockResolvedValueOnce([{ id: "policy-1", policy_number: "POL-1" }]);

@@ -50,11 +50,11 @@ export const REPORT_CATEGORIES = [
     href: "/dashboard/reports/endorsements",
   },
   {
-    id: "customer-profiling",
-    title: "Customer Profiling Intelligence",
+    id: "lead-generation",
+    title: "Lead Generation Intelligence",
     description: "Lead funnel, conversions, pending leads, user performance, and profiling register.",
     phase: "Phase 2",
-    href: "/dashboard/reports/customer-profiling",
+    href: "/dashboard/reports/lead-generation",
   },
   {
     id: "service-requests",
@@ -376,7 +376,7 @@ function buildCategoryCards(context, summary) {
     renewals: `${summary.dueWeek} due this week`,
     claims: `${summary.pendingClaims} pending claims`,
     endorsements: `${summary.pendingEndorsements} pending endorsements`,
-    "customer-profiling": `${summary.profilingCount} profiling records`,
+    "lead-generation": `${summary.profilingCount} lead records`,
     "service-requests": "No service request table",
     team: `${context.users.length} users`,
     operations: `${context.audits.length} recent activities`,
@@ -662,7 +662,7 @@ function buildReport(category, context, summary) {
     return base;
   }
 
-  if (category === "customer-profiling") {
+  if (category === "lead-generation") {
     const converted = profiles.filter((p) => p.convertedToCustomer);
     base.kpis = [
       kpi("Leads Added", profiles.length),

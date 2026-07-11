@@ -271,7 +271,7 @@ export async function GET(request) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: getUserFacingErrorMessage(error, "Failed to search customer profiles.") },
+      { error: getUserFacingErrorMessage(error, "Failed to search lead profiles.") },
       { status: 500 },
     );
   }
@@ -352,8 +352,8 @@ export async function POST(request) {
       return NextResponse.json(
         {
           error: isOwnLead
-            ? "This phone number already exists in your Customer Profiling leads."
-            : "This phone number is already claimed by another user in Customer Profiling.",
+            ? "This phone number already exists in your Lead Generation records."
+            : "This phone number is already claimed by another user in Lead Generation.",
           profile: isOwnLead ? serializeCustomerProfile(existing) : null,
           claimedByAnotherUser: !isOwnLead,
         },

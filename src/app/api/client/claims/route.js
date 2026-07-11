@@ -18,7 +18,7 @@ export async function GET(request) {
     const orgId = session.organizationId;
 
     // Fetch the client's phone number
-    const customer = await prisma.customerProfile.findFirst({
+    const customer = await prisma.clientAccount.findFirst({
       where: {
         id: customerId,
         organizationId: orgId,
@@ -93,7 +93,7 @@ export async function POST(request) {
     const customerId = session.customerId;
     const orgId = session.organizationId;
 
-    const customer = await prisma.customerProfile.findFirst({
+    const customer = await prisma.clientAccount.findFirst({
       where: {
         id: customerId,
         organizationId: orgId,
@@ -103,7 +103,7 @@ export async function POST(request) {
     });
 
     if (!customer) {
-      return NextResponse.json({ success: false, error: "Customer profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Client account not found" }, { status: 404 });
     }
 
     const payload = await request.json();

@@ -106,8 +106,8 @@ export async function PUT(request, { params }) {
       return NextResponse.json(
         {
           error: isOwnLead
-            ? "This phone number already exists in your Customer Profiling leads."
-            : "This phone number is already claimed by another user in Customer Profiling.",
+            ? "This phone number already exists in your Lead Generation records."
+            : "This phone number is already claimed by another user in Lead Generation.",
           profile: isOwnLead ? serializeCustomerProfile(duplicate) : null,
           claimedByAnotherUser: !isOwnLead,
         },
@@ -158,7 +158,7 @@ export async function DELETE(request, { params }) {
     if (!token) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     const session = await verifyJWT(token);
     if (!session || session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Only Super Admin can delete customer profiling leads." }, { status: 403 });
+      return NextResponse.json({ error: "Only Super Admin can delete lead generation records." }, { status: 403 });
     }
 
     const { id } = await params;

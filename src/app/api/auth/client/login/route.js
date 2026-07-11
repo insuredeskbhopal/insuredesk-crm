@@ -15,8 +15,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Client MPIN must be a 4-digit code" }, { status: 400 });
     }
 
-    // Lookup the CustomerProfile
-    const customer = await prisma.customerProfile.findUnique({
+    const customer = await prisma.clientAccount.findUnique({
       where: { id: customerId },
       select: {
         id: true,
@@ -29,7 +28,7 @@ export async function POST(request) {
     });
 
     if (!customer || customer.deletedAt) {
-      return NextResponse.json({ success: false, error: "Client profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Client account not found" }, { status: 404 });
     }
 
     if (!customer.phone) {

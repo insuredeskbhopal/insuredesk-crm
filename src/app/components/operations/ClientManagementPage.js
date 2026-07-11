@@ -56,10 +56,10 @@ export default function ClientManagementPage() {
     setError("");
     try {
       const queryParam = searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : "";
-      const res = await fetch(`/api/customer-profiles?page=${page}&limit=${limit}${queryParam}`);
-      if (!res.ok) throw new Error("Failed to fetch customer profiles");
+      const res = await fetch(`/api/client-accounts?page=${page}&limit=${limit}${queryParam}`);
+      if (!res.ok) throw new Error("Failed to fetch client accounts");
       const data = await res.json();
-      setProfiles(data.profiles || []);
+      setProfiles(data.accounts || data.profiles || []);
       setTotalCount(data.total || 0);
     } catch (err) {
       setError(err.message || "Failed to load profiles");
@@ -114,13 +114,13 @@ export default function ClientManagementPage() {
     try {
       let res;
       if (modalMode === "create") {
-        res = await fetch("/api/customer-profiles", {
+        res = await fetch("/api/client-accounts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
-        res = await fetch(`/api/customer-profiles/${selectedProfileId}`, {
+        res = await fetch(`/api/client-accounts/${selectedProfileId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -236,7 +236,7 @@ export default function ClientManagementPage() {
           <div className="p-12 text-center text-slate-500 space-y-2">
             <Users className="h-12 w-12 text-slate-300 mx-auto" />
             <p className="text-base font-semibold text-slate-700">No client profiles found</p>
-            <p className="text-sm text-slate-400">Search with another filter or create a new profile.</p>
+            <p className="text-sm text-slate-400">Search with another filter or create a new client login.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">

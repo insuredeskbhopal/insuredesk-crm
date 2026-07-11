@@ -25,7 +25,7 @@ import { OPERATIONS_MODULES, FUTURE_OPERATIONS_MODULES } from "@/app/lib/operati
 
 const ICONS = {
   "work-center": CalendarDays,
-  "customer-profiling": Users,
+  "lead-generation": Users,
   "manual-policy-entry": FilePenLine,
   "claims-management": ShieldCheck,
   declarations: ClipboardCheck,
@@ -135,7 +135,7 @@ export default function OperationsHubPage() {
       />
 
       <section className="operations-summary-grid">
-        <SummaryCard icon={Users} label="Customer Profiles" value={metrics.customerProfiles} />
+        <SummaryCard icon={Users} label="Lead Profiles" value={metrics.customerProfiles} />
         <SummaryCard icon={FileText} label="Policy Records" value={metrics.policyRecords} />
         <SummaryCard icon={Activity} label="Open Activities" value={metrics.openActivities} />
         <SummaryCard icon={BadgeCheck} label="Active Modules" value={metrics.activeModules} />
@@ -251,13 +251,13 @@ function OperationsCard({ module, metrics }) {
 
 function getModuleCount(id, metrics) {
   if (id === "work-center") return metrics.openActivities || 0;
-  if (id === "customer-profiling" || id === "lead-management" || id === "birthday-management") return metrics.customerProfiles || 0;
+  if (id === "lead-generation" || id === "lead-management" || id === "birthday-management") return metrics.customerProfiles || 0;
   if (id === "manual-policy-entry") return metrics.policyRecords || 0;
   return 0;
 }
 
 function getLastActivityText(id, count, metrics) {
-  if (id === "customer-profiling" || id === "lead-management" || id === "birthday-management") {
+  if (id === "lead-generation" || id === "lead-management" || id === "birthday-management") {
     return count > 0 && metrics.latestProfileActivity
       ? `Last activity ${metrics.latestProfileActivity}`
       : "No recent activity";

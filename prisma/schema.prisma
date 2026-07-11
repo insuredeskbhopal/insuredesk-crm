@@ -121,6 +121,7 @@ model Organization {
   uploadedFiles UploadedFile[]
   auditLogs     AuditLog[]
   customerProfiles CustomerProfile[]
+  clientAccounts ClientAccount[]
   claims        Claim[]
   endorsements  Endorsement[]
   whatsAppTemplates WhatsAppTemplate[]
@@ -455,6 +456,32 @@ model CustomerProfile {
   @@map("customer_profiles")
 }
 
+model ClientAccount {
+  id             String        @id @default(uuid()) @db.Uuid
+  name           String
+  phone          String
+  email          String?
+  googleEmail    String?       @unique @map("google_email")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?     @map("deleted_at") @db.Timestamptz(6)
+
+  organizationId String?       @map("organization_id") @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdById    String?       @map("created_by_id") @db.Uuid
+  createdBy      User?         @relation("ClientAccountCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById    String?       @map("updated_by_id") @db.Uuid
+  updatedBy      User?         @relation("ClientAccountUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([phone])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt, updatedAt])
+  @@index([createdById])
+  @@index([deletedAt])
+  @@index([googleEmail])
+  @@map("client_accounts")
+}
+
 model PolicyRecord {
   id                      String             @id @db.Uuid
   savedAt                 DateTime           @default(now()) @map("saved_at") @db.Timestamptz(6)
@@ -705,6 +732,8 @@ model User {
   auditLogs      AuditLog[]
   createdCustomerProfiles CustomerProfile[] @relation("CustomerProfileCreatedBy")
   updatedCustomerProfiles CustomerProfile[] @relation("CustomerProfileUpdatedBy")
+  createdClientAccounts ClientAccount[] @relation("ClientAccountCreatedBy")
+  updatedClientAccounts ClientAccount[] @relation("ClientAccountUpdatedBy")
   createdClaims Claim[] @relation("ClaimCreatedBy")
   updatedClaims Claim[] @relation("ClaimUpdatedBy")
   deletedClaims Claim[] @relation("ClaimDeletedBy")

@@ -27,7 +27,7 @@ const ICONS = {
   renewals: RefreshCw,
   claims: ShieldCheck,
   endorsements: FileCheck2,
-  "customer-profiling": Users,
+  "lead-generation": Users,
   "service-requests": ClipboardList,
   team: Activity,
   operations: BriefcaseBusiness,
