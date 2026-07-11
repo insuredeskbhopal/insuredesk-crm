@@ -6,7 +6,6 @@ export default function robots() {
     "/admin/",
     "/analytics-reports/",
     "/bulk-upload/",
-    "/crm/admin/login",
     "/customer-management/",
     "/dashboard/",
     "/field-setup/",
@@ -50,4 +49,3 @@ export default function robots() {
     host: SITE_URL,
   };
 }
-

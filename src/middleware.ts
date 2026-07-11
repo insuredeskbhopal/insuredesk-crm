@@ -62,9 +62,12 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPage = pathname === ADMIN_LOGIN_PATH;
   const isAuthApi = pathname.startsWith("/api/auth");
+  const isClientAuthApi = pathname.startsWith("/api/auth/client/");
+  const isSharedAuthApi = pathname === "/api/auth/logout";
   const isCronApi = pathname.startsWith("/api/cron");
   const isBlogPage = pathname.startsWith("/blog");
   const isPublicPage = PUBLIC_ROUTE_PATHS.includes(pathname) || pathname === "/not-found" || isAuthPage || isBlogPage;
+  const isStaffOnlyPage = !pathname.startsWith("/api/") && !isPublicPage && !isClientRoute;
 
   // Handle client / staff API access security
   if (pathname.startsWith("/api/") && !isAuthApi && !isCronApi && pathname !== "/api/contact" && !pathname.startsWith("/api/client/")) {
@@ -74,6 +77,10 @@ export async function middleware(request: NextRequest) {
     if (userRole === "CLIENT") {
       return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
     }
+  }
+
+  if (isAuthenticated && userRole === "CLIENT" && isAuthApi && !isClientAuthApi && !isSharedAuthApi) {
+    return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
   }
 
   // Handle Login & Signup paths redirection based on role
@@ -103,7 +110,7 @@ export async function middleware(request: NextRequest) {
 
   // Logged-in client rules
   if (userRole === "CLIENT") {
-    if (isStaffRoute || isAuthPage) {
+    if (isStaffRoute || isStaffOnlyPage || isAuthPage) {
       return NextResponse.redirect(new URL("/client/portal", request.url));
     }
   }

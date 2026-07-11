@@ -10,7 +10,7 @@ export async function GET(request) {
     }
 
     const session = await verifyJWT(token);
-    if (!session || session.role !== "CLIENT" || !session.customerId) {
+    if (!session || session.role !== "CLIENT" || !session.customerId || !session.organizationId) {
       return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
     }
 
@@ -18,9 +18,13 @@ export async function GET(request) {
     const orgId = session.organizationId;
 
     // Fetch the client's phone number
-    const customer = await prisma.customerProfile.findUnique({
-      where: { id: customerId },
-      select: { phone: true }
+    const customer = await prisma.customerProfile.findFirst({
+      where: {
+        id: customerId,
+        organizationId: orgId,
+        deletedAt: null,
+      },
+      select: { phone: true },
     });
 
     if (!customer || !customer.phone) {
@@ -34,14 +38,24 @@ export async function GET(request) {
     }
     const phoneSuffix = cleanPhone.slice(-10);
 
-    // Fetch claims matching this customer's mobile number
+    const policyRows = await getClientPolicyRows({ orgId, customerId });
+    const policyNumbers = policyRows
+      .map((row) => row.policy_number)
+      .filter(Boolean);
+
+    if (!policyNumbers.length) {
+      return NextResponse.json({ success: true, claims: [] });
+    }
+
+    // Fetch claims matching this customer's own policy numbers and mobile number.
     const claims = await prisma.claim.findMany({
       where: {
         deletedAt: null,
         organizationId: orgId,
+        policyNo: { in: policyNumbers },
         mobileNo: {
-          endsWith: phoneSuffix
-        }
+          endsWith: phoneSuffix,
+        },
       },
       orderBy: { createdAt: "desc" },
       select: {
@@ -54,7 +68,7 @@ export async function GET(request) {
         claimDate: true,
         followUpDate: true,
         createdAt: true,
-      }
+      },
     });
 
     return NextResponse.json({ success: true, claims });
@@ -72,16 +86,20 @@ export async function POST(request) {
     }
 
     const session = await verifyJWT(token);
-    if (!session || session.role !== "CLIENT" || !session.customerId) {
+    if (!session || session.role !== "CLIENT" || !session.customerId || !session.organizationId) {
       return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
     }
 
     const customerId = session.customerId;
     const orgId = session.organizationId;
 
-    const customer = await prisma.customerProfile.findUnique({
-      where: { id: customerId },
-      select: { name: true, phone: true }
+    const customer = await prisma.customerProfile.findFirst({
+      where: {
+        id: customerId,
+        organizationId: orgId,
+        deletedAt: null,
+      },
+      select: { name: true, phone: true },
     });
 
     if (!customer) {
@@ -93,6 +111,12 @@ export async function POST(request) {
 
     if (!policyNo || !claimType) {
       return NextResponse.json({ success: false, error: "Policy number and claim type are required." }, { status: 400 });
+    }
+
+    const policy = await getClientPolicyRows({ orgId, customerId, policyNo });
+
+    if (!policy.length) {
+      return NextResponse.json({ success: false, error: "Policy not found for this client." }, { status: 403 });
     }
 
     // Generate a unique claim number
@@ -114,8 +138,8 @@ export async function POST(request) {
         metadata: {
           insuranceCompany: insuranceCompany || "",
           customerId,
-        }
-      }
+        },
+      },
     });
 
     return NextResponse.json({ success: true, claim: newClaim });
@@ -123,4 +147,35 @@ export async function POST(request) {
     console.error("Client Initiate Claim Error:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
+}
+
+function getClientPolicyRows({ orgId, customerId, policyNo = "" }) {
+  if (policyNo) {
+    return prisma.$queryRaw`
+      SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
+      FROM pdf_records
+      WHERE deleted_at IS NULL
+        AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
+        AND (
+          reviewed_data->>'clientId' = ${customerId} OR
+          data->>'clientId' = ${customerId}
+        )
+        AND (
+          reviewed_data->>'policyNumber' = ${policyNo} OR
+          data->>'policyNumber' = ${policyNo}
+        )
+      LIMIT 1
+    `;
+  }
+
+  return prisma.$queryRaw`
+    SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
+    FROM pdf_records
+    WHERE deleted_at IS NULL
+      AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
+      AND (
+        reviewed_data->>'clientId' = ${customerId} OR
+        data->>'clientId' = ${customerId}
+      )
+  `;
 }

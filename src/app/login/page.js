@@ -714,7 +714,7 @@ export default function ClientLoginPage() {
               <p>
                 {loginMode === "regular"
                   ? "Access coverages using your registered credentials"
-                  : "Verify credentials to link your Google account"}
+                  : "One-time setup to activate Google login"}
               </p>
             </div>
 
@@ -828,7 +828,7 @@ export default function ClientLoginPage() {
                 {loginMode === "google" && googleStage === "verify_link" && (
                   <form onSubmit={handleVerifyLink} className="space-y-4">
                     <div className="info-pill">
-                      The Google profile <strong className="text-slate-800">{googleEmail}</strong> needs to be linked to your BimaHeadquarter account.
+                      First-time setup only: confirm Client ID and MPIN once to link <strong className="text-slate-800">{googleEmail}</strong>. Next Google sign-ins will open the portal directly.
                     </div>
 
                     <div className="input-group">

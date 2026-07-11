@@ -10,12 +10,16 @@ export async function GET(request) {
     }
 
     const session = await verifyJWT(token);
-    if (!session || session.role !== "CLIENT" || !session.customerId) {
+    if (!session || session.role !== "CLIENT" || !session.customerId || !session.organizationId) {
       return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
     }
 
-    const customer = await prisma.customerProfile.findUnique({
-      where: { id: session.customerId },
+    const customer = await prisma.customerProfile.findFirst({
+      where: {
+        id: session.customerId,
+        organizationId: session.organizationId,
+        deletedAt: null,
+      },
       select: {
         id: true,
         name: true,
@@ -27,7 +31,7 @@ export async function GET(request) {
         state: true,
         customerType: true,
         createdAt: true,
-      }
+      },
     });
 
     if (!customer) {

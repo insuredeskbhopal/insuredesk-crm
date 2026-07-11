@@ -367,8 +367,8 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td align="center">
-                    <a href="${appUrl}/crm/admin/login" target="_blank" style="display: block; width: 100%; text-align: center; background-color: #0f172a; color: #ffffff !important; font-size: 14px; font-weight: 600; text-decoration: none; padding: 14px 24px; border-radius: 8px; box-sizing: border-box; -webkit-text-size-adjust: none;">
-                      Login to CRM Dashboard &rarr;
+                    <a href="${appUrl}" target="_blank" style="display: block; width: 100%; text-align: center; background-color: #0f172a; color: #ffffff !important; font-size: 14px; font-weight: 600; text-decoration: none; padding: 14px 24px; border-radius: 8px; box-sizing: border-box; -webkit-text-size-adjust: none;">
+                      Open BIMAHEADQUARTER &rarr;
                     </a>
                   </td>
                 </tr>
@@ -418,4 +418,3 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
 
   return { sent: true };
 }
-

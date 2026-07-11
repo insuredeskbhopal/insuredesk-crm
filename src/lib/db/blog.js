@@ -3,6 +3,7 @@
  * Server-side functions for fetching blog posts from the database.
  */
 import { prisma } from "./prisma";
+import { BLOG_POSTS } from "@/app/blog/blogData";
 
 /**
  * Transform a DB blog post record into the shape used by the frontend.
@@ -43,86 +44,125 @@ function transformPost(dbPost) {
  * Get all published blog posts, ordered by date descending.
  */
 export async function getAllBlogPosts() {
-  const posts = await prisma.blogPost.findMany({
-    where: { published: true },
-    include: { sections: { orderBy: { order: "asc" } } },
-    orderBy: { date: "desc" },
-  });
+  try {
+    const posts = await prisma.blogPost.findMany({
+      where: { published: true },
+      include: { sections: { orderBy: { order: "asc" } } },
+      orderBy: { date: "desc" },
+    });
 
-  return posts.map(transformPost);
+    return posts.map(transformPost);
+  } catch (error) {
+    warnBlogFallback(error);
+    return sortFallbackPosts(BLOG_POSTS);
+  }
 }
 
 /**
  * Get a single blog post by slug.
  */
 export async function getBlogPostBySlug(slug) {
-  const post = await prisma.blogPost.findUnique({
-    where: { slug },
-    include: { sections: { orderBy: { order: "asc" } } },
-  });
+  try {
+    const post = await prisma.blogPost.findUnique({
+      where: { slug },
+      include: { sections: { orderBy: { order: "asc" } } },
+    });
 
-  if (!post || !post.published) return null;
+    if (!post || !post.published) return null;
 
-  return transformPost(post);
+    return transformPost(post);
+  } catch (error) {
+    warnBlogFallback(error);
+    return BLOG_POSTS.find((post) => post.slug === slug) || null;
+  }
 }
 
 /**
  * Get all published blog post slugs (for generateStaticParams).
  */
 export async function getBlogPostSlugs() {
-  const posts = await prisma.blogPost.findMany({
-    where: { published: true },
-    select: { slug: true },
-  });
+  try {
+    const posts = await prisma.blogPost.findMany({
+      where: { published: true },
+      select: { slug: true },
+    });
 
-  return posts.map((p) => ({ slug: p.slug }));
+    return posts.map((p) => ({ slug: p.slug }));
+  } catch (error) {
+    warnBlogFallback(error);
+    return BLOG_POSTS.map((post) => ({ slug: post.slug }));
+  }
 }
 
 /**
  * Get related posts (same category first, then others), excluding the current post.
  */
 export async function getRelatedPosts(currentSlug, category, limit = 2) {
-  // First try same-category posts
-  const sameCat = await prisma.blogPost.findMany({
-    where: {
-      published: true,
-      slug: { not: currentSlug },
-      category,
-    },
-    include: { sections: { orderBy: { order: "asc" } } },
-    orderBy: { date: "desc" },
-    take: limit,
-  });
+  try {
+    // First try same-category posts
+    const sameCat = await prisma.blogPost.findMany({
+      where: {
+        published: true,
+        slug: { not: currentSlug },
+        category,
+      },
+      include: { sections: { orderBy: { order: "asc" } } },
+      orderBy: { date: "desc" },
+      take: limit,
+    });
 
-  if (sameCat.length >= limit) {
-    return sameCat.map(transformPost);
+    if (sameCat.length >= limit) {
+      return sameCat.map(transformPost);
+    }
+
+    // Fill remaining with other categories
+    const remaining = limit - sameCat.length;
+    const otherPosts = await prisma.blogPost.findMany({
+      where: {
+        published: true,
+        slug: { notIn: [currentSlug, ...sameCat.map((p) => p.slug)] },
+        category: { not: category },
+      },
+      include: { sections: { orderBy: { order: "asc" } } },
+      orderBy: { date: "desc" },
+      take: remaining,
+    });
+
+    return [...sameCat, ...otherPosts].map(transformPost);
+  } catch (error) {
+    warnBlogFallback(error);
+    const posts = sortFallbackPosts(BLOG_POSTS).filter((post) => post.slug !== currentSlug);
+    const sameCategory = posts.filter((post) => post.category === category);
+    const otherCategories = posts.filter((post) => post.category !== category);
+    return [...sameCategory, ...otherCategories].slice(0, limit);
   }
-
-  // Fill remaining with other categories
-  const remaining = limit - sameCat.length;
-  const otherPosts = await prisma.blogPost.findMany({
-    where: {
-      published: true,
-      slug: { notIn: [currentSlug, ...sameCat.map((p) => p.slug)] },
-      category: { not: category },
-    },
-    include: { sections: { orderBy: { order: "asc" } } },
-    orderBy: { date: "desc" },
-    take: remaining,
-  });
-
-  return [...sameCat, ...otherPosts].map(transformPost);
 }
 
 /**
  * Get all published blog posts for sitemap (lightweight — no sections).
  */
 export async function getBlogPostsForSitemap() {
-  const posts = await prisma.blogPost.findMany({
-    where: { published: true },
-    select: { slug: true, date: true },
-    orderBy: { date: "desc" },
-  });
+  try {
+    const posts = await prisma.blogPost.findMany({
+      where: { published: true },
+      select: { slug: true, date: true },
+      orderBy: { date: "desc" },
+    });
 
-  return posts;
+    return posts;
+  } catch (error) {
+    warnBlogFallback(error);
+    return BLOG_POSTS.map((post) => ({
+      slug: post.slug,
+      date: new Date(post.date),
+    }));
+  }
+}
+
+function sortFallbackPosts(posts) {
+  return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+function warnBlogFallback(error) {
+  console.warn("Blog database unavailable; using bundled blog posts.", error?.message || error);
 }

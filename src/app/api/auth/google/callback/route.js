@@ -13,9 +13,7 @@ export async function GET(request) {
     });
   }
 
-  const baseUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}`;
-  const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || baseUrl;
-  return NextResponse.redirect(`${appBaseUrl}/crm/admin/login`);
+  return NextResponse.redirect(new URL("/login", request.url));
 }
 
 function renderOAuthCodePage(code) {

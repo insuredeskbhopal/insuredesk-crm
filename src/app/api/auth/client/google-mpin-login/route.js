@@ -5,56 +5,51 @@ import { signJWT } from "@/lib/auth";
 export async function POST(request) {
   try {
     const { googleEmail, customerId, mpin } = await request.json();
+    const normalizedGoogleEmail = String(googleEmail || "").trim().toLowerCase();
 
-    if (!googleEmail) {
+    if (!normalizedGoogleEmail) {
       return NextResponse.json({ success: false, error: "Google email is required" }, { status: 400 });
     }
 
     // ── AUTO-LOGIN: Check if this Google email is already linked to a profile ──
     if (!customerId && !mpin) {
       const linked = await prisma.customerProfile.findFirst({
-        where: { googleEmail: googleEmail.toLowerCase(), deletedAt: null },
+        where: { googleEmail: normalizedGoogleEmail, deletedAt: null },
         select: { id: true, name: true, email: true, phone: true, organizationId: true },
       });
 
-      if (!linked) {
-        return NextResponse.json({ success: false, linked: false, error: "Google email not linked yet" }, { status: 200 });
+      if (linked) {
+        return createClientLoginResponse(linked, "Auto-logged in via linked Google account");
       }
 
-      // Issue token directly — no MPIN needed on subsequent logins
-      const token = await signJWT({
-        role: "CLIENT",
-        customerId: linked.id,
-        email: linked.email,
-        name: linked.name,
-        phone: linked.phone?.replace(/[^0-9]/g, ""),
-        organizationId: linked.organizationId,
+      const matchingProfiles = await prisma.customerProfile.findMany({
+        where: { email: { equals: normalizedGoogleEmail, mode: "insensitive" }, deletedAt: null },
+        take: 2,
+        select: { id: true, name: true, email: true, phone: true, organizationId: true },
       });
 
-      const response = NextResponse.json({
-        success: true,
-        linked: true,
-        message: "Auto-logged in via linked Google account",
-        user: {
-          customerId: linked.id,
-          email: linked.email,
-          name: linked.name,
-          role: "CLIENT",
-          organizationId: linked.organizationId,
-        },
-      });
+      if (matchingProfiles.length === 1) {
+        const matched = await prisma.customerProfile.update({
+          where: { id: matchingProfiles[0].id },
+          data: { googleEmail: normalizedGoogleEmail },
+          select: { id: true, name: true, email: true, phone: true, organizationId: true },
+        });
 
-      response.cookies.set({
-        name: "token",
-        value: token,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24,
-        path: "/",
-      });
+        return createClientLoginResponse(matched, "Auto-linked and logged in via Google account");
+      }
 
-      return response;
+      if (matchingProfiles.length > 1) {
+        return NextResponse.json(
+          {
+            success: false,
+            linked: false,
+            error: "Multiple client profiles use this email. Please link once using Client ID and MPIN.",
+          },
+          { status: 200 },
+        );
+      }
+
+      return NextResponse.json({ success: false, linked: false, error: "Google email not linked yet" }, { status: 200 });
     }
 
     // ── FIRST-TIME LINK: Verify Client ID + MPIN, then persist the Google email ──
@@ -85,49 +80,78 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Incorrect MPIN details" }, { status: 401 });
     }
 
-    // Persist the Google email link on the CustomerProfile (one-time)
-    if (!customer.googleEmail) {
+    const existingGoogleLink = await prisma.customerProfile.findFirst({
+      where: {
+        googleEmail: normalizedGoogleEmail,
+        deletedAt: null,
+        NOT: { id: customer.id },
+      },
+      select: { id: true },
+    });
+
+    if (existingGoogleLink) {
+      return NextResponse.json(
+        { success: false, error: "This Google account is already linked to another client profile" },
+        { status: 409 },
+      );
+    }
+
+    // Persist/update the Google email link on the CustomerProfile (one-time setup)
+    if (customer.googleEmail !== normalizedGoogleEmail) {
       await prisma.customerProfile.update({
         where: { id: customer.id },
-        data: { googleEmail: googleEmail.toLowerCase() },
+        data: { googleEmail: normalizedGoogleEmail },
       });
     }
 
-    const token = await signJWT({
-      role: "CLIENT",
+    return createClientLoginResponse(
+      { ...customer, phone: cleanDbPhone },
+      "Account linked & logged in successfully",
+    );
+  } catch (error) {
+    console.error("Google MPIN login error:", error);
+    if (error?.code === "P2002") {
+      return NextResponse.json(
+        { success: false, error: "This Google account is already linked to another client profile" },
+        { status: 409 },
+      );
+    }
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
+  }
+}
+
+async function createClientLoginResponse(customer, message) {
+  const token = await signJWT({
+    role: "CLIENT",
+    customerId: customer.id,
+    email: customer.email,
+    name: customer.name,
+    phone: customer.phone?.replace(/[^0-9]/g, ""),
+    organizationId: customer.organizationId,
+  });
+
+  const response = NextResponse.json({
+    success: true,
+    linked: true,
+    message,
+    user: {
       customerId: customer.id,
       email: customer.email,
       name: customer.name,
-      phone: cleanDbPhone,
+      role: "CLIENT",
       organizationId: customer.organizationId,
-    });
+    },
+  });
 
-    const response = NextResponse.json({
-      success: true,
-      linked: true,
-      message: "Account linked & logged in successfully",
-      user: {
-        customerId: customer.id,
-        email: customer.email,
-        name: customer.name,
-        role: "CLIENT",
-        organizationId: customer.organizationId,
-      },
-    });
+  response.cookies.set({
+    name: "token",
+    value: token,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24,
+    path: "/",
+  });
 
-    response.cookies.set({
-      name: "token",
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24,
-      path: "/",
-    });
-
-    return response;
-  } catch (error) {
-    console.error("Google MPIN login error:", error);
-    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
-  }
+  return response;
 }

@@ -51,6 +51,7 @@ describe("sanitizeRecordPayload", () => {
         idv: "400000.00",
         contactNumber: "9876543210",
         contactPerson: "LEENA SAJWANI",
+        clientId: "11111111-1111-4111-8111-111111111111",
       },
     });
 

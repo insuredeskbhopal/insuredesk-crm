@@ -200,7 +200,7 @@ export default function SideNav({
                   if (onCloseSidebar) onCloseSidebar();
                   try {
                     await fetch("/api/auth/logout", { method: "POST" });
-                    window.location.href = "/crm/admin/login";
+                    window.location.href = "/";
                   } catch (err) {
                     console.error("Failed to log out:", err);
                     window.location.reload();
