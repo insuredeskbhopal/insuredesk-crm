@@ -47,6 +47,31 @@ describe("client API data isolation", () => {
     );
   });
 
+  it("allows legacy client sessions with a null organization boundary", async () => {
+    const { GET } = await import("../src/app/api/client/profile/route.js");
+    verifyJWTMock.mockResolvedValueOnce({
+      role: "CLIENT",
+      customerId: "client-1",
+      organizationId: null,
+    });
+    prismaMock.clientAccount.findFirst.mockResolvedValueOnce({
+      id: "client-1",
+      name: "Client One",
+      phone: "9876543210",
+      email: "",
+      createdAt: new Date("2026-07-01T00:00:00Z"),
+    });
+
+    const response = await GET(nextRequest("http://localhost/api/client/profile"));
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.clientAccount.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "client-1", organizationId: null, deletedAt: null },
+      }),
+    );
+  });
+
   it("returns portal-safe policy fields without raw CRM data", async () => {
     const { GET } = await import("../src/app/api/client/policies/route.js");
     prismaMock.clientAccount.findFirst.mockResolvedValueOnce({ id: "client-1" });

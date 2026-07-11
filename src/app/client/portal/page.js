@@ -69,7 +69,7 @@ export default function ClientPortal() {
       title: "15+ Cashless Garages",
       desc: "Instant cashless settlement at authorized network partners in Bhopal.",
       tag: "Claims Guide",
-      bg: "from-purple-650 to-indigo-700",
+      bg: "from-purple-600 to-indigo-700",
       text: "text-white",
     },
   ];
@@ -339,7 +339,7 @@ export default function ClientPortal() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div
                   onClick={() => setActiveTab("policies")}
-                  className="bg-white/75 backdrop-blur-md border border-white/50 p-6 rounded-2xl shadow-sm hover:shadow-md active:scale-98 transition-all flex items-center gap-4 text-left cursor-pointer"
+                  className="bg-white/75 backdrop-blur-md border border-white/50 p-6 rounded-2xl shadow-sm hover:shadow-md active:scale-[0.98] transition-all flex items-center gap-4 text-left cursor-pointer"
                 >
                   <div className="h-12 w-12 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-200 shadow-sm">
                     <FileText size={22} />
@@ -352,7 +352,7 @@ export default function ClientPortal() {
 
                 <div
                   onClick={() => setActiveTab("claims")}
-                  className="bg-white/75 backdrop-blur-md border border-white/50 p-6 rounded-2xl shadow-sm hover:shadow-md active:scale-98 transition-all flex items-center gap-4 text-left cursor-pointer"
+                  className="bg-white/75 backdrop-blur-md border border-white/50 p-6 rounded-2xl shadow-sm hover:shadow-md active:scale-[0.98] transition-all flex items-center gap-4 text-left cursor-pointer"
                 >
                   <div className="h-12 w-12 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-200 shadow-sm">
                     <Shield size={22} />
@@ -621,7 +621,7 @@ export default function ClientPortal() {
                     <button
                       type="submit"
                       disabled={submittingClaim}
-                      className="w-full mt-4 h-10 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-350 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer force-white"
+                      className="w-full mt-4 h-10 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer force-white"
                     >
                       {submittingClaim ? (
                         <span className="force-white">Initiating Claim...</span>
@@ -981,7 +981,7 @@ export default function ClientPortal() {
               <div className="bg-gradient-to-tr from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 shadow-sm text-center">
                 <span className="text-[8.5px] uppercase font-medium text-emerald-800/80 tracking-wider">Direct Bhopal Hotline</span>
                 <h4 className="text-lg font-bold text-emerald-700 mt-1 mb-1">88188 89660</h4>
-                <p className="text-slate-655 text-[9.5px] leading-relaxed">Call our Bhopal desk directly for renewals or claim updates.</p>
+                <p className="text-slate-600 text-[9.5px] leading-relaxed">Call our Bhopal desk directly for renewals or claim updates.</p>
               </div>
 
               {/* Policy Expiries list */}
@@ -1026,7 +1026,7 @@ export default function ClientPortal() {
                 <p className="text-[10px] text-slate-500 leading-relaxed">
                   In case of vehicle accidents or emergency property damage:
                 </p>
-                <div className="space-y-2.5 text-[10px] text-slate-655">
+                <div className="space-y-2.5 text-[10px] text-slate-600">
                   <div className="flex gap-2.5">
                     <span className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center font-medium text-slate-700 shrink-0">1</span>
                     <p className="leading-relaxed">Document all damages visually on the spot with pictures.</p>
@@ -1215,7 +1215,7 @@ export default function ClientPortal() {
                     <button
                       type="submit"
                       disabled={submittingClaim}
-                      className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-350 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer force-white"
+                      className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer force-white"
                     >
                       {submittingClaim ? (
                         <span className="force-white">Initiating Claim...</span>
@@ -1271,7 +1271,7 @@ export default function ClientPortal() {
                               <div className="space-y-1">
                                 <div className="flex items-center gap-1.5">
                                   <span className="font-extrabold text-xs text-slate-800">{c.claimNo}</span>
-                                  <span className="text-[8px] bg-slate-100 text-slate-655 px-1 py-0.5 rounded border border-slate-200/50 font-bold">
+                                  <span className="text-[8px] bg-slate-100 text-slate-600 px-1 py-0.5 rounded border border-slate-200/50 font-bold">
                                     {c.claimType}
                                   </span>
                                 </div>
@@ -1292,7 +1292,7 @@ export default function ClientPortal() {
                                 </span>
                                 <div
                                   onClick={() => setSelectedClaimId(selectedClaimId === c.id ? null : c.id)}
-                                  className="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-600 hover:text-white cursor-pointer transition-all text-[8.5px] font-bold shadow-xs"
+                                  className="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-600 hover:text-white cursor-pointer transition-all text-[8.5px] font-bold shadow-sm"
                                 >
                                   {selectedClaimId === c.id ? "Hide" : "Track"}
                                 </div>
@@ -1346,7 +1346,7 @@ export default function ClientPortal() {
 
                         <div className="bg-slate-50 border border-slate-200/50 p-3 rounded-lg text-[9.5px]">
                           <span className="text-[8px] uppercase font-semibold text-slate-400 block mb-1">Latest Operation Remark</span>
-                          <p className="text-slate-655 font-bold leading-relaxed">
+                          <p className="text-slate-600 font-bold leading-relaxed">
                             {activeClaim.currentRemark || "Your file is undergoing document checklist verification by the operations desk."}
                           </p>
                         </div>

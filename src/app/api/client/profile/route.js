@@ -10,7 +10,12 @@ export async function GET(request) {
     }
 
     const session = await verifyJWT(token);
-    if (!session || session.role !== "CLIENT" || !session.customerId || !session.organizationId) {
+    if (
+      !session ||
+      session.role !== "CLIENT" ||
+      !session.customerId ||
+      session.organizationId === undefined
+    ) {
       return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
     }
 
