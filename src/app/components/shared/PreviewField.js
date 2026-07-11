@@ -290,13 +290,15 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
                     style={{
                       width: "100%",
                       textAlign: "left",
-                      padding: "6px 8px",
+                      padding: "8px 10px",
                       fontSize: "11px",
                       background: "#f8fafc",
                       border: "1px solid #e2e8f0",
-                      borderRadius: "4px",
+                      borderRadius: "6px",
                       cursor: "pointer",
-                      color: "#1e293b"
+                      color: "#1e293b",
+                      display: "block",
+                      overflow: "hidden",
                     }}
                     onClick={() => {
                       onChange(profile.id);
@@ -306,9 +308,41 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
                       setResults([]);
                     }}
                   >
-                    <div style={{ fontWeight: "700" }}>{profile.name}</div>
-                    <div style={{ fontSize: "9.5px", color: "#64748b" }}>
-                      Phone: {profile.phone || "No phone"} | ID: {profile.id.slice(0, 8)}...
+                    <div
+                      style={{
+                        fontWeight: "700",
+                        fontSize: "11.5px",
+                        lineHeight: "1.35",
+                        marginBottom: "4px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {profile.name}
+                    </div>
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: "2px",
+                        fontSize: "10px",
+                        lineHeight: "1.3",
+                        color: "#64748b",
+                        minWidth: 0,
+                      }}
+                    >
+                      <span>Phone: {profile.phone || "No phone"}</span>
+                      <span
+                        style={{
+                          display: "block",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                        title={profile.id}
+                      >
+                        Client ID: {profile.id}
+                      </span>
                     </div>
                   </button>
                 </li>
