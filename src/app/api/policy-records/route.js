@@ -332,6 +332,7 @@ export async function POST(request) {
     const validation = getReviewValidation({
       sourceFile: payload.sourceFile || uploadedFile?.sourceFile || legacyPayload.sourceFile,
       extractedData: legacyPayload,
+      manualFields: Object.keys(legacyPayload),
     });
 
     if (validation.contactErrors.length) {

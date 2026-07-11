@@ -78,6 +78,7 @@ export async function PUT(request, { params }) {
     const validation = getReviewValidation({
       sourceFile,
       extractedData: mergedData,
+      manualFields: Object.keys(mergedData),
     });
 
     if (validation.contactErrors.length) {
