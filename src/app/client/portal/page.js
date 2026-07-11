@@ -80,7 +80,8 @@ export default function ClientPortal() {
         // 1. Fetch Profile
         const profileRes = await fetch("/api/client/profile");
         if (!profileRes.ok) {
-          window.location.href = "/login";
+          await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+          window.location.replace("/login");
           return;
         }
         const profileData = await profileRes.json();
@@ -217,29 +218,25 @@ export default function ClientPortal() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] via-[#f8fafc] to-[#e2e8f0] text-slate-800 flex flex-col font-sans relative overflow-hidden">
-      {/* Background Blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[450px] h-[450px] rounded-full bg-emerald-400/10 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-10%] w-[550px] h-[550px] rounded-full bg-indigo-400/10 blur-[120px] pointer-events-none" />
-      <div className="absolute top-[35%] right-[15%] w-[400px] h-[400px] rounded-full bg-sky-300/10 blur-[100px] pointer-events-none" />
+    <div className="min-h-screen bg-[#f4f7f9] text-slate-800 flex flex-col font-sans relative overflow-hidden">
 
       {/* ========================================================================= */}
       {/* A. DESKTOP VIEWPORT LAYOUT */}
       {/* ========================================================================= */}
-      <div className="hidden md:flex flex-col min-h-screen w-full">
+      <div className="hidden md:flex flex-col min-h-screen w-full bg-[linear-gradient(180deg,#f8fafc_0%,#eef4f2_46%,#f8fafc_100%)]">
         {/* Navbar */}
-        <header className="border-b border-white/40 bg-white/70 backdrop-blur-md sticky top-0 z-50 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <header className="border-b border-slate-200 bg-white/95 sticky top-0 z-50 shadow-sm">
+          <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <img
                 src="/brand/main-logo-wide.webp"
                 alt="BimaHeadquarter"
-                className="h-12 w-auto object-contain"
+                className="h-11 w-auto object-contain"
               />
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-2 bg-white/80 px-3.5 py-1.5 rounded-full border border-slate-200/50 text-xs shadow-sm">
+              <div className="hidden md:flex items-center gap-2 bg-slate-50 px-3.5 py-2 rounded-full border border-slate-200 text-xs shadow-sm">
                 <User size={12} className="text-emerald-600" />
                 <span className="font-semibold text-slate-700">{profile?.name}</span>
                 <span className="bg-emerald-500/10 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border border-emerald-500/20">
@@ -248,7 +245,7 @@ export default function ClientPortal() {
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-red-500/10 text-red-600 border border-red-200/50 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-sm"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-sm"
               >
                 <LogOut size={13} />
                 <span>Log out</span>
@@ -258,8 +255,8 @@ export default function ClientPortal() {
         </header>
 
         {/* Tab Selection Header Menu */}
-        <div className="border-b border-slate-200/50 bg-white/40 backdrop-blur-md z-10 sticky top-16">
-          <div className="max-w-7xl mx-auto px-8 flex items-center gap-6">
+        <div className="border-b border-slate-200 bg-white z-10 sticky top-16">
+          <div className="max-w-6xl mx-auto px-6 py-2 flex items-center gap-2">
             {[
               { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
               { id: "policies", label: "Active Policies", icon: FileText },
@@ -272,10 +269,10 @@ export default function ClientPortal() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 py-4 px-1 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
                     activeTab === tab.id
-                      ? "border-emerald-600 text-emerald-600"
-                      : "border-transparent text-emerald-800/50 hover:text-emerald-700 hover:border-emerald-300/40"
+                      ? "bg-white text-slate-950 border border-slate-200 shadow-sm"
+                      : "text-slate-600 hover:bg-white hover:text-slate-950 hover:shadow-sm"
                   }`}
                 >
                   <Icon size={15} />
@@ -287,98 +284,162 @@ export default function ClientPortal() {
         </div>
 
         {/* Main Content Workspace Container */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-8 py-8 z-10">
           
           {/* 1. Dashboard Tab */}
           {activeTab === "dashboard" && (
-            <div className="space-y-8">
-              {/* Desktop Promo Banner Carousel */}
-              <div className="relative rounded-[20px] overflow-hidden bg-gradient-to-r from-emerald-900 to-teal-900 text-white p-6 shadow-sm flex items-center justify-between">
-                <div className="space-y-2 max-w-2xl">
-                  <span className="bg-emerald-500 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider force-white">
-                    {carouselSlides[carouselIndex].tag}
-                  </span>
-                  <h3 className="text-lg font-semibold force-white">{carouselSlides[carouselIndex].title}</h3>
-                  <p className="text-xs leading-relaxed force-slate-light">
-                    {carouselSlides[carouselIndex].desc}
-                  </p>
+            <div className="space-y-7">
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase text-emerald-700">Client Command Center</p>
+                  <h1 className="mt-1 text-2xl font-semibold text-slate-950">Coverage workspace</h1>
                 </div>
-                <div className="flex gap-2 shrink-0">
-                  <button
-                    onClick={() => setCarouselIndex((prev) => (prev - 1 + carouselSlides.length) % carouselSlides.length)}
-                    className="p-1.5 rounded-full bg-emerald-800/60 hover:bg-emerald-700/80 text-emerald-200 transition-colors"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    onClick={() => setCarouselIndex((prev) => (prev + 1) % carouselSlides.length)}
-                    className="p-1.5 rounded-full bg-emerald-800/60 hover:bg-emerald-700/80 text-emerald-200 transition-colors"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
+                <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm">
+                  Client ID: <span className="font-mono text-slate-950">{profile?.id?.slice(0, 8) || "--------"}</span>
                 </div>
               </div>
 
-              {/* Information welcome sheet */}
-              <div className="relative rounded-[24px] overflow-hidden bg-gradient-to-br from-emerald-50/80 via-sky-50/80 to-indigo-50/80 border border-white/60 p-8 shadow-sm">
-                <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] pointer-events-none" />
-                <div className="relative z-10">
-                  <span className="inline-flex items-center gap-1.5 bg-emerald-600/10 text-emerald-800 px-3 py-1 rounded-full text-xs font-semibold mb-4 border border-emerald-500/20 shadow-sm">
-                    <Shield size={12} /> Secure Client Space
-                  </span>
-                  <h1 className="text-3xl md:text-4xl font-semibold text-slate-800 tracking-tight mb-3">
-                    Welcome, <span className="text-emerald-700">{profile?.name || "Client"}</span>
-                  </h1>
-                  <p className="text-slate-600 text-sm md:text-base leading-relaxed max-w-3xl">
-                    This is your dedicated BimaHeadquarter client portal. You can securely track active coverages, review policy expiries, manage claims support, and consult our risk advisors.
-                  </p>
+              <section className="grid grid-cols-[minmax(0,1fr)_400px] gap-7">
+                <div className="client-portal-hero relative overflow-hidden rounded-3xl border border-white/15 bg-[#064633] p-8 text-white shadow-[0_24px_55px_rgba(6,70,51,0.28),0_8px_18px_rgba(15,23,42,0.16)]">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_15%,rgba(255,255,255,0.16),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.10),transparent_40%,rgba(0,0,0,0.12))]" />
+                  <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-emerald-200/[0.22] blur-3xl" />
+                  <div className="absolute -bottom-28 left-16 h-72 w-72 rounded-full bg-amber-300/[0.18] blur-3xl" />
+                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-300 via-amber-300 to-white/80" />
+                  <div className="relative z-10">
+                    <span className="inline-flex items-center gap-1.5 bg-white/[0.12] text-white px-3 py-1 rounded-full text-xs font-semibold mb-6 border border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_8px_18px_rgba(0,0,0,0.12)]">
+                      <Shield size={12} /> Secure Client Workspace
+                    </span>
+                    <h2 className="max-w-3xl text-4xl font-semibold tracking-tight text-white force-white">
+                      Welcome, {profile?.name || "Client"}
+                    </h2>
+                    <p className="mt-4 max-w-2xl text-sm leading-7 text-white/90">
+                      Track active coverages, renewal dates, claims support, and service assistance from one private desk.
+                    </p>
+                    <div className="mt-7 grid grid-cols-[1fr_1fr_1.15fr] gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("policies")}
+                      className="client-portal-interactive group relative flex min-h-[110px] flex-col justify-between overflow-hidden rounded-2xl border border-white/[0.16] bg-white/[0.11] p-5 text-left text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_20px_36px_rgba(0,0,0,0.18)] focus-visible:border-white focus-visible:bg-white focus-visible:text-slate-950"
+                    >
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-white/45 via-emerald-200/70 to-transparent transition-colors group-hover:from-emerald-500 group-hover:via-emerald-300" />
+                      <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-white/[0.08] blur-2xl transition-colors group-hover:bg-emerald-200/30" />
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">
+                        Active Coverages
+                      </div>
+                      <div className="flex items-end justify-between gap-3">
+                        <div>
+                          <div className="text-4xl font-bold leading-none text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">{policies.length}</div>
+                          <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/80 transition-colors group-hover:text-slate-600 group-focus-visible:text-slate-600">Policies linked</div>
+                        </div>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/25 bg-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_16px_rgba(0,0,0,0.12)] transition-colors group-hover:border-slate-200 group-hover:bg-slate-100 group-focus-visible:border-slate-200 group-focus-visible:bg-slate-100">
+                          <FileText size={18} className="text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950" />
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("claims")}
+                      className="client-portal-interactive group relative flex min-h-[110px] flex-col justify-between overflow-hidden rounded-2xl border border-white/[0.16] bg-white/[0.11] p-5 text-left text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_20px_36px_rgba(0,0,0,0.18)] focus-visible:border-white focus-visible:bg-white focus-visible:text-slate-950"
+                    >
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-white/45 via-emerald-200/70 to-transparent transition-colors group-hover:from-emerald-500 group-hover:via-emerald-300" />
+                      <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-white/[0.08] blur-2xl transition-colors group-hover:bg-emerald-200/30" />
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">
+                        Tracked Claims
+                      </div>
+                      <div className="flex items-end justify-between gap-3">
+                        <div>
+                          <div className="text-4xl font-bold leading-none text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">{claims.length}</div>
+                          <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/80 transition-colors group-hover:text-slate-600 group-focus-visible:text-slate-600">Cases tracked</div>
+                        </div>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/25 bg-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_16px_rgba(0,0,0,0.12)] transition-colors group-hover:border-slate-200 group-hover:bg-slate-100 group-focus-visible:border-slate-200 group-focus-visible:bg-slate-100">
+                          <Shield size={18} className="text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950" />
+                        </div>
+                      </div>
+                    </button>
+                    <a
+                      href="tel:+918818889660"
+                      className="client-portal-interactive group relative flex min-h-[110px] flex-col justify-between overflow-hidden rounded-2xl border border-amber-200/35 bg-amber-300/[0.17] p-5 text-left text-white no-underline shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_16px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-100 hover:bg-white hover:text-slate-950 hover:shadow-[0_20px_36px_rgba(0,0,0,0.18)] focus-visible:border-amber-100 focus-visible:bg-white focus-visible:text-slate-950"
+                      aria-label="Call Bhopal support hotline"
+                    >
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-200 via-white/70 to-transparent transition-colors group-hover:from-amber-500 group-hover:via-amber-300" />
+                      <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-amber-200/[0.12] blur-2xl transition-colors group-hover:bg-amber-200/30" />
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-white transition-colors group-hover:text-slate-950">
+                        Support Hotline
+                      </div>
+                      <div className="flex items-end justify-between gap-3">
+                        <div>
+                          <div className="text-2xl font-black leading-none text-white transition-colors group-hover:text-slate-950">Call Support</div>
+                          <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/80 transition-colors group-hover:text-slate-600">Emergency assistance</div>
+                        </div>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/25 bg-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_16px_rgba(0,0,0,0.12)] transition-colors group-hover:border-slate-200 group-hover:bg-slate-100 group-focus-visible:border-slate-200 group-focus-visible:bg-slate-100">
+                          <Phone size={18} className="text-white transition-colors group-hover:text-slate-950" />
+                        </div>
+                      </div>
+                    </a>
+                    </div>
+                    <div className="mt-6 grid grid-cols-[1fr_1fr_1.15fr] gap-3 text-xs text-white">
+                      <div className="client-portal-interactive group rounded-xl border border-white/[0.16] bg-white/[0.08] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_16px_26px_rgba(0,0,0,0.16)]">
+                        <span className="block text-white transition-colors group-hover:text-slate-950">Mobile</span>
+                        <strong className="mt-1 block font-semibold text-white transition-colors group-hover:text-slate-950">{profile?.phone || "-"}</strong>
+                      </div>
+                      <div className="client-portal-interactive group rounded-xl border border-white/[0.16] bg-white/[0.08] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_16px_26px_rgba(0,0,0,0.16)]">
+                        <span className="block text-white transition-colors group-hover:text-slate-950">Email</span>
+                        <strong className="mt-1 block truncate font-semibold text-white transition-colors group-hover:text-slate-950">{profile?.email || "Not added"}</strong>
+                      </div>
+                      <div className="client-portal-interactive group rounded-xl border border-white/[0.16] bg-white/[0.08] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_16px_26px_rgba(0,0,0,0.16)]">
+                        <span className="block text-white transition-colors group-hover:text-slate-950">Workspace</span>
+                        <strong className="mt-1 block font-semibold text-white transition-colors group-hover:text-slate-950">Client Portal</strong>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Stats overview boxes */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div
-                  onClick={() => setActiveTab("policies")}
-                  className="bg-white/75 backdrop-blur-md border border-white/50 p-6 rounded-2xl shadow-sm hover:shadow-md active:scale-[0.98] transition-all flex items-center gap-4 text-left cursor-pointer"
-                >
-                  <div className="h-12 w-12 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-200 shadow-sm">
-                    <FileText size={22} />
-                  </div>
+                <div className="relative rounded-3xl overflow-hidden bg-white border border-slate-200 p-6 shadow-xl shadow-slate-200/70 flex flex-col justify-between">
+                  <div className="absolute inset-x-0 top-0 h-1 bg-amber-400" />
                   <div>
-                    <div className="text-2xl font-bold text-slate-800">{policies.length}</div>
-                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Coverages</div>
+                    <span className="inline-flex bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">
+                      {carouselSlides[carouselIndex].tag}
+                    </span>
+                    <h3 className="mt-5 text-3xl font-semibold leading-tight text-slate-950">{carouselSlides[carouselIndex].title}</h3>
+                    <p className="mt-4 text-sm leading-7 text-slate-600">
+                      {carouselSlides[carouselIndex].desc}
+                    </p>
+                    <div className="mt-7 space-y-3">
+                      {["Policy review", "Claim readiness", "Renewal check"].map((item) => (
+                        <div key={item} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-xs">
+                          <span className="font-semibold text-slate-700">{item}</span>
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-6">
+                    <span className="text-xs font-semibold text-slate-500">Risk advisory desk</span>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setCarouselIndex((prev) => (prev - 1 + carouselSlides.length) % carouselSlides.length)}
+                        className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCarouselIndex((prev) => (prev + 1) % carouselSlides.length)}
+                        className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                <div
-                  onClick={() => setActiveTab("claims")}
-                  className="bg-white/75 backdrop-blur-md border border-white/50 p-6 rounded-2xl shadow-sm hover:shadow-md active:scale-[0.98] transition-all flex items-center gap-4 text-left cursor-pointer"
-                >
-                  <div className="h-12 w-12 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-200 shadow-sm">
-                    <Shield size={22} />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-slate-800">{claims.length}</div>
-                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tracked Claims</div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-tr from-emerald-50/70 to-teal-50/70 border border-emerald-100/85 p-6 rounded-2xl shadow-sm flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-200 shadow-sm">
-                    <Phone size={20} />
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold text-emerald-700">88188 89660</div>
-                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Bhopal Hotline</div>
-                  </div>
-                </div>
-              </div>
+              </section>
 
               {/* Useful Client Panels Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Emergency Triage Checklist */}
-                <div className="bg-white/75 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm">
-                  <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                <div className="bg-white border border-slate-200 rounded-3xl p-7 shadow-sm">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase mb-5 pb-3 border-b border-slate-100 flex items-center gap-2">
                     <AlertTriangle size={14} /> Accident & Emergency Triage
                   </h3>
                   <p className="text-xs text-slate-500 leading-relaxed mb-4">
@@ -391,7 +452,9 @@ export default function ClientPortal() {
                     </div>
                     <div className="flex gap-3">
                       <span className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-700 shrink-0">2</span>
-                      <p className="leading-relaxed">Call direct Bhopal hotline at <strong className="text-slate-800">88188 89660</strong> to log roadside towing assistance.</p>
+                      <p className="leading-relaxed">
+                        Use the <a href="tel:+918818889660" className="font-semibold text-emerald-700 no-underline">Call Support</a> action to log roadside towing assistance.
+                      </p>
                     </div>
                     <div className="flex gap-3">
                       <span className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-700 shrink-0">3</span>
@@ -400,39 +463,50 @@ export default function ClientPortal() {
                   </div>
                 </div>
 
-                {/* Expiry overview list */}
-                <div className="bg-white/75 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                {/* Expiry overview table */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-7 shadow-sm flex flex-col justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 uppercase mb-5 pb-3 border-b border-slate-100 flex items-center gap-2">
                       <CalendarDays size={14} /> Policy Renewal Timelines
                     </h3>
-                    {policies.length === 0 ? (
-                      <p className="text-xs text-slate-400 py-6 text-center">No active policies tracked.</p>
-                    ) : (
-                      <div className="space-y-3.5">
-                        {policies.slice(0, 3).map((p) => {
-                          const payload = p.reviewedData || p.data || {};
-                          return (
-                            <div key={p.id} className="flex justify-between items-center text-xs pb-2 border-b border-slate-50 last:border-0 last:pb-0">
-                              <div>
-                                <div className="font-bold text-slate-800 truncate max-w-[220px]">
-                                  {payload.policyNumber || "Pending Reference"}
-                                </div>
-                                <div className="text-[10px] text-slate-400 mt-0.5">
-                                  {p.selectedCompany || payload.insuranceCompany || "-"}
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-[10px] text-slate-400 block">Renewal Date</span>
-                                <span className="font-semibold text-slate-700">
-                                  {formatDate(p.renewalDate || payload.policyExpiryDate)}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                    <div className="overflow-hidden rounded-2xl border border-slate-200">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                          <tr>
+                            <th className="px-4 py-3">Policy</th>
+                            <th className="px-4 py-3">Insurer</th>
+                            <th className="px-4 py-3 text-right">Renewal</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {policies.length === 0 ? (
+                            <tr>
+                              <td colSpan={3} className="px-4 py-8 text-center">
+                                <div className="font-semibold text-slate-700">No active policies tracked</div>
+                                <div className="mt-1 text-[10px] text-slate-400">Renewal timelines will appear here once policies are linked.</div>
+                              </td>
+                            </tr>
+                          ) : (
+                            policies.slice(0, 4).map((p) => {
+                              const payload = p.reviewedData || p.data || {};
+                              return (
+                                <tr key={p.id} className="hover:bg-slate-50/80">
+                                  <td className="max-w-[150px] px-4 py-3">
+                                    <div className="truncate font-bold text-slate-800">{payload.policyNumber || "Pending Reference"}</div>
+                                  </td>
+                                  <td className="max-w-[150px] px-4 py-3">
+                                    <div className="truncate font-semibold text-slate-600">{p.selectedCompany || payload.insuranceCompany || "-"}</div>
+                                  </td>
+                                  <td className="px-4 py-3 text-right font-semibold text-slate-700">
+                                    {formatDate(p.renewalDate || payload.policyExpiryDate)}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                   <button
                     onClick={() => setActiveTab("policies")}
@@ -792,13 +866,17 @@ export default function ClientPortal() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-tr from-emerald-50/70 to-teal-50/70 border border-emerald-100/85 rounded-2xl p-6 text-center shadow-sm flex flex-col justify-center">
-                <span className="text-[10px] uppercase font-bold text-emerald-800/80 tracking-wider">Direct Bhopal Hotline</span>
-                <h4 className="text-2xl font-black text-emerald-700 mt-1 mb-2 tracking-wide">88188 89660</h4>
+              <a
+                href="tel:+918818889660"
+                className="bg-gradient-to-tr from-emerald-50/70 to-teal-50/70 border border-emerald-100/85 rounded-2xl p-6 text-center shadow-sm flex flex-col justify-center no-underline hover:border-emerald-300 hover:bg-white transition-all"
+                aria-label="Call Bhopal support desk"
+              >
+                <span className="text-[10px] uppercase font-bold text-emerald-800/80 tracking-wider">Support Hotline</span>
+                <h4 className="text-2xl font-black text-emerald-700 mt-1 mb-2 tracking-wide">Call Support</h4>
                 <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Call our commercial desk directly for renewals or claim status updates.
+                  Connect with our commercial desk for renewals or claim status updates.
                 </p>
-              </div>
+              </a>
             </div>
           )}
 
@@ -942,8 +1020,10 @@ export default function ClientPortal() {
                     </span>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="block text-[8px] font-medium force-emerald-light">Direct Helpline</span>
-                    <span className="font-semibold block force-white">88188 89660</span>
+                    <span className="block text-[8px] font-medium force-emerald-light">Support</span>
+                    <a href="tel:+918818889660" className="font-semibold block force-white no-underline">
+                      Call Desk
+                    </a>
                   </div>
                 </div>
               </div>
@@ -978,11 +1058,15 @@ export default function ClientPortal() {
               </div>
 
               {/* Bhopal hotline quick panel */}
-              <div className="bg-gradient-to-tr from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 shadow-sm text-center">
-                <span className="text-[8.5px] uppercase font-medium text-emerald-800/80 tracking-wider">Direct Bhopal Hotline</span>
-                <h4 className="text-lg font-bold text-emerald-700 mt-1 mb-1">88188 89660</h4>
-                <p className="text-slate-600 text-[9.5px] leading-relaxed">Call our Bhopal desk directly for renewals or claim updates.</p>
-              </div>
+              <a
+                href="tel:+918818889660"
+                className="bg-gradient-to-tr from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 shadow-sm text-center active:scale-95 transition-all no-underline block"
+                aria-label="Call Bhopal support desk"
+              >
+                <span className="text-[8.5px] uppercase font-medium text-emerald-800/80 tracking-wider">Support Hotline</span>
+                <h4 className="text-lg font-bold text-emerald-700 mt-1 mb-1">Call Support</h4>
+                <p className="text-slate-600 text-[9.5px] leading-relaxed">Tap to connect with our Bhopal desk for renewals or claim updates.</p>
+              </a>
 
               {/* Policy Expiries list */}
               <div className="bg-white border border-slate-200/50 rounded-2xl p-4 shadow-sm space-y-3.5">
@@ -1033,7 +1117,9 @@ export default function ClientPortal() {
                   </div>
                   <div className="flex gap-2.5">
                     <span className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center font-medium text-slate-700 shrink-0">2</span>
-                    <p className="leading-relaxed">Call direct Bhopal hotline at <strong className="text-slate-800 font-semibold">88188 89660</strong> for immediate towing triage.</p>
+                    <p className="leading-relaxed">
+                      Use the <a href="tel:+918818889660" className="font-semibold text-emerald-700 no-underline">Call Support</a> button for immediate towing triage.
+                    </p>
                   </div>
                   <div className="flex gap-2.5">
                     <span className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center font-medium text-slate-700 shrink-0">3</span>
@@ -1390,13 +1476,17 @@ export default function ClientPortal() {
               </div>
 
               {/* Bhopal hotline panel */}
-              <div className="bg-gradient-to-tr from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-5 text-center shadow-sm">
-                <span className="text-[8.5px] uppercase font-bold text-emerald-800/80 tracking-wider">Direct Bhopal Hotline</span>
-                <h4 className="text-lg font-black text-emerald-700 mt-1 mb-1 tracking-wide">88188 89660</h4>
+              <a
+                href="tel:+918818889660"
+                className="bg-gradient-to-tr from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-5 text-center shadow-sm active:scale-95 transition-all no-underline block"
+                aria-label="Call Bhopal support desk"
+              >
+                <span className="text-[8.5px] uppercase font-bold text-emerald-800/80 tracking-wider">Support Hotline</span>
+                <h4 className="text-lg font-black text-emerald-700 mt-1 mb-1 tracking-wide">Call Support</h4>
                 <p className="text-slate-650 text-[9.5px] leading-relaxed">
-                  Call our commercial desk directly for renewals or claim status updates.
+                  Tap to connect for renewals or claim status updates.
                 </p>
-              </div>
+              </a>
             </div>
           )}
 

@@ -1,4 +1,4 @@
-import { CheckCircle, LoaderCircle, ShieldCheck, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle, LoaderCircle, ShieldCheck, Trash2 } from "lucide-react";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 import PreviewField from "../shared/PreviewField";
 import { applyAiSuggestionToReviewField, getEligibleAiSuggestion } from "./aiSuggestionHelpers";
@@ -28,7 +28,15 @@ const FIELD_OPTIONS = {
   ],
 };
 
-export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, onClear, onSave }) {
+export default function FixedPolicyPreview({
+  upload,
+  isSaving,
+  onFieldChange,
+  onClear,
+  onSave,
+  reviewError = "",
+  reviewFieldErrors = {},
+}) {
   const validation = getReviewValidation(upload);
   const { resolvedSchema, visibleFields, requiredKeys, missingRequired } = validation;
   const isMotorPreview = resolvedSchema?.groupId === "motor";
@@ -136,6 +144,17 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
           ) : null}
 
           <div className="preview-body">
+            {reviewError ? (
+              <section className="alert-card error preview-inline-error">
+                <div className="alert-icon">
+                  <AlertTriangle size={18} />
+                </div>
+                <div>
+                  <strong>Save failed</strong>
+                  <p>{reviewError}</p>
+                </div>
+              </section>
+            ) : null}
             <div className="preview-form-grouped">
               {groupedFields.map((group) => (
                 <fieldset key={group.title} className="preview-fieldset">
@@ -155,6 +174,7 @@ export default function FixedPolicyPreview({ upload, isSaving, onFieldChange, on
                         const personVal = getPreviewValue("contactPerson");
                         isDisabled = !personVal || !!validateContactPerson(personVal);
                       }
+                      fieldError = reviewFieldErrors[key] || fieldError;
 
                       return (
                         <PreviewField

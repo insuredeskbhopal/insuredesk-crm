@@ -173,6 +173,10 @@ export default function Dashboard({
   const [currentUserRole, setCurrentUserRole] = useState("");
   const [editingRecord, setEditingRecord] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [editError, setEditError] = useState("");
+  const [editFieldErrors, setEditFieldErrors] = useState({});
+  const [reviewError, setReviewError] = useState("");
+  const [reviewFieldErrors, setReviewFieldErrors] = useState({});
   const [isSaving, startSaving] = useTransition();
   const [isUploading, startUploading] = useTransition();
   const [isNavigating, startNavigation] = useTransition();
@@ -752,6 +756,13 @@ export default function Dashboard({
 
   function updateExtractedField(key, value) {
     if (!selectedUpload) return;
+    setReviewError("");
+    setReviewFieldErrors((current) => {
+      if (!current[key]) return current;
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
     updateSelectedUpload({
       extractedData: {
         ...(selectedUpload.extractedData || {}),
@@ -779,11 +790,20 @@ export default function Dashboard({
     );
     setEditingRecord(record);
     setEditForm(nextForm);
+    setEditError("");
+    setEditFieldErrors({});
     setAlert(null);
   }
 
   function updateEditField(key, value) {
     setEditForm((current) => ({ ...current, [key]: value }));
+    setEditFieldErrors((current) => {
+      if (!current[key]) return current;
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+    if (editError) setEditError("");
   }
 
   function saveEditedRecord() {
@@ -791,12 +811,12 @@ export default function Dashboard({
     startSaving(async () => {
       try {
         setAlert(null);
+        setEditError("");
+        setEditFieldErrors({});
         if (!editForm.clientId) {
-          setAlert({
-            type: "error",
-            title: "Client ID Required",
-            message: "You must link this policy to a Client ID before saving. Please use the search assistant under 'Client ID' to link an existing client, or request the admin to create a new client first.",
-          });
+          const message = "You must link this policy to a Client ID before saving. Please use the search assistant under Client ID to link an existing client, or request the admin to create a new client first.";
+          setEditError(message);
+          setEditFieldErrors({ clientId: "Client ID is required." });
           setToast("Client ID is required");
           return;
         }
@@ -805,8 +825,9 @@ export default function Dashboard({
             editValidation.missingRequired,
             editValidation.contactErrors,
           );
-          setAlert({ type: "error", title: "Review incomplete", message });
-          setToast("Fix contact details before saving");
+          setEditError(message);
+          setEditFieldErrors(buildEditFieldErrors(editValidation));
+          setToast("Fix highlighted fields before saving");
           return;
         }
         const reviewedData = editValidation.visibleFields.reduce(
@@ -826,11 +847,18 @@ export default function Dashboard({
 
         if (!response.ok) {
           let message = "Policy record could not be updated.";
+          let missingRequired = [];
           try {
             const payload = await response.json();
             if (payload?.error) message = payload.error;
+            if (Array.isArray(payload?.missingRequired)) missingRequired = payload.missingRequired;
           } catch {}
-          setAlert({ type: "error", title: "Update failed", message });
+          setEditError(message);
+          setEditFieldErrors(
+            missingRequired.length
+              ? buildEditFieldErrors({ ...editValidation, missingRequired })
+              : buildEditFieldErrors(editValidation),
+          );
           setToast(message);
           return;
         }
@@ -839,6 +867,8 @@ export default function Dashboard({
         setRecords((current) => current.map((record) => (record.id === updated.id ? updated : record)));
         setEditingRecord(null);
         setEditForm({});
+        setEditError("");
+        setEditFieldErrors({});
         setAlert({
           type: "success",
           title: "Record updated",
@@ -847,7 +877,7 @@ export default function Dashboard({
         setToast("Policy record updated");
       } catch (error) {
         const message = error?.message || "Policy record could not be updated.";
-        setAlert({ type: "error", title: "Update failed", message });
+        setEditError(message);
         setToast(message);
       }
     });
@@ -974,16 +1004,20 @@ export default function Dashboard({
         setAlert(null);
         const isDynamicPolicySave =
           (activePage === "bulk-entry" || activePage === "dashboard") && selectedUpload?.id;
+        const reviewedUploadData = isDynamicPolicySave ? prepareUploadReviewData(selectedUpload) : null;
 
         const targetClientId = isDynamicPolicySave
-          ? (selectedUpload?.reviewedData?.clientId || selectedUpload?.extractedData?.clientId)
+          ? (reviewedUploadData?.clientId || selectedUpload?.reviewedData?.clientId || selectedUpload?.extractedData?.clientId)
           : form.clientId;
 
         if (!targetClientId) {
+          const message = "You must link this policy to a Client ID before saving. Please use the search assistant under Client ID to link an existing client, or request the admin to create a new client first.";
+          setReviewError(message);
+          setReviewFieldErrors({ clientId: "Client ID is required." });
           setAlert({
             type: "error",
             title: "Client ID Required",
-            message: "You must link this policy to a Client ID before saving. Please use the search assistant under 'Client ID' to link an existing client, or request the admin to create a new client first.",
+            message,
           });
           setToast("Client ID is required");
           return;
@@ -1015,11 +1049,17 @@ export default function Dashboard({
             });
             return;
           }
-          const validation = getReviewValidation(selectedUpload);
+          const validation = getReviewValidation({
+            ...selectedUpload,
+            extractedData: reviewedUploadData,
+            manualFields: uniqueValues([...(selectedUpload.manualFields || []), ...Object.keys(reviewedUploadData || {})]),
+          });
           if (!validation.valid) {
             const message = formatReviewValidationError(validation.missingRequired, validation.contactErrors);
+            setReviewError(message);
+            setReviewFieldErrors(buildEditFieldErrors(validation));
             setAlert({ type: "error", title: "Review incomplete", message });
-            setToast("Fix contact details before saving");
+            setToast("Fix highlighted fields before saving");
             return;
           }
         } else if (activePage === "manual-entry") {
@@ -1035,7 +1075,6 @@ export default function Dashboard({
             return;
           }
         }
-        const reviewedUploadData = isDynamicPolicySave ? prepareUploadReviewData(selectedUpload) : null;
         const response = await fetch(isDynamicPolicySave ? "/api/policy-records" : "/api/records", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1067,10 +1106,20 @@ export default function Dashboard({
 
         if (!response.ok) {
           let message = "Record could not be saved.";
+          let missingRequired = [];
           try {
             const payload = await response.json();
             if (payload?.error) message = payload.error;
+            if (Array.isArray(payload?.missingRequired)) missingRequired = payload.missingRequired;
           } catch {}
+          if (isDynamicPolicySave) {
+            setReviewError(message);
+            setReviewFieldErrors(
+              missingRequired.length
+                ? buildEditFieldErrors({ missingRequired, contactFieldErrors: {} })
+                : reviewFieldErrors,
+            );
+          }
           setAlert({ type: "error", title: "Save failed", message });
           setToast(message);
           return;
@@ -1120,9 +1169,12 @@ export default function Dashboard({
           title: "Record saved",
           message: saved.sourceFile || "Policy record saved successfully.",
         });
+        setReviewError("");
+        setReviewFieldErrors({});
         setToast(`Saved ${saved.sourceFile}`);
       } catch (error) {
         const message = error?.message || "Record could not be saved.";
+        setReviewError(message);
         setAlert({ type: "error", title: "Save failed", message });
         setToast(message);
       }
@@ -1672,9 +1724,13 @@ export default function Dashboard({
               upload={selectedUpload}
               isSaving={isSaving}
               onFieldChange={updateExtractedField}
-              onClear={() =>
-                selectedUpload ? updateSelectedUpload({ extractedData: {}, manualFields: [] }) : null
-              }
+              reviewError={reviewError}
+              reviewFieldErrors={reviewFieldErrors}
+              onClear={() => {
+                setReviewError("");
+                setReviewFieldErrors({});
+                return selectedUpload ? updateSelectedUpload({ extractedData: {}, manualFields: [] }) : null;
+              }}
               onSave={saveRecord}
             />
           </section>
@@ -2339,7 +2395,13 @@ export default function Dashboard({
           record={editingRecord}
           editForm={editForm}
           updateEditField={updateEditField}
-          onClose={() => setEditingRecord(null)}
+          editError={editError}
+          editFieldErrors={editFieldErrors}
+          onClose={() => {
+            setEditingRecord(null);
+            setEditError("");
+            setEditFieldErrors({});
+          }}
           onSave={saveEditedRecord}
           isSaving={isSaving}
         />
@@ -2720,6 +2782,22 @@ function prepareUploadReviewData(upload) {
   }
 
   return data;
+}
+
+function buildEditFieldErrors(validation) {
+  const labelToKey = new Map(FIELD_SETUP.map(([label, key]) => [label, key]));
+  const errors = {};
+
+  (validation?.missingRequired || []).forEach((labelOrKey) => {
+    const key = labelToKey.get(labelOrKey) || labelOrKey;
+    errors[key] = `${labelOrKey} is required.`;
+  });
+
+  Object.entries(validation?.contactFieldErrors || {}).forEach(([key, message]) => {
+    if (message) errors[key] = message;
+  });
+
+  return errors;
 }
 
 function formatClientVehicleNumbers(client) {

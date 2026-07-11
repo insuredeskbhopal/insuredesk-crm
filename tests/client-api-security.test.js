@@ -33,13 +33,15 @@ describe("client API data isolation", () => {
     });
   });
 
-  it("does not return a profile unless the customer belongs to the token organization", async () => {
+  it("revokes stale client sessions when the account is not found in the token organization", async () => {
     const { GET } = await import("../src/app/api/client/profile/route.js");
     prismaMock.clientAccount.findFirst.mockResolvedValueOnce(null);
 
     const response = await GET(nextRequest("http://localhost/api/client/profile"));
 
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(401);
+    expect(response.headers.get("set-cookie")).toContain("token=");
+    expect(response.headers.get("set-cookie")).toContain("Max-Age=0");
     expect(prismaMock.clientAccount.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: "client-1", organizationId: "org-1", deletedAt: null },

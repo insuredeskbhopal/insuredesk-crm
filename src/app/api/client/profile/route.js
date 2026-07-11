@@ -35,7 +35,7 @@ export async function GET(request) {
     });
 
     if (!customer) {
-      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
+      return clearClientSession({ success: false, error: "Client session expired" }, 401);
     }
 
     return NextResponse.json({ success: true, profile: customer });
@@ -43,4 +43,18 @@ export async function GET(request) {
     console.error("Client Profile Error:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
+}
+
+function clearClientSession(payload, status) {
+  const response = NextResponse.json(payload, { status });
+  response.cookies.set({
+    name: "token",
+    value: "",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 0,
+    path: "/",
+  });
+  return response;
 }

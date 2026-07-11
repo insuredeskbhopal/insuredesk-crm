@@ -627,3 +627,26 @@ tbody tr:hover {
 .force-slate-light {
   color: #E2E8F0 !important;
 }
+
+.client-portal-hero,
+.client-portal-hero * {
+  color: #ffffff !important;
+}
+
+.client-portal-hero svg {
+  color: #ffffff !important;
+  stroke: currentColor !important;
+}
+
+.client-portal-hero .client-portal-interactive:hover,
+.client-portal-hero .client-portal-interactive:hover *,
+.client-portal-hero .client-portal-interactive:focus-visible,
+.client-portal-hero .client-portal-interactive:focus-visible * {
+  color: #000000 !important;
+}
+
+.client-portal-hero .client-portal-interactive:hover svg,
+.client-portal-hero .client-portal-interactive:focus-visible svg {
+  color: #000000 !important;
+  stroke: currentColor !important;
+}

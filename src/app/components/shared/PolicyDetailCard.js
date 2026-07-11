@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { X, Printer, Pencil, LoaderCircle, CheckCircle } from "lucide-react";
+import { AlertTriangle, X, Printer, Pencil, LoaderCircle, CheckCircle } from "lucide-react";
 import {
   FIELD_GROUPS,
   FUEL_TYPE_OPTIONS,
@@ -129,6 +129,8 @@ export default function PolicyDetailCard({
   updateEditField,
   onSave,
   isSaving = false,
+  editError = "",
+  editFieldErrors = {},
   // View mode specific props:
   onPrint,
 }) {
@@ -335,6 +337,17 @@ export default function PolicyDetailCard({
             </>
           ) : (
             <div className="preview-form-grouped" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              {editError ? (
+                <section className="alert-card error preview-inline-error">
+                  <div className="alert-icon">
+                    <AlertTriangle size={18} />
+                  </div>
+                  <div>
+                    <strong>Update failed</strong>
+                    <p>{editError}</p>
+                  </div>
+                </section>
+              ) : null}
               {fieldGroups.map((group) => (
                 <fieldset
                   key={group.title}
@@ -370,6 +383,7 @@ export default function PolicyDetailCard({
                           : isContactNumber
                             ? validateContactNumber(editForm.contactNumber)
                             : "";
+                      const fieldError = editFieldErrors[key] || error;
                       return (
                         <PreviewField
                           key={key}
@@ -378,7 +392,7 @@ export default function PolicyDetailCard({
                           onChange={(value) => updateEditField(key, value)}
                           options={FIELD_OPTIONS[key]}
                           wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
-                          error={error}
+                          error={fieldError}
                           disabled={isContactNumber && Boolean(contactPersonError)}
                           insuredName={editForm.insuredName}
                           contactNumber={editForm.contactNumber}
