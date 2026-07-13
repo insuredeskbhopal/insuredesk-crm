@@ -45,6 +45,7 @@ export async function GET(request) {
         !mine && OPEN_STATUSES.includes(item.status)
           ? await findSuggestions(item)
           : [],
+      policies: !mine ? await findAttachedPolicies(item) : [],
     })),
   );
 
@@ -172,25 +173,47 @@ export async function PATCH(request) {
     }
   }
 
-  const updated = await prisma.task.update({
-    where: { id: item.id },
-    data: {
-      status: "COMPLETED",
-      completedAt: new Date(),
-      updatedById: actorId,
-      recordId: account.id,
-      recordLabel: account.name,
-      metadata: {
-        ...(item.metadata || {}),
-        resolvedClientId: account.id,
-        resolvedClientName: account.name,
-        resolutionType,
-        resolvedByName: session.name || null,
+  const { updated, mappedPolicyCount } = await prisma.$transaction(async (tx) => {
+    const policies = await tx.policyRecord.findMany({
+      where: { clientIdRequestId: item.id, clientIdPending: true, deletedAt: null },
+      select: { id: true, data: true, reviewedData: true, extractedData: true },
+    });
+    for (const policy of policies) {
+      await tx.policyRecord.update({
+        where: { id: policy.id },
+        data: {
+          data: { ...(policy.data || {}), clientId: account.id },
+          reviewedData: { ...(policy.reviewedData || policy.data || {}), clientId: account.id },
+          extractedData: policy.extractedData
+            ? { ...policy.extractedData, clientId: account.id }
+            : policy.extractedData,
+          clientIdPending: false,
+        },
+      });
+    }
+
+    const resolvedTask = await tx.task.update({
+      where: { id: item.id },
+      data: {
+        status: "COMPLETED",
+        completedAt: new Date(),
+        updatedById: actorId,
+        recordId: account.id,
+        recordLabel: account.name,
+        metadata: {
+          ...(item.metadata || {}),
+          resolvedClientId: account.id,
+          resolvedClientName: account.name,
+          resolutionType,
+          resolvedByName: session.name || null,
+          mappedPolicyCount: policies.length,
+        },
       },
-    },
+    });
+    return { updated: resolvedTask, mappedPolicyCount: policies.length };
   });
 
-  return NextResponse.json(serializeRequest(updated));
+  return NextResponse.json({ ...serializeRequest(updated), mappedPolicyCount });
 }
 
 async function findSuggestions(item) {
@@ -209,6 +232,23 @@ async function findSuggestions(item) {
     select: { id: true, name: true, phone: true, email: true },
     take: 5,
     orderBy: { updatedAt: "desc" },
+  });
+}
+
+async function findAttachedPolicies(item) {
+  const policies = await prisma.policyRecord.findMany({
+    where: { clientIdRequestId: item.id, deletedAt: null },
+    select: { id: true, sourceFile: true, data: true, reviewedData: true, clientIdPending: true },
+    orderBy: { savedAt: "desc" },
+  });
+  return policies.map((policy) => {
+    const data = policy.reviewedData || policy.data || {};
+    return {
+      id: policy.id,
+      policyNumber: data.policyNumber || "",
+      sourceFile: policy.sourceFile || data.sourceFile || "Policy PDF",
+      clientIdPending: policy.clientIdPending,
+    };
   });
 }
 

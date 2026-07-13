@@ -219,6 +219,8 @@ export async function GET(request) {
       pdfMimeType: true,
       organizationId: true,
       createdById: true,
+      clientIdRequestId: true,
+      clientIdPending: true,
       createdBy: {
         select: {
           name: true,
@@ -281,6 +283,30 @@ export async function POST(request) {
 
     const payload = await request.json();
 
+    const incomingReviewedData = payload.reviewedData || payload.extractedData || {};
+    const incomingClientId = String(incomingReviewedData.clientId || "").trim();
+    let clientIdRequest = null;
+    if (!incomingClientId && payload.clientIdRequestId) {
+      clientIdRequest = await prisma.task.findFirst({
+        where: {
+          id: String(payload.clientIdRequestId),
+          module: "CLIENT_ID_REQUEST",
+          status: { in: ["OPEN", "IN_PROGRESS", "COMPLETED"] },
+          ...(user.organizationId ? { organizationId: user.organizationId } : { createdById: actorId }),
+        },
+      });
+      if (!clientIdRequest || !matchesClientIdRequest(clientIdRequest, incomingReviewedData)) {
+        return Response.json({ error: "The Client ID request is invalid or does not match this policy." }, { status: 400 });
+      }
+      const resolvedClientId = clientIdRequest.metadata?.resolvedClientId || clientIdRequest.recordId;
+      if (clientIdRequest.status === "COMPLETED" && resolvedClientId) {
+        payload.reviewedData = { ...incomingReviewedData, clientId: resolvedClientId };
+        payload.extractedData = { ...(payload.extractedData || {}), clientId: resolvedClientId };
+      }
+    }
+    const resolvedRequestClientId = String(payload.reviewedData?.clientId || payload.extractedData?.clientId || "").trim();
+    const clientIdPending = Boolean(clientIdRequest && !resolvedRequestClientId);
+
     // Find the uploaded file enforcing tenant scope boundary
     const uploadedFile = payload.uploadedFileId
       ? await prisma.uploadedFile.findFirst({
@@ -331,7 +357,7 @@ export async function POST(request) {
     );
     const validation = getReviewValidation({
       sourceFile: payload.sourceFile || uploadedFile?.sourceFile || legacyPayload.sourceFile,
-      extractedData: legacyPayload,
+      extractedData: clientIdPending ? { ...legacyPayload, clientId: "PENDING_CLIENT_ID" } : legacyPayload,
       manualFields: Object.keys(legacyPayload),
     });
 
@@ -385,6 +411,8 @@ export async function POST(request) {
         policySchemaId: payload.policySchemaId || undefined,
         organizationId: user.organizationId,
         createdById: actorId,
+        clientIdRequestId: clientIdPending ? clientIdRequest.id : null,
+        clientIdPending,
       },
     });
     const renewalMatch = await linkRenewalMarkerToPolicy({
@@ -695,5 +723,22 @@ function hasMotorPayloadSignals(data) {
     data.cubicCapacity ||
     data.seatingCapacity ||
     /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(data.policyType || ""),
+  );
+}
+
+function matchesClientIdRequest(request, policyData) {
+  const requestPhone = String(request.customerMobile || "").replace(/\D/g, "").slice(-10);
+  const policyPhone = String(policyData.contactNumber || policyData.customerMobile || "")
+    .replace(/\D/g, "")
+    .slice(-10);
+  const normalizeName = (value) =>
+    String(value || "")
+      .replace(/^\s*(?:m\/s|mr|mrs|miss|ms)\.?\s+/i, "")
+      .replace(/[^a-z0-9]/gi, "")
+      .toLowerCase();
+  return (
+    requestPhone.length === 10 &&
+    requestPhone === policyPhone &&
+    normalizeName(request.customerName) === normalizeName(policyData.insuredName)
   );
 }

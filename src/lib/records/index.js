@@ -83,6 +83,8 @@ export function normalizeRecord(record) {
     extractionLog: record.extractionLog || null,
     customerId,
     clientId: payload.clientId || legacy.clientId || "",
+    clientIdRequestId: record.clientIdRequestId || "",
+    clientIdPending: Boolean(record.clientIdPending),
     sourceFile: payload.sourceFile || legacy.sourceFile || payload.sourceFileName || "",
     status: payload.status || legacy.status || "saved",
     insuredName,

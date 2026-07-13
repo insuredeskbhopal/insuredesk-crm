@@ -71,13 +71,40 @@ export async function PUT(request, { params }) {
           sourceFile,
         })
       : existing.extractedData;
+    const clientIdRequestId = payload.clientIdRequestId ?? existing.clientIdRequestId;
+    let clientIdPending = false;
+    let verifiedClientIdRequest = null;
+    if (!reviewedData.clientId && clientIdRequestId) {
+      verifiedClientIdRequest = await prisma.task.findFirst({
+        where: {
+          id: clientIdRequestId,
+          module: "CLIENT_ID_REQUEST",
+          status: { in: ["OPEN", "IN_PROGRESS", "COMPLETED"] },
+          ...(session.organizationId
+            ? { organizationId: session.organizationId }
+            : { createdById: existing.createdById }),
+        },
+      });
+      if (!verifiedClientIdRequest || !matchesClientIdRequest(verifiedClientIdRequest, reviewedData)) {
+        return Response.json({ error: "The Client ID request is invalid or does not match this policy." }, { status: 400 });
+      }
+      const resolvedClientId =
+        verifiedClientIdRequest.metadata?.resolvedClientId || verifiedClientIdRequest.recordId;
+      if (verifiedClientIdRequest.status === "COMPLETED" && resolvedClientId) {
+        reviewedData.clientId = resolvedClientId;
+        mergedData.clientId = resolvedClientId;
+        if (extractedData) extractedData.clientId = resolvedClientId;
+      } else {
+        clientIdPending = true;
+      }
+    }
     const selectedCompany = normalizeInsuranceCompanyName(
       payload.selectedCompany ?? reviewedData.insuranceCompany ?? existing.selectedCompany,
       existing.rawText || "",
     );
     const validation = getReviewValidation({
       sourceFile,
-      extractedData: mergedData,
+      extractedData: clientIdPending ? { ...mergedData, clientId: "PENDING_CLIENT_ID" } : mergedData,
       manualFields: Object.keys(mergedData),
     });
 
@@ -106,6 +133,8 @@ export async function PUT(request, { params }) {
         selectedPolicyType: payload.selectedPolicyType ?? existing.selectedPolicyType,
         data: mergedData,
         updatedById: actorId,
+        clientIdRequestId: clientIdPending ? verifiedClientIdRequest.id : null,
+        clientIdPending,
       },
       include: {
         createdBy: {
@@ -234,4 +263,21 @@ export async function DELETE(request, { params }) {
   } catch {
     return Response.json({ error: "Policy record could not be deleted." }, { status: 500 });
   }
+}
+
+function matchesClientIdRequest(request, policyData) {
+  const requestPhone = String(request.customerMobile || "").replace(/\D/g, "").slice(-10);
+  const policyPhone = String(policyData.contactNumber || policyData.customerMobile || "")
+    .replace(/\D/g, "")
+    .slice(-10);
+  const normalizeName = (value) =>
+    String(value || "")
+      .replace(/^\s*(?:m\/s|mr|mrs|miss|ms)\.?\s+/i, "")
+      .replace(/[^a-z0-9]/gi, "")
+      .toLowerCase();
+  return (
+    requestPhone.length === 10 &&
+    requestPhone === policyPhone &&
+    normalizeName(request.customerName) === normalizeName(policyData.insuredName)
+  );
 }

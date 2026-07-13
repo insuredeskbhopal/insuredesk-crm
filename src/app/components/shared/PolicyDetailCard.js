@@ -397,6 +397,9 @@ export default function PolicyDetailCard({
                           insuredName={editForm.insuredName}
                           contactNumber={editForm.contactNumber}
                           email={editForm.email}
+                          onClientIdRequestChange={(requestId) =>
+                            updateEditField("clientIdRequestId", requestId)
+                          }
                         />
                       );
                     })}

@@ -194,6 +194,9 @@ export default function FixedPolicyPreview({
                           insuredName={getPreviewValue("insuredName")}
                           contactNumber={getPreviewValue("contactNumber")}
                           email={getPreviewValue("email")}
+                          onClientIdRequestChange={(requestId) =>
+                            onFieldChange("clientIdRequestId", requestId)
+                          }
                         />
                       );
                     })}

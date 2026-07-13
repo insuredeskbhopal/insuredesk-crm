@@ -13,6 +13,7 @@ export default function PreviewField({
   insuredName,
   contactNumber,
   email,
+  onClientIdRequestChange,
 }) {
   const metaClass = meta ? `meta-${meta.toLowerCase().replace(" ", "-")}` : "";
   const hasSuggestion = Boolean(suggestion?.suggestedValue);
@@ -68,6 +69,7 @@ export default function PreviewField({
           insuredName={insuredName}
           contactNumber={contactNumber}
           email={email}
+          onClientIdRequestChange={onClientIdRequestChange}
         />
       )}
       {hasSuggestion ? (
@@ -97,10 +99,10 @@ export default function PreviewField({
   );
 }
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { matchesClientAccountIdentity } from "@/lib/client-accounts/utils";
 
-function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber, email }) {
+function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber, email, onClientIdRequestChange }) {
   const [showSearch, setShowSearch] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -109,6 +111,7 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
   const [clientIdRequest, setClientIdRequest] = useState(null);
   const [requesting, setRequesting] = useState(false);
   const [requestError, setRequestError] = useState("");
+  const notifiedRequestId = useRef("");
 
   const [autoSuggestedClient, setAutoSuggestedClient] = useState(null);
 
@@ -192,7 +195,14 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
         setClientIdRequest(item);
         if (item?.status === "COMPLETED" && item.resolvedClientId) {
           setSelectedClientName(item.resolvedClientName || "Client");
+          if (notifiedRequestId.current) {
+            notifiedRequestId.current = "";
+            onClientIdRequestChange?.("");
+          }
           onChange(item.resolvedClientId);
+        } else if (item?.id && notifiedRequestId.current !== item.id) {
+          notifiedRequestId.current = item.id;
+          onClientIdRequestChange?.(item.id);
         }
       } catch {
         // The normal client search remains available if request status cannot be loaded.
@@ -205,7 +215,7 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
       active = false;
       window.clearInterval(timer);
     };
-  }, [value, insuredName, contactNumber, onChange]);
+  }, [value, insuredName, contactNumber, onChange, onClientIdRequestChange]);
 
   const handleSearch = async (val) => {
     setQuery(val);
@@ -239,6 +249,8 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Client ID request could not be submitted.");
       setClientIdRequest(data);
+      notifiedRequestId.current = data.id;
+      onClientIdRequestChange?.(data.id);
     } catch (err) {
       setRequestError(err.message);
     } finally {
@@ -284,6 +296,8 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
             }}
             onClick={() => {
               onChange(autoSuggestedClient.id);
+              notifiedRequestId.current = "";
+              onClientIdRequestChange?.("");
               setSelectedClientName(autoSuggestedClient.name);
               setAutoSuggestedClient(null);
             }}
@@ -362,6 +376,8 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
                     }}
                     onClick={() => {
                       onChange(profile.id);
+                      notifiedRequestId.current = "";
+                      onClientIdRequestChange?.("");
                       setSelectedClientName(profile.name);
                       setShowSearch(false);
                       setQuery("");

@@ -54,7 +54,11 @@ export default function ClientManagementPage() {
   const [clientIdRequests, setClientIdRequests] = useState(null);
   const [requestQueueLoading, setRequestQueueLoading] = useState(true);
   const [resolutionRequest, setResolutionRequest] = useState(null);
+  const [resolutionAction, setResolutionAction] = useState("LINK_EXISTING");
   const [resolutionClientId, setResolutionClientId] = useState("");
+  const [resolutionSearch, setResolutionSearch] = useState("");
+  const [resolutionResults, setResolutionResults] = useState([]);
+  const [resolutionSearching, setResolutionSearching] = useState(false);
   const [resolutionError, setResolutionError] = useState("");
   const [resolvingRequestId, setResolvingRequestId] = useState("");
 
@@ -103,8 +107,39 @@ export default function ClientManagementPage() {
 
   const openExistingClientModal = (request, clientId = "") => {
     setResolutionRequest(request);
+    setResolutionAction("LINK_EXISTING");
     setResolutionClientId(clientId);
+    setResolutionSearch("");
+    setResolutionResults([]);
     setResolutionError("");
+  };
+
+  const openCreateClientModal = (request) => {
+    setResolutionRequest(request);
+    setResolutionAction("CREATE_NEW");
+    setResolutionClientId("");
+    setResolutionSearch("");
+    setResolutionResults([]);
+    setResolutionError("");
+  };
+
+  const searchExistingClients = async (query) => {
+    setResolutionSearch(query);
+    if (query.trim().length < 2) {
+      setResolutionResults([]);
+      return;
+    }
+    setResolutionSearching(true);
+    try {
+      const res = await fetch(`/api/client-accounts?page=1&limit=8&q=${encodeURIComponent(query)}`);
+      if (!res.ok) throw new Error("Client search failed");
+      const data = await res.json();
+      setResolutionResults(data.accounts || data.profiles || []);
+    } catch (err) {
+      setResolutionError(err.message || "Client search failed");
+    } finally {
+      setResolutionSearching(false);
+    }
   };
 
   const resolveClientIdRequest = async (request, action, clientId = "") => {
@@ -307,6 +342,15 @@ export default function ClientManagementPage() {
                     <p className="mt-1 text-xs text-slate-400">
                       Requested by {item.requestedByName || item.requestedByEmail || "Agent"}
                     </p>
+                    <p className="mt-1 font-mono text-[10px] text-slate-400">Request ID: {item.id}</p>
+                    <div className="mt-2 rounded-lg bg-slate-50 p-2 text-xs text-slate-600">
+                      <strong>{item.policies?.length || 0} attached {item.policies?.length === 1 ? "policy" : "policies"}</strong>
+                      {item.policies?.map((policy) => (
+                        <div key={policy.id} className="mt-1 truncate" title={policy.sourceFile}>
+                          {policy.policyNumber || policy.sourceFile}
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div>
@@ -340,7 +384,7 @@ export default function ClientManagementPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => resolveClientIdRequest(item, "CREATE_NEW")}
+                      onClick={() => openCreateClientModal(item)}
                       disabled={resolvingRequestId === item.id}
                       className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
                     >
@@ -616,7 +660,9 @@ export default function ClientManagementPage() {
           <div className="relative w-full max-w-lg rounded-2xl border border-slate-100 bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
               <div>
-                <h3 className="font-bold text-slate-900">Link existing Client ID</h3>
+                <h3 className="font-bold text-slate-900">
+                  {resolutionAction === "CREATE_NEW" ? "Confirm new Client ID" : "Link existing Client ID"}
+                </h3>
                 <p className="text-xs text-slate-500 mt-1">Request for {resolutionRequest.name} · {resolutionRequest.phone}</p>
               </div>
               <button type="button" onClick={() => setResolutionRequest(null)} className="text-slate-400 hover:text-slate-700">
@@ -624,7 +670,36 @@ export default function ClientManagementPage() {
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <div>
+              {resolutionAction === "LINK_EXISTING" ? <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Search existing clients</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="search"
+                      value={resolutionSearch}
+                      onChange={(event) => searchExistingClients(event.target.value)}
+                      placeholder="Search name, phone or email"
+                      className="w-full rounded-lg border border-slate-300 py-2.5 pl-9 pr-3 text-sm focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                  {resolutionSearching && <p className="mt-2 text-xs text-slate-500">Searching...</p>}
+                  {resolutionResults.length > 0 && (
+                    <div className="mt-2 max-h-36 space-y-1 overflow-y-auto rounded-lg border border-slate-200 p-1">
+                      {resolutionResults.map((client) => (
+                        <button
+                          key={client.id}
+                          type="button"
+                          onClick={() => setResolutionClientId(client.id)}
+                          className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left hover:bg-emerald-50"
+                        >
+                          <span><strong className="block text-xs text-slate-800">{client.name}</strong><span className="text-[11px] text-slate-500">{client.phone}</span></span>
+                          <span className="text-[10px] font-bold text-emerald-700">Select</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Existing Client ID</label>
                 <input
                   type="text"
@@ -633,7 +708,18 @@ export default function ClientManagementPage() {
                   placeholder="Paste the complete Client ID"
                   className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 font-mono text-sm focus:border-emerald-500 focus:outline-none"
                 />
-              </div>
+              </div> : (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-slate-700">
+                  <p className="font-bold text-slate-900">Review before creating</p>
+                  <dl className="mt-3 grid grid-cols-[90px_1fr] gap-2 text-xs">
+                    <dt className="text-slate-500">Name</dt><dd className="font-semibold">{resolutionRequest.name}</dd>
+                    <dt className="text-slate-500">Phone</dt><dd className="font-semibold">{resolutionRequest.phone}</dd>
+                    <dt className="text-slate-500">Email</dt><dd className="font-semibold">{resolutionRequest.email || "Not provided"}</dd>
+                    <dt className="text-slate-500">Policies</dt><dd className="font-semibold">{resolutionRequest.policies?.length || 0}</dd>
+                  </dl>
+                  <p className="mt-3 text-xs text-amber-800">Confirm only after checking that no valid existing client is available.</p>
+                </div>
+              )}
               {resolutionError && (
                 <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
                   <AlertCircle className="h-4 w-4 shrink-0" /> {resolutionError}
@@ -645,12 +731,12 @@ export default function ClientManagementPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={!resolutionClientId || resolvingRequestId === resolutionRequest.id}
-                  onClick={() => resolveClientIdRequest(resolutionRequest, "LINK_EXISTING", resolutionClientId)}
+                  disabled={(resolutionAction === "LINK_EXISTING" && !resolutionClientId) || resolvingRequestId === resolutionRequest.id}
+                  onClick={() => resolveClientIdRequest(resolutionRequest, resolutionAction, resolutionClientId)}
                   className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
                 >
                   {resolvingRequestId === resolutionRequest.id && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Link Client ID
+                  {resolutionAction === "CREATE_NEW" ? "Confirm & Create Client ID" : "Confirm & Link Client ID"}
                 </button>
               </div>
             </div>

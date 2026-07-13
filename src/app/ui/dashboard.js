@@ -813,14 +813,18 @@ export default function Dashboard({
         setAlert(null);
         setEditError("");
         setEditFieldErrors({});
-        if (!editForm.clientId) {
+        if (!editForm.clientId && !editForm.clientIdRequestId) {
           const message = "You must link this policy to a Client ID before saving. Please use the search assistant under Client ID to link an existing client, or request the admin to create a new client first.";
           setEditError(message);
           setEditFieldErrors({ clientId: "Client ID is required." });
           setToast("Client ID is required");
           return;
         }
-        if (!editValidation.valid) {
+        const pendingClientIdOnly =
+          Boolean(editForm.clientIdRequestId) &&
+          editValidation.contactErrors.length === 0 &&
+          editValidation.missingRequired.every((key) => key === "clientId" || key === "Client ID");
+        if (!editValidation.valid && !pendingClientIdOnly) {
           const message = formatReviewValidationError(
             editValidation.missingRequired,
             editValidation.contactErrors,
@@ -842,6 +846,7 @@ export default function Dashboard({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             reviewedData,
+            clientIdRequestId: editForm.clientIdRequestId || null,
           }),
         });
 
@@ -1009,8 +1014,11 @@ export default function Dashboard({
         const targetClientId = isDynamicPolicySave
           ? (reviewedUploadData?.clientId || selectedUpload?.reviewedData?.clientId || selectedUpload?.extractedData?.clientId)
           : form.clientId;
+        const targetClientIdRequestId = isDynamicPolicySave
+          ? reviewedUploadData?.clientIdRequestId
+          : form.clientIdRequestId;
 
-        if (!targetClientId) {
+        if (!targetClientId && !targetClientIdRequestId) {
           const message = "You must link this policy to a Client ID before saving. Please use the search assistant under Client ID to link an existing client, or request the admin to create a new client first.";
           setReviewError(message);
           setReviewFieldErrors({ clientId: "Client ID is required." });
@@ -1054,7 +1062,11 @@ export default function Dashboard({
             extractedData: reviewedUploadData,
             manualFields: uniqueValues([...(selectedUpload.manualFields || []), ...Object.keys(reviewedUploadData || {})]),
           });
-          if (!validation.valid) {
+          const pendingClientIdOnly =
+            Boolean(targetClientIdRequestId) &&
+            validation.contactErrors.length === 0 &&
+            validation.missingRequired.every((key) => key === "clientId" || key === "Client ID");
+          if (!validation.valid && !pendingClientIdOnly) {
             const message = formatReviewValidationError(validation.missingRequired, validation.contactErrors);
             setReviewError(message);
             setReviewFieldErrors(buildEditFieldErrors(validation));
@@ -1094,6 +1106,7 @@ export default function Dashboard({
                   confidenceScore: 0,
                   extractedData: selectedUpload.extractedData || {},
                   reviewedData: reviewedUploadData,
+                  clientIdRequestId: targetClientIdRequestId || null,
                   extractionMethod: selectedUpload.extractionMethod,
                   extractionQuality: {},
                   extractionLog: selectedUpload.extractionLog,

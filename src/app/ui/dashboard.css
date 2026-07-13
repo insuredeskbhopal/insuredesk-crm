@@ -2036,6 +2036,10 @@ button.client-id-search-toggle:active {
   box-shadow: none !important;
 }
 
+.client-id-pending-badge {
+  color: #92400e !important;
+}
+
 .preview-form > label:has(.client-id-search-container) > input {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;

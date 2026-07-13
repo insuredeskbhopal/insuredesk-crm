@@ -63,7 +63,33 @@ function renderCell(record, column) {
       : column.format === "date"
         ? formatDate(rawValue)
         : rawValue || "";
-  if (column.primary) return <strong className="record-primary">{value}</strong>;
+  if (column.primary) {
+    return (
+      <div>
+        <strong className="record-primary">{value}</strong>
+        {record.clientIdPending ? (
+          <span
+            className="client-id-pending-badge"
+            title={`Request ID: ${record.clientIdRequestId}`}
+            style={{
+              display: "block",
+              width: "fit-content",
+              marginTop: "4px",
+              padding: "2px 6px",
+              borderRadius: "999px",
+              background: "#fef3c7",
+              color: "#92400e",
+              fontSize: "9px",
+              fontWeight: 800,
+              whiteSpace: "nowrap",
+            }}
+          >
+            Client ID Pending · {record.clientIdRequestId?.slice(0, 8)}…
+          </span>
+        ) : null}
+      </div>
+    );
+  }
   if (column.code) return <span className="record-code">{value}</span>;
   return value;
 }
