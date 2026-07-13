@@ -247,9 +247,9 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
   };
 
   return (
-    <div className="client-id-search-container" style={{ marginTop: "6px", display: "block", width: "100%" }}>
+    <div className="client-id-search-container">
       {selectedClientName && (
-        <div style={{ fontSize: "11.5px", color: "#059669", marginBottom: "4px", fontWeight: "600" }}>
+        <div className="client-id-linked-status">
           ✓ Linked Client: {selectedClientName}
         </div>
       )}
@@ -294,6 +294,7 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
       )}
       <button
         type="button"
+        className="client-id-search-toggle"
         style={{
           background: "none",
           border: "none",
@@ -310,7 +311,7 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
         {showSearch ? "Hide client search" : "🔍 Search & Link Client Profile"}
       </button>
       {showSearch && (
-        <div style={{
+        <div className="client-id-search-panel" style={{
           marginTop: "6px",
           padding: "8px",
           background: "#ffffff",
@@ -320,6 +321,7 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
         }}>
           <input
             type="text"
+            className="client-id-search-input"
             placeholder="Type name, phone or email..."
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
