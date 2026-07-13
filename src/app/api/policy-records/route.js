@@ -602,6 +602,7 @@ function toLegacyPayload(data) {
     status: "saved",
     insuredName: data.insuredName,
     policyNumber: data.policyNumber,
+    clientId: data.clientId,
     contactNumber: data.contactNumber || data.mobileNumber,
     contactPerson: data.contactPerson,
     whatsappGroupName: data.whatsappGroupName,

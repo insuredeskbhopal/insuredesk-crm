@@ -18,6 +18,7 @@ export function sanitizeRecordPayload(payload = {}) {
     status: asText(payload.status || "pending", 40),
     insuredName: asText(payload.insuredName, 260),
     policyNumber: asText(payload.policyNumber, 120),
+    clientId: asText(payload.clientId, 120),
     contactNumber: asText(payload.contactNumber, 40),
     contactPerson: asText(payload.contactPerson, 180),
     whatsappGroupName: asText(payload.whatsappGroupName, 180),
