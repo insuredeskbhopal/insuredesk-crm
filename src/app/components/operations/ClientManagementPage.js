@@ -631,7 +631,7 @@ export default function ClientManagementPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop blur with overlay mask */}
           <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            className="client-management-modal-backdrop absolute inset-0"
             onClick={() => setIsModalOpen(false)}
           ></div>
 
@@ -745,7 +745,7 @@ export default function ClientManagementPage() {
           <button
             type="button"
             aria-label="Close Client ID resolution"
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            className="client-management-modal-backdrop absolute inset-0"
             onClick={() => setResolutionRequest(null)}
           />
           <div className="relative w-full max-w-lg rounded-2xl border border-slate-100 bg-white shadow-2xl">
@@ -837,7 +837,7 @@ export default function ClientManagementPage() {
 
       {decisionRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <button type="button" aria-label="Close decision dialog" className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setDecisionRequest(null)} />
+          <button type="button" aria-label="Close decision dialog" className="client-management-modal-backdrop absolute inset-0" onClick={() => setDecisionRequest(null)} />
           <div className="relative w-full max-w-lg rounded-2xl border border-white/70 bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
               <div>
@@ -865,7 +865,7 @@ export default function ClientManagementPage() {
 
       {correctionRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <button type="button" aria-label="Close correction panel" className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setCorrectionRequest(null)} />
+          <button type="button" aria-label="Close correction panel" className="client-management-modal-backdrop absolute inset-0" onClick={() => setCorrectionRequest(null)} />
           <div className="relative w-full max-w-lg rounded-2xl border border-white/70 bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
               <div><h3 className="font-bold text-slate-900">Correct Client ID request</h3><p className="mt-1 font-mono text-[10px] text-slate-400">Request ID: {correctionRequest.id}</p></div>

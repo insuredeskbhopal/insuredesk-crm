@@ -10152,6 +10152,25 @@ label.is-disabled textarea {
   z-index: 9999;
 }
 
+/* Client Management overlays are buttons in some dialogs. Keep the global
+   button reset from painting them white and hiding the backdrop effect. */
+.client-management-modal-backdrop,
+.client-management-modal-backdrop:hover:not(:disabled),
+.client-management-modal-backdrop:active,
+.client-management-modal-backdrop:focus,
+.client-management-modal-backdrop:focus-visible {
+  min-height: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  background: rgba(15, 23, 42, 0.55) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+
 .tb-modal-card {
   width: 480px;
   background-color: #ffffff;
