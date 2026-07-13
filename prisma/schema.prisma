@@ -522,6 +522,7 @@ model PolicyRecord {
   updatedBy               User?              @relation("PolicyUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   clientIdRequestId       String?            @map("client_id_request_id") @db.Uuid
   clientIdPending         Boolean            @default(false) @map("client_id_pending")
+  clientIdStatus          String             @default("LINKED") @map("client_id_status")
   deletedById             String?            @map("deleted_by_id") @db.Uuid
   deletedBy               User?              @relation("PolicyDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
   deletedAt               DateTime?          @map("deleted_at") @db.Timestamptz(6)
@@ -545,6 +546,7 @@ model PolicyRecord {
   @@index([createdById, deletedAt, savedAt])
   @@index([clientIdRequestId])
   @@index([organizationId, clientIdPending])
+  @@index([organizationId, clientIdStatus])
   @@index([selectedCompany])
   @@index([selectedPolicyType])
   @@index([createdAt])

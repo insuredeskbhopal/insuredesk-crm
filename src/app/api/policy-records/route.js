@@ -221,6 +221,7 @@ export async function GET(request) {
       createdById: true,
       clientIdRequestId: true,
       clientIdPending: true,
+      clientIdStatus: true,
       createdBy: {
         select: {
           name: true,
@@ -291,7 +292,7 @@ export async function POST(request) {
         where: {
           id: String(payload.clientIdRequestId),
           module: "CLIENT_ID_REQUEST",
-          status: { in: ["OPEN", "IN_PROGRESS", "COMPLETED"] },
+          status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS", "COMPLETED"] },
           ...(user.organizationId ? { organizationId: user.organizationId } : { createdById: actorId }),
         },
       });
@@ -413,6 +414,11 @@ export async function POST(request) {
         createdById: actorId,
         clientIdRequestId: clientIdPending ? clientIdRequest.id : null,
         clientIdPending,
+        clientIdStatus: clientIdPending
+          ? clientIdRequest.status === "WAITING_DOCUMENTS"
+            ? "ACTION_REQUIRED"
+            : "PENDING"
+          : "LINKED",
       },
     });
     const renewalMatch = await linkRenewalMarkerToPolicy({

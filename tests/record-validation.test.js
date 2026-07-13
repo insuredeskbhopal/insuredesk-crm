@@ -7,6 +7,7 @@ import {
 import {
   getReviewFieldValue,
   getReviewValidation,
+  canSaveWithPendingClientId,
   shouldUseExtractedFuelType,
 } from "../src/app/lib/dashboard-helpers";
 
@@ -60,6 +61,19 @@ describe("sanitizeRecordPayload", () => {
     expect(validation.requiredKeys).not.toContain("fuelType");
     expect(validation.missingRequired).not.toContain("Fuel Type");
     expect(validation.valid).toBe(true);
+  });
+
+  it("allows saving a complete review when only Client ID is pending through a request", () => {
+    const validation = {
+      valid: false,
+      missingRequired: ["Client ID"],
+      contactErrors: [],
+    };
+
+    expect(canSaveWithPendingClientId(validation, "10000000-0000-4000-8000-000000000001")).toBe(true);
+    expect(canSaveWithPendingClientId(validation, "")).toBe(false);
+    expect(canSaveWithPendingClientId({ ...validation, missingRequired: ["Client ID", "Policy Number"] }, "request-id")).toBe(false);
+    expect(canSaveWithPendingClientId({ ...validation, contactErrors: ["Invalid phone"] }, "request-id")).toBe(false);
   });
 
   it("validates contact person as required and name-only", () => {

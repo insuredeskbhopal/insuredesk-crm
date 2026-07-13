@@ -10,6 +10,7 @@ import {
   FUEL_TYPE_OPTIONS,
   PAYMENT_MODE_OPTIONS,
   getReviewValidation,
+  canSaveWithPendingClientId,
   getReviewFieldValue,
   reviewStatusLabel,
   hasValue,
@@ -39,6 +40,10 @@ export default function FixedPolicyPreview({
 }) {
   const validation = getReviewValidation(upload);
   const { resolvedSchema, visibleFields, requiredKeys, missingRequired } = validation;
+  const clientIdRequestId =
+    upload?.reviewedData?.clientIdRequestId || upload?.extractedData?.clientIdRequestId || "";
+  const pendingClientIdOnly = canSaveWithPendingClientId(validation, clientIdRequestId);
+  const displayedMissingRequired = pendingClientIdOnly ? [] : missingRequired;
   const isMotorPreview = resolvedSchema?.groupId === "motor";
   const manualFields = upload?.manualFields || [];
   const getPreviewValue = (key) => {
@@ -53,6 +58,7 @@ export default function FixedPolicyPreview({
     return upload?.extractedData?.[key] || "";
   };
   const getFieldMeta = (key) => {
+    if (key === "clientId" && pendingClientIdOnly) return "Pending approval";
     const hasPreviewValue = hasValue(getPreviewValue(key));
     const isRequired = requiredKeys?.includes(key);
     const isManual = manualFields.includes(key) || isFieldManualForUpload(upload, key);
@@ -82,7 +88,7 @@ export default function FixedPolicyPreview({
           </p>
         </div>
         <strong>
-          <CheckCircle size={15} /> {reviewStatusLabel(upload, missingRequired)}
+          <CheckCircle size={15} /> {reviewStatusLabel(upload, displayedMissingRequired)}
         </strong>
       </div>
 
@@ -131,14 +137,14 @@ export default function FixedPolicyPreview({
             </div>
           </div>
 
-          {missingRequired.length ? (
+          {displayedMissingRequired.length ? (
             <section className="alert-card warning">
               <div className="alert-icon">
                 <ShieldCheck size={18} />
               </div>
               <div>
                 <strong>Manual details needed.</strong>
-                <p>{missingRequired.join(", ")}</p>
+                <p>{displayedMissingRequired.join(", ")}</p>
               </div>
             </section>
           ) : null}
@@ -214,7 +220,11 @@ export default function FixedPolicyPreview({
               className="secondary-action"
               type="button"
               onClick={onSave}
-              disabled={isSaving || uploadStatus === UPLOAD_STATUS.APPROVED || !validation.valid}
+              disabled={
+                isSaving ||
+                uploadStatus === UPLOAD_STATUS.APPROVED ||
+                (!validation.valid && !pendingClientIdOnly)
+              }
             >
               {isSaving ? <LoaderCircle size={18} className="spin" /> : <CheckCircle size={18} />}
               Verify & Save

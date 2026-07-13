@@ -59,7 +59,7 @@ export async function POST(request) {
     let mainPolicy = null;
     if (policyId) {
       mainPolicy = await prisma.policyRecord.findFirst({
-        where: { id: policyId, ...tenantFilter },
+        where: { id: policyId, clientIdPending: false, ...tenantFilter },
       });
       if (mainPolicy) {
         const norm = normalizeRecord(mainPolicy);
@@ -75,6 +75,7 @@ export async function POST(request) {
       activePolicies = await prisma.policyRecord.findMany({
         where: {
           deletedAt: null,
+          clientIdPending: false,
           ...(isSuperAdmin ? {} : { organizationId: orgId }),
           OR: [
             { reviewedData: { path: ["contactNumber"], string_contains: cleanContact } },

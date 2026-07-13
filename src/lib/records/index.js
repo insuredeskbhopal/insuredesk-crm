@@ -85,6 +85,7 @@ export function normalizeRecord(record) {
     clientId: payload.clientId || legacy.clientId || "",
     clientIdRequestId: record.clientIdRequestId || "",
     clientIdPending: Boolean(record.clientIdPending),
+    clientIdStatus: record.clientIdStatus || (record.clientIdPending ? "PENDING" : "LINKED"),
     sourceFile: payload.sourceFile || legacy.sourceFile || payload.sourceFileName || "",
     status: payload.status || legacy.status || "saved",
     insuredName,

@@ -7,6 +7,7 @@ export const runtime = "nodejs";
 
 const MODULE = "CLIENT_ID_REQUEST";
 const OPEN_STATUSES = ["OPEN", "IN_PROGRESS"];
+const ACTIVE_STATUSES = [...OPEN_STATUSES, "WAITING_DOCUMENTS"];
 
 export async function GET(request) {
   const session = await requireStaffSession(request);
@@ -14,6 +15,7 @@ export async function GET(request) {
 
   const { searchParams } = new URL(request.url);
   const mine = searchParams.get("mine") === "1";
+  const allMine = mine && searchParams.get("all") === "1";
   if (!mine && session.role !== "SUPER_ADMIN") {
     return NextResponse.json({ error: "Only Super Admin can review Client ID requests." }, { status: 403 });
   }
@@ -35,7 +37,7 @@ export async function GET(request) {
   const requests = await prisma.task.findMany({
     where,
     orderBy: { createdAt: "desc" },
-    take: mine ? 1 : 50,
+    take: allMine ? 50 : mine ? 1 : 50,
   });
 
   const items = await Promise.all(
@@ -45,7 +47,7 @@ export async function GET(request) {
         !mine && OPEN_STATUSES.includes(item.status)
           ? await findSuggestions(item)
           : [],
-      policies: !mine ? await findAttachedPolicies(item) : [],
+      policies: await findAttachedPolicies(item),
     })),
   );
 
@@ -77,13 +79,15 @@ export async function POST(request) {
       organizationId,
       createdById: actorId,
       customerMobile: phone,
-      status: { in: OPEN_STATUSES },
+      customerName: { equals: name, mode: "insensitive" },
+      status: { in: ACTIVE_STATUSES },
     },
     orderBy: { createdAt: "desc" },
   });
 
   if (existing) return NextResponse.json(serializeRequest(existing));
 
+  const requestedAt = new Date();
   const item = await prisma.task.create({
     data: {
       organizationId,
@@ -101,6 +105,16 @@ export async function POST(request) {
         email,
         requestedByName: session.name || null,
         requestedByEmail: session.email || null,
+        workflowStatus: "PENDING",
+        history: [
+          {
+            event: "REQUESTED",
+            actorId,
+            actorName: session.name || session.email || "Agent",
+            at: requestedAt.toISOString(),
+            identity: { name, phone, email },
+          },
+        ],
       },
     },
   });
@@ -111,15 +125,13 @@ export async function POST(request) {
 export async function PATCH(request) {
   const session = await requireStaffSession(request);
   if (session.response) return session.response;
-  if (session.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ error: "Only Super Admin can resolve Client ID requests." }, { status: 403 });
-  }
 
   const body = await request.json();
   const requestId = String(body.requestId || "");
   const action = body.action;
-  if (!requestId || !["LINK_EXISTING", "CREATE_NEW"].includes(action)) {
-    return NextResponse.json({ error: "A valid request and resolution action are required." }, { status: 400 });
+  const allowedActions = ["LINK_EXISTING", "CREATE_NEW", "NEEDS_CORRECTION", "REJECT", "RESUBMIT"];
+  if (!requestId || !allowedActions.includes(action)) {
+    return NextResponse.json({ error: "A valid request action is required." }, { status: 400 });
   }
 
   const item = await prisma.task.findFirst({
@@ -130,11 +142,152 @@ export async function PATCH(request) {
     },
   });
   if (!item) return NextResponse.json({ error: "Client ID request not found." }, { status: 404 });
-  if (!OPEN_STATUSES.includes(item.status)) {
-    return NextResponse.json({ error: "This request has already been resolved." }, { status: 409 });
-  }
 
   const actorId = session.userId || session.id;
+
+  if (["NEEDS_CORRECTION", "REJECT"].includes(action)) {
+    if (session.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Only Super Admin can return a request for correction." }, { status: 403 });
+    }
+    if (!OPEN_STATUSES.includes(item.status)) {
+      return NextResponse.json({ error: "Only a pending request can be returned for correction." }, { status: 409 });
+    }
+    const note = String(body.note || "").trim();
+    if (!note) {
+      return NextResponse.json({ error: "A correction note is required." }, { status: 400 });
+    }
+    const decidedAt = new Date();
+    const history = getHistory(item.metadata);
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.policyRecord.updateMany({
+        where: { clientIdRequestId: item.id, clientIdPending: true, deletedAt: null },
+        data: { clientIdStatus: "ACTION_REQUIRED" },
+      });
+      const task = await tx.task.update({
+        where: { id: item.id },
+        data: {
+          status: "WAITING_DOCUMENTS",
+          updatedById: actorId,
+          metadata: {
+            ...(item.metadata || {}),
+            workflowStatus: "NEEDS_CORRECTION",
+            latestCorrectionNote: note,
+            history: [
+              ...history,
+              {
+                event: action,
+                note,
+                actorId,
+                actorName: session.name || session.email || "Super Admin",
+                at: decidedAt.toISOString(),
+                identity: requestIdentity(item),
+              },
+            ],
+          },
+        },
+      });
+      if (item.createdById) {
+        await tx.notification.create({
+          data: {
+            organizationId: item.organizationId,
+            userId: item.createdById,
+            createdById: actorId,
+            category: "SERVICE_REQUEST",
+            severity: "WARNING",
+            title: "Client ID request needs correction",
+            message: note,
+            module: MODULE,
+            recordId: item.id,
+            recordLabel: item.customerName,
+            actionUrl: `/operations/client-management?clientIdRequest=${item.id}`,
+            sourceKey: `client-id-correction:${item.id}:${decidedAt.getTime()}`,
+            metadata: { requestId: item.id, decisionType: action },
+          },
+        });
+      }
+      return task;
+    });
+    return NextResponse.json(serializeRequest(updated));
+  }
+
+  if (action === "RESUBMIT") {
+    if (!canResubmit(session, item)) {
+      return NextResponse.json({ error: "You cannot resubmit this request." }, { status: 403 });
+    }
+    if (item.status !== "WAITING_DOCUMENTS") {
+      return NextResponse.json({ error: "This request is not waiting for correction." }, { status: 409 });
+    }
+    const name = String(body.name || "").trim();
+    const phone = normalizeIndianPhone(body.phone || "");
+    const email = String(body.email || "").trim().toLowerCase() || null;
+    if (!name || !phone) {
+      return NextResponse.json(
+        { error: "Client name and a valid 10-digit Indian mobile number are required." },
+        { status: 400 },
+      );
+    }
+    const before = requestIdentity(item);
+    const after = { name, phone, email };
+    const resubmittedAt = new Date();
+    const history = getHistory(item.metadata);
+    const updated = await prisma.$transaction(async (tx) => {
+      const policies = await tx.policyRecord.findMany({
+        where: { clientIdRequestId: item.id, clientIdPending: true, deletedAt: null },
+        select: { id: true, data: true, reviewedData: true, extractedData: true },
+      });
+      for (const policy of policies) {
+        const identityUpdate = {
+          insuredName: name,
+          contactNumber: phone,
+          email: email || "",
+          emailAddress: email || "",
+        };
+        await tx.policyRecord.update({
+          where: { id: policy.id },
+          data: {
+            data: { ...(policy.data || {}), ...identityUpdate },
+            reviewedData: { ...(policy.reviewedData || policy.data || {}), ...identityUpdate },
+            extractedData: policy.extractedData ? { ...policy.extractedData, ...identityUpdate } : policy.extractedData,
+            clientIdStatus: "PENDING",
+          },
+        });
+      }
+      return tx.task.update({
+        where: { id: item.id },
+        data: {
+          title: `Client ID requested for ${name}`,
+          customerName: name,
+          customerMobile: phone,
+          status: "OPEN",
+          updatedById: actorId,
+          metadata: {
+            ...(item.metadata || {}),
+            email,
+            workflowStatus: "PENDING",
+            history: [
+              ...history,
+              {
+                event: "RESUBMITTED",
+                actorId,
+                actorName: session.name || session.email || "Agent",
+                at: resubmittedAt.toISOString(),
+                before,
+                after,
+              },
+            ],
+          },
+        },
+      });
+    });
+    return NextResponse.json(serializeRequest(updated));
+  }
+
+  if (session.role !== "SUPER_ADMIN") {
+    return NextResponse.json({ error: "Only Super Admin can resolve Client ID requests." }, { status: 403 });
+  }
+  if (!OPEN_STATUSES.includes(item.status)) {
+    return NextResponse.json({ error: "This request must be pending before it can be resolved." }, { status: 409 });
+  }
   let account;
   let resolutionType = action;
 
@@ -188,6 +341,7 @@ export async function PATCH(request) {
             ? { ...policy.extractedData, clientId: account.id }
             : policy.extractedData,
           clientIdPending: false,
+          clientIdStatus: "LINKED",
         },
       });
     }
@@ -207,6 +361,19 @@ export async function PATCH(request) {
           resolutionType,
           resolvedByName: session.name || null,
           mappedPolicyCount: policies.length,
+          workflowStatus: "LINKED",
+          history: [
+            ...getHistory(item.metadata),
+            {
+              event: resolutionType,
+              actorId,
+              actorName: session.name || session.email || "Super Admin",
+              at: new Date().toISOString(),
+              resolvedClientId: account.id,
+              resolvedClientName: account.name,
+              mappedPolicyCount: policies.length,
+            },
+          ],
         },
       },
     });
@@ -238,7 +405,14 @@ async function findSuggestions(item) {
 async function findAttachedPolicies(item) {
   const policies = await prisma.policyRecord.findMany({
     where: { clientIdRequestId: item.id, deletedAt: null },
-    select: { id: true, sourceFile: true, data: true, reviewedData: true, clientIdPending: true },
+    select: {
+      id: true,
+      sourceFile: true,
+      data: true,
+      reviewedData: true,
+      clientIdPending: true,
+      clientIdStatus: true,
+    },
     orderBy: { savedAt: "desc" },
   });
   return policies.map((policy) => {
@@ -248,6 +422,7 @@ async function findAttachedPolicies(item) {
       policyNumber: data.policyNumber || "",
       sourceFile: policy.sourceFile || data.sourceFile || "Policy PDF",
       clientIdPending: policy.clientIdPending,
+      clientIdStatus: policy.clientIdStatus,
     };
   });
 }
@@ -265,9 +440,31 @@ function serializeRequest(item) {
     resolvedClientId: metadata.resolvedClientId || item.recordId || null,
     resolvedClientName: metadata.resolvedClientName || item.recordLabel || null,
     resolutionType: metadata.resolutionType || null,
+    workflowStatus: metadata.workflowStatus || (item.status === "WAITING_DOCUMENTS" ? "NEEDS_CORRECTION" : "PENDING"),
+    correctionNote: metadata.latestCorrectionNote || null,
+    history: Array.isArray(metadata.history) ? metadata.history : [],
     createdAt: item.createdAt,
     completedAt: item.completedAt,
   };
+}
+
+function getHistory(metadata) {
+  return Array.isArray(metadata?.history) ? metadata.history : [];
+}
+
+function requestIdentity(item) {
+  return {
+    name: item.customerName || "",
+    phone: item.customerMobile || "",
+    email: item.metadata?.email || null,
+  };
+}
+
+function canResubmit(session, item) {
+  const actorId = session.userId || session.id;
+  if (session.role === "VIEWER" || session.role === "CLIENT") return false;
+  if (session.role === "SUPER_ADMIN" || item.createdById === actorId) return true;
+  return Boolean(session.organizationId && session.organizationId === item.organizationId);
 }
 
 async function requireStaffSession(request) {

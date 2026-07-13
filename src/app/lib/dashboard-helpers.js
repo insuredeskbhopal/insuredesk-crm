@@ -601,6 +601,14 @@ export function getReviewValidation(upload, options = {}) {
   };
 }
 
+export function canSaveWithPendingClientId(validation, clientIdRequestId) {
+  return (
+    Boolean(clientIdRequestId) &&
+    validation.contactErrors.length === 0 &&
+    validation.missingRequired.every((field) => field === "clientId" || field === "Client ID")
+  );
+}
+
 export function formatReviewValidationError(missingRequired, contactErrors = []) {
   if (contactErrors.length) return contactErrors.join(" ");
   return `Fill required field${missingRequired.length === 1 ? "" : "s"} before saving: ${missingRequired.join(", ")}.`;

@@ -37,6 +37,7 @@ import {
   getReviewCounts,
   queueSummaryLabel,
   getReviewValidation,
+  canSaveWithPendingClientId,
   formatReviewValidationError,
   resolvePolicySchema,
   pageTitle,
@@ -1062,10 +1063,7 @@ export default function Dashboard({
             extractedData: reviewedUploadData,
             manualFields: uniqueValues([...(selectedUpload.manualFields || []), ...Object.keys(reviewedUploadData || {})]),
           });
-          const pendingClientIdOnly =
-            Boolean(targetClientIdRequestId) &&
-            validation.contactErrors.length === 0 &&
-            validation.missingRequired.every((key) => key === "clientId" || key === "Client ID");
+          const pendingClientIdOnly = canSaveWithPendingClientId(validation, targetClientIdRequestId);
           if (!validation.valid && !pendingClientIdOnly) {
             const message = formatReviewValidationError(validation.missingRequired, validation.contactErrors);
             setReviewError(message);

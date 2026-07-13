@@ -79,7 +79,7 @@ export async function PUT(request, { params }) {
         where: {
           id: clientIdRequestId,
           module: "CLIENT_ID_REQUEST",
-          status: { in: ["OPEN", "IN_PROGRESS", "COMPLETED"] },
+          status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS", "COMPLETED"] },
           ...(session.organizationId
             ? { organizationId: session.organizationId }
             : { createdById: existing.createdById }),
@@ -135,6 +135,11 @@ export async function PUT(request, { params }) {
         updatedById: actorId,
         clientIdRequestId: clientIdPending ? verifiedClientIdRequest.id : null,
         clientIdPending,
+        clientIdStatus: clientIdPending
+          ? verifiedClientIdRequest.status === "WAITING_DOCUMENTS" || existing.clientIdStatus === "ACTION_REQUIRED"
+            ? "ACTION_REQUIRED"
+            : "PENDING"
+          : "LINKED",
       },
       include: {
         createdBy: {

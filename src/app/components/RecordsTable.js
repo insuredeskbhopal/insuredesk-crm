@@ -69,7 +69,7 @@ function renderCell(record, column) {
         <strong className="record-primary">{value}</strong>
         {record.clientIdPending ? (
           <span
-            className="client-id-pending-badge"
+            className={`client-id-pending-badge${record.clientIdStatus === "ACTION_REQUIRED" ? " client-id-action-required-badge" : ""}`}
             title={`Request ID: ${record.clientIdRequestId}`}
             style={{
               display: "block",
@@ -77,14 +77,14 @@ function renderCell(record, column) {
               marginTop: "4px",
               padding: "2px 6px",
               borderRadius: "999px",
-              background: "#fef3c7",
-              color: "#92400e",
+              background: record.clientIdStatus === "ACTION_REQUIRED" ? "#fee2e2" : "#fef3c7",
+              color: record.clientIdStatus === "ACTION_REQUIRED" ? "#991b1b" : "#92400e",
               fontSize: "9px",
               fontWeight: 800,
               whiteSpace: "nowrap",
             }}
           >
-            Client ID Pending · {record.clientIdRequestId?.slice(0, 8)}…
+            {record.clientIdStatus === "ACTION_REQUIRED" ? "Client ID Action Required" : "Client ID Pending"} · {record.clientIdRequestId?.slice(0, 8)}…
           </span>
         ) : null}
       </div>
