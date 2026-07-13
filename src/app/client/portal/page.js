@@ -47,7 +47,7 @@ function ClientPolicyCard({ policy, onStartClaim, formatDate }) {
 
   return (
     <article className="group relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-[0_28px_70px_rgba(6,95,70,0.16)]">
-      <div className="relative overflow-hidden bg-[linear-gradient(135deg,#052e2b_0%,#075f46_58%,#0f766e_100%)] px-5 py-5 text-white sm:px-6 sm:py-6">
+      <div className="relative overflow-hidden bg-[linear-gradient(135deg,#052e2b_0%,#075f46_58%,#0f766e_100%)] px-5 py-5 !text-white force-white [&_*]:!text-white [&_svg]:!stroke-white sm:px-6 sm:py-6">
         <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full border border-white/10 bg-white/[0.06]" />
         <div className="absolute -bottom-16 right-20 h-32 w-32 rounded-full bg-amber-300/10 blur-2xl" />
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-300 via-emerald-200 to-cyan-200" />
@@ -55,30 +55,30 @@ function ClientPolicyCard({ policy, onStartClaim, formatDate }) {
         <div className="relative flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm">
-              <ShieldCheck size={22} />
+              <ShieldCheck size={22} className="text-white force-white" />
             </div>
             <div className="min-w-0">
-              <p className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-100">{insurer}</p>
-              <h3 className="mt-1 truncate text-base font-bold text-white sm:text-lg">{policyType}</h3>
+              <p className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-white force-white">{insurer}</p>
+              <h3 className="mt-1 truncate text-base font-bold text-white force-white sm:text-lg">{policyType}</h3>
             </div>
           </div>
           <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${
             isActive
-              ? "border-emerald-200/40 bg-emerald-200/15 text-emerald-50"
-              : "border-white/20 bg-white/10 text-slate-200"
+              ? "border-emerald-200/40 bg-emerald-200/15 text-white force-white"
+              : "border-white/20 bg-white/10 text-white force-white"
           }`}>
-            <BadgeCheck size={11} /> {isActive ? "Active" : "Expired"}
+            <BadgeCheck size={11} className="text-white force-white" /> {isActive ? "Active" : "Expired"}
           </span>
         </div>
 
         <div className="relative mt-7">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-100/80">Policy number</p>
-          <p className="mt-1 break-all font-mono text-xl font-bold tracking-wide text-white sm:text-2xl">{policyNumber}</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white force-white">Policy number</p>
+          <p className="mt-1 break-all font-mono text-xl font-bold tracking-wide text-white force-white sm:text-2xl">{policyNumber}</p>
         </div>
 
-        <div className="relative mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/15 pt-4 text-[10px] text-emerald-50/90">
-          <span className="inline-flex items-center gap-1.5"><Calendar size={12} /> From {formatDate(payload.startDate)}</span>
-          <span className="inline-flex items-center gap-1.5"><CalendarDays size={12} /> Until {formatDate(expiryDate)}</span>
+        <div className="relative mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/15 pt-4 text-[10px] text-white force-white">
+          <span className="inline-flex items-center gap-1.5 text-white force-white"><Calendar size={12} className="text-white force-white" /> From {formatDate(payload.startDate)}</span>
+          <span className="inline-flex items-center gap-1.5 text-white force-white"><CalendarDays size={12} className="text-white force-white" /> Until {formatDate(expiryDate)}</span>
         </div>
       </div>
 
@@ -119,7 +119,7 @@ function ClientPolicyCard({ policy, onStartClaim, formatDate }) {
             type="button"
             onClick={() => onStartClaim(policy)}
             disabled={!payload.policyNumber}
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-[11px] font-bold text-white shadow-lg shadow-slate-300 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-[11px] font-bold text-white force-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Start a claim <ArrowRight size={13} />
           </button>
