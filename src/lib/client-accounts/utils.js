@@ -26,6 +26,22 @@ export function normalizeClientPhone(value) {
   return normalizePhone(value);
 }
 
+export function matchesClientAccountIdentity(profile, { insuredName, contactNumber, email } = {}) {
+  const expectedName = normalizeName(insuredName);
+  if (!expectedName || normalizeName(profile?.name) !== expectedName) return false;
+
+  const expectedPhone = normalizePhone(contactNumber);
+  const phoneMatches = expectedPhone && normalizePhone(profile?.phone) === expectedPhone;
+  const expectedEmail = String(email || "").trim().toLowerCase();
+  const emailMatches =
+    expectedEmail &&
+    [profile?.email, profile?.googleEmail].some(
+      (candidate) => String(candidate || "").trim().toLowerCase() === expectedEmail,
+    );
+
+  return Boolean(phoneMatches || emailMatches);
+}
+
 function normalizePhone(value) {
   return (
     normalizeIndianPhone(value) ||
@@ -33,6 +49,13 @@ function normalizePhone(value) {
       .replace(/\D/g, "")
       .slice(0, 10)
   );
+}
+
+function normalizeName(value) {
+  return String(value || "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
 }
 
 function asText(value, limit) {

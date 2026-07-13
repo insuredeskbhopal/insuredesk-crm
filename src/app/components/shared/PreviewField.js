@@ -98,6 +98,7 @@ export default function PreviewField({
 }
 
 import { useState, useEffect } from "react";
+import { matchesClientAccountIdentity } from "@/lib/client-accounts/utils";
 
 function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber, email }) {
   const [showSearch, setShowSearch] = useState(false);
@@ -138,23 +139,23 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
       if (email && email.includes("@")) {
         searchTerms.push(email);
       }
-      if (insuredName && insuredName.trim().length > 3) {
-        searchTerms.push(insuredName.trim());
-      }
-
-      if (searchTerms.length === 0) {
+      if (!insuredName?.trim() || searchTerms.length === 0) {
         setAutoSuggestedClient(null);
         return;
       }
 
+      setAutoSuggestedClient(null);
       try {
         for (const term of searchTerms) {
-          const res = await fetch(`/api/client-accounts?page=1&limit=1&q=${encodeURIComponent(term)}`);
+          const res = await fetch(`/api/client-accounts?page=1&limit=5&q=${encodeURIComponent(term)}`);
           if (res.ok) {
             const data = await res.json();
             const matches = data.accounts || data.profiles || [];
-            if (matches.length > 0) {
-              setAutoSuggestedClient(matches[0]);
+            const identityMatch = matches.find((profile) =>
+              matchesClientAccountIdentity(profile, { insuredName, contactNumber, email }),
+            );
+            if (identityMatch) {
+              setAutoSuggestedClient(identityMatch);
               break;
             }
           }
