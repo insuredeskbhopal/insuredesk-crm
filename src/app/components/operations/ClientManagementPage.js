@@ -22,6 +22,8 @@ import {
   UserPlus,
   MessageSquareWarning,
   Send,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
 
@@ -327,6 +329,9 @@ export default function ClientManagementPage() {
   };
 
   const totalPages = Math.ceil(totalCount / limit);
+  const pageStart = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+  const pageEnd = Math.min(page * limit, totalCount);
+  const paginationPages = getPaginationPages(page, totalPages);
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -524,15 +529,15 @@ export default function ClientManagementPage() {
         </section>
       )}
 
-      {/* Main Workspace Table Panel */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+      {/* Client directory */}
+      <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_45px_-32px_rgba(15,23,42,0.45)]">
+        <div className="flex flex-col gap-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-emerald-50/40 p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative w-full max-w-xl">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Search clients by name, phone, or Client ID..."
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-500"
+              className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-800 shadow-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -540,8 +545,18 @@ export default function ClientManagementPage() {
               }}
             />
           </div>
-          <div className="text-xs text-slate-400 font-medium">
-            Showing {profiles.length} of {totalCount} total clients
+          <div className="flex items-center justify-between gap-4 lg:justify-end">
+            <div className="text-right">
+              <p className="text-sm font-bold text-slate-800">{totalCount} client{totalCount === 1 ? "" : "s"}</p>
+              <p className="text-xs text-slate-500">Showing {pageStart}–{pageEnd}</p>
+            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+                <button type="button" aria-label="Previous client page" onClick={() => setPage((value) => Math.max(value - 1, 1))} disabled={page === 1} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-30"><ChevronLeft className="h-4 w-4" /></button>
+                <span className="min-w-16 px-2 text-center text-xs font-bold text-slate-700">{page} / {totalPages}</span>
+                <button type="button" aria-label="Next client page" onClick={() => setPage((value) => Math.min(value + 1, totalPages))} disabled={page === totalPages} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-30"><ChevronRight className="h-4 w-4" /></button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -557,108 +572,59 @@ export default function ClientManagementPage() {
             <p className="text-sm text-slate-400">Search with another filter or create a new client login.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Client Details
-                  </th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Client ID (Unique Key)
-                  </th>
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Client MPIN
-                  </th>
-                  <th className="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
-                {profiles.map((profile) => (
-                  <tr key={profile.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-semibold text-sm">
-                          {profile.name ? profile.name[0].toUpperCase() : "?"}
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-slate-800">{profile.name}</div>
-                          <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-                            <Phone className="h-3 w-3" /> {profile.phone || "No phone"}
-                          </div>
-                          {profile.email && (
-                            <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-                              <Mail className="h-3 w-3" /> {profile.email}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 font-mono text-xs text-slate-600 bg-slate-50 border border-slate-200 px-2 py-1.5 rounded-lg w-fit">
-                        <span>{profile.id}</span>
-                        <button
-                          onClick={() => handleCopy(profile.id)}
-                          className="text-slate-400 hover:text-slate-600 transition-colors"
-                          title="Copy Client ID"
-                        >
-                          {copiedId === profile.id ? (
-                            <Check className="h-3.5 w-3.5 text-emerald-600" />
-                          ) : (
-                            <Copy className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        <KeyRound className="h-4 w-4 text-emerald-600" />
-                        <span className="font-mono font-semibold text-slate-800 text-sm tracking-wider">
-                          {getMpin(profile.phone)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleOpenEditModal(profile)}
-                        className="text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-colors"
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
-                        <span>Edit Credentials</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid gap-3 bg-slate-50/50 p-4 md:p-5">
+            {profiles.map((profile) => (
+              <article key={profile.id} className="group grid gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_8px_24px_-22px_rgba(15,23,42,0.8)] transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-[0_18px_32px_-24px_rgba(5,150,105,0.45)] lg:grid-cols-[1.25fr_1fr_auto_auto] lg:items-center">
+                <div className="flex min-w-0 items-center gap-3.5">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-sm font-black text-white shadow-md shadow-emerald-100">
+                    {profile.name ? profile.name[0].toUpperCase() : "?"}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-sm font-bold text-slate-900">{profile.name}</h3>
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+                      <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3 text-emerald-600" />{profile.phone || "No phone"}</span>
+                      {profile.email && <span className="inline-flex min-w-0 items-center gap-1"><Mail className="h-3 w-3 text-sky-500" /><span className="truncate">{profile.email}</span></span>}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="min-w-0">
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Client ID</p>
+                  <div className="flex max-w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                    <span className="truncate font-mono text-[11px] font-medium text-slate-600" title={profile.id}>{profile.id}</span>
+                    <button type="button" onClick={() => handleCopy(profile.id)} className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-slate-400 shadow-sm transition hover:text-emerald-600" title="Copy Client ID">
+                      {copiedId === profile.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-emerald-50 px-3 py-2 lg:min-w-24">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700/70">Client MPIN</p>
+                  <div className="mt-1 flex items-center gap-1.5"><KeyRound className="h-3.5 w-3.5 text-emerald-600" /><span className="font-mono text-sm font-black tracking-[0.16em] text-emerald-950">{getMpin(profile.phone)}</span></div>
+                </div>
+
+                <button type="button" onClick={() => handleOpenEditModal(profile)} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800">
+                  <Edit2 className="h-3.5 w-3.5" /> Edit
+                </button>
+              </article>
+            ))}
           </div>
         )}
 
-        {/* Pagination bar */}
+        {/* Pagination */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
-            <button
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              disabled={page === 1}
-              className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
-            >
-              Previous
-            </button>
-            <span className="text-xs text-slate-500 font-medium">
-              Page {page} of {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-              disabled={page === totalPages}
-              className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
-            >
-              Next
-            </button>
-          </div>
+          <nav aria-label="Client pagination" className="flex flex-col items-center justify-between gap-3 border-t border-slate-100 bg-white px-5 py-4 sm:flex-row">
+            <p className="text-xs font-medium text-slate-500">Showing <strong className="text-slate-800">{pageStart}–{pageEnd}</strong> of <strong className="text-slate-800">{totalCount}</strong></p>
+            <div className="flex items-center gap-1.5">
+              <button type="button" onClick={() => setPage((value) => Math.max(value - 1, 1))} disabled={page === 1} className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35"><ChevronLeft className="h-4 w-4" /> Previous</button>
+              {paginationPages.map((pageNumber) => (
+                <button key={pageNumber} type="button" onClick={() => setPage(pageNumber)} aria-current={pageNumber === page ? "page" : undefined} className={`flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-xs font-bold transition ${pageNumber === page ? "bg-emerald-600 text-white shadow-md shadow-emerald-200" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>{pageNumber}</button>
+              ))}
+              <button type="button" onClick={() => setPage((value) => Math.min(value + 1, totalPages))} disabled={page === totalPages} className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35">Next <ChevronRight className="h-4 w-4" /></button>
+            </div>
+          </nav>
         )}
-      </div>
+      </section>
 
       {/* CREATE & EDIT MODALS */}
       {isModalOpen && (
@@ -923,4 +889,10 @@ export default function ClientManagementPage() {
       )}
     </div>
   );
+}
+
+function getPaginationPages(currentPage, totalPages) {
+  if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
+  const start = Math.min(Math.max(currentPage - 2, 1), totalPages - 4);
+  return Array.from({ length: 5 }, (_, index) => start + index);
 }

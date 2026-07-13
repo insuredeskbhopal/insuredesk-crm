@@ -1,0 +1,58 @@
+CLIENT ID POLICY REMOVAL AUDIT
+Generated: 2026-07-13 (Asia/Calcutta)
+
+Scope
+-----
+All non-deleted policy records across all organizations were inspected.
+Total policy records inspected: 511
+Policies containing an assigned Client ID: 4
+
+Important
+---------
+This audit records the assignments that existed before removal.
+Client Account records are not deleted.
+
+1. M P AGROTONICS LTD
+   Policy number: N7698793
+   Policy record ID: 82aedf05-8118-467b-a1d6-cfaf7b69025d
+   Previous Client ID: 3715fa78-2bd2-4ae7-a93e-73e543f254ee
+   Request ID: 1be07540-ccde-45a0-864a-2a7ce0f055d6
+   Source file: M P AGROTONICS LTD_MP38AB8502_2026-27.PDF
+
+2. PRIYANSH TIWARI
+   Policy number: 45140031260200003524
+   Policy record ID: 54acee7e-8d4f-44a4-8582-8b54e39be6e9
+   Previous Client ID: 8b844868-2b14-4aad-bf36-791b21a8450d
+   Request ID: None
+   Source file: PRIYANSH TIWARI_MP04UF6972_2026-27 POLICY.pdf
+
+3. GAUTAM WAREHOUSE
+   Policy number: 44543328
+   Policy record ID: 43f6d555-b444-4f43-9322-c11e18ed6927
+   Previous Client ID: 4f124727-8875-42dd-830f-b11cc18acd80
+   Request ID: None
+   Source file: GAUTAM WAREHOUSE- BURGLARY POLICY.pdf
+
+4. FALODI WAREHOUSE PROP. NISHMA GUPTA
+   Policy number: 5161126406
+   Policy record ID: c99babf0-6b94-4f56-8be1-1e66d71a9319
+   Previous Client ID: 4f124727-8875-42dd-830f-b11cc18acd80
+   Request ID: None
+   Source file: FALODI WAREHOUSE BUILDING POLICY.pdf
+
+Completed Client ID request records preserved
+---------------------------------------------
+These historical request records were not deleted because the requested scope was
+policy-to-client assignments. They can still be reviewed in request history.
+
+1. Request ID: 1be07540-ccde-45a0-864a-2a7ce0f055d6
+   Client: M P AGROTONICS LTD
+   Resolved Client ID: 3715fa78-2bd2-4ae7-a93e-73e543f254ee
+
+2. Request ID: a9c42a9f-af95-4eea-b61a-4f06fd603150
+   Client: PRIYANSH TIWARI
+   Resolved Client ID: 8b844868-2b14-4aad-bf36-791b21a8450d
+
+3. Request ID: 8e4a7ede-8cee-4bc8-bf86-d5dd4544d307
+   Client: MS- VIJAY KUMAR MISHRA CONSTRUCTION PVT. LTD.
+   Resolved Client ID: 496919e5-e4ff-4c10-b530-228a03864ad9
