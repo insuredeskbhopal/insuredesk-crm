@@ -31,4 +31,16 @@ describe("record customer ID", () => {
     expect(record.customerId).toBe("VIJA6655");
     expect(record.srNo).toBeUndefined();
   });
+
+  it("preserves the linked Client ID for policy record editing", () => {
+    const record = normalizeRecord({
+      id: "record-1",
+      reviewedData: {
+        insuredName: "Shashank Garg",
+        clientId: "5be7a398-f0df-4603-a187-655fb7885970",
+      },
+    });
+
+    expect(record.clientId).toBe("5be7a398-f0df-4603-a187-655fb7885970");
+  });
 });

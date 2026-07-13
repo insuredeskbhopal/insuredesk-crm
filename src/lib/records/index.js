@@ -82,6 +82,7 @@ export function normalizeRecord(record) {
     confidenceScore: record.confidenceScore ?? null,
     extractionLog: record.extractionLog || null,
     customerId,
+    clientId: payload.clientId || legacy.clientId || "",
     sourceFile: payload.sourceFile || legacy.sourceFile || payload.sourceFileName || "",
     status: payload.status || legacy.status || "saved",
     insuredName,
