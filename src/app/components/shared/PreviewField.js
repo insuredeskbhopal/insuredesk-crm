@@ -106,6 +106,9 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [selectedClientName, setSelectedClientName] = useState("");
+  const [clientIdRequest, setClientIdRequest] = useState(null);
+  const [requesting, setRequesting] = useState(false);
+  const [requestError, setRequestError] = useState("");
 
   const [autoSuggestedClient, setAutoSuggestedClient] = useState(null);
 
@@ -169,6 +172,41 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
     return () => window.clearTimeout(timer);
   }, [value, insuredName, contactNumber, email]);
 
+  useEffect(() => {
+    if (value || !insuredName?.trim()) return;
+    const cleanPhone = contactNumber?.replace(/[^0-9]/g, "").slice(-10);
+    if (cleanPhone?.length !== 10) return;
+
+    let active = true;
+    const checkRequest = async () => {
+      try {
+        const params = new window.URLSearchParams({
+          mine: "1",
+          phone: cleanPhone,
+          name: insuredName.trim(),
+        });
+        const res = await fetch(`/api/client-id-requests?${params}`);
+        if (!res.ok || !active) return;
+        const data = await res.json();
+        const item = data.requests?.[0] || null;
+        setClientIdRequest(item);
+        if (item?.status === "COMPLETED" && item.resolvedClientId) {
+          setSelectedClientName(item.resolvedClientName || "Client");
+          onChange(item.resolvedClientId);
+        }
+      } catch {
+        // The normal client search remains available if request status cannot be loaded.
+      }
+    };
+
+    checkRequest();
+    const timer = window.setInterval(checkRequest, 10000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [value, insuredName, contactNumber, onChange]);
+
   const handleSearch = async (val) => {
     setQuery(val);
     if (val.trim().length < 2) {
@@ -186,6 +224,25 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
       console.error(err);
     } finally {
       setSearching(false);
+    }
+  };
+
+  const handleClientIdRequest = async () => {
+    setRequestError("");
+    setRequesting(true);
+    try {
+      const res = await fetch("/api/client-id-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: insuredName, phone: contactNumber, email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Client ID request could not be submitted.");
+      setClientIdRequest(data);
+    } catch (err) {
+      setRequestError(err.message);
+    } finally {
+      setRequesting(false);
     }
   };
 
@@ -349,6 +406,35 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
                 </li>
               ))}
             </ul>
+          )}
+          {!value && !clientIdRequest && (
+            <button
+              type="button"
+              onClick={handleClientIdRequest}
+              disabled={disabled || requesting}
+              style={{
+                width: "100%",
+                marginTop: "8px",
+                padding: "7px 9px",
+                border: "1px solid #f59e0b",
+                borderRadius: "6px",
+                background: "#fffbeb",
+                color: "#92400e",
+                fontSize: "10.5px",
+                fontWeight: "700",
+                cursor: requesting ? "wait" : "pointer",
+              }}
+            >
+              {requesting ? "Sending request..." : "No match found — Request Client ID"}
+            </button>
+          )}
+          {clientIdRequest && clientIdRequest.status !== "COMPLETED" && (
+            <div style={{ marginTop: "8px", padding: "7px 9px", borderRadius: "6px", background: "#fffbeb", color: "#92400e", fontSize: "10.5px", fontWeight: "650" }}>
+              Client ID request sent to Super Admin. This field will fill automatically after approval.
+            </div>
+          )}
+          {requestError && (
+            <div style={{ marginTop: "6px", color: "#be123c", fontSize: "10px" }}>{requestError}</div>
           )}
         </div>
       )}

@@ -17,6 +17,9 @@ import {
   KeyRound,
   Shield,
   Loader2,
+  Inbox,
+  Link2,
+  UserPlus,
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
 
@@ -47,9 +50,21 @@ export default function ClientManagementPage() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
+  // Super Admin Client ID request queue. A 403 means this user is not a Super Admin.
+  const [clientIdRequests, setClientIdRequests] = useState(null);
+  const [requestQueueLoading, setRequestQueueLoading] = useState(true);
+  const [resolutionRequest, setResolutionRequest] = useState(null);
+  const [resolutionClientId, setResolutionClientId] = useState("");
+  const [resolutionError, setResolutionError] = useState("");
+  const [resolvingRequestId, setResolvingRequestId] = useState("");
+
   useEffect(() => {
     fetchClients();
   }, [page, searchQuery]);
+
+  useEffect(() => {
+    fetchClientIdRequests();
+  }, []);
 
   async function fetchClients() {
     setLoading(true);
@@ -67,6 +82,56 @@ export default function ClientManagementPage() {
       setLoading(false);
     }
   }
+
+  async function fetchClientIdRequests() {
+    setRequestQueueLoading(true);
+    try {
+      const res = await fetch("/api/client-id-requests");
+      if (res.status === 403) {
+        setClientIdRequests(null);
+        return;
+      }
+      if (!res.ok) throw new Error("Failed to load Client ID requests");
+      const data = await res.json();
+      setClientIdRequests(data.requests || []);
+    } catch (err) {
+      setError(err.message || "Failed to load Client ID requests");
+    } finally {
+      setRequestQueueLoading(false);
+    }
+  }
+
+  const openExistingClientModal = (request, clientId = "") => {
+    setResolutionRequest(request);
+    setResolutionClientId(clientId);
+    setResolutionError("");
+  };
+
+  const resolveClientIdRequest = async (request, action, clientId = "") => {
+    setResolutionError("");
+    setResolvingRequestId(request.id);
+    try {
+      const res = await fetch("/api/client-id-requests", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId: request.id, action, clientId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Client ID request could not be resolved.");
+      setSuccessMessage(
+        action === "CREATE_NEW" && data.resolutionType === "CREATE_NEW"
+          ? `New Client ID created for ${data.resolvedClientName}.`
+          : `${data.resolvedClientName} linked to the existing Client ID.`,
+      );
+      setResolutionRequest(null);
+      await Promise.all([fetchClientIdRequests(), fetchClients()]);
+      setTimeout(() => setSuccessMessage(""), 4000);
+    } catch (err) {
+      setResolutionError(err.message || "Client ID request could not be resolved.");
+    } finally {
+      setResolvingRequestId("");
+    }
+  };
 
   const handleCopy = (id) => {
     navigator.clipboard.writeText(id);
@@ -204,6 +269,90 @@ export default function ClientManagementPage() {
           <AlertCircle className="h-5 w-5 text-rose-600" />
           <span className="font-medium">{error}</span>
         </div>
+      )}
+
+      {clientIdRequests !== null && (
+        <section className="bg-white border border-amber-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-amber-100 bg-amber-50 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                <Inbox className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="font-bold text-slate-900">Client ID Requests</h2>
+                <p className="text-xs text-slate-600">Check for an existing client before creating a new Client ID.</p>
+              </div>
+            </div>
+            <span className="rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-bold">
+              {clientIdRequests.filter((item) => item.status !== "COMPLETED").length} pending
+            </span>
+          </div>
+
+          {requestQueueLoading ? (
+            <div className="p-6 flex items-center justify-center gap-2 text-sm text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading requests...
+            </div>
+          ) : clientIdRequests.filter((item) => item.status !== "COMPLETED").length === 0 ? (
+            <div className="p-6 text-center text-sm text-slate-500">No pending Client ID requests.</div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {clientIdRequests.filter((item) => item.status !== "COMPLETED").map((item) => (
+                <div key={item.id} className="p-4 grid gap-4 lg:grid-cols-[1fr_1.2fr_auto] lg:items-center">
+                  <div>
+                    <div className="font-bold text-slate-900">{item.name}</div>
+                    <div className="mt-1 text-sm text-slate-600 flex flex-wrap gap-x-4 gap-y-1">
+                      <span className="inline-flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{item.phone}</span>
+                      {item.email && <span className="inline-flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{item.email}</span>}
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Requested by {item.requestedByName || item.requestedByEmail || "Agent"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Possible existing clients</p>
+                    {item.suggestions?.length ? (
+                      <div className="flex flex-wrap gap-2">
+                        {item.suggestions.map((client) => (
+                          <button
+                            key={client.id}
+                            type="button"
+                            onClick={() => openExistingClientModal(item, client.id)}
+                            className="text-left rounded-lg border border-slate-200 bg-slate-50 hover:border-emerald-400 px-3 py-2 transition-colors"
+                          >
+                            <span className="block text-xs font-bold text-slate-800">{client.name}</span>
+                            <span className="block text-[11px] text-slate-500">{client.phone}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400">No likely matches found.</p>
+                    )}
+                  </div>
+
+                  <div className="flex lg:flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openExistingClientModal(item)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                    >
+                      <Link2 className="h-4 w-4" /> Paste existing ID
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => resolveClientIdRequest(item, "CREATE_NEW")}
+                      disabled={resolvingRequestId === item.id}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
+                    >
+                      {resolvingRequestId === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                      Create new Client ID
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       )}
 
       {/* Main Workspace Table Panel */}
@@ -452,6 +601,59 @@ export default function ClientManagementPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {resolutionRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Close Client ID resolution"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            onClick={() => setResolutionRequest(null)}
+          />
+          <div className="relative w-full max-w-lg rounded-2xl border border-slate-100 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <div>
+                <h3 className="font-bold text-slate-900">Link existing Client ID</h3>
+                <p className="text-xs text-slate-500 mt-1">Request for {resolutionRequest.name} · {resolutionRequest.phone}</p>
+              </div>
+              <button type="button" onClick={() => setResolutionRequest(null)} className="text-slate-400 hover:text-slate-700">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Existing Client ID</label>
+                <input
+                  type="text"
+                  value={resolutionClientId}
+                  onChange={(event) => setResolutionClientId(event.target.value.trim())}
+                  placeholder="Paste the complete Client ID"
+                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 font-mono text-sm focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+              {resolutionError && (
+                <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                  <AlertCircle className="h-4 w-4 shrink-0" /> {resolutionError}
+                </div>
+              )}
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => setResolutionRequest(null)} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!resolutionClientId || resolvingRequestId === resolutionRequest.id}
+                  onClick={() => resolveClientIdRequest(resolutionRequest, "LINK_EXISTING", resolutionClientId)}
+                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {resolvingRequestId === resolutionRequest.id && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Link Client ID
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

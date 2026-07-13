@@ -1,8 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldCheck, Mail, Loader2, LogIn, KeyRound, ArrowLeft, ShieldAlert, BadgeCheck, FileCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  BadgeCheck,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  FileCheck,
+  Headphones,
+  KeyRound,
+  Loader2,
+  LockKeyhole,
+  LogIn,
+  Mail,
+  RefreshCw,
+  ShieldAlert,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import Script from "next/script";
 
 export default function ClientLoginPage() {
@@ -11,142 +28,120 @@ export default function ClientLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const isVerified = Boolean(success);
-
-  // Google Login flow states
-  const [loginMode, setLoginMode] = useState("regular"); // "regular" or "google"
-  const [googleStage, setGoogleStage] = useState("verify_link"); // "verify_link" (only stage needed for unlinked accounts)
+  const [showMpin, setShowMpin] = useState(false);
+  const [loginMode, setLoginMode] = useState("regular");
+  const [googleStage, setGoogleStage] = useState("verify_link");
   const [googleEmail, setGoogleEmail] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [mpin, setMpin] = useState("");
+  const isVerified = Boolean(success);
 
-  const handleRegularSubmit = async (e) => {
-    e.preventDefault();
+  const handleRegularSubmit = async (event) => {
+    event.preventDefault();
     setError("");
     setSuccess("");
-
     if (!regularCustomerId || !regularMpin) {
       setError("Client ID and Client MPIN are required.");
       return;
     }
 
     setLoading(true);
-
     try {
-      const res = await fetch("/api/auth/client/login", {
+      const response = await fetch("/api/auth/client/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ customerId: regularCustomerId, mpin: regularMpin }),
       });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Something went wrong.");
-      }
-
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Something went wrong.");
       setSuccess("Logged in successfully. Redirecting...");
-
       setTimeout(() => {
         window.location.href = "/client/portal";
       }, 1200);
-    } catch (err) {
-      setError(err.message);
+    } catch (requestError) {
+      setError(requestError.message);
     } finally {
       setLoading(false);
     }
   };
 
-
-
   const handleGoogleStart = () => {
     setError("");
     setSuccess("");
+    if (typeof window === "undefined" || !window.google) {
+      setError("Google Identity services are loading. Please try again in a moment.");
+      return;
+    }
 
-    if (typeof window !== "undefined" && window.google) {
-      try {
-        const tokenClient = window.google.accounts.oauth2.initTokenClient({
-          client_id: "780359724362-m0i25gff41i2dgru6atnkjc02n2hcq74.apps.googleusercontent.com",
-          scope: "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
-          callback: async (tokenResponse) => {
-            if (tokenResponse && tokenResponse.access_token) {
-              setLoading(true);
-              try {
-                const res = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenResponse.access_token}`);
-                if (!res.ok) throw new Error("Failed to retrieve Google user details");
-                const userInfo = await res.json();
-                const selectedEmail = userInfo.email;
+    try {
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: "780359724362-m0i25gff41i2dgru6atnkjc02n2hcq74.apps.googleusercontent.com",
+        scope: "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
+        callback: async (tokenResponse) => {
+          if (!tokenResponse?.access_token) return;
+          setLoading(true);
+          try {
+            const profileResponse = await fetch(
+              `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenResponse.access_token}`,
+            );
+            if (!profileResponse.ok) throw new Error("Failed to retrieve Google user details.");
+            const userInfo = await profileResponse.json();
+            setGoogleEmail(userInfo.email);
 
-                setGoogleEmail(selectedEmail);
-
-                // Check if this Google email is already linked in DB
-                const checkRes = await fetch("/api/auth/client/google-mpin-login", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ googleEmail: selectedEmail }),
-                });
-                const checkData = await checkRes.json();
-
-                if (checkData.success && checkData.linked) {
-                  // Already linked — auto-login, skip everything
-                  setSuccess("Verified. Redirecting to portal...");
-                  setTimeout(() => { window.location.href = "/client/portal"; }, 800);
-                  return;
-                }
-
-                // Not linked yet — show one-time verification form
-                setLoginMode("google");
-                setGoogleStage("verify_link");
-                setCustomerId("");
-              } catch (err) {
-                setError(err.message);
-              } finally {
-                setLoading(false);
-              }
+            const loginResponse = await fetch("/api/auth/client/google-mpin-login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ googleEmail: userInfo.email }),
+            });
+            const loginData = await loginResponse.json();
+            if (loginData.success && loginData.linked) {
+              setSuccess("Verified. Redirecting to portal...");
+              setTimeout(() => {
+                window.location.href = "/client/portal";
+              }, 800);
+              return;
             }
-          },
-        });
-        tokenClient.requestAccessToken({ prompt: "consent" });
-      } catch (err) {
-        console.error("GIS Error:", err);
-        setError("Failed to initialize Google Login client.");
-      }
-    } else {
-      setError("Google Identity services loading. Please wait a moment and try again.");
+            setLoginMode("google");
+            setGoogleStage("verify_link");
+            setCustomerId("");
+          } catch (requestError) {
+            setError(requestError.message);
+          } finally {
+            setLoading(false);
+          }
+        },
+      });
+      tokenClient.requestAccessToken({ prompt: "consent" });
+    } catch (googleError) {
+      console.error("Google Identity error:", googleError);
+      setError("Failed to initialize Google Login.");
     }
   };
 
-  const handleVerifyLink = async (e) => {
-    e.preventDefault();
+  const handleVerifyLink = async (event) => {
+    event.preventDefault();
     setError("");
     setSuccess("");
-
     if (!customerId || !mpin) {
-      setError("Customer ID and MPIN are required.");
+      setError("Client ID and MPIN are required.");
       return;
     }
 
     setLoading(true);
-
     try {
-      const res = await fetch("/api/auth/client/google-mpin-login", {
+      const response = await fetch("/api/auth/client/google-mpin-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ googleEmail, customerId, mpin }),
       });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Invalid verification details.");
-      }
-
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Invalid verification details.");
       setSuccess("Account linked successfully. Redirecting...");
-
       setTimeout(() => {
         window.location.href = "/client/portal";
       }, 1200);
-    } catch (err) {
-      setError(err.message);
+    } catch (requestError) {
+      setError(requestError.message);
     } finally {
       setLoading(false);
     }
@@ -160,751 +155,397 @@ export default function ClientLoginPage() {
     setCustomerId("");
   };
 
+  const features = [
+    { icon: FileCheck, title: "Policy Repository", text: "View active policies, coverage details and documents." },
+    { icon: BadgeCheck, title: "Claim Assistance", text: "Track updates and securely submit requested documents." },
+    { icon: RefreshCw, title: "Renewal Management", text: "Review upcoming renewals and receive timely assistance." },
+    { icon: Headphones, title: "Secure Support", text: "Connect directly with the BimaHeadquarter support desk." },
+  ];
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
-        .split-container {
-          display: flex;
-          min-height: 100vh;
-          background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #e0f2fe 100%);
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100%;
+          min-height: 100%;
+          overflow-x: hidden;
+        }
+        .client-login-shell, .client-login-shell * { box-sizing: border-box; }
+        .client-login-shell {
+          --navy: #07162f;
+          --navy-mid: #0b2348;
+          --blue: #2563eb;
+          min-height: 100dvh;
+          display: grid;
+          grid-template-columns: minmax(430px, .9fr) minmax(560px, 1.1fr);
           color: #0f172a;
-          font-family: Inter, system-ui, -apple-system, sans-serif;
-          position: relative;
+          background: radial-gradient(circle at 76% 20%, rgba(59,130,246,.16), transparent 27%), radial-gradient(circle at 85% 85%, rgba(34,211,238,.14), transparent 25%), linear-gradient(135deg,#f8fbff,#edf5ff 50%,#eaf8fb);
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif;
           overflow: hidden;
         }
-        /* Floating blurred ambient blobs */
-        .ambient-blob-1 {
-          position: absolute;
-          top: -200px;
-          left: -100px;
-          width: 600px;
-          height: 600px;
-          background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
-          border-radius: 50%;
-          filter: blur(80px);
-          pointer-events: none;
-        }
-        .ambient-blob-2 {
-          position: absolute;
-          bottom: -200px;
-          right: -100px;
-          width: 700px;
-          height: 700px;
-          background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
-          border-radius: 50%;
-          filter: blur(100px);
-          pointer-events: none;
-        }
-        .ambient-blob-3 {
-          position: absolute;
-          top: 30%;
-          left: 45%;
-          width: 500px;
-          height: 500px;
-          background: radial-gradient(circle, rgba(236, 72, 153, 0.06) 0%, transparent 70%);
-          border-radius: 50%;
-          filter: blur(80px);
-          pointer-events: none;
-        }
-        .visual-panel {
-          flex: 1.2;
+        .client-brand-panel {
+          position: relative;
+          min-height: 100dvh;
+          padding: clamp(42px,4.4vw,68px) clamp(38px,4.5vw,70px) 36px;
           display: flex;
           flex-direction: column;
-          justify-content: space-between;
-          padding: 80px;
-          border-right: 1px solid rgba(255, 255, 255, 0.4);
-          position: relative;
-          z-index: 10;
+          color: white;
+          background: linear-gradient(155deg,rgba(7,22,47,.99),rgba(11,35,72,.98) 55%,rgba(10,71,84,.95));
+          box-shadow:
+            18px 0 34px rgba(7,22,47,.18),
+            38px 0 72px rgba(7,22,47,.10);
+          z-index: 2;
         }
-        .bg-pattern {
+        .client-brand-panel::before {
+          content: '';
           position: absolute;
           inset: 0;
-          background-image: radial-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 0);
-          background-size: 24px 24px;
+          opacity: .26;
+          background-image: linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+          background-size: 34px 34px;
+          mask-image: linear-gradient(to bottom,#000,transparent 88%);
           pointer-events: none;
         }
-        .visual-logo-container {
-          display: flex;
+        .client-brand-content, .client-brand-footer { position: relative; z-index: 3; }
+        .client-security-label {
+          display: inline-flex;
           align-items: center;
-          gap: 12px;
-          position: relative;
-          z-index: 10;
-        }
-        .visual-logo-container img {
-          height: 76px;
-          width: auto;
-          object-fit: contain;
-          filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
-        }
-        .feature-showcase {
-          max-width: 520px;
-          position: relative;
-          z-index: 10;
-          margin: auto 0;
-        }
-        .feature-showcase h1 {
-          font-size: 46px;
-          font-weight: 800;
-          line-height: 1.2;
-          letter-spacing: -1.5px;
-          margin-bottom: 20px;
-          color: #0f172a;
-          text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
-        }
-        .feature-showcase > p {
-          font-size: 15.5px;
-          color: #475569;
-          line-height: 1.65;
-        }
-        .feature-list {
-          margin-top: 40px;
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-        .feature-card {
-          display: flex;
-          align-items: flex-start;
-          gap: 20px;
-          background: rgba(255, 255, 255, 0.35);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.5);
-          padding: 24px;
-          border-radius: 24px;
-          box-shadow: 0 4px 20px rgba(148, 163, 184, 0.05);
-          transition: all 0.3s ease;
-        }
-        .feature-card:hover {
-          transform: translateY(-2px);
-          background: rgba(255, 255, 255, 0.55);
-          border-color: rgba(255, 255, 255, 0.8);
-          box-shadow: 0 10px 30px rgba(148, 163, 184, 0.1);
-        }
-        .feature-icon-wrapper {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 46px;
-          width: 46px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-          color: white;
-          flex-shrink: 0;
-          box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
-        }
-        .feature-card h3 {
-          font-size: 17px;
-          font-weight: 750;
-          color: #0f172a;
-          margin-bottom: 6px;
-        }
-        .feature-card p {
-          font-size: 13.5px;
-          color: #475569;
-          line-height: 1.5;
-        }
-        .visual-footer {
-          position: relative;
-          z-index: 10;
-          font-size: 12.5px;
-          color: #64748b;
-          font-weight: 500;
-        }
-        .form-panel {
-          flex: 1.1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 60px;
-          position: relative;
-          z-index: 10;
-        }
-        .glass-login-card {
-          width: 100%;
-          max-width: 480px;
-          background: rgba(255, 255, 255, 0.45);
-          backdrop-filter: blur(24px) saturate(180%);
-          -webkit-backdrop-filter: blur(24px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.6);
-          border-radius: 32px;
-          padding: 56px;
-          box-shadow: 0 30px 60px rgba(31, 38, 135, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-          animation: card-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-        .card-header {
-          text-align: center;
-          margin-bottom: 36px;
-        }
-        .card-header img {
-          width: 320px;
-          height: auto;
-          margin: 0 auto 20px;
-          display: block;
-          object-fit: contain;
-          filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.03));
-        }
-        .back-to-home-btn {
-          position: absolute;
-          top: 32px;
-          right: 32px;
-          z-index: 100;
-          background: #ffffff;
-          border: 1px solid rgba(226, 232, 240, 0.8);
+          gap: 10px;
+          width: fit-content;
+          padding: 9px 14px;
           border-radius: 999px;
-          padding: 8px 18px;
-          font-size: 12.5px;
-          font-weight: 700;
-          color: #334155;
-          text-decoration: none;
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
-          transition: all 0.2s;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          cursor: pointer;
-        }
-        .back-to-home-btn:hover {
-          background: #f8fafc;
-          border-color: #cbd5e1;
-          color: #0f172a;
-          transform: translateY(-1px);
-          box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-        }
-        .card-header h2 {
-          font-size: 24px;
-          font-weight: 700;
-          color: #0f172a;
-          letter-spacing: -0.5px;
-          margin-bottom: 8px;
-        }
-        .card-header p {
-          font-size: 14px;
-          color: #475569;
-          line-height: 1.4;
-        }
-        .input-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          margin-bottom: 28px;
-        }
-        .input-group span {
-          font-size: 11.5px;
-          font-weight: 600;
-          color: #475569;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .input-container {
-          position: relative;
-        }
-        .input-icon {
-          position: absolute;
-          left: 4px;
-          top: 14px;
-          color: #94a3b8;
-          pointer-events: none;
-        }
-        .input-field {
-          width: 100%;
-          background: transparent;
-          border: none;
-          border-bottom: 2px solid rgba(226, 232, 240, 1.2);
-          border-radius: 0;
-          padding: 12px 4px 12px 32px;
-          color: #0f172a;
-          font-size: 15px;
-          outline: none;
-          transition: all 0.2s;
-        }
-        .input-field:focus {
-          border-bottom-color: #031638;
-          box-shadow: none;
-        }
-        .submit-btn {
-          width: 100%;
-          max-width: 260px;
-          margin: 28px auto 0;
-          padding: 16px;
-          border-radius: 16px;
-          background: #ffffff;
-          border: 1px solid rgba(226, 232, 240, 0.9);
-          color: #031638;
-          font-weight: 600;
-          font-size: 15px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
-          transition: all 0.2s;
-        }
-        .submit-btn:hover {
-          transform: translateY(-1px);
-          background: #f8fafc;
-          border-color: #cbd5e1;
-          color: #031638;
-          box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-        }
-        .divider {
-          display: flex;
-          align-items: center;
-          text-align: center;
-          color: #94a3b8;
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          margin: 30px 0;
+          background: rgba(34,211,238,.08);
+          box-shadow: inset 0 0 0 1px rgba(103,232,249,.18);
+          color: #99f6e4;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: .16em;
           text-transform: uppercase;
         }
-        .divider::before,
-        .divider::after {
-          content: '';
-          flex: 1;
-          border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        .client-security-dot { width: 8px; height: 8px; border-radius: 50%; background:#34d399; box-shadow:0 0 0 6px rgba(52,211,153,.1); }
+        .client-brand-copy { margin-top: clamp(42px,6vh,76px); max-width: 580px; }
+        .client-eyebrow { margin: 0 0 17px; color:#a5f3fc; font-size:12px; font-weight:750; letter-spacing:.1em; text-transform:uppercase; }
+        .client-brand-copy h1 { max-width:560px; margin:0; font-size:clamp(46px,4.4vw,70px); line-height:.99; letter-spacing:-.055em; font-weight:850; }
+        .client-brand-copy h1 span { display:block; color:#7dd3fc; }
+        .client-brand-copy > p { max-width:520px; margin:22px 0 0; color:rgba(226,232,240,.82); font-size:15px; line-height:1.7; }
+        .client-feature-list { margin-top:32px; max-width:580px; padding:8px; border-radius:22px; background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025)); box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 22px 50px rgba(0,0,0,.12); backdrop-filter:blur(16px); }
+        .client-feature-item { display:grid; grid-template-columns:44px 1fr auto; gap:15px; align-items:center; padding:14px; border-radius:15px; transition:.22s ease; }
+        .client-feature-item:hover { background:rgba(255,255,255,.055); transform:translateX(3px); }
+        .client-feature-icon { width:42px; height:42px; display:grid; place-items:center; border-radius:13px; color:white; background:linear-gradient(135deg,#06b6d4,#2563eb); box-shadow:0 9px 22px rgba(6,182,212,.18); }
+        .client-feature-text strong { display:block; margin-bottom:3px; font-size:14px; }
+        .client-feature-text span { display:block; color:rgba(203,213,225,.74); font-size:12px; line-height:1.42; }
+        .client-feature-arrow { color:rgba(255,255,255,.3); }
+        .client-brand-footer { margin-top:auto; padding-top:30px; display:flex; align-items:center; gap:10px; color:rgba(203,213,225,.58); font-size:11px; }
+        .client-brand-footer span:first-child { width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 0 5px rgba(52,211,153,.08); }
+        html body .client-brand-panel .client-security-label { color:#99f6e4!important; }
+        html body .client-brand-panel .client-eyebrow { color:#dbeafe!important; }
+        html body .client-brand-panel .client-brand-copy h1 { color:#ffffff!important; }
+        html body .client-brand-panel .client-brand-copy h1 span { color:#7dd3fc!important; }
+        html body .client-brand-panel .client-brand-copy > p { color:rgba(226,232,240,.92)!important; }
+        html body .client-brand-panel .client-feature-text strong { color:#ffffff!important; }
+        html body .client-brand-panel .client-feature-text span { color:rgba(203,213,225,.82)!important; }
+        html body .client-brand-panel .client-feature-arrow { color:rgba(255,255,255,.42)!important; }
+        html body .client-brand-panel .client-feature-icon,
+        html body .client-brand-panel .client-feature-icon svg { color:#ffffff!important; stroke:#ffffff!important; }
+        html body .client-brand-panel .client-brand-footer,
+        html body .client-brand-panel .client-brand-footer span { color:rgba(203,213,225,.68)!important; }
+        .client-portal-panel { position:relative; min-height:100dvh; padding:72px 48px 30px; display:flex; align-items:center; justify-content:center; z-index:1; }
+        .client-website-link { position:absolute; top:28px; right:38px; display:inline-flex; align-items:center; gap:8px; padding:10px 15px; color:#0b2348; text-decoration:none; font-size:12px; font-weight:750; border-radius:999px; background:rgba(255,255,255,.7); box-shadow:inset 0 0 0 1px rgba(148,163,184,.22),0 8px 25px rgba(15,35,74,.07); backdrop-filter:blur(14px); transition:.2s ease; }
+        .client-website-link:hover { transform:translateY(-2px); background:white; }
+        .client-mobile-brand { display:none; }
+        .client-login-card { width:min(100%,540px); padding:34px 42px 28px; border-radius:30px; background:rgba(255,255,255,.76); box-shadow:0 30px 80px rgba(15,35,74,.16),inset 0 1px 0 rgba(255,255,255,.86); backdrop-filter:blur(28px); }
+        .client-logo { display:flex; justify-content:center; margin-bottom:14px; }
+        .client-logo img { width:min(220px,62%); max-height:112px; object-fit:contain; }
+        .client-login-heading { text-align:center; margin-bottom:22px; }
+        .client-portal-tag { display:block; margin-bottom:7px; color:#2563eb; font-size:10px; font-weight:850; letter-spacing:.15em; text-transform:uppercase; }
+        .client-login-heading h2 { margin:0; font-size:28px; line-height:1.18; letter-spacing:-.035em; }
+        .client-login-heading p { margin:7px auto 0; max-width:390px; color:#64748b; font-size:13px; line-height:1.55; }
+        .client-alert { display:flex; align-items:center; gap:9px; margin-bottom:16px; padding:11px 12px; border-radius:11px; font-size:12px; line-height:1.4; }
+        .client-alert.error { color:#be123c; background:#fff1f2; }
+        .client-alert.success { color:#047857; background:#ecfdf5; }
+        .client-success { display:grid; place-items:center; gap:10px; padding:24px; color:#059669; font-weight:750; }
+        .client-form-group { margin-bottom:16px; }
+        .client-form-label { display:block; margin:0 0 7px 2px; color:#334155; font-size:10.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }
+        .client-input-wrap { position:relative; }
+        .client-input-icon { position:absolute; left:16px; top:50%; transform:translateY(-50%); color:#64748b; pointer-events:none; }
+        .client-form-control { width:100%; height:52px; padding:0 46px; border:0; border-radius:12px; outline:none; background:rgba(255,255,255,.88); color:#0f172a; font-size:14px; box-shadow:inset 0 0 0 1px rgba(203,213,225,.72); transition:.2s ease; }
+        .client-form-control:focus { background:white; box-shadow:inset 0 0 0 1px #3b82f6,0 0 0 4px rgba(59,130,246,.12); }
+        .client-form-control::placeholder { color:#94a3b8; }
+        .client-toggle-mpin { position:absolute; right:14px; top:50%; transform:translateY(-50%); border:0; padding:4px; background:transparent; color:#64748b; cursor:pointer; }
+        .client-form-row { min-height:28px; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:2px; }
+        .client-remember { display:inline-flex; align-items:center; gap:7px; color:#64748b; font-size:12px; }
+        .client-remember input[type='checkbox'] {
+          appearance:auto!important;
+          -webkit-appearance:checkbox!important;
+          width:15px!important;
+          min-width:15px!important;
+          height:15px!important;
+          min-height:15px!important;
+          margin:0!important;
+          padding:0!important;
+          border:0!important;
+          border-radius:3px!important;
+          background:transparent!important;
+          box-shadow:none!important;
+          accent-color:#2563eb;
         }
-        .google-sign-btn {
-          width: 100%;
-          max-width: 260px;
-          margin: 0 auto;
-          padding: 15px;
-          border-radius: 16px;
-          background: rgba(255, 255, 255, 0.6);
-          border: 1px solid rgba(226, 232, 240, 0.9);
-          color: #334155;
-          font-weight: 500;
-          font-size: 14.5px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          transition: all 0.2s;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.01);
+        .client-forgot {
+          width:auto!important;
+          min-width:0!important;
+          min-height:0!important;
+          height:auto!important;
+          margin:0!important;
+          padding:4px 0!important;
+          border:0!important;
+          border-radius:0!important;
+          background:transparent!important;
+          box-shadow:none!important;
+          color:#2563eb!important;
+          font-size:12px;
+          font-weight:750;
+          line-height:1.2;
+          cursor:pointer;
         }
-        .google-sign-btn:hover {
-          background: rgba(255, 255, 255, 0.95);
-          color: #0f172a;
-          border-color: #cbd5e1;
+        .client-forgot:hover { color:#1d4ed8!important; text-decoration:underline; transform:none!important; }
+        .client-primary-btn, .client-google-btn { width:100%; height:52px; display:flex; align-items:center; justify-content:center; gap:9px; border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; transition:.2s ease; }
+        .client-primary-btn {
+          margin-top:19px;
+          border:0!important;
+          color:#fff!important;
+          background:#1d4ed8!important;
+          box-shadow:0 13px 27px rgba(29,78,216,.28);
         }
-        .google-list-btn {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 14px;
-          border-radius: 12px;
-          background: rgba(255, 255, 255, 0.6);
-          border: 1px solid rgba(226, 232, 240, 0.8);
-          cursor: pointer;
-          text-align: left;
-          transition: all 0.2s;
+        .client-primary-btn *, .client-primary-btn svg { color:#fff!important; stroke:currentColor!important; }
+        .client-primary-btn:hover,
+        .client-primary-btn:focus,
+        .client-primary-btn:focus-visible,
+        .client-primary-btn:active {
+          color:#fff!important;
+          background:#1d4ed8!important;
+          border-color:transparent!important;
+          transform:none!important;
+          box-shadow:0 13px 27px rgba(29,78,216,.32)!important;
+          outline:none!important;
         }
-        .google-list-btn:hover {
-          border-color: #cbd5e1;
-          background: white;
+        button.client-primary-btn:disabled,
+        button.client-primary-btn[disabled] {
+          opacity:.78!important;
+          color:#fff!important;
+          background:#1d4ed8!important;
+          border:0!important;
+          box-shadow:0 13px 27px rgba(29,78,216,.24)!important;
+          cursor:wait!important;
         }
-        .google-list-btn h4 {
-          font-size: 13px;
-          font-weight: 700;
-          color: #1e293b;
-          margin-bottom: 2px;
+        button.client-primary-btn:disabled *,
+        button.client-primary-btn:disabled svg,
+        button.client-primary-btn[disabled] *,
+        button.client-primary-btn[disabled] svg {
+          color:#fff!important;
+          stroke:currentColor!important;
+          opacity:1!important;
         }
-        .google-list-btn p {
-          font-size: 11px;
-          color: #64748b;
+        html body .client-login-shell .client-login-card form button.client-primary-btn,
+        html body .client-login-shell .client-login-card form button.client-primary-btn:hover,
+        html body .client-login-shell .client-login-card form button.client-primary-btn:focus,
+        html body .client-login-shell .client-login-card form button.client-primary-btn:focus-visible,
+        html body .client-login-shell .client-login-card form button.client-primary-btn:active,
+        html body .client-login-shell .client-login-card form button.client-primary-btn:disabled,
+        html body .client-login-shell .client-login-card form button.client-primary-btn[disabled] {
+          background:#1d4ed8!important;
+          background-color:#1d4ed8!important;
+          background-image:none!important;
+          color:#fff!important;
+          -webkit-text-fill-color:#fff!important;
+          border:0!important;
+          transform:none!important;
+          animation:none!important;
+          filter:none!important;
+          box-shadow:0 13px 27px rgba(29,78,216,.28)!important;
         }
-        .google-badge {
-          font-size: 9px;
-          font-weight: 750;
-          text-transform: uppercase;
-          background: rgba(37, 99, 235, 0.08);
-          color: #2563eb;
-          padding: 3px 6px;
-          border-radius: 4px;
+        html body .client-login-shell .client-login-card form button.client-primary-btn *,
+        html body .client-login-shell .client-login-card form button.client-primary-btn svg {
+          color:#fff!important;
+          -webkit-text-fill-color:#fff!important;
+          stroke:currentColor!important;
+          opacity:1!important;
         }
-        .back-action-btn {
-          width: 100%;
-          background: transparent;
-          border: none;
-          color: #64748b;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          margin-top: 16px;
-          transition: color 0.2s;
+        .client-primary-btn:disabled, .client-google-btn:disabled { opacity:.65; cursor:wait; transform:none; }
+        .client-divider { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:11px; margin:19px 0; color:#94a3b8; font-size:9px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+        .client-divider::before, .client-divider::after { content:''; height:1px; background:linear-gradient(to right,transparent,#cbd5e1); }
+        .client-divider::after { background:linear-gradient(to left,transparent,#cbd5e1); }
+        .client-google-btn { border:0; color:#334155; background:rgba(255,255,255,.86); box-shadow:inset 0 0 0 1px rgba(203,213,225,.7); }
+        .client-google-btn:hover { transform:translateY(-2px); background:white; box-shadow:inset 0 0 0 1px rgba(148,163,184,.6),0 11px 26px rgba(15,35,74,.09); }
+        .client-google-btn svg { width:20px!important; height:20px!important; flex:0 0 20px; }
+        .client-security-note { margin-top:17px; display:flex; justify-content:center; align-items:center; gap:7px; color:#94a3b8; font-size:10px; text-align:center; }
+        .client-security-note svg { color:#10b981; }
+        .client-info-pill { margin-bottom:16px; padding:11px 12px; border-radius:11px; color:#475569; background:#eff6ff; font-size:11px; line-height:1.5; }
+        .client-back-actions { margin-top:13px; display:flex; flex-direction:column; align-items:center; gap:6px; }
+        .client-back-btn { display:inline-flex; align-items:center; gap:5px; border:0; background:transparent; color:#64748b; font-size:11px; font-weight:650; cursor:pointer; }
+        @media (max-width:1180px) {
+          .client-login-shell { grid-template-columns:.85fr 1.15fr; }
+          .client-brand-panel { padding-left:38px; padding-right:50px; }
+          .client-brand-copy h1 { font-size:50px; }
+          .client-portal-panel { padding-left:34px; padding-right:34px; }
         }
-        .back-action-btn:hover {
-          color: #1e293b;
+        @media (max-width:900px) {
+          .client-login-shell { display:block; min-height:100dvh; overflow-y:auto; }
+          .client-brand-panel { display:none; }
+          .client-portal-panel { min-height:100dvh; padding:84px 20px 28px; flex-direction:column; }
+          .client-mobile-brand { display:block; margin-bottom:18px; text-align:center; }
+          .client-mobile-brand span { color:#2563eb; font-size:10px; font-weight:850; letter-spacing:.13em; text-transform:uppercase; }
+          .client-mobile-brand h1 { margin:9px 0 0; color:#0b2348; font-size:29px; letter-spacing:-.04em; }
+          .client-login-card { padding:29px 25px 24px; border-radius:25px; }
+          .client-website-link { top:20px; right:20px; }
         }
-        .alert-box {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 12px;
-          border-radius: 12px;
-          font-size: 12px;
-          margin-bottom: 20px;
-          line-height: 1.4;
+        @media (max-width:480px) {
+          .client-portal-panel { padding:76px 13px 20px; }
+          .client-login-card { padding:25px 18px 22px; border-radius:22px; }
+          .client-logo img { width:190px; max-height:96px; }
+          .client-login-heading h2 { font-size:25px; }
+          .client-form-control, .client-primary-btn, .client-google-btn { height:50px; }
+          .client-form-row { align-items:flex-start; }
         }
-        .alert-box.error {
-          background: rgba(239, 68, 68, 0.05);
-          border: 1px solid rgba(239, 68, 68, 0.15);
-          color: #dc2626;
-        }
-        .alert-box.success {
-          background: rgba(16, 185, 129, 0.05);
-          border: 1px solid rgba(16, 185, 129, 0.15);
-          color: #059669;
-        }
-        .card-footer {
-          margin-top: 28px;
-          text-align: center;
-          font-size: 11px;
-          color: #94a3b8;
-          border-t: 1px solid rgba(226, 232, 240, 0.8);
-          padding-top: 14px;
-        }
-        .info-pill {
-          background: rgba(255, 255, 255, 0.5);
-          border: 1px solid rgba(226, 232, 240, 0.8);
-          border-radius: 12px;
-          padding: 12px;
-          font-size: 11px;
-          color: #475569;
-          line-height: 1.5;
-          margin-bottom: 18px;
-        }
-        .success-illustration {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 24px 0;
-          text-align: center;
-        }
-        .success-ring {
-          height: 60px;
-          width: 60px;
-          border-radius: 50%;
-          background: rgba(16, 185, 129, 0.08);
-          border: 2px solid rgba(16, 185, 129, 0.2);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #059669;
-          margin-bottom: 16px;
-          animation: ring-pulse 1.5s infinite;
-        }
-        .success-illustration span {
-          color: #059669;
-          font-weight: 700;
-          font-size: 14px;
-        }
-        @keyframes card-fade-up {
-          from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes ring-pulse {
-          0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.2); }
-          70% { transform: scale(1.04); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-          100% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-        @media (max-width: 1024px) {
-          .visual-panel {
-            display: none;
-          }
-          .form-panel {
-            padding: 20px;
-          }
-        }
-        @media (max-width: 768px) {
-          .glass-login-card {
-            padding: 32px 24px;
-            border-radius: 24px;
-          }
-          .card-header img {
-            width: 240px;
-            margin-bottom: 16px;
-          }
-          .card-header h2 {
-            font-size: 20px;
-          }
-          .submit-btn, .google-sign-btn {
-            max-width: 100%;
-          }
-          .back-to-home-btn {
-            top: 16px;
-            right: 16px;
-            padding: 6px 12px;
-            font-size: 11px;
-          }
-        }
-      `}} />
+      ` }} />
 
-      <div className="split-container">
-        <Link href="/" className="back-to-home-btn">
-          <span>Go to Website</span>
-        </Link>
-        {/* Floating blurred ambient blobs */}
-        <div className="ambient-blob-1" />
-        <div className="ambient-blob-2" />
-        <div className="ambient-blob-3" />
-
-        {/* LEFT BRAND PANEL */}
-        <div className="visual-panel">
-          <div className="bg-pattern" />
-
-          <div className="feature-showcase">
-            <h1>Secure Customer Portal</h1>
-            <p>
-              Access your personal insurance dashboard to view live policies, review coverages, check claim progress, and request instant support.
-            </p>
-            <div className="feature-list">
-              <div className="feature-card">
-                <div className="feature-icon-wrapper">
-                  <FileCheck size={18} />
-                </div>
-                <div>
-                  <h3>Instant Policy Repository</h3>
-                  <p>All active insurance covers and terms organized in one single secure directory.</p>
-                </div>
-              </div>
-
-              <div className="feature-card">
-                <div className="feature-icon-wrapper">
-                  <BadgeCheck size={18} />
-                </div>
-                <div>
-                  <h3>Direct Claim Coordination</h3>
-                  <p>Track real-time status updates and submit document requests to our risk desk.</p>
-                </div>
-              </div>
-
-              <div className="feature-card">
-                <div className="feature-icon-wrapper">
-                  <ShieldCheck size={18} />
-                </div>
-                <div>
-                  <h3>Client MPIN Security</h3>
-                  <p>Encrypted data protection shields your account details from unauthorized queries.</p>
-                </div>
-              </div>
+      <main className="client-login-shell">
+        <section className="client-brand-panel">
+          <div className="client-brand-content">
+            <div className="client-security-label">
+              <span className="client-security-dot" />
+              Protected client workspace
             </div>
-          </div>
 
-          <div className="visual-footer">
-            &copy; {new Date().getFullYear()} BIMAHEADQUARTER. Commercial Risk Consulting Desk.
-          </div>
-        </div>
-
-        {/* RIGHT LOGIN CARD PANEL */}
-        <div className="form-panel">
-          <div className="glass-login-card">
-            
-            <div className="card-header">
-              <img src="/brand/main-logo-wide.webp" alt="BIMAHEADQUARTER Logo" />
-              <h2>Client Portal Login</h2>
+            <div className="client-brand-copy">
+              <p className="client-eyebrow">Insurance, simplified</p>
+              <h1>
+                Everything secure.
+                <span>Everything together.</span>
+              </h1>
               <p>
-                {loginMode === "regular"
-                  ? "Access coverages using your registered credentials"
-                  : "One-time setup to activate Google login"}
+                Access active policies, follow claim progress, manage renewal requirements and connect with your insurance support team from one private workspace.
               </p>
+
+              <div className="client-feature-list">
+                {features.map(({ icon: Icon, title, text }) => (
+                  <div className="client-feature-item" key={title}>
+                    <div className="client-feature-icon"><Icon size={19} /></div>
+                    <div className="client-feature-text"><strong>{title}</strong><span>{text}</span></div>
+                    <ChevronRight className="client-feature-arrow" size={17} />
+                  </div>
+                ))}
+              </div>
             </div>
-
-            {error && (
-              <div className="alert-box error">
-                <ShieldAlert size={16} />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {success && (
-              <div className="alert-box success">
-                <ShieldCheck size={16} />
-                <span>{success}</span>
-              </div>
-            )}
-
-            {isVerified && (
-              <div className="success-illustration" aria-hidden="true">
-                <div className="success-ring">
-                  <ShieldCheck size={32} />
-                </div>
-                <span>Verification Successful</span>
-              </div>
-            )}
-
-            {!isVerified && (
-              <>
-                {/* STAGE 1: REGULAR LOGIN FORM */}
-                {loginMode === "regular" && (
-                  <form onSubmit={handleRegularSubmit} className="space-y-4">
-                    <div className="input-group">
-                      <span>Client ID</span>
-                      <div className="input-container">
-                        <Mail size={16} className="input-icon" />
-                        <input
-                          type="text"
-                          placeholder="Enter your Client ID"
-                          className="input-field"
-                          value={regularCustomerId}
-                          onChange={(e) => setRegularCustomerId(e.target.value)}
-                          required
-                          disabled={loading}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="input-group">
-                      <span>Client MPIN</span>
-                      <div className="input-container">
-                        <KeyRound size={16} className="input-icon" />
-                        <input
-                          type="password"
-                          maxLength={4}
-                          placeholder="Enter Client MPIN"
-                          className="input-field"
-                          value={regularMpin}
-                          onChange={(e) => setRegularMpin(e.target.value)}
-                          required
-                          disabled={loading}
-                        />
-                      </div>
-                    </div>
-
-                    <button type="submit" className="submit-btn" disabled={loading}>
-                      {loading ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        <LogIn size={16} />
-                      )}
-                      <span>{loading ? "Verifying..." : "Sign In"}</span>
-                    </button>
-
-                    <div className="divider">Or login with</div>
-
-                    <button
-                      type="button"
-                      onClick={handleGoogleStart}
-                      className="google-sign-btn"
-                    >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24">
-                        <path
-                          fill="currentColor"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                          style={{ fill: "#4285f4" }}
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                          style={{ fill: "#34a853" }}
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                          style={{ fill: "#fbbc05" }}
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                          style={{ fill: "#ea4335" }}
-                        />
-                      </svg>
-                      <span>Continue with Google</span>
-                    </button>
-                  </form>
-                )}
-
-
-
-                {/* STAGE 3: GOOGLE LINKING ID/MPIN */}
-                {loginMode === "google" && googleStage === "verify_link" && (
-                  <form onSubmit={handleVerifyLink} className="space-y-4">
-                    <div className="info-pill">
-                      First-time setup only: confirm Client ID and MPIN once to link <strong className="text-slate-800">{googleEmail}</strong>. Next Google sign-ins will open the portal directly.
-                    </div>
-
-                    <div className="input-group">
-                      <span>Client ID</span>
-                      <div className="input-container">
-                        <Mail size={16} className="input-icon" />
-                        <input
-                          type="text"
-                          placeholder="Enter your Client ID"
-                          className="input-field"
-                          value={customerId}
-                          onChange={(e) => setCustomerId(e.target.value)}
-                          required
-                          disabled={loading}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="input-group">
-                      <span>Client MPIN</span>
-                      <div className="input-container">
-                        <KeyRound size={16} className="input-icon" />
-                        <input
-                          type="password"
-                          maxLength={4}
-                          placeholder="Enter Client MPIN"
-                          className="input-field"
-                          value={mpin}
-                          onChange={(e) => setMpin(e.target.value)}
-                          required
-                          disabled={loading}
-                        />
-                      </div>
-                    </div>
-
-                    <button type="submit" className="submit-btn" disabled={loading}>
-                      {loading ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        <ShieldCheck size={16} />
-                      )}
-                      <span>Link & Authenticate</span>
-                    </button>
-
-                    <div className="flex flex-col gap-1 items-center">
-                      <button
-                        type="button"
-                        onClick={handleGoogleStart}
-                        className="back-action-btn"
-                      >
-                        <ArrowLeft size={13} />
-                        <span>Choose different Google Account</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={resetFlow}
-                        className="back-action-btn mt-1"
-                      >
-                        <ArrowLeft size={13} />
-                        <span>Back to normal Sign In</span>
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-
-              </>
-            )}
-
-            <div className="card-footer">
-              Credentials are issued by the BimaHeadquarter risk management desk.
-            </div>
-
           </div>
-        </div>
-      </div>
+
+          <div className="client-brand-footer">
+            <span />
+            <span>© {new Date().getFullYear()} BIMAHEADQUARTER. Secure Insurance Client Services.</span>
+          </div>
+        </section>
+
+        <section className="client-portal-panel">
+          <Link href="/" className="client-website-link">
+            <ArrowLeft size={14} /> Go to Website
+          </Link>
+
+          <div className="client-mobile-brand">
+            <span>● Secure client access</span>
+            <h1>Your insurance workspace</h1>
+          </div>
+
+          <div className="client-login-card">
+            <div className="client-logo">
+              <Image src="/brand/main-logo-wide.webp" alt="BIMAHEADQUARTER" width={440} height={224} priority />
+            </div>
+
+            <div className="client-login-heading">
+              <span className="client-portal-tag">Client Portal</span>
+              <h2>{loginMode === "regular" ? "Welcome back" : "Secure Google setup"}</h2>
+              <p>{loginMode === "regular" ? "Sign in to access your policies, claims and renewal information." : "Confirm your Client ID and MPIN once to connect your Google account."}</p>
+            </div>
+
+            {error && <div className="client-alert error"><ShieldAlert size={16} /><span>{error}</span></div>}
+            {success && <div className="client-alert success"><ShieldCheck size={16} /><span>{success}</span></div>}
+
+            {isVerified ? (
+              <div className="client-success"><ShieldCheck size={38} /><span>Verification successful</span></div>
+            ) : loginMode === "regular" ? (
+              <form onSubmit={handleRegularSubmit}>
+                <div className="client-form-group">
+                  <label className="client-form-label" htmlFor="client-id">Client ID</label>
+                  <div className="client-input-wrap">
+                    <Mail className="client-input-icon" size={17} />
+                    <input id="client-id" className="client-form-control" type="text" autoComplete="username" placeholder="Enter your Client ID" value={regularCustomerId} onChange={(event) => setRegularCustomerId(event.target.value)} disabled={loading} required />
+                  </div>
+                </div>
+
+                <div className="client-form-group">
+                  <label className="client-form-label" htmlFor="client-mpin">Client MPIN</label>
+                  <div className="client-input-wrap">
+                    <KeyRound className="client-input-icon" size={17} />
+                    <input id="client-mpin" className="client-form-control" type={showMpin ? "text" : "password"} inputMode="numeric" maxLength={4} autoComplete="current-password" placeholder="Enter your MPIN" value={regularMpin} onChange={(event) => setRegularMpin(event.target.value)} disabled={loading} required />
+                    <button className="client-toggle-mpin" type="button" aria-label={showMpin ? "Hide MPIN" : "Show MPIN"} onClick={() => setShowMpin((visible) => !visible)}>
+                      {showMpin ? <EyeOff size={17} /> : <Eye size={17} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="client-form-row">
+                  <label className="client-remember"><input type="checkbox" />Remember this device</label>
+                  <button className="client-forgot" type="button" onClick={() => setError("Please contact the BimaHeadquarter support desk to reset your MPIN.")}>Forgot MPIN?</button>
+                </div>
+
+                <button className="client-primary-btn" type="submit" disabled={loading}>
+                  {loading ? <Loader2 size={17} className="animate-spin" /> : <LockKeyhole size={17} />}
+                  {loading ? "Verifying..." : "Sign In Securely"}
+                  {!loading && <LogIn size={16} />}
+                </button>
+
+                <div className="client-divider">or continue with</div>
+
+                <button className="client-google-btn" type="button" onClick={handleGoogleStart} disabled={loading}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Continue with Google
+                </button>
+
+                <div className="client-security-note"><ShieldCheck size={13} /><span>Your account is protected with encrypted client credentials.</span></div>
+              </form>
+            ) : googleStage === "verify_link" ? (
+              <form onSubmit={handleVerifyLink}>
+                <div className="client-info-pill">First-time setup for <strong>{googleEmail}</strong>. Your next Google sign-in will open the portal directly.</div>
+                <div className="client-form-group">
+                  <label className="client-form-label" htmlFor="google-client-id">Client ID</label>
+                  <div className="client-input-wrap">
+                    <Mail className="client-input-icon" size={17} />
+                    <input id="google-client-id" className="client-form-control" type="text" placeholder="Enter your Client ID" value={customerId} onChange={(event) => setCustomerId(event.target.value)} disabled={loading} required />
+                  </div>
+                </div>
+                <div className="client-form-group">
+                  <label className="client-form-label" htmlFor="google-client-mpin">Client MPIN</label>
+                  <div className="client-input-wrap">
+                    <KeyRound className="client-input-icon" size={17} />
+                    <input id="google-client-mpin" className="client-form-control" type={showMpin ? "text" : "password"} inputMode="numeric" maxLength={4} placeholder="Enter your MPIN" value={mpin} onChange={(event) => setMpin(event.target.value)} disabled={loading} required />
+                    <button className="client-toggle-mpin" type="button" aria-label={showMpin ? "Hide MPIN" : "Show MPIN"} onClick={() => setShowMpin((visible) => !visible)}>{showMpin ? <EyeOff size={17} /> : <Eye size={17} />}</button>
+                  </div>
+                </div>
+                <button className="client-primary-btn" type="submit" disabled={loading}>{loading ? <Loader2 size={17} className="animate-spin" /> : <ShieldCheck size={17} />}{loading ? "Linking account..." : "Link & Authenticate"}</button>
+                <div className="client-back-actions">
+                  <button type="button" className="client-back-btn" onClick={handleGoogleStart}><RefreshCw size={12} />Choose another Google account</button>
+                  <button type="button" className="client-back-btn" onClick={resetFlow}><ArrowLeft size={12} />Back to Client ID login</button>
+                </div>
+              </form>
+            ) : null}
+          </div>
+        </section>
+      </main>
+
       <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
     </>
   );
