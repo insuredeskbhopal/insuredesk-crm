@@ -20,7 +20,114 @@ import {
   ChevronRight,
   AlertTriangle,
   CalendarDays,
+  BadgeCheck,
+  Car,
+  IndianRupee,
+  ShieldCheck,
 } from "lucide-react";
+
+function ClientPolicyCard({ policy, onStartClaim, formatDate }) {
+  const payload = policy.reviewedData || policy.data || {};
+  const policyNumber = payload.policyNumber || "Pending Issuance";
+  const policyType = policy.selectedPolicyType || payload.policyType || "General Insurance";
+  const insurer = policy.selectedCompany || payload.insuranceCompany || "Insurance provider pending";
+  const expiryDate = payload.expiryDate || payload.policyExpiryDate || policy.renewalDate;
+  const coverageValue = payload.sumInsured || payload.idv;
+  const premium = payload.totalPremium || payload.premium;
+  const vehicle = payload.vehicleNumber || payload.registrationNumber;
+  const vehicleLabel = [vehicle, payload.makeModel].filter(Boolean).join(" · ");
+  const isActive = Boolean(policy.isActivePolicy);
+
+  const formatMoney = (value) => {
+    const amount = Number(String(value || "").replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(amount) && amount > 0
+      ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount)
+      : "Not available";
+  };
+
+  return (
+    <article className="group relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-[0_28px_70px_rgba(6,95,70,0.16)]">
+      <div className="relative overflow-hidden bg-[linear-gradient(135deg,#052e2b_0%,#075f46_58%,#0f766e_100%)] px-5 py-5 text-white sm:px-6 sm:py-6">
+        <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full border border-white/10 bg-white/[0.06]" />
+        <div className="absolute -bottom-16 right-20 h-32 w-32 rounded-full bg-amber-300/10 blur-2xl" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-300 via-emerald-200 to-cyan-200" />
+
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm">
+              <ShieldCheck size={22} />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-100">{insurer}</p>
+              <h3 className="mt-1 truncate text-base font-bold text-white sm:text-lg">{policyType}</h3>
+            </div>
+          </div>
+          <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${
+            isActive
+              ? "border-emerald-200/40 bg-emerald-200/15 text-emerald-50"
+              : "border-white/20 bg-white/10 text-slate-200"
+          }`}>
+            <BadgeCheck size={11} /> {isActive ? "Active" : "Expired"}
+          </span>
+        </div>
+
+        <div className="relative mt-7">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-100/80">Policy number</p>
+          <p className="mt-1 break-all font-mono text-xl font-bold tracking-wide text-white sm:text-2xl">{policyNumber}</p>
+        </div>
+
+        <div className="relative mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/15 pt-4 text-[10px] text-emerald-50/90">
+          <span className="inline-flex items-center gap-1.5"><Calendar size={12} /> From {formatDate(payload.startDate)}</span>
+          <span className="inline-flex items-center gap-1.5"><CalendarDays size={12} /> Until {formatDate(expiryDate)}</span>
+        </div>
+      </div>
+
+      <div className="p-5 sm:p-6">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3.5">
+            <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">
+              <Shield size={12} className="text-emerald-600" /> Coverage value
+            </div>
+            <p className="mt-2 text-sm font-bold text-slate-900 sm:text-base">{formatMoney(coverageValue)}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3.5">
+            <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">
+              <IndianRupee size={12} className="text-amber-600" /> Premium
+            </div>
+            <p className="mt-2 text-sm font-bold text-slate-900 sm:text-base">{formatMoney(premium)}</p>
+          </div>
+        </div>
+
+        {vehicleLabel ? (
+          <div className="mt-3 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-700 shadow-sm">
+              <Car size={17} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-emerald-700/70">Insured vehicle</p>
+              <p className="mt-0.5 truncate text-xs font-bold text-slate-800">{vehicleLabel}</p>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Renewal desk</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-slate-600">Support linked to this policy</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onStartClaim(policy)}
+            disabled={!payload.policyNumber}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-[11px] font-bold text-white shadow-lg shadow-slate-300 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Start a claim <ArrowRight size={13} />
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
 
 
 export default function ClientPortal() {
@@ -202,6 +309,21 @@ export default function ClientPortal() {
       month: "short",
       year: "numeric",
     });
+  };
+
+  const openClaimForPolicy = (policy) => {
+    const payload = policy.reviewedData || policy.data || {};
+    if (!payload.policyNumber) return;
+    setClaimForm((current) => ({
+      ...current,
+      policyNo: payload.policyNumber,
+      claimType: policy.selectedPolicyType || payload.policyType || "General",
+    }));
+    setClaimError("");
+    setClaimSuccess("");
+    setShowInitiateForm(true);
+    setActiveTab("claims");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (loading) {
@@ -522,13 +644,17 @@ export default function ClientPortal() {
 
           {/* 2. Policies Tab */}
           {activeTab === "policies" && (
-            <div className="bg-white/75 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <FileText className="text-emerald-600" size={18} />
-                  <h2 className="text-lg font-bold text-slate-800">My Active Insurance Coverages</h2>
+            <div className="space-y-6">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 text-emerald-700">
+                    <ShieldCheck size={17} />
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em]">Your insurance wallet</p>
+                  </div>
+                  <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">My active coverages</h2>
+                  <p className="mt-1 text-xs text-slate-500">Coverage, vehicle and renewal details in one secure view.</p>
                 </div>
-                <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-slate-200/50">
+                <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-700">
                   {policies.length} Policies
                 </span>
               </div>
@@ -544,49 +670,15 @@ export default function ClientPortal() {
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-100 text-slate-400 uppercase tracking-wider font-semibold">
-                        <th className="py-3 pr-4">Policy / Type</th>
-                        <th className="py-3 px-4">Insurer</th>
-                        <th className="py-3 px-4">Expiry Date</th>
-                        <th className="py-3 pl-4 text-right">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {policies.map((p) => {
-                        const payload = p.reviewedData || p.data || {};
-                        return (
-                          <tr key={p.id} className="hover:bg-slate-50/50 text-slate-650 transition-colors">
-                            <td className="py-3 pr-4">
-                              <div className="font-bold text-slate-800 truncate max-w-[200px]">
-                                {payload.policyNumber || "Pending Issuance"}
-                              </div>
-                              <div className="text-[10px] text-slate-400 mt-0.5">
-                                {p.selectedPolicyType || payload.policyType || "General"}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4 truncate max-w-[120px] font-semibold text-slate-700">
-                              {p.selectedCompany || payload.insuranceCompany || "-"}
-                            </td>
-                            <td className="py-3 px-4 font-medium text-slate-500">
-                              {formatDate(p.renewalDate || payload.policyExpiryDate)}
-                            </td>
-                            <td className="py-3 pl-4 text-right">
-                              <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                                p.isActivePolicy
-                                  ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20"
-                                  : "bg-slate-100 text-slate-500 border border-slate-200"
-                              }`}>
-                                {p.isActivePolicy ? "Active" : "Expired"}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                  {policies.map((policy) => (
+                    <ClientPolicyCard
+                      key={policy.id}
+                      policy={policy}
+                      onStartClaim={openClaimForPolicy}
+                      formatDate={formatDate}
+                    />
+                  ))}
                 </div>
               )}
             </div>
@@ -1157,42 +1249,15 @@ export default function ClientPortal() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-3.5">
-                  {policies.map((p) => {
-                    const payload = p.reviewedData || p.data || {};
-                    return (
-                      <div key={p.id} className="bg-white border border-slate-200/40 rounded-xl p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all duration-300">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-[8.5px] uppercase font-bold text-slate-400">Policy Number</span>
-                            <div className="font-extrabold text-slate-800 text-xs mt-0.5">{payload.policyNumber || "Pending Issuance"}</div>
-                          </div>
-                          <span className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${
-                            p.isActivePolicy
-                              ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20"
-                              : "bg-slate-100 text-slate-500 border border-slate-200"
-                          }`}>
-                            {p.isActivePolicy ? "Active" : "Expired"}
-                          </span>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-2.5 text-[10.5px]">
-                          <div>
-                            <span className="text-[8.5px] uppercase font-semibold text-slate-400 block">Insurer</span>
-                            <span className="font-semibold text-slate-700 block truncate mt-0.5">{p.selectedCompany || payload.insuranceCompany || "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-[8.5px] uppercase font-semibold text-slate-400 block">Expiry Date</span>
-                            <span className="font-semibold text-slate-700 block mt-0.5">{formatDate(p.renewalDate || payload.policyExpiryDate)}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-slate-50 rounded-lg px-2.5 py-1.5 text-[9.5px] text-slate-600 border border-slate-200/30 flex justify-between items-center">
-                          <span>LOB Type: <strong className="text-slate-800 font-bold">{p.selectedPolicyType || payload.policyType || "General"}</strong></span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="space-y-4">
+                  {policies.map((policy) => (
+                    <ClientPolicyCard
+                      key={policy.id}
+                      policy={policy}
+                      onStartClaim={openClaimForPolicy}
+                      formatDate={formatDate}
+                    />
+                  ))}
                 </div>
               )}
             </div>
