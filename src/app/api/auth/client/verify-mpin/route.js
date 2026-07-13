@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { verifyClientMpin } from "@/lib/client-portal/credentials";
 
 export async function POST(request) {
   try {
@@ -33,8 +34,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "No mobile number associated with this profile" }, { status: 400 });
     }
 
-    const cleanDbPhone = customer.phone.replace(/[^0-9]/g, "");
-    if (cleanDbPhone.slice(-4) !== cleanMpin) {
+    if (!(await verifyClientMpin(customer, cleanMpin))) {
       return NextResponse.json({ success: false, error: "Incorrect MPIN details" }, { status: 401 });
     }
 

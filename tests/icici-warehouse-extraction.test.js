@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
 const pdf = require("pdf-parse");
 
-describe.skip("ICICI warehouse MSME Suraksha Kavach extraction", () => {
+describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
   it("locks the PATEL WAREHOUSE AC MPWLC policy extraction contract", async () => {
     const file = "tests/POLICY COPY/FIRE - WAREHOUSE/PATEL WAREHOUSE AC MPWLC - POLICY- ICICI.pdf";
     const parsed = await pdf(fs.readFileSync(file));

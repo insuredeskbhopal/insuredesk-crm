@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 const pdf = require("pdf-parse");
 const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
 
-describe.skip("IFFCO Tokio Workmen Compensation extraction", () => {
+describe("IFFCO Tokio Workmen Compensation extraction", () => {
   it("does not misclassify the IFFCO WC policy as motor", async () => {
     const file = "tests/POLICY COPY/WC/AKSHAT INDUSTRIES_WC-IFFCO.pdf";
     const parsed = await pdf(fs.readFileSync(file));

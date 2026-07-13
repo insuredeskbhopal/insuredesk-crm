@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
 const pdf = require("pdf-parse");
 
-describe.skip("IFFCO Tokio Warehouse Policy extraction", () => {
+describe("IFFCO Tokio Warehouse Policy extraction", () => {
   const testCases = [
     {
       file: "tests/Warehouse/IFFCO/222 copy.pdf",

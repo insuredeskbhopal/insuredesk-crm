@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireSession, canWriteOperations } from "@/lib/auth/session";
 import { updateTaskStatus } from "@/lib/operations-center/engine";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
+import { prisma } from "@/lib/db/prisma";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,47 @@ export async function PATCH(request, context) {
 
     const { id } = await context.params;
     const body = await request.json();
+    const hasQuoteUpdate = body.quoteAmount !== undefined || body.paymentLink !== undefined || body.quoteNote !== undefined;
+
+    if (hasQuoteUpdate) {
+      const task = await prisma.task.findFirst({
+        where: { id, organizationId: auth.session.organizationId, module: "CLIENT_PORTAL", archivedAt: null },
+        select: { id: true, metadata: true, amount: true },
+      });
+      if (!task || !["NEW_POLICY_QUOTE", "RENEWAL_QUOTE"].includes(task.metadata?.requestType)) {
+        return NextResponse.json({ error: "Client quotation task not found." }, { status: 404 });
+      }
+
+      const amount = body.quoteAmount === undefined ? task.amount?.toString() : String(body.quoteAmount).replace(/[^0-9.]/g, "");
+      if (!amount || Number(amount) <= 0) {
+        return NextResponse.json({ error: "Enter a valid quotation amount." }, { status: 422 });
+      }
+      const rawPaymentLink = String(body.paymentLink || "").trim();
+      if (rawPaymentLink && !/^https:\/\//i.test(rawPaymentLink)) {
+        return NextResponse.json({ error: "Payment link must start with https://" }, { status: 422 });
+      }
+      if (rawPaymentLink && !task.metadata?.paymentRequested) {
+        return NextResponse.json({ error: "Publish the quotation first. Add a payment link only after the client requests it." }, { status: 422 });
+      }
+
+      const updated = await prisma.task.update({
+        where: { id: task.id },
+        data: {
+          amount,
+          status: "WAITING_CUSTOMER",
+          metadata: {
+            ...(task.metadata || {}),
+            quoteNote: String(body.quoteNote || "").trim().slice(0, 2000),
+            paymentLink: rawPaymentLink,
+            quotePublishedAt: new Date().toISOString(),
+            paymentRequested: Boolean(task.metadata?.paymentRequested),
+          },
+        },
+        select: { id: true, title: true, amount: true, status: true, metadata: true, updatedAt: true },
+      });
+      return NextResponse.json({ success: true, task: { ...updated, amount: updated.amount?.toString() || null } });
+    }
+
     const status = String(body.status || "")
       .trim()
       .toUpperCase();

@@ -1235,8 +1235,10 @@ function serializeTask(task) {
     customerName: task.customerName,
     customerMobile: task.customerMobile,
     policyNumber: task.policyNumber,
+    amount: task.amount?.toString() || null,
     dueAt: task.dueAt,
     completedAt: task.completedAt,
+    updatedAt: task.updatedAt,
     metadata: task.metadata,
   };
 }

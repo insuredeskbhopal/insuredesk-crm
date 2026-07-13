@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url);
 const pdf = require("pdf-parse");
 const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
 
-describe.skip("Bajaj warehouse extraction", () => {
+describe("Bajaj warehouse extraction", () => {
   const dir = "tests/Warehouse/bajaj";
   const files = fs.existsSync(dir)
     ? fs.readdirSync(dir)

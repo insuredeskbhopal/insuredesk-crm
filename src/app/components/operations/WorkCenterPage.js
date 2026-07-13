@@ -164,7 +164,7 @@ export default function WorkCenterPage() {
           ) : activeView === "Timeline" ? (
             <Timeline events={data?.events || []} tasks={tasks} />
           ) : (
-            <TaskList tasks={tasks} onComplete={completeTask} loading={loading} />
+            <TaskList tasks={tasks} onComplete={completeTask} onUpdated={load} loading={loading} />
           )}
         </section>
 
@@ -213,7 +213,43 @@ export default function WorkCenterPage() {
   );
 }
 
-function TaskList({ tasks, onComplete, loading }) {
+function TaskList({ tasks, onComplete, onUpdated, loading }) {
+  const [quoteTask, setQuoteTask] = useState(null);
+  const [quoteForm, setQuoteForm] = useState({ quoteAmount: "", quoteNote: "", paymentLink: "" });
+  const [quoteError, setQuoteError] = useState("");
+  const [savingQuote, setSavingQuote] = useState(false);
+
+  const openQuote = (task) => {
+    setQuoteTask(task);
+    setQuoteForm({
+      quoteAmount: task.amount || "",
+      quoteNote: task.metadata?.quoteNote || "",
+      paymentLink: task.metadata?.paymentLink || "",
+    });
+    setQuoteError("");
+  };
+
+  const saveQuote = async (event) => {
+    event.preventDefault();
+    setSavingQuote(true);
+    setQuoteError("");
+    try {
+      const response = await fetch(`/api/tasks/${quoteTask.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(quoteForm),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Quotation could not be updated.");
+      setQuoteTask(null);
+      onUpdated?.();
+    } catch (error) {
+      setQuoteError(error.message);
+    } finally {
+      setSavingQuote(false);
+    }
+  };
+
   if (loading && tasks.length === 0) {
     return <div className="work-empty">Loading live work items...</div>;
   }
@@ -222,6 +258,7 @@ function TaskList({ tasks, onComplete, loading }) {
   }
 
   return (
+    <>
     <div className="task-list">
       {tasks.map((task) => (
         <article key={task.id} className={`task-row priority-${String(task.priority).toLowerCase()}`}>
@@ -245,8 +282,15 @@ function TaskList({ tasks, onComplete, loading }) {
               </span>
               <span>{task.priority}</span>
               {task.customerName ? <span>{task.customerName}</span> : null}
+              {task.metadata?.paymentRequested ? <span className="font-bold text-amber-700">Payment link requested</span> : null}
             </div>
           </div>
+          <div className="flex items-center gap-2">
+          {["NEW_POLICY_QUOTE", "RENEWAL_QUOTE"].includes(task.metadata?.requestType) ? (
+            <button type="button" onClick={() => openQuote(task)} className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
+              Update quote
+            </button>
+          ) : null}
           <button
             className="icon-action"
             type="button"
@@ -255,9 +299,35 @@ function TaskList({ tasks, onComplete, loading }) {
           >
             <CheckCircle2 size={19} />
           </button>
+          </div>
         </article>
       ))}
     </div>
+    {quoteTask ? (
+      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md">
+        <form onSubmit={saveQuote} className="w-full max-w-lg rounded-3xl border border-white/60 bg-white p-6 shadow-2xl">
+          <div className="flex items-start justify-between gap-4">
+            <div><p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Client quotation</p><h2 className="mt-1 text-xl font-bold text-slate-900">{quoteTask.customerName || "Client"}</h2><p className="mt-1 text-xs text-slate-500">{quoteTask.policyNumber || "New policy request"}</p></div>
+            <button type="button" onClick={() => setQuoteTask(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-lg text-slate-600">×</button>
+          </div>
+          {quoteError ? <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600">{quoteError}</div> : null}
+          <div className="mt-5 space-y-4">
+            <label className="block text-xs font-bold text-slate-600">Quotation amount
+              <input type="number" min="1" step="0.01" required value={quoteForm.quoteAmount} onChange={(event) => setQuoteForm({ ...quoteForm, quoteAmount: event.target.value })} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" placeholder="Premium amount" />
+            </label>
+            <label className="block text-xs font-bold text-slate-600">Agent note
+              <textarea value={quoteForm.quoteNote} onChange={(event) => setQuoteForm({ ...quoteForm, quoteNote: event.target.value })} className="mt-1.5 min-h-24 w-full rounded-xl border border-slate-200 p-3 text-sm" placeholder="Coverage summary, insurer, validity, or next steps" />
+            </label>
+            <label className="block text-xs font-bold text-slate-600">Secure payment link <span className="font-normal text-slate-400">(add only after client requests it)</span>
+              <input type="url" value={quoteForm.paymentLink} onChange={(event) => setQuoteForm({ ...quoteForm, paymentLink: event.target.value })} disabled={!quoteTask.metadata?.paymentRequested} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" placeholder={quoteTask.metadata?.paymentRequested ? "https://..." : "Waiting for client request"} />
+            </label>
+            {quoteTask.metadata?.paymentRequested ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-bold text-amber-700">The client has requested a payment link for this quotation.</p> : null}
+          </div>
+          <button disabled={savingQuote} className="mt-5 h-11 w-full rounded-xl bg-emerald-600 text-sm font-bold !text-white force-white disabled:opacity-50">{savingQuote ? "Saving..." : "Publish quotation to client"}</button>
+        </form>
+      </div>
+    ) : null}
+    </>
   );
 }
 

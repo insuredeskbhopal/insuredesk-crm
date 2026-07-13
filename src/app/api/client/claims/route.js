@@ -72,7 +72,17 @@ export async function GET(request) {
         claimDescription: true,
         claimDate: true,
         followUpDate: true,
+        currentRemark: true,
         createdAt: true,
+        updatedAt: true,
+        remarks: {
+          orderBy: { createdAt: "asc" },
+          select: { id: true, text: true, followUpDate: true, createdAt: true },
+        },
+        documents: {
+          orderBy: { uploadedAt: "desc" },
+          select: { id: true, name: true, fileName: true, fileType: true, size: true, uploadedAt: true },
+        },
       },
     });
 

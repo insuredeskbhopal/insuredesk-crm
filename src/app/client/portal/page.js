@@ -24,9 +24,15 @@ import {
   Car,
   IndianRupee,
   ShieldCheck,
+  RefreshCw,
 } from "lucide-react";
+import ClientExperienceCenter, {
+  ClaimDocumentManager,
+  ClientProfileManager,
+  PolicyDetailModal,
+} from "./ClientExperienceCenter";
 
-function ClientPolicyCard({ policy, onStartClaim, formatDate }) {
+function ClientPolicyCard({ policy, onStartClaim, onViewDetails, onServiceRequest, formatDate }) {
   const payload = policy.reviewedData || policy.data || {};
   const policyNumber = payload.policyNumber || "Pending Issuance";
   const policyType = policy.selectedPolicyType || payload.policyType || "General Insurance";
@@ -37,6 +43,16 @@ function ClientPolicyCard({ policy, onStartClaim, formatDate }) {
   const vehicle = payload.vehicleNumber || payload.registrationNumber;
   const vehicleLabel = [vehicle, payload.makeModel].filter(Boolean).join(" · ");
   const isActive = Boolean(policy.isActivePolicy);
+  const duration = (() => {
+    if (payload.duration) return payload.duration;
+    const start = new Date(payload.startDate);
+    const end = new Date(expiryDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return "Duration unavailable";
+    const totalDays = Math.ceil((end - start) / 86400000);
+    const months = Math.round(totalDays / 30.44);
+    if (months < 1) return `${totalDays} day${totalDays === 1 ? "" : "s"}`;
+    return months >= 12 && months % 12 === 0 ? `${months / 12} year${months === 12 ? "" : "s"}` : `${months} months`;
+  })();
 
   const formatMoney = (value) => {
     const amount = Number(String(value || "").replace(/[^0-9.-]/g, ""));
@@ -79,6 +95,7 @@ function ClientPolicyCard({ policy, onStartClaim, formatDate }) {
         <div className="relative mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/15 pt-4 text-[10px] text-white force-white">
           <span className="inline-flex items-center gap-1.5 text-white force-white"><Calendar size={12} className="text-white force-white" /> From {formatDate(payload.startDate)}</span>
           <span className="inline-flex items-center gap-1.5 text-white force-white"><CalendarDays size={12} className="text-white force-white" /> Until {formatDate(expiryDate)}</span>
+          <span className="inline-flex items-center gap-1.5 text-white force-white"><RefreshCw size={12} className="text-white force-white" /> {duration}</span>
         </div>
       </div>
 
@@ -110,19 +127,37 @@ function ClientPolicyCard({ policy, onStartClaim, formatDate }) {
           </div>
         ) : null}
 
-        <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Renewal desk</p>
-            <p className="mt-0.5 text-[11px] font-semibold text-slate-600">Support linked to this policy</p>
+            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-emerald-700">Issued policy</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-slate-600">Policy created · Payment completed</p>
           </div>
+          <div className="flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => onViewDetails(policy)}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[10px] font-bold text-slate-700 transition-all hover:border-emerald-300 hover:text-emerald-700"
+          >
+            View details <ArrowRight size={13} />
+          </button>
+          <button
+            type="button"
+            onClick={() => onServiceRequest("RENEWAL_QUOTE", policy)}
+            disabled={!payload.policyNumber || !expiryDate}
+            title={!expiryDate ? "Expiry date is required before renewal" : "Request renewal quotation"}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[10px] font-bold text-emerald-700 transition-all hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Renew <RefreshCw size={13} />
+          </button>
           <button
             type="button"
             onClick={() => onStartClaim(policy)}
             disabled={!payload.policyNumber}
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-[11px] font-bold text-white force-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2.5 text-[10px] font-bold text-white force-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Start a claim <ArrowRight size={13} />
           </button>
+          </div>
         </div>
       </div>
     </article>
@@ -153,6 +188,8 @@ export default function ClientPortal() {
 
   // Claims Selection State
   const [selectedClaimId, setSelectedClaimId] = useState(null);
+  const [selectedPolicy, setSelectedPolicy] = useState(null);
+  const [serviceAction, setServiceAction] = useState(null);
 
   // Carousel State
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -302,6 +339,12 @@ export default function ClientPortal() {
     }
   };
 
+  const refreshClaims = async () => {
+    const response = await fetch("/api/client/claims");
+    const data = await response.json();
+    if (response.ok && data.success) setClaims(data.claims || []);
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
     return new Date(dateStr).toLocaleDateString("en-IN", {
@@ -325,6 +368,15 @@ export default function ClientPortal() {
     setActiveTab("claims");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const openPolicyDetails = (policy) => setSelectedPolicy(policy);
+  const openServiceRequest = (requestType, policy) => {
+    setServiceAction({ type: requestType, policyNo: policy ? (policy.reviewedData || policy.data || {}).policyNumber || "" : "" });
+    setActiveTab("services");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const updateProfile = (nextProfile) => setProfile((current) => ({ ...current, ...nextProfile }));
 
   if (loading) {
     return (
@@ -654,9 +706,18 @@ export default function ClientPortal() {
                   <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">My active coverages</h2>
                   <p className="mt-1 text-xs text-slate-500">Coverage, vehicle and renewal details in one secure view.</p>
                 </div>
-                <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-700">
-                  {policies.length} Policies
-                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("services")}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 underline underline-offset-4 hover:text-emerald-900"
+                  >
+                    Policy Services <ArrowRight size={12} />
+                  </button>
+                  <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-700">
+                    {policies.length} Policies
+                  </span>
+                </div>
               </div>
 
               {policies.length === 0 ? (
@@ -676,6 +737,8 @@ export default function ClientPortal() {
                       key={policy.id}
                       policy={policy}
                       onStartClaim={openClaimForPolicy}
+                      onViewDetails={openPolicyDetails}
+                      onServiceRequest={openServiceRequest}
                       formatDate={formatDate}
                     />
                   ))}
@@ -921,12 +984,25 @@ export default function ClientPortal() {
                             {activeClaim.currentRemark || "Your claim is currently undergoing document verification by our backend office. No remarks updated yet."}
                           </p>
                         </div>
+                        <ClaimDocumentManager claim={activeClaim} onUpdated={refreshClaims} />
                       </div>
                     );
                   })()}
                 </>
               )}
             </div>
+          )}
+
+          {activeTab === "services" && (
+            <ClientExperienceCenter
+              policies={policies}
+              claims={claims}
+              profile={profile}
+              onStartClaim={openClaimForPolicy}
+              initialRequest={serviceAction}
+              onInitialRequestHandled={() => setServiceAction(null)}
+              onBack={() => setActiveTab("policies")}
+            />
           )}
 
           {/* 4. Assistance Tab */}
@@ -974,6 +1050,7 @@ export default function ClientPortal() {
 
           {/* 5. Profile Tab */}
           {activeTab === "profile" && (
+            <div className="space-y-6">
             <div className="bg-white/75 backdrop-blur-md border border-white/50 rounded-2xl p-8 shadow-sm max-w-2xl">
               <h2 className="text-xl font-bold text-slate-800 mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
                 <User size={20} className="text-emerald-600" />
@@ -1017,6 +1094,8 @@ export default function ClientPortal() {
                   </div>
                 )}
               </div>
+            </div>
+            <ClientProfileManager profile={profile} onUpdated={updateProfile} />
             </div>
           )}
         </main>
@@ -1231,9 +1310,14 @@ export default function ClientPortal() {
                   <FileText size={14} className="text-emerald-600" />
                   <span>My Coverages</span>
                 </h3>
-                <span className="text-[9.5px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/50">
-                  {policies.length} Total
-                </span>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => setActiveTab("services")} className="text-[9.5px] font-bold text-emerald-700 underline underline-offset-2">
+                    Policy Services
+                  </button>
+                  <span className="text-[9.5px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/50">
+                    {policies.length} Total
+                  </span>
+                </div>
               </div>
 
               {policies.length === 0 ? (
@@ -1255,6 +1339,8 @@ export default function ClientPortal() {
                       key={policy.id}
                       policy={policy}
                       onStartClaim={openClaimForPolicy}
+                      onViewDetails={openPolicyDetails}
+                      onServiceRequest={openServiceRequest}
                       formatDate={formatDate}
                     />
                   ))}
@@ -1501,12 +1587,25 @@ export default function ClientPortal() {
                             {activeClaim.currentRemark || "Your file is undergoing document checklist verification by the operations desk."}
                           </p>
                         </div>
+                        <ClaimDocumentManager claim={activeClaim} onUpdated={refreshClaims} />
                       </div>
                     );
                   })()}
                 </>
               )}
             </div>
+          )}
+
+          {activeTab === "services" && (
+            <ClientExperienceCenter
+              policies={policies}
+              claims={claims}
+              profile={profile}
+              onStartClaim={openClaimForPolicy}
+              initialRequest={serviceAction}
+              onInitialRequestHandled={() => setServiceAction(null)}
+              onBack={() => setActiveTab("policies")}
+            />
           )}
 
           {/* 4. Mobile Assistance View */}
@@ -1595,6 +1694,7 @@ export default function ClientPortal() {
                   )}
                 </div>
               </div>
+              <ClientProfileManager profile={profile} onUpdated={updateProfile} />
             </div>
           )}
 
@@ -1610,7 +1710,7 @@ export default function ClientPortal() {
             { id: "profile", label: "Profile", icon: User },
           ].map((tab) => {
             const Icon = tab.icon;
-            const isSelected = activeTab === tab.id;
+            const isSelected = activeTab === tab.id || (tab.id === "policies" && activeTab === "services");
             return (
               <button
                 key={tab.id}
@@ -1629,6 +1729,18 @@ export default function ClientPortal() {
           })}
         </div>
       </div>
+      <PolicyDetailModal
+        policy={selectedPolicy}
+        onClose={() => setSelectedPolicy(null)}
+        onStartClaim={(policy) => {
+          setSelectedPolicy(null);
+          openClaimForPolicy(policy);
+        }}
+        onServiceRequest={(type, policy) => {
+          setSelectedPolicy(null);
+          openServiceRequest(type, policy);
+        }}
+      />
     </div>
   );
 }
