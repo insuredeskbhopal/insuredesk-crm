@@ -57,10 +57,6 @@ export async function POST(request) {
   if (session.role === "VIEWER") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
-  if (!session.organizationId) {
-    return NextResponse.json({ error: "Your account is not assigned to an organization." }, { status: 400 });
-  }
-
   const body = await request.json();
   const name = String(body.name || "").trim();
   const phone = normalizeIndianPhone(body.phone || "");
@@ -73,10 +69,11 @@ export async function POST(request) {
   }
 
   const actorId = session.userId || session.id;
+  const organizationId = await resolveOrganizationId(session);
   const existing = await prisma.task.findFirst({
     where: {
       module: MODULE,
-      organizationId: session.organizationId,
+      organizationId,
       createdById: actorId,
       customerMobile: phone,
       status: { in: OPEN_STATUSES },
@@ -88,7 +85,7 @@ export async function POST(request) {
 
   const item = await prisma.task.create({
     data: {
-      organizationId: session.organizationId,
+      organizationId,
       createdById: actorId,
       updatedById: actorId,
       title: `Client ID requested for ${name}`,
@@ -241,4 +238,15 @@ async function requireStaffSession(request) {
     return { response: NextResponse.json({ error: "Unauthorized" }, { status: 403 }) };
   }
   return session;
+}
+
+async function resolveOrganizationId(session) {
+  if (session.organizationId) return session.organizationId;
+  const actorId = session.userId || session.id;
+  if (!actorId) return null;
+  const user = await prisma.user.findUnique({
+    where: { id: actorId },
+    select: { organizationId: true },
+  });
+  return user?.organizationId || null;
 }
