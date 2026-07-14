@@ -344,6 +344,7 @@ function extractIffcoPolicyNumber(text = "") {
 // Start of extractIffcoInsuredName (Lines 3482-3488)
 function extractIffcoInsuredName(text = "") {
   const value =
+    matchGroup(text, /(?:^|\n)([A-Z][A-Z .&'-]{2,}?)(?=Policy\s*#\s*:)/m) ||
     matchGroup(text, /([A-Z][A-Z0-9 .&'-]{2,})\s+Policy\s*#\s*:/i) ||
     matchGroup(text, /Insured'?s\s+name\s*:?\s*([A-Z0-9 .&'-]+?)(?=\s+Unique Invoice|\s+Policy No|\n)/i);
   const cleaned = cleanInsuredName(value);

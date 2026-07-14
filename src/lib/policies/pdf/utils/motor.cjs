@@ -37,6 +37,7 @@ function shouldKeepExtractedMotorPartyFields(data = {}) {
   const company = [data.insuranceCompany, data.companyName].filter(Boolean).join(" ");
   return (
     /\bTATA\s*AIG\b/i.test(company) ||
+    /\bHDFC\s+ERGO\b/i.test(company) ||
     /Generali\s+Central|Future\s+Generali/i.test(company)
   );
 }

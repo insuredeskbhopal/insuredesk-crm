@@ -292,6 +292,47 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("locks the verified JAY SHANKAR BALWANI IFFCO private car schedule fields", async () => {
+    const sourceFile = "tests/fixtures/JAY SHANKAR BALWANI_MP04EB2062_2026-27 POLICY.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "IFFCO_TOKIO_MOTOR_V1",
+      documentCategory: "Motor Insurance",
+      insuranceCompany: "IFFCO Tokio General Insurance Company Limited",
+      policyType: "Private Car Package Policy",
+      insuredName: "JAY SHANKAR BALWANI",
+      contactPerson: "JAY SHANKAR BALWANI",
+      policyNumber: "N8001571",
+      startDate: "15/07/2026",
+      expiryDate: "14/07/2027",
+      duration: "12 months",
+      vehicleNumber: "MP04EB2062",
+      registrationNumber: "MP04EB2062",
+      makeModel: "MARUTI EECO 5 STR",
+      manufacturingYear: "2021",
+      engineNumber: "G12BN939978",
+      chassisNumber: "MA3ERLF1S00924263",
+      cubicCapacity: "1196",
+      seatingCapacity: "5",
+      idv: "230100.00",
+      sumInsured: "230100.00",
+      premium: "5662.82",
+      totalPremium: "5662.82",
+      netPremium: "4798.00",
+      odPremium: "1002.00",
+      tpDriverOwner: "3796.00",
+      cgst: "431.91",
+      sgst: "431.91",
+      gstAmount: "863.82",
+      ncb: "50%",
+      policyCoverType: "Comprehensive",
+      rtoLocation: "BHOPAL",
+      financerName: "SUNDARAM FINANCE LTD.",
+    });
+  });
+
   it("locks the IFFCO Tokio standalone OD private car contract", async () => {
     const sourceFile = "tests/fixtures/POOJA-SHARMA-MP04ZX6611 (1).pdf";
     const parsed = await pdf(readFileSync(sourceFile));
@@ -1007,6 +1048,71 @@ describe("generic motor policy extraction", () => {
       netPremium: "18302.00",
       odPremium: "9780.00",
       tpDriverOwner: "8522.00",
+    });
+  });
+
+  it("locks the verified MS AKANKSHA SINGH HDFC ERGO private car schedule fields", async () => {
+    const sourceFile = "tests/fixtures/MS AKANKSHA SINGH_MP04EE1512_2026-27 POLICY.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "HDFC_ERGO_MOTOR_V1",
+      documentCategory: "Motor Insurance",
+      insuranceCompany: "HDFC ERGO General Insurance Company Limited",
+      policyType: "PRIVATE CAR COMPREHENSIVE POLICY",
+      policyCoverType: "Comprehensive",
+      insuredName: "MS AKANKSHA SINGH",
+      contactPerson: "MS AKANKSHA SINGH",
+      policyNumber: "2302206612163602000",
+      proposalNumber: "202607130040555",
+      invoiceNumber: "206612163602000",
+      issuanceDate: "13/07/2026",
+      customerId: "100005841432",
+      panNumber: "FLGPS0609B",
+      startDate: "10/07/2026 00:01 hrs",
+      expiryDate: "09/07/2027 Midnight",
+      vehicleNumber: "MP-04-EE-1512",
+      registrationNumber: "MP-04-EE-1512",
+      makeModel: "MAHINDRA. XUV 700-AX 7 MT DIESEL 7 STR",
+      fuelType: "Diesel",
+      engineNumber: "ZSN4E49957",
+      chassisNumber: "MA1NE2ZSAN6E18641",
+      cubicCapacity: "2184",
+      manufacturingYear: "2022",
+      seatingCapacity: "7",
+      idv: "1339740.00",
+      sumInsured: "1339740.00",
+      premium: "43373.00",
+      totalPremium: "43373.00",
+      netPremium: "36757.00",
+      basicOwnDamage: "20096.00",
+      basicThirdPartyLiability: "7897.00",
+      odPremium: "28135.00",
+      tpDriverOwner: "8622.00",
+      zeroDepreciationCover: "4689.00",
+      engineGearboxProtection: "2010.00",
+      costOfConsumables: "1340.00",
+      gstAmount: "6616.00",
+      cgst: "3308.00",
+      sgst: "3308.00",
+      ncb: "20%",
+      rtoLocation: "BHOPAL",
+      bodyType: "SUV",
+      geographicalArea: "India",
+      compulsoryDeductible: "2,000.00",
+      voluntaryDeductible: "0.00",
+      previousPolicyNumber: "2302206612163601001",
+      previousPolicyValidity: "07/07/2025 to 06/07/2026",
+      previousInsurer: "HDFC ERGO GENERAL INSURANCE CO.LTD.",
+      nomineeName: "Sushil Kumar Singh, Father",
+      financerName: "IDBI Bank",
+      customerMobile: "98XXXXXXX7",
+      customerEmail: "suxxxxxxxxxx68@gxxxx.com",
+      bankName: "BizDirect",
+      cscName: "INSUREDESK IMF PRIVATE LIMITED",
+      cscCode: "200427207967",
+      cscContactNumber: "8827731100",
     });
   });
 

@@ -80,6 +80,8 @@ function extractHdfcErgoMotor(text) {
       "amount",
     ),
     gstAmount: extractGstAmount(text),
+    cgst: extractHdfcTaxAmount(text, "Central"),
+    sgst: extractHdfcTaxAmount(text, "State"),
     totalPremium: extractByLabels(text, ["Total Premium"], "amount"),
     zeroDepreciationCover: extractHdfcAmountAfterCoverage(text, "Zero Depreciation"),
     engineGearboxProtection: extractHdfcAmountAfterCoverage(text, "Engine and Gear box Protection"),
@@ -88,6 +90,15 @@ function extractHdfcErgoMotor(text) {
     previousPolicyValidity: extractHdfcPreviousPolicyValidity(text),
     previousInsurer: extractHdfcPreviousInsurer(text),
     ncbPercentage: extractByLabels(text, ["NCB", "No Claim Bonus"], "percent"),
+    nomineeName: cleanHdfcValue(
+      matchGroup(text, /Nominee for Owner driver\s*([A-Z][A-Z .,'-]+?)(?=Appointee|Hypothecated|$)/i),
+    ),
+    financerName: cleanHdfcValue(
+      matchGroup(
+        text,
+        /Hypothecated(?:\(IMT-7\))?\s+with\s*:\s*([A-Z0-9 .&'-]+?)(?=LIMITATIONS|Nominee|\n|$)/i,
+      ),
+    ),
     paymentReference: extractByLabels(text, ["Payment Details", "Payment Reference"], "text"),
     bankName: extractByLabels(text, ["Bank Name"], "text"),
     cscName: extractHdfcBoundedText(text, "CSC Name", ["CSC Code", "Contact No", "For HDFC", "Anti rebate"]),
@@ -213,6 +224,11 @@ function extractHdfcAmountAfterCoverage(text, label) {
   const escaped = escapeRegExp(label).replace(/\\ /g, "\\s+");
   const pattern = new RegExp(`${escaped}(?:\\s*\\([^\\n]+\\))?\\s*\\n\\s*([0-9,]+(?:\\.\\d{1,2})?)`, "i");
   const match = text.match(pattern);
+  return match?.[1] ? normalizeAmount(match[1]) : "";
+}
+
+function extractHdfcTaxAmount(text, taxType) {
+  const match = text.match(new RegExp(`${taxType}\\s+Tax\\s+9%\\s*\\([^0-9]*([0-9,.]+)`, "i"));
   return match?.[1] ? normalizeAmount(match[1]) : "";
 }
 

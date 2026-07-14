@@ -1499,10 +1499,10 @@ function extractPolicyFromText(text, sourceFile = "") {
       ncb,
     policyCoverType,
     rtoLocation: hdfcErgoMotor.rto || generaliMotor.rto || newIndiaMotor.rtoLocation || rtoLocation,
-    nomineeName: generaliMotor.nomineeName || nomineeName,
+    nomineeName: hdfcErgoMotor.nomineeName || generaliMotor.nomineeName || nomineeName,
     financerName: newIndiaMotor.documentDetected
       ? newIndiaMotor.financerName
-      : generaliMotor.financerName || iffcoMotor.financerName || financerName,
+      : hdfcErgoMotor.financerName || generaliMotor.financerName || iffcoMotor.financerName || financerName,
     companyName:
       hdfcErgoMotor.companyName ||
       generaliMotor.companyName ||
