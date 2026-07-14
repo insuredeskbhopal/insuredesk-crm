@@ -930,7 +930,10 @@ function extractIffcoWarehouse(text, filename = "") {
   const sourceName = String(filename || "");
   const textHasFire = /Flexi\s+Property\s+Protector/i.test(text);
   const textHasBurglary = /Burglary\s+And\s+House\s+Breaking/i.test(text);
-  const textHasFidelity = /Fidelity\s+Guarantee/i.test(text);
+  const textHasFidelity =
+    /Fidelity\s+Guarantee(?:\s*\([^)]*\))?[\s\S]{0,220}(?:Policy\s+Schedule|Attaching\s+to\s+and\s+forming\s+part\s+of\s+Policy)/i.test(
+      text,
+    );
 
   const isFire = textHasFire || (!textHasBurglary && !textHasFidelity && /Fire/i.test(sourceName));
   const isBurglary = textHasBurglary || (!textHasFire && !textHasFidelity && /Burglary/i.test(sourceName));
