@@ -75,7 +75,10 @@ function extractLibertyMotor(text, sourceFile = "") {
 }
 
 function isLibertyMotor(text) {
-  return /Liberty\s+General\s+Insurance/i.test(text);
+  return (
+    /Liberty\s+General\s+Insurance/i.test(text) &&
+    /TWO\s+WHEELER\s+LIABILITY\s+POLICY/i.test(text)
+  );
 }
 
 function extractLibertyVehicle(text) {

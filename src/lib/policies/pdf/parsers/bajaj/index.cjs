@@ -478,6 +478,16 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
     }
   }
 
+  // Bajaj's private-car schedule flattens variant, year, NCB, CC and seats into one row.
+  const denseVehicleSpecs = text.match(
+    /Sub\s*TypeYear\s*of\s*MfgNCB\s*%CCSeating\s*Capacity[\s\S]{0,180}?(19\d{2}|20\d{2})-?\d{1,2}(\d{3,4})([1-9])(?=\s*NameofRegistrationAuthority)/i,
+  );
+  if (denseVehicleSpecs) {
+    manufacturingYear = denseVehicleSpecs[1];
+    cubicCapacity = denseVehicleSpecs[2];
+    seatingCapacity = denseVehicleSpecs[3];
+  }
+
   const idv = normalizeAmount(
     matchGroup(text, /Total\s*Sum\s*Insured[\s\S]{0,150}?\b(\d{1,3}(?:,\d{2,3})+(?:\.\d{2})?)/i) ||
       matchGroup(text, /Vehicle\s*IDV[\s\S]{0,150}?\b(\d{1,3}(?:,\d{2,3})+(?:\.\d{2})?)/i) ||
@@ -511,8 +521,8 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
       matchGroup(text, /Total Amount\s*(?:Rs\.?)?\s*([0-9,.]+)/i),
   );
 
-  const sgst = matchGroup(text, /State GST\s*\(\d+%\)\s*([0-9,.]+)/i);
-  const cgst = matchGroup(text, /Central GST\s*\(\d+%\)\s*([0-9,.]+)/i);
+  const sgst = normalizeAmount(matchGroup(text, /State GST\s*\(\d+%\)\s*([0-9,.]+)/i));
+  const cgst = normalizeAmount(matchGroup(text, /Central GST\s*\(\d+%\)\s*([0-9,.]+)/i));
   let gstAmount = "";
   if (sgst && cgst) {
     gstAmount = (parseFloat(sgst.replace(/,/g, "")) + parseFloat(cgst.replace(/,/g, ""))).toFixed(2);
@@ -539,8 +549,18 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
   const financerName = cleanHdfcValue(
     matchGroup(text, /HYPOTHECATED\s+WITH\s*[:.-]?\s*([A-Z0-9/&()., -]{2,80})/i) ||
     matchGroup(text, /Financial\s+Institute\s+Name\s*\n?\s*1([^\n]+)/i) ||
-    matchGroup(text, /Name\s+of\s+the\s+financial\s+institution[^:]*:\s*([^\n]+)/i)
+    matchGroup(text, /Name\s+of\s+the\s+financial\s+institution[^:]*:\s*([^\n]+)/i) ||
+    matchGroup(text, /Name\s+of\s+Pledgee\s*:\s*([^\n.]+)/i)
   );
+
+  const issuanceDate = normalizeBajajDate(
+    matchGroup(text, /Policy\s+Issued\s+on\s+(\d{1,2}-[A-Z]{3}-\d{4})/i),
+  );
+  const invoiceNumber = matchGroup(text, /Invoice\s+No\s*\n?\s*([A-Z0-9/-]+)/i);
+  const customerId = matchGroup(text, /Customer\s+ID\s*\n?\s*(\d+)/i);
+  const receiptNumber = matchGroup(text, /Receipt\s+No\.\s*([A-Z0-9/-]+)/i);
+  const receiptDateRaw = matchGroup(text, /Receipt\s+No\.[^\n]*?Date\s+(\d{1,2}-[A-Z]{3}-\d{2,4})/i);
+  const receiptDate = normalizeBajajDate(receiptDateRaw.replace(/-(\d{2})$/, "-20$1"));
 
   // Client GSTIN is not present in policy PDFs; "Company GST No" is the insurer's GSTIN.
   const gstin = "";
@@ -587,6 +607,8 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
     odPremium,
     tpDriverOwner,
     gstAmount,
+    cgst,
+    sgst,
     rtoLocation,
     customerMobile,
     customerEmail,
@@ -596,6 +618,11 @@ function extractBajajAllianzMotor(text, _sourceFile = "") {
     gstin,
     ncbPercentage,
     financerName,
+    issuanceDate,
+    invoiceNumber,
+    customerId,
+    receiptNumber,
+    receiptDate,
   };
 }
 

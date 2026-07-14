@@ -1397,6 +1397,54 @@ describe("generic motor policy extraction", () => {
     });
   });
 
+  it("locks the Bajaj General extraction contract for Kshama Puntambekar", async () => {
+    const sourceFile =
+      "tests/fixtures/KSHAMAPUNTAMBEKAR_MP04EE1323_2026-27 POLICY.pdf";
+    const parsed = await pdf(readFileSync(sourceFile));
+    const result = extractPolicyFromText(parsed.text || "", sourceFile);
+
+    expect(result).toMatchObject({
+      documentFormat: "BAJAJ_ALLIANZ_MOTOR_V1",
+      insuranceCompany: "Bajaj Allianz General Insurance Company Limited",
+      policyType: "Private Car Package Policy",
+      policyCoverType: "Comprehensive",
+      insuredName: "KSHAMA PUNTAMBEKAR",
+      policyNumber: "OG-27-2301-1801-00000401",
+      issuanceDate: "11/07/2026",
+      startDate: "13/07/2026",
+      expiryDate: "12/07/2027",
+      invoiceNumber: "489750088/1",
+      customerId: "507332784",
+      customerMobile: "******1100",
+      customerEmail: "*************pal@gmail.com",
+      vehicleNumber: "MP04EE1323",
+      registrationNumber: "MP04EE1323",
+      makeModel: "HONDA - NEW CITY",
+      variant: "1.5 ZX SENSING CVT eHEV Hybrid",
+      fuelType: "HYBRID",
+      engineNumber: "LEBA1200663",
+      chassisNumber: "MAKGN366GN4100661",
+      cubicCapacity: "1498",
+      manufacturingYear: "2022",
+      seatingCapacity: "5",
+      idv: "12,50,000.00",
+      premium: "19,850.00",
+      totalPremium: "19,850.00",
+      netPremium: "16,822.00",
+      odPremium: "13,025.00",
+      tpDriverOwner: "3,797.00",
+      cgst: "1,514.00",
+      sgst: "1,514.00",
+      gstAmount: "3028.00",
+      ncb: "45%",
+      financerName: "STATE BANK OF INDIA",
+      previousInsurer: "Liberty general insurance limited.",
+      previousPolicyNumber: "201140070125700129100000",
+      receiptNumber: "2301-00360220",
+      receiptDate: "11/07/2026",
+    });
+  });
+
   it("extracts Tata AIG engine number when the engine label wraps across lines", () => {
     const text = `
       Tata AIG General Insurance Company Limited General Insurance Company Limited
