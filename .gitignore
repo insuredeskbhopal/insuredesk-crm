@@ -1,34 +1,49 @@
 # dependencies
-/node_modules
-/.venv/
-/.pnp
+node_modules/
+/.pnp/
 .pnp.js
-coverage/
+
+# Python environments and caches
+/.venv/
+/venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # testing
 /coverage
 /dist
+.vitest/
 
 # next.js
 /.next/
 /out/
+/.turbo/
+/.vite/
 
 # production
 /build
 
 # debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.tmp
+*.temp
+*.bak
+~$*
 
 # local env files
-.env*.local
 .env
-.env.production
+.env.*
+!.env.example
 
 # vercel
-.vercel
+/.vercel/
 
 # typescript
 *.tsbuildinfo
@@ -38,6 +53,17 @@ next-env.d.ts
 .DS_Store
 Thumbs.db
 *.db
+/.idea/
+
+# generated analysis and batch artifacts
+/graphify-out/
+/artifacts/
+
+# generated report binaries; keep Markdown/readme/audit sources tracked
+/reports/*.docx
+/reports/*.pdf
+/reports/*.xlsx
+/reports/*.csv
 
 # local project-specific data & personal documents
 # *.pdf
