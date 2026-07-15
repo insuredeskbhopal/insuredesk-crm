@@ -36,11 +36,11 @@ To make the claims page fully data-driven rather than an informational page:
 
 ## File Summary
 
-- [login/page.js](file:///c:/Users/abhis/insuredesk-crm/src/app/login/page.js): Custom Client Login form.
-- [route.js](file:///c:/Users/abhis/insuredesk-crm/src/app/api/auth/client/login/route.js): Dedicated Client Login API.
-- [route.js](file:///c:/Users/abhis/insuredesk-crm/src/app/api/client/policies/route.js): Client-only policies lookup matching phone suffix.
-- [route.js](file:///c:/Users/abhis/insuredesk-crm/src/app/api/client/profile/route.js): Client profile info API.
-- [route.js](file:///c:/Users/abhis/insuredesk-crm/src/app/api/client/claims/route.js): Secure client-initiated claims API handler.
-- [page.js](file:///c:/Users/abhis/insuredesk-crm/src/app/client/portal/page.js): Dashboard UI displaying policies, claims, consulting CTAs, and dynamic claim operations tracking.
-- [middleware.ts](file:///c:/Users/abhis/insuredesk-crm/src/middleware.ts): Role-based routing and CRM API restriction guards.
-- [globals.css](file:///c:/Users/abhis/insuredesk-crm/src/app/globals.css): Appended `.force-` utility classes to bypass global black text locks.
+- [login/page.js](../../src/app/login/page.js): Custom Client Login form.
+- [route.js](../../src/app/api/auth/client/login/route.js): Dedicated Client Login API.
+- [route.js](../../src/app/api/client/policies/route.js): Client-only policies lookup matching phone suffix.
+- [route.js](../../src/app/api/client/profile/route.js): Client profile info API.
+- [route.js](../../src/app/api/client/claims/route.js): Secure client-initiated claims API handler.
+- [page.js](../../src/app/client/portal/page.js): Dashboard UI displaying policies, claims, consulting CTAs, and dynamic claim operations tracking.
+- [middleware.ts](../../src/middleware.ts): Role-based routing and CRM API restriction guards.
+- [globals.css](../../src/app/globals.css): Appended `.force-` utility classes to bypass global black text locks.

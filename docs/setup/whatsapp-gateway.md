@@ -19,7 +19,7 @@ Navigate to the `whatsapp-gateway` directory on your server and ensure the `.env
 ```ini
 WHATSAPP_GATEWAY_PORT=8090
 WHATSAPP_GATEWAY_HOST=127.0.0.1
-WHATSAPP_GATEWAY_API_KEY=bimaheadquarter-openwa-3mP4sV8qL2nR5aT1w
+WHATSAPP_GATEWAY_API_KEY=<generate-a-strong-private-api-key>
 ```
 *(Alternatively, the gateway will automatically read the shared `.env` from the CRM parent folder if no gateway-specific `.env` is present).*
 
@@ -58,7 +58,7 @@ Update your CRM's production `.env` file on `bimaheadquarter.com`:
 ```ini
 # WhatsApp Baileys Gateway Configuration
 WHATSAPP_GATEWAY_URL=http://localhost:8090
-WHATSAPP_GATEWAY_API_KEY=bimaheadquarter-openwa-3mP4sV8qL2nR5aT1w
+WHATSAPP_GATEWAY_API_KEY=<generate-a-strong-private-api-key>
 
 # Cron Worker Secret (for security)
 CRON_SECRET=your_secure_cron_secret_here

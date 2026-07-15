@@ -6,6 +6,7 @@ export default [
   {
     ignores: [
       ".next/**",
+      ".venv/**",
       ".vite/**",
       "dist/**",
       "node_modules/**",
