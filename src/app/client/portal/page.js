@@ -404,7 +404,7 @@ export default function ClientPortal() {
             <div className="flex items-center gap-2">
               <img
                 src="/brand/main-logo-wide.webp"
-                alt="BimaHeadquarter"
+                alt="Bima Headquarter"
                 className="h-11 w-auto object-contain"
               />
             </div>
@@ -1102,7 +1102,7 @@ export default function ClientPortal() {
 
         {/* Footer */}
         <footer className="border-t border-white/40 py-6 text-center text-xs text-slate-400 bg-white/50 z-10 backdrop-blur-sm mt-auto">
-          © {new Date().getFullYear()} BIMAHEADQUARTER. Secured Client Workspace.
+          © {new Date().getFullYear()} Bima Headquarter. Secured Client Workspace.
         </footer>
       </div>
 
@@ -1115,7 +1115,7 @@ export default function ClientPortal() {
           <div className="flex items-center gap-1.5">
             <img
               src="/brand/main-logo-wide.webp"
-              alt="BimaHeadquarter"
+              alt="Bima Headquarter"
               className="h-9 w-auto object-contain"
             />
           </div>
@@ -1169,7 +1169,7 @@ export default function ClientPortal() {
                 
                 <div className="flex justify-between items-start relative z-10">
                   <div>
-                    <div className="text-[10px] uppercase font-semibold tracking-widest force-white">BimaHeadquarter</div>
+                    <div className="text-[10px] uppercase font-semibold tracking-widest force-white">Bima Headquarter</div>
                     <div className="text-[9px] font-medium force-mint">Secured Digital Client Card</div>
                   </div>
                   <div className="h-9 rounded-lg bg-white/20 flex items-center justify-center px-2 border border-white/20 shadow-sm">

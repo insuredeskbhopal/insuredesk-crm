@@ -41,7 +41,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
   const [loadingDiagnostics, setLoadingDiagnostics] = useState(false);
   const [toast, setToast] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [user, setUser] = useState({ id: "", name: "BIMAHEADQUARTER Admin", email: "admin@bimaheadquarter.com" });
+  const [user, setUser] = useState({ id: "", name: "Bima Headquarter Admin", email: "admin@bimaheadquarter.com" });
 
   const fetchHeaderData = async () => {
     try {
@@ -497,7 +497,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
             </div>
             <div className="tb-modal-body">
               <p className="tb-status-desc">
-                Are you sure you want to log out of your BIMAHEADQUARTER account?
+                Are you sure you want to log out of your Bima Headquarter account?
               </p>
             </div>
             <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px" }}>

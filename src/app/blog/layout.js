@@ -3,7 +3,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/seo/site";
 export const metadata = {
   title: "Insurance Blog & Insights",
   description:
-    "Read the latest guides, checklists, and expert insights on insurance claims, renewals, and risk management from BIMAHEADQUARTER.",
+    "Read the latest guides, checklists, and expert insights on insurance claims, renewals, and risk management from Bima Headquarter.",
   alternates: {
     canonical: "/blog",
   },

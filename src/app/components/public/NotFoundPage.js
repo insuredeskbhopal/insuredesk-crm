@@ -23,7 +23,7 @@ export default function NotFoundPage() {
               <p className="not-found-code">404</p>
               <h1>This route is not insured.</h1>
               <p>
-                The address may be mistyped or the page may have moved. Head back to BIMAHEADQUARTER and
+                The address may be mistyped or the page may have moved. Head back to Bima Headquarter and
                 continue with insurance services, claims help, or renewals.
               </p>
               <div className="not-found-actions">

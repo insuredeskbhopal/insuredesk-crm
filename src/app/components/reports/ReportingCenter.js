@@ -226,7 +226,7 @@ function ReportHero({ title, subtitle, lastUpdated }) {
   return (
     <section className="bi-hero">
       <div>
-        <p className="eyebrow">BimaHeadquarter BI</p>
+        <p className="eyebrow">Bima Headquarter BI</p>
         <h1>{title}</h1>
         <p>{subtitle}</p>
       </div>

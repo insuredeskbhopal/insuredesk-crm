@@ -43,7 +43,7 @@ export default function WhatsAppSetupPage() {
 
   // Test message
   const [testPhone, setTestPhone] = useState("");
-  const [testMessage, setTestMessage] = useState("Hello! This is a test message from BimaHeadquarter CRM WhatsApp integration.");
+  const [testMessage, setTestMessage] = useState("Hello! This is a test message from Bima Headquarter CRM WhatsApp integration.");
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [testResult, setTestResult] = useState(null);
 
@@ -74,7 +74,7 @@ export default function WhatsAppSetupPage() {
     if (!text) return "Type a template message in the editor to see a live preview here...";
     return text
       .replace(/\{\{customerName\}\}/g, "John Doe")
-      .replace(/\{\{companyName\}\}/g, "BIMAHEADQUARTER")
+      .replace(/\{\{companyName\}\}/g, "Bima Headquarter")
       .replace(/\{\{policyNumber\}\}/g, "POL-987654")
       .replace(/\{\{policyType\}\}/g, "Health Insurance")
       .replace(/\{\{expiryDate\}\}/g, "15-Jul-2026")

@@ -13,8 +13,8 @@ const structuredData = {
       "@id": `${SITE_URL}/about#webpage`,
       url: `${SITE_URL}/about`,
       name: `About Us | ${SITE_NAME}`,
-      headline: `About BIMAHEADQUARTER`,
-      description: `Learn about BIMAHEADQUARTER, an insurance and claim consulting brand by InsureDesk IMF Pvt Ltd serving individuals and businesses in India.`,
+      headline: `About Bima Headquarter`,
+      description: `Learn about Bima Headquarter, an insurance and claim consulting brand by InsureDesk IMF Pvt. Ltd. serving individuals and businesses in India.`,
       isPartOf: {
         "@id": `${SITE_URL}/#website`,
       },
@@ -27,14 +27,24 @@ const structuredData = {
       "@type": "Organization",
       "@id": `${SITE_URL}/#organization`,
       name: SITE_NAME,
-      alternateName: "Bima Headquarter",
+      alternateName: ["BimaHeadquarter", "bimaheadquarter.com"],
       legalName: BUSINESS_DETAILS.legalName,
       url: SITE_URL,
       logo: `${SITE_URL}/brand/main-logo-wide.webp`,
       email: BUSINESS_DETAILS.email,
       telephone: BUSINESS_DETAILS.phoneHref,
       description: SITE_DESCRIPTION,
-      areaServed: BUSINESS_DETAILS.serviceArea,
+      areaServed: { "@type": "Country", name: BUSINESS_DETAILS.serviceArea },
+      founder: { "@id": `${SITE_URL}/about#anand-soni` },
+      parentOrganization: { "@id": `${SITE_URL}/#company` },
+    },
+    {
+      "@type": "Person",
+      "@id": `${SITE_URL}/about#anand-soni`,
+      name: LEADERSHIP[0].name,
+      jobTitle: LEADERSHIP[0].role,
+      worksFor: { "@id": `${SITE_URL}/#company` },
+      sameAs: [LEADERSHIP[0].linkedin],
     },
   ],
 };
@@ -329,14 +339,14 @@ export default function AboutPage() {
                   >
                     verified
                   </span>
-                  BY INSUREDESK IMF PVT LTD
+                  BY INSUREDESK IMF PVT. LTD.
                 </div>
                 <h1 className="font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold max-w-4xl">
-                  About <span className="text-secondary">BIMAHEADQUARTER</span>
+                  About <span className="text-secondary">Bima Headquarter</span>
                 </h1>
                 <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-3xl mx-auto text-[18px] leading-relaxed">
                   An institutional consulting and claim assistance brand by{" "}
-                  <strong className="text-primary font-semibold">InsureDesk IMF Pvt Ltd</strong>. We bridge
+                  <strong className="text-primary font-semibold">InsureDesk IMF Pvt. Ltd.</strong>. We bridge
                   the gap between policyholders and insurance providers across India with absolute integrity,
                   regulatory precision, and claim settlement advocacy.
                 </p>
@@ -411,6 +421,36 @@ export default function AboutPage() {
             </div>
           </section>
 
+          <section className="py-20 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <article className="glass-card p-10 rounded-2xl reveal">
+                <h2 className="font-headline-lg text-primary mb-5 text-[30px] font-bold">History and Company</h2>
+                <p className="text-on-surface-variant text-[16px] leading-relaxed mb-4">
+                  Bima Headquarter grew from the insurance consulting experience of InsureDesk IMF Pvt. Ltd.,
+                  led by Founder Director Anand Soni since 2015. The brand was established to give individuals
+                  and businesses a clear, specialist point of contact for insurance decisions, renewals, risk
+                  review, and claim documentation.
+                </p>
+                <p className="text-on-surface-variant text-[16px] leading-relaxed">
+                  {BUSINESS_DETAILS.entityStatement} The consultancy is based in Bhopal, Madhya Pradesh, and
+                  serves clients across India.
+                </p>
+              </article>
+              <article className="glass-card p-10 rounded-2xl reveal">
+                <h2 className="font-headline-lg text-primary mb-5 text-[30px] font-bold">Services and Industries Served</h2>
+                <p className="text-on-surface-variant text-[16px] leading-relaxed mb-4">
+                  Bima Headquarter advises on motor, health, life, commercial, fire, marine, warehouse, policy
+                  renewal, and claims assistance needs.
+                </p>
+                <p className="text-on-surface-variant text-[16px] leading-relaxed">
+                  Clients include families, professionals, transport and fleet operators, warehouses,
+                  manufacturers, retailers, logistics companies, SMEs, institutions, and corporate teams
+                  seeking practical coverage and claim-readiness guidance.
+                </p>
+              </article>
+            </div>
+          </section>
+
           {/* Corporate Background Section */}
           <section className="py-24 bg-surface-container-low border-t border-b border-outline-variant/20">
             <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
@@ -420,12 +460,12 @@ export default function AboutPage() {
                     COMPLIANCE & AUTHORITY
                   </div>
                   <h2 className="font-headline-lg text-headline-lg text-primary mb-6 text-[32px] font-bold leading-tight">
-                    Licensed Expertise by InsureDesk IMF Pvt Ltd
+                    Licensed Expertise by InsureDesk IMF Pvt. Ltd.
                   </h2>
                   <div className="space-y-6 text-on-surface-variant text-[16px] leading-relaxed">
                     <p>
-                      BIMAHEADQUARTER operates as an exclusive consulting and services brand under the
-                      corporate umbrella of <strong>InsureDesk IMF Pvt Ltd</strong>. As a licensed Insurance
+                      Bima Headquarter operates as an exclusive consulting and services brand under the
+                      corporate umbrella of <strong>InsureDesk IMF Pvt. Ltd.</strong>. As a licensed Insurance
                       Marketing Firm registered under the regulations of the Insurance Regulatory and
                       Development Authority of India (IRDAI), we carry out professional activities with robust
                       compliance.
@@ -437,7 +477,7 @@ export default function AboutPage() {
                     </p>
                     <p>
                       Whether protecting industrial assets, warehouse inventory, employee corporate health, or
-                      commercial transits, BIMAHEADQUARTER combines local presence with corporate standards to
+                      commercial transits, Bima Headquarter combines local presence with corporate standards to
                       safeguard your business.
                     </p>
                   </div>
@@ -534,7 +574,7 @@ export default function AboutPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={leader.image}
-                          alt={leader.name}
+                          alt={`${leader.name}, Founder Director of Bima Headquarter owner InsureDesk IMF Pvt. Ltd.`}
                           className="transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
@@ -597,7 +637,7 @@ export default function AboutPage() {
                 style={{ animationDelay: "0.2s" }}
               >
                 Get a thorough check on your commercial policies or health coverage gaps. Connect with
-                BIMAHEADQUARTER today.
+                Bima Headquarter today.
               </p>
               <div
                 className="flex flex-wrap justify-center gap-6 entry-anim"

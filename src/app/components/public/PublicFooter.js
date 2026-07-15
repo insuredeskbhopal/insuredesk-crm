@@ -1,6 +1,6 @@
 import Link from "next/link";
 import BrandLogo from "@/app/components/brand/BrandLogo";
-import { BUSINESS_DETAILS } from "@/lib/seo/site";
+import { BUSINESS_DETAILS, SITE_NAME } from "@/lib/seo/site";
 
 const serviceLinks = [
   ["General Insurance", "/services/general-insurance"],
@@ -9,6 +9,7 @@ const serviceLinks = [
   ["Life Insurance", "/services/life-insurance"],
   ["Commercial Insurance", "/services/commercial-insurance"],
   ["Warehouse Insurance", "/services/warehouse-insurance"],
+  ["Fire Insurance", "/services/fire-insurance"],
   ["Marine Insurance", "/services/marine-insurance"],
   ["Claims Assistance", "/services/claims-assistance"],
   ["Policy Renewals", "/services/policy-renewals"],
@@ -33,7 +34,9 @@ export default function PublicFooter() {
             <div className="footer-brand">
               <BrandLogo href="/" />
             </div>
-            <p>Institutional insurance consultancy and claim assistance by {BUSINESS_DETAILS.legalName}.</p>
+            <p><strong>{SITE_NAME}</strong></p>
+            <p>Trusted Insurance Consultancy</p>
+            <p>Powered by {BUSINESS_DETAILS.legalName}</p>
           </div>
 
           <div className="public-footer-actions" aria-label="Contact actions">
@@ -106,10 +109,11 @@ export default function PublicFooter() {
         </div>
 
         <div className="public-footer-bottom">
-          <p>© {new Date().getFullYear()} BIMAHEADQUARTER. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
           <div>
             <Link href="/privacy-policy">Privacy</Link>
             <Link href="/terms-and-conditions">Terms</Link>
+            <Link href="/disclaimer">Disclaimer</Link>
             <Link href="/faq">FAQ</Link>
           </div>
         </div>

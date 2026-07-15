@@ -13,11 +13,11 @@ const POSTS_PER_PAGE = 9;
 
 const stripHtml = (value) => value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 
-export default function BlogFeedClient({ initialPosts = [] }) {
+export default function BlogFeedClient({ initialPosts = [], initialSearch = "" }) {
   const BLOG_POSTS = initialPosts;
 
   const [activeCategory, setActiveCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -66,9 +66,10 @@ export default function BlogFeedClient({ initialPosts = [] }) {
   const blogSchema = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    name: "BIMAHEADQUARTER Insurance Knowledge Hub",
+    "@id": `${SITE_URL}/blog#blog`,
+    name: "Bima Headquarter Insurance Knowledge Hub",
     description:
-      "Insurance guides, claim assistance articles, renewal checklists, and business risk education from BIMAHEADQUARTER.",
+      "Insurance guides, claim assistance articles, renewal checklists, and business risk education from Bima Headquarter.",
     blogPost: BLOG_POSTS.map((post) => ({
       "@type": "BlogPosting",
       headline: post.title,
@@ -78,6 +79,7 @@ export default function BlogFeedClient({ initialPosts = [] }) {
         "@type": "Person",
         name: post.author.name,
       },
+      publisher: { "@id": `${SITE_URL}/#organization` },
       url: `${SITE_URL}/blog/${post.slug}`,
     })),
   };
@@ -101,10 +103,10 @@ export default function BlogFeedClient({ initialPosts = [] }) {
                   <span className="material-symbols-outlined">menu_book</span>
                   Insights & Guides
                 </span>
-                <h1>Knowledge Hub for Smart Insurance</h1>
+                <h1>Bima Headquarter Insurance Knowledge Hub</h1>
                 <p>
-                  Explore professional advice, claims navigation manuals, and updates to protect your health,
-                  vehicles, and businesses across India.
+                  Explore Bima Headquarter guides on insurance decisions, claims, renewals, health, vehicles,
+                  property, and business risks across India.
                 </p>
               </div>
 

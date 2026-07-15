@@ -159,7 +159,7 @@ export default function ClientLoginPage() {
     { icon: FileCheck, title: "Policy Repository", text: "View active policies, coverage details and documents." },
     { icon: BadgeCheck, title: "Claim Assistance", text: "Track updates and securely submit requested documents." },
     { icon: RefreshCw, title: "Renewal Management", text: "Review upcoming renewals and receive timely assistance." },
-    { icon: Headphones, title: "Secure Support", text: "Connect directly with the BimaHeadquarter support desk." },
+    { icon: Headphones, title: "Secure Support", text: "Connect directly with the Bima Headquarter support desk." },
   ];
 
   return (
@@ -441,7 +441,7 @@ export default function ClientLoginPage() {
 
           <div className="client-brand-footer">
             <span />
-            <span>© {new Date().getFullYear()} BIMAHEADQUARTER. Secure Insurance Client Services.</span>
+            <span>© {new Date().getFullYear()} Bima Headquarter. Secure Insurance Client Services.</span>
           </div>
         </section>
 
@@ -457,7 +457,7 @@ export default function ClientLoginPage() {
 
           <div className="client-login-card">
             <div className="client-logo">
-              <Image src="/brand/main-logo-wide.webp" alt="BIMAHEADQUARTER" width={440} height={224} priority />
+              <Image src="/brand/main-logo-wide.webp" alt="Bima Headquarter" width={440} height={224} priority />
             </div>
 
             <div className="client-login-heading">
@@ -494,7 +494,7 @@ export default function ClientLoginPage() {
 
                 <div className="client-form-row">
                   <label className="client-remember"><input type="checkbox" />Remember this device</label>
-                  <button className="client-forgot" type="button" onClick={() => setError("Please contact the BimaHeadquarter support desk to reset your MPIN.")}>Forgot MPIN?</button>
+                  <button className="client-forgot" type="button" onClick={() => setError("Please contact the Bima Headquarter support desk to reset your MPIN.")}>Forgot MPIN?</button>
                 </div>
 
                 <button className="client-primary-btn" type="submit" disabled={loading}>

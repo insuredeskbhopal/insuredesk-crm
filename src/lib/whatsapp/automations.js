@@ -93,7 +93,7 @@ export async function triggerDailyBirthdays({ organizationId = null } = {}) {
         where: { id: orgId },
         select: { name: true },
       });
-      const companyName = org?.name || 'BimaHeadquarter';
+      const companyName = org?.name || 'Bima Headquarter';
 
       // Load template
       const template = await prisma.whatsAppTemplate.findFirst({

@@ -1099,7 +1099,7 @@ export async function sendDueFollowUpEmails({ now = new Date(), limit = 100 } = 
     const dueLabel = task.dueAt ? formatBusinessDate(task.dueAt) : "today";
     const actionUrl = task.metadata?.actionUrl || "/work-center";
     const title = task.dueAt && startOfDay(task.dueAt) < startOfDay(now) ? "Follow-up overdue" : "Follow-up pending";
-    const message = `${task.title} is due ${dueLabel}. Please open BIMAHEADQUARTER and complete the follow-up.`;
+    const message = `${task.title} is due ${dueLabel}. Please open Bima Headquarter and complete the follow-up.`;
 
     try {
       const result = await sendFollowUpReminderEmail({

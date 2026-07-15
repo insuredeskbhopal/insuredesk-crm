@@ -3,8 +3,8 @@ import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import LandingEffects from "@/app/components/LandingEffects";
 import PublicFooter from "@/app/components/public/PublicFooter";
-import { BUSINESS_DETAILS } from "@/lib/seo/site";
-import { getRelatedServices, getServicePageSchema } from "./servicePageData";
+import { BUSINESS_DETAILS, SITE_NAME } from "@/lib/seo/site";
+import { entityFaqs, getRelatedServices, getServicePageSchema } from "./servicePageData";
 
 export default function ServiceDetailPage({ service }) {
   const pageSchema = getServicePageSchema(service);
@@ -50,6 +50,10 @@ export default function ServiceDetailPage({ service }) {
                 <span className="service-detail-section-kicker">Overview</span>
                 <h2>Built for real-world insurance decisions</h2>
                 <div className="service-detail-prose">
+                  <p>
+                    {SITE_NAME} provides {service.title.toLowerCase()} consultancy for clients across India.
+                    {" "}{BUSINESS_DETAILS.entityStatement}
+                  </p>
                   {service.overview.map((paragraph) => (
                     <p key={paragraph}>{paragraph}</p>
                   ))}
@@ -86,7 +90,7 @@ export default function ServiceDetailPage({ service }) {
                 <span className="service-detail-section-kicker">Questions</span>
                 <h2>Frequently asked questions</h2>
                 <div className="service-detail-faqs">
-                  {service.faqs.map(([question, answer]) => (
+                  {[...service.faqs, ...entityFaqs].map(([question, answer]) => (
                     <details key={question}>
                       <summary>
                         <span>{question}</span>
@@ -125,8 +129,8 @@ export default function ServiceDetailPage({ service }) {
               </div>
 
               <div className="service-detail-side-card service-detail-trust-card">
-                <p>BIMAHEADQUARTER is a brand of</p>
-                <strong>{BUSINESS_DETAILS.legalName}</strong>
+                <p>{SITE_NAME}</p>
+                <strong>{BUSINESS_DETAILS.entityStatement}</strong>
                 <span>IRDAI Registered Insurance Marketing Firm. Serving clients across India.</span>
               </div>
             </aside>

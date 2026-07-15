@@ -43,7 +43,7 @@ export async function POST(request) {
     const orgId = user.organizationId || null;
 
     // Get organization name
-    let orgName = "BimaHeadquarter";
+    let orgName = "Bima Headquarter";
     if (orgId) {
       const org = await prisma.organization.findUnique({
         where: { id: orgId },

@@ -13,31 +13,19 @@ const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Organization",
+      "@type": ["Organization", "LocalBusiness", "InsuranceAgency"],
       "@id": `${SITE_URL}/#organization`,
       name: SITE_NAME,
-      alternateName: "Bima Headquarter",
+      alternateName: ["BimaHeadquarter", "bimaheadquarter.com"],
       legalName: BUSINESS_DETAILS.legalName,
       url: SITE_URL,
       logo: `${SITE_URL}/brand/main-logo-wide.webp`,
+      image: `${SITE_URL}/brand/main-logo-wide.webp`,
       email: BUSINESS_DETAILS.email,
       telephone: BUSINESS_DETAILS.phoneHref,
       description: SITE_DESCRIPTION,
-      areaServed: BUSINESS_DETAILS.serviceArea,
-      knowsAbout: [
-        "Insurance consulting",
-        "Claim assistance",
-        ...SERVICES.map((s) => s.title),
-      ],
-    },
-    {
-      "@type": "InsuranceAgency",
-      "@id": `${SITE_URL}/#local-business`,
-      name: SITE_NAME,
-      url: SITE_URL,
-      image: `${SITE_URL}/brand/main-logo-wide.webp`,
-      telephone: BUSINESS_DETAILS.phoneHref,
-      email: BUSINESS_DETAILS.email,
+      foundingDate: BUSINESS_DETAILS.foundingDate,
+      slogan: "Trusted Insurance Consultancy",
       address: {
         "@type": "PostalAddress",
         ...BUSINESS_DETAILS.address,
@@ -47,14 +35,49 @@ const structuredData = {
         latitude: 23.1956,
         longitude: 77.4608,
       },
+      hasMap: BUSINESS_DETAILS.mapsUrl,
       areaServed: {
         "@type": "Country",
         name: BUSINESS_DETAILS.serviceArea,
       },
-      parentOrganization: {
-        "@id": `${SITE_URL}/#organization`,
+      openingHoursSpecification: {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: BUSINESS_DETAILS.openingHours.days,
+        opens: BUSINESS_DETAILS.openingHours.opens,
+        closes: BUSINESS_DETAILS.openingHours.closes,
       },
-      priceRange: "$$",
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: BUSINESS_DETAILS.phoneHref,
+        email: BUSINESS_DETAILS.email,
+        contactType: "customer service",
+        areaServed: "IN",
+        availableLanguage: ["English", "Hindi"],
+      },
+      founder: {
+        "@type": "Person",
+        "@id": `${SITE_URL}/about#anand-soni`,
+        name: "Anand Soni",
+        jobTitle: "Founder Director",
+        sameAs: ["https://www.linkedin.com/in/anand-soni-976b7024/"],
+      },
+      parentOrganization: {
+        "@id": `${SITE_URL}/#company`,
+      },
+      knowsAbout: [
+        "Insurance consulting",
+        "Claim assistance",
+        ...SERVICES.map((s) => s.title),
+      ],
+    },
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#company`,
+      name: BUSINESS_DETAILS.legalName,
+      legalName: BUSINESS_DETAILS.legalName,
+      url: SITE_URL,
+      founder: { "@id": `${SITE_URL}/about#anand-soni` },
+      brand: { "@id": `${SITE_URL}/#organization` },
     },
     {
       "@type": "WebSite",
@@ -67,6 +90,14 @@ const structuredData = {
         "@id": `${SITE_URL}/#organization`,
       },
       inLanguage: "en-IN",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${SITE_URL}/blog?search={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
     },
     {
       "@type": "Service",
@@ -356,12 +387,12 @@ export default function RootPage() {
                   </span>
                   {HOMEPAGE_CONTENT.hero.brandBadge}
                 </div>
-                <h1 className="typing-headline font-display-lg text-display-lg text-primary mb-6 leading-tight text-[40px] md:text-[48px] font-bold text-left">
-                  <span className="typing-line typing-line-one">{HOMEPAGE_CONTENT.hero.headlineLine1}</span>
-                  <span className="typing-line typing-line-two">
-                    <span className="text-secondary">{HOMEPAGE_CONTENT.hero.headlineLine2Highlight}</span>{HOMEPAGE_CONTENT.hero.headlineLine2Tail}
-                  </span>
+                <h1 className="typing-headline font-display-lg text-display-lg text-primary mb-3 leading-tight text-[40px] md:text-[48px] font-bold text-left">
+                  {HOMEPAGE_CONTENT.hero.heading}
                 </h1>
+                <p className="text-secondary text-[20px] md:text-[24px] font-bold mb-5">
+                  {HOMEPAGE_CONTENT.hero.subheading}
+                </p>
                 <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-left">
                   {HOMEPAGE_CONTENT.hero.description}
                 </p>
@@ -474,7 +505,12 @@ export default function RootPage() {
 
                     <div className="service-card-media">
                       <div className="service-image-clip">
-                        <Image src={service.image} alt={service.title} width={600} height={400} />
+                        <Image
+                          src={service.image}
+                          alt={`${service.title} consultancy by Bima Headquarter`}
+                          width={600}
+                          height={400}
+                        />
                       </div>
                     </div>
                   </Link>
@@ -552,7 +588,7 @@ export default function RootPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
               <div className="order-2 lg:order-1 reveal">
                 <Image
-                  alt="Insurance claim assistance meeting with documents"
+                  alt="Bima Headquarter insurance claim assistance consultation"
                   className="rounded-3xl shadow-2xl w-full aspect-video object-cover"
                   src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=80"
                   width={1200}

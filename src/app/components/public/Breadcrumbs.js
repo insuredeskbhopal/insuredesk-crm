@@ -14,9 +14,17 @@ const ROUTE_NAMES = {
   "motor-insurance": "Motor Insurance",
   "life-insurance": "Life Insurance",
   "commercial-insurance": "Commercial Insurance",
+  "warehouse-insurance": "Warehouse Insurance",
+  "fire-insurance": "Fire Insurance",
+  "marine-insurance": "Marine Insurance",
   "policy-renewals": "Policy Renewals",
   "claims-assistance": "Claims Assistance",
   "risk-advisory": "Risk Advisory",
+  blog: "Blog",
+  faq: "Frequently Asked Questions",
+  "privacy-policy": "Privacy Policy",
+  "terms-and-conditions": "Terms and Conditions",
+  disclaimer: "Disclaimer",
 };
 
 export default function Breadcrumbs() {

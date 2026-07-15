@@ -3,14 +3,14 @@ import { SERVICES } from "./services";
 const STATIC_MARKETING_PAGES = [
   {
     path: "/about",
-    title: "About BIMAHEADQUARTER",
+    title: "About Bima Headquarter",
     description:
-      "Learn about BIMAHEADQUARTER, an insurance and claim consulting brand by InsureDesk IMF Pvt Ltd serving individuals and businesses in India.",
-    heading: "About BIMAHEADQUARTER",
+      "Learn about Bima Headquarter, an insurance and claim consulting brand by InsureDesk IMF Pvt. Ltd. serving individuals and businesses in India.",
+    heading: "About Bima Headquarter",
     summary:
-      "BIMAHEADQUARTER helps clients choose suitable insurance coverage and navigate claim complexity with expert support.",
+      "Bima Headquarter helps clients choose suitable insurance coverage and navigate claim complexity with expert support.",
     sections: [
-      "Insurance consulting backed by InsureDesk IMF Pvt Ltd.",
+      "Insurance consulting backed by InsureDesk IMF Pvt. Ltd.",
       "Policy comparison and coverage gap review for individuals and businesses.",
       "Claim documentation and settlement assistance across leading insurers.",
     ],
@@ -19,11 +19,11 @@ const STATIC_MARKETING_PAGES = [
   },
   {
     path: "/contact",
-    title: "Contact BIMAHEADQUARTER",
+    title: "Contact Bima Headquarter",
     description:
-      "Contact BIMAHEADQUARTER for insurance consultation, claim assistance, policy comparison, and business insurance support.",
-    heading: "Contact BIMAHEADQUARTER",
-    summary: "Reach BIMAHEADQUARTER for insurance advice, claim support, and policy consultation.",
+      "Contact Bima Headquarter for insurance consultation, claim assistance, policy comparison, and business insurance support.",
+    heading: "Contact Bima Headquarter",
+    summary: "Reach Bima Headquarter for insurance advice, claim support, and policy consultation.",
     sections: [
       "Email: info@bimaheadquarter.com",
       "Phone: 88188 89660",
@@ -36,10 +36,10 @@ const STATIC_MARKETING_PAGES = [
     path: "/privacy-policy",
     title: "Privacy Policy",
     description:
-      "Privacy policy for BIMAHEADQUARTER, including how insurance consultation and claim assistance information is handled.",
+      "Privacy policy for Bima Headquarter, including how insurance consultation and claim assistance information is handled.",
     heading: "Privacy Policy",
     summary:
-      "BIMAHEADQUARTER handles client information for insurance consultation, claim assistance, and policy servicing purposes.",
+      "Bima Headquarter handles client information for insurance consultation, claim assistance, and policy servicing purposes.",
     sections: [
       "Client data may include contact details, policy details, claim documents, and service requests.",
       "Information is used to provide insurance consultation, claim support, and operational follow-up.",
@@ -52,23 +52,39 @@ const STATIC_MARKETING_PAGES = [
     path: "/terms-and-conditions",
     title: "Terms and Conditions",
     description:
-      "Terms and conditions for using BIMAHEADQUARTER insurance consultation and claim assistance services.",
+      "Terms and conditions for using Bima Headquarter insurance consultation and claim assistance services.",
     heading: "Terms and Conditions",
     summary:
-      "These terms summarize the basis for using BIMAHEADQUARTER consultation and claim assistance services.",
+      "These terms summarize the basis for using Bima Headquarter consultation and claim assistance services.",
     sections: [
       "Insurance recommendations depend on information provided by the client and insurer terms.",
       "Final policy issuance, premium, underwriting, and claim decisions remain subject to insurer rules.",
-      "BIMAHEADQUARTER may provide claim support, but claim approval is determined by the insurer.",
+      "Bima Headquarter may provide claim support, but claim approval is determined by the insurer.",
+    ],
+    priority: 0.4,
+    changeFrequency: "yearly",
+  },
+  {
+    path: "/disclaimer",
+    title: "Insurance Consultancy Disclaimer",
+    description:
+      "Read the Bima Headquarter disclaimer covering insurance consultancy, insurer decisions, policy terms, and claims assistance.",
+    heading: "Disclaimer",
+    summary:
+      "Bima Headquarter provides insurance consultancy and claims assistance; insurers retain responsibility for underwriting, policy issuance, and claim decisions.",
+    sections: [
+      "Bima Headquarter is a brand owned and operated by InsureDesk IMF Pvt. Ltd.",
+      "Guidance is based on information supplied by clients and the terms made available by insurers. Clients should read the final policy wording, schedule, exclusions, and endorsements.",
+      "Claims assistance does not guarantee settlement. Claim admission, assessment, payment, or rejection remains subject to the insurer's decision and the applicable policy terms.",
     ],
     priority: 0.4,
     changeFrequency: "yearly",
   },
   {
     path: "/services",
-    title: "Insurance Services Across India | BimaHeadquarter",
+    title: "Insurance Services Across India | Bima Headquarter",
     description:
-      "Explore insurance services across India with BimaHeadquarter. We offer general, health, motor, life, commercial insurance, claims assistance, and risk advisory.",
+      "Explore insurance services across India with Bima Headquarter. We offer general, health, motor, life, commercial insurance, claims assistance, and risk advisory.",
     heading: "Our Insurance Services",
     summary: "Complete insurance solutions and expert claim consulting with Pan India support.",
     priority: 0.9,
@@ -76,9 +92,9 @@ const STATIC_MARKETING_PAGES = [
   },
   {
     path: "/blog",
-    title: "Insurance Blog & Insights | BimaHeadquarter",
+    title: "Insurance Blog & Insights | Bima Headquarter",
     description:
-      "Read the latest guides, checklists, and expert insights on insurance claims, renewals, and risk management from BimaHeadquarter.",
+      "Read the latest guides, checklists, and expert insights on insurance claims, renewals, and risk management from Bima Headquarter.",
     heading: "Insurance Blog & Insights",
     summary:
       "Expert advice and detailed guides on navigating insurance claims, policy renewals, and risk management.",
@@ -87,14 +103,14 @@ const STATIC_MARKETING_PAGES = [
   },
   {
     path: "/faq",
-    title: "Frequently Asked Questions (FAQ) | BIMAHEADQUARTER",
+    title: "Frequently Asked Questions (FAQ) | Bima Headquarter",
     description:
-      "Find answers to common questions about BIMAHEADQUARTER (InsureDesk IMF Pvt Ltd), claims assistance, policy renewals, and commercial risk advisory.",
+      "Find answers to common questions about Bima Headquarter (InsureDesk IMF Pvt. Ltd.), claims assistance, policy renewals, and commercial risk advisory.",
     heading: "Frequently Asked Questions",
     summary:
       "Clear, professional answers about our advisory process, claim representation, compliance, and policies.",
     sections: [
-      "IRDAI registered Insurance Marketing Firm licensed through InsureDesk IMF Pvt Ltd.",
+      "IRDAI registered Insurance Marketing Firm licensed through InsureDesk IMF Pvt. Ltd.",
       "Expert claims assistance and representation support for personal and commercial losses.",
       "Data privacy, secure document management, and regular policy renewal support.",
     ],
@@ -105,24 +121,9 @@ const STATIC_MARKETING_PAGES = [
 
 const servicePages = [];
 SERVICES.forEach((service) => {
-  // 1. Add Legacy path config (if it exists and differs from route)
-  if (service.legacyPath && service.legacyPath !== service.route) {
-    servicePages.push({
-      path: service.legacyPath,
-      title: service.marketingTitle || `${service.title} Consulting`,
-      description: service.marketingDescription || service.description,
-      heading: service.marketingHeading || `${service.title} Consulting`,
-      summary: service.marketingSummary || service.desc,
-      sections: service.marketingSections || [],
-      priority: 0.8,
-      changeFrequency: "monthly",
-    });
-  }
-
-  // 2. Add services subfolder route config (e.g. /services/motor-insurance)
   servicePages.push({
     path: service.route,
-    title: service.seoTitle || `${service.title} Consulting Across India | BimaHeadquarter`,
+    title: service.seoTitle || `${service.title} Consulting Across India | Bima Headquarter`,
     description: service.description || service.desc,
     heading: service.title,
     summary: service.marketingSummary || service.desc,

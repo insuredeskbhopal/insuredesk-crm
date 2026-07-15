@@ -184,7 +184,7 @@ export default function SideNav({
             </div>
             <div className="tb-modal-body">
               <p className="tb-status-desc">
-                Are you sure you want to log out of your BIMAHEADQUARTER account?
+                Are you sure you want to log out of your Bima Headquarter account?
               </p>
             </div>
             <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px" }}>

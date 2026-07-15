@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import BrandLogo from "@/app/components/brand/BrandLogo";
+import Breadcrumbs from "@/app/components/public/Breadcrumbs";
 import { BUSINESS_DETAILS } from "@/lib/seo/site";
 
 const navItems = [
@@ -156,6 +157,8 @@ export default function PublicHeader() {
           </div>
         </div>
       </nav>
+
+      <Breadcrumbs />
 
       <button
         type="button"

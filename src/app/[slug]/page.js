@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Script from "next/script";
+import PublicHeader from "@/app/components/public/PublicHeader";
+import PublicFooter from "@/app/components/public/PublicFooter";
 import { BUSINESS_DETAILS, MARKETING_PAGES, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
 function findPage(slug) {
@@ -112,13 +114,15 @@ export default async function MarketingPage({ params }) {
   };
 
   return (
-    <main className="seo-page">
+    <div className="landing-shell min-h-screen">
       <Script
         id={`structured-data-${slug}`}
         type="application/ld+json"
         strategy="beforeInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
+      <PublicHeader />
+      <main className="seo-page">
       <section className="seo-page-hero">
         <Link className="seo-page-brand" href="/">
           {SITE_NAME}
@@ -128,7 +132,7 @@ export default async function MarketingPage({ params }) {
         <p className="seo-page-summary">{page.summary}</p>
         <div className="seo-page-actions">
           <Link href="/#cta-banner">Get Consultation</Link>
-          <Link href="/claims-assistance">Claim Assistance</Link>
+          <Link href="/services/claims-assistance">Claim Assistance</Link>
         </div>
       </section>
       <section className="seo-page-content">
@@ -139,12 +143,15 @@ export default async function MarketingPage({ params }) {
         ))}
       </section>
       <section className="seo-page-contact">
-        <h2>Talk to BIMAHEADQUARTER</h2>
+        <h2>Talk to Bima Headquarter</h2>
         <p>
-          Contact {BUSINESS_DETAILS.legalName} at {BUSINESS_DETAILS.email} or {BUSINESS_DETAILS.phone}.
+          {BUSINESS_DETAILS.entityStatement} Contact the Bima Headquarter team at {BUSINESS_DETAILS.email} or{" "}
+          {BUSINESS_DETAILS.phone}.
         </p>
-        <Link href="/">Back to Home</Link>
+        <Link href="/contact">Contact Bima Headquarter</Link>
       </section>
-    </main>
+      </main>
+      <PublicFooter />
+    </div>
   );
 }

@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
           {isVerified ? <ShieldCheck size={28} /> : <LogIn size={28} />}
         </div>
         <h2>CRM Login</h2>
-        <p>Private staff login for BIMAHEADQUARTER operations</p>
+        <p>Private staff login for Bima Headquarter operations</p>
       </div>
 
       {error && (

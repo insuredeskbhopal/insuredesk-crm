@@ -1,21 +1,19 @@
 import { MARKETING_PAGES } from "./marketing";
 
 export const SITE_URL = "https://bimaheadquarter.com";
-export const SITE_NAME = "BIMAHEADQUARTER";
-export const SITE_TITLE = "BIMAHEADQUARTER | Insurance & Claim Consulting";
+export const SITE_NAME = "Bima Headquarter";
+export const SITE_TITLE = "Bima Headquarter | Trusted Insurance Consultancy in India";
 export const SITE_DESCRIPTION =
-  "BIMAHEADQUARTER helps individuals, families, businesses, warehouses, transporters, and institutions make informed insurance decisions with professional consulting and claim support. Headquartered in Bhopal, we assist clients across India with motor, health, life, marine, warehouse, and commercial insurance solutions.";
+  "Bima Headquarter is a trusted insurance consultancy helping individuals and businesses across India with Motor, Health, Life, Commercial, Fire, Marine and Claims Assistance.";
 
 export const BRAND_KEYWORDS = [
-  "BimaHeadquarter",
   "Bima Headquarter",
-  "Bima Headquarters",
-  "Bima HQ",
-  "BimaHQ",
-  "BHQ",
-  "BHQ Insurance",
-  "BimaHeadquarter by InsureDesk",
-  "InsureDesk IMF Private Limited",
+  "BimaHeadquarter",
+  "bimaheadquarter",
+  "Bima Headquarter insurance consultancy",
+  "Bima Headquarter Bhopal",
+  "Bima Headquarter by InsureDesk",
+  "InsureDesk IMF Pvt. Ltd.",
   "InsureDesk",
 ];
 

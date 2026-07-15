@@ -65,7 +65,7 @@ function getHTMLTemplate({ name, title, message, absoluteActionUrl, appUrl, type
                 <tr>
                   <td style="padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;">
                     <a href="${appUrl}" target="_blank" style="text-decoration: none; border: 0; outline: none; display: block;">
-                      <img src="cid:logo" alt="BIMAHEADQUARTER" style="height: 120px; width: auto; max-width: 480px; display: block; border: 0;">
+                      <img src="cid:logo" alt="Bima Headquarter" style="height: 120px; width: auto; max-width: 480px; display: block; border: 0;">
                     </a>
                   </td>
                 </tr>
@@ -191,7 +191,7 @@ function getHTMLTemplate({ name, title, message, absoluteActionUrl, appUrl, type
           <tr>
             <td style="background-color: #f8fafc; padding: 24px 32px; text-align: center; border-top: 1px solid #e2e8f0;">
               <p style="font-size: 12px; color: #94a3b8; line-height: 1.5; margin: 0 0 12px 0;">
-                This is an automated notification from BIMAHEADQUARTER. Please do not reply directly to this message.
+                This is an automated notification from Bima Headquarter. Please do not reply directly to this message.
               </p>
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
                 <tr>
@@ -245,7 +245,7 @@ export async function sendFollowUpReminderEmail({ to, name, title, message, acti
   if (amount) textLines.push(`Amount: ₹${Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
   if (customerMobile) textLines.push(`Contact: ${customerMobile}`);
   if (customerName || policyNumber || amount || customerMobile) textLines.push("");
-  textLines.push(`Open BIMAHEADQUARTER: ${absoluteActionUrl}`);
+  textLines.push(`Open Bima Headquarter: ${absoluteActionUrl}`);
 
   await mailer.sendMail({
     from,
@@ -297,7 +297,7 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
                 <tr>
                   <td style="padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;">
                     <a href="${appUrl}" target="_blank" style="text-decoration: none; border: 0; outline: none; display: block;">
-                      <img src="cid:logo" alt="BIMAHEADQUARTER" style="height: 120px; width: auto; max-width: 480px; display: block; border: 0;">
+                      <img src="cid:logo" alt="Bima Headquarter" style="height: 120px; width: auto; max-width: 480px; display: block; border: 0;">
                     </a>
                   </td>
                 </tr>
@@ -368,7 +368,7 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
                 <tr>
                   <td align="center">
                     <a href="${appUrl}" target="_blank" style="display: block; width: 100%; text-align: center; background-color: #0f172a; color: #ffffff !important; font-size: 14px; font-weight: 600; text-decoration: none; padding: 14px 24px; border-radius: 8px; box-sizing: border-box; -webkit-text-size-adjust: none;">
-                      Open BIMAHEADQUARTER &rarr;
+                      Open Bima Headquarter &rarr;
                     </a>
                   </td>
                 </tr>
@@ -380,7 +380,7 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
           <tr>
             <td style="background-color: #f8fafc; padding: 24px 32px; text-align: center; border-top: 1px solid #e2e8f0;">
               <p style="font-size: 12px; color: #94a3b8; line-height: 1.5; margin: 0 0 12px 0;">
-                This inquiry was received automatically from the BIMAHEADQUARTER landing page.
+                This inquiry was received automatically from the Bima Headquarter landing page.
               </p>
             </td>
           </tr>

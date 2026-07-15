@@ -5,7 +5,7 @@ import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import BlogSidebarForm from "../BlogSidebarForm";
 import { getBlogPostBySlug, getBlogPostSlugs, getRelatedPosts } from "@/lib/db/blog";
-import { BUSINESS_DETAILS, SITE_NAME, SITE_URL } from "@/lib/seo/site";
+import { BUSINESS_DETAILS, SITE_URL } from "@/lib/seo/site";
 import { SERVICES } from "@/content/services";
 
 const stripHtml = (value) => value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
@@ -25,13 +25,13 @@ export async function generateMetadata({ params }) {
   }
 
   return {
-    title: `${post.title} | BIMAHEADQUARTER Blog`,
+    title: `${post.title} | Bima Headquarter Blog`,
     description: stripHtml(post.excerpt),
     alternates: {
       canonical: `/blog/${post.slug}`,
     },
     openGraph: {
-      title: `${post.title} | BIMAHEADQUARTER Blog`,
+      title: `${post.title} | Bima Headquarter Blog`,
       description: stripHtml(post.excerpt),
       url: `${SITE_URL}/blog/${post.slug}`,
       type: "article",
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }) {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${post.title} | BIMAHEADQUARTER Blog`,
+      title: `${post.title} | Bima Headquarter Blog`,
       description: stripHtml(post.excerpt),
     },
   };
@@ -98,16 +98,10 @@ export default async function BlogPostPage({ params }) {
           "@type": "Person",
           name: post.author.name,
           jobTitle: post.author.role,
+          description: `${post.author.name} contributes insurance guidance as ${post.author.role} at Bima Headquarter.`,
+          worksFor: { "@id": `${SITE_URL}/#organization` },
         },
-        publisher: {
-          "@type": "Organization",
-          name: SITE_NAME,
-          url: SITE_URL,
-          logo: {
-            "@type": "ImageObject",
-            url: `${SITE_URL}/brand/main-logo-wide.webp`,
-          },
-        },
+        publisher: { "@id": `${SITE_URL}/#organization` },
         mainEntityOfPage: {
           "@type": "WebPage",
           "@id": postUrl,
@@ -178,6 +172,9 @@ export default async function BlogPostPage({ params }) {
                   <div>
                     <strong>{post.author.name}</strong>
                     <span>{post.author.role}</span>
+                    <p>
+                      {post.author.name} contributes practical insurance guidance for Bima Headquarter readers.
+                    </p>
                   </div>
                 </div>
               </div>

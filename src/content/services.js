@@ -20,12 +20,12 @@ export const SERVICES = [
     ],
     // Detail page parameters (replaces servicePageData.js contents)
     eyebrow: "Vehicle Protection",
-    seoTitle: "Motor Insurance Consulting Across India | BimaHeadquarter",
+    seoTitle: "Motor Insurance Consulting Across India | Bima Headquarter",
     description: "Compare and renew car, bike, commercial vehicle, and fleet insurance with guidance on IDV, add-ons, NCB, and claim support.",
     heroImage: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=1400&q=80",
     overview: [
       "Motor insurance is mandatory, but a meaningful motor policy goes beyond third-party compliance. IDV, zero depreciation, engine protection, consumables, roadside assistance, and NCB handling can affect both premium and claim payout.",
-      "BimaHeadquarter helps vehicle owners and fleet operators compare policies, structure add-ons, and manage claim documentation for smoother repair and settlement outcomes.",
+      "Bima Headquarter helps vehicle owners and fleet operators compare policies, structure add-ons, and manage claim documentation for smoother repair and settlement outcomes.",
     ],
     audiences: [
       "Car and bike owners",
@@ -86,7 +86,7 @@ export const SERVICES = [
       "Get guidance on documentation and policy servicing.",
     ],
     eyebrow: "Financial Security",
-    seoTitle: "Life Insurance Consulting Across India | BimaHeadquarter",
+    seoTitle: "Life Insurance Consulting Across India | Bima Headquarter",
     description: "Plan term insurance, family protection, savings-linked covers, and key person protection with clear need analysis and policy comparison.",
     heroImage: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1400&q=80",
     overview: [
@@ -146,7 +146,7 @@ export const SERVICES = [
       "Get support for claim paperwork and insurer coordination.",
     ],
     eyebrow: "Stock & Storage",
-    seoTitle: "Warehouse Insurance Consulting Across India | BimaHeadquarter",
+    seoTitle: "Warehouse Insurance Consulting Across India | Bima Headquarter",
     description: "Protect warehouse stock, storage liabilities, fire exposure, burglary risk, and fluctuating inventory values with structured insurance guidance.",
     heroImage: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1400&q=80",
     overview: [
@@ -206,7 +206,7 @@ export const SERVICES = [
       "Get support for documentation during transit claims.",
     ],
     eyebrow: "Transit Risk",
-    seoTitle: "Marine Insurance Consulting Across India | BimaHeadquarter",
+    seoTitle: "Marine Insurance Consulting Across India | Bima Headquarter",
     description: "Cover goods moving by road, rail, air, or sea with marine cargo and inland transit insurance advisory for businesses across India.",
     heroImage: "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=1400&q=80",
     overview: [
@@ -269,7 +269,7 @@ export const SERVICES = [
       "Get expert claim support during loss documentation and settlement.",
     ],
     eyebrow: "Business Risk",
-    seoTitle: "Commercial & Business Insurance Across India | BimaHeadquarter",
+    seoTitle: "Commercial & Business Insurance Across India | Bima Headquarter",
     description: "Protect business assets, stock, liabilities, factories, offices, and operational exposures with commercial insurance advisory across India.",
     heroImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=80",
     overview: [
@@ -329,12 +329,12 @@ export const SERVICES = [
       "Track claims and documentation updates with our consulting support.",
     ],
     eyebrow: "Asset Protection",
-    seoTitle: "General Insurance Consulting Across India | BimaHeadquarter",
+    seoTitle: "General Insurance Consulting Across India | Bima Headquarter",
     description: "Protect personal assets, homes, shops, property, inventory, and liabilities with correctly structured general insurance guidance across India.",
     heroImage: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1400&q=80",
     overview: [
       "General insurance protects non-life assets such as property, stock, vehicles, household contents, commercial premises, and liability exposures. A policy works well only when the sum insured, exclusions, add-ons, and claim conditions match the real risk.",
-      "BimaHeadquarter, by Insuredesk IMF Private Ltd, helps individuals and businesses compare coverage options, review policy wordings, identify under-insurance, and prepare documents so claims do not fail because of avoidable gaps.",
+      "Bima Headquarter, by InsureDesk IMF Pvt. Ltd., helps individuals and businesses compare coverage options, review policy wordings, identify under-insurance, and prepare documents so claims do not fail because of avoidable gaps.",
     ],
     audiences: [
       "Homeowners and tenants",
@@ -362,7 +362,7 @@ export const SERVICES = [
         "It can cover property, vehicles, stock, household goods, liability, cargo, and other non-life risks depending on the selected policy.",
       ],
       [
-        "Can BimaHeadquarter compare multiple insurers?",
+        "Can Bima Headquarter compare multiple insurers?",
         "Yes. We help compare options across insurer partners and explain the practical differences in policy wording, price, and claim process.",
       ],
       [
@@ -398,7 +398,7 @@ export const SERVICES = [
       "Get assistance when a health claim needs documentation or follow-up.",
     ],
     eyebrow: "Medical Cover",
-    seoTitle: "Health Insurance Consulting Across India | BimaHeadquarter",
+    seoTitle: "Health Insurance Consulting Across India | Bima Headquarter",
     description: "Compare individual, family, senior citizen, and corporate health insurance plans with guidance on waiting periods, exclusions, and cashless claims.",
     heroImage: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1400&q=80",
     overview: [
@@ -464,7 +464,7 @@ export const SERVICES = [
       "Complete renewals on time to preserve loyalty and NCB benefits.",
     ],
     eyebrow: "Continuity",
-    seoTitle: "Easy Policy Renewals Across India | BimaHeadquarter",
+    seoTitle: "Easy Policy Renewals Across India | Bima Headquarter",
     description: "Avoid coverage gaps with timely renewal review, premium comparison, updated risk assessment, and policy continuity support across India.",
     heroImage: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1400&q=80",
     overview: [
@@ -524,7 +524,7 @@ export const SERVICES = [
       "Support claim settlement workflows for individuals and businesses.",
     ],
     eyebrow: "Claim Advocacy",
-    seoTitle: "Insurance Claims Assistance Across India | BimaHeadquarter",
+    seoTitle: "Insurance Claims Assistance Across India | Bima Headquarter",
     description: "Get professional help with insurance claim documentation, rejection review, surveyor coordination, and settlement follow-up across India.",
     heroImage: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1400&q=80",
     overview: [
@@ -580,8 +580,8 @@ export const SERVICES = [
     route: "/services/risk-advisory",
     legacyPath: "/services/risk-advisory",
     delay: "1.0s",
-    marketingTitle: "Corporate Risk Advisory Services Across India | BimaHeadquarter",
-    marketingDescription: "Identify, assess, and mitigate business risks. Corporate risk advisory services across India from Insuredesk IMF Private Ltd.",
+    marketingTitle: "Corporate Risk Advisory Services Across India | Bima Headquarter",
+    marketingDescription: "Identify, assess, and mitigate business risks. Corporate risk advisory services across India from InsureDesk IMF Pvt. Ltd.",
     marketingHeading: "Risk Advisory Services",
     marketingSummary: "Identify coverage gaps, audit asset values, and implement risk control strategies.",
     marketingSections: [
@@ -590,7 +590,7 @@ export const SERVICES = [
       "Prioritize risk mitigation and coverage extensions.",
     ],
     eyebrow: "Risk Engineering",
-    seoTitle: "Corporate Risk Advisory Services Across India | BimaHeadquarter",
+    seoTitle: "Corporate Risk Advisory Services Across India | Bima Headquarter",
     description: "Identify insurance gaps, asset valuation issues, operational exposures, and risk-control priorities with corporate advisory support across India.",
     heroImage: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1400&q=80",
     overview: [
@@ -632,5 +632,65 @@ export const SERVICES = [
     related: ["commercial-insurance", "warehouse-insurance", "marine-insurance", "claims-assistance"],
     ctaTitle: "Want to see your hidden risk gaps?",
     ctaText: "Request a focused risk and insurance gap review.",
+  },
+  {
+    slug: "fire-insurance",
+    title: "Fire Insurance",
+    fullName: "Fire and Property Insurance Consulting",
+    icon: "local_fire_department",
+    desc: "Protect buildings, plant, machinery, stock, and business assets against fire and allied perils.",
+    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
+    route: "/services/fire-insurance",
+    legacyPath: "/fire-insurance",
+    delay: "1.1s",
+    marketingTitle: "Fire Insurance Consulting",
+    marketingDescription: "Fire insurance consulting for buildings, stock, plant, machinery, warehouses, and commercial property, with claims assistance across India.",
+    marketingHeading: "Fire Insurance Consulting",
+    marketingSummary: "Review property values, insured perils, add-ons, and claim-readiness before fire or allied-peril losses occur.",
+    marketingSections: [
+      "Review buildings, plant, machinery, stock, and contents at realistic reinstatement values.",
+      "Understand covered perils, exclusions, deductibles, and useful extensions.",
+      "Prepare asset records and claim documentation before a loss occurs.",
+    ],
+    eyebrow: "Property Protection",
+    seoTitle: "Fire Insurance Consulting Across India | Bima Headquarter",
+    description: "Protect buildings, stock, plant, machinery, warehouses, and commercial assets with fire insurance guidance and claims assistance from Bima Headquarter.",
+    heroImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=80",
+    overview: [
+      "Fire insurance can cover physical assets against fire and specified allied perils, but accurate values, asset schedules, occupancy details, deductibles, and policy extensions materially affect claim outcomes.",
+      "Bima Headquarter helps businesses review property exposures, select suitable coverage structures, document insured values, understand exclusions, and prepare for fire-related claims.",
+    ],
+    audiences: [
+      "Manufacturers and factories",
+      "Warehouse and stock owners",
+      "Retailers and office owners",
+      "Commercial property owners and tenants",
+    ],
+    benefits: [
+      ["Accurate Asset Values", "We help review reinstatement values and stock sums insured to reduce under-insurance risk."],
+      ["Peril and Extension Review", "We explain insured events, exclusions, deductibles, and relevant add-on covers."],
+      ["Claim-Ready Records", "We help organize asset schedules, invoices, stock records, and loss documentation."],
+    ],
+    faqs: [
+      [
+        "What does fire insurance cover?",
+        "Coverage depends on the policy, but it may protect insured property against fire and listed allied perils. Buildings, plant, machinery, stock, and contents must be correctly declared.",
+      ],
+      [
+        "How should the sum insured be calculated?",
+        "Buildings and machinery are commonly assessed on reinstatement value, while stock is based on appropriate declared values. A professional review helps reduce under-insurance disputes.",
+      ],
+      [
+        "Does fire insurance cover warehouse stock?",
+        "It can, when the location, occupancy, stock type, values, and storage conditions are correctly disclosed and accepted under the policy.",
+      ],
+      [
+        "Does Bima Headquarter help with fire claims?",
+        "Yes. Bima Headquarter assists with claim intimation guidance, document review, surveyor coordination, loss records, and insurer follow-up. Final decisions remain with the insurer.",
+      ],
+    ],
+    related: ["commercial-insurance", "warehouse-insurance", "general-insurance", "claims-assistance"],
+    ctaTitle: "Are your property values and records claim-ready?",
+    ctaText: "Request a fire insurance and asset-value review from Bima Headquarter.",
   },
 ];

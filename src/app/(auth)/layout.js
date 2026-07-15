@@ -2,7 +2,7 @@ import "@/app/ui/dashboard.css";
 import BrandLogo from "@/app/components/brand/BrandLogo";
 
 export const metadata = {
-  title: "BIMAHEADQUARTER - Authenticate",
+  title: "Bima Headquarter - Authenticate",
   description: "Secure admin-managed login portal",
   robots: {
     index: false,

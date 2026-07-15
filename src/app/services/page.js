@@ -86,8 +86,8 @@ const servicesSchema = {
       "@type": "WebPage",
       "@id": `${SITE_URL}/services#webpage`,
       url: `${SITE_URL}/services`,
-      name: `Insurance Services Across India | BimaHeadquarter`,
-      description: `Explore insurance services across India with BimaHeadquarter. We offer general, health, motor, life, commercial insurance, claims assistance, and risk advisory.`,
+      name: `Insurance Services Across India | Bima Headquarter`,
+      description: `Explore insurance services across India with Bima Headquarter. We offer general, health, motor, life, commercial insurance, claims assistance, and risk advisory.`,
       isPartOf: {
         "@id": `${SITE_URL}/#website`,
       },
@@ -108,7 +108,7 @@ const servicesSchema = {
       },
       hasOfferCatalog: {
         "@type": "OfferCatalog",
-        name: "BimaHeadquarter Service Catalog",
+        name: "Bima Headquarter Service Catalog",
         itemListElement: SERVICES_LIST.map((service) => ({
           "@type": "Offer",
           itemOffered: {
@@ -214,7 +214,7 @@ export default function ServicesPage() {
                   CERTIFIED CONSULTING IN INDIA
                 </div>
                 <h1 className="font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold max-w-3xl">
-                  <span className="whitespace-nowrap">BIMAHEADQUARTER</span> <span className="text-secondary">Services Hub</span>
+                  <span className="whitespace-nowrap">Bima Headquarter</span> <span className="text-secondary">Services Hub</span>
                 </h1>
                 <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl text-[18px]">
                   Providing independent coverage engineering, claim settlement advocacy, and corporate risk
@@ -236,7 +236,7 @@ export default function ServicesPage() {
                 <h2>Choose the coverage path that fits your risk.</h2>
                 <p>
                   Every service includes guidance on policy structure, insurer coordination, documentation,
-                  and claim-readiness from the <span className="whitespace-nowrap">BIMAHEADQUARTER</span> team.
+                  and claim-readiness from the <span className="whitespace-nowrap">Bima Headquarter</span> team.
                 </p>
               </div>
 

@@ -15,12 +15,13 @@ const contactSchema = {
       "@type": "ContactPage",
       "@id": `${SITE_URL}/contact#webpage`,
       url: `${SITE_URL}/contact`,
-      name: "Contact BimaHeadquarter | Insurance Consulting Across India",
+      name: "Contact Bima Headquarter | Insurance Consulting Across India",
       description:
-        "Contact BimaHeadquarter for Pan India insurance consulting, policy review, renewals, risk advisory, and claim assistance.",
+        "Contact Bima Headquarter for Pan India insurance consulting, policy review, renewals, risk advisory, and claim assistance.",
       isPartOf: {
         "@id": `${SITE_URL}/#website`,
       },
+      about: { "@id": `${SITE_URL}/#organization` },
     },
     {
       "@type": "Organization",
@@ -53,6 +54,7 @@ const contactSchema = {
         postalCode: BUSINESS_DETAILS.address.postalCode,
         addressCountry: BUSINESS_DETAILS.address.addressCountry,
       },
+      hasMap: BUSINESS_DETAILS.mapsUrl,
       geo: {
         "@type": "GeoCoordinates",
         latitude: 23.1956,
@@ -175,7 +177,7 @@ export default function ContactPage() {
                   <span className="material-symbols-outlined">support_agent</span>
                   Pan India Insurance Support
                 </span>
-                <h1>Talk to BimaHeadquarter for policy, renewal, and claim support.</h1>
+                <h1>Talk to Bima Headquarter for policy, renewal, and claim support.</h1>
                 <p>
                   Share your requirement and our team will help you review coverage, compare options, or
                   understand the next step in a claim.
@@ -207,11 +209,24 @@ export default function ContactPage() {
                 <div className="contact-info-card">
                   <span className="material-symbols-outlined">domain</span>
                   <h2>Corporate Office</h2>
-                  <p>{BUSINESS_DETAILS.shortAddress}</p>
+                  <strong>{SITE_NAME}</strong>
+                  <p>{BUSINESS_DETAILS.fullAddress}</p>
                   <a href={BUSINESS_DETAILS.mapsUrl} target="_blank" rel="noopener noreferrer">
                     Get Directions
                     <span className="material-symbols-outlined">arrow_forward</span>
                   </a>
+                </div>
+
+                <div className="contact-info-card overflow-hidden">
+                  <h2>Bima Headquarter on Google Maps</h2>
+                  <iframe
+                    title="Bima Headquarter office location in Bhopal"
+                    src={BUSINESS_DETAILS.mapsEmbedUrl}
+                    className="w-full min-h-[260px] border-0 rounded-xl"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    allowFullScreen
+                  />
                 </div>
 
                 <div className="contact-info-card">

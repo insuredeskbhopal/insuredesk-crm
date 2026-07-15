@@ -1,5 +1,5 @@
 import { SERVICES } from "@/content/services";
-import { BUSINESS_DETAILS, SITE_NAME, SITE_URL } from "@/lib/seo/site";
+import { BUSINESS_DETAILS, SITE_URL } from "@/lib/seo/site";
 
 export const servicesBySlug = {};
 SERVICES.forEach((service) => {
@@ -23,6 +23,21 @@ SERVICES.forEach((service) => {
 
 export const serviceSlugs = Object.keys(servicesBySlug);
 
+export const entityFaqs = [
+  [
+    "What is Bima Headquarter?",
+    "Bima Headquarter is an insurance consultancy brand owned and operated by InsureDesk IMF Pvt. Ltd. From Bhopal, the team serves clients across India with policy guidance, coverage review, renewals, risk advisory, and claims assistance for personal and commercial insurance needs.",
+  ],
+  [
+    "Where is Bima Headquarter located and does it serve all of India?",
+    "Bima Headquarter is located in Bhopal, Madhya Pradesh. Its insurance consultancy and claims assistance services are available to individuals, families, and businesses across India through phone, email, online coordination, and office consultations.",
+  ],
+  [
+    "Does Bima Headquarter provide claim assistance?",
+    "Yes. Bima Headquarter helps clients understand claim requirements, review documents, coordinate with insurers and surveyors, follow up on submissions, and review rejection reasons. Final claim decisions remain with the insurer and are governed by the applicable policy terms.",
+  ],
+];
+
 export function getServicePageSchema(service) {
   return {
     "@context": "https://schema.org",
@@ -36,18 +51,16 @@ export function getServicePageSchema(service) {
         isPartOf: {
           "@id": `${SITE_URL}/#website`,
         },
+        about: {
+          "@id": `${SITE_URL}/#organization`,
+        },
       },
       {
         "@type": "Service",
         "@id": `${SITE_URL}/services/${service.slug}#service`,
         name: service.title,
         description: service.description,
-        provider: {
-          "@type": "Organization",
-          name: SITE_NAME,
-          legalName: BUSINESS_DETAILS.legalName,
-          url: SITE_URL,
-        },
+        provider: { "@id": `${SITE_URL}/#organization` },
         areaServed: {
           "@type": "Country",
           name: BUSINESS_DETAILS.serviceArea,
@@ -57,7 +70,7 @@ export function getServicePageSchema(service) {
       {
         "@type": "FAQPage",
         "@id": `${SITE_URL}/services/${service.slug}#faq`,
-        mainEntity: service.faqs.map(([question, answer]) => ({
+        mainEntity: [...service.faqs, ...entityFaqs].map(([question, answer]) => ({
           "@type": "Question",
           name: question,
           acceptedAnswer: {
@@ -65,6 +78,20 @@ export function getServicePageSchema(service) {
             text: answer,
           },
         })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${SITE_URL}/services/${service.slug}#breadcrumb`,
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+          { "@type": "ListItem", position: 2, name: "Services", item: `${SITE_URL}/services` },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: service.title,
+            item: `${SITE_URL}/services/${service.slug}`,
+          },
+        ],
       },
     ],
   };

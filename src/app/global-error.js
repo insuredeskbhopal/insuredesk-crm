@@ -10,7 +10,7 @@ export default function GlobalError({ error, reset }) {
           <section className="state-card error-state">
             <div className="state-icon">!</div>
             <p className="eyebrow">Application error</p>
-            <h1>BIMAHEADQUARTER could not start</h1>
+            <h1>Bima Headquarter could not start</h1>
             <p>{error?.message || "A critical error occurred while loading the app."}</p>
             <button className="secondary-action" type="button" onClick={reset}>
               Try again
