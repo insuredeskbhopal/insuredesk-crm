@@ -27,7 +27,7 @@ npm run build
 | `public/` | Public static assets |
 | `tests/` | Automated tests and policy fixtures |
 | `scripts/` | Maintained operational, migration, import, and seed scripts |
-| `scratch/` | One-time diagnostics; not application runtime code |
+| `scratch/` | Local one-time diagnostics; ignored by Git and not application runtime code |
 | `docker/` | Container configuration |
 | `whatsapp-gateway/` | Standalone WhatsApp gateway service |
 | `rto-data/` | RTO reference datasets |

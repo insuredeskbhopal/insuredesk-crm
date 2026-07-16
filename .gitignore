@@ -58,6 +58,7 @@ Thumbs.db
 # generated analysis and batch artifacts
 /graphify-out/
 /artifacts/
+/scratch/
 /scripts/*_parsed.json
 /scripts/*_raw_text.txt
 
