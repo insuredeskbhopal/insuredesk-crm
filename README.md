@@ -30,7 +30,7 @@ npm run build
 | `scratch/` | Local one-time diagnostics; ignored by Git and not application runtime code |
 | `docker/` | Container configuration |
 | `whatsapp-gateway/` | Standalone WhatsApp gateway service |
-| `rto-data/` | RTO reference datasets |
+| `rto-data/` | RTO master reference dataset used by policy extraction |
 | `storage/` | Local uploads and working documents; ignored by Git |
 | `docs/` | Architecture, setup, archived task notes, and deferred SEO material |
 | `reports/` | Generated business reports and operational audits |
