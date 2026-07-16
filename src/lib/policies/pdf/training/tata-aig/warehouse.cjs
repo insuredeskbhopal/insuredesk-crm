@@ -2,7 +2,8 @@ const { normalizeAmount, sumPlainAmounts } = require("../../utils/amounts.cjs");
 const { normalizeWarehouseDate } = require("../../utils/dates.cjs");
 const { matchGroup } = require("../../utils/regex.cjs");
 const { cleanWarehouseBlock } = require("../../utils/text.cjs");
-const { extractTataWarehouse: extractBaseTataWarehouse } = require("./index.cjs");
+
+const scope = { insurer: "tata-aig", category: "warehouse" };
 
 function extractIncreaseAmount(text, section) {
   return normalizeAmount(
@@ -13,10 +14,11 @@ function extractIncreaseAmount(text, section) {
   );
 }
 
-function extractTataWarehouse(text) {
-  const base = extractBaseTataWarehouse(text);
-  if (!base.documentDetected || !/\bENDORSEMENT\b|change\s+in\s+sum\s+insured/i.test(text)) return base;
+function matches({ text = "" }) {
+  return /\bENDORSEMENT\b|change\s+in\s+sum\s+insured/i.test(text);
+}
 
+function train({ text = "", result }) {
   const policyPeriod = text.match(/(\d{2}\/\d{2}\/\d{4})\s*To\s*(\d{2}\/\d{2}\/\d{4})\s*Policy\s+PeriodFrom/i);
   const insuredName = cleanWarehouseBlock(
     matchGroup(text, /change\s+in\s+sum\s+insured\s+limit\s*\n\s*([^\n]+)/i) ||
@@ -39,22 +41,24 @@ function extractTataWarehouse(text) {
   ].filter(Boolean);
 
   return {
-    ...base,
-    insuredName: base.insuredName || insuredName,
-    mailingAddress: base.mailingAddress || base.riskLocation,
-    businessDescription: occupancy || base.businessDescription,
-    occupancy: occupancy || base.occupancy,
-    startDate: normalizeWarehouseDate(policyPeriod?.[1] || base.startDate),
-    expiryDate: normalizeWarehouseDate(policyPeriod?.[2] || base.expiryDate),
-    premiumIncludingGst: premiumIncludingGst || base.premiumIncludingGst,
-    cgst: cgst || base.cgst,
-    sgst: sgst || base.sgst,
-    gstAmount: sumPlainAmounts(cgst || base.cgst, sgst || base.sgst),
-    sumInsured: contentsSumInsured || burglarySumInsured || base.sumInsured,
-    contentsSumInsured: contentsSumInsured || base.contentsSumInsured,
-    burglarySumInsured: burglarySumInsured || base.burglarySumInsured,
-    fidelitySumInsured: fidelitySumInsured || base.fidelitySumInsured,
-    coverages: coverages.length ? coverages : base.coverages,
+    insuredName: result.insuredName || insuredName,
+    mailingAddress: result.mailingAddress || result.riskLocation,
+    communicationAddress: result.communicationAddress || result.riskLocation,
+    businessDescription: occupancy || result.businessDescription,
+    occupancy: occupancy || result.occupancy,
+    startDate: normalizeWarehouseDate(policyPeriod?.[1] || result.startDate),
+    expiryDate: normalizeWarehouseDate(policyPeriod?.[2] || result.expiryDate),
+    premiumIncludingGst: premiumIncludingGst || result.premiumIncludingGst,
+    premium: premiumIncludingGst || result.premium,
+    totalPremium: premiumIncludingGst || result.totalPremium,
+    cgst: cgst || result.cgst,
+    sgst: sgst || result.sgst,
+    gstAmount: sumPlainAmounts(cgst || result.cgst, sgst || result.sgst),
+    sumInsured: contentsSumInsured || burglarySumInsured || result.sumInsured,
+    contentsSumInsured: contentsSumInsured || result.contentsSumInsured,
+    burglarySumInsured: burglarySumInsured || result.burglarySumInsured,
+    fidelitySumInsured: fidelitySumInsured || result.fidelitySumInsured,
+    coverages: coverages.length ? coverages : result.coverages,
     isEndorsement: true,
     endorsementNumber:
       matchGroup(text, /\n\s*(\d{1,3})\s*\nEndorsement\s+No\.?/i) ||
@@ -66,4 +70,4 @@ function extractTataWarehouse(text) {
   };
 }
 
-module.exports = { extractTataWarehouse };
+module.exports = { scope, matches, train };

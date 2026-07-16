@@ -88,12 +88,13 @@ const {
   isTataAigFinalData,
   protectTataAigMergedFields,
   finalizeTataAigMotorFields,
-  extractTataAigMotor
+  extractTataAigMotor,
+  extractTataWarehouse
 } = require("./parsers/tata/index.cjs");
 
 const {
-  extractTataWarehouse
-} = require("./parsers/tata/warehouse-endorsement.cjs");
+  applyScopedTraining
+} = require("./training/registry.cjs");
 
 const {
   isNewIndiaFinalData,
@@ -149,7 +150,7 @@ async function extractPolicyFromPdf(buffer, sourceFile = "") {
 }
 
 // Start of extractPolicyFromText
-function extractPolicyFromText(text, sourceFile = "") {
+function extractPolicyFromTextBase(text, sourceFile = "") {
   const sourceText = cleanText(text || "");
   const policyUnderstanding = understandDocument(sourceText);
   const policySchema = resolveSchema(policyUnderstanding);
@@ -1643,6 +1644,14 @@ function extractPolicyFromText(text, sourceFile = "") {
   };
 
   return buildIntelligentResult(legacyData, policyUnderstanding, policySchema, schemaExtraction);
+}
+
+function extractPolicyFromText(text, sourceFile = "") {
+  const result = extractPolicyFromTextBase(text, sourceFile);
+  return applyScopedTraining(result, {
+    text: result?.sourceText || cleanText(text || ""),
+    sourceFile,
+  });
 }
 
 // Start of buildIntelligentResult

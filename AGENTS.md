@@ -6,7 +6,16 @@
 # Motor Policy Extraction Guidelines
 
 - **No Modifications to Motor Logic**: Under no circumstances should you edit or modify any motor policy PDF extraction logic, schema definition, or helper logic (e.g., in `src/lib/policies/pdf/utils/motor.cjs`, motor schemas, or motor parsers). Any parsing updates or training request for other lines of business (like Fire, Burglary, Fidelity, or Workmen's Compensation) must be implemented completely separately, without touching the motor parser code path.
-- **Non-Motor Training Only**: All current and future PDF training work must target non-motor policies only. Keep every non-motor parser, schema, prompt, fixture, and training artifact isolated from the motor implementation; do not edit, refactor, rename, move, import into, or reuse shared logic in any way that changes the motor PDF extraction path or its behavior.
+
+# PDF Training Isolation Guidelines (Strict)
+
+- **Exact Training Scope**: Every PDF training change must be isolated to one exact `(insurance company, policy category)` pair, such as `(ICICI Lombard, Fire)` or `(Tata AIG, Warehouse)`.
+- **Bidirectional Category Isolation**: Training Motor must not affect Fire, Warehouse, Health, Marine, or any other category, and training any non-motor category must not affect Motor or another non-motor category for the same insurer.
+- **Insurer Isolation**: Training one insurer must not change extraction behavior for any other insurer.
+- **Scoped Training Modules Only**: Add training under `src/lib/policies/pdf/training/<insurer>/<category>.cjs`. A training module may use only neutral helpers such as text, regex, dates, locations, and amounts. It must not import another training scope, an insurer parser, a motor helper, or a motor schema.
+- **Training Diff Boundary**: A training task may edit only its exact scoped module, scoped fixtures/tests, and the registry when registering a new scope. It may import existing neutral helpers but must not modify shared helpers, the base extractor, another scope, or another insurer as part of that training task.
+- **Immutable Scope Identity**: Training modules must not change `insuranceCompany`, `companyName`, `documentCategory`, `documentFormat`, or `sourceDocumentType`. Scope selection belongs exclusively to the training registry.
+- **Regression Proof Required**: Every training change must include tests for its own scope plus isolation tests proving it is not selected for another category of the same insurer or the same category of another insurer.
 
 # Ponytail, lazy senior dev mode
 
