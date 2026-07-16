@@ -8,7 +8,7 @@ import { cachedJson } from "@/app/lib/client-api";
 import { getRecordSearchText } from "@/lib/records/search";
 import { validateContactNumber, validateContactPerson } from "@/lib/records/validation";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
-import { buildAnalytics, formatMoney, parseMoney } from "@/lib/records/analytics";
+import { formatMoney, parseMoney } from "@/lib/records/analytics";
 import PageHeader from "@/app/components/layout/PageHeader";
 import RecordsTable from "@/app/components/RecordsTable";
 import AlertCard from "@/app/components/shared/AlertCard";
@@ -113,8 +113,6 @@ export default function Dashboard({
     lost: 0,
     lostPremium: 0,
   });
-  const [agentWiseStats, setAgentWiseStats] = useState([]);
-
   useEffect(() => {
     async function fetchHeaderData() {
       try {
@@ -122,9 +120,6 @@ export default function Dashboard({
         if (data.success) {
           if (data.renewalCounts) {
             setRenewalCounts(data.renewalCounts);
-          }
-          if (data.agentWise) {
-            setAgentWiseStats(data.agentWise);
           }
         }
       } catch (err) {
@@ -558,7 +553,6 @@ export default function Dashboard({
     ? buildClientProfiles(records, parseMoney).find((client) => client.name === selectedClientName)
     : null;
 
-  const analytics = useMemo(() => buildAnalytics(filteredRecords), [filteredRecords]);
   const canEditPolicyRecords = ["SUPER_ADMIN", "ADMIN", "MANAGER", "AGENT"].includes(currentUserRole);
   const canDeletePolicyRecords = currentUserRole === "SUPER_ADMIN";
   const editValidation = useMemo(
@@ -570,10 +564,6 @@ export default function Dashboard({
     [editingRecord, editForm],
   );
 
-  const handleSelectReport = (report) => {
-    if (!report) return;
-    router.push(`/analytics-reports/${encodeURIComponent(report.id)}`);
-  };
   const selectedPolicy = selectedClient
     ? selectedClient.policies.find((record) => record.id === selectedPolicyId)
     : null;

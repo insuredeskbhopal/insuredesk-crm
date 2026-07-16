@@ -332,7 +332,7 @@ export default function ClientPortal() {
       } else {
         setClaimError(resData.error || "Failed to initiate claim.");
       }
-    } catch (err) {
+    } catch {
       setClaimError("Could not reach servers. Please try again.");
     } finally {
       setSubmittingClaim(false);

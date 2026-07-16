@@ -1031,7 +1031,7 @@ export default function ClaimsManagementPage() {
                     } else {
                       window.alert(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`);
                     }
-                  } catch (err) {
+                  } catch {
                     window.alert("Failed to connect to the CRM WhatsApp API.");
                   }
                 }} style={{ background: "#ffffff", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>

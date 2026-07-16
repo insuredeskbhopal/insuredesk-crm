@@ -13,11 +13,7 @@ import {
   RotateCcw,
   Plus,
   Info,
-  Calendar,
   AlertCircle,
-  Copy,
-  Layout,
-  ExternalLink,
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
 
@@ -51,7 +47,7 @@ export default function WhatsAppSetupPage() {
   const [templates, setTemplates] = useState([]);
   const [activeTemplateTab, setActiveTemplateTab] = useState("birthday_wish");
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
-  const [templateSuccess, setTemplateSuccess] = useState(false);
+  const [, setTemplateSuccess] = useState(false);
 
   // Queue & Logs
   const [queueMessages, setQueueMessages] = useState([]);

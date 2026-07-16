@@ -10,11 +10,9 @@ import {
   Upload,
   Calendar,
   Plus,
-  Trash2,
   User,
   Mail,
   Phone,
-  ArrowLeft,
   AlertCircle,
   CheckCircle2,
   X,
@@ -221,7 +219,7 @@ export default function BirthdayManagementPage() {
       link.click();
       URL.revokeObjectURL(url);
       showToast("success", "Template downloaded successfully!");
-    } catch (err) {
+    } catch {
       showToast("error", "Failed to download Excel template");
     }
   };
@@ -261,7 +259,7 @@ export default function BirthdayManagementPage() {
       link.click();
       URL.revokeObjectURL(url);
       showToast("success", "Excel file exported successfully!");
-    } catch (err) {
+    } catch {
       showToast("error", "Failed to export data");
     }
   };
@@ -485,7 +483,7 @@ export default function BirthdayManagementPage() {
       } else {
         showToast("error", `Failed to send greeting: ${data.error || "Unknown error"}`);
       }
-    } catch (err) {
+    } catch {
       showToast("error", "Failed to connect to the CRM WhatsApp API.");
     }
     setIsGreetingModalOpen(false);

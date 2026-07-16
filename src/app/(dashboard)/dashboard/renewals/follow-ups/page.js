@@ -112,7 +112,7 @@ export default function FollowUpsPage() {
         } else {
           window.alert(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`);
         }
-      } catch (err) {
+      } catch {
         window.alert("Failed to connect to the CRM WhatsApp API.");
       }
     } else {
