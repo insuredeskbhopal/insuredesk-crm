@@ -1,0 +1,26 @@
+{
+  "name": "United India Bharat Laghu Udyam Suraksha Warehouse Policy",
+  "version": 1,
+  "expectedSections": ["policy_details", "insured_details", "risk_location", "premium_details"],
+  "expectedTables": ["sum_insured_table", "premium_table"],
+  "fields": [
+    { "field": "insuranceCompany", "aliases": ["UNITED INDIA INSURANCE COMPANY LIMITED"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "productName", "aliases": ["UNITED BHARAT LAGHU UDYAM SURAKSHA POLICY"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "policyType", "aliases": ["UNITED BHARAT LAGHU UDYAM SURAKSHA POLICY"], "section": "policy_details", "type": "string", "required": true },
+    { "field": "policyNumber", "aliases": ["POLICY NO", "Policy No."], "section": "policy_details", "type": "string", "required": true },
+    { "field": "insuredName", "aliases": ["Name Of Insured", "Insured"], "section": "insured_details", "type": "string", "required": true },
+    { "field": "mailingAddress", "aliases": ["Insured"], "section": "insured_details", "type": "string", "required": true },
+    { "field": "riskLocation", "aliases": ["Location Address", "Location/Risk Details"], "section": "risk_location", "type": "string", "required": true },
+    { "field": "startDate", "aliases": ["From"], "section": "policy_details", "type": "date", "required": true },
+    { "field": "expiryDate", "aliases": ["To Midnight of"], "section": "policy_details", "type": "date", "required": true },
+    { "field": "sumInsured", "aliases": ["Contents"], "section": "risk_location", "type": "amount", "required": true },
+    { "field": "contentsSumInsured", "aliases": ["Contents"], "section": "risk_location", "type": "amount", "required": false },
+    { "field": "netPremium", "aliases": ["Net Premium"], "section": "premium_details", "type": "amount", "required": true },
+    { "field": "premiumIncludingGst", "aliases": ["Total"], "section": "premium_details", "type": "amount", "required": true },
+    { "field": "igst", "aliases": ["IGST"], "section": "premium_details", "type": "amount", "required": false },
+    { "field": "invoiceNumber", "aliases": ["Invoice No. & Date"], "section": "premium_details", "type": "string", "required": false },
+    { "field": "brokerName", "aliases": ["Agent Name"], "section": "policy_details", "type": "string", "required": false },
+    { "field": "brokerCode", "aliases": ["Agent Code"], "section": "policy_details", "type": "string", "required": false },
+    { "field": "hypothecationDetails", "aliases": ["Financier Name"], "section": "financier_details", "type": "string", "required": false }
+  ]
+}

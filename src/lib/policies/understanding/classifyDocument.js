@@ -2,6 +2,18 @@ function classifyDocument(text = "") {
   const normalized = String(text || "");
   const candidates = [
     {
+      company: "United India Insurance Company Limited",
+      documentFormat: "UNITED_INDIA_WAREHOUSE_V1",
+      documentCategory: "Warehouse Insurance",
+      policyType: "United Bharat Laghu Udyam Suraksha Policy",
+      signals: [
+        /UNITED INDIA INSURANCE COMPANY LIMITED/i,
+        /UNITED BHARAT LAGHU UDYAM SURAKSHA POLICY/i,
+        /Location\s*\/\s*Risk Details/i,
+        /Storage of Non-hazardous goods/i,
+      ],
+    },
+    {
       company: "HDFC ERGO",
       documentFormat: "HDFC_ERGO_MOTOR_V1",
       documentCategory: "Motor Insurance",

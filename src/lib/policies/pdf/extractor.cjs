@@ -135,6 +135,10 @@ const {
   extractUnitedIndiaMotor
 } = require("./parsers/united-india/index.cjs");
 
+const {
+  extractUnitedIndiaWarehouse
+} = require("./parsers/united-india/warehouse.cjs");
+
 // Start of extractPolicyFromPdf
 async function extractPolicyFromPdf(buffer, sourceFile = "") {
   const parsed = await pdf(buffer);
@@ -148,6 +152,30 @@ function extractPolicyFromText(text, sourceFile = "") {
   const policySchema = resolveSchema(policyUnderstanding);
   const schemaExtraction = extractWithSchema(sourceText, policyUnderstanding, policySchema);
   const paymentCollection = extractPaymentCollection(sourceText);
+
+  const unitedIndiaWarehouse = extractUnitedIndiaWarehouse(sourceText);
+  if (unitedIndiaWarehouse.documentDetected) {
+    const legacyData = {
+      ...buildWarehouseLegacyData({
+        sourceFile,
+        sourceText,
+        data: unitedIndiaWarehouse,
+        documentFormat: "UNITED_INDIA_WAREHOUSE_V1",
+        insuranceCompany: unitedIndiaWarehouse.insuranceCompany,
+      }),
+      sourceDocumentType: "UNITED_INDIA_WAREHOUSE_V1",
+      goodsStored: unitedIndiaWarehouse.goodsStored,
+      storageType: unitedIndiaWarehouse.storageType,
+      hazardCategory: unitedIndiaWarehouse.hazardCategory,
+      warehouseFinanced: unitedIndiaWarehouse.warehouseFinanced,
+      igst: unitedIndiaWarehouse.igst,
+      receiptNumber: unitedIndiaWarehouse.receiptNumber,
+      receiptDate: unitedIndiaWarehouse.receiptDate,
+      fieldConfidence: unitedIndiaWarehouse.fieldConfidence,
+      fieldEvidence: unitedIndiaWarehouse.fieldEvidence,
+    };
+    return buildIntelligentResult(legacyData, policyUnderstanding, policySchema, schemaExtraction);
+  }
 
   const unitedIndiaMotor = extractUnitedIndiaMotor(sourceText, sourceFile);
   if (unitedIndiaMotor.documentDetected) {

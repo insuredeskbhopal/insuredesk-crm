@@ -97,6 +97,16 @@ const INSURANCE_COMPANY_MASTER = [
     active: true,
   },
   {
+    name: "United India Insurance Company Limited",
+    aliases: [
+      "United India Insurance",
+      "United India Insurance Co. Ltd.",
+      "United India Insurance Company Ltd",
+      "UIIC",
+    ],
+    active: true,
+  },
+  {
     name: "Liberty General Insurance Limited",
     aliases: [
       "Liberty",
