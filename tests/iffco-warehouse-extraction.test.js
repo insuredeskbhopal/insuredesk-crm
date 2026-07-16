@@ -1,5 +1,5 @@
 /* @vitest-environment node */
-// NOTE: Skipped � PDF fixture files removed from repo. Re-enable when new fixtures are provided.
+// Active regression test; its PDF fixtures are present in the repository.
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createRequire } from "node:module";
