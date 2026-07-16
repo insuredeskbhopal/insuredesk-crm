@@ -58,6 +58,8 @@ Thumbs.db
 # generated analysis and batch artifacts
 /graphify-out/
 /artifacts/
+/scripts/*_parsed.json
+/scripts/*_raw_text.txt
 
 # generated report binaries; keep Markdown/readme/audit sources tracked
 /reports/*.docx
