@@ -58,4 +58,35 @@ describe("Tata AIG warehouse extraction", () => {
     expect(result.netPremium).toBe("16,351.00");
     expect(result.premiumIncludingGst).toBe("19,294.00");
   });
+
+  it("extracts the Shri Sawariya warehouse sum-insured endorsement", async () => {
+    const file = "tests/Warehouse/Tata/SHRI SAWARIYA WAREHOUSE 20 AC MPWLC ENDO.pdf";
+    const parsed = await pdf(fs.readFileSync(file));
+    const result = extractPolicyFromText(parsed.text || "", file);
+
+    expect(result).toMatchObject({
+      documentFormat: "TATA_AIG_WAREHOUSE_V1",
+      documentCategory: "Warehouse Insurance",
+      insuranceCompany: "Tata AIG General Insurance Company Limited",
+      policyNumber: "5161117456",
+      insuredName: "SHRI SAWARIYA WAREHOUSE 20 A/C MPWLC",
+      startDate: "12/05/2026",
+      expiryDate: "11/05/2027",
+      netPremium: "13,871.00",
+      premiumIncludingGst: "16,367.00",
+      cgst: "1,248.00",
+      sgst: "1,248.00",
+      gstAmount: "2496.00",
+      sumInsured: "59,000,000.00",
+      contentsSumInsured: "59,000,000.00",
+      burglarySumInsured: "59,000,000.00",
+      fidelitySumInsured: "5,900,000.00",
+      isEndorsement: true,
+      endorsementNumber: "01",
+      endorsementEffectiveDate: "02/07/2026",
+      extractionTrainingVersion: "TATA_AIG_WAREHOUSE_ENDORSEMENT_V1",
+    });
+    expect(result.coverages).toHaveLength(3);
+    expect(result.registrationNumber || result.vehicleNumber || "").toBe("");
+  });
 });

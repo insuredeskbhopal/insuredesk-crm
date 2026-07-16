@@ -88,9 +88,12 @@ const {
   isTataAigFinalData,
   protectTataAigMergedFields,
   finalizeTataAigMotorFields,
-  extractTataAigMotor,
-  extractTataWarehouse
+  extractTataAigMotor
 } = require("./parsers/tata/index.cjs");
+
+const {
+  extractTataWarehouse
+} = require("./parsers/tata/warehouse-endorsement.cjs");
 
 const {
   isNewIndiaFinalData,
