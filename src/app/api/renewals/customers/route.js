@@ -202,8 +202,8 @@ export async function GET(request) {
             OR EXISTS (
               SELECT 1
               FROM unnest(string_to_array($8, '|||')) AS filter_company(value)
-              WHERE LOWER(TRIM(raw_company)) = LOWER(filter_company.value)
-                OR LOWER(TRIM(selected_company)) = LOWER(filter_company.value)
+              WHERE LOWER(TRIM(raw_company)) LIKE '%' || LOWER(TRIM(filter_company.value)) || '%'
+                OR LOWER(TRIM(selected_company)) LIKE '%' || LOWER(TRIM(filter_company.value)) || '%'
             )
           )
           -- Policy Type Filter

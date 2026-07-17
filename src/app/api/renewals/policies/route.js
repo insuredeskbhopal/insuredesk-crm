@@ -248,8 +248,8 @@ export async function GET(request) {
             OR EXISTS (
               SELECT 1
               FROM unnest(string_to_array($6, '|||')) AS filter_company(value)
-              WHERE LOWER(TRIM(company)) = LOWER(filter_company.value)
-                OR LOWER(TRIM(selected_company)) = LOWER(filter_company.value)
+              WHERE LOWER(TRIM(company)) LIKE '%' || LOWER(TRIM(filter_company.value)) || '%'
+                OR LOWER(TRIM(selected_company)) LIKE '%' || LOWER(TRIM(filter_company.value)) || '%'
             )
           )
           -- Policy Type Filter
@@ -312,8 +312,8 @@ export async function GET(request) {
           OR EXISTS (
             SELECT 1
             FROM unnest(string_to_array($6, '|||')) AS filter_company(value)
-            WHERE LOWER(TRIM(company)) = LOWER(filter_company.value)
-              OR LOWER(TRIM(selected_company)) = LOWER(filter_company.value)
+            WHERE LOWER(TRIM(company)) LIKE '%' || LOWER(TRIM(filter_company.value)) || '%'
+              OR LOWER(TRIM(selected_company)) LIKE '%' || LOWER(TRIM(filter_company.value)) || '%'
           )
         )
         AND (
@@ -347,8 +347,8 @@ export async function GET(request) {
           OR EXISTS (
             SELECT 1
             FROM unnest(string_to_array($6, '|||')) AS filter_company(value)
-            WHERE LOWER(TRIM(company)) = LOWER(filter_company.value)
-              OR LOWER(TRIM(selected_company)) = LOWER(filter_company.value)
+            WHERE LOWER(TRIM(company)) LIKE '%' || LOWER(TRIM(filter_company.value)) || '%'
+              OR LOWER(TRIM(selected_company)) LIKE '%' || LOWER(TRIM(filter_company.value)) || '%'
           )
         )
         AND (
