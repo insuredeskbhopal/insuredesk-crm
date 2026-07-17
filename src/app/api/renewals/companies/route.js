@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { startOfDay } from "@/app/lib/reporting/filters";
+import { consolidateRenewalCompanyStats } from "@/lib/renewals/companies";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,8 @@ export async function GET(request) {
     `;
 
     const result = await prisma.$queryRawUnsafe(sql, ...queryParams);
-    return Response.json({ companyStats: result });
+    const companyStats = consolidateRenewalCompanyStats(result).sort((a, b) => b.total - a.total);
+    return Response.json({ companyStats });
   } catch (error) {
     console.error("Renewals companies fetch failed:", error);
     return Response.json({ error: "Failed to load companies." }, { status: 500 });

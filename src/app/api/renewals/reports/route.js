@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { startOfDay } from "@/app/lib/reporting/filters";
+import { consolidateRenewalCompanyStats } from "@/lib/renewals/companies";
 
 export const dynamic = "force-dynamic";
 
@@ -102,7 +103,6 @@ export async function GET(request) {
       WHERE expiry_date IS NOT NULL
       GROUP BY COALESCE(NULLIF(TRIM(company), ''), 'Other')
       ORDER BY total_policies DESC
-      LIMIT 15
     `;
 
     // 3. Policy Type Performance
@@ -175,7 +175,9 @@ export async function GET(request) {
     return Response.json({
       success: true,
       agents,
-      companies,
+      companies: consolidateRenewalCompanyStats(companies, "company_name")
+        .sort((a, b) => b.total_policies - a.total_policies)
+        .slice(0, 15),
       types,
       lostReasons,
       monthlyTrends,

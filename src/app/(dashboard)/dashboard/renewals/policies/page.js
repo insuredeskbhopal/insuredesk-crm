@@ -43,6 +43,8 @@ export default function RenewalPoliciesPage() {
   const [queryDraft, setQueryDraft] = useState("");
   const [query, setQuery] = useState("");
   const [policyType, setPolicyType] = useState("All");
+  const [company, setCompany] = useState("All");
+  const [companyOptions, setCompanyOptions] = useState([]);
   const [renewalMonth, setRenewalMonth] = useState("All");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -58,10 +60,33 @@ export default function RenewalPoliciesPage() {
     setQueryDraft(initialQuery);
     setQuery(initialQuery);
     setPolicyType(params.get("policyType") || "All");
+    setCompany(params.get("company") || "All");
     setRenewalMonth(normalizeRenewalRegisterMonth(params.get("month")));
     setPage(Math.max(1, Number(params.get("page")) || 1));
     setInitialized(true);
   }, []);
+
+  useEffect(() => {
+    if (!initialized) return;
+    const controller = new window.AbortController();
+
+    fetch("/api/renewals/companies", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Insurance companies could not be loaded.");
+        setCompanyOptions(
+          (payload.companyStats || [])
+            .map((row) => row.company)
+            .filter((name) => name && name !== "Other")
+            .sort((a, b) => a.localeCompare(b)),
+        );
+      })
+      .catch((loadError) => {
+        if (loadError.name !== "AbortError") console.error(loadError);
+      });
+
+    return () => controller.abort();
+  }, [initialized]);
 
   useEffect(() => {
     if (!initialized) return;
@@ -74,6 +99,7 @@ export default function RenewalPoliciesPage() {
         const params = new window.URLSearchParams({ tab: "register", page: String(page), limit: String(PAGE_SIZE) });
         if (query) params.set("q", query);
         if (policyType !== "All") params.set("policyType", policyType);
+        if (company !== "All") params.set("company", company);
         if (renewalMonth !== "All") params.set("month", renewalMonth);
         const response = await fetch(`/api/renewals/policies?${params}`, { cache: "no-store", signal: controller.signal });
         const payload = await response.json();
@@ -91,13 +117,14 @@ export default function RenewalPoliciesPage() {
 
     loadPolicies();
     return () => controller.abort();
-  }, [initialized, page, policyType, query, refreshKey, renewalMonth]);
+  }, [company, initialized, page, policyType, query, refreshKey, renewalMonth]);
 
   const syncUrl = (updates = {}) => {
-    const next = { query, policyType, renewalMonth, page, ...updates };
+    const next = { query, policyType, company, renewalMonth, page, ...updates };
     const params = new window.URLSearchParams();
     if (next.query) params.set("q", next.query);
     if (next.policyType !== "All") params.set("policyType", next.policyType);
+    if (next.company !== "All") params.set("company", next.company);
     if (next.renewalMonth !== "All") params.set("month", next.renewalMonth);
     if (next.page > 1) params.set("page", String(next.page));
     router.replace(params.size ? `?${params}` : "/dashboard/renewals/policies", { scroll: false });
@@ -127,6 +154,13 @@ export default function RenewalPoliciesPage() {
     syncUrl({ renewalMonth: nextMonth, page: 1 });
   };
 
+  const changeCompany = (value) => {
+    setCompany(value);
+    setPage(1);
+    closeActionMenu();
+    syncUrl({ company: value, page: 1 });
+  };
+
   const changePage = (nextPage) => {
     setPage(nextPage);
     closeActionMenu();
@@ -137,6 +171,7 @@ export default function RenewalPoliciesPage() {
     setQueryDraft("");
     setQuery("");
     setPolicyType("All");
+    setCompany("All");
     setRenewalMonth("All");
     setPage(1);
     closeActionMenu();
@@ -212,11 +247,15 @@ export default function RenewalPoliciesPage() {
         <select value={policyType} onChange={(event) => changePolicyType(event.target.value)} aria-label="Policy type">
           {RENEWAL_REGISTER_POLICY_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
+        <select value={company} onChange={(event) => changeCompany(event.target.value)} aria-label="Insurance company">
+          <option value="All">All insurance companies</option>
+          {companyOptions.map((name) => <option key={name} value={name}>{name}</option>)}
+        </select>
         <select value={renewalMonth} onChange={(event) => changeRenewalMonth(event.target.value)} aria-label="Renewal month">
           {RENEWAL_REGISTER_MONTHS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
         <button type="submit" className="rn-btn rn-btn-primary"><Search size={15} /> Search</button>
-        {(query || policyType !== "All" || renewalMonth !== "All") ? (
+        {(query || policyType !== "All" || company !== "All" || renewalMonth !== "All") ? (
           <button type="button" className="rn-btn" onClick={clearFilters}><RefreshCw size={15} /> Clear</button>
         ) : null}
       </form>

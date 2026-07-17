@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import renewalImportIdentity from "@/lib/renewals/import-identity.cjs";
+import { normalizeRenewalInsuranceCompany } from "@/lib/renewals/companies";
 import * as XLSX from "xlsx";
 
 const MANUAL_RENEWAL_IMPORT_METHOD = "renewal_excel_import";
@@ -173,8 +174,10 @@ export async function POST(request) {
         payload.sumInsured = payload.sumInsured || payload.idv || "";
         payload.customerMobile = payload.customerMobile || payload.contactNumber || "";
         payload.contactNumber = payload.contactNumber || payload.customerMobile || "";
-        payload.companyName = payload.companyName || payload.insuranceCompany || "";
-        payload.insuranceCompany = payload.insuranceCompany || payload.companyName || "";
+        payload.insuranceCompany = normalizeRenewalInsuranceCompany(
+          payload.insuranceCompany || payload.companyName,
+        );
+        payload.companyName = payload.insuranceCompany;
 
         const name = payload.insuredName || "";
         const policyNo = payload.policyNumber || "";

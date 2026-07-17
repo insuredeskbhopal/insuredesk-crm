@@ -3,6 +3,11 @@ import { verifyJWT } from "@/lib/auth";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
 import { normalizeRenewalRegisterMonth } from "@/lib/renewals/register";
+import {
+  getRenewalCompanyFilterTerms,
+  normalizeRenewalInsuranceCompany,
+  withRenewalCompanyDisplay,
+} from "@/lib/renewals/companies";
 import { startOfDay } from "@/app/lib/reporting/filters";
 import {
   getDaysStatus,
@@ -27,6 +32,7 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const company = searchParams.get("company") || "All";
+    const companyFilterTerms = getRenewalCompanyFilterTerms(company);
     const policyType = searchParams.get("policyType") || "All";
     const tab = searchParams.get("tab") || "upcoming";
     const q = searchParams.get("q") || "";
@@ -53,7 +59,7 @@ export async function GET(request) {
       todayStr,
       tab,
       maxDays,
-      company,
+      companyFilterTerms,
       policyType,
       q.trim(),
       `%${q.trim().toLowerCase()}%`,
@@ -238,9 +244,13 @@ export async function GET(request) {
           )
           -- Company Filter
           AND (
-            $6 = 'All' 
-            OR LOWER(company) = LOWER($6) 
-            OR LOWER(selected_company) = LOWER($6)
+            $6 = ''
+            OR EXISTS (
+              SELECT 1
+              FROM unnest(string_to_array($6, '|||')) AS filter_company(value)
+              WHERE LOWER(TRIM(company)) = LOWER(filter_company.value)
+                OR LOWER(TRIM(selected_company)) = LOWER(filter_company.value)
+            )
           )
           -- Policy Type Filter
           AND (
@@ -298,9 +308,13 @@ export async function GET(request) {
       FROM active_policies
       WHERE
         (
-          $6 = 'All'
-          OR LOWER(company) = LOWER($6)
-          OR LOWER(selected_company) = LOWER($6)
+          $6 = ''
+          OR EXISTS (
+            SELECT 1
+            FROM unnest(string_to_array($6, '|||')) AS filter_company(value)
+            WHERE LOWER(TRIM(company)) = LOWER(filter_company.value)
+              OR LOWER(TRIM(selected_company)) = LOWER(filter_company.value)
+          )
         )
         AND (
           $7 = 'All'
@@ -329,9 +343,13 @@ export async function GET(request) {
       FROM active_policies
       WHERE
         (
-          $6 = 'All'
-          OR LOWER(company) = LOWER($6)
-          OR LOWER(selected_company) = LOWER($6)
+          $6 = ''
+          OR EXISTS (
+            SELECT 1
+            FROM unnest(string_to_array($6, '|||')) AS filter_company(value)
+            WHERE LOWER(TRIM(company)) = LOWER(filter_company.value)
+              OR LOWER(TRIM(selected_company)) = LOWER(filter_company.value)
+          )
         )
         AND (
           $11::integer = 0
@@ -413,7 +431,7 @@ export async function GET(request) {
           const tp = payload.totalPremium || payload.premium || "";
           renewedPolicyMap[p.id] = {
             policyNumber: payload.policyNumber || "",
-            insuranceCompany: ic,
+            insuranceCompany: normalizeRenewalInsuranceCompany(ic),
             totalPremium: tp,
             savedAt: p.savedAt || p.createdAt || null,
           };
@@ -422,7 +440,7 @@ export async function GET(request) {
 
       const orderedRecords = ids.map((id) => recordMap[id]).filter(Boolean);
       policies = orderedRecords.map((record) => {
-        const normalized = withRenewalPolicyDisplay(normalizeRecord(record));
+        const normalized = withRenewalCompanyDisplay(withRenewalPolicyDisplay(normalizeRecord(record)));
         normalized.daysRemaining = calculateDaysLeft(normalized.expiryDate);
         normalized.renewalStatus = calculateRenewalStatus(normalized.expiryDate, record.renewalStatus);
         normalized.expiryState = getExpiryState(normalized.expiryDate);

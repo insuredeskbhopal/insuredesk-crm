@@ -44,6 +44,8 @@ describe("policy-wise renewal register", () => {
     expect(route).toContain("categoryCounts: normalizeCategoryCounts");
     expect(route).toContain("LIMIT $12::integer OFFSET $13::integer");
     expect(page).toContain('params.set("month", renewalMonth)');
+    expect(page).toContain('params.set("company", company)');
+    expect(page).toContain('aria-label="Insurance company"');
     expect(page).toContain("RENEWAL_REGISTER_CATEGORY_TABS.map");
   });
 });

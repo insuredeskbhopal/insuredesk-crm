@@ -4,6 +4,7 @@ import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
+import { normalizeRenewalInsuranceCompany } from "@/lib/renewals/companies";
 
 export const runtime = "nodejs";
 
@@ -49,6 +50,7 @@ export async function POST(request) {
     if (!insuranceCompany || !String(insuranceCompany).trim()) {
       return Response.json({ error: "Insurance Company is required." }, { status: 400 });
     }
+    const standardInsuranceCompany = normalizeRenewalInsuranceCompany(insuranceCompany);
     if (!policyType || !String(policyType).trim()) {
       return Response.json({ error: "Policy Type is required." }, { status: 400 });
     }
@@ -97,7 +99,9 @@ export async function POST(request) {
     const oldContactPersonName = oldData.contactPersonName || oldData.contactPerson || "";
     const oldContactNumber = oldData.contactNumber || oldData.customerMobile || "";
     const oldPolicyNumber = oldData.policyNumber || "";
-    const oldInsuranceCompany = policy.selectedCompany || oldData.insuranceCompany || "";
+    const oldInsuranceCompany = normalizeRenewalInsuranceCompany(
+      policy.selectedCompany || oldData.insuranceCompany,
+    );
     const oldPolicyType = policy.selectedPolicyType || oldData.policyType || "";
     const oldPremium = oldData.premium || oldData.totalPremium || 0;
     const oldExpiryDate = oldData.expiryDate || oldData.policyEndDate || "";
@@ -127,11 +131,11 @@ export async function POST(request) {
     if (String(policyNumber).trim() !== String(oldPolicyNumber).trim()) {
       changes.push({ field: "Policy Number", oldValue: oldPolicyNumber || "N/A", newValue: policyNumber });
     }
-    if (String(insuranceCompany).trim() !== String(oldInsuranceCompany).trim()) {
+    if (standardInsuranceCompany !== oldInsuranceCompany) {
       changes.push({
         field: "Insurance Company",
         oldValue: oldInsuranceCompany || "N/A",
-        newValue: insuranceCompany,
+        newValue: standardInsuranceCompany,
       });
     }
     if (String(policyType).trim() !== String(oldPolicyType).trim()) {
@@ -272,7 +276,7 @@ export async function POST(request) {
       contactNumber: cleanPhone,
       customerMobile: cleanPhone,
       policyNumber,
-      insuranceCompany,
+      insuranceCompany: standardInsuranceCompany,
       policyType,
       premium: finalPremium,
       totalPremium: finalPremium,
@@ -346,7 +350,7 @@ export async function POST(request) {
       where: { id: policyId },
       data: {
         renewalStatus: finalStatus,
-        selectedCompany: insuranceCompany,
+        selectedCompany: standardInsuranceCompany,
         selectedPolicyType: policyType,
         isActivePolicy,
         reviewedData: updatedPayload,

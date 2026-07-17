@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
+import { withRenewalCompanyDisplay } from "@/lib/renewals/companies";
 import {
   sortByDaysLeftAscending,
   withRenewalWindowDisplay,
@@ -127,7 +128,7 @@ export async function GET(request, props) {
 
     const allPolicies = await Promise.all(
       rawPolicies.map(async (record) => {
-        const normalized = withRenewalPolicyDisplay(normalizeRecord(record));
+        const normalized = withRenewalCompanyDisplay(withRenewalPolicyDisplay(normalizeRecord(record)));
         const withWindow = withRenewalWindowDisplay(normalized);
         return enrichPolicy(withWindow);
       })
@@ -162,7 +163,7 @@ export async function GET(request, props) {
         },
       });
       if (fallbackRecord) {
-        const normalized = withRenewalPolicyDisplay(normalizeRecord(fallbackRecord));
+        const normalized = withRenewalCompanyDisplay(withRenewalPolicyDisplay(normalizeRecord(fallbackRecord)));
         requestedPolicy = await enrichPolicy(withRenewalWindowDisplay(normalized));
       }
     }

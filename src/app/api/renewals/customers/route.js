@@ -3,6 +3,7 @@ import { verifyJWT } from "@/lib/auth";
 import { startOfDay } from "@/app/lib/reporting/filters";
 import { normalizeRecord } from "@/lib/records";
 import { calculateRenewalStatus, calculateDaysLeft } from "@/lib/renewals/dates";
+import { getRenewalCompanyFilterTerms } from "@/lib/renewals/companies";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,7 @@ export async function GET(request) {
     const status = searchParams.get("status") || "All"; // Active, Due Soon, Overdue, Fully Renewed, Lost, All
     const assignedTo = searchParams.get("assignedTo") || "All";
     const companyFilter = searchParams.get("company") || "All";
+    const companyFilterTerms = getRenewalCompanyFilterTerms(companyFilter);
     const policyTypeFilter = searchParams.get("policyType") || "All";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10", 10) || 10));
@@ -64,7 +66,7 @@ export async function GET(request) {
       q.trim(),
       `%${q.trim().toLowerCase()}%`,
       assignedTo,
-      companyFilter,
+      companyFilterTerms,
       policyTypeFilter,
     ];
 
@@ -196,9 +198,13 @@ export async function GET(request) {
           )
           -- Company Filter
           AND (
-            $8 = 'All'
-            OR LOWER(raw_company) LIKE LOWER('%' || $8 || '%')
-            OR LOWER(selected_company) LIKE LOWER('%' || $8 || '%')
+            $8 = ''
+            OR EXISTS (
+              SELECT 1
+              FROM unnest(string_to_array($8, '|||')) AS filter_company(value)
+              WHERE LOWER(TRIM(raw_company)) = LOWER(filter_company.value)
+                OR LOWER(TRIM(selected_company)) = LOWER(filter_company.value)
+            )
           )
           -- Policy Type Filter
           AND (

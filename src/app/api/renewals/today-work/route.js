@@ -3,6 +3,7 @@ import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
+import { withRenewalCompanyDisplay } from "@/lib/renewals/companies";
 import { startOfDay } from "@/app/lib/reporting/filters";
 import {
   RENEWAL_WORK_ACTIONS,
@@ -144,7 +145,7 @@ export async function GET(request) {
         },
       });
       records.forEach((record) => {
-        policyMap[record.id] = withRenewalPolicyDisplay(normalizeRecord(record));
+        policyMap[record.id] = withRenewalCompanyDisplay(withRenewalPolicyDisplay(normalizeRecord(record)));
       });
     }
 

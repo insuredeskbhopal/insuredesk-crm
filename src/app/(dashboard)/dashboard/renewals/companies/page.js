@@ -9,20 +9,6 @@ export default function CompaniesViewPage() {
   const [companyData, setCompanyData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const targetCompanies = [
-    "ICICI Lombard",
-    "TATA AIG",
-    "New India",
-    "IFFCO Tokio",
-    "HDFC ERGO",
-    "Bajaj Allianz",
-    "Royal Sundaram",
-    "Future Generali",
-    "Digit",
-    "SBI General",
-    "Universal Sompo",
-  ];
-
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
@@ -30,23 +16,15 @@ export default function CompaniesViewPage() {
         const res = await fetch("/api/renewals/companies", { cache: "no-store" });
         const data = await res.json();
         if (res.ok && data.companyStats) {
-          // Normalize and map results
-          const mapped = targetCompanies.map((name) => {
-            // Find match in SQL result
-            const match = data.companyStats.find((row) =>
-              String(row.company || "")
-                .toLowerCase()
-                .includes(name.toLowerCase()),
-            );
-            return {
-              name,
-              total: match ? match.total : 0,
-              due: match ? match.due : 0,
-              renewed: match ? match.renewed : 0,
-              lost: match ? match.lost : 0,
-            };
-          });
-          setCompanyData(mapped);
+          setCompanyData(
+            data.companyStats.map((row) => ({
+              name: row.company || "Other",
+              total: row.total || 0,
+              due: row.due || 0,
+              renewed: row.renewed || 0,
+              lost: row.lost || 0,
+            })),
+          );
         }
       } catch (error) {
         console.error("Failed to load company stats:", error);
@@ -62,19 +40,18 @@ export default function CompaniesViewPage() {
   };
 
   const renderCompanyLogo = (name) => {
-    const logos = {
-      "ICICI Lombard": "/logo/icici-lombard-general-insurance.svg",
-      "TATA AIG": "/logo/tata-aig-general-insurance.png",
-      "New India": "/logo/new-india-assurance.svg",
-      "IFFCO Tokio": "/logo/iffco-tokio-general-insurance.svg",
-      "HDFC ERGO": "/logo/hdfc-ergo-general-insurance.svg",
-      "Bajaj Allianz": "/logo/bajaj-allianz-general-insurance.svg",
-      "Royal Sundaram": "/logo/royal-sundaram-general-insurance.png",
-      "Future Generali": "/logo/future-generali-logo.png",
-      "SBI General": "/logo/sbi-general-insurance.png",
-    };
-
-    const src = logos[name];
+    const normalizedName = String(name || "").toLowerCase();
+    const src = [
+      ["icici lombard", "/logo/icici-lombard-general-insurance.svg"],
+      ["tata aig", "/logo/tata-aig-general-insurance.png"],
+      ["new india", "/logo/new-india-assurance.svg"],
+      ["iffco tokio", "/logo/iffco-tokio-general-insurance.svg"],
+      ["hdfc ergo", "/logo/hdfc-ergo-general-insurance.svg"],
+      ["bajaj allianz", "/logo/bajaj-allianz-general-insurance.svg"],
+      ["royal sundaram", "/logo/royal-sundaram-general-insurance.png"],
+      ["generali", "/logo/future-generali-logo.png"],
+      ["sbi general", "/logo/sbi-general-insurance.png"],
+    ].find(([company]) => normalizedName.includes(company))?.[1];
     if (src) {
       return (
         <div
@@ -99,7 +76,7 @@ export default function CompaniesViewPage() {
       );
     }
 
-    if (name === "Digit") {
+    if (normalizedName.includes("digit")) {
       return (
         <div
           style={{
@@ -122,7 +99,7 @@ export default function CompaniesViewPage() {
       );
     }
 
-    if (name === "Universal Sompo") {
+    if (normalizedName.includes("universal sompo")) {
       return (
         <div
           style={{

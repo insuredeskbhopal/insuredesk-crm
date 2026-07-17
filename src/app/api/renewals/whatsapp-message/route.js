@@ -5,6 +5,7 @@ import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
+import { withRenewalCompanyDisplay } from "@/lib/renewals/companies";
 
 export const runtime = "nodejs";
 
@@ -89,7 +90,9 @@ export async function POST(request) {
       activePolicies = [mainPolicy];
     }
 
-    const normalized = activePolicies.map((p) => withRenewalPolicyDisplay(normalizeRecord(p)));
+    const normalized = activePolicies.map((p) =>
+      withRenewalCompanyDisplay(withRenewalPolicyDisplay(normalizeRecord(p))),
+    );
 
     // 3. Filter to active due policies in the 30-day window
     const today = new Date();
@@ -115,7 +118,7 @@ export async function POST(request) {
         : normalized.length > 0
           ? normalized
           : mainPolicy
-            ? [withRenewalPolicyDisplay(normalizeRecord(mainPolicy))]
+            ? [withRenewalCompanyDisplay(withRenewalPolicyDisplay(normalizeRecord(mainPolicy)))]
             : [];
 
     if (targetList.length === 0) {

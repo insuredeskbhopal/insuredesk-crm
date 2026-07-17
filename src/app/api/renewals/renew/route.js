@@ -4,6 +4,7 @@ import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { normalizeRecord } from "@/lib/records";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { withRenewalCompanyDisplay } from "@/lib/renewals/companies";
 
 export const runtime = "nodejs";
 
@@ -95,7 +96,7 @@ export async function POST(request) {
       metadata: { uploadRequired: true },
     });
 
-    return Response.json(normalizeRecord(result), { status: 201 });
+    return Response.json(withRenewalCompanyDisplay(normalizeRecord(result)), { status: 201 });
   } catch (error) {
     console.error("Policy renewal failed:", error);
     return Response.json({ error: "Policy renewal failed. Please try again." }, { status: 500 });
