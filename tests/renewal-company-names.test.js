@@ -12,7 +12,12 @@ describe("renewal insurance company names", () => {
     ["ICICI Lombard", "ICICI Lombard General Insurance Company Limited"],
     ["HDFC", "HDFC ERGO General Insurance Company Limited"],
     ["Future", "Generali Central Insurance Company Limited"],
+    ["IFFCO", "IFFCO Tokio General Insurance Company Limited"],
+    ["RELIANCE", "Reliance General Insurance Company Limited"],
+    ["SHRIRAM", "Shriram General Insurance Company Limited"],
+    ["SHRIRAM GENERAL INSURANCE COMPANY LIMITED", "Shriram General Insurance Company Limited"],
     ["UNITED", "United India Insurance Company Limited"],
+    ["UNITED INDIA", "United India Insurance Company Limited"],
     ["Go digit", "Go Digit General Insurance Limited"],
   ])("normalizes %s to one canonical renewal name", (input, expected) => {
     expect(normalizeRenewalInsuranceCompany(input)).toBe(expected);

@@ -11,7 +11,14 @@ const RENEWAL_SHORT_ALIASES = new Map(
     ["Future", "Generali Central Insurance Company Limited"],
     ["HDFC", "HDFC ERGO General Insurance Company Limited"],
     ["ICICI", "ICICI Lombard General Insurance Company Limited"],
+    ["IFFCO", "IFFCO Tokio General Insurance Company Limited"],
+    ["Reliance", "Reliance General Insurance Company Limited"],
+    ["Reliance General", "Reliance General Insurance Company Limited"],
+    ["Shriram", "Shriram General Insurance Company Limited"],
+    ["Shriram General", "Shriram General Insurance Company Limited"],
+    ["Shriram General Insurance Company Limited", "Shriram General Insurance Company Limited"],
     ["UNITED", "United India Insurance Company Limited"],
+    ["UNITED INDIA", "United India Insurance Company Limited"],
   ].map(([alias, company]) => [normalizeCompanyToken(alias), company]),
 );
 
