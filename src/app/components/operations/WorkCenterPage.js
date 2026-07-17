@@ -304,7 +304,7 @@ function TaskList({ tasks, onComplete, onUpdated, loading }) {
       ))}
     </div>
     {quoteTask ? (
-      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md">
+      <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md">
         <form onSubmit={saveQuote} className="w-full max-w-lg rounded-3xl border border-white/60 bg-white p-6 shadow-2xl">
           <div className="flex items-start justify-between gap-4">
             <div><p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Client quotation</p><h2 className="mt-1 text-xl font-bold text-slate-900">{quoteTask.customerName || "Client"}</h2><p className="mt-1 text-xs text-slate-500">{quoteTask.policyNumber || "New policy request"}</p></div>

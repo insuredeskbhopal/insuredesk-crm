@@ -947,7 +947,7 @@ export default function WhatsAppSetupPage() {
 
       {/* DISCONNECT CONFIRMATION MODAL */}
       {showDisconnectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+        <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
           <div 
             className="bg-white rounded-2xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl text-center transform scale-100 transition-all"
             role="dialog"

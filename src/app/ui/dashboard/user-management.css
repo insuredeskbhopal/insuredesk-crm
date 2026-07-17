@@ -966,7 +966,7 @@
   }
 
   .user-form-modal-backdrop {
-    align-items: end;
+    align-items: center;
     padding: 14px;
   }
 
@@ -1023,4 +1023,3 @@
     grid-template-columns: 1fr;
   }
 }
-

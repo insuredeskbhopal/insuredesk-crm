@@ -1455,11 +1455,13 @@
 .claims-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 10000;
   display: grid;
   place-items: center;
   padding: 20px;
   background: rgba(15, 23, 42, 0.36);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .claims-detail-grid {
@@ -2023,4 +2025,3 @@
     grid-template-columns: 1fr;
   }
 }
-

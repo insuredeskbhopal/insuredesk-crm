@@ -143,7 +143,7 @@ export function PolicyDetailModal({ policy, onClose, onStartClaim, onServiceRequ
   ].filter(([, value]) => value && value !== "Not available");
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md" role="dialog" aria-modal="true">
       <div className="flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl">
         <div className="flex items-start justify-between bg-gradient-to-r from-emerald-900 to-teal-700 p-6 text-white [&_*]:!text-white [&_svg]:!stroke-white">
           <div>
@@ -227,7 +227,7 @@ function RequestModal({ request, policies, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md" role="dialog" aria-modal="true">
       <form onSubmit={submit} className="w-full max-w-lg rounded-3xl border border-white/60 bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between">
           <div><p className="text-[10px] font-bold uppercase text-emerald-700">Client service request</p><h2 className="mt-1 text-lg font-bold text-slate-900">{REQUEST_LABELS[request.type]}</h2></div>

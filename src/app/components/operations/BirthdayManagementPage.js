@@ -917,7 +917,7 @@ export default function BirthdayManagementPage() {
       {/* IMPORT EXCEL MODAL */}
       {isImportModalOpen && typeof window !== "undefined" && createPortal(
         <div 
-          className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[10050] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => {
             setIsImportModalOpen(false);
             setImportFile(null);
@@ -1152,7 +1152,7 @@ export default function BirthdayManagementPage() {
       {/* WHATSAPP GREETINGS MODAL */}
       {isGreetingModalOpen && greetingTarget && typeof window !== "undefined" && createPortal(
         <div 
-          className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[10050] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setIsGreetingModalOpen(false)}
         >
           <div 
