@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Phone, MessageSquare, AlertCircle } from "lucide-react";
 import { formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
+import ModalPortal from "@/app/components/shared/ModalPortal";
 
 export default function FollowUpsPage() {
   // Data state
@@ -332,7 +333,8 @@ export default function FollowUpsPage() {
 
       {/* MODAL: Reschedule Follow-Up */}
       {remarkModalOpen && selectedPolicy && (
-        <div className="tb-modal-backdrop" onClick={() => setRemarkModalOpen(false)}>
+        <ModalPortal>
+          <div className="tb-modal-backdrop" onClick={() => setRemarkModalOpen(false)}>
           <div className="tb-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
             <div className="tb-modal-header">
               <h3>Reschedule Follow-Up</h3>
@@ -425,7 +427,8 @@ export default function FollowUpsPage() {
               </div>
             </form>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
     </div>
   );

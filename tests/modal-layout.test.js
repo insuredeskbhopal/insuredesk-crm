@@ -9,11 +9,20 @@ const cssRule = (css, selector) => {
 };
 
 describe("modal layout contract", () => {
-  it("keeps fixed dialogs relative to the viewport", () => {
+  it("keeps dashboard content from creating a fixed-position containing block", () => {
     const globals = read("src/app/globals.css");
+    const shell = read("src/app/ui/dashboard/shell-and-upload.css");
     const pageIn = globals.slice(globals.indexOf("@keyframes page-in"), globals.indexOf("@media (prefers-reduced-motion"));
+    const contentCanvas = cssRule(shell, ".content-canvas");
 
     expect(pageIn).not.toContain("transform:");
+    expect(contentCanvas).not.toMatch(/(?:animation|transform|filter|contain|will-change)\s*:/);
+  });
+
+  it("provides one document-body portal for focus-taking floating cards", () => {
+    const portal = read("src/app/components/shared/ModalPortal.js");
+    expect(portal).toContain('import { createPortal } from "react-dom"');
+    expect(portal).toContain("createPortal(children, document.body)");
   });
 
   it("centers and blurs shared dashboard modal backdrops above the chrome", () => {
@@ -45,6 +54,36 @@ describe("modal layout contract", () => {
         expect(line, file).toContain("justify-center");
         expect(line, file).toContain("backdrop-blur-md");
       }
+    }
+  });
+
+  it("portals every modal-bearing surface above its layout ancestors", () => {
+    const modalFiles = [
+      "src/app/ui/dashboard.js",
+      "src/app/components/layout/SideNav.tsx",
+      "src/app/components/layout/TopBar.tsx",
+      "src/app/components/operations/BirthdayManagementPage.js",
+      "src/app/components/operations/ClaimsManagementPage.js",
+      "src/app/components/operations/ClientManagementPage.js",
+      "src/app/components/operations/WhatsAppSetupPage.js",
+      "src/app/components/operations/WorkCenterPage.js",
+      "src/app/components/operations/claims/modals.js",
+      "src/app/components/shared/PolicyDetailCard.js",
+      "src/app/components/users/UserManagement.js",
+      "src/app/client/portal/ClientExperienceCenter.js",
+      "src/app/(dashboard)/dashboard/manual-entry/customer-profiling/page.js",
+      "src/app/(dashboard)/dashboard/manual-entry/customer-profiling/[id]/page.js",
+      "src/app/(dashboard)/dashboard/renewals/customers/page.js",
+      "src/app/(dashboard)/dashboard/renewals/customers/[id]/page.js",
+      "src/app/(dashboard)/dashboard/renewals/daily-work/page.js",
+      "src/app/(dashboard)/dashboard/renewals/follow-ups/page.js",
+      "src/app/(dashboard)/dashboard/renewals/layout.js",
+    ];
+
+    for (const file of modalFiles) {
+      const source = read(file);
+      const usesPortal = source.includes("<ModalPortal>") || (source.includes("createPortal(") && source.includes("document.body"));
+      expect(usesPortal, `${file} must render modals under document.body`).toBe(true);
     }
   });
 

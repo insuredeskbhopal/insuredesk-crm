@@ -338,7 +338,6 @@
   margin-left: 240px;
   padding-top: 48px;
   background: transparent;
-  animation: page-in 260ms var(--motion-soft) both;
 }
 
 .page-inner {
@@ -1471,4 +1470,3 @@ label span em {
   font-weight: 800;
   padding: 0 8px;
 }
-

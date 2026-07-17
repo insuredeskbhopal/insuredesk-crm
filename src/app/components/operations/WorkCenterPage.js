@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
+import ModalPortal from "@/app/components/shared/ModalPortal";
 
 const VIEWS = ["Agenda", "Day", "Week", "Month", "Timeline", "Team Workload"];
 const STATUS_LABELS = {
@@ -304,28 +305,30 @@ function TaskList({ tasks, onComplete, onUpdated, loading }) {
       ))}
     </div>
     {quoteTask ? (
-      <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md">
-        <form onSubmit={saveQuote} className="w-full max-w-lg rounded-3xl border border-white/60 bg-white p-6 shadow-2xl">
-          <div className="flex items-start justify-between gap-4">
-            <div><p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Client quotation</p><h2 className="mt-1 text-xl font-bold text-slate-900">{quoteTask.customerName || "Client"}</h2><p className="mt-1 text-xs text-slate-500">{quoteTask.policyNumber || "New policy request"}</p></div>
-            <button type="button" onClick={() => setQuoteTask(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-lg text-slate-600">×</button>
-          </div>
-          {quoteError ? <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600">{quoteError}</div> : null}
-          <div className="mt-5 space-y-4">
-            <label className="block text-xs font-bold text-slate-600">Quotation amount
-              <input type="number" min="1" step="0.01" required value={quoteForm.quoteAmount} onChange={(event) => setQuoteForm({ ...quoteForm, quoteAmount: event.target.value })} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" placeholder="Premium amount" />
-            </label>
-            <label className="block text-xs font-bold text-slate-600">Agent note
-              <textarea value={quoteForm.quoteNote} onChange={(event) => setQuoteForm({ ...quoteForm, quoteNote: event.target.value })} className="mt-1.5 min-h-24 w-full rounded-xl border border-slate-200 p-3 text-sm" placeholder="Coverage summary, insurer, validity, or next steps" />
-            </label>
-            <label className="block text-xs font-bold text-slate-600">Secure payment link <span className="font-normal text-slate-400">(add only after client requests it)</span>
-              <input type="url" value={quoteForm.paymentLink} onChange={(event) => setQuoteForm({ ...quoteForm, paymentLink: event.target.value })} disabled={!quoteTask.metadata?.paymentRequested} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" placeholder={quoteTask.metadata?.paymentRequested ? "https://..." : "Waiting for client request"} />
-            </label>
-            {quoteTask.metadata?.paymentRequested ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-bold text-amber-700">The client has requested a payment link for this quotation.</p> : null}
-          </div>
-          <button disabled={savingQuote} className="mt-5 h-11 w-full rounded-xl bg-emerald-600 text-sm font-bold !text-white force-white disabled:opacity-50">{savingQuote ? "Saving..." : "Publish quotation to client"}</button>
-        </form>
-      </div>
+      <ModalPortal>
+        <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md">
+          <form onSubmit={saveQuote} className="w-full max-w-lg rounded-3xl border border-white/60 bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div><p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Client quotation</p><h2 className="mt-1 text-xl font-bold text-slate-900">{quoteTask.customerName || "Client"}</h2><p className="mt-1 text-xs text-slate-500">{quoteTask.policyNumber || "New policy request"}</p></div>
+              <button type="button" onClick={() => setQuoteTask(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-lg text-slate-600">×</button>
+            </div>
+            {quoteError ? <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600">{quoteError}</div> : null}
+            <div className="mt-5 space-y-4">
+              <label className="block text-xs font-bold text-slate-600">Quotation amount
+                <input type="number" min="1" step="0.01" required value={quoteForm.quoteAmount} onChange={(event) => setQuoteForm({ ...quoteForm, quoteAmount: event.target.value })} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" placeholder="Premium amount" />
+              </label>
+              <label className="block text-xs font-bold text-slate-600">Agent note
+                <textarea value={quoteForm.quoteNote} onChange={(event) => setQuoteForm({ ...quoteForm, quoteNote: event.target.value })} className="mt-1.5 min-h-24 w-full rounded-xl border border-slate-200 p-3 text-sm" placeholder="Coverage summary, insurer, validity, or next steps" />
+              </label>
+              <label className="block text-xs font-bold text-slate-600">Secure payment link <span className="font-normal text-slate-400">(add only after client requests it)</span>
+                <input type="url" value={quoteForm.paymentLink} onChange={(event) => setQuoteForm({ ...quoteForm, paymentLink: event.target.value })} disabled={!quoteTask.metadata?.paymentRequested} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" placeholder={quoteTask.metadata?.paymentRequested ? "https://..." : "Waiting for client request"} />
+              </label>
+              {quoteTask.metadata?.paymentRequested ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-bold text-amber-700">The client has requested a payment link for this quotation.</p> : null}
+            </div>
+            <button disabled={savingQuote} className="mt-5 h-11 w-full rounded-xl bg-emerald-600 text-sm font-bold !text-white force-white disabled:opacity-50">{savingQuote ? "Saving..." : "Publish quotation to client"}</button>
+          </form>
+        </div>
+      </ModalPortal>
     ) : null}
     </>
   );

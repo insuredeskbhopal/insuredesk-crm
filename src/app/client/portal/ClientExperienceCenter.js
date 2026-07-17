@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import ModalPortal from "@/app/components/shared/ModalPortal";
 import {
   AlertCircle,
   ArrowRight,
@@ -143,7 +144,8 @@ export function PolicyDetailModal({ policy, onClose, onStartClaim, onServiceRequ
   ].filter(([, value]) => value && value !== "Not available");
 
   return (
-    <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md" role="dialog" aria-modal="true">
+    <ModalPortal>
+      <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md" role="dialog" aria-modal="true">
       <div className="flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl">
         <div className="flex items-start justify-between bg-gradient-to-r from-emerald-900 to-teal-700 p-6 text-white [&_*]:!text-white [&_svg]:!stroke-white">
           <div>
@@ -189,7 +191,8 @@ export function PolicyDetailModal({ policy, onClose, onStartClaim, onServiceRequ
           <button type="button" onClick={() => onStartClaim(policy)} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white force-white">Start a claim</button>
         </div>
       </div>
-    </div>
+      </div>
+    </ModalPortal>
   );
 }
 
@@ -227,7 +230,8 @@ function RequestModal({ request, policies, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md" role="dialog" aria-modal="true">
+    <ModalPortal>
+      <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md" role="dialog" aria-modal="true">
       <form onSubmit={submit} className="w-full max-w-lg rounded-3xl border border-white/60 bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between">
           <div><p className="text-[10px] font-bold uppercase text-emerald-700">Client service request</p><h2 className="mt-1 text-lg font-bold text-slate-900">{REQUEST_LABELS[request.type]}</h2></div>
@@ -250,7 +254,8 @@ function RequestModal({ request, policies, onClose, onSaved }) {
         </div>
         <button disabled={saving} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-xs font-bold text-white force-white disabled:opacity-50">{saving ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />} Submit request</button>
       </form>
-    </div>
+      </div>
+    </ModalPortal>
   );
 }
 

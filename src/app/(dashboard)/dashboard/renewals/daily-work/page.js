@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { AlertCircle, MoreVertical, Eye, CheckCircle, XCircle, PlusCircle } from "lucide-react";
+import ModalPortal from "@/app/components/shared/ModalPortal";
 
 const CLOSED_RENEWAL_STATUSES = new Set([
   "RENEWED",
@@ -658,7 +659,8 @@ export default function DailyWorkPage() {
 
       {/* MODAL: Log Follow-Up / Remark */}
       {remarkModalOpen && selectedPolicy && (
-        <div className="tb-modal-backdrop" onClick={() => setRemarkModalOpen(false)}>
+        <ModalPortal>
+          <div className="tb-modal-backdrop" onClick={() => setRemarkModalOpen(false)}>
           <div className="tb-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
             <div className="tb-modal-header">
               <h3>Log Follow-Up & Remark</h3>
@@ -767,12 +769,14 @@ export default function DailyWorkPage() {
               </div>
             </form>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {/* MODAL: Renew Policy */}
       {renewModalOpen && selectedPolicy && (
-        <div className="tb-modal-backdrop" onClick={() => setRenewModalOpen(false)}>
+        <ModalPortal>
+          <div className="tb-modal-backdrop" onClick={() => setRenewModalOpen(false)}>
           <div className="tb-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
             <div className="tb-modal-header">
               <h3>Renew Policy</h3>
@@ -816,12 +820,14 @@ export default function DailyWorkPage() {
               </div>
             </form>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {/* MODAL: Mark Lost */}
       {lostModalOpen && selectedPolicy && (
-        <div className="tb-modal-backdrop" onClick={() => setLostModalOpen(false)}>
+        <ModalPortal>
+          <div className="tb-modal-backdrop" onClick={() => setLostModalOpen(false)}>
           <div className="tb-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
             <div className="tb-modal-header">
               <h3 style={{ color: "var(--rn-danger)" }}>Mark Renewal as Lost</h3>
@@ -880,7 +886,8 @@ export default function DailyWorkPage() {
               </div>
             </form>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
     </div>
   );

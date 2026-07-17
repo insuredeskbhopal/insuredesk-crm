@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
+import ModalPortal from "@/app/components/shared/ModalPortal";
 import {
   Smartphone,
   CheckCircle2,
@@ -947,40 +948,42 @@ export default function WhatsAppSetupPage() {
 
       {/* DISCONNECT CONFIRMATION MODAL */}
       {showDisconnectModal && (
-        <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
-          <div 
-            className="bg-white rounded-2xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl text-center transform scale-100 transition-all"
-            role="dialog"
-            aria-modal="true"
-          >
-            <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto mb-4 text-rose-600">
-              <AlertTriangle className="w-6 h-6 animate-pulse" />
-            </div>
-            
-            <h3 className="text-base font-bold text-slate-900 mb-2">Disconnect WhatsApp?</h3>
-            <p className="text-xs text-slate-500 leading-relaxed mb-6 font-semibold">
-              Are you sure you want to disconnect your WhatsApp session? This will stop all scheduled messages until you re-link.
-            </p>
-            
-            <div className="flex gap-2.5 justify-center">
-              <button
-                type="button"
-                onClick={() => setShowDisconnectModal(false)}
-                className="px-4 py-2 border border-slate-350 rounded-lg text-xs font-semibold hover:bg-slate-50 text-slate-700 bg-white transition shadow-sm"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="px-4 py-2 bg-gradient-to-r from-rose-600 to-red-650 hover:from-rose-700 hover:to-red-700 text-white font-bold rounded-lg text-xs shadow-md transition disabled:opacity-50"
-              >
-                {isLoggingOut ? "Disconnecting..." : "Disconnect"}
-              </button>
+        <ModalPortal>
+          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+            <div
+              className="bg-white rounded-2xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl text-center transform scale-100 transition-all"
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto mb-4 text-rose-600">
+                <AlertTriangle className="w-6 h-6 animate-pulse" />
+              </div>
+
+              <h3 className="text-base font-bold text-slate-900 mb-2">Disconnect WhatsApp?</h3>
+              <p className="text-xs text-slate-500 leading-relaxed mb-6 font-semibold">
+                Are you sure you want to disconnect your WhatsApp session? This will stop all scheduled messages until you re-link.
+              </p>
+
+              <div className="flex gap-2.5 justify-center">
+                <button
+                  type="button"
+                  onClick={() => setShowDisconnectModal(false)}
+                  className="px-4 py-2 border border-slate-350 rounded-lg text-xs font-semibold hover:bg-slate-50 text-slate-700 bg-white transition shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="px-4 py-2 bg-gradient-to-r from-rose-600 to-red-650 hover:from-rose-700 hover:to-red-700 text-white font-bold rounded-lg text-xs shadow-md transition disabled:opacity-50"
+                >
+                  {isLoggingOut ? "Disconnecting..." : "Disconnect"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
     </div>
   );

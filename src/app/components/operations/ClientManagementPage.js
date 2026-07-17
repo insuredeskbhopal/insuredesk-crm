@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ModalPortal from "@/app/components/shared/ModalPortal";
 import {
   Users,
   Search,
@@ -628,7 +629,8 @@ export default function ClientManagementPage() {
 
       {/* CREATE & EDIT MODALS */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
+        <ModalPortal>
+          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
           {/* Backdrop blur with overlay mask */}
           <div
             className="client-management-modal-backdrop absolute inset-0"
@@ -737,11 +739,13 @@ export default function ClientManagementPage() {
               </div>
             </form>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {resolutionRequest && (
-        <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
+        <ModalPortal>
+          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
           <button
             type="button"
             aria-label="Close Client ID resolution"
@@ -832,11 +836,13 @@ export default function ClientManagementPage() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {decisionRequest && (
-        <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
+        <ModalPortal>
+          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
           <button type="button" aria-label="Close decision dialog" className="client-management-modal-backdrop absolute inset-0" onClick={() => setDecisionRequest(null)} />
           <div className="relative w-full max-w-lg rounded-2xl border border-white/70 bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -860,11 +866,13 @@ export default function ClientManagementPage() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {correctionRequest && (
-        <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
+        <ModalPortal>
+          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
           <button type="button" aria-label="Close correction panel" className="client-management-modal-backdrop absolute inset-0" onClick={() => setCorrectionRequest(null)} />
           <div className="relative w-full max-w-lg rounded-2xl border border-white/70 bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -885,7 +893,8 @@ export default function ClientManagementPage() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
     </div>
   );

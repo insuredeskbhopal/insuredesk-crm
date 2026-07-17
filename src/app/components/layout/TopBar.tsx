@@ -15,6 +15,7 @@ import {
   Menu,
 } from "lucide-react";
 import SearchBox from "@/app/components/shared/SearchBox";
+import ModalPortal from "@/app/components/shared/ModalPortal";
 import BrandLogo from "@/app/components/brand/BrandLogo";
 import { cachedJson } from "@/app/lib/client-api";
 import Link from "next/link";
@@ -393,7 +394,8 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
 
       {/* Diagnostics Modal */}
       {showDiagnosticsModal && (
-        <div className="tb-modal-backdrop" onClick={() => setShowDiagnosticsModal(false)}>
+        <ModalPortal>
+          <div className="tb-modal-backdrop" onClick={() => setShowDiagnosticsModal(false)}>
           <div className="tb-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="tb-modal-header">
               <h3 className="tb-status-title tb-modal-title">🔍 System Diagnostics</h3>
@@ -485,12 +487,14 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
               Done
             </button>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (
-        <div className="tb-modal-backdrop" onClick={() => setShowLogoutModal(false)}>
+        <ModalPortal>
+          <div className="tb-modal-backdrop" onClick={() => setShowLogoutModal(false)}>
           <div className="tb-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="tb-modal-header">
               <h3 className="tb-status-title tb-modal-title">Confirm Logout</h3>
@@ -532,7 +536,8 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
               </button>
             </div>
           </div>
-        </div>
+          </div>
+        </ModalPortal>
       )}
 
       {/* Toast Notification */}

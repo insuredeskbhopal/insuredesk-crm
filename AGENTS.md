@@ -2,6 +2,8 @@
 
 - **Overlay Alignment**: All modal cards, dialog overlays, and popup blocks must be perfectly centered both vertically and horizontally.
 - **Backdrop Styling**: The background page behind any active overlay must be visually blurred using backdrop blur classes (e.g., `backdrop-blur-sm` or `backdrop-blur-md` in Tailwind) and overlay masks to ensure the active card is visually separated and stands out.
+- **Viewport Portal Required**: Every focus-taking modal, confirmation, detail card, or form overlay must render under `document.body` through `src/app/components/shared/ModalPortal.js` (existing direct `createPortal(..., document.body)` implementations are also valid). Never leave a modal nested inside `.content-canvas`, `.page-inner`, a panel, table, or card.
+- **Above Dashboard Chrome**: Modal backdrops must cover the complete viewport and layer above the sidebar and header. Dropdown menus, tooltips, toasts, and intentionally edge-aligned drawers are not centered dialogs and are excluded from this rule.
 
 # Motor Policy Extraction Guidelines
 
