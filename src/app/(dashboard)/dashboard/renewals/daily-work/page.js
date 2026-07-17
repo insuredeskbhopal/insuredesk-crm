@@ -81,7 +81,7 @@ export default function DailyWorkPage() {
       // We will pull:
       // - Upcoming policies (limit 100)
       // - Overdue followups
-      const policiesRes = await fetch("/api/renewals/policies?tab=all&limit=100", { cache: "no-store" });
+      const policiesRes = await fetch("/api/renewals/policies?tab=all&limit=500", { cache: "no-store" });
       const policiesData = await policiesRes.json();
 
       if (policiesRes.ok && policiesData.policies) {

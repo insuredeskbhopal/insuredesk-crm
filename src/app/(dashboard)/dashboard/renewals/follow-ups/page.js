@@ -27,7 +27,7 @@ export default function FollowUpsPage() {
     try {
       setLoading(true);
       // Fetch all active policies in the renewal window
-      const res = await fetch("/api/renewals/policies?tab=all&limit=200", { cache: "no-store" });
+      const res = await fetch("/api/renewals/policies?tab=all&limit=500", { cache: "no-store" });
       const data = await res.json();
       if (res.ok && data.policies) {
         // Filter out policies that have a scheduled follow-up date and are not renewed/lost

@@ -55,8 +55,10 @@ export async function POST(request) {
     if (!expiryDate || isNaN(new Date(expiryDate).getTime())) {
       return Response.json({ error: "Valid Expiry Date is required." }, { status: 400 });
     }
-    if (!premium || isNaN(parseFloat(String(premium)))) {
-      return Response.json({ error: "Premium must be a valid number." }, { status: 400 });
+    const premiumProvided = premium !== undefined && premium !== null && String(premium).trim() !== "";
+    const parsedPremium = premiumProvided ? Number(String(premium).replace(/[^0-9.-]/g, "")) : null;
+    if (premiumProvided && (!Number.isFinite(parsedPremium) || parsedPremium < 0)) {
+      return Response.json({ error: "Premium must be a valid non-negative number." }, { status: 400 });
     }
 
     // Phone validation & normalization
@@ -88,10 +90,11 @@ export async function POST(request) {
       return Response.json({ error: "Policy record not found or access denied" }, { status: 404 });
     }
 
-    const oldData = policy.reviewedData || policy.data || {};
+    const oldData = { ...(policy.data || {}), ...(policy.reviewedData || {}) };
 
     // Parse old values
     const oldInsuredName = oldData.insuredName || "";
+    const oldContactPersonName = oldData.contactPersonName || oldData.contactPerson || "";
     const oldContactNumber = oldData.contactNumber || oldData.customerMobile || "";
     const oldPolicyNumber = oldData.policyNumber || "";
     const oldInsuranceCompany = policy.selectedCompany || oldData.insuranceCompany || "";
@@ -101,6 +104,10 @@ export async function POST(request) {
     const oldAssignedTo = oldData.assignedTo || "";
     const oldAssignedToId = oldData.assignedToId || "";
     const oldStatus = policy.renewalStatus || "ACTIVE";
+    const finalContactPersonName = contactPersonName === undefined
+      ? String(oldContactPersonName).trim()
+      : String(contactPersonName || "").trim();
+    const finalPremium = premiumProvided ? parsedPremium : oldPremium;
 
     // Calculate changes
     const changes = [];
@@ -109,6 +116,13 @@ export async function POST(request) {
     }
     if (cleanPhone !== String(oldContactNumber).trim()) {
       changes.push({ field: "Customer Phone", oldValue: oldContactNumber || "N/A", newValue: cleanPhone });
+    }
+    if (finalContactPersonName !== String(oldContactPersonName).trim()) {
+      changes.push({
+        field: "Contact Person Name",
+        oldValue: oldContactPersonName || "N/A",
+        newValue: finalContactPersonName || "N/A",
+      });
     }
     if (String(policyNumber).trim() !== String(oldPolicyNumber).trim()) {
       changes.push({ field: "Policy Number", oldValue: oldPolicyNumber || "N/A", newValue: policyNumber });
@@ -123,11 +137,14 @@ export async function POST(request) {
     if (String(policyType).trim() !== String(oldPolicyType).trim()) {
       changes.push({ field: "Policy Type", oldValue: oldPolicyType || "N/A", newValue: policyType });
     }
-    if (parseFloat(String(premium)) !== parseFloat(String(oldPremium))) {
+    if (premiumProvided && parsedPremium !== Number(String(oldPremium).replace(/[^0-9.-]/g, ""))) {
       changes.push({ field: "Premium", oldValue: String(oldPremium || 0), newValue: String(premium) });
     }
 
-    const formattedOldExpiry = oldExpiryDate ? new Date(oldExpiryDate).toISOString().split("T")[0] : "";
+    const parsedOldExpiry = oldExpiryDate ? new Date(oldExpiryDate) : null;
+    const formattedOldExpiry = parsedOldExpiry && !Number.isNaN(parsedOldExpiry.getTime())
+      ? parsedOldExpiry.toISOString().split("T")[0]
+      : String(oldExpiryDate || "");
     const formattedNewExpiry = new Date(expiryDate).toISOString().split("T")[0];
     if (formattedNewExpiry !== formattedOldExpiry) {
       changes.push({
@@ -250,15 +267,15 @@ export async function POST(request) {
     const updatedPayload = {
       ...oldData,
       insuredName,
-      contactPerson: contactPersonName || "",
-      contactPersonName: contactPersonName || "",
+      contactPerson: finalContactPersonName,
+      contactPersonName: finalContactPersonName,
       contactNumber: cleanPhone,
       customerMobile: cleanPhone,
       policyNumber,
       insuranceCompany,
       policyType,
-      premium: parseFloat(String(premium)),
-      totalPremium: parseFloat(String(premium)),
+      premium: finalPremium,
+      totalPremium: finalPremium,
       expiryDate: formattedNewExpiry,
       policyEndDate: formattedNewExpiry,
       assignedTo: newAssignedTo,
@@ -304,7 +321,7 @@ export async function POST(request) {
         await prisma.customerProfile.update({
           where: { id: profile.id },
           data: {
-            contactPersonName: contactPersonName || null,
+            contactPersonName: finalContactPersonName || null,
             updatedById: actorId,
           },
         });
@@ -314,7 +331,7 @@ export async function POST(request) {
           data: {
             name: insuredName || "Unnamed Customer",
             phone: cleanPhone,
-            contactPersonName: contactPersonName || null,
+            contactPersonName: finalContactPersonName || null,
             organizationId: user.organizationId,
             createdById: actorId,
             updatedById: actorId,

@@ -27,6 +27,7 @@ export async function GET(request, props) {
       return Response.json({ error: "Phone number parameter is required" }, { status: 400 });
     }
     const cleanPhone = String(phone).replace(/[^0-9]/g, "");
+    const requestedPolicyId = new URL(request.url).searchParams.get("policyId") || "";
 
     const isSuperAdmin = user.role === "SUPER_ADMIN";
     const orgId = user.organizationId || null;
@@ -147,25 +148,26 @@ export async function GET(request, props) {
 
     let policies = allPolicies.filter(isOpenRenewalPolicy).sort(sortByDaysLeftAscending);
 
-    // Fallback: if phone search found nothing, try fetching by explicit policyId
-    if (policies.length === 0) {
-      const fallbackId = new URL(request.url).searchParams.get("policyId");
-      if (fallbackId) {
-        const fallbackRecord = await prisma.policyRecord.findFirst({
-          where: { id: fallbackId, deletedAt: null, ...(isSuperAdmin ? {} : { organizationId: orgId }) },
-          select: {
-            id: true, savedAt: true, data: true, reviewedData: true, renewalStatus: true,
-            previousPolicyId: true, renewedPolicyId: true, renewalDate: true, lostReason: true,
-            isActivePolicy: true, selectedCompany: true, selectedPolicyType: true, pdfFileName: true,
-            createdAt: true, updatedAt: true, createdBy: { select: { name: true, email: true } },
-          },
-        });
-        if (fallbackRecord) {
-          const normalized = withRenewalPolicyDisplay(normalizeRecord(fallbackRecord));
-          const withWindow = withRenewalWindowDisplay(normalized);
-          policies = isOpenRenewalPolicy(withWindow) ? [await enrichPolicy(withWindow)] : [];
-        }
+    // An explicit policy action must never fall back to another policy for the same phone.
+    // Include the requested record even when it is closed or outside the normal renewal window.
+    let requestedPolicy = requestedPolicyId ? allPolicies.find((policy) => policy.id === requestedPolicyId) : null;
+    if (requestedPolicyId && !requestedPolicy) {
+      const fallbackRecord = await prisma.policyRecord.findFirst({
+        where: { id: requestedPolicyId, deletedAt: null, ...(isSuperAdmin ? {} : { organizationId: orgId }) },
+        select: {
+          id: true, savedAt: true, data: true, reviewedData: true, renewalStatus: true,
+          previousPolicyId: true, renewedPolicyId: true, renewalDate: true, lostReason: true,
+          isActivePolicy: true, selectedCompany: true, selectedPolicyType: true, pdfFileName: true,
+          createdAt: true, updatedAt: true, createdBy: { select: { name: true, email: true } },
+        },
+      });
+      if (fallbackRecord) {
+        const normalized = withRenewalPolicyDisplay(normalizeRecord(fallbackRecord));
+        requestedPolicy = await enrichPolicy(withRenewalWindowDisplay(normalized));
       }
+    }
+    if (requestedPolicy) {
+      policies = [requestedPolicy, ...policies.filter((policy) => policy.id !== requestedPolicy.id)];
     }
 
     // 3. Compute stats

@@ -47,17 +47,41 @@ export async function POST(request) {
     // 1. Fetch matching policies (either single policy or customer policies by phone)
     let targetPolicies = [];
     if (phone) {
+      const cleanPhone = String(phone).replace(/\D/g, "").slice(-10);
+      if (!phone.startsWith("NO-MOBILE-") && cleanPhone.length !== 10) {
+        return Response.json({ error: "A valid 10-digit phone number is required." }, { status: 400 });
+      }
+      const matchedPolicyIds = phone.startsWith("NO-MOBILE-")
+        ? [phone.replace("NO-MOBILE-", "")]
+        : (
+            await prisma.$queryRawUnsafe(
+              `
+                SELECT id
+                FROM pdf_records
+                WHERE deleted_at IS NULL
+                  AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
+                  AND RIGHT(regexp_replace(COALESCE(
+                    reviewed_data->>'contactNumber',
+                    reviewed_data->>'customerMobile',
+                    reviewed_data->>'mobileNumber',
+                    reviewed_data->>'phone',
+                    data->>'contactNumber',
+                    data->>'customerMobile',
+                    data->>'mobileNumber',
+                    data->>'phone',
+                    ''
+                  ), '[^0-9]', '', 'g'), 10) = $3
+              `,
+              isSuperAdmin,
+              orgId,
+              cleanPhone,
+            )
+          ).map((row) => row.id);
       targetPolicies = await prisma.policyRecord.findMany({
         where: {
           deletedAt: null,
           ...(isSuperAdmin ? {} : { organizationId: orgId }),
-          OR: [
-            { reviewedData: { path: ["contactNumber"], string_contains: phone } },
-            { reviewedData: { path: ["customerMobile"], string_contains: phone } },
-            { data: { path: ["contactNumber"], string_contains: phone } },
-            { data: { path: ["customerMobile"], string_contains: phone } },
-            phone.startsWith("NO-MOBILE-") ? { id: phone.replace("NO-MOBILE-", "") } : {},
-          ],
+          id: { in: matchedPolicyIds },
         },
       });
     } else {

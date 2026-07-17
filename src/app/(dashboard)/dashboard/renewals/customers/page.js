@@ -335,7 +335,7 @@ export default function CustomerRenewalsPage() {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const res = await fetch("/api/users");
+        const res = await fetch("/api/renewals/team");
         const data = await res.json();
         if (res.ok && data.users) {
           setTeamMembers(data.users);
@@ -1452,8 +1452,8 @@ export default function CustomerRenewalsPage() {
                         profileAuditLogs.map((log) => {
                           let dotClass = "";
                           if (log.action === "Remark Added") dotClass = "remarked";
-                          if (log.action === "Status Updated") dotClass = "status-updated";
-                          if (log.action === "Policy Renewed") dotClass = "renewed";
+                          if (log.action === "Status Changed") dotClass = "status-updated";
+                          if (log.action === "Marked Renewed") dotClass = "renewed";
                           if (log.action === "Marked Lost") dotClass = "lost";
                           if (log.action === "User Reassigned") dotClass = "reassigned";
 
@@ -1462,11 +1462,10 @@ export default function CustomerRenewalsPage() {
                               <div className={`rn-audit-dot ${dotClass}`} />
                               <div className="rn-audit-header">
                                 <span className="rn-audit-user">{log.userName || "System"}</span>
-                                <span>{formatDate(log.createdAt)}</span>
+                                <span>{formatDate(log.timestamp || log.createdAt)}</span>
                               </div>
                               <div className="rn-audit-body">
                                 <strong>{log.action}</strong>
-                                <span style={{ color: "var(--rn-text-secondary)" }}>{log.detailText}</span>
                                 {log.changes && log.changes.length > 0 && (
                                   <div className="rn-audit-changes">
                                     {log.changes.map((ch, idx) => (

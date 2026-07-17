@@ -147,6 +147,7 @@ export default function CustomerProfilePage(props) {
   });
   const [editForm, setEditForm] = useState({
     insuredName: "",
+    contactPersonName: "",
     contactNumber: "",
     policyNumber: "",
     insuranceCompany: "",
@@ -283,7 +284,7 @@ export default function CustomerProfilePage(props) {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const res = await fetch("/api/users");
+        const res = await fetch("/api/renewals/team");
         const data = await res.json();
         if (res.ok && data.users) {
           setTeamMembers(data.users);
@@ -434,13 +435,20 @@ export default function CustomerProfilePage(props) {
       }
     };
 
+    const contactPersonName = policy.contactPersonName || policy.contactPerson || profile?.contactPerson || "";
+    const premiumValue = policy.premium ?? policy.totalPremium ?? "";
+    const numericPremium = String(premiumValue).replace(/[^0-9.-]/g, "");
+
     setEditForm({
       insuredName: policy.insuredName || "",
+      contactPersonName: ["Contact not available", "Unknown Contact"].includes(contactPersonName)
+        ? ""
+        : contactPersonName,
       contactNumber: policy.contactNumber || "",
       policyNumber: policy.policyNumber || "",
       insuranceCompany: policy.insuranceCompany || "",
       policyType: policy.policyType || "",
-      premium: policy.premium || policy.totalPremium || "",
+      premium: numericPremium && Number.isFinite(Number(numericPremium)) ? numericPremium : "",
       expiryDate: fmtDate(policy.expiryDate),
       assignedToUserId: policy.assignedToId || "",
       renewalStatus: policy.renewalStatus || "ACTIVE",
@@ -697,8 +705,12 @@ export default function CustomerProfilePage(props) {
     const actionKey = `${requestedPolicyId}:${requestedAction}`;
     if (openedRequestedAction.current === actionKey) return;
 
-    const policy = policies.find((item) => item.id === requestedPolicyId) || policies[0];
-    if (!policy) return;
+    const policy = requestedPolicyId ? policies.find((item) => item.id === requestedPolicyId) : policies[0];
+    if (!policy) {
+      openedRequestedAction.current = actionKey;
+      window.alert("The selected renewal policy could not be loaded.");
+      return;
+    }
     openedRequestedAction.current = actionKey;
 
     if (requestedAction === "edit") handleEditRenewal(policy);
@@ -1741,8 +1753,8 @@ export default function CustomerProfilePage(props) {
                         profileAuditLogs.map((log) => {
                           let dotClass = "";
                           if (log.action === "Remark Added") dotClass = "remarked";
-                          if (log.action === "Status Updated") dotClass = "status-updated";
-                          if (log.action === "Policy Renewed") dotClass = "renewed";
+                          if (log.action === "Status Changed") dotClass = "status-updated";
+                          if (log.action === "Marked Renewed") dotClass = "renewed";
                           if (log.action === "Marked Lost") dotClass = "lost";
                           if (log.action === "User Reassigned") dotClass = "reassigned";
 
@@ -1751,11 +1763,10 @@ export default function CustomerProfilePage(props) {
                               <div className={`rn-audit-dot ${dotClass}`} />
                               <div className="rn-audit-header">
                                 <span className="rn-audit-user">{log.userName || "System"}</span>
-                                <span>{formatDate(log.createdAt)}</span>
+                                <span>{formatDate(log.timestamp || log.createdAt)}</span>
                               </div>
                               <div className="rn-audit-body">
                                 <strong>{log.action}</strong>
-                                <span style={{ color: "var(--rn-text-secondary)" }}>{log.detailText}</span>
                                 {log.changes && log.changes.length > 0 && (
                                   <div className="rn-audit-changes">
                                     {log.changes.map((ch, idx) => (
@@ -1961,6 +1972,16 @@ export default function CustomerProfilePage(props) {
                       value={editForm.insuredName}
                       onChange={(e) => setEditForm({ ...editForm, insuredName: e.target.value })}
                       required
+                    />
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Contact Person Name</label>
+                    <input
+                      type="text"
+                      className="rn-input"
+                      style={{ width: "100%", marginTop: "4px" }}
+                      value={editForm.contactPersonName}
+                      onChange={(e) => setEditForm({ ...editForm, contactPersonName: e.target.value })}
                     />
                   </div>
                   <div>
