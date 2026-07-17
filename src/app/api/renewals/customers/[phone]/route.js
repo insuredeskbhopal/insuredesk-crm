@@ -264,7 +264,9 @@ export async function GET(request, props) {
     let enrichedCity = "";
     let enrichedName = "";
 
-    for (const p of policies) {
+    // Contact details belong to the phone portfolio, so include history outside
+    // the current renewal window when choosing the display contact.
+    for (const p of allPolicies) {
       if (!enrichedContactPerson && p.contactPerson) enrichedContactPerson = p.contactPerson;
       if (!enrichedEmail && p.email) enrichedEmail = p.email;
       if (!enrichedName && p.insuredName) enrichedName = p.insuredName;

@@ -69,6 +69,34 @@ describe("renewal action isolation", () => {
     expect(payload.policies.map((policy) => policy.id)).toEqual(["policy-requested", "policy-other"]);
   });
 
+  it("uses policy history outside the renewal window to resolve the portfolio contact", async () => {
+    const correctHistoricalContact = renewalRecord("policy-history", 365, {
+      contactPerson: "Anand Soni",
+    });
+    const duePolicyWithWrongContact = renewalRecord("policy-due", 5, {
+      contactPerson: "Siddharth Chouhan",
+    });
+    prismaMock.$queryRawUnsafe.mockResolvedValue([
+      { id: correctHistoricalContact.id },
+      { id: duePolicyWithWrongContact.id },
+    ]);
+    prismaMock.policyRecord.findMany.mockResolvedValue([
+      correctHistoricalContact,
+      duePolicyWithWrongContact,
+    ]);
+
+    const { GET } = await import("../src/app/api/renewals/customers/[phone]/route.js");
+    const response = await GET(
+      renewalRequest("http://localhost/api/renewals/customers/8818889660"),
+      { params: Promise.resolve({ phone: "8818889660" }) },
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.profile.contactPerson).toBe("Anand Soni");
+    expect(payload.policies.map((policy) => policy.id)).toEqual(["policy-due"]);
+  });
+
   it("preserves contact, premium, and original data when an edit leaves optional fields blank", async () => {
     prismaMock.policyRecord.findFirst.mockResolvedValue({
       id: "policy-1",
@@ -121,7 +149,7 @@ describe("renewal action isolation", () => {
   });
 });
 
-function renewalRecord(id, daysRemaining) {
+function renewalRecord(id, daysRemaining, overrides = {}) {
   return {
     id,
     renewedPolicyId: null,
@@ -135,6 +163,7 @@ function renewalRecord(id, daysRemaining) {
       renewalStatus: "ACTIVE",
       premium: 1000,
       sumInsured: 100000,
+      ...overrides,
     },
   };
 }
