@@ -76,8 +76,8 @@ export default function RenewalPoliciesPage() {
         if (!response.ok) throw new Error(payload.error || "Insurance companies could not be loaded.");
         setCompanyOptions(
           (payload.companyStats || [])
+            .filter((row) => row.company && row.company !== "Other" && Number(row.total) > 0)
             .map((row) => row.company)
-            .filter((name) => name && name !== "Other")
             .sort((a, b) => a.localeCompare(b)),
         );
       })

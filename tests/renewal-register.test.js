@@ -46,6 +46,7 @@ describe("policy-wise renewal register", () => {
     expect(page).toContain('params.set("month", renewalMonth)');
     expect(page).toContain('params.set("company", company)');
     expect(page).toContain('aria-label="Insurance company"');
+    expect(page).toContain("Number(row.total) > 0");
     expect(page).toContain("RENEWAL_REGISTER_CATEGORY_TABS.map");
   });
 });
