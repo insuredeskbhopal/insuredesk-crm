@@ -11,6 +11,31 @@ export const RENEWAL_REGISTER_POLICY_TYPES = [
   ["Other", "Other"],
 ];
 
+export const RENEWAL_REGISTER_CATEGORY_TABS = [
+  { value: "All", label: "All Renewals", countKey: "all" },
+  { value: "Motor", label: "Motor Policy", countKey: "motor" },
+  { value: "Fire", label: "Warehouse Policy", countKey: "warehouse" },
+  { value: "Other", label: "Other Policies", countKey: "other" },
+];
+
+export const RENEWAL_REGISTER_MONTHS = [
+  ["All", "All renewal months"],
+  ...Array.from({ length: 12 }, (_, index) => [
+    String(index + 1),
+    new Intl.DateTimeFormat("en-IN", { month: "long" }).format(new Date(2026, index, 1)),
+  ]),
+];
+
+export function normalizeRenewalRegisterMonth(value) {
+  const month = Number(value);
+  return Number.isInteger(month) && month >= 1 && month <= 12 ? String(month) : "All";
+}
+
+export function getRenewalRegisterMonthLabel(value) {
+  const normalized = normalizeRenewalRegisterMonth(value);
+  return RENEWAL_REGISTER_MONTHS.find(([month]) => month === normalized)?.[1] || "";
+}
+
 export function formatRenewalRegisterDate(value) {
   const date = parseRenewalDate(value);
   if (!date) return value ? String(value) : "—";

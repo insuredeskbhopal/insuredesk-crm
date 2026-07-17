@@ -22,10 +22,14 @@ import {
   XCircle,
 } from "lucide-react";
 import {
+  RENEWAL_REGISTER_CATEGORY_TABS,
+  RENEWAL_REGISTER_MONTHS,
   RENEWAL_REGISTER_POLICY_TYPES,
   formatRenewalRegisterAmount,
   formatRenewalRegisterDate,
+  getRenewalRegisterMonthLabel,
   getRenewalRegisterStatusTone,
+  normalizeRenewalRegisterMonth,
 } from "@/lib/renewals/register";
 
 const PAGE_SIZE = 25;
@@ -39,9 +43,11 @@ export default function RenewalPoliciesPage() {
   const [queryDraft, setQueryDraft] = useState("");
   const [query, setQuery] = useState("");
   const [policyType, setPolicyType] = useState("All");
+  const [renewalMonth, setRenewalMonth] = useState("All");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [categoryCounts, setCategoryCounts] = useState({ all: 0, motor: 0, warehouse: 0, other: 0 });
   const [activeActionPolicyId, setActiveActionPolicyId] = useState("");
   const [actionMenuPosition, setActionMenuPosition] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -52,6 +58,7 @@ export default function RenewalPoliciesPage() {
     setQueryDraft(initialQuery);
     setQuery(initialQuery);
     setPolicyType(params.get("policyType") || "All");
+    setRenewalMonth(normalizeRenewalRegisterMonth(params.get("month")));
     setPage(Math.max(1, Number(params.get("page")) || 1));
     setInitialized(true);
   }, []);
@@ -67,12 +74,14 @@ export default function RenewalPoliciesPage() {
         const params = new window.URLSearchParams({ tab: "register", page: String(page), limit: String(PAGE_SIZE) });
         if (query) params.set("q", query);
         if (policyType !== "All") params.set("policyType", policyType);
+        if (renewalMonth !== "All") params.set("month", renewalMonth);
         const response = await fetch(`/api/renewals/policies?${params}`, { cache: "no-store", signal: controller.signal });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || "Renewal data could not be loaded.");
         setPolicies(payload.policies || []);
         setTotalCount(payload.totalCount || 0);
         setTotalPages(payload.pages || 1);
+        setCategoryCounts(payload.categoryCounts || { all: 0, motor: 0, warehouse: 0, other: 0 });
       } catch (loadError) {
         if (loadError.name !== "AbortError") setError(loadError.message || "Renewal data could not be loaded.");
       } finally {
@@ -82,13 +91,14 @@ export default function RenewalPoliciesPage() {
 
     loadPolicies();
     return () => controller.abort();
-  }, [initialized, page, policyType, query, refreshKey]);
+  }, [initialized, page, policyType, query, refreshKey, renewalMonth]);
 
   const syncUrl = (updates = {}) => {
-    const next = { query, policyType, page, ...updates };
+    const next = { query, policyType, renewalMonth, page, ...updates };
     const params = new window.URLSearchParams();
     if (next.query) params.set("q", next.query);
     if (next.policyType !== "All") params.set("policyType", next.policyType);
+    if (next.renewalMonth !== "All") params.set("month", next.renewalMonth);
     if (next.page > 1) params.set("page", String(next.page));
     router.replace(params.size ? `?${params}` : "/dashboard/renewals/policies", { scroll: false });
   };
@@ -109,6 +119,14 @@ export default function RenewalPoliciesPage() {
     syncUrl({ policyType: value, page: 1 });
   };
 
+  const changeRenewalMonth = (value) => {
+    const nextMonth = normalizeRenewalRegisterMonth(value);
+    setRenewalMonth(nextMonth);
+    setPage(1);
+    closeActionMenu();
+    syncUrl({ renewalMonth: nextMonth, page: 1 });
+  };
+
   const changePage = (nextPage) => {
     setPage(nextPage);
     closeActionMenu();
@@ -119,6 +137,7 @@ export default function RenewalPoliciesPage() {
     setQueryDraft("");
     setQuery("");
     setPolicyType("All");
+    setRenewalMonth("All");
     setPage(1);
     closeActionMenu();
     router.replace("/dashboard/renewals/policies", { scroll: false });
@@ -168,12 +187,14 @@ export default function RenewalPoliciesPage() {
     else window.alert("No contact number available for this policy.");
   };
 
+  const selectedMonthLabel = renewalMonth === "All" ? "" : getRenewalRegisterMonthLabel(renewalMonth);
+
   return (
     <section className="rn-policy-register">
       <div className="rn-policy-register__intro">
         <div>
           <p>Policy-wise register</p>
-          <h2>All Renewals</h2>
+          <h2>{selectedMonthLabel ? `${selectedMonthLabel} Renewals` : "All Renewals"}</h2>
           <span>Every renewal is shown as its own policy row. No customer grouping is applied.</span>
         </div>
         <strong>{totalCount.toLocaleString("en-IN")} policies</strong>
@@ -191,13 +212,29 @@ export default function RenewalPoliciesPage() {
         <select value={policyType} onChange={(event) => changePolicyType(event.target.value)} aria-label="Policy type">
           {RENEWAL_REGISTER_POLICY_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
+        <select value={renewalMonth} onChange={(event) => changeRenewalMonth(event.target.value)} aria-label="Renewal month">
+          {RENEWAL_REGISTER_MONTHS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
         <button type="submit" className="rn-btn rn-btn-primary"><Search size={15} /> Search</button>
-        {(query || policyType !== "All") ? (
+        {(query || policyType !== "All" || renewalMonth !== "All") ? (
           <button type="button" className="rn-btn" onClick={clearFilters}><RefreshCw size={15} /> Clear</button>
         ) : null}
       </form>
 
       <div className="rn-table-container rn-policy-register__table-shell">
+        <div className="rn-lob-tabs" aria-label="Renewal policy categories">
+          {RENEWAL_REGISTER_CATEGORY_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              className={policyType === tab.value ? "active" : ""}
+              onClick={() => changePolicyType(tab.value)}
+            >
+              {tab.label}
+              <span>{categoryCounts[tab.countKey] || 0}</span>
+            </button>
+          ))}
+        </div>
         {error ? (
           <div className="rn-policy-register__state rn-policy-register__state--error">
             <AlertCircle size={22} />

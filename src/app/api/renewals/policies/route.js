@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
+import { normalizeRenewalRegisterMonth } from "@/lib/renewals/register";
 import { startOfDay } from "@/app/lib/reporting/filters";
 import {
   getDaysStatus,
@@ -33,6 +34,8 @@ export async function GET(request) {
     const limit = Math.min(500, Math.max(1, parseInt(searchParams.get("limit") || "10", 10) || 10));
     const offset = (page - 1) * limit;
     const daysParam = searchParams.get("days");
+    const normalizedMonth = normalizeRenewalRegisterMonth(searchParams.get("month"));
+    const renewalMonth = normalizedMonth === "All" ? 0 : Number(normalizedMonth);
 
     const requestedMaxDays = daysParam ? parseInt(daysParam, 10) : 29;
     const maxDays = Math.min(Math.max(Number.isFinite(requestedMaxDays) ? requestedMaxDays : 29, 1), 30);
@@ -55,6 +58,7 @@ export async function GET(request) {
       q.trim(),
       `%${q.trim().toLowerCase()}%`,
       actorId,
+      renewalMonth,
     ];
 
     const baseCTE = `
@@ -241,10 +245,16 @@ export async function GET(request) {
           -- Policy Type Filter
           AND (
             $7 = 'All' 
+            OR (LOWER($7) = 'other' AND policy_family NOT IN ('Motor Policy', 'Fire Policy'))
             OR LOWER(policy_type) = LOWER($7) 
             OR LOWER(selected_policy_type) = LOWER($7)
             OR LOWER(policy_family) = LOWER($7)
             OR LOWER(policy_family) = LOWER($7 || ' Policy')
+          )
+          -- Renewal Month Filter (expiry month, across all years)
+          AND (
+            $11::integer = 0
+            OR EXTRACT(MONTH FROM expiry_date)::integer = $11::integer
           )
           -- Text Search
           AND (
@@ -294,10 +304,38 @@ export async function GET(request) {
         )
         AND (
           $7 = 'All'
+          OR (LOWER($7) = 'other' AND policy_family NOT IN ('Motor Policy', 'Fire Policy'))
           OR LOWER(policy_type) = LOWER($7)
           OR LOWER(selected_policy_type) = LOWER($7)
           OR LOWER(policy_family) = LOWER($7)
           OR LOWER(policy_family) = LOWER($7 || ' Policy')
+        )
+        AND (
+          $11::integer = 0
+          OR EXTRACT(MONTH FROM expiry_date)::integer = $11::integer
+        )
+        AND (
+          $8 = ''
+          OR search_text LIKE $9
+        )
+    `;
+    const categoryQuery = `
+      ${baseCTE}
+      SELECT
+        COUNT(*)::integer AS all_count,
+        COUNT(*) FILTER (WHERE policy_family = 'Motor Policy')::integer AS motor_count,
+        COUNT(*) FILTER (WHERE policy_family = 'Fire Policy')::integer AS warehouse_count,
+        COUNT(*) FILTER (WHERE policy_family NOT IN ('Motor Policy', 'Fire Policy'))::integer AS other_count
+      FROM active_policies
+      WHERE
+        (
+          $6 = 'All'
+          OR LOWER(company) = LOWER($6)
+          OR LOWER(selected_company) = LOWER($6)
+        )
+        AND (
+          $11::integer = 0
+          OR EXTRACT(MONTH FROM expiry_date)::integer = $11::integer
         )
         AND (
           $8 = ''
@@ -311,13 +349,14 @@ export async function GET(request) {
         CASE WHEN days_remaining IS NOT NULL THEN 0 ELSE 1 END,
         days_remaining ASC,
         saved_at DESC
-      LIMIT $11::integer OFFSET $12::integer
+      LIMIT $12::integer OFFSET $13::integer
     `;
 
-    const [countResult, dataResult, summaryResult] = await Promise.all([
+    const [countResult, dataResult, summaryResult, categoryResult] = await Promise.all([
       prisma.$queryRawUnsafe(countQuery, ...queryParams),
       prisma.$queryRawUnsafe(dataQuery, ...queryParams, limit, offset),
       prisma.$queryRawUnsafe(summaryQuery, ...queryParams),
+      prisma.$queryRawUnsafe(categoryQuery, ...queryParams),
     ]);
 
     const totalCount = countResult[0]?.count || 0;
@@ -410,11 +449,21 @@ export async function GET(request) {
       pages: Math.ceil(totalCount / limit) || 1,
       currentPage: page,
       summaryCounts: normalizeSummaryCounts(summaryResult[0] || {}),
+      categoryCounts: normalizeCategoryCounts(categoryResult[0] || {}),
     });
   } catch (error) {
     console.error("Renewals policies fetch failed:", error);
     return Response.json({ error: "Failed to load renewal policies." }, { status: 500 });
   }
+}
+
+function normalizeCategoryCounts(row = {}) {
+  return {
+    all: Number(row.all_count) || 0,
+    motor: Number(row.motor_count) || 0,
+    warehouse: Number(row.warehouse_count) || 0,
+    other: Number(row.other_count) || 0,
+  };
 }
 
 function normalizeSummaryCounts(row = {}) {
