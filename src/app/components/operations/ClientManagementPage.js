@@ -630,7 +630,7 @@ export default function ClientManagementPage() {
       {/* CREATE & EDIT MODALS */}
       {isModalOpen && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
+          <div className="client-management-modal-shell">
           {/* Backdrop blur with overlay mask */}
           <div
             className="client-management-modal-backdrop absolute inset-0"
@@ -638,7 +638,7 @@ export default function ClientManagementPage() {
           ></div>
 
           {/* Modal Container: centered vertically and horizontally */}
-          <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+          <div className="client-management-modal-card bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true">
             <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
               <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                 <Shield className="h-5 w-5 text-emerald-600" />
@@ -745,14 +745,14 @@ export default function ClientManagementPage() {
 
       {resolutionRequest && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
+          <div className="client-management-modal-shell">
           <button
             type="button"
             aria-label="Close Client ID resolution"
             className="client-management-modal-backdrop absolute inset-0"
             onClick={() => setResolutionRequest(null)}
           />
-          <div className="relative w-full max-w-lg rounded-2xl border border-slate-100 bg-white shadow-2xl">
+          <div className="client-management-modal-card rounded-2xl border border-slate-100 bg-white shadow-2xl" role="dialog" aria-modal="true">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
               <div>
                 <h3 className="font-bold text-slate-900">
@@ -842,9 +842,9 @@ export default function ClientManagementPage() {
 
       {decisionRequest && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
+          <div className="client-management-modal-shell">
           <button type="button" aria-label="Close decision dialog" className="client-management-modal-backdrop absolute inset-0" onClick={() => setDecisionRequest(null)} />
-          <div className="relative w-full max-w-lg rounded-2xl border border-white/70 bg-white shadow-2xl">
+          <div className="client-management-modal-card rounded-2xl border border-white/70 bg-white shadow-2xl" role="dialog" aria-modal="true">
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
               <div>
                 <h3 className="font-bold text-slate-900">{decisionAction === "REJECT" ? "Reject request for correction" : "Request correction"}</h3>
@@ -872,9 +872,9 @@ export default function ClientManagementPage() {
 
       {correctionRequest && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4">
+          <div className="client-management-modal-shell">
           <button type="button" aria-label="Close correction panel" className="client-management-modal-backdrop absolute inset-0" onClick={() => setCorrectionRequest(null)} />
-          <div className="relative w-full max-w-lg rounded-2xl border border-white/70 bg-white shadow-2xl">
+          <div className="client-management-modal-card rounded-2xl border border-white/70 bg-white shadow-2xl" role="dialog" aria-modal="true">
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
               <div><h3 className="font-bold text-slate-900">Correct Client ID request</h3><p className="mt-1 font-mono text-[10px] text-slate-400">Request ID: {correctionRequest.id}</p></div>
               <button type="button" onClick={() => setCorrectionRequest(null)} className="text-slate-400 hover:text-slate-700"><X className="h-5 w-5" /></button>

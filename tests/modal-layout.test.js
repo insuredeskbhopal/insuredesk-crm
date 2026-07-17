@@ -87,6 +87,22 @@ describe("modal layout contract", () => {
     }
   });
 
+  it("centers every Client ID Management dialog in one full-viewport shell", () => {
+    const component = read("src/app/components/operations/ClientManagementPage.js");
+    const chrome = read("src/app/ui/dashboard/chrome-and-responsive.css");
+    const shell = cssRule(chrome, ".client-management-modal-shell");
+
+    expect(component.match(/<ModalPortal>/g)).toHaveLength(4);
+    expect(component.match(/className="client-management-modal-shell"/g)).toHaveLength(4);
+    expect(component.match(/client-management-modal-card/g)).toHaveLength(4);
+    expect(shell).toMatch(/position:\s*fixed/);
+    expect(shell).toMatch(/inset:\s*0/);
+    expect(shell).toMatch(/display:\s*grid/);
+    expect(shell).toMatch(/place-items:\s*center/);
+    expect(shell).toMatch(/backdrop-filter:\s*blur/);
+    expect(shell).toMatch(/z-index:\s*20000/);
+  });
+
   it("keeps responsive form dialogs centered", () => {
     const userManagement = read("src/app/ui/dashboard/user-management.css");
     expect(userManagement).not.toMatch(/\.user-form-modal-backdrop\s*\{[^}]*align-items:\s*(?:end|start|flex-end|flex-start)/s);
