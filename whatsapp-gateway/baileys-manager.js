@@ -11,7 +11,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SESSIONS_DIR = path.join(__dirname, "sessions", "insuredesk_session");
+const sessionsRoot =
+  process.env.WHATSAPP_GATEWAY_SESSIONS_DIR || path.join(__dirname, "sessions");
+const SESSIONS_DIR = path.join(sessionsRoot, "insuredesk_session");
 
 const logger = pino({ level: "warn" });
 

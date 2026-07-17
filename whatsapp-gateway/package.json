@@ -9,7 +9,9 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
+    "@hapi/boom": "^9.1.4",
     "@whiskeysockets/baileys": "^6.7.16",
+    "dotenv": "^16.6.1",
     "express": "^4.21.0",
     "pino": "^9.6.0",
     "qrcode": "^1.5.4"

@@ -28,8 +28,14 @@ if (fs.existsSync(gatewayEnvPath)) {
   config({ path: parentEnvPath });
 }
 
-const PORT = parseInt(process.env.WHATSAPP_GATEWAY_PORT || "8090", 10);
-const HOST = process.env.WHATSAPP_GATEWAY_HOST || "127.0.0.1";
+const platformPort = process.env.PORT;
+const PORT = parseInt(
+  process.env.WHATSAPP_GATEWAY_PORT || platformPort || "8090",
+  10
+);
+const HOST =
+  process.env.WHATSAPP_GATEWAY_HOST ||
+  (platformPort ? "0.0.0.0" : "127.0.0.1");
 
 const app = express();
 
