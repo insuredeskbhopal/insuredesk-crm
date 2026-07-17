@@ -2,50 +2,11 @@
 const XLSX = require("xlsx");
 const { randomUUID } = require("crypto");
 const path = require("path");
+const { buildRenewalImportKey, excelDateToString } = require("../src/lib/renewals/import-identity.cjs");
 
 const prisma = new PrismaClient();
 const excelPath = process.argv[2] || path.join(process.cwd(), "storage", "Non_Motor_July_2026_Renewal_Data (1).xlsx");
 const MANUAL_RENEWAL_IMPORT_METHOD = "renewal_excel_import";
-
-// Convert Excel serial date to YYYY-MM-DD
-function excelDateToString(excelDate) {
-  if (excelDate === null || excelDate === undefined || excelDate === "") return "";
-  if (excelDate instanceof Date) {
-    try {
-      return excelDate.toISOString().split("T")[0];
-    } catch (e) {
-      return "";
-    }
-  }
-
-  const num = Number(excelDate);
-  if (isNaN(num)) {
-    // Attempt to parse text date
-    const parsed = Date.parse(excelDate);
-    if (!isNaN(parsed)) {
-      try {
-        return new Date(parsed).toISOString().split("T")[0];
-      } catch (e) {
-        return "";
-      }
-    }
-    return String(excelDate).trim();
-  }
-
-  try {
-    // Excel base date: Dec 30, 1899
-    const utc_days = Math.floor(num - 25569);
-    const utc_value = utc_days * 86400;
-    const date_info = new Date(utc_value * 1000);
-
-    const yyyy = date_info.getFullYear();
-    const mm = String(date_info.getMonth() + 1).padStart(2, "0");
-    const dd = String(date_info.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  } catch (e) {
-    return String(excelDate).trim();
-  }
-}
 
 function buildCustomerId(name, mobile) {
   const namePart = String(name || "")
@@ -147,14 +108,21 @@ async function main() {
 
   console.log(`Using Organization ID: ${organizationId}`);
 
-  // Clear previous imports to remain idempotent
-  console.log(`Clearing previous imports from '${sourceFileName}'...`);
-  const deleteResult = await prisma.policyRecord.deleteMany({
-    where: { sourceFile: sourceFileName },
+  const existingRecords = await prisma.policyRecord.findMany({
+    where: {
+      extractionMethod: MANUAL_RENEWAL_IMPORT_METHOD,
+      organizationId,
+      deletedAt: null,
+    },
+    select: { data: true, reviewedData: true },
   });
-  console.log(`Deleted ${deleteResult.count} existing records.`);
+  const renewalKeys = new Set(
+    existingRecords.map((record) => buildRenewalImportKey(record.reviewedData || record.data || {})),
+  );
+  console.log(`Keeping ${existingRecords.length} existing renewal records.`);
 
   let insertedCount = 0;
+  let skippedDuplicateCount = 0;
 
   for (const sheetName of workbook.SheetNames) {
     const worksheet = workbook.Sheets[sheetName];
@@ -208,6 +176,13 @@ async function main() {
 
       if (!name && !policyNo) {
         console.log(`[${sheetName}] [${i + 1}/${rawRows.length}] Skipping empty row`);
+        continue;
+      }
+
+      const renewalKey = buildRenewalImportKey(payload);
+      if (renewalKeys.has(renewalKey)) {
+        console.log(`[${sheetName}] [${i + 1}/${rawRows.length}] Skipping existing renewal`);
+        skippedDuplicateCount++;
         continue;
       }
 
@@ -270,16 +245,19 @@ async function main() {
       };
 
       console.log(
-        `[${sheetName}] [${i + 1}/${rawRows.length}] Saving Policy Record for "${sanitizedData.insuredName}" (Status: ${renewalStatus})`,
+        `[${sheetName}] [${i + 1}/${rawRows.length}] Saving renewal (Status: ${renewalStatus})`,
       );
       await prisma.policyRecord.create({
         data: policyRecordPayload,
       });
+      renewalKeys.add(renewalKey);
       insertedCount++;
     }
   }
 
-  console.log(`\nImport Completed: Successfully inserted ${insertedCount} policy records.`);
+  console.log(
+    `\nImport completed: inserted ${insertedCount} new renewal records, skipped ${skippedDuplicateCount} duplicates, and kept ${existingRecords.length} existing renewal records.`,
+  );
 }
 
 main()

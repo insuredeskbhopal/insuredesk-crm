@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import {
   Smartphone,
@@ -480,9 +481,12 @@ export default function WhatsAppSetupPage() {
               {(status === "SCAN_QR_CODE" || status === "QR_READY") && qrCode && (
                 <div className="mt-5 w-full flex flex-col items-center">
                   <div className="p-3.5 bg-white border-2 border-emerald-100 rounded-xl shadow-md">
-                    <img
+                    <Image
                       src={qrCode}
                       alt="WhatsApp Web Login QR Code"
+                      width={192}
+                      height={192}
+                      unoptimized
                       className="w-48 h-48 block"
                     />
                   </div>

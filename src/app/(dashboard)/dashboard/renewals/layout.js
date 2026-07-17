@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import {
   LayoutDashboard,
   CalendarCheck,
+  ClipboardList,
   Users,
   Building2,
   FolderOpen,
@@ -30,6 +32,7 @@ export default function RenewalsLayout({ children }) {
   const navItems = [
     { label: "Dashboard", href: "/dashboard/renewals", icon: LayoutDashboard },
     { label: "Daily Work", href: "/dashboard/renewals/daily-work", icon: CalendarCheck },
+    { label: "Renewal", href: "/dashboard/renewals/policies", icon: ClipboardList },
     { label: "Customer Renewals", href: "/dashboard/renewals/customers", icon: Users },
     { label: "Companies", href: "/dashboard/renewals/companies", icon: Building2 },
     { label: "Policy Types", href: "/dashboard/renewals/policy-types", icon: FolderOpen },
@@ -42,6 +45,9 @@ export default function RenewalsLayout({ children }) {
   const getActiveHref = () => {
     if (pathname.startsWith("/dashboard/renewals/customers")) {
       return "/dashboard/renewals/customers";
+    }
+    if (pathname.startsWith("/dashboard/renewals/policies")) {
+      return "/dashboard/renewals/policies";
     }
     if (pathname.startsWith("/dashboard/renewals/daily-work")) {
       return "/dashboard/renewals/daily-work";
@@ -176,9 +182,11 @@ export default function RenewalsLayout({ children }) {
               marginBottom: "20px"
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                <img
+                <Image
                   src="/brand/main-logo-wide.webp"
                   alt="Bima Headquarter"
+                  width={1024}
+                  height={570}
                   style={{ height: "36px", width: "auto" }}
                 />
                 <div style={{ width: "1px", height: "30px", backgroundColor: "#e5e7eb" }} />

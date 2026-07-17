@@ -1,9 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function BrandLogo({ href, className = "", compact = false }) {
   const content = (
     <span className={`brand-logo ${compact ? "compact" : ""} ${className}`.trim()}>
-      <img
+      <Image
         className="brand-logo-image"
         src="/brand/main-logo-wide.webp"
         alt="Bima Headquarter"

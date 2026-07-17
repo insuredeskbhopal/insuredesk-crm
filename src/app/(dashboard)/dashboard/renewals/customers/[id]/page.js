@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use, useMemo } from "react";
+import { useEffect, useState, use, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
@@ -99,6 +99,8 @@ export default function CustomerProfilePage(props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const phone = params.id;
+  const requestedPolicyId = searchParams.get("policyId") || "";
+  const requestedAction = searchParams.get("action") || "";
   const returnTo = searchParams.get("returnTo") || "/dashboard/renewals/customers";
   const goBackToPortfolios = () => router.push(returnTo);
 
@@ -172,6 +174,7 @@ export default function CustomerProfilePage(props) {
 
   const [teamMembers, setTeamMembers] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
+  const openedRequestedAction = useRef("");
 
   // Resizable columns
   const STORAGE_KEY = "rn-contact-policies-col-widths-v2";
@@ -256,7 +259,8 @@ export default function CustomerProfilePage(props) {
   const fetchCustomerProfile = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/renewals/customers/${phone}`, { cache: "no-store" });
+      const policyQuery = requestedPolicyId ? `?policyId=${encodeURIComponent(requestedPolicyId)}` : "";
+      const res = await fetch(`/api/renewals/customers/${phone}${policyQuery}`, { cache: "no-store" });
       const data = await res.json();
       if (res.ok && data.success) {
         setProfile(data.profile);
@@ -274,7 +278,7 @@ export default function CustomerProfilePage(props) {
 
   useEffect(() => {
     fetchCustomerProfile();
-  }, [phone]);
+  }, [phone, requestedPolicyId]);
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -687,6 +691,24 @@ export default function CustomerProfilePage(props) {
     setWhatsAppPreviewOpen(false);
     await fetchCustomerProfile();
   };
+
+  useEffect(() => {
+    if (loading || !profile || !requestedAction || policies.length === 0) return;
+    const actionKey = `${requestedPolicyId}:${requestedAction}`;
+    if (openedRequestedAction.current === actionKey) return;
+
+    const policy = policies.find((item) => item.id === requestedPolicyId) || policies[0];
+    if (!policy) return;
+    openedRequestedAction.current = actionKey;
+
+    if (requestedAction === "edit") handleEditRenewal(policy);
+    else if (requestedAction === "remark") handleAddRemark(policy);
+    else if (requestedAction === "assign") handleReassignUser(policy);
+    else if (requestedAction === "renew") handleMarkRenewed(policy);
+    else if (requestedAction === "lost") handleMarkLost(policy);
+    else if (requestedAction === "timeline") handleViewPolicyDrawer(policy);
+    else if (requestedAction === "whatsapp") void handleWhatsApp(policy);
+  }, [loading, policies, profile, requestedAction, requestedPolicyId]);
 
   if (loading) {
     return (

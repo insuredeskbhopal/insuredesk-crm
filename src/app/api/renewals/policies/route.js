@@ -69,6 +69,8 @@ export async function GET(request) {
           updated_by_id,
           selected_company,
           selected_policy_type,
+          extraction_method,
+          LOWER(COALESCE(reviewed_data->>'manualRenewalSource', data->>'manualRenewalSource', '')) = 'true' AS manual_renewal_source,
           COALESCE(reviewed_data->>'assignedTo', data->>'assignedTo', '') AS assigned_to,
           COALESCE(reviewed_data->'renewalFollowUp'->>'nextFollowUpDate', data->'renewalFollowUp'->>'nextFollowUpDate', '') AS raw_follow_up,
           COALESCE(reviewed_data->'renewalFollowUp'->>'priority', data->'renewalFollowUp'->>'priority', '') AS priority,
@@ -127,6 +129,8 @@ export async function GET(request) {
           policy_type,
           selected_company,
           selected_policy_type,
+          extraction_method,
+          manual_renewal_source,
           search_text,
           (CASE
             WHEN policy_haystack ~ '\\m(motor|vehicle|private\\s+car|two\\s+wheeler|commercial\\s+vehicle|goods\\s+carrying|auto\\s+secure|registration|chassis|engine)\\M'
@@ -164,7 +168,8 @@ export async function GET(request) {
         SELECT *
         FROM parsed_policies
         WHERE 
-          (expiry_date IS NOT NULL AND (expiry_date - $3::date) >= -30 AND (expiry_date - $3::date) <= 30)
+          ($4 = 'register' AND (extraction_method = 'renewal_excel_import' OR manual_renewal_source = true))
+          OR (expiry_date IS NOT NULL AND (expiry_date - $3::date) >= -30 AND (expiry_date - $3::date) <= 30)
           OR (is_active_policy = true AND expiry_date IS NOT NULL AND (expiry_date - $3::date) < -30 AND LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval'))
           OR (expiry_state IN ('missing', 'invalid'))
       ),
@@ -224,6 +229,7 @@ export async function GET(request) {
             OR ($4 = 'priority_high' AND LOWER(priority) IN ('high', 'urgent'))
             OR ($4 = 'priority_medium' AND LOWER(priority) IN ('medium', 'normal'))
             OR ($4 = 'priority_low' AND LOWER(priority) = 'low')
+            OR ($4 = 'register')
             OR ($4 = 'all' AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND (expiry_date - $3::date) >= -30 AND (expiry_date - $3::date) <= 30)
           )
           -- Company Filter
@@ -343,6 +349,7 @@ export async function GET(request) {
           updatedAt: true,
           createdById: true,
           updatedById: true,
+          extractionMethod: true,
           createdBy: { select: { name: true, email: true } },
           updatedBy: { select: { name: true, email: true } },
         },
@@ -388,6 +395,11 @@ export async function GET(request) {
           normalized.renewedInsuranceCompany = renewedInfo.insuranceCompany;
           normalized.newPremium = renewedInfo.totalPremium;
         }
+        const payload = record.reviewedData || record.data || {};
+        normalized.quote = payload.quote || "";
+        normalized.message = payload.msg || payload.message || "";
+        normalized.paymentLink = payload.paymentLink || "";
+        normalized.callStatus = payload.call || payload.callStatus || "";
         return normalized;
       });
     }

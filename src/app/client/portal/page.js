@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   LogOut,
   Shield,
@@ -402,9 +403,11 @@ export default function ClientPortal() {
         <header className="border-b border-slate-200 bg-white/95 sticky top-0 z-50 shadow-sm">
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img
+              <Image
                 src="/brand/main-logo-wide.webp"
                 alt="Bima Headquarter"
+                width={1024}
+                height={570}
                 className="h-11 w-auto object-contain"
               />
             </div>
@@ -1113,9 +1116,11 @@ export default function ClientPortal() {
         {/* Sticky Mobile App Bar */}
         <header className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-200/60 px-4 h-14 flex items-center justify-between z-30 shadow-sm">
           <div className="flex items-center gap-1.5">
-            <img
+            <Image
               src="/brand/main-logo-wide.webp"
               alt="Bima Headquarter"
+              width={1024}
+              height={570}
               className="h-9 w-auto object-contain"
             />
           </div>
@@ -1173,7 +1178,13 @@ export default function ClientPortal() {
                     <div className="text-[9px] font-medium force-mint">Secured Digital Client Card</div>
                   </div>
                   <div className="h-9 rounded-lg bg-white/20 flex items-center justify-center px-2 border border-white/20 shadow-sm">
-                    <img src="/brand/main-logo-wide.webp" alt="BH" className="h-6 w-auto object-contain brightness-0 invert" />
+                    <Image
+                      src="/brand/main-logo-wide.webp"
+                      alt="BH"
+                      width={1024}
+                      height={570}
+                      className="h-6 w-auto object-contain brightness-0 invert"
+                    />
                   </div>
                 </div>
 

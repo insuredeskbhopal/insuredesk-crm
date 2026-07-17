@@ -1,47 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
+import renewalImportIdentity from "@/lib/renewals/import-identity.cjs";
 import * as XLSX from "xlsx";
 
 const MANUAL_RENEWAL_IMPORT_METHOD = "renewal_excel_import";
-
-// Convert Excel date to YYYY-MM-DD
-function excelDateToString(excelDate) {
-  if (excelDate === null || excelDate === undefined || excelDate === "") return "";
-  if (excelDate instanceof Date) {
-    try {
-      return excelDate.toISOString().split("T")[0];
-    } catch {
-      return "";
-    }
-  }
-
-  const num = Number(excelDate);
-  if (isNaN(num)) {
-    const parsed = Date.parse(excelDate);
-    if (!isNaN(parsed)) {
-      try {
-        return new Date(parsed).toISOString().split("T")[0];
-      } catch {
-        return "";
-      }
-    }
-    return String(excelDate).trim();
-  }
-
-  try {
-    const utc_days = Math.floor(num - 25569);
-    const utc_value = utc_days * 86400;
-    const date_info = new Date(utc_value * 1000);
-
-    const yyyy = date_info.getFullYear();
-    const mm = String(date_info.getMonth() + 1).padStart(2, "0");
-    const dd = String(date_info.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  } catch {
-    return String(excelDate).trim();
-  }
-}
+const { buildRenewalImportKey, excelDateToString } = renewalImportIdentity;
 
 function buildCustomerId(name, mobile) {
   const namePart = String(name || "")
@@ -162,13 +126,20 @@ export async function POST(request) {
     const sourceFileName = file.name || "imported_renewals.xlsx";
 
     const organizationId = user.organizationId || null;
-
-    // Clear previous imports to remain idempotent
-    await prisma.policyRecord.deleteMany({
-      where: { sourceFile: sourceFileName },
+    const existingRecords = await prisma.policyRecord.findMany({
+      where: {
+        extractionMethod: MANUAL_RENEWAL_IMPORT_METHOD,
+        organizationId,
+        deletedAt: null,
+      },
+      select: { data: true, reviewedData: true },
     });
+    const renewalKeys = new Set(
+      existingRecords.map((record) => buildRenewalImportKey(record.reviewedData || record.data || {})),
+    );
 
     let insertedCount = 0;
+    let skippedDuplicateCount = 0;
 
     for (const sheetName of workbook.SheetNames) {
       const worksheet = workbook.Sheets[sheetName];
@@ -213,6 +184,12 @@ export async function POST(request) {
         const status = payload.status || "";
 
         if (!name && !policyNo) {
+          continue;
+        }
+
+        const renewalKey = buildRenewalImportKey(payload);
+        if (renewalKeys.has(renewalKey)) {
+          skippedDuplicateCount++;
           continue;
         }
 
@@ -271,14 +248,17 @@ export async function POST(request) {
             isActivePolicy: isActivePolicy,
           },
         });
+        renewalKeys.add(renewalKey);
         insertedCount++;
       }
     }
 
     return Response.json({
       success: true,
-      message: `Successfully imported ${insertedCount} renewal policies from all sheets in the workbook.`,
+      message: `Imported ${insertedCount} new renewal policies and kept all existing renewal data.`,
       insertedCount,
+      skippedDuplicateCount,
+      existingCount: existingRecords.length,
     });
   } catch (error) {
     console.error("Failed to import renewals Excel:", error);

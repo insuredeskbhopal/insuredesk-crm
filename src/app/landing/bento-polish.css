@@ -1,0 +1,123 @@
+/* ==========================================
+   Why Choose Bento Card Polish
+   ========================================== */
+
+.landing-shell #solutions + section {
+  overflow: hidden;
+}
+
+.landing-shell #solutions + section .grid > div:nth-child(2) {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  gap: 26px !important;
+  min-height: 352px !important;
+  padding: clamp(32px, 3.2vw, 44px) !important;
+  background: #031638 !important;
+}
+
+.landing-shell #solutions + section .grid > div:nth-child(2) .material-symbols-outlined {
+  flex: 0 0 auto !important;
+  margin-bottom: 0 !important;
+  color: #ffffff !important;
+  font-size: 34px !important;
+}
+
+.landing-shell #solutions + section .grid > div:nth-child(2) h3 {
+  max-width: 320px !important;
+  margin-bottom: 18px !important;
+  color: #ffffff !important;
+  font-size: clamp(30px, 2.5vw, 38px) !important;
+  line-height: 1.14 !important;
+}
+
+.landing-shell #solutions + section .grid > div:nth-child(2) p {
+  max-width: 330px !important;
+  margin: 0 0 24px !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  font-size: 16px !important;
+  line-height: 1.58 !important;
+}
+
+.landing-shell #solutions + section .grid > div:nth-child(2) a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  min-width: 172px !important;
+  min-height: 50px !important;
+  padding: 0 22px !important;
+  border-radius: 12px !important;
+  background: #1c6c39 !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 900px) {
+  .landing-shell #solutions + section > .max-w-container-max > .flex {
+    align-items: flex-start !important;
+    margin-bottom: 34px !important;
+  }
+
+  .landing-shell #solutions + section > .max-w-container-max > .flex h2 {
+    font-size: clamp(28px, 7vw, 34px) !important;
+    line-height: 1.12 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-shell #solutions + section .grid > div:nth-child(2) {
+    gap: 14px !important;
+    min-height: 0 !important;
+    padding: 22px !important;
+    border-radius: 20px !important;
+  }
+
+  .landing-shell #solutions + section .grid > div:nth-child(2) .material-symbols-outlined {
+    font-size: 30px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .landing-shell #solutions + section .grid > div:nth-child(2) h3 {
+    max-width: none !important;
+    margin-bottom: 10px !important;
+    font-size: 23px !important;
+    line-height: 1.2 !important;
+  }
+
+  .landing-shell #solutions + section .grid > div:nth-child(2) p {
+    max-width: none !important;
+    margin: 0 0 16px !important;
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+  }
+
+  .landing-shell #solutions + section .grid > div:nth-child(2) a {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 42px !important;
+    margin: 0 !important;
+    padding: 0 14px !important;
+    align-self: flex-start !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .landing-shell #solutions + section .grid > div:nth-child(2) {
+    padding: 20px !important;
+  }
+
+  .landing-shell #solutions + section .grid > div:nth-child(2) h3 {
+    font-size: 21px !important;
+  }
+
+  .landing-shell #solutions + section .grid > div:nth-child(2) p {
+    font-size: 14px !important;
+  }
+}
+
