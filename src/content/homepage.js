@@ -2,7 +2,7 @@ import { BUSINESS_DETAILS } from "./business";
 
 export const HOMEPAGE_CONTENT = {
   hero: {
-    brandBadge: "Owned and operated by InsureDesk IMF Pvt. Ltd.",
+    brandBadge: "By InsureDesk IMF Pvt. Ltd.",
     heading: "Bima Headquarter",
     subheading: "Trusted Insurance Consultancy in India",
     description:

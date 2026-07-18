@@ -95,8 +95,7 @@
 
 @media (max-width: 768px) {
   /* Mobile Navbar & Hamburger Menu */
-  .landing-shell nav#mainNav,
-  .landing-shell nav#mainNav.scrolled {
+  .landing-shell nav#mainNav {
     position: sticky !important;
     top: 8px !important;
     z-index: 80 !important;
@@ -576,4 +575,3 @@
     scroll-behavior: auto !important;
   }
 }
-

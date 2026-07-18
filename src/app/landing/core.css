@@ -193,20 +193,8 @@ body:has(.seo-page) {
   backdrop-filter: blur(22px) saturate(1.25);
 }
 
-.landing-shell nav#mainNav.scrolled {
-  height: 86px !important;
-  border: 0 !important;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.82), rgba(238, 246, 255, 0.72)),
-    rgba(255, 255, 255, 0.68) !important;
-  box-shadow: none !important;
-  -webkit-backdrop-filter: blur(24px) saturate(1.35) !important;
-  backdrop-filter: blur(24px) saturate(1.35) !important;
-}
-
 .landing-shell nav#mainNav,
-.landing-shell nav#mainNav.border-b,
-.landing-shell nav#mainNav.scrolled {
+.landing-shell nav#mainNav.border-b {
   border: 0 !important;
   border-bottom: 0 !important;
   box-shadow: none !important;
@@ -4260,4 +4248,3 @@ body:has(.seo-page) {
     padding-bottom: 56px;
   }
 }
-

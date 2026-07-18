@@ -18,17 +18,9 @@ const navItems = [
 ];
 
 export default function PublicHeader() {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const menuTitleId = useId();
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40);
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -70,7 +62,8 @@ export default function PublicHeader() {
         .landing-floating-consultation {
             position: fixed !important;
             bottom: 24px !important;
-            left: 24px !important;
+            right: 24px !important;
+            left: auto !important;
             z-index: 90 !important;
             display: inline-flex !important;
             align-items: center !important;
@@ -97,7 +90,8 @@ export default function PublicHeader() {
         @media (max-width: 640px) {
             .landing-floating-consultation {
                 bottom: 16px !important;
-                left: 16px !important;
+                right: 16px !important;
+                left: auto !important;
                 padding: 10px 18px !important;
                 font-size: 13px !important;
             }
@@ -106,7 +100,7 @@ export default function PublicHeader() {
         }}
       />
       <nav
-        className={`landing-premium-nav ${scrolled ? "scrolled" : ""}`}
+        className="landing-premium-nav"
         id="mainNav"
         aria-label="Primary navigation"
       >

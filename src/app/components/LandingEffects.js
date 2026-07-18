@@ -8,7 +8,7 @@ export default function LandingEffects() {
     document.body.classList.add("landing-page");
 
     const autoRevealSelectors = [
-      ".landing-shell main > header",
+      ".landing-shell main > header:not(#hero)",
       ".landing-shell main > section",
       ".landing-shell .glass-card",
       ".landing-shell .service-card",
