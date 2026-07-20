@@ -1168,6 +1168,119 @@
   display: block;
 }
 
+/* Policy register cursor card */
+.rn-policy-register__table tbody tr {
+  cursor: pointer;
+}
+
+.rn-policy-register__hover-card {
+  width: 340px;
+  min-width: 340px;
+  max-width: 340px;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid #dbe4f0;
+  border-top: 2px solid var(--rn-primary);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16), 0 4px 12px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.rn-policy-register__hover-card .rn-hover-title {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid #e6edf5;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef5ff 100%);
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.rn-policy-register__hover-card .rn-hover-title::after {
+  content: "Customer overview";
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rn-policy-register__hover-card .rn-hover-grid {
+  gap: 6px;
+  padding: 8px;
+}
+
+.rn-policy-register__hover-card .rn-hover-item {
+  min-width: 0;
+  gap: 2px;
+  padding: 6px 7px;
+  border: 1px solid #edf1f6;
+  border-radius: 7px;
+  background: #f8fafc;
+}
+
+.rn-policy-register__hover-card .rn-hover-label {
+  color: #64748b;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+}
+
+.rn-policy-register__hover-card .rn-hover-value {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: normal;
+}
+
+.rn-policy-register__hover-card .rn-policy-register__customer-grid .rn-hover-item:nth-child(2) .rn-hover-value {
+  width: fit-content;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #fff3d6;
+  color: #8a5700;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.rn-policy-register__hover-card .rn-hover-item-full {
+  background: #ffffff;
+}
+
+.rn-policy-register__hover-section-title {
+  padding: 6px 12px;
+  border-top: 1px solid #e6edf5;
+  border-bottom: 1px solid #e6edf5;
+  background: #f8fbff;
+  color: #334155;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rn-policy-register__hover-policy-grid {
+  padding-top: 8px !important;
+}
+
+.rn-policy-register__hover-policy-grid .rn-hover-value {
+  display: -webkit-box;
+  font-size: 11px;
+  white-space: normal;
+  word-break: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .rn-hover-remark-box {
   background-color: #ffffff;
   border: 1px solid rgba(233, 236, 239, 0.94);

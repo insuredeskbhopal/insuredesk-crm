@@ -70,4 +70,21 @@ describe("policy-wise renewal register", () => {
     expect(page).toContain('const isMotorView = policyType === "Motor"');
     expect(page).toContain("<th>Due In</th>");
   });
+
+  it("shows a read-only customer information card where a policy row is clicked", () => {
+    const page = fs.readFileSync(path.join(process.cwd(), "src/app/(dashboard)/dashboard/renewals/policies/page.js"), "utf8");
+    const styles = fs.readFileSync(path.join(process.cwd(), "src/app/ui/renewals-redesign.css"), "utf8");
+
+    expect(page).toContain("onClick={(event) => onRowClick(policy, event)}");
+    expect(page).toContain("getHoverCardPosition(event.clientX, event.clientY)");
+    expect(page).toContain('role="note"');
+    expect(page).toContain("closeOnOutsideClick");
+    expect(page).toContain('<HoverInfo label="Total Policies"');
+    expect(page).toContain('rn-policy-register__hover-section-title">Policy Details');
+    expect(page).toContain('<HoverInfo full label="Policyholder"');
+    expect(page).toContain('<HoverInfo label="Policy Number"');
+    expect(page).toContain('<HoverInfo label="Insurance Company"');
+    expect(page).toContain('<HoverInfo label="Due In"');
+    expect(styles).toMatch(/\.rn-hover-card\s*\{[\s\S]*?pointer-events:\s*none/);
+  });
 });

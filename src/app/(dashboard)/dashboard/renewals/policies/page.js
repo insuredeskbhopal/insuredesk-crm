@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
@@ -35,6 +35,32 @@ import {
 
 const PAGE_SIZE = 25;
 
+function getPolicyCustomerKey(policy) {
+  const digits = String(policy.contactNumber || "").replace(/\D/g, "");
+  return policy.customerPortfolioId || (digits.length >= 10 ? digits.slice(-10) : `NO-MOBILE-${policy.id}`);
+}
+
+function formatHoverStatus(value) {
+  return String(value || "Active")
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function getHoverCardPosition(clientX, clientY) {
+  const cardWidth = 340;
+  const cardHeight = 520;
+  const gap = 14;
+  return {
+    left: clientX + cardWidth + gap > window.innerWidth
+      ? Math.max(12, clientX - cardWidth - gap)
+      : clientX + gap,
+    top: clientY + cardHeight + gap > window.innerHeight
+      ? Math.max(12, clientY - cardHeight - gap)
+      : clientY + gap,
+  };
+}
+
 export default function RenewalPoliciesPage() {
   const router = useRouter();
   const [policies, setPolicies] = useState([]);
@@ -54,6 +80,22 @@ export default function RenewalPoliciesPage() {
   const [activeActionPolicyId, setActiveActionPolicyId] = useState("");
   const [actionMenuPosition, setActionMenuPosition] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [hoverCard, setHoverCard] = useState(null);
+  const hoverRequestRef = useRef(0);
+  const hoverCacheRef = useRef(new Map());
+  const infoCardOpen = hoverCard !== null;
+
+  useEffect(() => {
+    if (!infoCardOpen) return undefined;
+
+    const closeOnOutsideClick = (event) => {
+      if (event.target.closest?.(".rn-policy-register__table tbody tr")) return;
+      hoverRequestRef.current += 1;
+      setHoverCard(null);
+    };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    return () => document.removeEventListener("pointerdown", closeOnOutsideClick);
+  }, [infoCardOpen]);
 
   useEffect(() => {
     const params = new window.URLSearchParams(window.location.search);
@@ -181,6 +223,7 @@ export default function RenewalPoliciesPage() {
 
   const openActionMenu = (policyId, event) => {
     event.stopPropagation();
+    setHoverCard(null);
     if (activeActionPolicyId === policyId) {
       closeActionMenu();
       return;
@@ -204,9 +247,58 @@ export default function RenewalPoliciesPage() {
     setActionMenuPosition(null);
   }
 
+  const showPolicyInfoCard = async (policy, event) => {
+    if (activeActionPolicyId) return;
+    if (hoverCard?.policy.id === policy.id) {
+      hoverRequestRef.current += 1;
+      setHoverCard(null);
+      return;
+    }
+
+    const requestId = ++hoverRequestRef.current;
+    const { top, left } = getHoverCardPosition(event.clientX, event.clientY);
+    const customerKey = getPolicyCustomerKey(policy);
+    const cached = hoverCacheRef.current.get(customerKey);
+
+    setHoverCard({ policy, top, left, details: cached || null, loading: !cached });
+    if (cached) return;
+
+    try {
+      const response = await fetch(`/api/renewals/customers/${encodeURIComponent(customerKey)}?policyId=${encodeURIComponent(policy.id)}`, {
+        cache: "no-store",
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) return;
+
+      const nearestPolicy = (payload.policies || [])
+        .filter((item) => item.expiryDate)
+        .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))[0];
+      const profilePhone = String(payload.profile?.phone || "");
+      const details = {
+        name: payload.profile?.contactPerson || payload.profile?.name || policy.insuredName || "Contact Details",
+        phone: profilePhone.replace(/\D/g, "").length >= 10
+          ? profilePhone
+          : policy.renewalRecipientMobile || policy.contactNumber || "N/A",
+        status: payload.profile?.customerStatus || policy.renewalStatus,
+        totalCompanies: payload.stats?.totalCompanies ?? "—",
+        totalPolicies: payload.stats?.totalPolicies ?? "—",
+        policiesDue: payload.stats?.policiesDue ?? "—",
+        nearestExpiry: nearestPolicy?.expiryDate || policy.expiryDate,
+        assignee: payload.profile?.assignedTo || policy.assignedTo || "Unassigned",
+      };
+      hoverCacheRef.current.set(customerKey, details);
+      if (hoverRequestRef.current === requestId) {
+        setHoverCard((current) => current ? { ...current, details, loading: false } : null);
+      }
+    } catch {
+      if (hoverRequestRef.current === requestId) {
+        setHoverCard((current) => current ? { ...current, loading: false } : null);
+      }
+    }
+  };
+
   const openCustomerAction = (policy, action = "") => {
-    const digits = String(policy.contactNumber || "").replace(/\D/g, "");
-    const customerKey = policy.customerPortfolioId || (digits.length >= 10 ? digits.slice(-10) : `NO-MOBILE-${policy.id}`);
+    const customerKey = getPolicyCustomerKey(policy);
     const returnTo = `${window.location.pathname}${window.location.search}`;
     const params = new window.URLSearchParams({ returnTo, policyId: policy.id });
     if (action) params.set("action", action);
@@ -314,6 +406,7 @@ export default function RenewalPoliciesPage() {
                     onCloseMenu={closeActionMenu}
                     onCustomerAction={openCustomerAction}
                     onCall={callCustomer}
+                    onRowClick={showPolicyInfoCard}
                   />
                 );
               })}
@@ -329,6 +422,38 @@ export default function RenewalPoliciesPage() {
           </div>
         </footer>
       </div>
+      {hoverCard && typeof document !== "undefined" ? createPortal(
+        <div
+          className="rn-hover-card rn-policy-register__hover-card"
+          style={{ position: "fixed", top: `${hoverCard.top}px`, left: `${hoverCard.left}px` }}
+          role="note"
+          aria-label="Customer and policy information"
+        >
+          <h4 className="rn-hover-title">
+            {hoverCard.details?.name || hoverCard.policy.contactPersonName || hoverCard.policy.insuredName || "Contact Details"}
+          </h4>
+          <div className="rn-hover-grid rn-policy-register__customer-grid">
+            <HoverInfo label="Phone" value={hoverCard.details?.phone || hoverCard.policy.renewalRecipientMobile || hoverCard.policy.contactNumber || "N/A"} />
+            <HoverInfo label="Status" value={formatHoverStatus(hoverCard.details?.status || hoverCard.policy.renewalStatus)} />
+            <HoverInfo label="Companies" value={hoverCard.details?.totalCompanies ?? (hoverCard.loading ? "Loading…" : "—")} />
+            <HoverInfo label="Total Policies" value={hoverCard.details?.totalPolicies ?? (hoverCard.loading ? "Loading…" : "—")} />
+            <HoverInfo label="Policies Due" value={hoverCard.details?.policiesDue ?? (hoverCard.loading ? "Loading…" : "—")} />
+            <HoverInfo label="Nearest Expiry" value={formatRenewalRegisterDate(hoverCard.details?.nearestExpiry || hoverCard.policy.expiryDate)} />
+            <HoverInfo full label="Assignee" value={hoverCard.details?.assignee || hoverCard.policy.assignedTo || "Unassigned"} />
+          </div>
+          <div className="rn-policy-register__hover-section-title">Policy Details</div>
+          <div className="rn-hover-grid rn-policy-register__hover-policy-grid">
+            <HoverInfo full label="Policyholder" value={hoverCard.policy.insuredName || "Name not available"} />
+            <HoverInfo label="Policy Number" value={hoverCard.policy.policyNumber || "—"} />
+            <HoverInfo label="Policy Type" value={hoverCard.policy.displayPolicyType || hoverCard.policy.policyType || "—"} />
+            <HoverInfo label="Insurance Company" value={hoverCard.policy.insuranceCompany || "—"} />
+            <HoverInfo label="Vehicle / Risk" value={hoverCard.policy.vehicleNumber || hoverCard.policy.registrationNumber || hoverCard.policy.riskLocation || "—"} />
+            <HoverInfo label="Expiry Date" value={formatRenewalRegisterDate(hoverCard.policy.expiryDate)} />
+            <HoverInfo label="Due In" value={formatRenewalRegisterDueIn(hoverCard.policy.daysRemaining)} />
+          </div>
+        </div>,
+        document.body,
+      ) : null}
     </section>
   );
 }
@@ -344,9 +469,10 @@ function PolicyRegisterRow({
   onCloseMenu,
   onCustomerAction,
   onCall,
+  onRowClick,
 }) {
   return (
-    <tr>
+    <tr onClick={(event) => onRowClick(policy, event)}>
       <td><strong className="rn-policy-register__primary">{policy.insuredName || "Name not available"}</strong></td>
       <td><span className="rn-policy-register__mono">{policy.policyNumber || "—"}</span></td>
       <td>{policy.displayPolicyType || policy.policyType || "—"}</td>
@@ -403,6 +529,15 @@ function PolicyRegisterRow({
         </div>
       </td>
     </tr>
+  );
+}
+
+function HoverInfo({ label, value, full = false }) {
+  return (
+    <div className={`rn-hover-item${full ? " rn-hover-item-full" : ""}`}>
+      <span className="rn-hover-label">{label}</span>
+      <span className="rn-hover-value">{value}</span>
+    </div>
   );
 }
 
