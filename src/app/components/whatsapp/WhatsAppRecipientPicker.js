@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, RefreshCw, Search, UserRound, UsersRound } from "lucide-react";
 
 const normalizePhone = (value) => {
@@ -41,6 +41,9 @@ export default function WhatsAppRecipientPicker({
   const [searching, setSearching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [selectionMode, setSelectionMode] = useState("auto");
+  const matchRequestRef = useRef(0);
+  const searchRequestRef = useRef(0);
 
   const selectedGroup = useMemo(
     () => [...matches, ...searchResults].find((group) => group.id === groupId),
@@ -48,10 +51,12 @@ export default function WhatsAppRecipientPicker({
   );
 
   const findMatches = async () => {
+    const requestId = ++matchRequestRef.current;
     const phone = normalizePhone(contactPhone);
     setError("");
     setSearchResults([]);
     if (phone.length < 10) {
+      setMatching(false);
       setMatches([]);
       setMatchedPhone("");
       setSearchOpen(true);
@@ -63,27 +68,32 @@ export default function WhatsAppRecipientPicker({
       const payload = await fetchGroups(
         `/api/operations/whatsapp/groups?phone=${encodeURIComponent(phone)}`,
       );
+      if (requestId !== matchRequestRef.current) return;
       const nextMatches = Array.isArray(payload.groups) ? payload.groups : [];
       setMatches(nextMatches);
       setMatchedPhone(payload.phone || phone);
       setSearchOpen(nextMatches.length === 0);
+      setSelectionMode("auto");
       if (nextMatches.length > 0 && !nextMatches.some((group) => group.id === groupId)) {
         onGroupChange(nextMatches[0].id);
       } else if (nextMatches.length === 0) {
         onGroupChange("");
       }
     } catch (matchError) {
+      if (requestId !== matchRequestRef.current) return;
       setMatches([]);
       setSearchOpen(true);
       setError(matchError.message || "Could not match WhatsApp groups");
     } finally {
-      setMatching(false);
+      if (requestId === matchRequestRef.current) setMatching(false);
     }
   };
 
   useEffect(() => {
     if (type === "group") void findMatches();
-    // groupId intentionally stays out: selecting a manual override must not rerun matching.
+    return () => {
+      matchRequestRef.current += 1;
+    };
   }, [type, contactPhone]);
 
   useEffect(() => {
@@ -98,22 +108,31 @@ export default function WhatsAppRecipientPicker({
       return undefined;
     }
 
+    const requestId = ++searchRequestRef.current;
+    const controller = new globalThis.AbortController();
     setSearching(true);
     const timer = setTimeout(async () => {
       try {
         const payload = await fetchGroups(
           `/api/operations/whatsapp/groups?search=${encodeURIComponent(query)}&limit=30`,
+          { signal: controller.signal },
         );
+        if (requestId !== searchRequestRef.current) return;
         setSearchResults(Array.isArray(payload.groups) ? payload.groups : []);
         setError("");
       } catch (searchError) {
+        if (searchError.name === "AbortError" || requestId !== searchRequestRef.current) return;
         setSearchResults([]);
         setError(searchError.message || "Could not search WhatsApp groups");
       } finally {
-        setSearching(false);
+        if (requestId === searchRequestRef.current) setSearching(false);
       }
     }, 250);
-    return () => globalThis.clearTimeout(timer);
+    return () => {
+      globalThis.clearTimeout(timer);
+      controller.abort();
+      searchRequestRef.current += 1;
+    };
   }, [searchOpen, searchQuery, type]);
 
   const refreshGroups = async () => {
@@ -159,10 +178,31 @@ export default function WhatsAppRecipientPicker({
       </div>
 
       {type === "group" ? (
-        <div className="mt-3 border-t border-slate-100 pt-3">
+        <div className="rn-recipient-panel mt-3 border-t border-slate-100 pt-3">
           {matching ? (
             <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-3 text-xs font-medium text-slate-600">
               <RefreshCw size={14} className="animate-spin text-emerald-600" /> Finding groups containing this contact…
+            </div>
+          ) : selectionMode === "manual" && selectedGroup && !searchOpen ? (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2.5 shadow-sm">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <CheckCircle2 size={17} className="shrink-0 text-emerald-600" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-emerald-700">Selected group</p>
+                  <p className="mt-0.5 truncate text-xs font-bold text-slate-800">{selectedGroup.name}</p>
+                  <p className="mt-0.5 text-[10px] text-slate-500">
+                    Manual selection{selectedGroup.participants ? ` · ${selectedGroup.participants} members` : ""}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setSearchOpen(true)}
+                className="shrink-0 rounded-md border border-emerald-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+              >
+                Change
+              </button>
             </div>
           ) : matches.length > 0 && !searchOpen ? (
             <div className="overflow-hidden rounded-xl border border-emerald-200 bg-white shadow-sm">
@@ -190,7 +230,10 @@ export default function WhatsAppRecipientPicker({
                       aria-checked={selected}
                       disabled={disabled}
                       title={group.name}
-                      onClick={() => onGroupChange(group.id)}
+                      onClick={() => {
+                        setSelectionMode("auto");
+                        onGroupChange(group.id);
+                      }}
                       className={`flex min-w-0 items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition ${
                         selected
                           ? "border-emerald-400 bg-emerald-50 shadow-sm"
@@ -226,7 +269,17 @@ export default function WhatsAppRecipientPicker({
               ) : matches.length > 0 ? (
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <p className="text-xs font-semibold text-slate-700">Search another group</p>
-                  <button type="button" onClick={() => setSearchOpen(false)} className="text-[11px] font-semibold text-emerald-700">Keep auto match</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectionMode("auto");
+                      onGroupChange(matches[0]?.id || "");
+                      setSearchOpen(false);
+                    }}
+                    className="text-[11px] font-semibold text-emerald-700"
+                  >
+                    Keep auto match
+                  </button>
                 </div>
               ) : (
                 <p className="mb-2 text-xs font-semibold text-slate-700">Search for a WhatsApp group</p>
@@ -236,6 +289,7 @@ export default function WhatsAppRecipientPicker({
                 <input
                   type="search"
                   value={searchQuery}
+                  autoFocus
                   disabled={disabled}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   placeholder="Type at least 2 letters of the group name…"
@@ -253,6 +307,7 @@ export default function WhatsAppRecipientPicker({
                     type="button"
                     disabled={disabled}
                     onClick={() => {
+                      setSelectionMode("manual");
                       onGroupChange(group.id);
                       setSearchOpen(false);
                     }}
@@ -273,16 +328,6 @@ export default function WhatsAppRecipientPicker({
               >
                 <RefreshCw size={12} className={refreshing ? "animate-spin" : ""} /> Refresh synced groups
               </button>
-            </div>
-          ) : null}
-
-          {!matching && selectedGroup && matches.length === 0 && !searchOpen ? (
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Selected group</p>
-                <p className="mt-1 truncate text-xs font-bold text-slate-800">{selectedGroup.name}</p>
-              </div>
-              <button type="button" onClick={() => setSearchOpen(true)} className="shrink-0 text-[11px] font-semibold text-emerald-700">Change</button>
             </div>
           ) : null}
 

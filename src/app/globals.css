@@ -601,6 +601,21 @@ tbody tr:hover {
   }
 }
 
+.rn-recipient-panel {
+  animation: rn-recipient-reveal 180ms ease-out both;
+}
+
+@keyframes rn-recipient-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
