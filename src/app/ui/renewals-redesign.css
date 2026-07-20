@@ -882,9 +882,9 @@
   gap: 18px;
 }
 
-.rn-edit-contact-title .brand-logo-image {
-  width: 142px;
-  height: 68px;
+.rn-edit-contact-title .brand-logo.compact .brand-logo-image {
+  width: 112px;
+  height: 62px;
   object-fit: contain;
 }
 
@@ -1081,8 +1081,8 @@
     gap: 12px;
   }
 
-  .rn-edit-contact-title .brand-logo-image {
-    width: 92px;
+  .rn-edit-contact-title .brand-logo.compact .brand-logo-image {
+    width: 88px;
     height: 48px;
   }
 

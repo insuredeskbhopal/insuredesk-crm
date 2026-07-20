@@ -1655,9 +1655,9 @@ export default function CustomerRenewalsPage() {
                     type="submit"
                     className="rn-btn"
                     style={{
-                      background: "var(--rn-primary)",
-                      color: "#fff",
-                      borderColor: "var(--rn-primary)",
+                      background: "#fff",
+                      color: "var(--rn-text-primary)",
+                      borderColor: "var(--rn-border)",
                     }}
                     disabled={actionLoading}
                   >
