@@ -172,9 +172,20 @@ export async function logoutWhatsApp() {
   }
 }
 
-export async function getWhatsAppGroups() {
-  const groups = await callGateway("GET", "groups");
+export async function getWhatsAppGroups({ search = "", limit = 30 } = {}) {
+  const query = search
+    ? `?search=${encodeURIComponent(search)}&limit=${encodeURIComponent(limit)}`
+    : "";
+  const groups = await callGateway("GET", `groups${query}`);
   return Array.isArray(groups) ? groups : [];
+}
+
+export async function matchWhatsAppGroups(phone) {
+  const result = await callGateway("GET", `groups/match?phone=${encodeURIComponent(phone)}`);
+  return {
+    phone: result.phone || "",
+    groups: Array.isArray(result.groups) ? result.groups : [],
+  };
 }
 
 export async function refreshWhatsAppGroups() {

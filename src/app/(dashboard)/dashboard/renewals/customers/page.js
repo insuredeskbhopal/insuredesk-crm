@@ -2206,6 +2206,7 @@ export default function CustomerRenewalsPage() {
                     }}
                     groupId={whatsappGroupId}
                     onGroupChange={setWhatsAppGroupId}
+                    contactPhone={whatsappPhone}
                     disabled={actionLoading}
                   />
                 </div>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyJWT } from "@/lib/auth";
-import { getWhatsAppGroups, refreshWhatsAppGroups } from "@/lib/whatsapp/whatsapp-client";
+import { getWhatsAppGroups, matchWhatsAppGroups, refreshWhatsAppGroups } from "@/lib/whatsapp/whatsapp-client";
 
 export const runtime = "nodejs";
 
@@ -16,7 +16,19 @@ export async function GET(request) {
   try {
     const session = await requireSession(request);
     if (session.errorResponse) return session.errorResponse;
-    return NextResponse.json({ success: true, groups: await getWhatsAppGroups() });
+    const { searchParams } = new URL(request.url);
+    const phone = searchParams.get("phone");
+    if (phone) {
+      const match = await matchWhatsAppGroups(phone);
+      return NextResponse.json({ success: true, ...match });
+    }
+    return NextResponse.json({
+      success: true,
+      groups: await getWhatsAppGroups({
+        search: searchParams.get("search") || "",
+        limit: searchParams.get("limit") || 30,
+      }),
+    });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Failed to load WhatsApp groups" }, { status: 503 });
   }

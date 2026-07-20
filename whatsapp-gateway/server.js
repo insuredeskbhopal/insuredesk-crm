@@ -6,6 +6,7 @@ import {
   sendText,
   sendMedia,
   listGroups,
+  matchGroupsByPhone,
   refreshGroups,
   logout,
 } from "./baileys-manager.js";
@@ -80,8 +81,16 @@ app.get("/qr", (_req, res) => {
 });
 
 // ---- GET /groups ----
-app.get("/groups", (_req, res) => {
-  res.json(listGroups());
+app.get("/groups", (req, res) => {
+  res.json(listGroups({ search: req.query.search, limit: req.query.limit }));
+});
+
+// ---- GET /groups/match?phone=... ----
+app.get("/groups/match", (req, res) => {
+  if (!req.query.phone) {
+    return res.status(400).json({ success: false, error: "A customer phone number is required" });
+  }
+  res.json(matchGroupsByPhone(req.query.phone));
 });
 
 // ---- POST /groups/refresh ----

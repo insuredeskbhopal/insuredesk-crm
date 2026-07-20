@@ -8,6 +8,7 @@ const sessionsRoot =
   process.env.WHATSAPP_GATEWAY_SESSIONS_DIR || path.join(__dirname, "sessions");
 const storePath = path.join(sessionsRoot, "groups.json");
 let cachedGroups = null;
+let activityWriteTimer = null;
 
 function readStore() {
   if (cachedGroups) return { groups: cachedGroups };
@@ -51,6 +52,7 @@ export function storeDiscoveredGroups(discoveredGroups, whatsappSessionId) {
       groupId: group.groupId,
       groupName: group.groupName,
       participantCount: group.participantCount,
+      groupParticipants: Array.isArray(group.groupParticipants) ? group.groupParticipants : [],
       creationTime: group.creationTime || null,
       lastSyncedAt: syncedAt,
       active: true,
@@ -70,7 +72,45 @@ export function storeDiscoveredGroups(discoveredGroups, whatsappSessionId) {
   return groups.filter((group) => group.active);
 }
 
+export function findStoredGroupsByParticipant(phone) {
+  const normalizedPhone = String(phone || "").replace(/\D/g, "");
+  if (!normalizedPhone) return [];
+
+  return getStoredGroups()
+    .filter((group) => group.groupParticipants?.some((participant) => participant.phone === normalizedPhone))
+    .sort((a, b) =>
+      String(b.lastActivity || "").localeCompare(String(a.lastActivity || "")) ||
+      Number(b.participantCount || 0) - Number(a.participantCount || 0) ||
+      String(b.lastSyncedAt || "").localeCompare(String(a.lastSyncedAt || "")),
+    );
+}
+
+export function searchStoredGroups(search, limit = 30) {
+  const query = String(search || "").trim().toLocaleLowerCase();
+  if (!query) return [];
+  const safeLimit = Math.min(Math.max(Number(limit) || 30, 1), 50);
+
+  return getStoredGroups()
+    .filter((group) =>
+      String(group.groupName || "").toLocaleLowerCase().includes(query) ||
+      String(group.groupId || "").toLocaleLowerCase().includes(query),
+    )
+    .slice(0, safeLimit);
+}
+
+export function markStoredGroupActivity(groupId, timestamp = new Date().toISOString()) {
+  const groups = getStoredGroups({ includeInactive: true });
+  const index = groups.findIndex((group) => group.groupId === groupId);
+  if (index < 0) return;
+  groups[index] = { ...groups[index], lastActivity: timestamp };
+  cachedGroups = groups;
+  globalThis.clearTimeout(activityWriteTimer);
+  activityWriteTimer = setTimeout(() => writeStore(cachedGroups), 5000);
+}
+
 export function clearStoredGroups() {
+  globalThis.clearTimeout(activityWriteTimer);
+  activityWriteTimer = null;
   cachedGroups = null;
   try {
     if (fs.existsSync(storePath)) fs.rmSync(storePath);

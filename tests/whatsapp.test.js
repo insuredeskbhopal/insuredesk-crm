@@ -3,6 +3,7 @@ import { compileTemplate } from "../src/lib/whatsapp/queue-manager.js";
 import {
   getWhatsAppGroups,
   getWhatsAppStatus,
+  matchWhatsAppGroups,
   refreshWhatsAppGroups,
   sendWhatsAppText,
 } from "../src/lib/whatsapp/whatsapp-client.js";
@@ -105,6 +106,17 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
     await expect(refreshWhatsAppGroups()).resolves.toEqual(groups);
     expect(fetch.mock.calls.at(-2)[0]).toContain("/groups");
     expect(fetch.mock.calls.at(-1)[0]).toContain("/groups/refresh");
+  });
+
+  it("matches synced groups using a customer phone number", async () => {
+    const match = {
+      phone: "919111111692",
+      groups: [{ id: "120363412345678901@g.us", name: "Renewal Team", participants: 5 }],
+    };
+    fetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(match) });
+
+    await expect(matchWhatsAppGroups("+91 91111 11692")).resolves.toEqual(match);
+    expect(fetch.mock.calls.at(-1)[0]).toContain("/groups/match?phone=%2B91%2091111%2011692");
   });
 
   it("replaces an HTML 404 response with a readable group deployment error", async () => {

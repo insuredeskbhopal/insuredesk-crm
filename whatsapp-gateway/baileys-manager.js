@@ -11,7 +11,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import {
   clearStoredGroups,
+  findStoredGroupsByParticipant,
   getStoredGroups,
+  markStoredGroupActivity,
+  searchStoredGroups,
   storeDiscoveredGroups,
 } from "./group-store.js";
 
@@ -161,6 +164,18 @@ export async function startConnection() {
 
   // ---- Credential Persistence ----
   sock.ev.on("creds.update", saveCreds);
+  sock.ev.on("messages.upsert", ({ messages }) => {
+    for (const message of messages || []) {
+      const groupId = message?.key?.remoteJid;
+      if (groupId?.endsWith("@g.us")) {
+        const timestamp = Number(message.messageTimestamp || 0);
+        markStoredGroupActivity(
+          groupId,
+          timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
+        );
+      }
+    }
+  });
 
   return sock;
 }
@@ -215,14 +230,55 @@ export function formatRecipientToJid(recipient) {
 
 export const formatPhoneToJid = formatRecipientToJid;
 
-export function listGroups() {
-  return getStoredGroups().map((group) => ({
+function publicGroup(group) {
+  return {
     id: group.groupId,
     name: group.groupName,
     participants: group.participantCount,
     creationTime: group.creationTime,
     lastSyncedAt: group.lastSyncedAt,
-  }));
+    lastActivity: group.lastActivity || null,
+  };
+}
+
+export function listGroups({ search = "", limit } = {}) {
+  const groups = search ? searchStoredGroups(search, limit) : getStoredGroups();
+  return groups.map(publicGroup);
+}
+
+export function matchGroupsByPhone(phone) {
+  const normalizedPhone = normalizeIndianPhone(phone);
+  if (!normalizedPhone) return { phone: "", groups: [] };
+  return {
+    phone: normalizedPhone,
+    groups: findStoredGroupsByParticipant(normalizedPhone).map(publicGroup),
+  };
+}
+
+export function normalizeIndianPhone(value) {
+  if (!value) return "";
+  const raw = String(value).trim();
+  if (/@lid$/i.test(raw)) return "";
+  let digits = raw.replace(/@(c\.us|s\.whatsapp\.net)$/i, "").replace(/\D/g, "");
+  if (digits.startsWith("0")) digits = digits.slice(1);
+  if (digits.length === 10) digits = `91${digits}`;
+  return digits.length >= 10 && digits.length <= 15 ? digits : "";
+}
+
+function normalizeGroupParticipants(participants) {
+  const normalized = new Map();
+  for (const participant of participants || []) {
+    const jid = participant?.jid || participant?.id || "";
+    const phone = normalizeIndianPhone(participant?.jid) || normalizeIndianPhone(participant?.id);
+    const key = phone || jid;
+    if (!key) continue;
+    normalized.set(key, {
+      phone,
+      jid,
+      name: participant?.name || participant?.notify || participant?.verifiedName || "",
+    });
+  }
+  return [...normalized.values()];
 }
 
 export async function refreshGroups() {
@@ -237,6 +293,7 @@ export async function refreshGroups() {
       groupId: group.id,
       groupName: group.subject || "Unnamed WhatsApp Group",
       participantCount: Array.isArray(group.participants) ? group.participants.length : 0,
+      groupParticipants: normalizeGroupParticipants(group.participants),
       creationTime: group.creation ? new Date(Number(group.creation) * 1000).toISOString() : null,
     }));
     const sessionId = sock.user?.id ? String(sock.user.id).split(":")[0] : null;

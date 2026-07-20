@@ -2540,6 +2540,7 @@ export default function CustomerProfilePage(props) {
                     }}
                     groupId={whatsappGroupId}
                     onGroupChange={setWhatsAppGroupId}
+                    contactPhone={whatsappPhone}
                     disabled={actionLoading}
                   />
                 </div>
