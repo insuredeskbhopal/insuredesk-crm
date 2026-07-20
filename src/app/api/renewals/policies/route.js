@@ -459,6 +459,27 @@ export async function GET(request) {
         normalized.callStatus = payload.call || payload.callStatus || "";
         return normalized;
       });
+
+      const whatsappLogs = await prisma.auditLog.findMany({
+        where: {
+          action: "WHATSAPP_REMINDER_SENT",
+          entityType: "PolicyRecord",
+          entityId: { in: ids },
+          ...(isSuperAdmin ? {} : { organizationId: orgId }),
+        },
+        select: { entityId: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+      });
+      const whatsappSentAtByPolicy = new Map();
+      whatsappLogs.forEach((log) => {
+        if (log.entityId && !whatsappSentAtByPolicy.has(log.entityId)) {
+          whatsappSentAtByPolicy.set(log.entityId, log.createdAt);
+        }
+      });
+      policies = policies.map((policy) => ({
+        ...policy,
+        whatsappMessageSentAt: whatsappSentAtByPolicy.get(policy.id) || null,
+      }));
     }
 
     return Response.json({

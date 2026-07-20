@@ -6,7 +6,7 @@ import { normalizeRenewalInsuranceCompany } from "@/lib/renewals/companies";
 import * as XLSX from "xlsx";
 
 const MANUAL_RENEWAL_IMPORT_METHOD = "renewal_excel_import";
-const { buildRenewalImportKey, excelDateToString } = renewalImportIdentity;
+const { excelDateToString, findRenewalImportMatch, mergeRenewalImportData } = renewalImportIdentity;
 
 function buildCustomerId(name, mobile) {
   const namePart = String(name || "")
@@ -22,22 +22,22 @@ const headerMap = {
   // General/Policy Fields
   "insured name": "insuredName",
   "insured/proposer name": "insuredName",
-  "name": "insuredName",
+  name: "insuredName",
 
   "policy number": "policyNumber",
-  "policyno": "policyNumber",
+  policyno: "policyNumber",
 
   "policy type": "policyType",
-  "product": "policyType",
-  "lob": "policyType",
+  product: "policyType",
+  lob: "policyType",
 
-  "premium": "premium",
+  premium: "premium",
   "expiring policy premium": "premium",
   "total premium": "totalPremium",
   "net premium": "netPremium",
   "od premium": "odPremium",
   "premium including gst": "premiumIncludingGst",
-  "premiumincludinggst": "premiumIncludingGst",
+  premiumincludinggst: "premiumIncludingGst",
 
   "sum insured": "sumInsured",
   "expiring policy sum insured": "sumInsured",
@@ -45,61 +45,61 @@ const headerMap = {
   "start date": "startDate",
   "expiry date": "expiryDate",
   "end date": "expiryDate",
-  "expirydate": "expiryDate",
+  expirydate: "expiryDate",
 
-  "duration": "duration",
+  duration: "duration",
 
   "insurance company": "insuranceCompany",
-  "insurancecompany": "insuranceCompany",
+  insurancecompany: "insuranceCompany",
 
   "cover type": "policyCoverType",
   "policy cover type": "policyCoverType",
 
   // Motor Fields
   "vehicle number": "vehicleNumber",
-  "vehiclenumber": "vehicleNumber",
+  vehiclenumber: "vehicleNumber",
   "registration number": "registrationNumber",
-  "registrationnumber": "registrationNumber",
+  registrationnumber: "registrationNumber",
 
   "make / model": "makeModel",
-  "make": "vehicleMake",
-  "model": "vehicleModel",
-  "variant": "variant",
+  make: "vehicleMake",
+  model: "vehicleModel",
+  variant: "variant",
   "manufacturing year": "manufacturingYear",
   "registration date": "registrationDate",
   "engine number": "engineNumber",
   "chassis number": "chassisNumber",
   "fuel type": "fuelType",
   "cubic capacity": "cubicCapacity",
-  "idv": "idv",
-  "ncb": "ncb",
+  idv: "idv",
+  ncb: "ncb",
   "rto location": "rtoLocation",
 
   // Contact / Remark / Status / Non-Motor
   "contact number": "contactNumber",
-  "mob": "contactNumber",
+  mob: "contactNumber",
   "mob no": "contactNumber",
-  "mobile": "contactNumber",
+  mobile: "contactNumber",
   "contact person": "contactPerson",
-  "contactperson": "contactPerson",
+  contactperson: "contactPerson",
   "contact person name": "contactPerson",
-  "contactpersonname": "contactPerson",
+  contactpersonname: "contactPerson",
   "contact name": "contactPerson",
   "person name": "contactPerson",
   "whatsapp group name": "whatsappGroupName",
-  "remark": "remark",
-  "status": "status",
+  remark: "remark",
+  status: "status",
   "risk location": "riskLocation",
   "business description": "businessDescription",
-  "occupancy": "occupancy",
-  "quote": "quote",
-  "msg": "msg",
-  "message": "msg",
-  "whatsapp": "msg",
+  occupancy: "occupancy",
+  quote: "quote",
+  msg: "msg",
+  message: "msg",
+  whatsapp: "msg",
   "payment link": "paymentLink",
-  "paymentlink": "paymentLink",
-  "link": "paymentLink",
-  "call": "call",
+  paymentlink: "paymentLink",
+  link: "paymentLink",
+  call: "call",
   "call status": "call",
 };
 
@@ -133,14 +133,22 @@ export async function POST(request) {
         organizationId,
         deletedAt: null,
       },
-      select: { data: true, reviewedData: true },
+      select: {
+        id: true,
+        data: true,
+        extractedData: true,
+        reviewedData: true,
+        detectedCompany: true,
+        detectedPolicyType: true,
+        selectedCompany: true,
+        selectedPolicyType: true,
+      },
     });
-    const renewalKeys = new Set(
-      existingRecords.map((record) => buildRenewalImportKey(record.reviewedData || record.data || {})),
-    );
 
     let insertedCount = 0;
-    let skippedDuplicateCount = 0;
+    let updatedCount = 0;
+    let unchangedCount = 0;
+    let ambiguousCount = 0;
 
     for (const sheetName of workbook.SheetNames) {
       const worksheet = workbook.Sheets[sheetName];
@@ -166,7 +174,6 @@ export async function POST(request) {
           }
         }
 
-        payload.sourceFile = sourceFileName;
         payload.manualRenewalSource = true;
 
         payload.premium = payload.premium || payload.totalPremium || payload.netPremium || "";
@@ -190,21 +197,73 @@ export async function POST(request) {
           continue;
         }
 
-        const renewalKey = buildRenewalImportKey(payload);
-        if (renewalKeys.has(renewalKey)) {
-          skippedDuplicateCount++;
-          continue;
-        }
-
         let customerId = "";
         if (name && mob) {
           customerId = buildCustomerId(name, mob);
         }
         payload.customerId = customerId;
 
-        const sanitizedData = payload;
+        const match = findRenewalImportMatch(payload, existingRecords);
+        if (match.status === "ambiguous") {
+          ambiguousCount++;
+          continue;
+        }
 
-        const statusLower = String(status || "").trim().toLowerCase();
+        if (match.status === "matched") {
+          const record = match.record;
+          const dataMerge = mergeRenewalImportData(record.data || {}, payload);
+          const reviewedMerge = mergeRenewalImportData(record.reviewedData || record.data || {}, payload);
+          const extractedMerge = mergeRenewalImportData(record.extractedData || record.data || {}, payload);
+          const updateData = {};
+
+          if (dataMerge.changedFields.length) updateData.data = dataMerge.data;
+          if (reviewedMerge.changedFields.length) updateData.reviewedData = reviewedMerge.data;
+          if (extractedMerge.changedFields.length) updateData.extractedData = extractedMerge.data;
+
+          if (insuranceCompany && record.detectedCompany !== insuranceCompany) {
+            updateData.detectedCompany = insuranceCompany;
+          }
+          if (insuranceCompany && record.selectedCompany !== insuranceCompany) {
+            updateData.selectedCompany = insuranceCompany;
+          }
+          if (product && record.detectedPolicyType !== product) {
+            updateData.detectedPolicyType = product;
+          }
+          if (product && record.selectedPolicyType !== product) {
+            updateData.selectedPolicyType = product;
+          }
+
+          if (status) {
+            const statusLower = String(status).trim().toLowerCase();
+            if (statusLower === "renewed") {
+              updateData.renewalStatus = "RENEWED";
+              updateData.isActivePolicy = false;
+            } else if (statusLower === "lost") {
+              updateData.renewalStatus = "LOST";
+              updateData.isActivePolicy = false;
+            } else if (statusLower === "active") {
+              updateData.renewalStatus = "ACTIVE";
+              updateData.isActivePolicy = true;
+            }
+          }
+
+          if (!Object.keys(updateData).length) {
+            unchangedCount++;
+            continue;
+          }
+
+          updateData.updatedById = user.userId || user.id || null;
+          await prisma.policyRecord.update({ where: { id: record.id }, data: updateData });
+          Object.assign(record, updateData);
+          updatedCount++;
+          continue;
+        }
+
+        const sanitizedData = { ...payload, sourceFile: sourceFileName };
+
+        const statusLower = String(status || "")
+          .trim()
+          .toLowerCase();
         let renewalStatus = "ACTIVE";
         let isActivePolicy = true;
 
@@ -217,10 +276,11 @@ export async function POST(request) {
         }
 
         const recordDate = new Date();
+        const recordId = randomUUID();
 
         await prisma.policyRecord.create({
           data: {
-            id: randomUUID(),
+            id: recordId,
             savedAt: recordDate,
             createdAt: recordDate,
             updatedAt: recordDate,
@@ -251,16 +311,28 @@ export async function POST(request) {
             isActivePolicy: isActivePolicy,
           },
         });
-        renewalKeys.add(renewalKey);
+        existingRecords.push({
+          id: recordId,
+          data: sanitizedData,
+          extractedData: sanitizedData,
+          reviewedData: sanitizedData,
+          detectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
+          detectedPolicyType: sanitizedData.policyType || product,
+          selectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
+          selectedPolicyType: sanitizedData.policyType || product,
+        });
         insertedCount++;
       }
     }
 
     return Response.json({
       success: true,
-      message: `Imported ${insertedCount} new renewal policies and kept all existing renewal data.`,
+      message: `Imported ${insertedCount} new renewal policies, updated ${updatedCount}, and preserved all blank-cell and workflow data.`,
       insertedCount,
-      skippedDuplicateCount,
+      updatedCount,
+      unchangedCount,
+      ambiguousCount,
+      skippedDuplicateCount: unchangedCount,
       existingCount: existingRecords.length,
     });
   } catch (error) {

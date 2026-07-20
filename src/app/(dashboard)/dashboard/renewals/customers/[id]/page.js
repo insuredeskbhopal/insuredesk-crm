@@ -31,6 +31,7 @@ const COL_HEADERS = [
   "Start Date",
   "Expiry Date",
   "Days Left",
+  "WhatsApp Status",
   "Renewal Status",
   "Actions",
 ];
@@ -169,9 +170,12 @@ export default function CustomerProfilePage(props) {
   const [lostForm, setLostForm] = useState({ lostReason: "Premium High", remarks: "" });
   const [reassignForm, setReassignForm] = useState({ assignedToUserId: "", note: "" });
   const [whatsappTemplates, setWhatsAppTemplates] = useState(null);
+  const [whatsappCustomFields, setWhatsAppCustomFields] = useState([]);
+  const [whatsappPreviewView, setWhatsAppPreviewView] = useState("message");
   const [selectedTemplateType, setSelectedTemplateType] = useState("due_soon");
   const [editedWhatsAppMessage, setEditedWhatsAppMessage] = useState("");
   const [whatsappPhone, setWhatsAppPhone] = useState("");
+  const [whatsappPolicyId, setWhatsAppPolicyId] = useState("");
 
   const [teamMembers, setTeamMembers] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
@@ -179,7 +183,7 @@ export default function CustomerProfilePage(props) {
 
   // Resizable columns
   const STORAGE_KEY = "rn-contact-policies-col-widths-v2";
-  const DEFAULT_WIDTHS = [135, 160, 145, 120, 95, 110, 100, 105, 90, 120, 70];
+  const DEFAULT_WIDTHS = [135, 160, 145, 120, 95, 110, 100, 105, 90, 125, 120, 70];
   const [colWidths, setColWidths] = useState(() => {
     if (typeof window === "undefined") return DEFAULT_WIDTHS;
     try {
@@ -616,7 +620,10 @@ export default function CustomerProfilePage(props) {
     }
 
     setWhatsAppPhone("");
+    setWhatsAppPolicyId(policy?.id || "");
     setWhatsAppTemplates(null);
+    setWhatsAppCustomFields([]);
+    setWhatsAppPreviewView("message");
     setSelectedTemplateType("due_soon");
     setEditedWhatsAppMessage("");
 
@@ -635,6 +642,7 @@ export default function CustomerProfilePage(props) {
       if (res.ok && data.success) {
         setWhatsAppPhone(data.phone);
         setWhatsAppTemplates(data.templates);
+        setWhatsAppCustomFields(data.customFields || []);
         setSelectedTemplateType(data.defaultTemplate);
         setEditedWhatsAppMessage(data.templates[data.defaultTemplate]);
         setWhatsAppPreviewOpen(true);
@@ -663,20 +671,6 @@ export default function CustomerProfilePage(props) {
     if (!editedWhatsAppMessage) return;
 
     try {
-      // Log audit action
-      try {
-        await fetch("/api/renewals/whatsapp-message", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            phone: profile.phone,
-            logAudit: true,
-          }),
-        });
-      } catch (e) {
-        console.error("Failed to log WhatsApp audit:", e);
-      }
-
       // Direct message send
       const res = await fetch("/api/operations/whatsapp/test-message", {
         method: "POST",
@@ -688,6 +682,19 @@ export default function CustomerProfilePage(props) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        try {
+          await fetch("/api/renewals/whatsapp-message", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              phone: profile.phone,
+              policyId: whatsappPolicyId || undefined,
+              logAudit: true,
+            }),
+          });
+        } catch (auditError) {
+          console.error("Failed to log WhatsApp audit:", auditError);
+        }
         window.alert(`WhatsApp message sent successfully to ${profile.insuredName}!`);
       } else {
         window.alert(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`);
@@ -1307,8 +1314,22 @@ export default function CustomerProfilePage(props) {
                         <span className={getDaysClass(daysLeft)}>{getDaysText(daysLeft)}</span>
                       </td>
 
-                      {/* 10. Renewal Status */}
+                      {/* 10. WhatsApp Status */}
                       <td style={{ width: colWidths[9] + "px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "3px", alignItems: "flex-start" }}>
+                          <span className={`rn-badge ${p.whatsappMessageSentAt ? "rn-badge-success" : "rn-badge-active"}`}>
+                            {p.whatsappMessageSentAt ? "Sent" : "Not sent"}
+                          </span>
+                          {p.whatsappMessageSentAt ? (
+                            <small style={{ color: "var(--rn-text-muted)", whiteSpace: "nowrap" }}>
+                              {formatDate(p.whatsappMessageSentAt)}
+                            </small>
+                          ) : null}
+                        </div>
+                      </td>
+
+                      {/* 11. Renewal Status */}
+                      <td style={{ width: colWidths[10] + "px" }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                           <span
                             className={`rn-badge ${
@@ -1355,8 +1376,8 @@ export default function CustomerProfilePage(props) {
                         </div>
                       </td>
 
-                      {/* 11. Actions (3-dot dropdown) */}
-                      <td style={{ width: colWidths[10] + "px" }}>
+                      {/* 12. Actions (3-dot dropdown) */}
+                      <td style={{ width: colWidths[11] + "px" }}>
                         <div className="rn-dropdown">
                           <button className="rn-dropdown-btn" onClick={(e) => openActionMenu(p.id, e)}>
                             <MoreVertical size={16} />
@@ -2370,7 +2391,7 @@ export default function CustomerProfilePage(props) {
           >
             <div
               className="tb-modal-content"
-              style={{ maxWidth: "550px" }}
+              style={{ maxWidth: "760px", maxHeight: "90vh", overflowY: "auto" }}
               onClick={(e) => e.stopPropagation()}
             >
               <div
@@ -2394,49 +2415,75 @@ export default function CustomerProfilePage(props) {
               {whatsappTemplates && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
                   <div>
-                    <label className="customer-meta-label">Template Context</label>
-                    <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
-                      {Object.keys(whatsappTemplates).map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          className="rn-btn"
-                          style={{
-                            fontSize: "12px",
-                            padding: "6px 10px",
-                            ...(selectedTemplateType === type && {
-                              background: "var(--rn-primary-light)",
-                              color: "var(--rn-primary)",
-                              borderColor: "var(--rn-primary)",
-                            }),
-                          }}
-                          onClick={() => {
-                            setSelectedTemplateType(type);
-                            setEditedWhatsAppMessage(whatsappTemplates[type]);
-                          }}
-                        >
-                          {type.replace("_", " ").toUpperCase()}
+                    <label className="customer-meta-label">View</label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
+                      {[
+                        ["message", "Message Preview"],
+                        ["fields", "Custom Fields"],
+                      ].map(([value, label]) => (
+                        <button key={value} type="button" className="rn-btn" onClick={() => setWhatsAppPreviewView(value)}
+                          style={whatsappPreviewView === value ? { background: "var(--rn-primary-light)", color: "var(--rn-primary)", borderColor: "var(--rn-primary)" } : undefined}>
+                          {label}
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  <div>
-                    <label className="customer-meta-label">Message Preview & Edit</label>
-                    <textarea
-                      className="rn-input"
-                      style={{
-                        width: "100%",
-                        height: "180px",
-                        marginTop: "4px",
-                        fontFamily: "monospace",
-                        fontSize: "13px",
-                        lineHeight: "1.4",
-                      }}
-                      value={editedWhatsAppMessage}
-                      onChange={(e) => setEditedWhatsAppMessage(e.target.value)}
-                    />
-                  </div>
+                  {whatsappPreviewView === "fields" ? (
+                    <div style={{ overflowX: "auto" }}>
+                      <table className="rn-table" style={{ minWidth: "620px" }}>
+                        <thead><tr><th>Field Name</th><th>Placeholder</th><th>Example Value</th></tr></thead>
+                        <tbody>
+                          {whatsappCustomFields.map((field) => (
+                            <tr key={field.placeholder}>
+                              <td>{field.label}</td>
+                              <td><code>{field.placeholder}</code></td>
+                              <td>{field.example}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="customer-meta-label">Template Context</label>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
+                          {Object.keys(whatsappTemplates).map((type) => (
+                            <button
+                              key={type}
+                              type="button"
+                              className="rn-btn"
+                              style={{
+                                fontSize: "12px",
+                                padding: "6px 10px",
+                                ...(selectedTemplateType === type && {
+                                  background: "var(--rn-primary-light)",
+                                  color: "var(--rn-primary)",
+                                  borderColor: "var(--rn-primary)",
+                                }),
+                              }}
+                              onClick={() => {
+                                setSelectedTemplateType(type);
+                                setEditedWhatsAppMessage(whatsappTemplates[type]);
+                              }}
+                            >
+                              {type.replaceAll("_", " ").toUpperCase()}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="customer-meta-label">Message Preview & Edit</label>
+                        <textarea
+                          className="rn-input"
+                          style={{ width: "100%", height: "180px", marginTop: "4px", fontFamily: "monospace", fontSize: "13px", lineHeight: "1.4" }}
+                          value={editedWhatsAppMessage}
+                          onChange={(e) => setEditedWhatsAppMessage(e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 

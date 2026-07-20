@@ -289,7 +289,7 @@ export default function RenewalPoliciesPage() {
             <thead>
               <tr>
                 <th>Policyholder</th><th>Policy Number</th><th>Policy Type</th><th>Company</th><th>Vehicle / Risk</th>
-                <th>Start Date</th><th>Expiry Date</th><th>Sum Insured / IDV</th><th>Premium</th><th>Mobile</th><th>Status</th><th>Actions</th>
+                <th>Start Date</th><th>Expiry Date</th><th>Sum Insured / IDV</th><th>Premium</th><th>Mobile</th><th>WhatsApp Status</th><th>Status</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -350,6 +350,12 @@ function PolicyRegisterRow({
       <td>{formatRenewalRegisterAmount(policy.sumInsured || policy.idv)}</td>
       <td>{formatRenewalRegisterAmount(policy.totalPremium || policy.premium)}</td>
       <td>{policy.contactNumber || "—"}</td>
+      <td>
+        <span className={`rn-policy-register__status rn-policy-register__status--${policy.whatsappMessageSentAt ? "success" : "neutral"}`}>
+          {policy.whatsappMessageSentAt ? "Sent" : "Not sent"}
+        </span>
+        {policy.whatsappMessageSentAt ? <small>{formatRenewalRegisterDate(policy.whatsappMessageSentAt)}</small> : null}
+      </td>
       <td><span className={`rn-policy-register__status rn-policy-register__status--${statusTone}`}>{String(policy.renewalStatus || "unknown").replaceAll("_", " ")}</span></td>
       <td className="rn-policy-register__actions">
         <div className="rn-dropdown">

@@ -171,6 +171,29 @@ export async function GET(request, props) {
       policies = [requestedPolicy, ...policies.filter((policy) => policy.id !== requestedPolicy.id)];
     }
 
+    const whatsappLogs = policies.length
+      ? await prisma.auditLog.findMany({
+          where: {
+            action: "WHATSAPP_REMINDER_SENT",
+            entityType: "PolicyRecord",
+            entityId: { in: policies.map((policy) => policy.id) },
+            ...(isSuperAdmin ? {} : { organizationId: orgId }),
+          },
+          select: { entityId: true, createdAt: true },
+          orderBy: { createdAt: "desc" },
+        })
+      : [];
+    const whatsappSentAtByPolicy = new Map();
+    whatsappLogs.forEach((log) => {
+      if (log.entityId && !whatsappSentAtByPolicy.has(log.entityId)) {
+        whatsappSentAtByPolicy.set(log.entityId, log.createdAt);
+      }
+    });
+    policies = policies.map((policy) => ({
+      ...policy,
+      whatsappMessageSentAt: whatsappSentAtByPolicy.get(policy.id) || null,
+    }));
+
     // 3. Compute stats
     let totalPremium = 0;
     let totalSumInsured = 0;

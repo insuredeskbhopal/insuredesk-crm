@@ -6,6 +6,11 @@ import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
 import { withRenewalCompanyDisplay } from "@/lib/renewals/companies";
+import {
+  buildRenewalWhatsAppMessage,
+  RENEWAL_WHATSAPP_CUSTOM_FIELDS,
+  selectRenewalWhatsAppPolicies,
+} from "@/lib/renewals/whatsapp-message";
 
 export const runtime = "nodejs";
 
@@ -112,14 +117,15 @@ export async function POST(request) {
     });
 
     // Fallback: If no policies are strictly "due in window", use all normalized matching policies
-    const targetList =
-      duePolicies.length > 0
-        ? duePolicies
-        : normalized.length > 0
-          ? normalized
-          : mainPolicy
-            ? [withRenewalCompanyDisplay(withRenewalPolicyDisplay(normalizeRecord(mainPolicy)))]
-            : [];
+    const primaryPolicy = mainPolicy
+      ? withRenewalCompanyDisplay(withRenewalPolicyDisplay(normalizeRecord(mainPolicy)))
+      : null;
+    const targetList = selectRenewalWhatsAppPolicies({
+      policyId,
+      primaryPolicy,
+      duePolicies,
+      policies: normalized,
+    });
 
     if (targetList.length === 0) {
       return Response.json({ error: "No policies found to generate message" }, { status: 404 });
@@ -176,6 +182,12 @@ export async function POST(request) {
     // 4. Generate Message Content
     let templates = {};
     let defaultTemplate = "due_soon";
+    const agentName =
+      targetList.find((policy) => String(policy.assignedTo || "").trim())?.assignedTo ||
+      user.name ||
+      user.email ||
+      "Team Member";
+    const renewalMessage = buildRenewalWhatsAppMessage({ agentName, customerName, policies: targetList });
 
     if (count > 1) {
       // Combined Multi-policy message template
@@ -210,6 +222,7 @@ ${orgName} Team`;
         today: combinedText,
         expired: combinedText,
         follow_up: combinedText,
+        renewal_msg: renewalMessage,
       };
     } else {
       // Single policy message templates
@@ -290,6 +303,7 @@ ${orgName} Team`;
         today: expiringTodayText,
         expired: alreadyExpiredText,
         follow_up: followUpText,
+        renewal_msg: renewalMessage,
       };
 
       if (daysRemaining < 0) {
@@ -308,6 +322,7 @@ ${orgName} Team`;
       phone: phoneParam,
       defaultTemplate,
       templates,
+      customFields: RENEWAL_WHATSAPP_CUSTOM_FIELDS,
     });
   } catch (error) {
     console.error("WhatsApp message generation failed:", error);
