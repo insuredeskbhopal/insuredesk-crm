@@ -1,5 +1,6 @@
 import renewalImportIdentity from "./import-identity.cjs";
 import { calculateDaysLeft } from "./dates";
+import { normalizeCustomerName, resolvePolicyCustomerName } from "./customer-name";
 
 const RENEWAL_HELP_NUMBER = "+91 88188 89660";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -37,7 +38,7 @@ export function isRenewalAgentId(value) {
 }
 
 export function normalizeRenewalContactName(value, fallback = "Valued Customer") {
-  const name = String(value || "").trim();
+  const name = normalizeCustomerName(value);
   return name && !isRenewalAgentId(name) && name.toLowerCase() !== "unassigned" ? name : fallback;
 }
 
@@ -54,7 +55,7 @@ export function groupRenewalPoliciesByRecipient(policies = []) {
     if (!mobile) return;
     const current = groups.get(mobile) || {
       mobile,
-      name: policy.renewalRecipientName || policy.contactPerson || "Valued Customer",
+      name: resolvePolicyCustomerName(policy.renewalRecipientName, policy.contactPerson, policy.insuredName) || "Valued Customer",
       policies: [],
     };
     current.policies.push(policy);
@@ -83,8 +84,11 @@ function renewalVehicleDescription(policy = {}) {
 }
 
 export function buildRenewalWhatsAppMessage({ recipientName, agentName, customerName, policies = [], referenceDate } = {}) {
-  const recipient = normalizeRenewalContactName(recipientName || agentName);
-  const name = String(customerName || "Valued Customer").trim() || "Valued Customer";
+  const name = normalizeCustomerName(customerName) || "Valued Customer";
+  const recipient = normalizeRenewalContactName(
+    recipientName || agentName,
+    normalizeRenewalContactName(name),
+  );
   const reminders = policies
     .map((policy) => {
       const hasDaysRemaining = policy.daysRemaining !== null && policy.daysRemaining !== undefined && policy.daysRemaining !== "";

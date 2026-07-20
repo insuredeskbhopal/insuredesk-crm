@@ -1,4 +1,5 @@
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
+import { resolvePolicyCustomerName } from "@/lib/renewals/customer-name";
 
 const { normalizeInsuranceCompanyName } = insuranceCompanyMaster;
 
@@ -21,6 +22,17 @@ export function normalizeRecord(record) {
     legacy.customerName ||
     payload["Insured Name"] ||
     "";
+  const contactPersonName = resolvePolicyCustomerName(
+    record.contactPersonName,
+    payload,
+    legacy,
+    insuredName,
+  );
+  const renewalRecipientName = resolvePolicyCustomerName(
+    record.renewalRecipientName,
+    contactPersonName,
+    insuredName,
+  );
   const contactNumber =
     record.contactPersonMobile ||
     payload.contactNumber ||
@@ -93,18 +105,7 @@ export function normalizeRecord(record) {
     insuredName,
     policyNumber: payload.policyNumber || legacy.policyNumber || payload["Policy No."] || "",
     contactNumber,
-    contactPerson:
-      record.contactPersonName ||
-      payload.contactPerson ||
-      legacy.contactPerson ||
-      payload.contactPersonName ||
-      legacy.contactPersonName ||
-      payload.customerName ||
-      legacy.customerName ||
-      payload["Contact person name"] ||
-      payload["Contact Person Name"] ||
-      payload["Contact Person"] ||
-      "",
+    contactPerson: contactPersonName,
     email:
       record.contactPersonEmail ||
       payload.email ||
@@ -116,8 +117,7 @@ export function normalizeRecord(record) {
       payload["Email ID"] ||
       payload["Email Address"] ||
       "",
-    renewalRecipientName:
-      record.renewalRecipientName || record.contactPersonName || payload.contactPerson || payload.contactPersonName || "",
+    renewalRecipientName,
     renewalRecipientMobile:
       record.renewalRecipientMobile || record.contactPersonMobile || contactNumber,
     renewalRecipientEmail:

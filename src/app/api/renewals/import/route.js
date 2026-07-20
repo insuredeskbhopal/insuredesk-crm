@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import renewalImportIdentity from "@/lib/renewals/import-identity.cjs";
 import { normalizeRenewalInsuranceCompany } from "@/lib/renewals/companies";
+import { normalizeCustomerName, resolvePolicyCustomerName } from "@/lib/renewals/customer-name";
 import * as XLSX from "xlsx";
 
 const MANUAL_RENEWAL_IMPORT_METHOD = "renewal_excel_import";
@@ -168,10 +169,10 @@ export async function POST(request) {
       });
       portfolio ||= await prisma.customerProfile.create({
         data: {
-          name: String(payload.insuredName || "Unnamed Customer").trim(),
+          name: resolvePolicyCustomerName(payload) || "Unnamed Customer",
           phone: mobile,
           email: String(payload.email || payload.customerEmail || "").trim() || null,
-          contactPersonName: String(payload.contactPerson || payload.contactPersonName || "").trim() || null,
+          contactPersonName: resolvePolicyCustomerName(payload) || null,
           organizationId,
           createdById: user.userId || user.id || null,
           updatedById: user.userId || user.id || null,
@@ -249,7 +250,7 @@ export async function POST(request) {
 
         if (match.status === "matched") {
           const record = match.record;
-          const contactName = String(record.contactPersonName || payload.contactPerson || payload.contactPersonName || "").trim();
+          const contactName = normalizeCustomerName(record.contactPersonName) || resolvePolicyCustomerName(payload);
           const contactMobile = String(record.contactPersonMobile || payload.contactNumber || payload.customerMobile || "").trim();
           const contactEmail = String(record.contactPersonEmail || payload.email || payload.customerEmail || "").trim();
           const portfolioId = record.customerPortfolioId || await resolvePortfolio({ ...payload, contactNumber: contactMobile }, record.id);
@@ -261,7 +262,7 @@ export async function POST(request) {
           updateData.contactPersonName = contactName || null;
           updateData.contactPersonMobile = contactMobile || null;
           updateData.contactPersonEmail = contactEmail || null;
-          updateData.renewalRecipientName = record.renewalRecipientName || contactName || null;
+          updateData.renewalRecipientName = normalizeCustomerName(record.renewalRecipientName) || contactName || null;
           updateData.renewalRecipientMobile = record.renewalRecipientMobile || contactMobile || null;
           updateData.renewalRecipientEmail = record.renewalRecipientEmail || contactEmail || null;
 
@@ -327,7 +328,7 @@ export async function POST(request) {
         const recordDate = new Date();
         const recordId = randomUUID();
         const portfolioId = await resolvePortfolio(sanitizedData, recordId);
-        const contactName = String(sanitizedData.contactPerson || sanitizedData.contactPersonName || "").trim();
+        const contactName = resolvePolicyCustomerName(sanitizedData);
         const contactMobile = String(sanitizedData.contactNumber || sanitizedData.customerMobile || "").trim();
         const contactEmail = String(sanitizedData.email || sanitizedData.customerEmail || "").trim();
 

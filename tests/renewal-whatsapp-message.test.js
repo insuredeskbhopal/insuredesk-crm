@@ -42,6 +42,16 @@ describe("renewal WhatsApp message", () => {
     ).toEqual([policies[0]]);
   });
 
+  it("uses an extracted policyholder name without requiring a manual contact save", () => {
+    const message = buildRenewalWhatsAppMessage({
+      customerName: "Rahul Sharma",
+      policies: [{ policyNumber: "POL-100", insuredName: "Rahul Sharma" }],
+    });
+
+    expect(message).toContain("Dear Rahul Sharma,");
+    expect(message).not.toContain("Dear Valued Customer,");
+  });
+
   it("exposes the requested custom-field catalog", () => {
     expect(RENEWAL_WHATSAPP_CUSTOM_FIELDS).toEqual([
       { label: "Contact Person Name", placeholder: "{ContactPersonName}", example: "Amit Sharma" },

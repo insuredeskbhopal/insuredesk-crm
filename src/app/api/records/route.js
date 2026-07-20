@@ -8,6 +8,7 @@ import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import { withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
+import { buildPolicyCustomerNameFields } from "@/lib/renewals/customer-name";
 
 export async function GET(request) {
   try {
@@ -215,6 +216,7 @@ export async function POST(request) {
       );
     }
 
+    const customerNameFields = buildPolicyCustomerNameFields(data);
     const record = await prisma.policyRecord.create({
       data: {
         id: randomUUID(),
@@ -227,6 +229,7 @@ export async function POST(request) {
         extractedData: data,
         organizationId: user.organizationId,
         createdById: actorId,
+        ...customerNameFields,
       },
     });
 

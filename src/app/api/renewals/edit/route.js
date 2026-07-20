@@ -5,6 +5,7 @@ import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 import { normalizeRenewalInsuranceCompany } from "@/lib/renewals/companies";
+import { normalizeCustomerName, resolvePolicyCustomerName } from "@/lib/renewals/customer-name";
 
 export const runtime = "nodejs";
 
@@ -50,7 +51,8 @@ export async function POST(request) {
     if (!policyId) {
       return Response.json({ error: "Missing policyId parameter" }, { status: 400 });
     }
-    if (!insuredName || !String(insuredName).trim()) {
+    const validatedInsuredName = normalizeCustomerName(insuredName);
+    if (!validatedInsuredName) {
       return Response.json({ error: "Customer Name is required." }, { status: 400 });
     }
     if (!policyNumber || !String(policyNumber).trim()) {
@@ -130,18 +132,23 @@ export async function POST(request) {
     const oldAssignedTo = oldData.assignedTo || "";
     const oldAssignedToId = oldData.assignedToId || "";
     const oldStatus = policy.renewalStatus || "ACTIVE";
-    const finalContactPersonName = contactPersonName === undefined
-      ? String(oldContactPersonName).trim()
-      : String(contactPersonName || "").trim();
+    const finalContactPersonName = resolvePolicyCustomerName(
+      contactPersonName === undefined ? oldContactPersonName : contactPersonName,
+      validatedInsuredName,
+    );
     const finalContactPersonEmail = String(contactPersonEmail ?? policy.contactPersonEmail ?? oldData.email ?? "").trim();
-    const finalRenewalRecipientName = String(renewalRecipientName ?? policy.renewalRecipientName ?? finalContactPersonName).trim();
+    const finalRenewalRecipientName = resolvePolicyCustomerName(
+      renewalRecipientName ?? policy.renewalRecipientName,
+      finalContactPersonName,
+      validatedInsuredName,
+    );
     const finalRenewalRecipientEmail = String(renewalRecipientEmail ?? policy.renewalRecipientEmail ?? finalContactPersonEmail).trim();
     const finalPremium = premiumProvided ? parsedPremium : oldPremium;
 
     // Calculate changes
     const changes = [];
-    if (String(insuredName).trim() !== String(oldInsuredName).trim()) {
-      changes.push({ field: "Customer Name", oldValue: oldInsuredName || "N/A", newValue: insuredName });
+    if (validatedInsuredName !== String(oldInsuredName).trim()) {
+      changes.push({ field: "Customer Name", oldValue: oldInsuredName || "N/A", newValue: validatedInsuredName });
     }
     if (cleanPhone !== String(oldContactNumber).trim()) {
       changes.push({ field: "Customer Phone", oldValue: oldContactNumber || "N/A", newValue: cleanPhone });
@@ -301,7 +308,7 @@ export async function POST(request) {
     // Build the updated JSON payload
     const updatedPayload = {
       ...oldData,
-      insuredName,
+      insuredName: validatedInsuredName,
       contactPerson: finalContactPersonName,
       contactPersonName: finalContactPersonName,
       contactNumber: cleanPhone,
@@ -352,7 +359,7 @@ export async function POST(request) {
           : null;
         currentPortfolio ||= await tx.customerProfile.create({
           data: {
-            name: oldInsuredName || insuredName || "Unnamed Customer",
+            name: normalizeCustomerName(oldInsuredName) || validatedInsuredName || "Unnamed Customer",
             phone: oldMobile || `NO-MOBILE-${policy.id}`,
             contactPersonName: oldContactPersonName || null,
             organizationId: policy.organizationId || null,

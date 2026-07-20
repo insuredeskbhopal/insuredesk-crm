@@ -16,6 +16,7 @@ import { getUploadFailureMessage, persistFailedUploadedFile } from "@/lib/upload
 import { UPLOAD_STATUS } from "@/lib/uploads/status";
 import { uploadFile } from "@/lib/storage";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
+import { buildPolicyCustomerNameFields } from "@/lib/renewals/customer-name";
 
 export const runtime = "nodejs";
 
@@ -70,6 +71,7 @@ export async function POST(request) {
           throw new Error(formatReviewValidationError(validation.missingRequired));
         }
 
+        const customerNameFields = buildPolicyCustomerNameFields(data);
         const uploadedFile = await prisma.uploadedFile.create({
           data: {
             id: randomUUID(),
@@ -121,6 +123,7 @@ export async function POST(request) {
             uploadedFileId: uploadedFile.id,
             organizationId: user.organizationId,
             createdById: user.userId || user.id,
+            ...customerNameFields,
           },
         });
 

@@ -12,6 +12,7 @@ import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import { getSavedAtDateFilter } from "@/lib/records/scoped-data";
 import { MANUAL_RENEWAL_IMPORT_METHOD, withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
+import { buildPolicyCustomerNameFields } from "@/lib/renewals/customer-name";
 
 export const runtime = "nodejs";
 
@@ -383,6 +384,7 @@ export async function POST(request) {
       );
     }
 
+    const customerNameFields = buildPolicyCustomerNameFields(reviewedData, legacyPayload, extractedData);
     const record = await prisma.policyRecord.create({
       data: {
         id: randomUUID(),
@@ -419,6 +421,7 @@ export async function POST(request) {
             ? "ACTION_REQUIRED"
             : "PENDING"
           : "LINKED",
+        ...customerNameFields,
       },
     });
     const renewalMatch = await linkRenewalMarkerToPolicy({

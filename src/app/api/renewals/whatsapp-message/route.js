@@ -146,9 +146,9 @@ export async function POST(request) {
       return Response.json({ error: "No policies found to generate message" }, { status: 404 });
     }
 
-    const customerName = String(targetList[0].insuredName || "Valued Customer").trim();
+    const customerName = String(targetList[0].insuredName || "").trim();
     const rawContactName = String(targetList[0].renewalRecipientName || targetList[0].contactPerson || "").trim();
-    const contactName = normalizeRenewalContactName(rawContactName);
+    const contactName = normalizeRenewalContactName(rawContactName, normalizeRenewalContactName(customerName));
     const count = targetList.length;
 
     const recipientPhone = targetList[0].renewalRecipientMobile || targetList[0].contactNumber || targetPhone;
@@ -201,7 +201,7 @@ export async function POST(request) {
       policyId: contactPolicy.id,
       name: normalizeRenewalContactName(
         contactPolicy.renewalRecipientName || contactPolicy.contactPerson,
-        "",
+        normalizeRenewalContactName(contactPolicy.insuredName, ""),
       ),
       mobile: contactMobile,
       whatsapp: formatPhoneForWhatsapp(contactMobile),
