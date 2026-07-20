@@ -5,6 +5,8 @@ import {
   getQrCode,
   sendText,
   sendMedia,
+  listGroups,
+  refreshGroups,
   logout,
 } from "./baileys-manager.js";
 import { apiKeyAuth } from "./auth-middleware.js";
@@ -74,6 +76,21 @@ app.get("/qr", (_req, res) => {
         ? "Already connected — no QR needed"
         : "QR not yet available. Waiting for WhatsApp...",
     });
+  }
+});
+
+// ---- GET /groups ----
+app.get("/groups", (_req, res) => {
+  res.json(listGroups());
+});
+
+// ---- POST /groups/refresh ----
+app.post("/groups/refresh", async (_req, res) => {
+  try {
+    res.json(await refreshGroups());
+  } catch (err) {
+    console.error("[Gateway] group refresh error:", err);
+    res.status(503).json({ success: false, error: err.message || "Failed to refresh WhatsApp groups" });
   }
 });
 

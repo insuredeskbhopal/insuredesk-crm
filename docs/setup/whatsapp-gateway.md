@@ -88,6 +88,16 @@ npm run start
 2. Enter a short message and click **Send Test Message**.
 3. Verify if the recipient receives the message.
 
+### WhatsApp Groups
+
+Groups are discovered automatically after the linked WhatsApp session connects or reconnects. The gateway persists the latest group names and internal WhatsApp IDs in its sessions directory.
+
+- `GET /groups` returns the cached active groups.
+- `POST /groups/refresh` refreshes the cache without restarting the gateway.
+- Existing `/send-text` and `/send-media` requests accept either an individual recipient or a discovered `@g.us` group recipient.
+
+CRM users select groups by name. Group IDs are kept internal and never need to be entered manually.
+
 ---
 
 ## 5. Set Up Cron Automations

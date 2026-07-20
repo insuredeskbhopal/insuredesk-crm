@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { compileTemplate } from "../src/lib/whatsapp/queue-manager.js";
-import { getWhatsAppStatus } from "../src/lib/whatsapp/whatsapp-client.js";
+import {
+  getWhatsAppGroups,
+  getWhatsAppStatus,
+  refreshWhatsAppGroups,
+  sendWhatsAppText,
+} from "../src/lib/whatsapp/whatsapp-client.js";
 
 // Mock global fetch for REST API tests
 global.fetch = vi.fn();
@@ -56,5 +61,49 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
     expect(status.connected).toBe(false);
     expect(status.state).toBe("UNREACHABLE");
     expect(status.error).toBe("Connection refused");
+  });
+
+  it("preserves a WhatsApp group JID when sending", async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ success: true, id: "group-message" }),
+    });
+
+    await sendWhatsAppText("120363412345678901@g.us", "Group reminder");
+
+    expect(fetch).toHaveBeenLastCalledWith(
+      expect.stringContaining("/send-text"),
+      expect.objectContaining({
+        body: JSON.stringify({ to: "120363412345678901@g.us", content: "Group reminder" }),
+      }),
+    );
+  });
+
+  it("keeps individual number formatting backward compatible", async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ success: true, id: "individual-message" }),
+    });
+
+    await sendWhatsAppText("9876543210", "Individual reminder");
+
+    expect(fetch).toHaveBeenLastCalledWith(
+      expect.stringContaining("/send-text"),
+      expect.objectContaining({
+        body: JSON.stringify({ to: "919876543210", content: "Individual reminder" }),
+      }),
+    );
+  });
+
+  it("loads and refreshes cached WhatsApp groups", async () => {
+    const groups = [{ id: "120363412345678901@g.us", name: "Renewal Team", participants: 5 }];
+    fetch
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(groups) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(groups) });
+
+    await expect(getWhatsAppGroups()).resolves.toEqual(groups);
+    await expect(refreshWhatsAppGroups()).resolves.toEqual(groups);
+    expect(fetch.mock.calls.at(-2)[0]).toContain("/groups");
+    expect(fetch.mock.calls.at(-1)[0]).toContain("/groups/refresh");
   });
 });

@@ -17,9 +17,13 @@ const API_KEY =
 
 // ── Internal helpers ────────────────────────────────────────────────
 
-function formatPhoneNumber(phone) {
-  if (!phone) return "";
-  let cleaned = phone.toString().replace(/\D/g, "");
+function formatRecipient(recipient) {
+  if (!recipient) return "";
+  const raw = recipient.toString().trim();
+  if (/^[0-9-]+@g\.us$/i.test(raw)) return raw.toLowerCase();
+  if (raw.toLowerCase().endsWith("@g.us")) throw new Error("Invalid WhatsApp group ID");
+
+  let cleaned = raw.replace(/@(c\.us|s\.whatsapp\.net)$/i, "").replace(/\D/g, "");
   if (cleaned.startsWith("0")) {
     cleaned = cleaned.substring(1);
   }
@@ -99,9 +103,9 @@ export async function getWhatsAppQrCode() {
 }
 
 export async function sendWhatsAppText(to, content) {
-  const phone = formatPhoneNumber(to);
+  const recipient = formatRecipient(to);
   const res = await callGateway("POST", "send-text", {
-    to: phone,
+    to: recipient,
     content,
   });
   return {
@@ -112,9 +116,9 @@ export async function sendWhatsAppText(to, content) {
 }
 
 export async function sendWhatsAppImage(to, fileData, filename, caption) {
-  const phone = formatPhoneNumber(to);
+  const recipient = formatRecipient(to);
   const res = await callGateway("POST", "send-media", {
-    to: phone,
+    to: recipient,
     mediaBase64: fileData,
     filename: filename || "image.png",
     caption: caption || "",
@@ -128,9 +132,9 @@ export async function sendWhatsAppImage(to, fileData, filename, caption) {
 }
 
 export async function sendWhatsAppFile(to, fileData, filename, caption) {
-  const phone = formatPhoneNumber(to);
+  const recipient = formatRecipient(to);
   const res = await callGateway("POST", "send-media", {
-    to: phone,
+    to: recipient,
     mediaBase64: fileData,
     filename: filename || "document.pdf",
     caption: caption || "",
@@ -159,6 +163,16 @@ export async function logoutWhatsApp() {
       error: error.message,
     };
   }
+}
+
+export async function getWhatsAppGroups() {
+  const groups = await callGateway("GET", "groups");
+  return Array.isArray(groups) ? groups : [];
+}
+
+export async function refreshWhatsAppGroups() {
+  const groups = await callGateway("POST", "groups/refresh");
+  return Array.isArray(groups) ? groups : [];
 }
 
 export const getOpenwaStatus = getWhatsAppStatus;

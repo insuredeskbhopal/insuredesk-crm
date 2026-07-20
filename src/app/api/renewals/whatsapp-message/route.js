@@ -41,7 +41,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { policyId, policyIds, portfolioId, phone, logAudit: shouldLog, message, messageId } = body;
+    const { policyId, policyIds, portfolioId, phone, recipient, logAudit: shouldLog, message, messageId } = body;
     if (!policyId && !portfolioId && !phone) {
       return Response.json({ error: "Missing policy, portfolio, or phone parameter" }, { status: 400 });
     }
@@ -172,7 +172,7 @@ export async function POST(request) {
           organizationId: orgId,
           metadata: {
             contactNumber: p.contactNumber,
-            recipientPhone: phoneParam || cleanContact,
+            recipientPhone: recipient || phoneParam || cleanContact,
             message: sentMessage,
             messageId: messageId || null,
             senderName,

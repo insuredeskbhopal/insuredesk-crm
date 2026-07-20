@@ -9,6 +9,11 @@ import QRCode from "qrcode";
 import pino from "pino";
 import path from "path";
 import { fileURLToPath } from "url";
+import {
+  clearStoredGroups,
+  getStoredGroups,
+  storeDiscoveredGroups,
+} from "./group-store.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const sessionsRoot =
@@ -23,6 +28,8 @@ let connectionState = "DISCONNECTED"; // DISCONNECTED | CONNECTING | QR_READY | 
 let currentQrDataUrl = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10;
+const GROUP_JID_PATTERN = /^[0-9-]+@g\.us$/i;
+let groupRefreshPromise = null;
 
 /**
  * Returns the current connection state and QR code (if available).
@@ -146,6 +153,9 @@ export async function startConnection() {
       currentQrDataUrl = null;
       reconnectAttempts = 0;
       console.log("[Baileys] ✅ WhatsApp connected successfully!");
+      refreshGroups().catch((error) => {
+        console.error("[Groups] Automatic discovery failed:", error.message);
+      });
     }
   });
 
@@ -174,6 +184,7 @@ export async function logout() {
   const fs = await import("fs");
   try {
     fs.rmSync(SESSIONS_DIR, { recursive: true, force: true });
+    clearStoredGroups();
     console.log("[Baileys] Session data cleared.");
   } catch (err) {
     console.warn("[Baileys] Could not clear session directory:", err.message);
@@ -184,9 +195,13 @@ export async function logout() {
  * Formats a phone number string into WhatsApp JID format.
  * Handles Indian numbers: strips leading 0, adds 91 country code if 10 digits.
  */
-export function formatPhoneToJid(phone) {
-  if (!phone) return "";
-  let cleaned = phone.toString().replace(/\D/g, "");
+export function formatRecipientToJid(recipient) {
+  if (!recipient) return "";
+  const raw = recipient.toString().trim();
+  if (GROUP_JID_PATTERN.test(raw)) return raw.toLowerCase();
+  if (raw.toLowerCase().endsWith("@g.us")) throw new Error("Invalid WhatsApp group ID");
+
+  let cleaned = raw.replace(/@(c\.us|s\.whatsapp\.net)$/i, "").replace(/\D/g, "");
   // Remove leading zero
   if (cleaned.startsWith("0")) {
     cleaned = cleaned.substring(1);
@@ -195,9 +210,60 @@ export function formatPhoneToJid(phone) {
   if (cleaned.length === 10) {
     cleaned = "91" + cleaned;
   }
-  // Remove @c.us/@s.whatsapp.net if already appended
-  cleaned = cleaned.replace(/@(c\.us|s\.whatsapp\.net)$/, "");
   return cleaned + "@s.whatsapp.net";
+}
+
+export const formatPhoneToJid = formatRecipientToJid;
+
+export function listGroups() {
+  return getStoredGroups().map((group) => ({
+    id: group.groupId,
+    name: group.groupName,
+    participants: group.participantCount,
+    creationTime: group.creationTime,
+    lastSyncedAt: group.lastSyncedAt,
+  }));
+}
+
+export async function refreshGroups() {
+  if (groupRefreshPromise) return groupRefreshPromise;
+  if (!sock || connectionState !== "CONNECTED") {
+    throw new Error("WhatsApp is not connected; groups cannot be refreshed");
+  }
+
+  groupRefreshPromise = (async () => {
+    const participating = await sock.groupFetchAllParticipating();
+    const groups = Object.values(participating || {}).map((group) => ({
+      groupId: group.id,
+      groupName: group.subject || "Unnamed WhatsApp Group",
+      participantCount: Array.isArray(group.participants) ? group.participants.length : 0,
+      creationTime: group.creation ? new Date(Number(group.creation) * 1000).toISOString() : null,
+    }));
+    const sessionId = sock.user?.id ? String(sock.user.id).split(":")[0] : null;
+    storeDiscoveredGroups(groups, sessionId);
+    console.log(`[Groups] Synced ${groups.length} participating group(s).`);
+    return listGroups();
+  })().finally(() => {
+    groupRefreshPromise = null;
+  });
+
+  return groupRefreshPromise;
+}
+
+function assertAvailableGroup(jid) {
+  if (!jid.endsWith("@g.us")) return;
+  if (!getStoredGroups().some((group) => group.groupId === jid)) {
+    throw new Error("WhatsApp group is no longer available. Refresh the group list and try again.");
+  }
+}
+
+function formatSendError(error, jid) {
+  if (!jid.endsWith("@g.us")) return error;
+  const message = String(error?.message || "");
+  if (/not.?authorized|forbidden|not.?found|item-not-found|participant/i.test(message)) {
+    return new Error("Unable to send to this WhatsApp group. It may have been deleted or this account may have been removed.");
+  }
+  return error;
 }
 
 /**
@@ -208,8 +274,15 @@ export async function sendText(to, content) {
   if (!sock || connectionState !== "CONNECTED") {
     throw new Error("WhatsApp is not connected");
   }
-  const jid = formatPhoneToJid(to);
-  const result = await sock.sendMessage(jid, { text: content });
+  const jid = formatRecipientToJid(to);
+  if (!jid) throw new Error("A valid WhatsApp recipient is required");
+  assertAvailableGroup(jid);
+  let result;
+  try {
+    result = await sock.sendMessage(jid, { text: content });
+  } catch (error) {
+    throw formatSendError(error, jid);
+  }
   return {
     success: true,
     id: result?.key?.id || null,
@@ -230,7 +303,9 @@ export async function sendMedia(to, mediaBase64, filename, caption, type) {
   if (!sock || connectionState !== "CONNECTED") {
     throw new Error("WhatsApp is not connected");
   }
-  const jid = formatPhoneToJid(to);
+  const jid = formatRecipientToJid(to);
+  if (!jid) throw new Error("A valid WhatsApp recipient is required");
+  assertAvailableGroup(jid);
 
   // Strip data URL prefix if present
   let rawBase64 = mediaBase64;
@@ -256,7 +331,12 @@ export async function sendMedia(to, mediaBase64, filename, caption, type) {
     };
   }
 
-  const result = await sock.sendMessage(jid, messagePayload);
+  let result;
+  try {
+    result = await sock.sendMessage(jid, messagePayload);
+  } catch (error) {
+    throw formatSendError(error, jid);
+  }
   return {
     success: true,
     id: result?.key?.id || null,

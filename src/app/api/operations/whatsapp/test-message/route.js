@@ -24,14 +24,15 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { phone, message } = body;
+    const recipient = body.recipient || body.phone;
+    const { message } = body;
 
-    if (!phone || !message) {
-      return NextResponse.json({ error: "Phone and message are required" }, { status: 400 });
+    if (!recipient || !message) {
+      return NextResponse.json({ error: "Recipient and message are required" }, { status: 400 });
     }
 
-    console.log(`Sending WhatsApp test message to ${phone}...`);
-    const openwaResponse = await sendWhatsAppText(phone, message);
+    console.log(`Sending WhatsApp test message to ${String(recipient).endsWith("@g.us") ? "a group" : "an individual"}...`);
+    const openwaResponse = await sendWhatsAppText(recipient, message);
 
     const msgId = typeof openwaResponse === 'object' ? openwaResponse.id || openwaResponse.response : openwaResponse;
 

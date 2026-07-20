@@ -22,6 +22,7 @@ import {
 import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 import WhatsAppContactCard from "@/app/components/renewals/WhatsAppContactCard";
 import BrandLogo from "@/app/components/brand/BrandLogo";
+import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
 
 const COL_HEADERS = [
   "Contact Person Name",
@@ -158,6 +159,8 @@ export default function CustomerRenewalsPage() {
   const [whatsappPhone, setWhatsAppPhone] = useState("");
   const [whatsappRecipientGroups, setWhatsAppRecipientGroups] = useState([]);
   const [whatsappContactDetails, setWhatsAppContactDetails] = useState(null);
+  const [whatsappRecipientType, setWhatsAppRecipientType] = useState("individual");
+  const [whatsappGroupId, setWhatsAppGroupId] = useState("");
 
   const [teamMembers, setTeamMembers] = useState([]);
   const [portfolioOptions, setPortfolioOptions] = useState([]);
@@ -735,6 +738,8 @@ export default function CustomerRenewalsPage() {
     setEditedWhatsAppMessage("");
     setWhatsAppRecipientGroups([]);
     setWhatsAppContactDetails(null);
+    setWhatsAppRecipientType("individual");
+    setWhatsAppGroupId("");
 
     try {
       setActionLoading(true);
@@ -780,14 +785,20 @@ export default function CustomerRenewalsPage() {
 
   const handleSendWhatsApp = async () => {
     if (!editedWhatsAppMessage) return;
-    const hasRecipient = whatsappRecipientGroups.length > 0 || String(whatsappPhone || "").replace(/\D/g, "").length >= 10;
+    const isGroupRecipient = whatsappRecipientType === "group";
+    const hasRecipient = isGroupRecipient
+      ? Boolean(whatsappGroupId)
+      : whatsappRecipientGroups.length > 0 || String(whatsappPhone || "").replace(/\D/g, "").length >= 10;
     if (!hasRecipient) {
-      window.alert("Add a valid renewal recipient mobile number before sending.");
+      window.alert(isGroupRecipient ? "Select a WhatsApp group before sending." : "Add a valid renewal recipient mobile number before sending.");
       return;
     }
 
     try {
-      const sends = whatsappRecipientGroups.length > 1
+      const groupPolicyIds = [...new Set(whatsappRecipientGroups.flatMap((group) => group.policyIds || []))];
+      const sends = isGroupRecipient
+        ? [{ phone: whatsappGroupId, message: editedWhatsAppMessage, policyIds: groupPolicyIds }]
+        : whatsappRecipientGroups.length > 1
         ? whatsappRecipientGroups
         : [{ phone: whatsappPhone, message: editedWhatsAppMessage, policyIds: whatsappRecipientGroups[0]?.policyIds || [] }];
       let sentCount = 0;
@@ -803,7 +814,7 @@ export default function CustomerRenewalsPage() {
           await fetch("/api/renewals/whatsapp-message", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ portfolioId: selectedCustomer.portfolio_id, phone: selectedCustomer.mobile, policyIds: send.policyIds, logAudit: true, message: send.message, messageId: data.messageId || undefined }),
+            body: JSON.stringify({ portfolioId: selectedCustomer.portfolio_id, phone: selectedCustomer.mobile, recipient: send.phone, policyIds: send.policyIds, logAudit: true, message: send.message, messageId: data.messageId || undefined }),
           });
         } catch (auditError) {
           console.error("Failed to log WhatsApp audit:", auditError);
@@ -2185,7 +2196,20 @@ export default function CustomerRenewalsPage() {
               </div>
 
               {whatsappTemplates && (
-                <div className="rn-whatsapp-preview-layout" style={{ marginTop: "16px" }}>
+                <>
+                <div style={{ marginTop: "16px" }}>
+                  <WhatsAppRecipientPicker
+                    type={whatsappRecipientType}
+                    onTypeChange={(value) => {
+                      setWhatsAppRecipientType(value);
+                      if (value === "individual") setWhatsAppGroupId("");
+                    }}
+                    groupId={whatsappGroupId}
+                    onGroupChange={setWhatsAppGroupId}
+                    disabled={actionLoading}
+                  />
+                </div>
+                <div className="rn-whatsapp-preview-layout" style={{ marginTop: "12px" }}>
                   <div className="rn-whatsapp-preview-main">
                   <div>
                     <label className="customer-meta-label">View</label>
@@ -2263,14 +2287,15 @@ export default function CustomerRenewalsPage() {
                     </>
                   )}
                   </div>
-                  <WhatsAppContactCard
+                  {whatsappRecipientType === "individual" ? <WhatsAppContactCard
                     details={whatsappContactDetails}
                     onEdit={() => {
                       setWhatsAppPreviewOpen(false);
                       handleEditRenewal(selectedCustomer, whatsappContactDetails?.policyId);
                     }}
-                  />
+                  /> : null}
                 </div>
+                </>
               )}
 
               <div
@@ -2298,7 +2323,9 @@ export default function CustomerRenewalsPage() {
                     type="button"
                     className="rn-btn"
                     onClick={handleSendWhatsApp}
-                    disabled={whatsappRecipientGroups.length === 0 && String(whatsappPhone || "").replace(/\D/g, "").length < 10}
+                    disabled={whatsappRecipientType === "group"
+                      ? !whatsappGroupId
+                      : whatsappRecipientGroups.length === 0 && String(whatsappPhone || "").replace(/\D/g, "").length < 10}
                     style={{ background: "#25d366", color: "#fff", borderColor: "#25d366" }}
                   >
                     <Send size={14} /> Send WhatsApp

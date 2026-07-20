@@ -18,6 +18,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
+import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
 
 const TEMPLATE_VARIABLES = [
   { tag: "{{customerName}}", desc: "Customer's Full Name" },
@@ -41,6 +42,8 @@ export default function WhatsAppSetupPage() {
 
   // Test message
   const [testPhone, setTestPhone] = useState("");
+  const [testRecipientType, setTestRecipientType] = useState("individual");
+  const [testGroupId, setTestGroupId] = useState("");
   const [testMessage, setTestMessage] = useState("Hello! This is a test message from Bima Headquarter CRM WhatsApp integration.");
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [testResult, setTestResult] = useState(null);
@@ -251,8 +254,9 @@ export default function WhatsAppSetupPage() {
 
   const handleSendTest = async (e) => {
     e.preventDefault();
-    if (!testPhone) {
-      showToast("error", "Please specify a recipient phone number");
+    const recipient = testRecipientType === "group" ? testGroupId : testPhone;
+    if (!recipient) {
+      showToast("error", testRecipientType === "group" ? "Please select a WhatsApp group" : "Please specify a recipient phone number");
       return;
     }
     setIsSendingTest(true);
@@ -262,7 +266,7 @@ export default function WhatsAppSetupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: testPhone,
+          recipient,
           message: testMessage,
         }),
       });
@@ -515,7 +519,17 @@ export default function WhatsAppSetupPage() {
               <h3 className="text-sm font-bold text-slate-800">Send Test Message</h3>
             </div>
             <form onSubmit={handleSendTest} className="p-5 space-y-4">
-              <div>
+              <WhatsAppRecipientPicker
+                type={testRecipientType}
+                onTypeChange={(value) => {
+                  setTestRecipientType(value);
+                  if (value === "individual") setTestGroupId("");
+                }}
+                groupId={testGroupId}
+                onGroupChange={setTestGroupId}
+                disabled={isSendingTest || !connected}
+              />
+              {testRecipientType === "individual" ? <div>
                 <label className="block text-xs font-bold text-slate-655 mb-1.5 uppercase">
                   Recipient Phone Number
                 </label>
@@ -529,7 +543,7 @@ export default function WhatsAppSetupPage() {
                 <p className="text-[10px] text-slate-400 mt-1 font-semibold">
                   Include country code (e.g. 91 for India) without '+' or spaces.
                 </p>
-              </div>
+              </div> : null}
 
               <div>
                 <label className="block text-xs font-bold text-slate-655 mb-1.5 uppercase">
