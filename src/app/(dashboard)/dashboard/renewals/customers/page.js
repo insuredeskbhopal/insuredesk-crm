@@ -20,6 +20,8 @@ import {
   Clipboard,
 } from "lucide-react";
 import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
+import WhatsAppContactCard from "@/app/components/renewals/WhatsAppContactCard";
+import BrandLogo from "@/app/components/brand/BrandLogo";
 
 const COL_HEADERS = [
   "Contact Person Name",
@@ -155,6 +157,7 @@ export default function CustomerRenewalsPage() {
   const [editedWhatsAppMessage, setEditedWhatsAppMessage] = useState("");
   const [whatsappPhone, setWhatsAppPhone] = useState("");
   const [whatsappRecipientGroups, setWhatsAppRecipientGroups] = useState([]);
+  const [whatsappContactDetails, setWhatsAppContactDetails] = useState(null);
 
   const [teamMembers, setTeamMembers] = useState([]);
   const [portfolioOptions, setPortfolioOptions] = useState([]);
@@ -403,15 +406,15 @@ export default function CustomerRenewalsPage() {
   };
 
   // On-demand fetch policy helper for actions
-  const fetchAndSelectPolicy = async (cust, callback) => {
+  const fetchAndSelectPolicy = async (cust, callback, requestedPolicyId = cust.nearest_due_policy_id) => {
     try {
       setActionLoading(true);
       const portfolioKey = cust.portfolio_id || cust.mobile;
-      const url = `/api/renewals/customers/${portfolioKey}${cust.nearest_due_policy_id ? `?policyId=${cust.nearest_due_policy_id}` : ""}`;
+      const url = `/api/renewals/customers/${portfolioKey}${requestedPolicyId ? `?policyId=${requestedPolicyId}` : ""}`;
       const res = await fetch(url);
       const data = await res.json();
       if (res.ok && data.success) {
-        const policy = data.policies.find((p) => p.id === cust.nearest_due_policy_id) || data.policies[0];
+        const policy = data.policies.find((p) => p.id === requestedPolicyId) || data.policies[0];
         if (policy) {
           setSelectedPolicy(policy);
           callback(policy);
@@ -510,7 +513,7 @@ export default function CustomerRenewalsPage() {
   };
 
   // Edit Renewal
-  const handleEditRenewal = (cust) => {
+  const handleEditRenewal = (cust, policyId) => {
     setSelectedCustomer(cust);
     fetchAndSelectPolicy(cust, (policy) => {
       const fmtDate = (dStr) => {
@@ -552,7 +555,7 @@ export default function CustomerRenewalsPage() {
         nextFollowUpDate: "",
       });
       setEditModalOpen(true);
-    });
+    }, policyId);
   };
 
   const submitEdit = async (e) => {
@@ -723,12 +726,6 @@ export default function CustomerRenewalsPage() {
 
   // WhatsApp combined message generator
   const handleWhatsApp = async (cust) => {
-    const cleanPhone = cust.renewal_mobile ? String(cust.renewal_mobile).replace(/[^0-9]/g, "") : "";
-    if (!cleanPhone || cleanPhone.length < 10) {
-      window.alert("No valid phone number available for this customer.");
-      return;
-    }
-
     setSelectedCustomer(cust);
     setWhatsAppPhone("");
     setWhatsAppTemplates(null);
@@ -737,13 +734,18 @@ export default function CustomerRenewalsPage() {
     setSelectedTemplateType("due_soon");
     setEditedWhatsAppMessage("");
     setWhatsAppRecipientGroups([]);
+    setWhatsAppContactDetails(null);
 
     try {
       setActionLoading(true);
       const res = await fetch("/api/renewals/whatsapp-message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portfolioId: cust.portfolio_id, phone: cust.mobile }),
+        body: JSON.stringify({
+          portfolioId: cust.portfolio_id || undefined,
+          policyId: cust.portfolio_id ? undefined : cust.nearest_due_policy_id,
+          phone: cust.mobile,
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -753,6 +755,7 @@ export default function CustomerRenewalsPage() {
         setSelectedTemplateType(data.defaultTemplate);
         setEditedWhatsAppMessage(data.templates[data.defaultTemplate]);
         setWhatsAppRecipientGroups(data.recipientGroups || []);
+        setWhatsAppContactDetails(data.contactDetails || null);
         setWhatsAppPreviewOpen(true);
       } else {
         window.alert(data.error || "Failed to load WhatsApp template.");
@@ -777,6 +780,11 @@ export default function CustomerRenewalsPage() {
 
   const handleSendWhatsApp = async () => {
     if (!editedWhatsAppMessage) return;
+    const hasRecipient = whatsappRecipientGroups.length > 0 || String(whatsappPhone || "").replace(/\D/g, "").length >= 10;
+    if (!hasRecipient) {
+      window.alert("Add a valid renewal recipient mobile number before sending.");
+      return;
+    }
 
     try {
       const sends = whatsappRecipientGroups.length > 1
@@ -1670,8 +1678,7 @@ export default function CustomerRenewalsPage() {
             onClick={() => setEditModalOpen(false)}
           >
             <div
-              className="tb-modal-content"
-              style={{ maxWidth: "600px" }}
+              className="tb-modal-content rn-edit-contact-modal"
               onClick={(e) => e.stopPropagation()}
             >
               <div
@@ -1683,7 +1690,10 @@ export default function CustomerRenewalsPage() {
                   paddingBottom: "12px",
                 }}
               >
-                <h3>Edit Contact Information</h3>
+                <div className="rn-edit-contact-title">
+                  <BrandLogo compact />
+                  <h3>Edit Contact Information</h3>
+                </div>
                 <button
                   onClick={() => setEditModalOpen(false)}
                   style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}
@@ -1691,7 +1701,7 @@ export default function CustomerRenewalsPage() {
                   &times;
                 </button>
               </div>
-              <form onSubmit={submitEdit}>
+              <form className="rn-edit-contact-form" onSubmit={submitEdit}>
                 <div
                   style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "16px" }}
                 >
@@ -1745,17 +1755,17 @@ export default function CustomerRenewalsPage() {
                     <label className="customer-meta-label">Recipient Email</label>
                     <input type="email" className="rn-input" style={{ width: "100%", marginTop: "4px" }} value={editForm.renewalRecipientEmail} onChange={(e) => setEditForm({ ...editForm, renewalRecipientEmail: e.target.value })} />
                   </div>
-                  <div style={{ gridColumn: "1 / -1", borderTop: "1px solid var(--rn-border)", paddingTop: "12px", display: "grid", gap: "10px" }}>
+                  <div style={{ gridColumn: "1 / -1", borderTop: "1px solid var(--rn-border)", paddingTop: "10px", display: "grid", gap: "3px" }}>
                     <strong>How should this change be applied?</strong>
-                    <label><input type="radio" name="contactUpdateMode" value="policy_only" checked={editForm.contactUpdateMode === "policy_only"} onChange={(e) => setEditForm({ ...editForm, contactUpdateMode: e.target.value })} /> Update only this policy — keep it in the current portfolio</label>
-                    <label><input type="radio" name="contactUpdateMode" value="move_existing" checked={editForm.contactUpdateMode === "move_existing"} onChange={(e) => setEditForm({ ...editForm, contactUpdateMode: e.target.value })} /> Move policy to an existing customer portfolio</label>
+                    <label className="rn-radio-option"><input type="radio" name="contactUpdateMode" value="policy_only" checked={editForm.contactUpdateMode === "policy_only"} onChange={(e) => setEditForm({ ...editForm, contactUpdateMode: e.target.value })} /> Update only this policy — keep it in the current portfolio</label>
+                    <label className="rn-radio-option"><input type="radio" name="contactUpdateMode" value="move_existing" checked={editForm.contactUpdateMode === "move_existing"} onChange={(e) => setEditForm({ ...editForm, contactUpdateMode: e.target.value })} /> Move policy to an existing customer portfolio</label>
                     {editForm.contactUpdateMode === "move_existing" ? (
                       <select className="rn-input" value={editForm.targetPortfolioId} onChange={(e) => setEditForm({ ...editForm, targetPortfolioId: e.target.value })}>
                         <option value="">Select portfolio</option>
                         {portfolioOptions.filter((item) => item.id !== selectedCustomer?.portfolio_id).map((item) => <option key={item.id} value={item.id}>{item.name} ({item.phone})</option>)}
                       </select>
                     ) : null}
-                    <label><input type="radio" name="contactUpdateMode" value="create_portfolio" checked={editForm.contactUpdateMode === "create_portfolio"} onChange={(e) => setEditForm({ ...editForm, contactUpdateMode: e.target.value })} /> Create a new customer portfolio and move this policy</label>
+                    <label className="rn-radio-option"><input type="radio" name="contactUpdateMode" value="create_portfolio" checked={editForm.contactUpdateMode === "create_portfolio"} onChange={(e) => setEditForm({ ...editForm, contactUpdateMode: e.target.value })} /> Create a new customer portfolio and move this policy</label>
                     {editForm.contactUpdateMode === "create_portfolio" ? (
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                         <input className="rn-input" placeholder="Portfolio name" value={editForm.newPortfolioName} onChange={(e) => setEditForm({ ...editForm, newPortfolioName: e.target.value })} />
@@ -2175,7 +2185,8 @@ export default function CustomerRenewalsPage() {
               </div>
 
               {whatsappTemplates && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
+                <div className="rn-whatsapp-preview-layout" style={{ marginTop: "16px" }}>
+                  <div className="rn-whatsapp-preview-main">
                   <div>
                     <label className="customer-meta-label">View</label>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
@@ -2251,6 +2262,14 @@ export default function CustomerRenewalsPage() {
                       </div>
                     </>
                   )}
+                  </div>
+                  <WhatsAppContactCard
+                    details={whatsappContactDetails}
+                    onEdit={() => {
+                      setWhatsAppPreviewOpen(false);
+                      handleEditRenewal(selectedCustomer, whatsappContactDetails?.policyId);
+                    }}
+                  />
                 </div>
               )}
 
@@ -2279,6 +2298,7 @@ export default function CustomerRenewalsPage() {
                     type="button"
                     className="rn-btn"
                     onClick={handleSendWhatsApp}
+                    disabled={whatsappRecipientGroups.length === 0 && String(whatsappPhone || "").replace(/\D/g, "").length < 10}
                     style={{ background: "#25d366", color: "#fff", borderColor: "#25d366" }}
                   >
                     <Send size={14} /> Send WhatsApp

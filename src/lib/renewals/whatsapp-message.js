@@ -6,7 +6,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3
 const { excelDateToString } = renewalImportIdentity;
 
 export const RENEWAL_WHATSAPP_CUSTOM_FIELDS = [
-  { label: "Agent Name", placeholder: "{AgentName}", example: "Amit Sharma" },
+  { label: "Contact Person Name", placeholder: "{ContactPersonName}", example: "Amit Sharma" },
   { label: "Customer Name", placeholder: "{CustomerName}", example: "BHAIJILAL CHOUHAN" },
   { label: "Insurance Company", placeholder: "{InsuranceCompany}", example: "IFFCO Tokio" },
   { label: "Policy Number", placeholder: "{PolicyNumber}", example: "N4116778" },
@@ -36,9 +36,13 @@ export function isRenewalAgentId(value) {
   return UUID_PATTERN.test(String(value || "").trim());
 }
 
-export function normalizeRenewalAgentName(value, fallback = "Team Member") {
+export function normalizeRenewalContactName(value, fallback = "Valued Customer") {
   const name = String(value || "").trim();
   return name && !isRenewalAgentId(name) && name.toLowerCase() !== "unassigned" ? name : fallback;
+}
+
+export function normalizeRenewalAgentName(value, fallback = "Team Member") {
+  return normalizeRenewalContactName(value, fallback);
 }
 
 export function groupRenewalPoliciesByRecipient(policies = []) {
@@ -78,8 +82,8 @@ function renewalVehicleDescription(policy = {}) {
   return `${vehicle}${vehicleNumber ? ` (${vehicleNumber})` : ""}`;
 }
 
-export function buildRenewalWhatsAppMessage({ agentName, customerName, policies = [], referenceDate } = {}) {
-  const agent = normalizeRenewalAgentName(agentName);
+export function buildRenewalWhatsAppMessage({ recipientName, agentName, customerName, policies = [], referenceDate } = {}) {
+  const recipient = normalizeRenewalContactName(recipientName || agentName);
   const name = String(customerName || "Valued Customer").trim() || "Valued Customer";
   const reminders = policies
     .map((policy) => {
@@ -98,7 +102,7 @@ export function buildRenewalWhatsAppMessage({ agentName, customerName, policies 
     })
     .join("\n\n");
 
-  return `Dear ${agent},
+  return `Dear ${recipient},
 
 ${reminders}
 

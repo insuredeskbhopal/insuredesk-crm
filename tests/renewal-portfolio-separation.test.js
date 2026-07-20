@@ -45,6 +45,7 @@ describe("renewal portfolio and communication separation", () => {
     const migration = fs.readFileSync(path.join(process.cwd(), "prisma/migrations/20260720000100_separate_portfolio_contacts/migration.sql"), "utf8");
     const editRoute = fs.readFileSync(path.join(process.cwd(), "src/app/api/renewals/edit/route.js"), "utf8");
     const customerRoute = fs.readFileSync(path.join(process.cwd(), "src/app/api/renewals/customers/route.js"), "utf8");
+    const whatsappRoute = fs.readFileSync(path.join(process.cwd(), "src/app/api/renewals/whatsapp-message/route.js"), "utf8");
 
     expect(migration).toContain('ADD COLUMN "customer_portfolio_id" UUID');
     expect(migration).not.toMatch(/DROP\s+(COLUMN|TABLE)/i);
@@ -52,5 +53,7 @@ describe("renewal portfolio and communication separation", () => {
     expect(editRoute).toContain('contactUpdateMode === "move_existing"');
     expect(editRoute).toContain('contactUpdateMode === "create_portfolio"');
     expect(customerRoute).toContain("COALESCE(customer_portfolio_id::text, contact_number) AS portfolio_key");
+    expect(whatsappRoute).toContain("contactPolicy.renewalRecipientName || contactPolicy.contactPerson");
+    expect(whatsappRoute).toContain("contactDetails");
   });
 });

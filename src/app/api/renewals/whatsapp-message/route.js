@@ -9,8 +9,7 @@ import { withRenewalCompanyDisplay } from "@/lib/renewals/companies";
 import {
   buildRenewalWhatsAppMessage,
   groupRenewalPoliciesByRecipient,
-  isRenewalAgentId,
-  normalizeRenewalAgentName,
+  normalizeRenewalContactName,
   RENEWAL_WHATSAPP_CUSTOM_FIELDS,
   selectRenewalWhatsAppPolicies,
 } from "@/lib/renewals/whatsapp-message";
@@ -147,28 +146,9 @@ export async function POST(request) {
       return Response.json({ error: "No policies found to generate message" }, { status: 404 });
     }
 
-    let customerName = "Valued Customer";
-    if (portfolioId || cleanContact) {
-      const profile = await prisma.customerProfile.findFirst({
-        where: {
-          ...(portfolioId ? { id: portfolioId } : { phone: { contains: cleanContact.slice(-10) } }),
-          deletedAt: null,
-          ...(isSuperAdmin ? {} : { organizationId: orgId }),
-        },
-        select: {
-          contactPersonName: true,
-        },
-      });
-      if (profile?.contactPersonName) {
-        customerName = profile.contactPersonName;
-      }
-    }
-
-    if (customerName === "Valued Customer") {
-      customerName = String(
-        targetList[0].contactPerson || targetList[0].insuredName || "Valued Customer",
-      ).trim();
-    }
+    const customerName = String(targetList[0].insuredName || "Valued Customer").trim();
+    const rawContactName = String(targetList[0].renewalRecipientName || targetList[0].contactPerson || "").trim();
+    const contactName = normalizeRenewalContactName(rawContactName);
     const count = targetList.length;
 
     const recipientPhone = targetList[0].renewalRecipientMobile || targetList[0].contactNumber || targetPhone;
@@ -206,32 +186,32 @@ export async function POST(request) {
     // 4. Generate Message Content
     let templates = {};
     const defaultTemplate = "renewal_msg";
-    const assignedPolicy = targetList.find((policy) => policy.assignedTo || policy.assignedToId);
-    const assignedTo = String(assignedPolicy?.assignedTo || "").trim();
-    const assignedToId = String(
-      assignedPolicy?.assignedToId || (isRenewalAgentId(assignedTo) ? assignedTo : ""),
-    ).trim();
-    let agentName = normalizeRenewalAgentName(assignedTo, "");
-
-    if (!agentName && isRenewalAgentId(assignedToId)) {
-      const assignee = await prisma.user.findFirst({
-        where: isSuperAdmin ? { id: assignedToId } : { id: assignedToId, organizationId: orgId },
-        select: { name: true, email: true },
-      });
-      agentName = assignee?.name || assignee?.email || "";
-    }
-
-    agentName = normalizeRenewalAgentName(agentName, user.name || user.email || "Team Member");
-    const renewalMessage = buildRenewalWhatsAppMessage({ agentName, customerName, policies: targetList });
+    const renewalMessage = buildRenewalWhatsAppMessage({ recipientName: contactName, customerName, policies: targetList });
     const recipientGroups = groupRenewalPoliciesByRecipient(targetList).map((group) => ({
       phone: formatPhoneForWhatsapp(group.mobile),
       name: group.name,
       policyIds: group.policies.map((policy) => policy.id),
-      message: buildRenewalWhatsAppMessage({ agentName, customerName, policies: group.policies }),
+      message: buildRenewalWhatsAppMessage({ recipientName: group.name, customerName, policies: group.policies }),
     }));
-    if (recipientGroups.length === 0) {
-      return Response.json({ error: "No valid renewal recipient mobile is available." }, { status: 400 });
-    }
+    const contactPolicy = targetList[0];
+    const contactMobile = String(contactPolicy.renewalRecipientMobile || contactPolicy.contactNumber || "").trim();
+    const renewalDigits = String(contactPolicy.renewalRecipientMobile || "").replace(/\D/g, "").slice(-10);
+    const contactDigits = String(contactPolicy.contactNumber || "").replace(/\D/g, "").slice(-10);
+    const contactDetails = {
+      policyId: contactPolicy.id,
+      name: normalizeRenewalContactName(
+        contactPolicy.renewalRecipientName || contactPolicy.contactPerson,
+        "",
+      ),
+      mobile: contactMobile,
+      whatsapp: formatPhoneForWhatsapp(contactMobile),
+      email: String(contactPolicy.renewalRecipientEmail || contactPolicy.email || "").trim(),
+      company: String(contactPolicy.insuredName || "").trim(),
+      role: renewalDigits && contactDigits && renewalDigits !== contactDigits
+        ? "Alternate Renewal Contact"
+        : "Primary Contact",
+      importedFromExcel: contactPolicy.extractionMethod === "renewal_excel_import",
+    };
 
     if (count > 1) {
       // Combined Multi-policy message template
@@ -250,7 +230,7 @@ export async function POST(request) {
         return `${idx + 1}. ${pType} for ${companyName} with ${pCompany} - Policy Number: ${pNumber} - Expiry: ${pExpiry} - ${daysLeft}`;
       });
 
-      const combinedText = `Dear ${customerName},
+      const combinedText = `Dear ${contactName},
 
 You have ${count} policies due for renewal:
 
@@ -293,7 +273,7 @@ ${orgName} Team`;
             ? "due today"
             : `${daysRemaining} days left`;
 
-      const dueSoonText = `Dear ${customerName},
+      const dueSoonText = `Dear ${contactName},
 
 Your ${policyType} for ${companyName} with ${insuranceCompany} is due for renewal on ${expiryDate}.
 
@@ -305,7 +285,7 @@ Please connect with us to avoid any interruption in coverage.
 Regards,
 ${orgName} Team`;
 
-      const expiringTodayText = `Dear ${customerName},
+      const expiringTodayText = `Dear ${contactName},
 
 Your ${policyType} for ${companyName} with ${insuranceCompany} is due for renewal today (${expiryDate}).
 
@@ -317,7 +297,7 @@ Please connect with us to avoid any interruption in coverage.
 Regards,
 ${orgName} Team`;
 
-      const alreadyExpiredText = `Dear ${customerName},
+      const alreadyExpiredText = `Dear ${contactName},
 
 Your ${policyType} for ${companyName} with ${insuranceCompany} was due for renewal on ${expiryDate}.
 
@@ -329,7 +309,7 @@ Please connect with us to avoid any interruption in coverage.
 Regards,
 ${orgName} Team`;
 
-      const followUpText = `Dear ${customerName},
+      const followUpText = `Dear ${contactName},
 
 Following up regarding your ${policyType} for ${companyName} with ${insuranceCompany}.
 
@@ -359,6 +339,7 @@ ${orgName} Team`;
       templates,
       customFields: RENEWAL_WHATSAPP_CUSTOM_FIELDS,
       recipientGroups,
+      contactDetails,
     });
   } catch (error) {
     console.error("WhatsApp message generation failed:", error);

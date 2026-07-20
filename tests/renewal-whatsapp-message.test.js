@@ -3,24 +3,26 @@ import {
   buildRenewalWhatsAppMessage,
   isRenewalAgentId,
   normalizeRenewalAgentName,
+  normalizeRenewalContactName,
   RENEWAL_WHATSAPP_CUSTOM_FIELDS,
   selectRenewalWhatsAppPolicies,
 } from "../src/lib/renewals/whatsapp-message";
 
 describe("renewal WhatsApp message", () => {
-  it("never exposes an internal assigned-user UUID in the greeting", () => {
+  it("never exposes an internal UUID in the client greeting", () => {
     const userId = "30f1e9c6-7b55-4b49-a1c6-748a42df0fd8";
 
     expect(isRenewalAgentId(userId)).toBe(true);
     expect(normalizeRenewalAgentName(userId, "Anand Soni")).toBe("Anand Soni");
     expect(normalizeRenewalAgentName("Amit Sharma", "Anand Soni")).toBe("Amit Sharma");
+    expect(normalizeRenewalContactName(userId, "")).toBe("");
     expect(
       buildRenewalWhatsAppMessage({
-        agentName: userId,
+        recipientName: userId,
         customerName: "Customer",
         policies: [{ policyNumber: "N4116778" }],
       }),
-    ).toContain("Dear Team Member,");
+    ).toContain("Dear Valued Customer,");
   });
 
   it("keeps an explicitly selected policy isolated from other policies on the same phone", () => {
@@ -42,7 +44,7 @@ describe("renewal WhatsApp message", () => {
 
   it("exposes the requested custom-field catalog", () => {
     expect(RENEWAL_WHATSAPP_CUSTOM_FIELDS).toEqual([
-      { label: "Agent Name", placeholder: "{AgentName}", example: "Amit Sharma" },
+      { label: "Contact Person Name", placeholder: "{ContactPersonName}", example: "Amit Sharma" },
       { label: "Customer Name", placeholder: "{CustomerName}", example: "BHAIJILAL CHOUHAN" },
       { label: "Insurance Company", placeholder: "{InsuranceCompany}", example: "IFFCO Tokio" },
       { label: "Policy Number", placeholder: "{PolicyNumber}", example: "N4116778" },
@@ -57,7 +59,7 @@ describe("renewal WhatsApp message", () => {
   it("uses the requested renewal format with make/model, vehicle number, and ISO expiry", () => {
     expect(
       buildRenewalWhatsAppMessage({
-        agentName: "Amit Sharma",
+        recipientName: "Amit Sharma",
         customerName: "BHAIJILAL CHOUHAN",
         referenceDate: new Date("2026-07-20T00:00:00+05:30"),
         policies: [
