@@ -28,7 +28,7 @@ const COL_HEADERS = [
   "Policy Type",
   "Premium",
   "Sum Insured / IDV",
-  "Start Date",
+  "Make / Model",
   "Expiry Date",
   "Days Left",
   "WhatsApp Status",
@@ -326,6 +326,7 @@ export default function CustomerProfilePage(props) {
         item.oldStatus,
         item.newStatus,
         item.type,
+        item.recipientPhone,
       ]
         .filter(Boolean)
         .join(" ")
@@ -690,6 +691,8 @@ export default function CustomerProfilePage(props) {
               phone: profile.phone,
               policyId: whatsappPolicyId || undefined,
               logAudit: true,
+              message: editedWhatsAppMessage,
+              messageId: data.messageId || undefined,
             }),
           });
         } catch (auditError) {
@@ -1274,6 +1277,7 @@ export default function CustomerProfilePage(props) {
               <tbody>
                 {policies.map((p) => {
                   const daysLeft = p.daysRemaining !== undefined ? p.daysRemaining : null;
+                  const makeModel = [p.vehicleMake, p.vehicleModel].map((value) => String(value || "").trim()).filter(Boolean).join(" ") || String(p.makeModel || "").trim().replace(/\s*,\s*/g, " ") || "-";
 
                   return (
                     <tr key={p.id}>
@@ -1303,8 +1307,8 @@ export default function CustomerProfilePage(props) {
                       {/* 6. Sum Insured */}
                       <td style={{ width: colWidths[5] + "px" }}>{formatPremium(p.sumInsured)}</td>
 
-                      {/* 7. Start Date */}
-                      <td style={{ width: colWidths[6] + "px" }}>{formatDate(p.startDate)}</td>
+                      {/* 7. Make / Model */}
+                      <td style={{ width: colWidths[6] + "px" }}>{makeModel}</td>
 
                       {/* 8. Expiry Date */}
                       <td style={{ width: colWidths[7] + "px" }}>{formatDate(p.expiryDate)}</td>
@@ -1599,7 +1603,12 @@ export default function CustomerProfilePage(props) {
                                   POLICY: {item.policyType} ({item.policyNumber})
                                 </span>
                               </div>
-                              <p style={{ margin: "4px 0 8px 0" }}>{item.text}</p>
+                              {item.type === "WHATSAPP_SENT" && item.recipientPhone ? (
+                                <div style={{ fontSize: "11px", color: "var(--rn-text-muted)", marginBottom: "6px" }}>
+                                  WhatsApp sent to: {item.recipientPhone}
+                                </div>
+                              ) : null}
+                              <p style={{ margin: "4px 0 8px 0", whiteSpace: "pre-wrap" }}>{item.text}</p>
                               {item.nextFollowUpDate && (
                                 <div
                                   style={{ fontSize: "11px", color: "var(--rn-primary)", fontWeight: "500" }}

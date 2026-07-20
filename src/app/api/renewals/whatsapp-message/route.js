@@ -39,7 +39,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { policyId, phone, logAudit: shouldLog } = body;
+    const { policyId, phone, logAudit: shouldLog, message, messageId } = body;
     if (!policyId && !phone) {
       return Response.json({ error: "Missing policyId or phone parameter" }, { status: 400 });
     }
@@ -161,6 +161,8 @@ export async function POST(request) {
     // Handle Audit logging
     if (shouldLog) {
       const { ipAddress, userAgent } = getAuditMetadata(request);
+      const senderName = user.name || user.email || "User";
+      const sentMessage = typeof message === "string" ? message.trim() : "";
       const logPromises = targetList.map((p) =>
         logAudit({
           action: "WHATSAPP_REMINDER_SENT",
@@ -172,7 +174,13 @@ export async function POST(request) {
           userAgent,
           userId: user.userId || user.id,
           organizationId: orgId,
-          metadata: { contactNumber: p.contactNumber },
+          metadata: {
+            contactNumber: p.contactNumber,
+            recipientPhone: phoneParam || cleanContact,
+            message: sentMessage,
+            messageId: messageId || null,
+            senderName,
+          },
         }),
       );
       await Promise.all(logPromises);

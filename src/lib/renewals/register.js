@@ -51,6 +51,17 @@ export function formatRenewalRegisterAmount(value) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
 }
 
+export function formatRenewalRegisterDueIn(value) {
+  if (value === null || value === undefined || value === "") return "—";
+  const days = Number(value);
+  if (!Number.isFinite(days)) return "—";
+  if (days === 0) return "Due Today";
+  if (days === 1) return "1 Day Left";
+  if (days > 1) return `${days} Days Left`;
+  if (days === -1) return "1 Day Overdue";
+  return `${Math.abs(days)} Days Overdue`;
+}
+
 export function getRenewalRegisterStatusTone(status) {
   const value = String(status || "unknown").toLowerCase();
   if (value === "renewed" || value === "active") return "success";

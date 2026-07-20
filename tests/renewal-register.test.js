@@ -6,6 +6,7 @@ import {
   RENEWAL_REGISTER_MONTHS,
   formatRenewalRegisterAmount,
   formatRenewalRegisterDate,
+  formatRenewalRegisterDueIn,
   getRenewalRegisterMonthLabel,
   getRenewalRegisterStatusTone,
   normalizeRenewalRegisterMonth,
@@ -20,6 +21,24 @@ describe("policy-wise renewal register", () => {
   it("formats numeric renewal amounts and preserves non-numeric values", () => {
     expect(formatRenewalRegisterAmount("125000")).toContain("1,25,000");
     expect(formatRenewalRegisterAmount("On request")).toBe("On request");
+  });
+
+  it("formats policy due days for the Motor register view", () => {
+    expect(formatRenewalRegisterDueIn(0)).toBe("Due Today");
+    expect(formatRenewalRegisterDueIn(1)).toBe("1 Day Left");
+    expect(formatRenewalRegisterDueIn(2)).toBe("2 Days Left");
+    expect(formatRenewalRegisterDueIn(-1)).toBe("1 Day Overdue");
+    expect(formatRenewalRegisterDueIn(null)).toBe("—");
+  });
+
+  it("shows make and model instead of start date in associated policies", () => {
+    const customerPage = fs.readFileSync(
+      path.join(process.cwd(), "src/app/(dashboard)/dashboard/renewals/customers/[id]/page.js"),
+      "utf8",
+    );
+
+    expect(customerPage).toContain('"Make / Model"');
+    expect(customerPage).toContain("{makeModel}</td>");
   });
 
   it("maps statuses to stable visual tones", () => {
@@ -48,5 +67,7 @@ describe("policy-wise renewal register", () => {
     expect(page).toContain('aria-label="Insurance company"');
     expect(page).toContain("Number(row.total) > 0");
     expect(page).toContain("RENEWAL_REGISTER_CATEGORY_TABS.map");
+    expect(page).toContain('const isMotorView = policyType === "Motor"');
+    expect(page).toContain("<th>Due In</th>");
   });
 });

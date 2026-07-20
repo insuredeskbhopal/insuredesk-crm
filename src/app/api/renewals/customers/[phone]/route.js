@@ -7,6 +7,7 @@ import {
   sortByDaysLeftAscending,
   withRenewalWindowDisplay,
 } from "@/lib/renewals/dates";
+import { buildWhatsAppTimelineItems } from "@/lib/renewals/timeline";
 
 export const dynamic = "force-dynamic";
 
@@ -179,7 +180,13 @@ export async function GET(request, props) {
             entityId: { in: policies.map((policy) => policy.id) },
             ...(isSuperAdmin ? {} : { organizationId: orgId }),
           },
-          select: { entityId: true, createdAt: true },
+          select: {
+            id: true,
+            entityId: true,
+            createdAt: true,
+            metadata: true,
+            user: { select: { name: true, email: true } },
+          },
           orderBy: { createdAt: "desc" },
         })
       : [];
@@ -272,6 +279,7 @@ export async function GET(request, props) {
         });
       });
     });
+    remarks.push(...buildWhatsAppTimelineItems(whatsappLogs, policies));
 
     // Sort remarks: newest first
     remarks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
