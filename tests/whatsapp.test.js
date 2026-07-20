@@ -106,4 +106,17 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
     expect(fetch.mock.calls.at(-2)[0]).toContain("/groups");
     expect(fetch.mock.calls.at(-1)[0]).toContain("/groups/refresh");
   });
+
+  it("replaces an HTML 404 response with a readable group deployment error", async () => {
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      headers: { get: () => "text/html" },
+      text: () => Promise.resolve("<!DOCTYPE html><pre>Cannot GET /groups</pre>"),
+    });
+
+    await expect(getWhatsAppGroups()).rejects.toThrow(
+      "WhatsApp group discovery is not active on the gateway. Deploy and restart the latest gateway version.",
+    );
+  });
 });

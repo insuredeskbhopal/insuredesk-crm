@@ -53,8 +53,15 @@ async function callGateway(method, endpoint, payload = null) {
   const response = await fetch(url, options);
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`WhatsApp Gateway error (${response.status}): ${errorText}`);
+    const contentType = response.headers?.get?.("content-type") || "";
+    const errorBody = contentType.includes("application/json")
+      ? await response.json().catch(() => ({}))
+      : await response.text().catch(() => "");
+    const gatewayMessage = typeof errorBody === "object" ? errorBody.error : "";
+    const fallbackMessage = response.status === 404
+      ? "WhatsApp group discovery is not active on the gateway. Deploy and restart the latest gateway version."
+      : `WhatsApp gateway request failed (${response.status}).`;
+    throw new Error(gatewayMessage || fallbackMessage);
   }
 
   return response.json();
