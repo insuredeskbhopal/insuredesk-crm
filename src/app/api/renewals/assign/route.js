@@ -30,10 +30,10 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { policyId, phone, assignedToUserId, note } = body;
+    const { policyId, portfolioId, phone, assignedToUserId, note } = body;
 
-    if (!policyId && !phone) {
-      return Response.json({ error: "Missing policyId or phone parameter" }, { status: 400 });
+    if (!policyId && !portfolioId && !phone) {
+      return Response.json({ error: "Missing policy, portfolio, or phone parameter" }, { status: 400 });
     }
     if (!assignedToUserId) {
       return Response.json({ error: "Please select a user to assign." }, { status: 400 });
@@ -46,7 +46,15 @@ export async function POST(request) {
 
     // 1. Fetch matching policies (either single policy or customer policies by phone)
     let targetPolicies = [];
-    if (phone) {
+    if (portfolioId) {
+      targetPolicies = await prisma.policyRecord.findMany({
+        where: {
+          customerPortfolioId: portfolioId,
+          deletedAt: null,
+          ...(isSuperAdmin ? {} : { organizationId: orgId }),
+        },
+      });
+    } else if (phone) {
       const cleanPhone = String(phone).replace(/\D/g, "").slice(-10);
       if (!phone.startsWith("NO-MOBILE-") && cleanPhone.length !== 10) {
         return Response.json({ error: "A valid 10-digit phone number is required." }, { status: 400 });

@@ -84,7 +84,7 @@ export default function FollowUpsPage() {
   };
 
   const handleCall = (policy) => {
-    const phone = policy.contactNumber || "";
+    const phone = policy.renewalRecipientMobile || policy.contactNumber || "";
     if (phone) {
       window.open(`tel:${phone}`);
     } else {
@@ -93,7 +93,7 @@ export default function FollowUpsPage() {
   };
 
   const handleWhatsApp = async (policy) => {
-    const phone = policy.contactNumber || "";
+    const phone = policy.renewalRecipientMobile || policy.contactNumber || "";
     if (phone) {
       const whatsappPhone = formatPhoneForWhatsapp(phone);
       if (!whatsappPhone) {
@@ -280,7 +280,7 @@ export default function FollowUpsPage() {
                   <td>
                     <div style={{ fontWeight: "600", color: "var(--rn-text-primary)" }}>{p.insuredName}</div>
                     <div style={{ fontSize: "12px", color: "var(--rn-text-muted)" }}>
-                      {p.contactNumber || "No Mobile"}
+                      {p.renewalRecipientMobile || p.contactNumber || "No Mobile"}
                     </div>
                   </td>
                   <td>{p.policyNumber}</td>

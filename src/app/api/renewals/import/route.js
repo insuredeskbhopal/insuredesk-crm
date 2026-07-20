@@ -142,8 +142,46 @@ export async function POST(request) {
         detectedPolicyType: true,
         selectedCompany: true,
         selectedPolicyType: true,
+        customerPortfolioId: true,
+        contactPersonName: true,
+        contactPersonMobile: true,
+        contactPersonEmail: true,
+        renewalRecipientName: true,
+        renewalRecipientMobile: true,
+        renewalRecipientEmail: true,
       },
     });
+
+    const portfolioCache = new Map();
+    const resolvePortfolio = async (payload, policyId) => {
+      const digits = String(payload.contactNumber || payload.customerMobile || "").replace(/\D/g, "");
+      const mobile = digits.length >= 10 ? digits.slice(-10) : `NO-MOBILE-${policyId}`;
+      if (portfolioCache.has(mobile)) return portfolioCache.get(mobile);
+      let portfolio = await prisma.customerProfile.findFirst({
+        where: {
+          phone: { contains: mobile },
+          deletedAt: null,
+          organizationId,
+        },
+        select: { id: true },
+        orderBy: { createdAt: "asc" },
+      });
+      portfolio ||= await prisma.customerProfile.create({
+        data: {
+          name: String(payload.insuredName || "Unnamed Customer").trim(),
+          phone: mobile,
+          email: String(payload.email || payload.customerEmail || "").trim() || null,
+          contactPersonName: String(payload.contactPerson || payload.contactPersonName || "").trim() || null,
+          organizationId,
+          createdById: user.userId || user.id || null,
+          updatedById: user.userId || user.id || null,
+          sourcePolicyId: policyId,
+        },
+        select: { id: true },
+      });
+      portfolioCache.set(mobile, portfolio.id);
+      return portfolio.id;
+    };
 
     let insertedCount = 0;
     let updatedCount = 0;
@@ -211,10 +249,21 @@ export async function POST(request) {
 
         if (match.status === "matched") {
           const record = match.record;
+          const contactName = String(record.contactPersonName || payload.contactPerson || payload.contactPersonName || "").trim();
+          const contactMobile = String(record.contactPersonMobile || payload.contactNumber || payload.customerMobile || "").trim();
+          const contactEmail = String(record.contactPersonEmail || payload.email || payload.customerEmail || "").trim();
+          const portfolioId = record.customerPortfolioId || await resolvePortfolio({ ...payload, contactNumber: contactMobile }, record.id);
           const dataMerge = mergeRenewalImportData(record.data || {}, payload);
           const reviewedMerge = mergeRenewalImportData(record.reviewedData || record.data || {}, payload);
           const extractedMerge = mergeRenewalImportData(record.extractedData || record.data || {}, payload);
           const updateData = {};
+          updateData.customerPortfolioId = portfolioId;
+          updateData.contactPersonName = contactName || null;
+          updateData.contactPersonMobile = contactMobile || null;
+          updateData.contactPersonEmail = contactEmail || null;
+          updateData.renewalRecipientName = record.renewalRecipientName || contactName || null;
+          updateData.renewalRecipientMobile = record.renewalRecipientMobile || contactMobile || null;
+          updateData.renewalRecipientEmail = record.renewalRecipientEmail || contactEmail || null;
 
           if (dataMerge.changedFields.length) updateData.data = dataMerge.data;
           if (reviewedMerge.changedFields.length) updateData.reviewedData = reviewedMerge.data;
@@ -277,6 +326,10 @@ export async function POST(request) {
 
         const recordDate = new Date();
         const recordId = randomUUID();
+        const portfolioId = await resolvePortfolio(sanitizedData, recordId);
+        const contactName = String(sanitizedData.contactPerson || sanitizedData.contactPersonName || "").trim();
+        const contactMobile = String(sanitizedData.contactNumber || sanitizedData.customerMobile || "").trim();
+        const contactEmail = String(sanitizedData.email || sanitizedData.customerEmail || "").trim();
 
         await prisma.policyRecord.create({
           data: {
@@ -309,6 +362,13 @@ export async function POST(request) {
             updatedById: null,
             renewalStatus: renewalStatus,
             isActivePolicy: isActivePolicy,
+            customerPortfolioId: portfolioId,
+            contactPersonName: contactName || null,
+            contactPersonMobile: contactMobile || null,
+            contactPersonEmail: contactEmail || null,
+            renewalRecipientName: contactName || null,
+            renewalRecipientMobile: contactMobile || null,
+            renewalRecipientEmail: contactEmail || null,
           },
         });
         existingRecords.push({

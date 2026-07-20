@@ -26,6 +26,15 @@ export async function POST(request) {
       insuredName,
       contactPersonName,
       contactNumber,
+      contactPersonEmail,
+      renewalRecipientName,
+      renewalRecipientMobile,
+      renewalRecipientEmail,
+      contactUpdateMode = "policy_only",
+      targetPortfolioId,
+      newPortfolioName,
+      newPortfolioMobile,
+      newPortfolioEmail,
       policyNumber,
       insuranceCompany,
       policyType,
@@ -57,6 +66,9 @@ export async function POST(request) {
     if (!expiryDate || isNaN(new Date(expiryDate).getTime())) {
       return Response.json({ error: "Valid Expiry Date is required." }, { status: 400 });
     }
+    if (!["policy_only", "move_existing", "create_portfolio"].includes(contactUpdateMode)) {
+      return Response.json({ error: "Invalid contact update mode." }, { status: 400 });
+    }
     const premiumProvided = premium !== undefined && premium !== null && String(premium).trim() !== "";
     const parsedPremium = premiumProvided ? Number(String(premium).replace(/[^0-9.-]/g, "")) : null;
     if (premiumProvided && (!Number.isFinite(parsedPremium) || parsedPremium < 0)) {
@@ -74,6 +86,14 @@ export async function POST(request) {
         );
       }
       cleanPhone = normalized;
+    }
+    let cleanRenewalMobile = String(renewalRecipientMobile ?? cleanPhone).trim();
+    if (cleanRenewalMobile) {
+      const normalized = normalizeIndianPhone(cleanRenewalMobile);
+      if (!normalized) {
+        return Response.json({ error: "Renewal recipient mobile must be a valid 10-digit Indian mobile number." }, { status: 400 });
+      }
+      cleanRenewalMobile = normalized;
     }
 
     const tenantFilter = getTenantFilter(user, "write");
@@ -96,8 +116,10 @@ export async function POST(request) {
 
     // Parse old values
     const oldInsuredName = oldData.insuredName || "";
-    const oldContactPersonName = oldData.contactPersonName || oldData.contactPerson || "";
-    const oldContactNumber = oldData.contactNumber || oldData.customerMobile || "";
+    const oldContactPersonName = policy.contactPersonName || oldData.contactPersonName || oldData.contactPerson || "";
+    const oldContactNumber = policy.contactPersonMobile || oldData.contactNumber || oldData.customerMobile || "";
+    const oldRenewalRecipientName = policy.renewalRecipientName || oldData.renewalRecipientName || oldContactPersonName;
+    const oldRenewalRecipientMobile = policy.renewalRecipientMobile || oldData.renewalRecipientMobile || oldContactNumber;
     const oldPolicyNumber = oldData.policyNumber || "";
     const oldInsuranceCompany = normalizeRenewalInsuranceCompany(
       policy.selectedCompany || oldData.insuranceCompany,
@@ -111,6 +133,9 @@ export async function POST(request) {
     const finalContactPersonName = contactPersonName === undefined
       ? String(oldContactPersonName).trim()
       : String(contactPersonName || "").trim();
+    const finalContactPersonEmail = String(contactPersonEmail ?? policy.contactPersonEmail ?? oldData.email ?? "").trim();
+    const finalRenewalRecipientName = String(renewalRecipientName ?? policy.renewalRecipientName ?? finalContactPersonName).trim();
+    const finalRenewalRecipientEmail = String(renewalRecipientEmail ?? policy.renewalRecipientEmail ?? finalContactPersonEmail).trim();
     const finalPremium = premiumProvided ? parsedPremium : oldPremium;
 
     // Calculate changes
@@ -127,6 +152,12 @@ export async function POST(request) {
         oldValue: oldContactPersonName || "N/A",
         newValue: finalContactPersonName || "N/A",
       });
+    }
+    if (finalRenewalRecipientName !== String(oldRenewalRecipientName).trim()) {
+      changes.push({ field: "Renewal Recipient", oldValue: oldRenewalRecipientName || "N/A", newValue: finalRenewalRecipientName || "N/A" });
+    }
+    if (cleanRenewalMobile !== String(oldRenewalRecipientMobile).trim()) {
+      changes.push({ field: "Renewal Mobile", oldValue: oldRenewalRecipientMobile || "N/A", newValue: cleanRenewalMobile || "N/A" });
     }
     if (String(policyNumber).trim() !== String(oldPolicyNumber).trim()) {
       changes.push({ field: "Policy Number", oldValue: oldPolicyNumber || "N/A", newValue: policyNumber });
@@ -275,6 +306,10 @@ export async function POST(request) {
       contactPersonName: finalContactPersonName,
       contactNumber: cleanPhone,
       customerMobile: cleanPhone,
+      contactPersonEmail: finalContactPersonEmail,
+      renewalRecipientName: finalRenewalRecipientName,
+      renewalRecipientMobile: cleanRenewalMobile,
+      renewalRecipientEmail: finalRenewalRecipientEmail,
       policyNumber,
       insuranceCompany: standardInsuranceCompany,
       policyType,
@@ -303,52 +338,65 @@ export async function POST(request) {
       isActivePolicy = false;
     }
 
-    // Update or create CustomerProfile if phone number is provided
-    if (cleanPhone) {
-      const cleanPhoneDigits = cleanPhone.replace(/\D/g, "");
-      const last10 = cleanPhoneDigits.slice(-10);
+    const customerPortfolioId = await prisma.$transaction(async (tx) => {
+      let customerPortfolioId = policy.customerPortfolioId || null;
+      const portfolioScope = { organizationId: policy.organizationId || null };
 
-      const isSuperAdmin = user.role === "SUPER_ADMIN";
-      const orgId = user.organizationId || null;
-
-      // Find profile by comparing the last 10 digits
-      const profile = await prisma.customerProfile.findFirst({
-        where: {
-          phone: { contains: last10 },
-          deletedAt: null,
-          ...(isSuperAdmin ? {} : { organizationId: orgId }),
-        },
-      });
-
-      if (profile) {
-        // Update contact person name
-        await prisma.customerProfile.update({
-          where: { id: profile.id },
+      if (!customerPortfolioId) {
+        const oldMobile = String(oldContactNumber || "").replace(/\D/g, "").slice(-10);
+        let currentPortfolio = oldMobile
+          ? await tx.customerProfile.findFirst({
+              where: { phone: { contains: oldMobile }, deletedAt: null, ...portfolioScope },
+              orderBy: { createdAt: "asc" },
+            })
+          : null;
+        currentPortfolio ||= await tx.customerProfile.create({
           data: {
-            contactPersonName: finalContactPersonName || null,
-            updatedById: actorId,
-          },
-        });
-      } else {
-        // Create new customer profile
-        await prisma.customerProfile.create({
-          data: {
-            name: insuredName || "Unnamed Customer",
-            phone: cleanPhone,
-            contactPersonName: finalContactPersonName || null,
-            organizationId: user.organizationId,
+            name: oldInsuredName || insuredName || "Unnamed Customer",
+            phone: oldMobile || `NO-MOBILE-${policy.id}`,
+            contactPersonName: oldContactPersonName || null,
+            organizationId: policy.organizationId || null,
             createdById: actorId,
             updatedById: actorId,
-            assignedTo: newAssignedTo || actorName,
           },
         });
+        customerPortfolioId = currentPortfolio.id;
       }
-    }
 
-    // Save changes to database
-    await prisma.policyRecord.update({
-      where: { id: policyId },
-      data: {
+      if (contactUpdateMode === "move_existing") {
+        const target = await tx.customerProfile.findFirst({
+          where: { id: targetPortfolioId, deletedAt: null, ...portfolioScope },
+          select: { id: true },
+        });
+        if (!target) throw new Error("TARGET_PORTFOLIO_NOT_FOUND");
+        customerPortfolioId = target.id;
+      } else if (contactUpdateMode === "create_portfolio") {
+        const portfolioPhone = normalizeIndianPhone(newPortfolioMobile || cleanPhone);
+        if (!String(newPortfolioName || "").trim() || !portfolioPhone) throw new Error("INVALID_NEW_PORTFOLIO");
+        const createdPortfolio = await tx.customerProfile.create({
+          data: {
+            name: String(newPortfolioName).trim(),
+            phone: portfolioPhone,
+            email: String(newPortfolioEmail || "").trim() || null,
+            contactPersonName: finalContactPersonName || null,
+            organizationId: policy.organizationId || null,
+            createdById: actorId,
+            updatedById: actorId,
+          },
+        });
+        customerPortfolioId = createdPortfolio.id;
+      }
+
+      await tx.policyRecord.update({
+        where: { id: policyId },
+        data: {
+        customerPortfolioId,
+        contactPersonName: finalContactPersonName || null,
+        contactPersonMobile: cleanPhone || null,
+        contactPersonEmail: finalContactPersonEmail || null,
+        renewalRecipientName: finalRenewalRecipientName || null,
+        renewalRecipientMobile: cleanRenewalMobile || null,
+        renewalRecipientEmail: finalRenewalRecipientEmail || null,
         renewalStatus: finalStatus,
         selectedCompany: standardInsuranceCompany,
         selectedPolicyType: policyType,
@@ -364,8 +412,14 @@ export async function POST(request) {
         lostReason: ["LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(finalStatus)
           ? cleanRemarkText || "Marked Lost"
           : undefined,
-      },
+        },
+      });
+      return customerPortfolioId;
     });
+
+    if (customerPortfolioId !== policy.customerPortfolioId) {
+      changes.push({ field: "Customer Portfolio", oldValue: policy.customerPortfolioId || "Legacy group", newValue: customerPortfolioId });
+    }
 
     // Write audit logs
     if (changes.length > 0) {
@@ -428,9 +482,15 @@ export async function POST(request) {
       });
     }
 
-    return Response.json({ success: true });
+    return Response.json({ success: true, customerPortfolioId });
   } catch (error) {
     console.error("Failed to edit renewal:", error);
+    if (error.message === "TARGET_PORTFOLIO_NOT_FOUND") {
+      return Response.json({ error: "Selected customer portfolio was not found." }, { status: 404 });
+    }
+    if (error.message === "INVALID_NEW_PORTFOLIO") {
+      return Response.json({ error: "New portfolio name and valid mobile number are required." }, { status: 400 });
+    }
     return Response.json({ error: "Failed to edit renewal record." }, { status: 500 });
   }
 }

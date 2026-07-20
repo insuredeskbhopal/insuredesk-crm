@@ -74,13 +74,14 @@ export async function GET(request) {
       WITH normalized_policies AS (
         SELECT 
           id,
+          customer_portfolio_id,
           saved_at,
           is_active_policy,
           COALESCE(renewal_status, 'ACTIVE') AS renewal_status,
           created_by_id,
           COALESCE(reviewed_data->>'assignedTo', data->>'assignedTo', '') AS assigned_to,
           COALESCE(reviewed_data->>'insuredName', data->>'insuredName', reviewed_data->>'customerName', data->>'customerName', '') AS insured_name,
-          COALESCE(
+          COALESCE(contact_person_name,
             reviewed_data->>'contactPerson',
             reviewed_data->>'contactPersonName',
             reviewed_data->>'customerName',
@@ -89,7 +90,7 @@ export async function GET(request) {
             data->>'customerName',
             ''
           ) AS contact_person,
-          COALESCE(
+          COALESCE(contact_person_mobile,
             reviewed_data->>'contactNumber',
             reviewed_data->>'customerMobile',
             reviewed_data->>'mobileNumber',
@@ -100,6 +101,14 @@ export async function GET(request) {
             data->>'phone',
             ''
           ) AS contact_number,
+          COALESCE(renewal_recipient_mobile, contact_person_mobile,
+            reviewed_data->>'renewalRecipientMobile', reviewed_data->>'contactNumber',
+            data->>'renewalRecipientMobile', data->>'contactNumber', ''
+          ) AS renewal_recipient_mobile,
+          COALESCE(renewal_recipient_name, contact_person_name,
+            reviewed_data->>'renewalRecipientName', reviewed_data->>'contactPerson',
+            data->>'renewalRecipientName', data->>'contactPerson', ''
+          ) AS renewal_recipient_name,
           COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry,
           COALESCE(reviewed_data->>'insuranceCompany', reviewed_data->>'Insurance Company', data->>'insuranceCompany', data->>'Insurance Company', '') AS raw_company,
           COALESCE(reviewed_data->>'policyType', reviewed_data->>'Policy Type', data->>'policyType', data->>'Policy Type', '') AS raw_policy_type,
@@ -121,6 +130,7 @@ export async function GET(request) {
       parsed_policies AS (
         SELECT
           id,
+          customer_portfolio_id,
           saved_at,
           is_active_policy,
           renewal_status,
@@ -128,6 +138,8 @@ export async function GET(request) {
           assigned_to,
           insured_name,
           contact_person,
+          renewal_recipient_mobile,
+          renewal_recipient_name,
           raw_company,
           raw_policy_type,
           selected_company,
@@ -160,6 +172,7 @@ export async function GET(request) {
       parsed_policies_with_days AS (
         SELECT
           *,
+          COALESCE(customer_portfolio_id::text, contact_number) AS portfolio_key,
           CASE WHEN expiry_date IS NULL THEN NULL ELSE (expiry_date - $3::date)::integer END AS days_left,
           CASE
             WHEN renewal_status = 'RENEWED' THEN 'RENEWED'
@@ -172,15 +185,17 @@ export async function GET(request) {
       ),
       customer_profile_contacts AS (
         SELECT
-          RIGHT(regexp_replace(phone, '[^0-9]', '', 'g'), 10) AS mobile,
-          MAX(NULLIF(contact_person_name, '')) AS profile_contact_person,
-          MAX(NULLIF(name, '')) AS profile_name,
-          MAX(NULLIF(assigned_to, '')) AS profile_assigned_to
+          id::text AS portfolio_key,
+          CASE
+            WHEN phone LIKE 'NO-MOBILE-%' THEN phone
+            ELSE RIGHT(regexp_replace(phone, '[^0-9]', '', 'g'), 10)
+          END AS mobile,
+          NULLIF(contact_person_name, '') AS profile_contact_person,
+          NULLIF(name, '') AS profile_name,
+          NULLIF(assigned_to, '') AS profile_assigned_to
         FROM customer_profiles
         WHERE deleted_at IS NULL
-          AND LENGTH(regexp_replace(phone, '[^0-9]', '', 'g')) >= 10
           AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
-        GROUP BY RIGHT(regexp_replace(phone, '[^0-9]', '', 'g'), 10)
       ),
       active_renewals AS (
         SELECT 
@@ -219,22 +234,22 @@ export async function GET(request) {
       ),
       contact_name_clusters AS (
         SELECT
-          contact_number,
+          portfolio_key,
           LOWER(SPLIT_PART(regexp_replace(TRIM(contact_person), '\\s+', ' ', 'g'), ' ', 1)) AS contact_key,
           COUNT(*) AS contact_count,
           MAX(saved_at) AS latest_saved_at
         FROM parsed_policies_with_days
         WHERE NULLIF(TRIM(contact_person), '') IS NOT NULL
-        GROUP BY contact_number, LOWER(SPLIT_PART(regexp_replace(TRIM(contact_person), '\\s+', ' ', 'g'), ' ', 1))
+        GROUP BY portfolio_key, LOWER(SPLIT_PART(regexp_replace(TRIM(contact_person), '\\s+', ' ', 'g'), ' ', 1))
       ),
       best_contact_keys AS (
-        SELECT contact_number, contact_key
+        SELECT portfolio_key, contact_key
         FROM (
           SELECT
-            contact_number,
+            portfolio_key,
             contact_key,
             ROW_NUMBER() OVER (
-              PARTITION BY contact_number
+              PARTITION BY portfolio_key
               ORDER BY contact_count DESC, latest_saved_at DESC
             ) AS rn
           FROM contact_name_clusters
@@ -242,13 +257,13 @@ export async function GET(request) {
         WHERE rn = 1
       ),
       best_contact_names AS (
-        SELECT contact_number, contact_person
+        SELECT portfolio_key, contact_person
         FROM (
           SELECT
-            active_renewals.contact_number,
+            active_renewals.portfolio_key,
             TRIM(active_renewals.contact_person) AS contact_person,
             ROW_NUMBER() OVER (
-              PARTITION BY active_renewals.contact_number
+              PARTITION BY active_renewals.portfolio_key
               ORDER BY
                 CASE WHEN TRIM(active_renewals.contact_person) ~* '\\m(sir|madam|maam)\\M' THEN 1 ELSE 0 END ASC,
                 LENGTH(TRIM(active_renewals.contact_person)) DESC,
@@ -257,34 +272,35 @@ export async function GET(request) {
             ) AS rn
           FROM parsed_policies_with_days active_renewals
           INNER JOIN best_contact_keys
-            ON best_contact_keys.contact_number = active_renewals.contact_number
+            ON best_contact_keys.portfolio_key = active_renewals.portfolio_key
            AND best_contact_keys.contact_key = LOWER(SPLIT_PART(regexp_replace(TRIM(active_renewals.contact_person), '\\s+', ' ', 'g'), ' ', 1))
           WHERE NULLIF(TRIM(active_renewals.contact_person), '') IS NOT NULL
-          GROUP BY active_renewals.contact_number, TRIM(active_renewals.contact_person)
+          GROUP BY active_renewals.portfolio_key, TRIM(active_renewals.contact_person)
         ) ranked_contacts
         WHERE rn = 1
       ),
       best_insured_names AS (
-        SELECT contact_number, insured_name
+        SELECT portfolio_key, insured_name
         FROM (
           SELECT
-            contact_number,
+            portfolio_key,
             TRIM(insured_name) AS insured_name,
             ROW_NUMBER() OVER (
-              PARTITION BY contact_number
+              PARTITION BY portfolio_key
               ORDER BY COUNT(*) DESC, MAX(saved_at) DESC
             ) AS rn
           FROM active_renewals
           WHERE NULLIF(TRIM(insured_name), '') IS NOT NULL
-          GROUP BY contact_number, TRIM(insured_name)
+          GROUP BY portfolio_key, TRIM(insured_name)
         ) ranked_insured
         WHERE rn = 1
       ),
       customer_groups AS (
         SELECT 
-          active_renewals.contact_number AS mobile,
+          MIN(active_renewals.customer_portfolio_id::text) AS portfolio_id,
+          COALESCE(MAX(cpc.mobile), MAX(active_renewals.contact_number)) AS mobile,
           STRING_AGG(DISTINCT NULLIF(active_renewals.insured_name, ''), ', ' ORDER BY NULLIF(active_renewals.insured_name, '')) AS company_names,
-          COALESCE(best_insured_names.insured_name, '') AS customer_name,
+          COALESCE(MAX(cpc.profile_name), best_insured_names.insured_name, '') AS customer_name,
           COALESCE(best_contact_names.contact_person, '') AS contact_person,
           COALESCE(
             NULLIF(best_contact_names.contact_person, ''),
@@ -294,7 +310,7 @@ export async function GET(request) {
             'Unknown Contact'
           ) AS contact_person_name,
           -- Count of unique company/insured names for this contact
-          (SELECT COUNT(DISTINCT NULLIF(p2.insured_name, ''))::integer FROM active_renewals p2 WHERE p2.contact_number = active_renewals.contact_number) AS total_companies,
+          (SELECT COUNT(DISTINCT NULLIF(p2.insured_name, ''))::integer FROM active_renewals p2 WHERE p2.portfolio_key = active_renewals.portfolio_key) AS total_companies,
           -- Count of ALL policies for this contact in the DB
           COUNT(*)::integer AS total_policies,
           -- Count of policies due (active and pending in window, excluding Renewed/Lost)
@@ -304,15 +320,23 @@ export async function GET(request) {
           COALESCE(NULLIF(MAX(cpc.profile_assigned_to), ''), MAX(active_renewals.assigned_to)) AS assigned_user,
           -- Reference Policy ID for customer level actions
           COALESCE(
-            (SELECT id FROM active_renewals p3 
-             WHERE p3.contact_number = active_renewals.contact_number 
+            (SELECT id FROM active_renewals p3
+             WHERE p3.portfolio_key = active_renewals.portfolio_key
                AND p3.is_active_policy = true 
                AND p3.renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE')
              ORDER BY p3.days_left ASC LIMIT 1),
-            (SELECT id FROM active_renewals p4 
-             WHERE p4.contact_number = active_renewals.contact_number 
+            (SELECT id FROM active_renewals p4
+             WHERE p4.portfolio_key = active_renewals.portfolio_key
              ORDER BY p4.days_left ASC NULLS LAST, p4.saved_at DESC LIMIT 1)
           ) AS nearest_due_policy_id,
+          COALESCE(
+            (SELECT NULLIF(p5.renewal_recipient_mobile, '') FROM active_renewals p5
+             WHERE p5.portfolio_key = active_renewals.portfolio_key
+             ORDER BY p5.days_left ASC NULLS LAST LIMIT 1),
+            MAX(active_renewals.contact_number)
+          ) AS renewal_mobile,
+          STRING_AGG(DISTINCT NULLIF(active_renewals.renewal_recipient_mobile, ''), ' ') AS renewal_mobiles,
+          STRING_AGG(DISTINCT NULLIF(active_renewals.renewal_recipient_name, ''), ' ') AS renewal_recipient_names,
           -- Customer status aggregation
           (CASE
             WHEN COUNT(CASE WHEN active_renewals.is_active_policy = true AND active_renewals.renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND active_renewals.days_left BETWEEN -30 AND 30 THEN 1 END) > 0 THEN
@@ -331,12 +355,12 @@ export async function GET(request) {
           END) AS customer_status
         FROM active_renewals
         LEFT JOIN customer_profile_contacts cpc
-          ON cpc.mobile = active_renewals.contact_number
+          ON cpc.portfolio_key = active_renewals.portfolio_key
         LEFT JOIN best_contact_names
-          ON best_contact_names.contact_number = active_renewals.contact_number
+          ON best_contact_names.portfolio_key = active_renewals.portfolio_key
         LEFT JOIN best_insured_names
-          ON best_insured_names.contact_number = active_renewals.contact_number
-        GROUP BY active_renewals.contact_number, best_contact_names.contact_person, best_insured_names.insured_name
+          ON best_insured_names.portfolio_key = active_renewals.portfolio_key
+        GROUP BY active_renewals.portfolio_key, best_contact_names.contact_person, best_insured_names.insured_name
       ),
       filtered_groups AS (
         SELECT *
@@ -357,6 +381,8 @@ export async function GET(request) {
             OR LOWER(contact_person_name) LIKE $6
             OR LOWER(contact_person) LIKE $6
             OR mobile LIKE $6
+            OR LOWER(COALESCE(renewal_recipient_names, '')) LIKE $6
+            OR COALESCE(renewal_mobiles, '') LIKE $6
           )
           -- Assigned Agent filter
           AND (
@@ -403,17 +429,21 @@ export async function GET(request) {
     const pageMobiles = dataResult
       .map((row) => String(row.mobile || ""))
       .filter((mobile) => mobile && !mobile.startsWith("NO-MOBILE-"));
-    const rawPagePolicies = pageMobiles.length
+    const pagePortfolioIds = dataResult.map((row) => row.portfolio_id).filter(Boolean);
+    const rawPagePolicies = pageMobiles.length || pagePortfolioIds.length
       ? await prisma.policyRecord.findMany({
           where: {
             deletedAt: null,
             ...(isSuperAdmin ? {} : { organizationId: orgId }),
-            OR: pageMobiles.flatMap((mobile) => [
-              { reviewedData: { path: ["contactNumber"], string_contains: mobile } },
-              { reviewedData: { path: ["customerMobile"], string_contains: mobile } },
-              { data: { path: ["contactNumber"], string_contains: mobile } },
-              { data: { path: ["customerMobile"], string_contains: mobile } },
-            ]),
+            OR: [
+              ...(pagePortfolioIds.length ? [{ customerPortfolioId: { in: pagePortfolioIds } }] : []),
+              ...pageMobiles.flatMap((mobile) => [
+                { reviewedData: { path: ["contactNumber"], string_contains: mobile } },
+                { reviewedData: { path: ["customerMobile"], string_contains: mobile } },
+                { data: { path: ["contactNumber"], string_contains: mobile } },
+                { data: { path: ["customerMobile"], string_contains: mobile } },
+              ]),
+            ],
           },
           select: {
             id: true,
@@ -431,22 +461,32 @@ export async function GET(request) {
             pdfFileName: true,
             createdAt: true,
             updatedAt: true,
+            customerPortfolioId: true,
+            contactPersonName: true,
+            contactPersonMobile: true,
+            contactPersonEmail: true,
+            renewalRecipientName: true,
+            renewalRecipientMobile: true,
+            renewalRecipientEmail: true,
           },
         })
       : [];
 
     const contactByMobile = new Map();
+    const contactByPortfolio = new Map();
     for (const record of rawPagePolicies) {
       const policy = normalizeRecord(record);
       const mobile = cleanMobile(policy.contactNumber);
-      if (!mobile || contactByMobile.has(mobile)) continue;
       if (isUsefulContactName(policy.contactPerson, policy.insuredName)) {
-        contactByMobile.set(mobile, policy.contactPerson);
+        if (mobile && !contactByMobile.has(mobile)) contactByMobile.set(mobile, policy.contactPerson);
+        if (policy.customerPortfolioId && !contactByPortfolio.has(policy.customerPortfolioId)) {
+          contactByPortfolio.set(policy.customerPortfolioId, policy.contactPerson);
+        }
       }
     }
 
     const enrichedCustomers = dataResult.map((row) => {
-      const policyContact = contactByMobile.get(String(row.mobile || ""));
+      const policyContact = contactByPortfolio.get(row.portfolio_id) || contactByMobile.get(String(row.mobile || ""));
       const resolvedContact = isUsefulContactName(row.contact_person_name, row.company_names)
         ? row.contact_person_name
         : isUsefulContactName(policyContact, row.company_names)

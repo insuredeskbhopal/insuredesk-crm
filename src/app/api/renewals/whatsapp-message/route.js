@@ -8,6 +8,9 @@ import { formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
 import { withRenewalCompanyDisplay } from "@/lib/renewals/companies";
 import {
   buildRenewalWhatsAppMessage,
+  groupRenewalPoliciesByRecipient,
+  isRenewalAgentId,
+  normalizeRenewalAgentName,
   RENEWAL_WHATSAPP_CUSTOM_FIELDS,
   selectRenewalWhatsAppPolicies,
 } from "@/lib/renewals/whatsapp-message";
@@ -39,9 +42,9 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { policyId, phone, logAudit: shouldLog, message, messageId } = body;
-    if (!policyId && !phone) {
-      return Response.json({ error: "Missing policyId or phone parameter" }, { status: 400 });
+    const { policyId, policyIds, portfolioId, phone, logAudit: shouldLog, message, messageId } = body;
+    if (!policyId && !portfolioId && !phone) {
+      return Response.json({ error: "Missing policy, portfolio, or phone parameter" }, { status: 400 });
     }
 
     const tenantFilter = getTenantFilter(user, "read");
@@ -69,7 +72,7 @@ export async function POST(request) {
       });
       if (mainPolicy) {
         const norm = normalizeRecord(mainPolicy);
-        targetPhone = norm.contactNumber || norm.customerMobile || "";
+        targetPhone = norm.renewalRecipientMobile || norm.contactNumber || "";
       }
     }
 
@@ -77,7 +80,16 @@ export async function POST(request) {
 
     // 2. Fetch all matching active policies for this phone to check the portfolio
     let activePolicies = [];
-    if (cleanContact) {
+    if (portfolioId) {
+      activePolicies = await prisma.policyRecord.findMany({
+        where: {
+          customerPortfolioId: portfolioId,
+          deletedAt: null,
+          clientIdPending: false,
+          ...(isSuperAdmin ? {} : { organizationId: orgId }),
+        },
+      });
+    } else if (cleanContact) {
       activePolicies = await prisma.policyRecord.findMany({
         where: {
           deletedAt: null,
@@ -120,23 +132,26 @@ export async function POST(request) {
     const primaryPolicy = mainPolicy
       ? withRenewalCompanyDisplay(withRenewalPolicyDisplay(normalizeRecord(mainPolicy)))
       : null;
-    const targetList = selectRenewalWhatsAppPolicies({
+    let targetList = selectRenewalWhatsAppPolicies({
       policyId,
       primaryPolicy,
       duePolicies,
       policies: normalized,
     });
+    if (Array.isArray(policyIds) && policyIds.length > 0) {
+      const requestedIds = new Set(policyIds.map(String));
+      targetList = targetList.filter((policy) => requestedIds.has(String(policy.id)));
+    }
 
     if (targetList.length === 0) {
       return Response.json({ error: "No policies found to generate message" }, { status: 404 });
     }
 
     let customerName = "Valued Customer";
-    if (cleanContact) {
-      const last10 = cleanContact.slice(-10);
+    if (portfolioId || cleanContact) {
       const profile = await prisma.customerProfile.findFirst({
         where: {
-          phone: { contains: last10 },
+          ...(portfolioId ? { id: portfolioId } : { phone: { contains: cleanContact.slice(-10) } }),
           deletedAt: null,
           ...(isSuperAdmin ? {} : { organizationId: orgId }),
         },
@@ -156,7 +171,8 @@ export async function POST(request) {
     }
     const count = targetList.length;
 
-    const phoneParam = formatPhoneForWhatsapp(targetPhone) || cleanContact;
+    const recipientPhone = targetList[0].renewalRecipientMobile || targetList[0].contactNumber || targetPhone;
+    const phoneParam = formatPhoneForWhatsapp(recipientPhone) || cleanContact;
 
     // Handle Audit logging
     if (shouldLog) {
@@ -189,13 +205,33 @@ export async function POST(request) {
 
     // 4. Generate Message Content
     let templates = {};
-    let defaultTemplate = "due_soon";
-    const agentName =
-      targetList.find((policy) => String(policy.assignedTo || "").trim())?.assignedTo ||
-      user.name ||
-      user.email ||
-      "Team Member";
+    const defaultTemplate = "renewal_msg";
+    const assignedPolicy = targetList.find((policy) => policy.assignedTo || policy.assignedToId);
+    const assignedTo = String(assignedPolicy?.assignedTo || "").trim();
+    const assignedToId = String(
+      assignedPolicy?.assignedToId || (isRenewalAgentId(assignedTo) ? assignedTo : ""),
+    ).trim();
+    let agentName = normalizeRenewalAgentName(assignedTo, "");
+
+    if (!agentName && isRenewalAgentId(assignedToId)) {
+      const assignee = await prisma.user.findFirst({
+        where: isSuperAdmin ? { id: assignedToId } : { id: assignedToId, organizationId: orgId },
+        select: { name: true, email: true },
+      });
+      agentName = assignee?.name || assignee?.email || "";
+    }
+
+    agentName = normalizeRenewalAgentName(agentName, user.name || user.email || "Team Member");
     const renewalMessage = buildRenewalWhatsAppMessage({ agentName, customerName, policies: targetList });
+    const recipientGroups = groupRenewalPoliciesByRecipient(targetList).map((group) => ({
+      phone: formatPhoneForWhatsapp(group.mobile),
+      name: group.name,
+      policyIds: group.policies.map((policy) => policy.id),
+      message: buildRenewalWhatsAppMessage({ agentName, customerName, policies: group.policies }),
+    }));
+    if (recipientGroups.length === 0) {
+      return Response.json({ error: "No valid renewal recipient mobile is available." }, { status: 400 });
+    }
 
     if (count > 1) {
       // Combined Multi-policy message template
@@ -314,15 +350,6 @@ ${orgName} Team`;
         renewal_msg: renewalMessage,
       };
 
-      if (daysRemaining < 0) {
-        defaultTemplate = "expired";
-      } else if (daysRemaining === 0) {
-        defaultTemplate = "today";
-      } else if (daysRemaining > 0 && daysRemaining <= 7) {
-        defaultTemplate = "due_soon";
-      } else {
-        defaultTemplate = "follow_up";
-      }
     }
 
     return Response.json({
@@ -331,6 +358,7 @@ ${orgName} Team`;
       defaultTemplate,
       templates,
       customFields: RENEWAL_WHATSAPP_CUSTOM_FIELDS,
+      recipientGroups,
     });
   } catch (error) {
     console.error("WhatsApp message generation failed:", error);

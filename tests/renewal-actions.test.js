@@ -5,6 +5,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { prismaMock, verifyJWTMock, logAuditMock } = vi.hoisted(() => ({
   prismaMock: {
     $queryRawUnsafe: vi.fn(),
+    $transaction: vi.fn(),
+    auditLog: {
+      findMany: vi.fn(),
+    },
     customerProfile: {
       findFirst: vi.fn(),
       create: vi.fn(),
@@ -49,6 +53,9 @@ describe("renewal action isolation", () => {
       organizationId: null,
     });
     prismaMock.customerProfile.findFirst.mockResolvedValue(null);
+    prismaMock.customerProfile.create.mockResolvedValue({ id: "portfolio-1" });
+    prismaMock.auditLog.findMany.mockResolvedValue([]);
+    prismaMock.$transaction.mockImplementation((callback) => callback(prismaMock));
     prismaMock.policyRecord.findUnique.mockResolvedValue(null);
   });
 

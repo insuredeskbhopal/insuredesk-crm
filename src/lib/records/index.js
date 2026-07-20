@@ -22,6 +22,7 @@ export function normalizeRecord(record) {
     payload["Insured Name"] ||
     "";
   const contactNumber =
+    record.contactPersonMobile ||
     payload.contactNumber ||
     legacy.contactNumber ||
     payload.customerMobile ||
@@ -33,7 +34,7 @@ export function normalizeRecord(record) {
     payload["Contact No."] ||
     payload["Mobile Number"] ||
     "";
-  const customerId = buildCustomerId(insuredName, contactNumber);
+  const customerId = record.customerPortfolioId || buildCustomerId(insuredName, contactNumber);
   const insuranceCompany = normalizeInsuranceCompanyName(
     payload.insuranceCompany ||
       payload.insurerName ||
@@ -82,6 +83,7 @@ export function normalizeRecord(record) {
     confidenceScore: record.confidenceScore ?? null,
     extractionLog: record.extractionLog || null,
     customerId,
+    customerPortfolioId: record.customerPortfolioId || "",
     clientId: payload.clientId || legacy.clientId || "",
     clientIdRequestId: record.clientIdRequestId || "",
     clientIdPending: Boolean(record.clientIdPending),
@@ -92,6 +94,7 @@ export function normalizeRecord(record) {
     policyNumber: payload.policyNumber || legacy.policyNumber || payload["Policy No."] || "",
     contactNumber,
     contactPerson:
+      record.contactPersonName ||
       payload.contactPerson ||
       legacy.contactPerson ||
       payload.contactPersonName ||
@@ -103,6 +106,7 @@ export function normalizeRecord(record) {
       payload["Contact Person"] ||
       "",
     email:
+      record.contactPersonEmail ||
       payload.email ||
       legacy.email ||
       payload.customerEmail ||
@@ -112,6 +116,12 @@ export function normalizeRecord(record) {
       payload["Email ID"] ||
       payload["Email Address"] ||
       "",
+    renewalRecipientName:
+      record.renewalRecipientName || record.contactPersonName || payload.contactPerson || payload.contactPersonName || "",
+    renewalRecipientMobile:
+      record.renewalRecipientMobile || record.contactPersonMobile || contactNumber,
+    renewalRecipientEmail:
+      record.renewalRecipientEmail || record.contactPersonEmail || payload.email || payload.customerEmail || "",
     whatsappGroupName:
       payload.whatsappGroupName || legacy.whatsappGroupName || payload["WhatsApp Group Name"] || "",
     groupName: payload.groupName || legacy.groupName || payload["Group name"] || "",

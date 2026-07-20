@@ -437,6 +437,7 @@ model CustomerProfile {
   updatedById         String?      @map("updated_by_id") @db.Uuid
   updatedBy           User?        @relation("CustomerProfileUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   endorsements        Endorsement[]
+  policies            PolicyRecord[]
 
   @@index([phone])
   @@index([sourcePolicyNumber])
@@ -533,6 +534,14 @@ model PolicyRecord {
   renewalDate             DateTime?          @map("renewal_date") @db.Timestamptz(6)
   lostReason              String?            @map("lost_reason")
   isActivePolicy          Boolean            @default(true) @map("is_active_policy")
+  customerPortfolioId     String?            @map("customer_portfolio_id") @db.Uuid
+  customerPortfolio       CustomerProfile?   @relation(fields: [customerPortfolioId], references: [id], onDelete: SetNull)
+  contactPersonName       String?            @map("contact_person_name")
+  contactPersonMobile     String?            @map("contact_person_mobile")
+  contactPersonEmail      String?            @map("contact_person_email")
+  renewalRecipientName    String?            @map("renewal_recipient_name")
+  renewalRecipientMobile  String?            @map("renewal_recipient_mobile")
+  renewalRecipientEmail   String?            @map("renewal_recipient_email")
   endorsements            Endorsement[]
 
   @@index([savedAt])
@@ -543,6 +552,8 @@ model PolicyRecord {
   @@index([organizationId, deletedAt, isActivePolicy])
   @@index([organizationId, renewalStatus])
   @@index([organizationId, isActivePolicy, renewalStatus])
+  @@index([organizationId, customerPortfolioId])
+  @@index([organizationId, renewalRecipientMobile])
   @@index([createdById, deletedAt, savedAt])
   @@index([clientIdRequestId])
   @@index([organizationId, clientIdPending])

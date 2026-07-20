@@ -105,7 +105,10 @@ export async function GET(request) {
           LOWER(
             COALESCE(reviewed_data->>'insuredName', data->>'insuredName', '') || ' ' ||
             COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') || ' ' ||
-            COALESCE(reviewed_data->>'contactNumber', data->>'contactNumber', '') || ' ' ||
+            COALESCE(contact_person_name, reviewed_data->>'contactPerson', data->>'contactPerson', '') || ' ' ||
+            COALESCE(contact_person_mobile, reviewed_data->>'contactNumber', data->>'contactNumber', '') || ' ' ||
+            COALESCE(renewal_recipient_name, reviewed_data->>'renewalRecipientName', data->>'renewalRecipientName', '') || ' ' ||
+            COALESCE(renewal_recipient_mobile, reviewed_data->>'renewalRecipientMobile', data->>'renewalRecipientMobile', '') || ' ' ||
             COALESCE(reviewed_data->>'vehicleNumber', data->>'vehicleNumber', '') || ' ' ||
             COALESCE(reviewed_data->>'registrationNumber', data->>'registrationNumber', '') || ' ' ||
             COALESCE(reviewed_data->'renewalRemarks'->0->>'text', data->'renewalRemarks'->0->>'text', reviewed_data->>'remark', data->>'remark', '') || ' ' ||
@@ -407,6 +410,13 @@ export async function GET(request) {
           createdById: true,
           updatedById: true,
           extractionMethod: true,
+          customerPortfolioId: true,
+          contactPersonName: true,
+          contactPersonMobile: true,
+          contactPersonEmail: true,
+          renewalRecipientName: true,
+          renewalRecipientMobile: true,
+          renewalRecipientEmail: true,
           createdBy: { select: { name: true, email: true } },
           updatedBy: { select: { name: true, email: true } },
         },

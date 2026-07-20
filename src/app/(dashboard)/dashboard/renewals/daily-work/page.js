@@ -246,12 +246,12 @@ export default function DailyWorkPage() {
 
   // Actions
   const handleViewProfile = (policy) => {
-    const phone = policy.contactNumber || "";
-    if (!phone) {
-      window.alert("No phone number associated with this policy.");
+    const portfolioKey = policy.customerPortfolioId || policy.contactNumber || "";
+    if (!portfolioKey) {
+      window.alert("No customer portfolio associated with this policy.");
       return;
     }
-    router.push(`/dashboard/renewals/customers/${encodeURIComponent(phone)}`);
+    router.push(`/dashboard/renewals/customers/${encodeURIComponent(portfolioKey)}`);
   };
 
   // Log remark / Schedule follow-up
@@ -528,7 +528,7 @@ export default function DailyWorkPage() {
                         {policy.insuredName}
                       </div>
                       <div style={{ fontSize: "12px", color: "var(--rn-text-muted)" }}>
-                        {policy.contactNumber || "No Mobile"}
+                        {policy.renewalRecipientMobile || policy.contactNumber || "No Mobile"}
                       </div>
                     </td>
                     <td>{policy.insuranceCompany}</td>

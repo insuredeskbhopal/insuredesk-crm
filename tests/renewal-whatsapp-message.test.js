@@ -1,11 +1,28 @@
 import { describe, expect, it } from "vitest";
 import {
   buildRenewalWhatsAppMessage,
+  isRenewalAgentId,
+  normalizeRenewalAgentName,
   RENEWAL_WHATSAPP_CUSTOM_FIELDS,
   selectRenewalWhatsAppPolicies,
 } from "../src/lib/renewals/whatsapp-message";
 
 describe("renewal WhatsApp message", () => {
+  it("never exposes an internal assigned-user UUID in the greeting", () => {
+    const userId = "30f1e9c6-7b55-4b49-a1c6-748a42df0fd8";
+
+    expect(isRenewalAgentId(userId)).toBe(true);
+    expect(normalizeRenewalAgentName(userId, "Anand Soni")).toBe("Anand Soni");
+    expect(normalizeRenewalAgentName("Amit Sharma", "Anand Soni")).toBe("Amit Sharma");
+    expect(
+      buildRenewalWhatsAppMessage({
+        agentName: userId,
+        customerName: "Customer",
+        policies: [{ policyNumber: "N4116778" }],
+      }),
+    ).toContain("Dear Team Member,");
+  });
+
   it("keeps an explicitly selected policy isolated from other policies on the same phone", () => {
     const policies = [
       { id: "policy-1", policyNumber: "N4116778" },

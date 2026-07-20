@@ -2,6 +2,7 @@ import renewalImportIdentity from "./import-identity.cjs";
 import { calculateDaysLeft } from "./dates";
 
 const RENEWAL_HELP_NUMBER = "+91 88188 89660";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const { excelDateToString } = renewalImportIdentity;
 
 export const RENEWAL_WHATSAPP_CUSTOM_FIELDS = [
@@ -31,6 +32,33 @@ export function selectRenewalWhatsAppPolicies({
   return primaryPolicy ? [primaryPolicy] : [];
 }
 
+export function isRenewalAgentId(value) {
+  return UUID_PATTERN.test(String(value || "").trim());
+}
+
+export function normalizeRenewalAgentName(value, fallback = "Team Member") {
+  const name = String(value || "").trim();
+  return name && !isRenewalAgentId(name) && name.toLowerCase() !== "unassigned" ? name : fallback;
+}
+
+export function groupRenewalPoliciesByRecipient(policies = []) {
+  const groups = new Map();
+  policies.forEach((policy) => {
+    const rawMobile = policy.renewalRecipientMobile || policy.contactNumber || "";
+    const digits = String(rawMobile).replace(/\D/g, "");
+    const mobile = digits.length >= 10 ? digits.slice(-10) : "";
+    if (!mobile) return;
+    const current = groups.get(mobile) || {
+      mobile,
+      name: policy.renewalRecipientName || policy.contactPerson || "Valued Customer",
+      policies: [],
+    };
+    current.policies.push(policy);
+    groups.set(mobile, current);
+  });
+  return Array.from(groups.values());
+}
+
 function renewalDueDate(value) {
   const raw = String(value || "").trim();
   if (!raw) return "N/A";
@@ -51,7 +79,7 @@ function renewalVehicleDescription(policy = {}) {
 }
 
 export function buildRenewalWhatsAppMessage({ agentName, customerName, policies = [], referenceDate } = {}) {
-  const agent = String(agentName || "Team Member").trim() || "Team Member";
+  const agent = normalizeRenewalAgentName(agentName);
   const name = String(customerName || "Valued Customer").trim() || "Valued Customer";
   const reminders = policies
     .map((policy) => {
@@ -59,7 +87,8 @@ export function buildRenewalWhatsAppMessage({ agentName, customerName, policies 
       const daysLeft = hasDaysRemaining && Number.isFinite(Number(policy.daysRemaining))
         ? Number(policy.daysRemaining)
         : calculateDaysLeft(policy.expiryDate, referenceDate);
-      return `The Motor Insurance Policy for *${name}* with *${String(policy.insuranceCompany || "your insurer").trim()}* is scheduled to expire soon.
+      const policyCustomerName = String(policy.insuredName || name).trim() || name;
+      return `The Motor Insurance Policy for *${policyCustomerName}* with *${String(policy.insuranceCompany || "your insurer").trim()}* is scheduled to expire soon.
 
 *Policy Number:* ${String(policy.policyNumber || "N/A").trim()}
 *Vehicle:* ${renewalVehicleDescription(policy).replace(/\s+\([^)]*\)$/, "")}

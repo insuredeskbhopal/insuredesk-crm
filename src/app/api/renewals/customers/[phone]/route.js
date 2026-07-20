@@ -24,11 +24,12 @@ export async function GET(request, props) {
       return Response.json({ error: "Invalid session" }, { status: 401 });
     }
 
-    const { phone } = params;
-    if (!phone) {
-      return Response.json({ error: "Phone number parameter is required" }, { status: 400 });
+    const { phone: portfolioKey } = params;
+    if (!portfolioKey) {
+      return Response.json({ error: "Customer portfolio parameter is required" }, { status: 400 });
     }
-    const cleanPhone = String(phone).replace(/[^0-9]/g, "");
+    const isPortfolioId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(portfolioKey);
+    const cleanPhone = String(portfolioKey).replace(/[^0-9]/g, "");
     const requestedPolicyId = new URL(request.url).searchParams.get("policyId") || "";
 
     const isSuperAdmin = user.role === "SUPER_ADMIN";
@@ -36,10 +37,22 @@ export async function GET(request, props) {
 
     // 1. Fetch matched CustomerProfile if exists
     let customerProfile = null;
-    if (!phone.startsWith("NO-MOBILE-")) {
+    if (isPortfolioId) {
       customerProfile = await prisma.customerProfile.findFirst({
         where: {
-          phone: { contains: cleanPhone || phone },
+          id: portfolioKey,
+          deletedAt: null,
+          ...(isSuperAdmin ? {} : { organizationId: orgId }),
+        },
+        include: {
+          createdBy: { select: { name: true, email: true } },
+          updatedBy: { select: { name: true, email: true } },
+        },
+      });
+    } else if (!portfolioKey.startsWith("NO-MOBILE-")) {
+      customerProfile = await prisma.customerProfile.findFirst({
+        where: {
+          phone: { contains: cleanPhone || portfolioKey },
           deletedAt: null,
           ...(isSuperAdmin ? {} : { organizationId: orgId }),
         },
@@ -52,8 +65,19 @@ export async function GET(request, props) {
 
     // 2. Fetch all Policies that match this contact number.
     // Excel renewal imports can store mobile numbers as JSON numbers; Prisma JSON string filters miss those.
-    const matchedPolicyIds = phone.startsWith("NO-MOBILE-")
-      ? [phone.replace("NO-MOBILE-", "")]
+    const matchedPolicyIds = isPortfolioId
+      ? (
+          await prisma.policyRecord.findMany({
+            where: {
+              customerPortfolioId: portfolioKey,
+              deletedAt: null,
+              ...(isSuperAdmin ? {} : { organizationId: orgId }),
+            },
+            select: { id: true },
+          })
+        ).map((row) => row.id)
+      : portfolioKey.startsWith("NO-MOBILE-")
+      ? [portfolioKey.replace("NO-MOBILE-", "")]
       : (
           await prisma.$queryRawUnsafe(
             `
@@ -102,6 +126,13 @@ export async function GET(request, props) {
         pdfFileName: true,
         createdAt: true,
         updatedAt: true,
+        customerPortfolioId: true,
+        contactPersonName: true,
+        contactPersonMobile: true,
+        contactPersonEmail: true,
+        renewalRecipientName: true,
+        renewalRecipientMobile: true,
+        renewalRecipientEmail: true,
         createdBy: { select: { name: true, email: true } },
       },
     });
@@ -161,6 +192,9 @@ export async function GET(request, props) {
           previousPolicyId: true, renewedPolicyId: true, renewalDate: true, lostReason: true,
           isActivePolicy: true, selectedCompany: true, selectedPolicyType: true, pdfFileName: true,
           createdAt: true, updatedAt: true, createdBy: { select: { name: true, email: true } },
+          customerPortfolioId: true, contactPersonName: true, contactPersonMobile: true,
+          contactPersonEmail: true, renewalRecipientName: true, renewalRecipientMobile: true,
+          renewalRecipientEmail: true,
         },
       });
       if (fallbackRecord) {
@@ -315,7 +349,7 @@ export async function GET(request, props) {
     const fallbackSummary = {
       name: enrichedContactPerson || "Contact not available",
       contactPerson: enrichedContactPerson || "Contact not available",
-      phone: phone.startsWith("NO-MOBILE-") ? "Not Available" : phone,
+      phone: portfolioKey.startsWith("NO-MOBILE-") ? "Not Available" : portfolioKey,
       email: enrichedEmail || "",
       address: enrichedAddress || "",
       state: enrichedState || "",
@@ -326,17 +360,17 @@ export async function GET(request, props) {
     const profileData = customerProfile
       ? {
           name:
-            customerProfile.contactPersonName ||
-            enrichedContactPerson ||
             customerProfile.name ||
             enrichedName ||
+            customerProfile.contactPersonName ||
+            enrichedContactPerson ||
             "Unknown Contact",
           contactPerson:
             customerProfile.contactPersonName ||
             enrichedContactPerson ||
             customerProfile.name ||
             "Contact not available",
-          phone: customerProfile.phone || phone,
+          phone: customerProfile.phone || portfolioKey,
           email: customerProfile.email || enrichedEmail || "",
           address: customerProfile.address || enrichedAddress || "",
           state: customerProfile.state || enrichedState || "",
@@ -351,6 +385,7 @@ export async function GET(request, props) {
       success: true,
       profile: {
         ...profileData,
+        id: customerProfile?.id || policies[0]?.customerPortfolioId || "",
         customerStatus,
       },
       policies,

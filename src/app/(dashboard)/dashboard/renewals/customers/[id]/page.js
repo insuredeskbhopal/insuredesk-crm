@@ -150,6 +150,15 @@ export default function CustomerProfilePage(props) {
     insuredName: "",
     contactPersonName: "",
     contactNumber: "",
+    contactPersonEmail: "",
+    renewalRecipientName: "",
+    renewalRecipientMobile: "",
+    renewalRecipientEmail: "",
+    contactUpdateMode: "policy_only",
+    targetPortfolioId: "",
+    newPortfolioName: "",
+    newPortfolioMobile: "",
+    newPortfolioEmail: "",
     policyNumber: "",
     insuranceCompany: "",
     policyType: "",
@@ -176,8 +185,10 @@ export default function CustomerProfilePage(props) {
   const [editedWhatsAppMessage, setEditedWhatsAppMessage] = useState("");
   const [whatsappPhone, setWhatsAppPhone] = useState("");
   const [whatsappPolicyId, setWhatsAppPolicyId] = useState("");
+  const [whatsappRecipientGroups, setWhatsAppRecipientGroups] = useState([]);
 
   const [teamMembers, setTeamMembers] = useState([]);
+  const [portfolioOptions, setPortfolioOptions] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
   const openedRequestedAction = useRef("");
 
@@ -300,6 +311,13 @@ export default function CustomerProfilePage(props) {
     fetchTeam();
   }, []);
 
+  useEffect(() => {
+    fetch("/api/renewals/portfolios", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data) => setPortfolioOptions(data.portfolios || []))
+      .catch((error) => console.error("Failed to fetch customer portfolios:", error));
+  }, []);
+
   const toInputDate = (dateStr) => {
     if (!dateStr) return "";
     try {
@@ -345,9 +363,10 @@ export default function CustomerProfilePage(props) {
     });
   }, [timeline, timelineFilters]);
 
-  const handleCall = () => {
-    if (profile && profile.phone && !profile.phone.startsWith("NO-MOBILE-")) {
-      window.open(`tel:${profile.phone}`);
+  const handleCall = (policy = null) => {
+    const mobile = policy?.renewalRecipientMobile || policy?.contactNumber || profile?.phone || "";
+    if (mobile && !mobile.startsWith("NO-MOBILE-")) {
+      window.open(`tel:${mobile}`);
     } else {
       window.alert("No contact number available.");
     }
@@ -450,6 +469,15 @@ export default function CustomerProfilePage(props) {
         ? ""
         : contactPersonName,
       contactNumber: policy.contactNumber || "",
+      contactPersonEmail: policy.email || "",
+      renewalRecipientName: policy.renewalRecipientName || contactPersonName || "",
+      renewalRecipientMobile: policy.renewalRecipientMobile || policy.contactNumber || "",
+      renewalRecipientEmail: policy.renewalRecipientEmail || policy.email || "",
+      contactUpdateMode: "policy_only",
+      targetPortfolioId: profile?.id || "",
+      newPortfolioName: "",
+      newPortfolioMobile: "",
+      newPortfolioEmail: "",
       policyNumber: policy.policyNumber || "",
       insuranceCompany: policy.insuranceCompany || "",
       policyType: policy.policyType || "",
@@ -615,7 +643,7 @@ export default function CustomerProfilePage(props) {
   // WhatsApp Combined Message
   const handleWhatsApp = async (policy = null) => {
     const cleanPhone = profile?.phone ? String(profile.phone).replace(/[^0-9]/g, "") : "";
-    if (!cleanPhone || cleanPhone.length < 10) {
+    if (!policy && !profile?.id && (!cleanPhone || cleanPhone.length < 10)) {
       window.alert("No valid phone number available for this customer.");
       return;
     }
@@ -627,6 +655,7 @@ export default function CustomerProfilePage(props) {
     setWhatsAppPreviewView("message");
     setSelectedTemplateType("due_soon");
     setEditedWhatsAppMessage("");
+    setWhatsAppRecipientGroups([]);
 
     try {
       setActionLoading(true);
@@ -636,6 +665,7 @@ export default function CustomerProfilePage(props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phone: profile.phone,
+          portfolioId: policy ? undefined : profile.id,
           policyId: policy ? policy.id : undefined,
         }),
       });
@@ -646,6 +676,7 @@ export default function CustomerProfilePage(props) {
         setWhatsAppCustomFields(data.customFields || []);
         setSelectedTemplateType(data.defaultTemplate);
         setEditedWhatsAppMessage(data.templates[data.defaultTemplate]);
+        setWhatsAppRecipientGroups(data.recipientGroups || []);
         setWhatsAppPreviewOpen(true);
       } else {
         window.alert(data.error || "Failed to load WhatsApp template.");
@@ -672,38 +703,44 @@ export default function CustomerProfilePage(props) {
     if (!editedWhatsAppMessage) return;
 
     try {
-      // Direct message send
-      const res = await fetch("/api/operations/whatsapp/test-message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: whatsappPhone,
-          message: editedWhatsAppMessage,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const sends = whatsappRecipientGroups.length > 1
+        ? whatsappRecipientGroups
+        : [{
+            phone: whatsappPhone,
+            message: editedWhatsAppMessage,
+            policyIds: whatsappRecipientGroups[0]?.policyIds || (whatsappPolicyId ? [whatsappPolicyId] : []),
+          }];
+      let sentCount = 0;
+      for (const send of sends) {
+        const res = await fetch("/api/operations/whatsapp/test-message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: send.phone, message: send.message }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || "Unknown error");
         try {
           await fetch("/api/renewals/whatsapp-message", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               phone: profile.phone,
+              portfolioId: profile.id || undefined,
               policyId: whatsappPolicyId || undefined,
+              policyIds: send.policyIds,
               logAudit: true,
-              message: editedWhatsAppMessage,
+              message: send.message,
               messageId: data.messageId || undefined,
             }),
           });
         } catch (auditError) {
           console.error("Failed to log WhatsApp audit:", auditError);
         }
-        window.alert(`WhatsApp message sent successfully to ${profile.insuredName}!`);
-      } else {
-        window.alert(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`);
+        sentCount++;
       }
-    } catch {
-      window.alert("Failed to connect to the CRM WhatsApp API.");
+      window.alert(`WhatsApp message sent successfully to ${sentCount} recipient${sentCount === 1 ? "" : "s"}.`);
+    } catch (error) {
+      window.alert(`Failed to send WhatsApp message: ${error.message || "Unknown error"}`);
     }
 
     setWhatsAppPreviewOpen(false);
@@ -1289,7 +1326,16 @@ export default function CustomerProfilePage(props) {
                       </td>
 
                       {/* 2. Company Name */}
-                      <td style={{ width: colWidths[1] + "px" }}>{p.insuredName || "-"}</td>
+                      <td style={{ width: colWidths[1] + "px" }}>
+                        <div>{p.insuredName || "-"}</div>
+                        <small>Contact: {p.contactPerson || "-"}</small>
+                        {p.contactNumber ? <small>{p.contactNumber}</small> : null}
+                        <small>Renewal: {p.renewalRecipientName || p.contactPerson || "-"}</small>
+                        {p.renewalRecipientMobile ? <small>{p.renewalRecipientMobile}</small> : null}
+                        {p.renewalRecipientMobile && p.renewalRecipientMobile !== profile.phone ? (
+                          <span className="rn-badge rn-badge-active">Alternate Contact</span>
+                        ) : null}
+                      </td>
 
                       {/* 3. Insurance Company */}
                       <td style={{ width: colWidths[2] + "px" }}>{p.insuranceCompany || "-"}</td>
@@ -1446,7 +1492,7 @@ export default function CustomerProfilePage(props) {
                                     className="rn-dropdown-item"
                                     onClick={() => {
                                       setActiveDropdownRowId(null);
-                                      handleCall();
+                                      handleCall(p);
                                     }}
                                   >
                                     <Phone size={14} /> Call Customer
@@ -1981,7 +2027,7 @@ export default function CustomerProfilePage(props) {
                   paddingBottom: "12px",
                 }}
               >
-                <h3>Edit Renewal Record</h3>
+                <h3>Edit Contact Information</h3>
                 <button
                   onClick={() => setEditModalOpen(false)}
                   style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}
@@ -2024,6 +2070,44 @@ export default function CustomerProfilePage(props) {
                       value={editForm.contactNumber}
                       onChange={(e) => setEditForm({ ...editForm, contactNumber: e.target.value })}
                     />
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Contact Email</label>
+                    <input type="email" className="rn-input" style={{ width: "100%", marginTop: "4px" }} value={editForm.contactPersonEmail} onChange={(e) => setEditForm({ ...editForm, contactPersonEmail: e.target.value })} />
+                  </div>
+                  <div style={{ gridColumn: "1 / -1", borderTop: "1px solid var(--rn-border)", paddingTop: "12px" }}>
+                    <strong>Renewal Recipient</strong>
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Recipient Name</label>
+                    <input className="rn-input" style={{ width: "100%", marginTop: "4px" }} value={editForm.renewalRecipientName} onChange={(e) => setEditForm({ ...editForm, renewalRecipientName: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Recipient Mobile</label>
+                    <input className="rn-input" style={{ width: "100%", marginTop: "4px" }} value={editForm.renewalRecipientMobile} onChange={(e) => setEditForm({ ...editForm, renewalRecipientMobile: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="customer-meta-label">Recipient Email</label>
+                    <input type="email" className="rn-input" style={{ width: "100%", marginTop: "4px" }} value={editForm.renewalRecipientEmail} onChange={(e) => setEditForm({ ...editForm, renewalRecipientEmail: e.target.value })} />
+                  </div>
+                  <div style={{ gridColumn: "1 / -1", borderTop: "1px solid var(--rn-border)", paddingTop: "12px", display: "grid", gap: "10px" }}>
+                    <strong>How should this change be applied?</strong>
+                    <label><input type="radio" name="contactUpdateMode" value="policy_only" checked={editForm.contactUpdateMode === "policy_only"} onChange={(e) => setEditForm({ ...editForm, contactUpdateMode: e.target.value })} /> Update only this policy — keep it in {profile?.name || "the current"} portfolio</label>
+                    <label><input type="radio" name="contactUpdateMode" value="move_existing" checked={editForm.contactUpdateMode === "move_existing"} onChange={(e) => setEditForm({ ...editForm, contactUpdateMode: e.target.value })} /> Move policy to an existing customer portfolio</label>
+                    {editForm.contactUpdateMode === "move_existing" ? (
+                      <select className="rn-input" value={editForm.targetPortfolioId} onChange={(e) => setEditForm({ ...editForm, targetPortfolioId: e.target.value })}>
+                        <option value="">Select portfolio</option>
+                        {portfolioOptions.filter((item) => item.id !== profile?.id).map((item) => <option key={item.id} value={item.id}>{item.name} ({item.phone})</option>)}
+                      </select>
+                    ) : null}
+                    <label><input type="radio" name="contactUpdateMode" value="create_portfolio" checked={editForm.contactUpdateMode === "create_portfolio"} onChange={(e) => setEditForm({ ...editForm, contactUpdateMode: e.target.value })} /> Create a new customer portfolio and move this policy</label>
+                    {editForm.contactUpdateMode === "create_portfolio" ? (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                        <input className="rn-input" placeholder="Portfolio name" value={editForm.newPortfolioName} onChange={(e) => setEditForm({ ...editForm, newPortfolioName: e.target.value })} />
+                        <input className="rn-input" placeholder="Primary mobile" value={editForm.newPortfolioMobile} onChange={(e) => setEditForm({ ...editForm, newPortfolioMobile: e.target.value })} />
+                        <input type="email" className="rn-input" placeholder="Primary email" value={editForm.newPortfolioEmail} onChange={(e) => setEditForm({ ...editForm, newPortfolioEmail: e.target.value })} />
+                      </div>
+                    ) : null}
                   </div>
                   <div>
                     <label className="customer-meta-label">Policy Number *</label>
@@ -2455,6 +2539,11 @@ export default function CustomerProfilePage(props) {
                     </div>
                   ) : (
                     <>
+                      {whatsappRecipientGroups.length > 1 ? (
+                        <div className="rn-badge rn-badge-active" style={{ alignSelf: "flex-start" }}>
+                          This portfolio will be sent as {whatsappRecipientGroups.length} separate messages by renewal recipient.
+                        </div>
+                      ) : null}
                       <div>
                         <label className="customer-meta-label">Template Context</label>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>

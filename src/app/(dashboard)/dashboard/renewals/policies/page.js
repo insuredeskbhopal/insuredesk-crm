@@ -206,7 +206,7 @@ export default function RenewalPoliciesPage() {
 
   const openCustomerAction = (policy, action = "") => {
     const digits = String(policy.contactNumber || "").replace(/\D/g, "");
-    const customerKey = digits.length >= 10 ? digits.slice(-10) : `NO-MOBILE-${policy.id}`;
+    const customerKey = policy.customerPortfolioId || (digits.length >= 10 ? digits.slice(-10) : `NO-MOBILE-${policy.id}`);
     const returnTo = `${window.location.pathname}${window.location.search}`;
     const params = new window.URLSearchParams({ returnTo, policyId: policy.id });
     if (action) params.set("action", action);
@@ -217,7 +217,7 @@ export default function RenewalPoliciesPage() {
   };
 
   const callCustomer = (policy) => {
-    const digits = String(policy.contactNumber || "").replace(/\D/g, "");
+    const digits = String(policy.renewalRecipientMobile || policy.contactNumber || "").replace(/\D/g, "");
     closeActionMenu();
     if (digits.length >= 10) window.open(`tel:${digits.slice(-10)}`);
     else window.alert("No contact number available for this policy.");
@@ -294,7 +294,7 @@ export default function RenewalPoliciesPage() {
                 {!isMotorView ? <th>Start Date</th> : null}
                 <th>Expiry Date</th>
                 {isMotorView ? <th>Due In</th> : <th>Sum Insured / IDV</th>}
-                <th>Premium</th><th>Mobile</th><th>WhatsApp Status</th><th>Status</th><th>Actions</th>
+                <th>Premium</th><th>Renewal Mobile</th><th>WhatsApp Status</th><th>Status</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -356,7 +356,7 @@ function PolicyRegisterRow({
       <td><strong>{formatRenewalRegisterDate(policy.expiryDate)}</strong>{!isMotorView ? <small>{policy.daysStatus || ""}</small> : null}</td>
       {isMotorView ? <td><strong>{formatRenewalRegisterDueIn(policy.daysRemaining)}</strong></td> : <td>{formatRenewalRegisterAmount(policy.sumInsured || policy.idv)}</td>}
       <td>{formatRenewalRegisterAmount(policy.totalPremium || policy.premium)}</td>
-      <td>{policy.contactNumber || "—"}</td>
+      <td>{policy.renewalRecipientMobile || policy.contactNumber || "—"}</td>
       <td>
         <span className={`rn-policy-register__status rn-policy-register__status--${policy.whatsappMessageSentAt ? "success" : "neutral"}`}>
           {policy.whatsappMessageSentAt ? "Sent" : "Not sent"}
