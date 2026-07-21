@@ -227,7 +227,7 @@ function OperationsCard({ module, metrics }) {
   const lastActivity = getLastActivityText(module.id, count, metrics);
 
   return (
-    <Link className={`operations-module-card accent-${module.accent}`} href={module.route}>
+    <Link className={`operations-module-card accent-${module.accent}`} href={module.route} prefetch={false}>
       <div className="operations-module-top">
         <span className="operations-module-icon">
           <Icon size={22} />

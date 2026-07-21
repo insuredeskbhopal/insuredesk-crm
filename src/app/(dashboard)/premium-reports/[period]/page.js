@@ -67,7 +67,7 @@ export default async function PremiumReportPage({ params }) {
           <p className="eyebrow">Premium Report</p>
           <h1>Unknown premium report</h1>
           <p>The selected premium card does not match any available report.</p>
-          <Link className="primary-action" href="/dashboard">
+          <Link className="primary-action" href="/dashboard" prefetch={false}>
             Back to Dashboard
           </Link>
         </section>
@@ -97,7 +97,7 @@ export default async function PremiumReportPage({ params }) {
             <p>{config.description}</p>
           </div>
           <div className="title-actions">
-            <Link className="secondary-action" href="/dashboard">
+            <Link className="secondary-action" href="/dashboard" prefetch={false}>
               Back to Dashboard
             </Link>
           </div>

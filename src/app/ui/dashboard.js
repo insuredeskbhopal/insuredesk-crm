@@ -2,6 +2,7 @@
 
 import { useDeferredValue, useEffect, useMemo, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import "./dashboard.css";
 import { cachedJson } from "@/app/lib/client-api";
@@ -53,13 +54,12 @@ import {
   download,
 } from "@/app/lib/dashboard-helpers";
 import { hasUploadDetection } from "@/lib/uploads/detection";
-import PreviewField from "@/app/components/shared/PreviewField";
 import FixedPolicyPreview from "@/app/components/upload/FixedPolicyPreview";
-import FieldSetupPanel from "@/app/components/field-setup/FieldSetupPanel";
-import ClientProfile from "@/app/components/customers/ClientProfile";
-import PolicyDetail from "@/app/components/policies/PolicyDetail";
-import AnalyticsReports from "@/app/components/analytics/AnalyticsReports";
-import PolicyDetailCard from "@/app/components/shared/PolicyDetailCard";
+
+const ClientProfile = dynamic(() => import("@/app/components/customers/ClientProfile"));
+const PolicyDetail = dynamic(() => import("@/app/components/policies/PolicyDetail"));
+const PolicyDetailCard = dynamic(() => import("@/app/components/shared/PolicyDetailCard"));
+const PreviewField = dynamic(() => import("@/app/components/shared/PreviewField"));
 
 const DASHBOARD_VIEW_KEY = "bimaheadquarter.dashboard.view";
 const FIELD_OPTIONS = {
@@ -116,7 +116,7 @@ export default function Dashboard({
   useEffect(() => {
     async function fetchHeaderData() {
       try {
-        const data = await cachedJson("/api/dashboard/header-data", { ttlMs: 5000 });
+        const data = await cachedJson("/api/dashboard/header-data?summaryOnly=true", { ttlMs: 5000 });
         if (data.success) {
           if (data.renewalCounts) {
             setRenewalCounts(data.renewalCounts);
@@ -2408,8 +2408,6 @@ export default function Dashboard({
         />
       )}
 
-      {activePage === "field-setup" && <FieldSetupPanel />}
-
       {activePage === "manual-entry" && (
         <section className="glass-panel manual-entry-container">
           <div className="manual-selectors">
@@ -2701,50 +2699,6 @@ export default function Dashboard({
         </section>
       )}
 
-      {activePage === "analytics" && (
-        <AnalyticsReports records={records} onEditRecord={startEditRecord} />
-      )}
-
-      {activePage === "settings" && (
-        <section className="settings-grid">
-          <section className="glass-panel">
-            <p className="eyebrow">Database</p>
-            <h2>Prisma + Neon</h2>
-            <div className="settings-list">
-              <div>
-                <span>Stack</span>
-                <strong>Next.js App Router</strong>
-              </div>
-              <div>
-                <span>ORM</span>
-                <strong>Prisma</strong>
-              </div>
-              <div>
-                <span>Database</span>
-                <strong>Neon PostgreSQL</strong>
-              </div>
-            </div>
-          </section>
-          <section className="glass-panel">
-            <p className="eyebrow">Status</p>
-            <h2>Current environment</h2>
-            <div className="settings-list">
-              <div>
-                <span>Records loaded</span>
-                <strong>{records.length}</strong>
-              </div>
-              <div>
-                <span>Uploads queued</span>
-                <strong>{selectedFiles.length}</strong>
-              </div>
-              <div>
-                <span>Mock seed data</span>
-                <strong>Removed</strong>
-              </div>
-            </div>
-          </section>
-        </section>
-      )}
       {toast ? (
         <button className="toast" type="button" onClick={() => setToast("")}>
           <CheckCircle size={20} />

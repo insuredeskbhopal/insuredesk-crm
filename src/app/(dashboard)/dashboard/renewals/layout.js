@@ -157,6 +157,7 @@ export default function RenewalsLayout({ children }) {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               className={`renewals-nav-link ${isActive ? "active" : ""}`}
             >
               <IconComponent size={16} />

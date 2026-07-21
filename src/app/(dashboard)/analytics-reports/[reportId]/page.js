@@ -24,7 +24,7 @@ export default async function AnalyticsReportPage({ params }) {
           <p className="eyebrow">Report not found</p>
           <h1>Unknown analytics report</h1>
           <p>The requested report ID does not match any available dashboard report.</p>
-          <Link className="primary-action" href="/analytics-reports">
+          <Link className="primary-action" href="/analytics-reports" prefetch={false}>
             Back to Analytics
           </Link>
         </section>
@@ -64,6 +64,7 @@ export default async function AnalyticsReportPage({ params }) {
               <Link
                 className="secondary-action"
                 href={`/customer-management/${encodeURIComponent(reportFilter.value)}`}
+                prefetch={false}
               >
                 Open Customer
               </Link>
@@ -72,11 +73,12 @@ export default async function AnalyticsReportPage({ params }) {
               <Link
                 className="secondary-action"
                 href={`/customer-management/${encodeURIComponent(matchingRecords[0].insuredName || "")}/policy/${matchingRecords[0].id}`}
+                prefetch={false}
               >
                 Open Policy
               </Link>
             ) : null}
-            <Link className="secondary-action" href="/analytics-reports">
+            <Link className="secondary-action" href="/analytics-reports" prefetch={false}>
               Back to Analytics
             </Link>
           </div>

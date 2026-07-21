@@ -73,7 +73,7 @@ export function ReportIndexPage({ modules, lastUpdated }) {
                   <strong>{module.kpi}</strong>
                   <span>Updated {formatRelative(module.lastUpdated)}</span>
                 </div>
-                <Link className="bi-report-link" href={module.href}>
+                <Link className="bi-report-link" href={module.href} prefetch={false}>
                   <span>Open Report</span>
                   <ChevronRight size={17} aria-hidden="true" />
                 </Link>
@@ -94,7 +94,7 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
           <div className="state-icon">!</div>
           <p className="eyebrow">Report unavailable</p>
           <h1>Business report not found</h1>
-          <Link className="primary-action" href="/dashboard/reports">
+          <Link className="primary-action" href="/dashboard/reports" prefetch={false}>
             Back to Reports
           </Link>
         </section>
@@ -108,7 +108,7 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
     <main className="bi-page">
       <ReportHero title={report.title} subtitle={report.description} lastUpdated={lastUpdated} />
       <div className="bi-report-nav">
-        <Link className="bi-back-link" href="/dashboard/reports">
+        <Link className="bi-back-link" href="/dashboard/reports" prefetch={false}>
           <ArrowLeft size={16} /> Back to Reports
         </Link>
       </div>

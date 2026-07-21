@@ -1025,6 +1025,18 @@ export async function getNotificationFeed(session, limit = 10) {
   };
 }
 
+export async function getUnreadNotificationCount(session) {
+  const actorId = session.userId || session.id;
+  const tenantWhere = buildOperationsTenantWhere(session);
+  return prisma.notification.count({
+    where: {
+      ...tenantWhere,
+      OR: [{ userId: null }, { userId: actorId }],
+      reads: { none: { userId: actorId } },
+    },
+  });
+}
+
 export async function markNotificationsRead(session, ids = []) {
   const actorId = session.userId || session.id;
   const tenantWhere = buildOperationsTenantWhere(session);

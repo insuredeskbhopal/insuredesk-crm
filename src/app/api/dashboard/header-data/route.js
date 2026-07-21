@@ -28,6 +28,7 @@ function formatRelativeTime(dateString) {
 
 export async function GET(request) {
   try {
+    const summaryOnly = new URL(request.url).searchParams.get("summaryOnly") === "true";
     const token = request.cookies.get("token")?.value;
     if (!token) {
       return Response.json({ error: "Not authenticated", success: false }, { status: 401 });
@@ -39,29 +40,28 @@ export async function GET(request) {
     }
 
     if (session.role === "VIEWER") {
-      return Response.json({
-        renewals: [],
-        notifications: [],
-        agentWise: [],
-        renewalCounts: {
-          eodPremium: 0,
-          eodCount: 0,
-          mtdPremium: 0,
-          mtdCount: 0,
-          ytdPremium: 0,
-          ytdCount: 0,
-          due10: 0,
-          due20: 0,
-          due30: 0,
-          expired: 0,
-          expiredPremium: 0,
-          renewed: 0,
-          renewedPremium: 0,
-          lost: 0,
-          lostPremium: 0,
-        },
-        success: true,
-      });
+      const renewalCounts = {
+        eodPremium: 0,
+        eodCount: 0,
+        mtdPremium: 0,
+        mtdCount: 0,
+        ytdPremium: 0,
+        ytdCount: 0,
+        due10: 0,
+        due20: 0,
+        due30: 0,
+        expired: 0,
+        expiredPremium: 0,
+        renewed: 0,
+        renewedPremium: 0,
+        lost: 0,
+        lostPremium: 0,
+      };
+      return Response.json(
+        summaryOnly
+          ? { renewalCounts, success: true }
+          : { renewals: [], notifications: [], agentWise: [], renewalCounts, success: true },
+      );
     }
 
     const tenantFilter = getTenantFilter(session, "read");
@@ -384,11 +384,13 @@ export async function GET(request) {
       GROUP BY u.id, u.name, u.email
     `;
 
-    const [renewalsResult, statsResult, agentResult] = await Promise.all([
-      prisma.$queryRawUnsafe(renewalsCTE, ...queryParams),
-      prisma.$queryRawUnsafe(statsQuery, ...statsParams),
-      prisma.$queryRawUnsafe(agentQuery, ...statsParams),
-    ]);
+    const [renewalsResult, statsResult, agentResult] = summaryOnly
+      ? [[], await prisma.$queryRawUnsafe(statsQuery, ...statsParams), []]
+      : await Promise.all([
+          prisma.$queryRawUnsafe(renewalsCTE, ...queryParams),
+          prisma.$queryRawUnsafe(statsQuery, ...statsParams),
+          prisma.$queryRawUnsafe(agentQuery, ...statsParams),
+        ]);
 
     const renewals = renewalsResult.map((r) => ({
       id: r.id,
@@ -417,6 +419,27 @@ export async function GET(request) {
     const renewedPremium = Number(stats.renewed_premium) || 0;
     const lostCount = Number(stats.lost_count) || 0;
     const lostPremium = Number(stats.lost_premium) || 0;
+    const renewalCounts = {
+      eodPremium,
+      eodCount,
+      mtdPremium,
+      mtdCount,
+      ytdPremium,
+      ytdCount,
+      due10,
+      due20,
+      due30,
+      expired: expiredCount,
+      expiredPremium,
+      renewed: renewedCount,
+      renewedPremium,
+      lost: lostCount,
+      lostPremium,
+    };
+
+    if (summaryOnly) {
+      return Response.json({ renewalCounts, success: true });
+    }
 
     const agentWise = (agentResult || []).map((a) => ({
       agentId: a.agent_id,
@@ -507,23 +530,7 @@ export async function GET(request) {
       renewals,
       notifications,
       agentWise,
-      renewalCounts: {
-        eodPremium,
-        eodCount,
-        mtdPremium,
-        mtdCount,
-        ytdPremium,
-        ytdCount,
-        due10,
-        due20,
-        due30,
-        expired: expiredCount,
-        expiredPremium,
-        renewed: renewedCount,
-        renewedPremium,
-        lost: lostCount,
-        lostPremium,
-      },
+      renewalCounts,
       success: true,
     });
   } catch (error) {

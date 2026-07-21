@@ -39,6 +39,23 @@ export default function DashboardLayout({ children }) {
     setQuery(urlQuery);
   }, [urlQuery]);
 
+  useEffect(() => {
+    if (query === urlQuery) return undefined;
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (query) params.set("q", query);
+      else params.delete("q");
+
+      const queryString = params.toString();
+      const targetPath =
+        SEARCHABLE_CURRENT_PATHS.has(pathname) || pathname.startsWith("/dashboard/reports")
+          ? pathname
+          : "/policy-records";
+      router.replace(queryString ? `${targetPath}?${queryString}` : targetPath);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [pathname, query, router, searchParams, urlQuery]);
+
   // Close sidebar on pathname change (navigating to new route)
   useEffect(() => {
     setIsSidebarOpen(false);
@@ -46,19 +63,6 @@ export default function DashboardLayout({ children }) {
 
   const handleQueryChange = (newQuery) => {
     setQuery(newQuery);
-    const params = new URLSearchParams(searchParams.toString());
-    if (newQuery) {
-      params.set("q", newQuery);
-    } else {
-      params.delete("q");
-    }
-
-    const queryString = params.toString();
-    const targetPath =
-      SEARCHABLE_CURRENT_PATHS.has(pathname) || pathname.startsWith("/dashboard/reports")
-        ? pathname
-        : "/policy-records";
-    router.push(queryString ? `${targetPath}?${queryString}` : targetPath);
   };
 
   return (

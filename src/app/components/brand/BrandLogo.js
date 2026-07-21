@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 
-export default function BrandLogo({ href, className = "", compact = false }) {
+export default function BrandLogo({ href, className = "", compact = false, prefetch }) {
   const content = (
     <span className={`brand-logo ${compact ? "compact" : ""} ${className}`.trim()}>
       <Image
@@ -16,7 +16,7 @@ export default function BrandLogo({ href, className = "", compact = false }) {
 
   if (href) {
     return (
-      <Link className="brand-logo-link" href={href}>
+      <Link className="brand-logo-link" href={href} prefetch={prefetch}>
         {content}
       </Link>
     );

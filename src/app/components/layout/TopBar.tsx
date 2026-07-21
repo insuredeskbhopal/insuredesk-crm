@@ -44,22 +44,42 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [user, setUser] = useState({ id: "", name: "Bima Headquarter Admin", email: "admin@bimaheadquarter.com" });
 
-  const fetchHeaderData = async () => {
+  const fetchNotificationCount = async () => {
     try {
-      const [workData, notificationData] = await Promise.all([
-        cachedJson("/api/work-center", {
-          ttlMs: 5000,
-          fetchOptions: { cache: "no-store" },
-        }),
-        cachedJson("/api/notifications?limit=10", {
-          ttlMs: 5000,
-          fetchOptions: { cache: "no-store" },
-        }),
-      ]);
+      const notificationData = await cachedJson("/api/notifications?countOnly=true", {
+        ttlMs: 5000,
+        fetchOptions: { cache: "no-store" },
+      });
+      if (notificationData.success) {
+        setUnreadCount(notificationData.unreadCount || 0);
+        setHasNotifications((notificationData.unreadCount || 0) > 0);
+      }
+    } catch (err) {
+      console.error("Failed to fetch notification count:", err);
+    }
+  };
+
+  const fetchCalendarTasks = async () => {
+    try {
+      const workData = await cachedJson("/api/work-center", {
+        ttlMs: 5000,
+        fetchOptions: { cache: "no-store" },
+      });
       if (workData.success) {
         const tasks = workData.tasks || [];
         setCalendarTasks(tasks.slice(0, 10));
       }
+    } catch (err) {
+      console.error("Failed to fetch calendar tasks:", err);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const notificationData = await cachedJson("/api/notifications?limit=10", {
+        ttlMs: 5000,
+        fetchOptions: { cache: "no-store" },
+      });
       if (notificationData.success) {
         setNotifications(notificationData.notifications || []);
         setUnreadCount(notificationData.unreadCount || 0);
@@ -71,7 +91,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
   };
 
   useEffect(() => {
-    fetchHeaderData();
+    fetchNotificationCount();
     const fetchUser = async () => {
       try {
         const data = await cachedJson("/api/auth/me", { ttlMs: 10000 });
@@ -105,7 +125,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
     setShowNotifications(false);
     setShowProfile(false);
     if (!showCalendar) {
-      fetchHeaderData();
+      fetchCalendarTasks();
     }
   };
 
@@ -115,7 +135,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
     setShowCalendar(false);
     setShowProfile(false);
     if (!showNotifications) {
-      fetchHeaderData();
+      fetchNotifications();
     }
   };
 
@@ -203,12 +223,12 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
         <button className="sidebar-toggle" onClick={onToggleSidebar} aria-label="Toggle Navigation">
           <Menu size={20} />
         </button>
-        <BrandLogo href="/dashboard" />
+        <BrandLogo href="/dashboard" prefetch={false} />
         <nav>
-          <Link className={isReportsActive ? "active" : ""} href="/dashboard/reports">
+          <Link className={isReportsActive ? "active" : ""} href="/dashboard/reports" prefetch={false}>
             Reports
           </Link>
-          <Link className={isBulkActive ? "active" : ""} href="/bulk-upload">
+          <Link className={isBulkActive ? "active" : ""} href="/bulk-upload" prefetch={false}>
             Bulk PDF Upload
           </Link>
         </nav>
@@ -231,7 +251,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
             <div className="tb-dropdown">
               <div className="tb-item-header tb-notif-header">
                 <h4 className="tb-dropdown-title tb-m-0">Today's Work</h4>
-                <Link href="/work-center" onClick={() => setShowCalendar(false)} className="tb-clear-btn">
+                <Link href="/work-center" prefetch={false} onClick={() => setShowCalendar(false)} className="tb-clear-btn">
                   View all
                 </Link>
               </div>
@@ -241,6 +261,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                     <Link
                       key={task.id}
                       href={task.metadata?.actionUrl || "/work-center"}
+                      prefetch={false}
                       onClick={() => setShowCalendar(false)}
                       className={`tb-renewal-item ${task.priority === "CRITICAL" || task.priority === "EMERGENCY" ? "border-expired" : task.priority === "HIGH" ? "border-soon" : "border-active"}`}
                     >
@@ -264,10 +285,10 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                 )}
               </div>
               <div className="tb-dropdown-actions">
-                <Link href="/work-center" onClick={() => setShowCalendar(false)}>
+                <Link href="/work-center" prefetch={false} onClick={() => setShowCalendar(false)}>
                   Add Task
                 </Link>
-                <Link href="/work-center" onClick={() => setShowCalendar(false)}>
+                <Link href="/work-center" prefetch={false} onClick={() => setShowCalendar(false)}>
                   Open Calendar
                 </Link>
               </div>
@@ -327,6 +348,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                             <Link
                               key={n.id}
                               href={href}
+                              prefetch={false}
                               onClick={() => setShowNotifications(false)}
                               className={n.read ? "tb-notif-item" : "tb-notif-item unread"}
                             >
@@ -346,10 +368,10 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                       )}
                     </div>
                     <div className="tb-dropdown-actions">
-                      <Link href="/work-center" onClick={() => setShowNotifications(false)}>
+                      <Link href="/work-center" prefetch={false} onClick={() => setShowNotifications(false)}>
                         Filter Notifications
                       </Link>
-                      <Link href="/work-center" onClick={() => setShowNotifications(false)}>
+                      <Link href="/work-center" prefetch={false} onClick={() => setShowNotifications(false)}>
                         View All
                       </Link>
                     </div>
@@ -370,7 +392,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                 <p>{user.email}</p>
               </div>
               <div className="tb-profile-actions">
-                <Link href="/settings" className="tb-profile-btn" onClick={() => setShowProfile(false)}>
+                <Link href="/settings" prefetch={false} className="tb-profile-btn" onClick={() => setShowProfile(false)}>
                   <Settings size={14} className="icon-default" />
                   <span>Profile Settings</span>
                 </Link>

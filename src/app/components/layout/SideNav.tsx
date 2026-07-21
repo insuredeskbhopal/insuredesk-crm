@@ -100,7 +100,7 @@ export default function SideNav({
     <>
       <aside className={`side-nav ${isSidebarOpen ? "open" : ""}`}>
         <div className="portal-title">
-          <BrandLogo href="/dashboard" />
+          <BrandLogo href="/dashboard" prefetch={false} />
           <p>Enterprise Portal</p>
         </div>
 
@@ -108,6 +108,7 @@ export default function SideNav({
           <Link
             className={activePage === "dashboard" ? "active" : ""}
             href={ROUTE_MAP["dashboard"]}
+            prefetch={false}
             onClick={() => { if (onCloseSidebar) onCloseSidebar(); }}
           >
             <LayoutDashboard size={20} /> Dashboard
@@ -141,6 +142,7 @@ export default function SideNav({
                             className={activePage === child.id ? "active" : ""}
                             key={child.id}
                             href={ROUTE_MAP[child.id] || "/dashboard"}
+                            prefetch={false}
                             onClick={() => { if (onCloseSidebar) onCloseSidebar(); }}
                           >
                             {child.label}
@@ -157,6 +159,7 @@ export default function SideNav({
                   <Link
                     className={activePage === item.id ? "active" : ""}
                     href={ROUTE_MAP[item.id] || "/dashboard"}
+                    prefetch={false}
                     onClick={() => { if (onCloseSidebar) onCloseSidebar(); }}
                   >
                     <Icon size={20} /> {item.label}

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { ShieldCheck } from "lucide-react";
 import { FIELD_SETUP, POLICY_SCHEMA_LIBRARY } from "@/app/lib/dashboard-helpers";

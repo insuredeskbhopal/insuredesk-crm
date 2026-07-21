@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/session";
-import { getNotificationFeed, markNotificationsRead } from "@/lib/operations-center/engine";
+import {
+  getNotificationFeed,
+  getUnreadNotificationCount,
+  markNotificationsRead,
+} from "@/lib/operations-center/engine";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const runtime = "nodejs";
@@ -12,6 +16,10 @@ export async function GET(request) {
     if (auth.response) return auth.response;
 
     const { searchParams } = new URL(request.url);
+    if (searchParams.get("countOnly") === "true") {
+      const unreadCount = await getUnreadNotificationCount(auth.session);
+      return NextResponse.json({ success: true, unreadCount });
+    }
     const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "10", 10), 1), 100);
     const feed = await getNotificationFeed(auth.session, limit);
 
