@@ -209,6 +209,21 @@ export const DEFAULT_POLICY_TYPES = [
   },
   {
     category: "Health Insurance",
+    company: "ICICI Lombard",
+    name: "Elevate",
+    aliases: ["ICICI Lombard Elevate", "Elevate Health Plan", "ELEVATE Health Insurance"],
+    keywords: [
+      "product name elevate",
+      "icihlip",
+      "policyholder details",
+      "insured details",
+      "power booster",
+      "loyalty bonus",
+    ],
+    fields: iciciLombardElevateHealthFields(),
+  },
+  {
+    category: "Health Insurance",
     name: "Individual Health",
     aliases: ["Individual Mediclaim"],
     keywords: ["individual health", "hospitalization", "tpa", "room rent", "pre-existing disease"],
@@ -311,6 +326,54 @@ function healthFields() {
     field("policyEndDate", "Policy End Date", "date", true, ["To", "Expiry Date", "Period To"]),
     field("tpaName", "TPA Name", "text", false, ["TPA", "TPA Name", "Third Party Administrator"]),
     field("nominee", "Nominee", "text", false, ["Nominee", "Nominee Name"]),
+  ];
+}
+
+function iciciLombardElevateHealthFields() {
+  return [
+    field("customerName", "Customer Name", "text", false, ["Customer Name", "Proposer Name"]),
+    field("proposerName", "Proposer Name", "text", true, ["Proposer Name", "Policyholder Name"]),
+    field("insuredName", "Primary Insured Name", "text", true, ["Insured Name"]),
+    field("contactNumber", "Mobile Number", "text", true, ["Mobile Number", "Contact Number"]),
+    field("email", "Email", "text", false, ["Email", "Email ID"]),
+    field("policyNumber", "Policy Number", "text", true, ["Policy Number", "Policy No"]),
+    field("productName", "Product Name", "text", true, ["Product Name", "ELEVATE"]),
+    field("productUin", "Product UIN", "text", true, ["UIN", "Product UIN"]),
+    field("policyType", "Policy Type", "dropdown", true, ["Policy Type"], ["FLOATER", "INDIVIDUAL"]),
+    field("policyTenure", "Policy Tenure", "text", false, ["Policy Tenure"]),
+    field("startDate", "Policy Start Date", "date", true, ["Policy Start Date & Time"]),
+    field("expiryDate", "Policy End Date", "date", true, ["Policy End Date & Time"]),
+    field("zone", "Zone", "text", false, ["Zone"]),
+    field("premiumPaymentFrequency", "Premium Payment Frequency", "text", false, [
+      "Premium Payment Frequency",
+    ]),
+    field("premiumPaymentMode", "Premium Payment Mode", "text", false, ["Premium Payment Mode"]),
+    field("mailingAddress", "Policyholder Address", "textarea", false, ["Address", "Mailing Address"]),
+    field("policyholderEmailMasked", "Policyholder Email (Masked)", "text", false, ["Email ID"]),
+    field("policyholderMobileMasked", "Policyholder Mobile (Masked)", "text", false, ["Mobile Number"]),
+    field("invoiceNumber", "Invoice Number", "text", false, ["Invoice Number"]),
+    field("sumInsured", "Sum Insured", "currency", true, ["Sum Insured"]),
+    field("basicPremium", "Basic Premium", "currency", true, ["Basic Premium"]),
+    field("gstAmount", "GST / Total Tax", "currency", false, ["GST", "Total Tax Payable"]),
+    field("stampDuty", "Stamp Duty", "currency", false, ["Stamp Duty"]),
+    field("totalPremium", "Total Premium", "currency", true, ["Total Premium"]),
+    field("nomineeName", "Nominee Name", "text", false, ["Nominee Name"]),
+    field("nomineeRelationship", "Nominee Relationship", "text", false, ["Relationship with Policyholder"]),
+    field("nomineeDateOfBirth", "Nominee Date of Birth", "date", false, ["Date of Birth"]),
+    field("appointeeName", "Appointee Name", "text", false, ["Appointee Name"]),
+    field("insuredMembers", "Insured Members", "textarea", true, ["Insured Details", "Insured Persons"]),
+    field("numberOfInsuredMembers", "Number of Insured Members", "number", true, ["Members Covered"]),
+    field("previousPolicyNumber", "Previous Policy Number", "text", false, ["Previous Policy Number"]),
+    field("loyaltyBonus", "Loyalty Bonus", "currency", false, ["Loyalty Bonus"]),
+    field("powerBooster", "Power Booster", "currency", false, ["Power Booster"]),
+    field("servicingBranchName", "Servicing Branch", "text", false, ["Policy Servicing Office Location"]),
+    field("servicingBranchAddress", "Servicing Branch Address", "textarea", false, [
+      "Policy Servicing Office Address",
+    ]),
+    field("agentName", "Agent Name", "text", false, ["Agent Name"]),
+    field("agentCode", "Agent Code", "text", false, ["Agent Code"]),
+    field("agentMobile", "Agent Mobile", "text", false, ["Agent Mobile Number"]),
+    field("remark", "Remarks", "textarea", false, ["Remark", "Remarks"]),
   ];
 }
 

@@ -6,6 +6,7 @@ const SCHEMA_DIR = fs.existsSync(path.join(process.cwd(), "src", "lib", "policie
   ? path.join(process.cwd(), "src", "lib", "policies", "schemas")
   : path.join(process.cwd(), "lib", "policies", "schemas");
 const FORMAT_TO_SCHEMA = {
+  ICICI_LOMBARD_HEALTH_ELEVATE_V1: "icici_health.json",
   UNITED_INDIA_WAREHOUSE_V1: "united_india_warehouse.json",
   HDFC_ERGO_MOTOR_V1: "hdfc_motor.json",
   IFFCO_TOKIO_MOTOR_V1: "iffco_motor.json",

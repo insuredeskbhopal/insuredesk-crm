@@ -1,0 +1,288 @@
+{
+  "name": "ICICI Lombard Elevate Health",
+  "version": 1,
+  "expectedSections": ["policy_details", "insured_details", "premium_details"],
+  "expectedTables": ["premium_table"],
+  "fields": [
+    {
+      "field": "insuranceCompany",
+      "aliases": ["ICICI Lombard"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "productName",
+      "aliases": ["Product Name", "ELEVATE"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "productUin",
+      "aliases": ["UIN", "Product UIN"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "policyNumber",
+      "aliases": ["Policy Number", "Policy No"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "policyType",
+      "aliases": ["Policy Type"],
+      "section": "policy_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "policyTenure",
+      "aliases": ["Policy Tenure"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "startDate",
+      "aliases": ["Policy Start Date & Time"],
+      "section": "policy_details",
+      "type": "date",
+      "required": true
+    },
+    {
+      "field": "expiryDate",
+      "aliases": ["Policy End Date & Time"],
+      "section": "policy_details",
+      "type": "date",
+      "required": true
+    },
+    {
+      "field": "zone",
+      "aliases": ["Zone"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "premiumPaymentFrequency",
+      "aliases": ["Premium Payment Frequency"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "premiumPaymentMode",
+      "aliases": ["Premium Payment Mode"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "customerName",
+      "aliases": ["Customer Name", "Proposer Name"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "proposerName",
+      "aliases": ["Proposer Name", "Policyholder Name"],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "insuredName",
+      "aliases": ["Insured Name"],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "contactNumber",
+      "aliases": ["Mobile Number", "Contact Number"],
+      "section": "insured_details",
+      "type": "string",
+      "required": true
+    },
+    {
+      "field": "email",
+      "aliases": ["Email", "Email ID"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "mailingAddress",
+      "aliases": ["Address", "Mailing Address"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "policyholderEmailMasked",
+      "aliases": ["Email ID"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "policyholderMobileMasked",
+      "aliases": ["Mobile Number"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "invoiceNumber",
+      "aliases": ["Invoice Number"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "sumInsured",
+      "aliases": ["Sum Insured"],
+      "section": "insured_details",
+      "type": "amount",
+      "required": true
+    },
+    {
+      "field": "basicPremium",
+      "aliases": ["Basic Premium"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": true
+    },
+    {
+      "field": "gstAmount",
+      "aliases": ["GST", "Total Tax Payable"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "stampDuty",
+      "aliases": ["Stamp Duty"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "totalPremium",
+      "aliases": ["Total Premium"],
+      "section": "premium_details",
+      "type": "amount",
+      "required": true
+    },
+    {
+      "field": "nomineeName",
+      "aliases": ["Nominee Name"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "nomineeRelationship",
+      "aliases": ["Relationship with Policyholder"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "nomineeDateOfBirth",
+      "aliases": ["Nominee Date of Birth"],
+      "section": "insured_details",
+      "type": "date",
+      "required": false
+    },
+    {
+      "field": "appointeeName",
+      "aliases": ["Appointee Name"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "insuredMembers",
+      "aliases": ["Insured Details", "Insured Persons"],
+      "section": "insured_details",
+      "type": "array",
+      "required": true
+    },
+    {
+      "field": "numberOfInsuredMembers",
+      "aliases": ["Members Covered"],
+      "section": "insured_details",
+      "type": "number",
+      "required": true
+    },
+    {
+      "field": "previousPolicyNumber",
+      "aliases": ["Previous Policy Number"],
+      "section": "insured_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "loyaltyBonus",
+      "aliases": ["Loyalty Bonus"],
+      "section": "insured_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "powerBooster",
+      "aliases": ["Power Booster"],
+      "section": "insured_details",
+      "type": "amount",
+      "required": false
+    },
+    {
+      "field": "servicingBranchName",
+      "aliases": ["Policy Servicing Office Location"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "servicingBranchAddress",
+      "aliases": ["Policy Servicing Office Address"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "agentName",
+      "aliases": ["Agent Name"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "agentCode",
+      "aliases": ["Agent Code"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "agentMobile",
+      "aliases": ["Agent Mobile Number"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    },
+    {
+      "field": "remark",
+      "aliases": ["Remark", "Remarks"],
+      "section": "policy_details",
+      "type": "string",
+      "required": false
+    }
+  ]
+}

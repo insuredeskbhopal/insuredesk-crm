@@ -17,6 +17,8 @@ export function sanitizeRecordPayload(payload = {}) {
     sourceFile: asText(payload.sourceFile || "Untitled.pdf", 260),
     status: asText(payload.status || "pending", 40),
     insuredName: asText(payload.insuredName, 260),
+    customerName: asText(payload.customerName, 260),
+    proposerName: asText(payload.proposerName, 260),
     policyNumber: asText(payload.policyNumber, 120),
     clientId: asText(payload.clientId, 120),
     contactNumber: asText(payload.contactNumber, 40),
@@ -25,6 +27,14 @@ export function sanitizeRecordPayload(payload = {}) {
     groupName: asText(payload.groupName, 120),
     sourceDocumentType: asText(payload.sourceDocumentType, 120),
     productName: asText(payload.productName, 260),
+    productUin: asText(payload.productUin, 120),
+    policyTenure: asText(payload.policyTenure, 80),
+    zone: asText(payload.zone, 80),
+    premiumPaymentFrequency: asText(payload.premiumPaymentFrequency, 80),
+    premiumPaymentMode: asText(payload.premiumPaymentMode, 80),
+    policyholderEmailMasked: asText(payload.policyholderEmailMasked, 180),
+    policyholderMobileMasked: asText(payload.policyholderMobileMasked, 40),
+    email: asText(payload.email, 180),
     mailingAddress: asText(payload.mailingAddress, TEXT_LIMIT),
     premisesAddress: asText(payload.premisesAddress, TEXT_LIMIT),
     businessDescription: asText(payload.businessDescription, TEXT_LIMIT),
@@ -34,6 +44,9 @@ export function sanitizeRecordPayload(payload = {}) {
     premium: asText(payload.premium, 80),
     totalPremium: asText(payload.totalPremium || payload.premium, 80),
     netPremium: asText(payload.netPremium, 80),
+    basicPremium: asText(payload.basicPremium, 80),
+    taxAmount: asText(payload.taxAmount, 80),
+    stampDuty: asText(payload.stampDuty, 80),
     gstAmount: asText(payload.gstAmount, 80),
     cgst: asText(payload.cgst, 80),
     sgst: asText(payload.sgst, 80),
@@ -90,6 +103,20 @@ export function sanitizeRecordPayload(payload = {}) {
     policyCoverType: asText(payload.policyCoverType, 120),
     rtoLocation: asText(payload.rtoLocation, 160),
     nomineeName: asText(payload.nomineeName, 220),
+    nomineeRelationship: asText(payload.nomineeRelationship, 120),
+    nomineeDateOfBirth: normalizeDateToYMD(payload.nomineeDateOfBirth || ""),
+    appointeeName: asText(payload.appointeeName, 220),
+    insuredMembers: sanitizeInsuredMembers(payload.insuredMembers),
+    numberOfInsuredMembers: Array.isArray(payload.insuredMembers)
+      ? Math.min(payload.insuredMembers.length, 50)
+      : asNumber(payload.numberOfInsuredMembers),
+    loyaltyBonus: asText(payload.loyaltyBonus, 80),
+    powerBooster: asText(payload.powerBooster, 80),
+    servicingBranchName: asText(payload.servicingBranchName, 180),
+    servicingBranchAddress: asText(payload.servicingBranchAddress, TEXT_LIMIT),
+    agentName: asText(payload.agentName, 220),
+    agentCode: asText(payload.agentCode, 120),
+    agentMobile: asText(payload.agentMobile, 40),
     financerName: asText(payload.financerName, 220),
     documentFormat: asText(payload.documentFormat, 80),
     documentCategory: asText(payload.documentCategory, 120),
@@ -162,6 +189,21 @@ function asNumber(value) {
 function asJson(value) {
   if (!value || typeof value !== "object") return null;
   return JSON.parse(JSON.stringify(value));
+}
+
+function sanitizeInsuredMembers(value) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 50).map((member) => ({
+    name: asText(member?.name, 260),
+    dateOfBirth: normalizeDateToYMD(member?.dateOfBirth || ""),
+    age: asText(member?.age, 3),
+    gender: asText(member?.gender, 40),
+    abhaId: asText(member?.abhaId, 40),
+    relationship: asText(member?.relationship, 80),
+    preExistingDiseases: asText(member?.preExistingDiseases, 500),
+    firstPolicyInceptionDate: normalizeDateToYMD(member?.firstPolicyInceptionDate || ""),
+    specificConditions: asText(member?.specificConditions, 500),
+  }));
 }
 
 export function validateContactPerson(value) {

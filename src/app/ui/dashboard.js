@@ -249,7 +249,9 @@ export default function Dashboard({
     : FIELD_SETUP;
 
   const manualGroupedFields = FIELD_GROUPS.map((group) => {
-    const fieldsInGroup = manualVisibleFields.filter(([, key]) => group.fields.includes(key));
+    const fieldsInGroup = group.fields
+      .map((key) => manualVisibleFields.find(([, visibleKey]) => visibleKey === key))
+      .filter(Boolean);
     return {
       title: group.title,
       fields: fieldsInGroup,

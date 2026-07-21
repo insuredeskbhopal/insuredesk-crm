@@ -1,5 +1,27 @@
 function classifyDocument(text = "") {
   const normalized = String(text || "");
+  if (
+    /ICICI\s+Lombard/i.test(normalized) &&
+    /Product\s+Name\s*ELEVATE\b/i.test(normalized) &&
+    /ICIHLIP\d{5}[A-Z]\d{6}/i.test(normalized) &&
+    /\bPolicyholder\s+Details\b/i.test(normalized) &&
+    /\bInsured\s+Details\b/i.test(normalized)
+  ) {
+    return {
+      company: "ICICI Lombard General Insurance Company Limited",
+      documentFormat: "ICICI_LOMBARD_HEALTH_ELEVATE_V1",
+      documentCategory: "Health Insurance",
+      policyType: "Elevate",
+      confidence: 1,
+      matchedSignals: [
+        "ICICI Lombard",
+        "Product Name ELEVATE",
+        "ICICI Health UIN",
+        "Policyholder Details",
+        "Insured Details",
+      ],
+    };
+  }
   const candidates = [
     {
       company: "United India Insurance Company Limited",

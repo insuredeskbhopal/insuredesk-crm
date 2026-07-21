@@ -148,7 +148,9 @@ export default function PolicyDetailCard({
 
   const fieldGroups = useMemo(() => {
     return FIELD_GROUPS.map((group) => {
-      const fieldsInGroup = validation.visibleFields.filter(([, key]) => group.fields.includes(key));
+      const fieldsInGroup = group.fields
+        .map((key) => validation.visibleFields.find(([, visibleKey]) => visibleKey === key))
+        .filter(Boolean);
       return {
         title: group.title,
         fields: fieldsInGroup,

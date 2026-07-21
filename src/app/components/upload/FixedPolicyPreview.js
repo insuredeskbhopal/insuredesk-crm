@@ -45,6 +45,10 @@ export default function FixedPolicyPreview({
   const pendingClientIdOnly = canSaveWithPendingClientId(validation, clientIdRequestId);
   const displayedMissingRequired = pendingClientIdOnly ? [] : missingRequired;
   const isMotorPreview = resolvedSchema?.groupId === "motor";
+  const isHealthPreview = resolvedSchema?.groupId === "health";
+  const insuredMembers = Array.isArray(upload?.extractedData?.insuredMembers)
+    ? upload.extractedData.insuredMembers
+    : [];
   const manualFields = upload?.manualFields || [];
   const getPreviewValue = (key) => {
     if (isManualRequiredField(key)) return getReviewFieldValue(upload, key);
@@ -71,7 +75,10 @@ export default function FixedPolicyPreview({
   const uploadStatus = normalizeUploadStatus(upload?.status);
 
   const groupedFields = FIELD_GROUPS.map((group) => {
-    const fieldsInGroup = visibleFields.filter(([, key]) => group.fields.includes(key));
+    const fieldsInGroup = group.fields
+      .filter((key) => key !== "insuredMembers")
+      .map((key) => visibleFields.find(([, visibleKey]) => visibleKey === key))
+      .filter(Boolean);
     return {
       title: group.title,
       fields: fieldsInGroup,
@@ -162,6 +169,12 @@ export default function FixedPolicyPreview({
               </section>
             ) : null}
             <div className="preview-form-grouped">
+              {isHealthPreview && insuredMembers.length ? (
+                <HealthInsuredMembersFields
+                  members={insuredMembers}
+                  onChange={(members) => onFieldChange("insuredMembers", members)}
+                />
+              ) : null}
               {groupedFields.map((group) => (
                 <fieldset key={group.title} className="preview-fieldset">
                   <legend className="preview-legend">{group.title}</legend>
@@ -190,7 +203,14 @@ export default function FixedPolicyPreview({
                           value={getPreviewValue(key)}
                           onChange={(value) => onFieldChange(key, value)}
                           options={FIELD_OPTIONS[key]}
-                          wide={["riskLocation", "description", "occupancy", "remark"].includes(key)}
+                          wide={[
+                            "riskLocation",
+                            "description",
+                            "occupancy",
+                            "remark",
+                            "mailingAddress",
+                            "servicingBranchAddress",
+                          ].includes(key)}
                           error={fieldError}
                           disabled={isDisabled}
                           suggestion={getEligibleAiSuggestion(upload, key)}
@@ -233,5 +253,48 @@ export default function FixedPolicyPreview({
         </>
       )}
     </section>
+  );
+}
+
+const HEALTH_MEMBER_FIELDS = [
+  ["Insured Name", "name"],
+  ["Date of Birth", "dateOfBirth"],
+  ["Age", "age"],
+  ["Gender", "gender"],
+  ["Relationship with Policyholder", "relationship"],
+  ["ABHA ID", "abhaId"],
+  ["Pre-Existing Diseases", "preExistingDiseases"],
+  ["First Policy Inception Date", "firstPolicyInceptionDate"],
+  ["Specific Conditions", "specificConditions"],
+];
+
+function HealthInsuredMembersFields({ members, onChange }) {
+  const updateMember = (index, key, value) => {
+    onChange(members.map((member, memberIndex) =>
+      memberIndex === index ? { ...member, [key]: value } : member,
+    ));
+  };
+
+  return (
+    <fieldset className="preview-fieldset">
+      <legend className="preview-legend">Insured Members ({members.length})</legend>
+      <div className="preview-form-grouped">
+        {members.map((member, index) => (
+          <fieldset key={`${member.name || "member"}-${index}`} className="preview-fieldset">
+            <legend className="preview-legend">Member {index + 1}</legend>
+            <div className="preview-form">
+              {HEALTH_MEMBER_FIELDS.map(([label, key]) => (
+                <PreviewField
+                  key={key}
+                  label={label}
+                  value={member?.[key] || ""}
+                  onChange={(value) => updateMember(index, key, value)}
+                />
+              ))}
+            </div>
+          </fieldset>
+        ))}
+      </div>
+    </fieldset>
   );
 }

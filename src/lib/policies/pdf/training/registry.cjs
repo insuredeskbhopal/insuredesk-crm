@@ -1,6 +1,8 @@
 const tataAigWarehouse = require("./tata-aig/warehouse.cjs");
+const iciciLombardHealth = require("./icici-lombard/health.cjs");
 
-const trainers = [tataAigWarehouse];
+const trainers = [tataAigWarehouse, iciciLombardHealth];
+const ICICI_LOMBARD_HEALTH_FORMAT = "ICICI_LOMBARD_HEALTH_ELEVATE_V1";
 const protectedScopeFields = [
   "sourceFile",
   "insuranceCompany",
@@ -51,15 +53,40 @@ function slug(value = "") {
     .replace(/^-|-$/g, "");
 }
 
-function deriveTrainingScope(result = {}) {
+function isIciciLombardElevateHealth(result = {}, context = {}) {
+  const insurer = normalizeInsurer(result.insuranceCompany || result.companyName);
+  const text = String(context.text || result.sourceText || "");
+  return (
+    insurer === "icici-lombard" &&
+    /Product\s+Name\s*ELEVATE\b/i.test(text) &&
+    /ICIHLIP\d{5}[A-Z]\d{6}/i.test(text) &&
+    /\bPolicyholder\s+Details\b/i.test(text) &&
+    /\bInsured\s+Details\b/i.test(text)
+  );
+}
+
+function deriveTrainingScope(result = {}, context = {}) {
+  const insurer = normalizeInsurer(result.insuranceCompany || result.companyName);
   return {
-    insurer: normalizeInsurer(result.insuranceCompany || result.companyName),
-    category: normalizeCategory(result.documentCategory),
+    insurer,
+    category: isIciciLombardElevateHealth(result, context)
+      ? "health"
+      : normalizeCategory(result.documentCategory),
+  };
+}
+
+function establishTrainingIdentity(result = {}, context = {}) {
+  if (!isIciciLombardElevateHealth(result, context)) return result;
+  return {
+    ...result,
+    documentCategory: "Health Insurance",
+    documentFormat: ICICI_LOMBARD_HEALTH_FORMAT,
+    sourceDocumentType: ICICI_LOMBARD_HEALTH_FORMAT,
   };
 }
 
 function selectScopedTraining(result = {}, context = {}) {
-  const scope = deriveTrainingScope(result);
+  const scope = deriveTrainingScope(result, context);
   if (!scope.insurer || !scope.category) return [];
   return trainers.filter((trainer) => {
     if (trainer.scope.insurer !== scope.insurer || trainer.scope.category !== scope.category) return false;
@@ -88,7 +115,8 @@ function protectScopeIdentity(candidate, original) {
 function applyScopedTraining(result, context = {}) {
   if (!result || typeof result !== "object") return result;
 
-  return selectScopedTraining(result, context).reduce((current, trainer) => {
+  const scopedResult = establishTrainingIdentity(result, context);
+  return selectScopedTraining(scopedResult, context).reduce((current, trainer) => {
     try {
       const working = clone(current);
       const patch = trainer.train({ result: working, ...context }) || {};
@@ -103,7 +131,7 @@ function applyScopedTraining(result, context = {}) {
         ],
       };
     }
-  }, result);
+  }, scopedResult);
 }
 
 module.exports = {

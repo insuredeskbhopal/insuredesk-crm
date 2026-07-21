@@ -38,6 +38,57 @@ describe("sanitizeRecordPayload", () => {
     expect(record.registrationNumber).toBe("MP04SS8925");
   });
 
+  it("preserves structured Health members and derives the member count", () => {
+    const record = sanitizeRecordPayload({
+      documentCategory: "Health Insurance",
+      customerName: "Apurv Gour",
+      proposerName: "Apurv Gour",
+      productUin: "ICIHLIP26054V052526",
+      insuredMembers: [
+        {
+          name: "Apurv Gour",
+          dateOfBirth: "28/04/1989",
+          age: "37",
+          gender: "Male",
+          relationship: "Self",
+          firstPolicyInceptionDate: "30/07/2025",
+          specificConditions: "Not Applicable",
+          unsupported: "drop me",
+        },
+        {
+          name: "Pragya Bhartiya",
+          dateOfBirth: "29/10/1988",
+          age: "37",
+          gender: "Female",
+          relationship: "Spouse",
+        },
+        {
+          name: "Avyana Gour",
+          dateOfBirth: "01/11/2021",
+          age: "4",
+          gender: "Female",
+          relationship: "Daughter",
+        },
+      ],
+      numberOfInsuredMembers: 99,
+    });
+
+    expect(record.numberOfInsuredMembers).toBe(3);
+    expect(record.insuredMembers).toHaveLength(3);
+    expect(record.insuredMembers[0]).toEqual({
+      name: "Apurv Gour",
+      dateOfBirth: "1989-04-28",
+      age: "37",
+      gender: "Male",
+      abhaId: "",
+      relationship: "Self",
+      preExistingDiseases: "",
+      firstPolicyInceptionDate: "2025-07-30",
+      specificConditions: "Not Applicable",
+    });
+    expect(record.insuredMembers[0]).not.toHaveProperty("unsupported");
+  });
+
   it("does not require fuel type before saving motor reviews", () => {
     const validation = getReviewValidation({
       sourceFile: "motor-policy.pdf",
