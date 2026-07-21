@@ -125,6 +125,13 @@ export function normalizeRecord(record) {
     whatsappGroupName:
       payload.whatsappGroupName || legacy.whatsappGroupName || payload["WhatsApp Group Name"] || "",
     groupName: payload.groupName || legacy.groupName || payload["Group name"] || "",
+    documentCategory:
+      payload.documentCategory ||
+      legacy.documentCategory ||
+      record.selectedServiceCategory ||
+      record.detectedServiceCategory ||
+      "",
+    documentFormat: payload.documentFormat || legacy.documentFormat || "",
     sourceDocumentType:
       payload.sourceDocumentType ||
       legacy.sourceDocumentType ||
@@ -150,6 +157,7 @@ export function normalizeRecord(record) {
       "",
     issuedAt: payload.issuedAt || legacy.issuedAt || payload.validIn || legacy.validIn || "",
     policyType: payload.policyType || legacy.policyType || payload["Policy Type"] || "",
+    policyTenure: payload.policyTenure || legacy.policyTenure || "",
     premium: payload.premium || legacy.premium || payload.Premium || "",
     premiumIncludingGst:
       payload.premiumIncludingGst ||
@@ -167,7 +175,10 @@ export function normalizeRecord(record) {
       legacy.premium ||
       "",
     netPremium: payload.netPremium || legacy.netPremium || payload["Net Premium"] || "",
+    basicPremium: payload.basicPremium || legacy.basicPremium || "",
+    taxAmount: payload.taxAmount || legacy.taxAmount || "",
     gstAmount: payload.gstAmount || legacy.gstAmount || "",
+    stampDuty: payload.stampDuty || legacy.stampDuty || "",
     cgst: payload.cgst || legacy.cgst || "",
     sgst: payload.sgst || legacy.sgst || "",
     igst: payload.igst || legacy.igst || "",
@@ -265,6 +276,22 @@ export function normalizeRecord(record) {
     policyCoverType: payload.policyCoverType || legacy.policyCoverType || payload["Cover Type"] || "",
     rtoLocation: payload.rtoLocation || legacy.rtoLocation || payload["RTO Location"] || "",
     nomineeName: payload.nomineeName || legacy.nomineeName || payload["Nominee Name"] || "",
+    nomineeRelationship: payload.nomineeRelationship || legacy.nomineeRelationship || "",
+    nomineeDateOfBirth: payload.nomineeDateOfBirth || legacy.nomineeDateOfBirth || "",
+    insuredMembers: Array.isArray(payload.insuredMembers)
+      ? payload.insuredMembers
+      : Array.isArray(legacy.insuredMembers)
+        ? legacy.insuredMembers
+        : [],
+    numberOfInsuredMembers:
+      payload.numberOfInsuredMembers ||
+      legacy.numberOfInsuredMembers ||
+      (Array.isArray(payload.insuredMembers)
+        ? payload.insuredMembers.length
+        : Array.isArray(legacy.insuredMembers)
+          ? legacy.insuredMembers.length
+          : ""),
+    previousPolicyNumber: payload.previousPolicyNumber || legacy.previousPolicyNumber || "",
     financerName:
       payload.financerName ||
       legacy.financerName ||

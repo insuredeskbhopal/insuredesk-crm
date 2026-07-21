@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Download, Pencil, Eye, Trash2, CheckSquare, Square, MinusSquare } from "lucide-react";
 import PolicyDetailCard from "@/app/components/shared/PolicyDetailCard";
+import { inferUploadSchema } from "@/app/lib/dashboard-helpers";
 
 
 
@@ -162,6 +163,8 @@ export default function RecordsTable({
 
   const handlePrint = (record) => {
     if (!record) return;
+    const isHealth =
+      inferUploadSchema({ sourceFile: record.sourceFile || "", extractedData: record })?.groupId === "health";
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
       window.alert("Please allow popups to print policy details.");
@@ -322,26 +325,31 @@ export default function RecordsTable({
             ["Group Name", record.groupName],
             ["Insurance Company", record.insuranceCompany],
             ["Policy Type", record.policyType],
+            ["New / Renewal", record.newOrRenewal],
           ])}
 
           ${renderPrintSection("Dates & Coverage", [
             ["Start Date", formatDateLocal(record.startDate)],
             ["Expiry Date", formatDateLocal(record.expiryDate)],
             ["Duration", record.duration],
+            ["Policy Tenure", record.policyTenure],
             ["Sum Insured", record.sumInsured],
           ])}
 
           ${renderPrintSection("Financial Details", [
+            ["Basic Premium", record.basicPremium],
+            ["GST", record.gstAmount],
+            ["Stamp Duty", record.stampDuty],
             ["Net Premium", record.netPremium],
-            ["OD Premium", record.odPremium],
-            ["TP + Driver + Owner", record.tpDriverOwner],
+            ["OD Premium", isHealth ? "" : record.odPremium],
+            ["TP + Driver + Owner", isHealth ? "" : record.tpDriverOwner],
             ["Total Premium", record.totalPremium],
-            ["Mode of Payment", record.modeOfPayment],
-            ["Collected Amount", record.collectedAmount],
-            ["Due Collection", record.dueCollection],
+            ["Mode of Payment", isHealth ? "" : record.modeOfPayment],
+            ["Collected Amount", isHealth ? "" : record.collectedAmount],
+            ["Due Collection", isHealth ? "" : record.dueCollection],
           ])}
 
-          ${renderPrintSection("Vehicle Details", [
+          ${isHealth ? "" : renderPrintSection("Vehicle Details", [
             ["Vehicle Number", record.vehicleNumber],
             ["Make & Model", record.makeModel],
             ["Variant", record.variant],
@@ -359,15 +367,39 @@ export default function RecordsTable({
             ["RTO Location", record.rtoLocation],
           ])}
 
+          ${
+            isHealth && Array.isArray(record.insuredMembers)
+              ? record.insuredMembers
+                  .map((member, index) =>
+                    renderPrintSection(`Insured Member ${index + 1}`, [
+                      ["Insured Name", member.name || member.insuredName],
+                      ["Date of Birth", member.dateOfBirth],
+                      ["Age", member.age],
+                      ["Gender", member.gender],
+                      ["Relationship with Policyholder", member.relationship || member.relationshipWithPolicyholder],
+                      ["ABHA ID", member.abhaId],
+                      ["Pre-existing Diseases", member.preExistingDiseases],
+                      ["First Policy Inception Date", member.firstPolicyInceptionDate],
+                      ["Specific Conditions", member.specificConditions],
+                    ]),
+                  )
+                  .join("")
+              : ""
+          }
+
           ${renderPrintSection("Additional & Risk Details", [
             ["Nominee Name", record.nomineeName],
-            ["Hypothecation / Financer", record.financerName],
-            ["Risk Location", record.riskLocation],
-            ["Occupancy", record.occupancy],
-            ["Tehsil", record.tehsil],
-            ["District", record.district],
-            ["PPT / MPWLC", record.pptMpwlc],
-            ["Valid In", record.validIn],
+            ["Nominee Relationship", record.nomineeRelationship],
+            ["Nominee Date of Birth", record.nomineeDateOfBirth],
+            ["Previous Policy Number", record.previousPolicyNumber],
+            ["Number of Insured Members", record.numberOfInsuredMembers],
+            ["Hypothecation / Financer", isHealth ? "" : record.financerName],
+            ["Risk Location", isHealth ? "" : record.riskLocation],
+            ["Occupancy", isHealth ? "" : record.occupancy],
+            ["Tehsil", isHealth ? "" : record.tehsil],
+            ["District", isHealth ? "" : record.district],
+            ["PPT / MPWLC", isHealth ? "" : record.pptMpwlc],
+            ["Valid In", isHealth ? "" : record.validIn],
             ["Remarks", record.remark],
           ])}
 

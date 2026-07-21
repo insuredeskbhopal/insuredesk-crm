@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCustomerId, normalizeRecord } from "../src/lib/records/index.js";
+import { getReviewValidation, inferUploadSchema } from "../src/app/lib/dashboard-helpers.js";
 
 describe("record customer ID", () => {
   it("uses the first four insured-name letters and last four unmasked phone digits", () => {
@@ -42,5 +43,66 @@ describe("record customer ID", () => {
     });
 
     expect(record.clientId).toBe("5be7a398-f0df-4603-a187-655fb7885970");
+  });
+
+  it("preserves Health identity and fields while hiding false Motor values", () => {
+    const record = normalizeRecord({
+      id: "health-record",
+      reviewedData: {
+        documentCategory: "Health Insurance",
+        documentFormat: "ICICI_LOMBARD_HEALTH_ELEVATE_V1",
+        insuredName: "Primary Member",
+        policyNumber: "HEALTH-001",
+        policyType: "FLOATER",
+        policyTenure: "1 Year",
+        previousPolicyNumber: "HEALTH-000",
+        basicPremium: "24,612.83",
+        gstAmount: "0.00",
+        stampDuty: "1.00",
+        nomineeName: "Family Nominee",
+        nomineeRelationship: "Spouse",
+        vehicleNumber: "FALSE-VEHICLE-VALUE",
+        insuredMembers: [
+          {
+            name: "Primary Member",
+            relationship: "Self",
+            dateOfBirth: "01/01/1990",
+          },
+          {
+            name: "Family Member",
+            relationship: "Spouse",
+            dateOfBirth: "02/02/1992",
+          },
+        ],
+      },
+    });
+
+    expect(record).toMatchObject({
+      documentCategory: "Health Insurance",
+      documentFormat: "ICICI_LOMBARD_HEALTH_ELEVATE_V1",
+      policyTenure: "1 Year",
+      previousPolicyNumber: "HEALTH-000",
+      basicPremium: "24,612.83",
+      gstAmount: "0.00",
+      stampDuty: "1.00",
+      nomineeRelationship: "Spouse",
+      numberOfInsuredMembers: 2,
+    });
+    expect(record.insuredMembers).toHaveLength(2);
+    expect(inferUploadSchema({ extractedData: record })).toMatchObject({ groupId: "health" });
+
+    const visibleKeys = getReviewValidation({ extractedData: record }).visibleFields.map(([, key]) => key);
+    expect(visibleKeys).toEqual(
+      expect.arrayContaining([
+        "insuredMembers",
+        "policyTenure",
+        "previousPolicyNumber",
+        "basicPremium",
+        "nomineeRelationship",
+      ]),
+    );
+    expect(visibleKeys).not.toEqual(
+      expect.arrayContaining(["vehicleNumber", "engineNumber", "chassisNumber", "idv"]),
+    );
   });
 });

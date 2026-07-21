@@ -120,6 +120,52 @@ function DetailSection({ title, children }) {
   );
 }
 
+function InsuredMembersDetails({ members = [] }) {
+  if (!Array.isArray(members) || members.length === 0) return null;
+
+  return (
+    <div style={{ gridColumn: "span 2", display: "flex", flexDirection: "column", gap: "12px" }}>
+      {members.map((member, index) => (
+        <div
+          key={`${member.name || member.insuredName || "member"}-${index}`}
+          style={{
+            border: "1px solid #e2e8f0",
+            borderRadius: "12px",
+            padding: "12px",
+            background: "#f8fafc",
+          }}
+        >
+          <div
+            style={{
+              marginBottom: "10px",
+              color: "#1e3a8a",
+              fontSize: "12px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+            }}
+          >
+            Member {index + 1}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <DetailField label="Insured Name" value={member.name || member.insuredName} />
+            <DetailField label="Date of Birth" value={member.dateOfBirth} />
+            <DetailField label="Age" value={member.age} />
+            <DetailField label="Gender" value={member.gender} />
+            <DetailField
+              label="Relationship with Policyholder"
+              value={member.relationship || member.relationshipWithPolicyholder}
+            />
+            <DetailField label="ABHA ID" value={member.abhaId} />
+            <DetailField label="Pre-existing Diseases" value={member.preExistingDiseases} wide />
+            <DetailField label="First Policy Inception Date" value={member.firstPolicyInceptionDate} />
+            <DetailField label="Specific Conditions" value={member.specificConditions} wide />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function PolicyDetailCard({
   mode = "view",
   record,
@@ -303,6 +349,9 @@ export default function PolicyDetailCard({
                 return (
                   <DetailSection key={group.title} title={group.title}>
                     {fieldsWithValue.map(([label, key]) => {
+                      if (key === "insuredMembers") {
+                        return <InsuredMembersDetails key={key} members={record[key]} />;
+                      }
                       const isDate = [
                         "startDate",
                         "expiryDate",
