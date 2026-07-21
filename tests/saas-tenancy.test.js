@@ -113,8 +113,8 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       expect(canAccessCustomerProfile(session, "write", otherProfile)).toBe(false);
     });
 
-    it("restricts manager, admin, and super admin to access only their own profiling records", () => {
-      for (const role of [UserRole.MANAGER, UserRole.ADMIN, UserRole.SUPER_ADMIN]) {
+    it("restricts managers and admins to access only their own profiling records", () => {
+      for (const role of [UserRole.MANAGER, UserRole.ADMIN]) {
         const session = { id: user1, role, organizationId: orgA };
 
         expect(canAccessCustomerProfile(session, "read", ownProfile)).toBe(true);
@@ -122,6 +122,15 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
         expect(canAccessCustomerProfile(session, "read", otherProfile)).toBe(false);
         expect(canAccessCustomerProfile(session, "write", otherProfile)).toBe(false);
       }
+    });
+
+    it("allows Super Admin to audit and manage all profiles in its organization", () => {
+      const session = { id: user1, role: UserRole.SUPER_ADMIN, organizationId: orgA };
+
+      expect(canAccessCustomerProfile(session, "read", otherProfile)).toBe(true);
+      expect(canAccessCustomerProfile(session, "write", otherProfile)).toBe(true);
+      expect(canAccessCustomerProfile(session, "delete", otherProfile)).toBe(true);
+      expect(canAccessCustomerProfile(session, "read", { organizationId: orgB, createdById: user2 })).toBe(false);
     });
 
     it("blocks cross-organization profiling access", () => {
@@ -259,14 +268,14 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
       }
     });
 
-    it("scopes super admin to their own lead generation records", () => {
+    it("scopes organization Super Admin to all lead generation records in its organization", () => {
       const session = { userId: user1, role: UserRole.SUPER_ADMIN, organizationId: orgA };
       const filter = getCustomerProfileScopedFilter(session);
 
       expect(filter).toEqual({
         organizationId: orgA,
         deletedAt: null,
-        createdById: user1,
+        createdById: { not: null },
       });
     });
 

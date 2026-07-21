@@ -60,7 +60,7 @@ describe("claims list pagination", () => {
       remarks: [],
     });
     expect(JSON.stringify(payload)).not.toContain("dataUrl");
-    expect(payload.filterCounts).toMatchObject({ all: 10, open: 8, settled: 2, "follow-up": 2 });
+    expect(payload.filterCounts).toMatchObject({ all: 10, pending: 8, open: 8, settled: 2, "follow-up": 2 });
     expect(prismaMock.claim.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ organizationId: "org-1", deletedAt: null }),
@@ -70,5 +70,25 @@ describe("claims list pagination", () => {
       }),
     );
     expect(prismaMock.claim.findMany.mock.calls[0][0]).not.toHaveProperty("include");
+  });
+
+  it("applies the pending-claim rule before pagination", async () => {
+    const request = {
+      url: "http://localhost/api/claims?page=1&limit=25&filter=pending",
+      cookies: { get: () => ({ value: "session-token" }) },
+    };
+    await GET(request);
+
+    expect(prismaMock.claim.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            expect.objectContaining({ NOT: expect.any(Array) }),
+          ]),
+        }),
+        take: 25,
+        skip: 0,
+      }),
+    );
   });
 });

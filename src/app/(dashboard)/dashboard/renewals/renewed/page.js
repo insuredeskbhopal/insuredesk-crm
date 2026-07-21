@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 
 export default function RenewedPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(Math.max(1, Number(searchParams.get("page")) || 1));
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -30,6 +33,11 @@ export default function RenewedPage() {
   useEffect(() => {
     fetchRenewedPolicies();
   }, [page]);
+
+  const changePage = (nextPage) => {
+    setPage(nextPage);
+    router.replace(nextPage > 1 ? `?page=${nextPage}` : "?", { scroll: false });
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -107,13 +115,13 @@ export default function RenewedPage() {
             Page {page} of {totalPages} ({totalCount} policies renewed)
           </span>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button className="rn-btn" disabled={page <= 1 || loading} onClick={() => setPage(page - 1)}>
+            <button className="rn-btn" disabled={page <= 1 || loading} onClick={() => changePage(page - 1)}>
               Previous
             </button>
             <button
               className="rn-btn"
               disabled={page >= totalPages || loading}
-              onClick={() => setPage(page + 1)}
+              onClick={() => changePage(page + 1)}
             >
               Next
             </button>

@@ -34,6 +34,7 @@ import {
 } from "@/lib/renewals/register";
 
 const PAGE_SIZE = 25;
+const CONTEXT_TABS = new Set(["register", "all", "due_today", "due_7", "due_30"]);
 
 function getPolicyCustomerKey(policy) {
   const digits = String(policy.contactNumber || "").replace(/\D/g, "");
@@ -73,6 +74,7 @@ export default function RenewalPoliciesPage() {
   const [company, setCompany] = useState("All");
   const [companyOptions, setCompanyOptions] = useState([]);
   const [renewalMonth, setRenewalMonth] = useState("All");
+  const [contextTab, setContextTab] = useState("register");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -105,6 +107,8 @@ export default function RenewalPoliciesPage() {
     setPolicyType(params.get("policyType") || "All");
     setCompany(params.get("company") || "All");
     setRenewalMonth(normalizeRenewalRegisterMonth(params.get("month")));
+    const requestedTab = params.get("tab") || "register";
+    setContextTab(CONTEXT_TABS.has(requestedTab) ? requestedTab : "register");
     setPage(Math.max(1, Number(params.get("page")) || 1));
     setInitialized(true);
   }, []);
@@ -139,7 +143,7 @@ export default function RenewalPoliciesPage() {
       setLoading(true);
       setError("");
       try {
-        const params = new window.URLSearchParams({ tab: "register", page: String(page), limit: String(PAGE_SIZE) });
+        const params = new window.URLSearchParams({ tab: contextTab, page: String(page), limit: String(PAGE_SIZE) });
         if (query) params.set("q", query);
         if (policyType !== "All") params.set("policyType", policyType);
         if (company !== "All") params.set("company", company);
@@ -160,11 +164,12 @@ export default function RenewalPoliciesPage() {
 
     loadPolicies();
     return () => controller.abort();
-  }, [company, initialized, page, policyType, query, refreshKey, renewalMonth]);
+  }, [company, contextTab, initialized, page, policyType, query, refreshKey, renewalMonth]);
 
   const syncUrl = (updates = {}) => {
     const next = { query, policyType, company, renewalMonth, page, ...updates };
     const params = new window.URLSearchParams();
+    if (contextTab !== "register") params.set("tab", contextTab);
     if (next.query) params.set("q", next.query);
     if (next.policyType !== "All") params.set("policyType", next.policyType);
     if (next.company !== "All") params.set("company", next.company);
@@ -218,7 +223,7 @@ export default function RenewalPoliciesPage() {
     setRenewalMonth("All");
     setPage(1);
     closeActionMenu();
-    router.replace("/dashboard/renewals/policies", { scroll: false });
+    router.replace(contextTab === "register" ? "/dashboard/renewals/policies" : `/dashboard/renewals/policies?tab=${contextTab}`, { scroll: false });
   };
 
   const openActionMenu = (policyId, event) => {
@@ -316,6 +321,12 @@ export default function RenewalPoliciesPage() {
   };
 
   const selectedMonthLabel = renewalMonth === "All" ? "" : getRenewalRegisterMonthLabel(renewalMonth);
+  const contextTitle = {
+    all: "Pending Renewals",
+    due_today: "Renewals Expiring Today",
+    due_7: "Renewals Due Within 7 Days",
+    due_30: "Renewals Due Within 30 Days",
+  }[contextTab];
   const isMotorView = policyType === "Motor";
 
   return (
@@ -323,7 +334,7 @@ export default function RenewalPoliciesPage() {
       <div className="rn-policy-register__intro">
         <div>
           <p>Policy-wise register</p>
-          <h2>{selectedMonthLabel ? `${selectedMonthLabel} Renewals` : "All Renewals"}</h2>
+          <h2>{contextTitle || (selectedMonthLabel ? `${selectedMonthLabel} Renewals` : "All Renewals")}</h2>
           <span>Every renewal is shown as its own policy row. No customer grouping is applied.</span>
         </div>
         <strong>{totalCount.toLocaleString("en-IN")} policies</strong>

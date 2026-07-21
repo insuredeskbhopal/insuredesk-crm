@@ -3,10 +3,9 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { normalizeRecord } from "@/lib/records";
-import { loadScopedPolicyRecords, getCurrentSessionFromCookies } from "@/lib/records/scoped-data";
-import { MANUAL_RENEWAL_IMPORT_METHOD, MANUAL_RENEWAL_SOURCE_FILE } from "@/lib/records/manual-renewal-source";
+import { getCurrentSessionFromCookies } from "@/lib/records/scoped-data";
 import { formatMoney, parseMoney } from "@/lib/records/analytics";
-import { parsePolicyDate } from "@/app/lib/reporting/filters";
+import { loadPremiumReportPage } from "@/lib/dashboard/premium-data";
 
 const REPORT_TIME_ZONE = "Asia/Kolkata";
 const INDIA_TIME_OFFSET = "+05:30";
@@ -50,13 +49,14 @@ const REPORTS = {
   },
 };
 
-export default async function PremiumReportPage({ params }) {
+export default async function PremiumReportPage({ params, searchParams }) {
   const session = await getCurrentSessionFromCookies();
   if (!session || session.role === "VIEWER") {
     redirect("/dashboard");
   }
 
   const { period } = await params;
+  const query = await searchParams;
   const reportId = String(period || "").toLowerCase();
   const config = REPORTS[reportId];
 
@@ -75,17 +75,37 @@ export default async function PremiumReportPage({ params }) {
     );
   }
 
-  const rawRecords = await loadScopedPolicyRecords({
-    includeInactive: true,
-    excludeRenewalSources: reportId !== "renewed",
-  });
-  const records = rawRecords.map(normalizeRecord);
+  const page = Math.max(1, Number.parseInt(query.page || "1", 10) || 1);
+  const limit = Math.min(100, Math.max(1, Number.parseInt(query.limit || "25", 10) || 25));
+  const q = String(query.q || "").trim();
+  const sort = ["newest", "oldest", "premium_desc"].includes(query.sort) ? query.sort : "newest";
   const now = new Date();
-  const filteredRecords =
-    reportId === "renewed" ? filterRenewedPremiumRecords(records, now) : filterPremiumRecords(records, reportId, now);
+  const todayParts = getIndiaDateParts(now);
+  const today = `${todayParts.year}-${String(todayParts.month).padStart(2, "0")}-${String(todayParts.day).padStart(2, "0")}`;
+  const report = await loadPremiumReportPage({
+    session,
+    reportId,
+    today,
+    startToday: startOfIndiaDay(now).toISOString(),
+    startMonth: startOfIndiaMonth(now).toISOString(),
+    startYear: startOfIndiaYear(now).toISOString(),
+    startNextMonth: startOfNextIndiaMonth(now).toISOString(),
+    page,
+    limit,
+    q,
+    sort,
+  });
+  const filteredRecords = report.records.map((record) => ({ ...normalizeRecord(record), reportDate: record.reportDate }));
   const pivotRows = buildPivotRows(filteredRecords, config.grouping);
-  const totalPremium = filteredRecords.reduce((sum, record) => sum + getPremium(record), 0);
   const latestRecord = filteredRecords[0];
+  const pageHref = (targetPage) => {
+    const values = new globalThis.URLSearchParams();
+    if (targetPage > 1) values.set("page", String(targetPage));
+    if (limit !== 25) values.set("limit", String(limit));
+    if (q) values.set("q", q);
+    if (sort !== "newest") values.set("sort", sort);
+    return values.size ? `?${values}` : "?";
+  };
 
   return (
     <main className="analytics-report-page">
@@ -106,16 +126,16 @@ export default async function PremiumReportPage({ params }) {
         <div className="report-summary-grid">
           <div className="metric-card">
             <span>Policy count</span>
-            <strong>{filteredRecords.length}</strong>
+            <strong>{report.totalCount}</strong>
           </div>
           <div className="metric-card">
             <span>Premium total</span>
-            <strong>{formatMoney(totalPremium)}</strong>
+            <strong>{formatMoney(report.totalPremium)}</strong>
           </div>
           <div className="metric-card">
             <span>Latest saved</span>
             <strong>
-              {latestRecord ? formatDateTime(latestRecord.savedAt || latestRecord.uploadedAt) : "-"}
+              {latestRecord ? formatDateTime(latestRecord.reportDate || latestRecord.savedAt || latestRecord.uploadedAt) : "-"}
             </strong>
           </div>
           <div className="metric-card">
@@ -124,6 +144,22 @@ export default async function PremiumReportPage({ params }) {
           </div>
         </div>
       </section>
+
+      <form className="glass-panel" method="get" style={{ display: "flex", gap: "10px", alignItems: "end", padding: "14px 18px" }}>
+        <label style={{ flex: 1 }}>
+          <span>Search within this report</span>
+          <input name="q" defaultValue={q} placeholder="Policyholder, policy number, company or policy type" />
+        </label>
+        <label>
+          <span>Sort</span>
+          <select name="sort" defaultValue={sort}>
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="premium_desc">Highest premium</option>
+          </select>
+        </label>
+        <button className="primary-action" type="submit">Apply</button>
+      </form>
 
       {pivotRows.length ? (
         <section className="glass-panel report-detail-table">
@@ -135,7 +171,7 @@ export default async function PremiumReportPage({ params }) {
                   ? "Month-wise premium"
                   : config.grouping === "day"
                     ? "Day-wise premium"
-                    : "Uploader summary"}
+                    : "Current page breakdown"}
               </h2>
             </div>
           </div>
@@ -196,7 +232,7 @@ export default async function PremiumReportPage({ params }) {
               {filteredRecords.length ? (
                 filteredRecords.map((record) => (
                   <tr key={record.id}>
-                    <td>{formatDateTime(record.savedAt || record.uploadedAt)}</td>
+                    <td>{formatDateTime(record.reportDate || record.savedAt || record.uploadedAt)}</td>
                     <td>{record.uploadedBy || "-"}</td>
                     <td>
                       <strong>{record.insuredName || "Unnamed"}</strong>
@@ -225,84 +261,15 @@ export default async function PremiumReportPage({ params }) {
           </table>
         </div>
       </section>
+
+      <nav className="table-pagination" aria-label="Premium report pagination">
+        <span>Page {report.page} of {report.totalPages} ({report.totalCount} matching policies)</span>
+        <div>
+          {report.page > 1 ? <Link href={pageHref(report.page - 1)}>Previous</Link> : <span>Previous</span>}
+          {report.page < report.totalPages ? <Link href={pageHref(report.page + 1)}>Next</Link> : <span>Next</span>}
+        </div>
+      </nav>
     </main>
-  );
-}
-
-function filterPremiumRecords(records, reportId, now) {
-  const startToday = startOfIndiaDay(now);
-  const startMonth = startOfIndiaMonth(now);
-  const startYear = startOfIndiaYear(now);
-
-  return records
-    .filter((record) => {
-      const savedDate = getSavedDate(record);
-      if (reportId === "eod") return savedDate && savedDate >= startToday;
-      if (reportId === "mtd") return savedDate && savedDate >= startMonth;
-      if (reportId === "ytd") return savedDate && savedDate >= startYear;
-      if (reportId === "lost") return record.renewalStatus === "LOST";
-      if (reportId === "expired") {
-        if (!record.isActivePolicy || record.renewalStatus !== "ACTIVE") return false;
-        const expiry = parsePolicyDate(record.expiryDate);
-        return expiry && expiry < startToday;
-      }
-      return false;
-    })
-    .sort((a, b) => (getSavedDate(b)?.getTime() || 0) - (getSavedDate(a)?.getTime() || 0));
-}
-
-function filterRenewedPremiumRecords(records, now) {
-  const startMonth = startOfIndiaMonth(now);
-  const startNextMonth = startOfNextIndiaMonth(now);
-  const recordsById = new Map(records.filter((record) => !isManualRenewalSource(record)).map((record) => [record.id, record]));
-  const renewedRecords = new Map();
-
-  for (const record of records) {
-    if (record.renewalStatus !== "RENEWED") continue;
-    const renewalDate = getRenewalActivityDate(record);
-    if (!renewalDate || renewalDate < startMonth || renewalDate >= startNextMonth) continue;
-
-    const linkedRecord = record.renewedPolicyId ? recordsById.get(record.renewedPolicyId) : null;
-    const displayRecord = linkedRecord || (!isManualRenewalSource(record) ? record : null);
-    if (displayRecord) {
-      renewedRecords.set(displayRecord.id, {
-        ...displayRecord,
-        savedAt: renewalDate,
-        uploadedAt: renewalDate,
-      });
-    }
-  }
-
-  for (const record of records) {
-    if (!isDirectRenewalUpload(record)) continue;
-    const savedDate = getSavedDate(record);
-    if (!savedDate || savedDate < startMonth || savedDate >= startNextMonth) continue;
-
-    renewedRecords.set(record.id, record);
-  }
-
-  return Array.from(renewedRecords.values()).sort(
-    (a, b) => (getSavedDate(b)?.getTime() || 0) - (getSavedDate(a)?.getTime() || 0),
-  );
-}
-
-function isDirectRenewalUpload(record) {
-  if (isManualRenewalSource(record)) return false;
-  return normalizeRenewalText(record.newOrRenewal) === "renewal";
-}
-
-function normalizeRenewalText(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z]/g, "");
-}
-
-function isManualRenewalSource(record) {
-  return (
-    record.extractionMethod === MANUAL_RENEWAL_IMPORT_METHOD ||
-    record.sourceFile === MANUAL_RENEWAL_SOURCE_FILE ||
-    record.pdfFileName === MANUAL_RENEWAL_SOURCE_FILE
   );
 }
 
@@ -346,14 +313,7 @@ function buildPivotRows(records, grouping) {
 }
 
 function getSavedDate(record) {
-  const value = record.savedAt || record.uploadedAt;
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function getRenewalActivityDate(record) {
-  const value = record.renewalDate || record.savedAt || record.uploadedAt;
+  const value = record.reportDate || record.savedAt || record.uploadedAt;
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;

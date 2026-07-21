@@ -50,6 +50,7 @@ export async function GET(request) {
     const startDate = searchParams.get("startDate") || "";
     const endDate = searchParams.get("endDate") || "";
     const datePreset = searchParams.get("datePreset") || "all";
+    const lifecycle = searchParams.get("lifecycle") || "all";
 
     // Fetch tenant-scoped and RBAC-authorized filter
     const tenantFilter = getTenantFilter(user, "read");
@@ -57,6 +58,11 @@ export async function GET(request) {
     const where = {
       ...tenantFilter,
       deletedAt: null,
+      ...(lifecycle === "active"
+        ? { isActivePolicy: true }
+        : lifecycle === "inactive"
+          ? { isActivePolicy: false }
+          : {}),
     };
     Object.assign(where, withoutManualRenewalSources(where));
     const andFilters = [];

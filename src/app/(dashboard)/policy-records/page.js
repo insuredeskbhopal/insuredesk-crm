@@ -34,6 +34,7 @@ export default async function PolicyRecordsPage(props) {
   const startDate = searchParams.startDate || "";
   const endDate = searchParams.endDate || "";
   const datePreset = searchParams.datePreset || "all";
+  const lifecycle = ["active", "inactive"].includes(searchParams.lifecycle) ? searchParams.lifecycle : "all";
 
   const session = await getCurrentSessionFromCookies();
   const tenantFilter = session
@@ -60,6 +61,7 @@ export default async function PolicyRecordsPage(props) {
     startDate,
     endDate,
     datePreset,
+    lifecycle,
   });
 
   const cacheKey = `${orgId || "global"}_${isSuperAdmin}`;
@@ -103,6 +105,7 @@ export default async function PolicyRecordsPage(props) {
       initialStartDate={startDate}
       initialEndDate={endDate}
       initialDatePreset={datePreset}
+      initialLifecycle={lifecycle}
       tabCounts={tabCounts}
       serverLoadError={
         countsError ||

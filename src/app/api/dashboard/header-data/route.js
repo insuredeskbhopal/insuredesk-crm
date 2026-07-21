@@ -7,6 +7,7 @@ import {
   MANUAL_RENEWAL_SOURCE_FILE,
   MANUAL_RENEWAL_SQL_EXCLUSION,
 } from "@/lib/records/manual-renewal-source";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const dynamic = "force-dynamic";
 
@@ -162,11 +163,7 @@ export async function GET(request) {
     const statsQuery = `
       WITH parsed AS (
         SELECT 
-          CASE 
-            WHEN COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') = '45140031260200003089' 
-            THEN '2026-06-29T12:00:00+05:30'::timestamptz 
-            ELSE saved_at 
-          END as saved_at,
+          saved_at,
           COALESCE(renewal_date, saved_at) as renewal_activity_at,
           is_active_policy,
           renewal_status,
@@ -275,11 +272,7 @@ export async function GET(request) {
     const agentQuery = `
       WITH parsed AS (
         SELECT 
-          CASE 
-            WHEN COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') = '45140031260200003089' 
-            THEN '2026-06-29T12:00:00+05:30'::timestamptz 
-            ELSE saved_at 
-          END as saved_at,
+          saved_at,
           COALESCE(renewal_date, saved_at) as renewal_activity_at,
           is_active_policy,
           renewal_status,
@@ -483,6 +476,10 @@ export async function GET(request) {
 
     const notifications = uploads.map((u) => {
       const uploadStatus = normalizeUploadStatus(u.status);
+      const safeErrorMessage = getUserFacingErrorMessage(
+        u.errorMessage,
+        "Processing failed. Please retry.",
+      );
       let icon = "📄";
       let text = `File "${u.sourceFile}" uploaded`;
       let type = "info";
@@ -502,7 +499,7 @@ export async function GET(request) {
         type = "success";
       } else if (uploadStatus === UPLOAD_STATUS.FAILED) {
         icon = "❌";
-        text = `Failed to process ${u.sourceFile}: ${u.errorMessage || "Unknown error"}`;
+        text = `Failed to process ${u.sourceFile}: ${safeErrorMessage}`;
         type = "error";
       } else if (uploadStatus === UPLOAD_STATUS.REVIEW_REQUIRED) {
         icon = "⚠️";
@@ -520,7 +517,7 @@ export async function GET(request) {
         text,
         time: formatRelativeTime(u.createdAt),
         type,
-        errorMessage: u.errorMessage || "",
+        errorMessage: uploadStatus === UPLOAD_STATUS.FAILED ? safeErrorMessage : "",
         recordId,
         clientName,
       };

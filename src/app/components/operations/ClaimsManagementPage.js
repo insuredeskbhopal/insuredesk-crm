@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ClipboardList,
@@ -52,8 +52,12 @@ import {
 const PAGE_SIZE = 25;
 
 export default function ClaimsManagementPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
+  const urlFilter = searchParams.get("filter") || "all";
+  const urlPage = Math.max(1, Number(searchParams.get("page")) || 1);
+  const initialFilter = FILTERS.some((item) => item.id === urlFilter) ? urlFilter : "all";
   const [claim, setClaim] = useState(EMPTY_CLAIM);
   const [claims, setClaims] = useState([]);
   const [query, setQuery] = useState(urlQuery);
@@ -62,7 +66,7 @@ export default function ClaimsManagementPage() {
   const [editingId, setEditingId] = useState("");
   const [selectedClaimId, setSelectedClaimId] = useState("");
   const [selectedClaimDetail, setSelectedClaimDetail] = useState(null);
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState(initialFilter);
   const [openMenuId, setOpenMenuId] = useState("");
   const [deleteCandidate, setDeleteCandidate] = useState(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -74,7 +78,7 @@ export default function ClaimsManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(urlPage);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [filterCounts, setFilterCounts] = useState({});
@@ -88,8 +92,34 @@ export default function ClaimsManagementPage() {
 
   useEffect(() => {
     setQuery(urlQuery);
+    setActiveFilter(initialFilter);
+    setPage(urlPage);
+  }, [urlQuery, initialFilter, urlPage]);
+
+  function syncListUrl({ filter = activeFilter, q = query, nextPage = page } = {}) {
+    const params = new window.URLSearchParams();
+    if (filter !== "all") params.set("filter", filter);
+    if (q.trim()) params.set("q", q.trim());
+    if (nextPage > 1) params.set("page", String(nextPage));
+    router.replace(params.size ? `?${params}` : "?", { scroll: false });
+  }
+
+  function changeListFilter(filter) {
+    setActiveFilter(filter);
     setPage(1);
-  }, [urlQuery]);
+    syncListUrl({ filter, nextPage: 1 });
+  }
+
+  function changeListQuery(value) {
+    setQuery(value);
+    setPage(1);
+    syncListUrl({ q: value, nextPage: 1 });
+  }
+
+  function changeListPage(nextPage) {
+    setPage(nextPage);
+    syncListUrl({ nextPage });
+  }
 
   useEffect(() => {
     const timer = window.setTimeout(loadClaims, query ? 300 : 0);
@@ -938,10 +968,7 @@ export default function ClaimsManagementPage() {
             key={filter.id}
             type="button"
             className={`claims-filter-card accent-${filter.accent}${activeFilter === filter.id ? " active" : ""}`}
-            onClick={() => {
-              setActiveFilter(filter.id);
-              setPage(1);
-            }}
+            onClick={() => changeListFilter(filter.id)}
           >
             <strong>{(filterCounts[filter.id] || 0).toLocaleString("en-IN")}</strong>
             <span>{filter.label}</span>
@@ -963,10 +990,7 @@ export default function ClaimsManagementPage() {
               type="search"
               value={query}
               placeholder="Search claims..."
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setPage(1);
-              }}
+              onChange={(event) => changeListQuery(event.target.value)}
             />
           </label>
         </div>
@@ -1075,14 +1099,14 @@ export default function ClaimsManagementPage() {
             <div className="table-page-list">
               <button
                 type="button"
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                onClick={() => changeListPage(Math.max(1, page - 1))}
                 disabled={page <= 1 || isLoading}
               >
                 Previous
               </button>
               <button
                 type="button"
-                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                onClick={() => changeListPage(Math.min(totalPages, page + 1))}
                 disabled={page >= totalPages || isLoading}
               >
                 Next

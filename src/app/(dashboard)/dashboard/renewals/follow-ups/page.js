@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Phone, MessageSquare, AlertCircle } from "lucide-react";
 import { formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
 import ModalPortal from "@/app/components/shared/ModalPortal";
@@ -8,11 +9,17 @@ import ModalPortal from "@/app/components/shared/ModalPortal";
 const PAGE_SIZE = 25;
 
 export default function FollowUpsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedFilter = searchParams.get("filter") || "today";
+  const initialFilter = ["today", "tomorrow", "this_week", "overdue"].includes(requestedFilter)
+    ? requestedFilter
+    : "today";
   // Data state
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState("today"); // today, tomorrow, this_week, overdue
-  const [page, setPage] = useState(1);
+  const [activeFilter, setActiveFilter] = useState(initialFilter); // today, tomorrow, this_week, overdue
+  const [page, setPage] = useState(Math.max(1, Number(searchParams.get("page")) || 1));
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [filterCounts, setFilterCounts] = useState({
@@ -79,6 +86,24 @@ export default function FollowUpsPage() {
     fetchFollowUps();
     return () => requestRef.current?.abort();
   }, [fetchFollowUps]);
+
+  const syncUrl = (filter, nextPage) => {
+    const params = new window.URLSearchParams();
+    params.set("filter", filter);
+    if (nextPage > 1) params.set("page", String(nextPage));
+    router.replace(`?${params}`, { scroll: false });
+  };
+
+  const changeFilter = (filter) => {
+    setPage(1);
+    setActiveFilter(filter);
+    syncUrl(filter, 1);
+  };
+
+  const changePage = (nextPage) => {
+    setPage(nextPage);
+    syncUrl(activeFilter, nextPage);
+  };
 
   const handleCall = (policy) => {
     const phone = policy.renewalRecipientMobile || policy.contactNumber || "";
@@ -208,10 +233,7 @@ export default function FollowUpsPage() {
             key={f.key}
             type="button"
             className={`rn-btn ${activeFilter === f.key ? "rn-btn-primary" : ""}`}
-            onClick={() => {
-              setPage(1);
-              setActiveFilter(f.key);
-            }}
+            onClick={() => changeFilter(f.key)}
             disabled={loading && activeFilter === f.key}
           >
             {f.label} ({filterCounts[f.key] || 0})
@@ -338,7 +360,7 @@ export default function FollowUpsPage() {
               type="button"
               className="rn-btn"
               disabled={page <= 1 || loading}
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              onClick={() => changePage(Math.max(1, page - 1))}
             >
               Previous
             </button>
@@ -346,7 +368,7 @@ export default function FollowUpsPage() {
               type="button"
               className="rn-btn"
               disabled={page >= totalPages || loading}
-              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              onClick={() => changePage(Math.min(totalPages, page + 1))}
             >
               Next
             </button>

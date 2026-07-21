@@ -31,9 +31,11 @@ export async function GET(request) {
 
       const status = searchParams.get("status") || "";
       const createdBy = searchParams.get("createdBy") || searchParams.get("assignedTo") || "";
+      const createdById = searchParams.get("createdById") || "";
       const lob = searchParams.get("lob") || "";
       const followUpDate = searchParams.get("followUpDate") || "";
       const q = searchParams.get("q") || "";
+      const summaryOnly = searchParams.get("summaryOnly") === "true";
 
       const where = {
         ...ownProfileFilter,
@@ -43,7 +45,13 @@ export async function GET(request) {
       const andFilters = [];
 
       if (status) {
-        where.status = status;
+        if (status === "Converted") {
+          andFilters.push({
+            OR: [{ status: "Converted" }, { convertedToCustomer: true }],
+          });
+        } else {
+          where.status = status;
+        }
       }
 
       if (createdBy) {
@@ -54,6 +62,12 @@ export async function GET(request) {
             { assignedTo: { contains: createdBy, mode: "insensitive" } },
           ],
         });
+      }
+
+      if (createdById === "unassigned") {
+        where.id = "00000000-0000-0000-0000-000000000000";
+      } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(createdById)) {
+        where.createdById = createdById;
       }
 
       if (lob) {
@@ -79,6 +93,18 @@ export async function GET(request) {
 
       if (andFilters.length > 0) {
         where.AND = andFilters;
+      }
+
+      if (summaryOnly) {
+        const counts = await prisma.customerProfile.groupBy({
+          by: ["status", "convertedToCustomer"],
+          where: {
+            ...ownProfileFilter,
+            deletedAt: null,
+          },
+          _count: { id: true },
+        });
+        return NextResponse.json({ counters: buildProfileCounters(counts) });
       }
 
       // Fetch paginated profiles and total counts in parallel
@@ -123,32 +149,7 @@ export async function GET(request) {
 
       const serialized = profiles.map(serializeCustomerProfile);
 
-      // Build counters from the aggregated status counts
-      let totalProfiles = 0;
-      let newLeads = 0;
-      let followUpRequired = 0;
-      let interested = 0;
-      let converted = 0;
-      let lost = 0;
-
-      for (const c of counts) {
-        const countVal = c._count.id || 0;
-        totalProfiles += countVal;
-        if (c.status === "New Lead") newLeads += countVal;
-        if (c.status === "Follow-up Required") followUpRequired += countVal;
-        if (c.status === "Interested") interested += countVal;
-        if (c.status === "Converted" || c.convertedToCustomer) converted += countVal;
-        if (c.status === "Lost") lost += countVal;
-      }
-
-      const counters = {
-        totalProfiles,
-        newLeads,
-        followUpRequired,
-        interested,
-        converted,
-        lost,
-      };
+      const counters = buildProfileCounters(counts);
 
       const filterOptions = {
         assignedTo: unique(
@@ -275,6 +276,29 @@ export async function GET(request) {
       { status: 500 },
     );
   }
+}
+
+function buildProfileCounters(counts) {
+  const counters = {
+    totalProfiles: 0,
+    newLeads: 0,
+    followUpRequired: 0,
+    interested: 0,
+    converted: 0,
+    lost: 0,
+  };
+
+  for (const item of counts) {
+    const count = item._count.id || 0;
+    counters.totalProfiles += count;
+    if (item.status === "New Lead") counters.newLeads += count;
+    if (item.status === "Follow-up Required") counters.followUpRequired += count;
+    if (item.status === "Interested") counters.interested += count;
+    if (item.status === "Converted" || item.convertedToCustomer) counters.converted += count;
+    if (item.status === "Lost") counters.lost += count;
+  }
+
+  return counters;
 }
 
 function unique(values) {

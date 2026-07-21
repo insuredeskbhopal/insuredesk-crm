@@ -798,6 +798,12 @@ export default function CustomerProfilingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
+  const urlStatus = searchParams.get("status") || "";
+  const urlAssignedTo = searchParams.get("assignedTo") || "";
+  const urlCreatedById = searchParams.get("createdById") || "";
+  const urlLob = searchParams.get("lob") || "";
+  const urlFollowUpDate = searchParams.get("followUpDate") || "";
+  const urlPage = Math.max(1, Number(searchParams.get("page")) || 1);
   const [form, setForm] = useState(EMPTY_FORM);
   const [selectedExistingId, setSelectedExistingId] = useState("");
   const [convertType, setConvertType] = useState("");
@@ -805,17 +811,18 @@ export default function CustomerProfilingPage() {
   const [profiles, setProfiles] = useState([]);
   const [counters, setCounters] = useState(EMPTY_COUNTERS);
   const [filterOptions, setFilterOptions] = useState({ assignedTo: [], lobs: [] });
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(urlPage);
   const [limit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
   const [filters, setFilters] = useState({
     q: urlQuery,
-    status: "",
-    assignedTo: "",
-    lob: "",
-    followUpDate: "",
+    status: urlStatus,
+    assignedTo: urlAssignedTo,
+    createdById: urlCreatedById,
+    lob: urlLob,
+    followUpDate: urlFollowUpDate,
   });
   const [alert, setAlert] = useState(null);
   const [isPending, startTransition] = useTransition();
@@ -837,8 +844,17 @@ export default function CustomerProfilingPage() {
   }, [searchResults]);
 
   useEffect(() => {
-    setFilters((current) => (current.q === urlQuery ? current : { ...current, q: urlQuery }));
-  }, [urlQuery]);
+    setFilters((current) => ({
+      ...current,
+      q: urlQuery,
+      status: urlStatus,
+      assignedTo: urlAssignedTo,
+      createdById: urlCreatedById,
+      lob: urlLob,
+      followUpDate: urlFollowUpDate,
+    }));
+    setPage(urlPage);
+  }, [urlQuery, urlStatus, urlAssignedTo, urlCreatedById, urlLob, urlFollowUpDate, urlPage]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -858,10 +874,6 @@ export default function CustomerProfilingPage() {
   useEffect(() => {
     loadCurrentUser();
   }, []);
-
-  useEffect(() => {
-    setPage(1);
-  }, [filters.q, filters.status, filters.assignedTo, filters.lob, filters.followUpDate]);
 
   useEffect(() => {
     if (!isValidProfilePhone) {
@@ -1618,7 +1630,28 @@ export default function CustomerProfilingPage() {
   }
 
   function updateFilter(key, value) {
-    setFilters((current) => ({ ...current, [key]: value }));
+    const nextFilters = {
+      ...filters,
+      [key]: value,
+      ...(key === "assignedTo" ? { createdById: "" } : {}),
+    };
+    setFilters(nextFilters);
+    setPage(1);
+    syncProfileListUrl(nextFilters, 1);
+  }
+
+  function syncProfileListUrl(nextFilters, nextPage) {
+    const params = new window.URLSearchParams();
+    Object.entries(nextFilters).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
+    if (nextPage > 1) params.set("page", String(nextPage));
+    router.replace(params.size ? `?${params}` : "?", { scroll: false });
+  }
+
+  function changeProfilePage(nextPage) {
+    setPage(nextPage);
+    syncProfileListUrl(filters, nextPage);
   }
 
   return (
@@ -1783,7 +1816,7 @@ export default function CustomerProfilingPage() {
                 <div className="table-page-list" style={{ display: "flex", gap: "6px" }}>
                   <button
                     type="button"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    onClick={() => changeProfilePage(Math.max(1, page - 1))}
                     disabled={page === 1}
                     style={{
                       padding: "6px 12px",
@@ -1807,7 +1840,7 @@ export default function CustomerProfilingPage() {
                         key={pNum}
                         type="button"
                         className={page === pNum ? "active" : ""}
-                        onClick={() => setPage(pNum)}
+                        onClick={() => changeProfilePage(pNum)}
                         style={{
                           padding: "6px 12px",
                           borderRadius: "6px",
@@ -1824,7 +1857,7 @@ export default function CustomerProfilingPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    onClick={() => changeProfilePage(Math.min(totalPages, page + 1))}
                     disabled={page === totalPages}
                     style={{
                       padding: "6px 12px",

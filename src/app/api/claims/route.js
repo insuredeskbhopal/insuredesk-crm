@@ -26,6 +26,7 @@ export async function GET(request) {
     const page = Math.max(parseInt(searchParams.get("page") || "1", 10) || 1, 1);
     const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "25", 10) || 25, 1), 100);
     const filter = String(searchParams.get("filter") || "all").toLowerCase();
+    const summaryOnly = searchParams.get("summaryOnly") === "true";
     const skip = (page - 1) * limit;
 
     const baseWhere = getClaimWhere(session, "read");
@@ -46,7 +47,14 @@ export async function GET(request) {
       ] });
     }
 
-    if (filter === "open") {
+    if (filter === "pending") {
+      andFilters.push({
+        NOT: [
+          { claimStatus: { equals: "Settled", mode: "insensitive" } },
+          { claimStatus: { equals: "Rejected", mode: "insensitive" } },
+        ],
+      });
+    } else if (filter === "open") {
       andFilters.push({ claimStatus: { equals: "Open", mode: "insensitive" } });
     } else if (filter === "follow-up") {
       andFilters.push({
@@ -65,14 +73,16 @@ export async function GET(request) {
     if (andFilters.length) where.AND = andFilters;
 
     const [claims, total, statusCounts, followUpCount] = await Promise.all([
-      prisma.claim.findMany({
-        where,
-        select: claimListSelect,
-        orderBy: { updatedAt: "desc" },
-        skip,
-        take: limit,
-      }),
-      prisma.claim.count({ where }),
+      summaryOnly
+        ? Promise.resolve([])
+        : prisma.claim.findMany({
+            where,
+            select: claimListSelect,
+            orderBy: { updatedAt: "desc" },
+            skip,
+            take: limit,
+          }),
+      summaryOnly ? Promise.resolve(0) : prisma.claim.count({ where }),
       prisma.claim.groupBy({
         by: ["claimStatus"],
         where: baseWhere,
@@ -105,6 +115,7 @@ export async function GET(request) {
       totalPages: Math.ceil(total / limit) || 1,
       filterCounts: {
         all: allCount,
+        pending: allCount - countStatus("settled") - countStatus("rejected"),
         open: countStatus("open"),
         "follow-up": followUpCount,
         documents: countStatus("documents pending"),

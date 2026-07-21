@@ -224,6 +224,7 @@ export const DETAIL_FIELDS = [
 
 export const FILTERS = [
   { id: "all", label: "All Claims", accent: "orange" },
+  { id: "pending", label: "Pending Claims", accent: "red" },
   { id: "open", label: "Open Claims", accent: "amber" },
   { id: "follow-up", label: "Follow Ups", accent: "blue" },
   { id: "documents", label: "Documents Pending", accent: "red" },

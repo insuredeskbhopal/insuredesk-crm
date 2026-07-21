@@ -320,6 +320,7 @@ export async function GET(request) {
         COUNT(CASE WHEN follow_up_date IS NOT NULL AND follow_up_date < $3::date AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END)::integer AS missed_followups,
         COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END)::integer AS renewed,
         COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END)::integer AS lost,
+        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND (expiry_date - $3::date) BETWEEN -30 AND 30 THEN 1 END)::integer AS pending,
         COUNT(CASE WHEN expiry_state = 'missing' THEN 1 END)::integer AS missing_expiry,
         COUNT(CASE WHEN expiry_state = 'invalid' THEN 1 END)::integer AS invalid_expiry,
         COUNT(DISTINCT CASE
@@ -563,6 +564,7 @@ function normalizeSummaryCounts(row = {}) {
     missedFollowUps: Number(row.missed_followups) || 0,
     renewed: Number(row.renewed) || 0,
     lost: Number(row.lost) || 0,
+    pending: Number(row.pending) || 0,
     missingExpiry: Number(row.missing_expiry) || 0,
     invalidExpiry: Number(row.invalid_expiry) || 0,
     todayWork: Number(row.today_work) || 0,

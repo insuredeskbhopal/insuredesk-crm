@@ -84,11 +84,16 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
   const filterValue = options.filterValue || "";
   const pdfFilter = options.pdfFilter || "all";
   const viewCategory = options.viewCategory || "all";
+  const lifecycle = options.lifecycle || (options.includeInactive ? "all" : "active");
 
   const where = {
     ...tenantFilter,
     deletedAt: null,
-    ...(options.includeInactive ? {} : { isActivePolicy: true }),
+    ...(lifecycle === "active"
+      ? { isActivePolicy: true }
+      : lifecycle === "inactive"
+        ? { isActivePolicy: false }
+        : {}),
   };
   if (options.excludeRenewalSources !== false) {
     Object.assign(where, withoutManualRenewalSources(where));
@@ -513,6 +518,8 @@ export async function loadScopedCustomerPolicyPage(options = {}) {
           AND pr.is_active_policy = true
           AND ($1::boolean OR pr.organization_id IS NOT DISTINCT FROM $2::uuid)
           ${MANUAL_RENEWAL_SQL_EXCLUSION}
+          AND COALESCE(pr.source_file, '') != 'generic_renewal_template.xlsx'
+          AND COALESCE(pr.pdf_file_name, '') != 'generic_renewal_template.xlsx'
           ${searchWhere}
       )
     `;
@@ -628,8 +635,13 @@ export async function loadScopedUploads(options = {}) {
 async function loadScopedUploadsUnsafe(options = {}) {
   const session = await getCurrentSessionFromCookies();
   if (!session) return options.page ? { uploads: [], totalCount: 0, page: 1, limit: 20, totalPages: 1 } : [];
-  const where = getTenantFilter(session, "read");
+  const where = { ...getTenantFilter(session, "read"), deletedAt: null };
   const q = String(options.q || "").trim();
+  const status = String(options.status || "").trim().toUpperCase();
+
+  if (["UPLOADED", "PROCESSING", "EXTRACTED", "REVIEW_REQUIRED", "APPROVED", "REJECTED", "FAILED", "ARCHIVED"].includes(status)) {
+    where.status = status;
+  }
 
   if (q) {
     where.OR = [

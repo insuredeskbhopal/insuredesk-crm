@@ -55,6 +55,7 @@ import {
 } from "@/app/lib/dashboard-helpers";
 import { hasUploadDetection } from "@/lib/uploads/detection";
 import FixedPolicyPreview from "@/app/components/upload/FixedPolicyPreview";
+import DashboardOverview from "@/app/components/dashboard/DashboardOverview";
 
 const ClientProfile = dynamic(() => import("@/app/components/customers/ClientProfile"));
 const PolicyDetail = dynamic(() => import("@/app/components/policies/PolicyDetail"));
@@ -89,6 +90,7 @@ export default function Dashboard({
   initialStartDate = "",
   initialEndDate = "",
   initialDatePreset = "all",
+  initialLifecycle = "all",
   tabCounts = null,
   serverPaginatedCustomers = false,
   serverLoadError = "",
@@ -115,6 +117,7 @@ export default function Dashboard({
     lostPremium: 0,
   });
   useEffect(() => {
+    if (activePage === "dashboard") return;
     async function fetchHeaderData() {
       try {
         const data = await cachedJson("/api/dashboard/header-data?summaryOnly=true", { ttlMs: 5000 });
@@ -128,7 +131,7 @@ export default function Dashboard({
       }
     }
     fetchHeaderData();
-  }, [records]);
+  }, [activePage, records]);
 
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
@@ -167,6 +170,7 @@ export default function Dashboard({
   const [recordStartDate, setRecordStartDate] = useState(initialStartDate);
   const [recordEndDate, setRecordEndDate] = useState(initialEndDate);
   const [recordDatePreset, setRecordDatePreset] = useState(initialDatePreset);
+  const [recordLifecycle, setRecordLifecycle] = useState(initialLifecycle);
   const [currentUserRole, setCurrentUserRole] = useState("");
   const [editingRecord, setEditingRecord] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -190,6 +194,7 @@ export default function Dashboard({
     const startVal = newParams.startDate !== undefined ? newParams.startDate : recordStartDate;
     const endVal = newParams.endDate !== undefined ? newParams.endDate : recordEndDate;
     const presetVal = newParams.datePreset !== undefined ? newParams.datePreset : recordDatePreset;
+    const lifecycleVal = newParams.lifecycle !== undefined ? newParams.lifecycle : recordLifecycle;
     const pageVal = newParams.page !== undefined ? newParams.page : 1;
 
     if (qVal.trim()) params.set("q", qVal.trim());
@@ -208,6 +213,8 @@ export default function Dashboard({
     else params.delete("endDate");
     if (presetVal && presetVal !== "all") params.set("datePreset", presetVal);
     else params.delete("datePreset");
+    if (lifecycleVal && lifecycleVal !== "all") params.set("lifecycle", lifecycleVal);
+    else params.delete("lifecycle");
     if (pageVal > 1) params.set("page", pageVal);
     else params.delete("page");
 
@@ -322,6 +329,10 @@ export default function Dashboard({
   useEffect(() => {
     setRecordDatePreset(initialDatePreset);
   }, [initialDatePreset]);
+
+  useEffect(() => {
+    setRecordLifecycle(initialLifecycle);
+  }, [initialLifecycle]);
 
   useEffect(() => {
     if (serverLoadError) {
@@ -534,6 +545,7 @@ export default function Dashboard({
   const activeRecordFilterCount =
     (recordFilterField && recordFilterValue.trim() ? 1 : 0) +
     (recordPdfFilter !== "all" ? 1 : 0) +
+    (recordLifecycle !== "all" ? 1 : 0) +
     (recordDatePreset !== "all" ? 1 : 0) +
     (recordDatePreset === "custom" && recordStartDate ? 1 : 0) +
     (recordDatePreset === "custom" && recordEndDate ? 1 : 0);
@@ -584,7 +596,7 @@ export default function Dashboard({
   const reviewCounts = getReviewCounts(selectedFiles);
 
   const showRecordSaveActions =
-    activePage === "bulk-entry" || activePage === "dashboard" || activePage === "manual-entry";
+    activePage === "bulk-entry" || activePage === "manual-entry";
 
   useEffect(() => {
     const savedView = loadDashboardView(DASHBOARD_VIEW_KEY);
@@ -1381,6 +1393,7 @@ export default function Dashboard({
     if (recordDatePreset && recordDatePreset !== "all") params.set("datePreset", recordDatePreset);
     if (recordDatePreset === "custom" && recordStartDate) params.set("startDate", recordStartDate);
     if (recordDatePreset === "custom" && recordEndDate) params.set("endDate", recordEndDate);
+    if (recordLifecycle && recordLifecycle !== "all") params.set("lifecycle", recordLifecycle);
     return params;
   }
 
@@ -1491,7 +1504,9 @@ export default function Dashboard({
 
       {alert ? <AlertCard alert={alert} onDismiss={() => setAlert(null)} /> : null}
 
-      {(activePage === "bulk-entry" || activePage === "dashboard") && currentUserRole !== "VIEWER" && (
+      {activePage === "dashboard" ? <DashboardOverview /> : null}
+
+      {activePage === "bulk-entry" && currentUserRole !== "VIEWER" && (
         <>
           {/* Renewal Counters Grid */}
           <section
@@ -1861,6 +1876,20 @@ export default function Dashboard({
                 />
               </label>
               <label>
+                <span>Policy Status</span>
+                <select
+                  value={recordLifecycle}
+                  onChange={(event) => {
+                    setRecordLifecycle(event.target.value);
+                    updateRecordQueryParams({ lifecycle: event.target.value, page: 1 });
+                  }}
+                >
+                  <option value="all">All policies</option>
+                  <option value="active">Active policies</option>
+                  <option value="inactive">Inactive policies</option>
+                </select>
+              </label>
+              <label>
                 <span>PDF Status</span>
                 <select
                   value={recordPdfFilter}
@@ -1940,6 +1969,7 @@ export default function Dashboard({
                   setRecordFilterField("");
                   setRecordFilterValue("");
                   setRecordPdfFilter("all");
+                  setRecordLifecycle("all");
                   setRecordStartDate("");
                   setRecordEndDate("");
                   setRecordDatePreset("all");
@@ -1947,6 +1977,7 @@ export default function Dashboard({
                     filterField: "",
                     filterValue: "",
                     pdfFilter: "all",
+                    lifecycle: "all",
                     startDate: "",
                     endDate: "",
                     datePreset: "all",

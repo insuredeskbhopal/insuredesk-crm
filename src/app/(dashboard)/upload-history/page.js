@@ -70,11 +70,13 @@ export default async function UploadHistoryPage(props) {
   const page = parseInt(searchParams.page || "1", 10);
   const limit = parseInt(searchParams.limit || "20", 10);
   const q = searchParams.q || "";
+  const status = ["REVIEW_REQUIRED", "FAILED"].includes(searchParams.status) ? searchParams.status : "";
 
   const { uploads, totalCount, totalPages } = await loadScopedUploads({
     page,
     limit,
     q,
+    status,
     select: {
       id: true,
       sourceFile: true,
@@ -89,6 +91,7 @@ export default async function UploadHistoryPage(props) {
     if (targetPage > 1) params.set("page", String(targetPage));
     if (limit !== 20) params.set("limit", String(limit));
     if (q) params.set("q", q);
+    if (status) params.set("status", status);
     const query = params.toString();
     return query ? `?${query}` : "?";
   };
@@ -104,8 +107,9 @@ export default async function UploadHistoryPage(props) {
         <div className="panel-head">
           <div>
             <p className="eyebrow">Log Audit</p>
-            <h2>Ingested file activities</h2>
+            <h2>{status === "REVIEW_REQUIRED" ? "PDFs awaiting review" : status === "FAILED" ? "Failed PDF extractions" : "Ingested file activities"}</h2>
           </div>
+          {status ? <strong>{totalCount.toLocaleString("en-IN")} matching files</strong> : null}
         </div>
 
         <div className="table-wrap">
