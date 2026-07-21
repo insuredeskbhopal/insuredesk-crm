@@ -152,13 +152,13 @@ export default function WhatsAppRecipientPicker({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg shadow-slate-200/70">
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Destination</p>
           <p className="mt-0.5 text-xs text-slate-500">Choose who should receive this message.</p>
         </div>
-        <div className="grid w-full grid-cols-2 rounded-xl border border-slate-200 bg-slate-50 p-1 sm:w-64" role="radiogroup" aria-label="WhatsApp recipient type">
+        <div className="grid w-full grid-cols-2 rounded-xl border border-slate-200 bg-white p-1 shadow-inner sm:w-64" role="radiogroup" aria-label="WhatsApp recipient type">
           {[
             ["individual", "Individual", UserRound],
             ["group", "Group", UsersRound],
@@ -170,10 +170,10 @@ export default function WhatsAppRecipientPicker({
               aria-checked={type === value}
               disabled={disabled}
               onClick={() => onTypeChange(value)}
-              className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 ${
+              className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border bg-white px-3 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 ${
                 type === value
-                  ? "bg-emerald-700 text-white shadow-sm"
-                  : "text-slate-600 hover:bg-white hover:text-slate-900"
+                  ? "border-slate-900 text-slate-900 shadow-md"
+                  : "border-transparent text-slate-600 hover:shadow-sm hover:text-slate-900"
               } disabled:cursor-not-allowed disabled:opacity-50`}
             >
               <Icon size={14} /> {label}
@@ -189,7 +189,7 @@ export default function WhatsAppRecipientPicker({
               <RefreshCw size={14} className="animate-spin text-emerald-600" /> Finding groups containing this contact…
             </div>
           ) : selectionMode === "manual" && selectedGroup && !searchOpen ? (
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 shadow-md shadow-emerald-100/60">
               <div className="flex min-w-0 items-center gap-2.5">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <CheckCircle2 size={17} />
@@ -205,13 +205,13 @@ export default function WhatsAppRecipientPicker({
                 type="button"
                 disabled={disabled}
                 onClick={() => setSearchOpen(true)}
-                className="shrink-0 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-[11px] font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+                className="shrink-0 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-[11px] font-semibold text-emerald-700 shadow-md transition hover:-translate-y-0.5 hover:bg-emerald-100 hover:shadow-lg"
               >
                 Change
               </button>
             </div>
           ) : matches.length > 0 && !searchOpen ? (
-            <div className="rounded-2xl bg-slate-50 p-3">
+            <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-3 shadow-md shadow-slate-200/70">
               <div className="flex items-start justify-between gap-3 px-1 pb-3">
                 <div className="flex min-w-0 items-start gap-2.5">
                   <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
@@ -230,7 +230,7 @@ export default function WhatsAppRecipientPicker({
                   type="button"
                   disabled={disabled}
                   onClick={() => setSearchOpen(true)}
-                  className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:border-emerald-200 hover:text-emerald-700"
+                  className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-700 shadow-md transition hover:-translate-y-0.5 hover:border-emerald-200 hover:text-emerald-700 hover:shadow-lg"
                 >
                   Change
                 </button>
@@ -250,9 +250,9 @@ export default function WhatsAppRecipientPicker({
                         setSelectionMode("auto");
                         onGroupChange(group.id);
                       }}
-                      className={`flex w-full min-w-0 items-center gap-3 rounded-xl border p-3 text-left transition ${
+                      className={`flex w-full min-w-0 items-center gap-3 rounded-xl border p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
                         selected
-                          ? "border-emerald-400 bg-white shadow-sm ring-1 ring-emerald-100"
+                          ? "border-emerald-400 bg-white shadow-md shadow-emerald-100/70 ring-1 ring-emerald-100"
                           : "border-slate-200 bg-white hover:border-emerald-200"
                       } disabled:cursor-not-allowed disabled:opacity-50`}
                     >
