@@ -190,6 +190,12 @@ describe("SaaS Multi-Tenancy & RBAC Tests", () => {
 
       expect(filter).toEqual({ organizationId: null, deletedAt: null });
     });
+
+    it("normalizes missing organization context to the legacy null tenant instead of an unscoped query", () => {
+      const session = { id: user1, role: UserRole.AGENT };
+
+      expect(getTenantFilter(session, "read")).toEqual({ organizationId: null, deletedAt: null });
+    });
   });
 
   describe("getVisibleUserWhere", () => {

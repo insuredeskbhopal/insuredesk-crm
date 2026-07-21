@@ -70,6 +70,9 @@ export default function WhatsAppSetupPage() {
 
   // Polling ref for QR code
   const pollIntervalRef = useRef(null);
+  const statusRequestRef = useRef(null);
+  const queueRequestRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
   const compilePreviewText = (text) => {
     if (!text) return "Type a template message in the editor to see a live preview here...";
@@ -91,12 +94,21 @@ export default function WhatsAppSetupPage() {
   useEffect(() => {
     fetchStatus();
     fetchTemplates();
-    fetchQueue();
 
     return () => {
       stopPollingStatus();
+      statusRequestRef.current?.abort();
+      statusRequestRef.current = null;
+      queueRequestRef.current?.abort();
+      queueRequestRef.current = null;
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    fetchQueue({ offset: queueOffset, statusFilter: queueStatusFilter });
+    return () => queueRequestRef.current?.abort();
+  }, [queueLimit, queueOffset, queueStatusFilter]);
 
   // Poll status when not connected
   useEffect(() => {
@@ -111,7 +123,7 @@ export default function WhatsAppSetupPage() {
   const startPollingStatus = () => {
     if (pollIntervalRef.current) return;
     pollIntervalRef.current = window.setInterval(() => {
-      fetchStatus(true);
+      if (!document.hidden) fetchStatus(true);
     }, 5000);
   };
 
@@ -124,15 +136,24 @@ export default function WhatsAppSetupPage() {
 
   const showToast = (type, message) => {
     setToast({ type, message });
-    setTimeout(() => {
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => {
       setToast(null);
+      toastTimerRef.current = null;
     }, 4000);
   };
 
-  async function fetchStatus(isSilent = false) {
+  async function fetchStatus(isSilent = false, force = false) {
+    if (statusRequestRef.current) {
+      if (!force) return;
+      statusRequestRef.current.abort();
+      statusRequestRef.current = null;
+    }
+    const controller = new window.AbortController();
+    statusRequestRef.current = controller;
     if (!isSilent) setIsCheckingStatus(true);
     try {
-      const res = await fetch("/api/operations/whatsapp/status");
+      const res = await fetch("/api/operations/whatsapp/status", { signal: controller.signal });
       if (!res.ok) throw new Error("Failed to fetch connection status");
       const data = await res.json();
       setConnected(data.connected);
@@ -141,13 +162,15 @@ export default function WhatsAppSetupPage() {
       setLastChecked(data.lastChecked ? new Date(data.lastChecked) : new Date());
       setStatusError(data.error);
     } catch (err) {
+      if (err?.name === "AbortError") return;
       setStatus("UNREACHABLE");
       setConnected(false);
       setQrCode(null);
       setStatusError(err.message);
       setLastChecked(new Date());
     } finally {
-      if (!isSilent) setIsCheckingStatus(false);
+      if (statusRequestRef.current === controller) statusRequestRef.current = null;
+      if (!isSilent && !controller.signal.aborted) setIsCheckingStatus(false);
     }
   }
 
@@ -161,7 +184,7 @@ export default function WhatsAppSetupPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to disconnect WhatsApp");
       showToast("success", "Successfully disconnected WhatsApp session");
-      fetchStatus();
+      fetchStatus(false, true);
     } catch (err) {
       showToast("error", err.message || "Failed to disconnect WhatsApp");
     } finally {
@@ -180,21 +203,29 @@ export default function WhatsAppSetupPage() {
     }
   }
 
-  async function fetchQueue() {
+  async function fetchQueue({ offset = queueOffset, statusFilter = queueStatusFilter } = {}) {
+    queueRequestRef.current?.abort();
+    const controller = new window.AbortController();
+    queueRequestRef.current = controller;
     setIsLoadingQueue(true);
     try {
-      const statusParam = queueStatusFilter ? `&status=${queueStatusFilter}` : "";
+      const statusParam = statusFilter ? `&status=${statusFilter}` : "";
       const res = await fetch(
-        `/api/operations/whatsapp/queue?limit=${queueLimit}&offset=${queueOffset}${statusParam}`
+        `/api/operations/whatsapp/queue?limit=${queueLimit}&offset=${offset}${statusParam}`,
+        { signal: controller.signal },
       );
       if (!res.ok) throw new Error("Failed to load queue");
       const data = await res.json();
       setQueueMessages(data.messages || []);
       setTotalCount(data.totalCount || 0);
     } catch (err) {
+      if (err?.name === "AbortError") return;
       showToast("error", err.message || "Failed to load message queue");
     } finally {
-      setIsLoadingQueue(false);
+      if (queueRequestRef.current === controller) {
+        queueRequestRef.current = null;
+        if (!controller.signal.aborted) setIsLoadingQueue(false);
+      }
     }
   }
 
@@ -371,14 +402,12 @@ export default function WhatsAppSetupPage() {
   // Pagination helper
   const handlePageChange = (newOffset) => {
     setQueueOffset(newOffset);
-    setTimeout(() => fetchQueue(), 50);
   };
 
   // Status Filter helper
   const handleStatusFilterChange = (status) => {
     setQueueStatusFilter(status);
     setQueueOffset(0);
-    setTimeout(() => fetchQueue(), 50);
   };
 
   return (

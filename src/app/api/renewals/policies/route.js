@@ -19,6 +19,30 @@ import {
 
 export const dynamic = "force-dynamic";
 
+const AUTO_LOST_SYNC_INTERVAL_MS = 5 * 60 * 1000;
+const autoLostSyncState = globalThis.__renewalAutoLostSyncState || new Map();
+globalThis.__renewalAutoLostSyncState = autoLostSyncState;
+
+async function ensureOverdueRenewalSync({ organizationId, referenceDate }) {
+  const key = organizationId === undefined ? "all-organizations" : organizationId || "null-organization";
+  const now = Date.now();
+  const current = autoLostSyncState.get(key);
+  if (current?.promise) return current.promise;
+  if (now - (current?.completedAt || 0) < AUTO_LOST_SYNC_INTERVAL_MS) return 0;
+
+  const promise = moveOverdueRenewalsToLost({ organizationId, referenceDate })
+    .then((count) => {
+      autoLostSyncState.set(key, { completedAt: Date.now(), promise: null });
+      return count;
+    })
+    .catch((error) => {
+      autoLostSyncState.delete(key);
+      throw error;
+    });
+  autoLostSyncState.set(key, { completedAt: current?.completedAt || 0, promise });
+  return promise;
+}
+
 export async function GET(request) {
   try {
     const token = request.cookies.get("token")?.value;
@@ -37,6 +61,7 @@ export async function GET(request) {
     const policyType = searchParams.get("policyType") || "All";
     const tab = searchParams.get("tab") || "upcoming";
     const q = searchParams.get("q") || "";
+    const summaryOnly = searchParams.get("summaryOnly") === "true";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
     const limit = Math.min(500, Math.max(1, parseInt(searchParams.get("limit") || "10", 10) || 10));
     const offset = (page - 1) * limit;
@@ -54,7 +79,7 @@ export async function GET(request) {
     const orgId = user.organizationId || null;
     const actorId = user.userId || user.id || null;
 
-    await moveOverdueRenewalsToLost({ organizationId: isSuperAdmin ? null : orgId, referenceDate: today });
+    await ensureOverdueRenewalSync({ organizationId: isSuperAdmin ? undefined : orgId, referenceDate: today });
 
     const queryParams = [
       isSuperAdmin,
@@ -376,6 +401,13 @@ export async function GET(request) {
         saved_at DESC
       LIMIT $12::integer OFFSET $13::integer
     `;
+
+    if (summaryOnly) {
+      const summaryResult = await prisma.$queryRawUnsafe(summaryQuery, ...queryParams);
+      return Response.json({
+        summaryCounts: normalizeSummaryCounts(summaryResult[0] || {}),
+      });
+    }
 
     const [countResult, dataResult, summaryResult, categoryResult] = await Promise.all([
       prisma.$queryRawUnsafe(countQuery, ...queryParams),

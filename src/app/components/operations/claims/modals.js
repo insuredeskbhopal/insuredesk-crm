@@ -106,8 +106,8 @@ export function ClaimDeleteModal({ claim, confirmation, isSaving, onConfirmation
   if (typeof document === "undefined" || !claim) return null;
 
   const isConfirmed = confirmation === "DELETE";
-  const documentCount = claim.documents?.length || 0;
-  const remarkCount = claim.remarks?.length || 0;
+  const documentCount = claim.documentCount ?? claim.documents?.length ?? 0;
+  const remarkCount = claim.remarkCount ?? claim.remarks?.length ?? 0;
 
   return createPortal(
     <div

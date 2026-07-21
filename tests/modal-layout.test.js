@@ -12,7 +12,7 @@ describe("modal layout contract", () => {
   it("keeps dashboard content from creating a fixed-position containing block", () => {
     const globals = read("src/app/globals.css");
     const shell = read("src/app/ui/dashboard/shell-and-upload.css");
-    const pageIn = globals.slice(globals.indexOf("@keyframes page-in"), globals.indexOf("@media (prefers-reduced-motion"));
+    const pageIn = globals.match(/@keyframes page-in\s*\{\s*from\s*\{[^}]*\}\s*to\s*\{[^}]*\}\s*\}/)?.[0] || "";
     const contentCanvas = cssRule(shell, ".content-canvas");
 
     expect(pageIn).not.toContain("transform:");

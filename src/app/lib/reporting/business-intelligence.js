@@ -109,6 +109,114 @@ const POLICY_SELECT = {
   uploadedFile: { select: { createdAt: true, createdBy: { select: { id: true, name: true, email: true } } } },
 };
 
+const POLICY_SUMMARY_SELECT = {
+  id: true,
+  savedAt: true,
+  createdAt: true,
+  data: true,
+  reviewedData: true,
+  pdfFileName: true,
+  renewalStatus: true,
+  lostReason: true,
+  isActivePolicy: true,
+};
+
+const CLAIM_SELECT = {
+  id: true,
+  insuredName: true,
+  claimNo: true,
+  claimType: true,
+  claimStatus: true,
+  followUpDate: true,
+  createdAt: true,
+  updatedAt: true,
+  createdById: true,
+  createdBy: { select: { id: true, name: true, email: true } },
+};
+
+const CLAIM_SUMMARY_SELECT = {
+  claimStatus: true,
+  followUpDate: true,
+};
+
+const ENDORSEMENT_SELECT = {
+  id: true,
+  endorsementNo: true,
+  policyNo: true,
+  endorsementType: true,
+  status: true,
+  createdAt: true,
+  createdById: true,
+  createdBy: { select: { id: true, name: true, email: true } },
+};
+
+const ENDORSEMENT_SUMMARY_SELECT = {
+  status: true,
+  createdAt: true,
+};
+
+const PROFILE_SELECT = {
+  id: true,
+  name: true,
+  phone: true,
+  status: true,
+  convertedToCustomer: true,
+  nextFollowUpDate: true,
+  createdAt: true,
+  updatedAt: true,
+  createdById: true,
+  createdBy: { select: { id: true, name: true, email: true } },
+};
+
+const PROFILE_SUMMARY_SELECT = {
+  convertedToCustomer: true,
+  nextFollowUpDate: true,
+};
+
+const UPLOAD_SELECT = {
+  id: true,
+  sourceFile: true,
+  status: true,
+  detectedCompanyName: true,
+  createdAt: true,
+};
+
+const UPLOAD_SUMMARY_SELECT = { status: true };
+
+const DETAIL_CATEGORIES = {
+  policies: new Set(["executive", "policies", "customers", "renewals", "team"]),
+  claims: new Set(["executive", "claims", "team"]),
+  endorsements: new Set(["endorsements", "team"]),
+  profiles: new Set(["lead-generation", "team"]),
+  uploads: new Set(["operations", "documents"]),
+};
+
+const SUMMARY_CATEGORIES = {
+  policies: new Set(["operations", "documents"]),
+  claims: new Set(["operations"]),
+  endorsements: new Set(["executive", "operations"]),
+  profiles: new Set(["executive", "operations"]),
+  uploads: new Set(["executive", "team"]),
+};
+
+export function getReportQueryPlan(category) {
+  const selected = REPORT_CATEGORIES.some((item) => item.id === category) ? category : "executive";
+  const mode = (dataset) =>
+    DETAIL_CATEGORIES[dataset].has(selected)
+      ? "detail"
+      : SUMMARY_CATEGORIES[dataset].has(selected)
+        ? "summary"
+        : "none";
+  return {
+    policies: mode("policies"),
+    claims: mode("claims"),
+    endorsements: mode("endorsements"),
+    profiles: mode("profiles"),
+    uploads: mode("uploads"),
+    audits: selected === "operations",
+  };
+}
+
 export async function loadReportingCenterData({ category = "executive", searchParams = {} } = {}) {
   const session = await getCurrentSessionFromCookies();
   if (!session) {
@@ -118,7 +226,8 @@ export async function loadReportingCenterData({ category = "executive", searchPa
   const filters = normalizeFilters(searchParams);
   const dateRange = getDateRange(filters.range, filters.from, filters.to);
   const sharedWhere = getTenantFilter(session, "read");
-  const auditBaseWhere = session.role === "SUPER_ADMIN" ? {} : { organizationId: session.organizationId };
+  const auditBaseWhere =
+    session.role === "SUPER_ADMIN" ? {} : { organizationId: session.organizationId ?? null };
   const policyWhere = applyPolicyFilters({ ...sharedWhere }, filters, dateRange);
   const claimWhere = applyDateAndFieldFilters({ ...sharedWhere }, filters, dateRange, "updatedAt", {
     statusField: "claimStatus",
@@ -139,7 +248,8 @@ export async function loadReportingCenterData({ category = "executive", searchPa
   const userWhere =
     session.role === "SUPER_ADMIN"
       ? { deletedAt: null }
-      : { organizationId: session.organizationId, deletedAt: null };
+      : { organizationId: session.organizationId ?? null, deletedAt: null };
+  const queryPlan = getReportQueryPlan(category);
 
   const [
     policiesRaw,
@@ -155,53 +265,80 @@ export async function loadReportingCenterData({ category = "executive", searchPa
     users,
     audits,
   ] = await Promise.all([
-    prisma.policyRecord.findMany({
-      where: policyWhere,
-      select: POLICY_SELECT,
-      orderBy: { savedAt: "desc" },
-      take: 5000,
-    }),
-    prisma.policyRecord.count({ where: policyWhere }),
-    prisma.claim.findMany({
-      where: claimWhere,
-      include: { createdBy: { select: { id: true, name: true, email: true } } },
-      orderBy: { updatedAt: "desc" },
-      take: 1000,
-    }),
-    prisma.claim.count({ where: claimWhere }),
-    prisma.endorsement.findMany({
-      where: endorsementWhere,
-      include: { createdBy: { select: { id: true, name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 1000,
-    }),
-    prisma.endorsement.count({ where: endorsementWhere }),
-    prisma.customerProfile.findMany({
-      where: profileWhere,
-      include: { createdBy: { select: { id: true, name: true, email: true } } },
-      orderBy: { updatedAt: "desc" },
-      take: 1000,
-    }),
-    prisma.customerProfile.count({ where: profileWhere }),
-    prisma.uploadedFile.findMany({
-      where: uploadWhere,
-      include: { createdBy: { select: { id: true, name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 1000,
-    }),
-    prisma.uploadedFile.count({ where: uploadWhere }),
+    queryPlan.policies === "none"
+      ? Promise.resolve([])
+      : prisma.policyRecord.findMany({
+          where: policyWhere,
+          select: queryPlan.policies === "detail" ? POLICY_SELECT : POLICY_SUMMARY_SELECT,
+          orderBy: { savedAt: "desc" },
+          take: 5000,
+        }),
+    queryPlan.policies === "none"
+      ? Promise.resolve(0)
+      : prisma.policyRecord.count({ where: policyWhere }),
+    queryPlan.claims === "none"
+      ? Promise.resolve([])
+      : prisma.claim.findMany({
+          where: claimWhere,
+          select: queryPlan.claims === "detail" ? CLAIM_SELECT : CLAIM_SUMMARY_SELECT,
+          orderBy: { updatedAt: "desc" },
+          take: 1000,
+        }),
+    queryPlan.claims === "none" ? Promise.resolve(0) : prisma.claim.count({ where: claimWhere }),
+    queryPlan.endorsements === "none"
+      ? Promise.resolve([])
+      : prisma.endorsement.findMany({
+          where: endorsementWhere,
+          select:
+            queryPlan.endorsements === "detail" ? ENDORSEMENT_SELECT : ENDORSEMENT_SUMMARY_SELECT,
+          orderBy: { createdAt: "desc" },
+          take: 1000,
+        }),
+    queryPlan.endorsements === "none"
+      ? Promise.resolve(0)
+      : prisma.endorsement.count({ where: endorsementWhere }),
+    queryPlan.profiles === "none"
+      ? Promise.resolve([])
+      : prisma.customerProfile.findMany({
+          where: profileWhere,
+          select: queryPlan.profiles === "detail" ? PROFILE_SELECT : PROFILE_SUMMARY_SELECT,
+          orderBy: { updatedAt: "desc" },
+          take: 1000,
+        }),
+    queryPlan.profiles === "none"
+      ? Promise.resolve(0)
+      : prisma.customerProfile.count({ where: profileWhere }),
+    queryPlan.uploads === "none"
+      ? Promise.resolve([])
+      : prisma.uploadedFile.findMany({
+          where: uploadWhere,
+          select: queryPlan.uploads === "detail" ? UPLOAD_SELECT : UPLOAD_SUMMARY_SELECT,
+          orderBy: { createdAt: "desc" },
+          take: 1000,
+        }),
+    queryPlan.uploads === "none"
+      ? Promise.resolve(0)
+      : prisma.uploadedFile.count({ where: uploadWhere }),
     prisma.user.findMany({
       where: userWhere,
       select: { id: true, name: true, email: true, role: true, createdAt: true },
       orderBy: { createdAt: "desc" },
       take: 500,
     }),
-    prisma.auditLog.findMany({
-      where: auditWhere,
-      include: { user: { select: { id: true, name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 1000,
-    }),
+    queryPlan.audits
+      ? prisma.auditLog.findMany({
+          where: auditWhere,
+          select: {
+            id: true,
+            action: true,
+            createdAt: true,
+            userId: true,
+            user: { select: { id: true, name: true, email: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 1000,
+        })
+      : Promise.resolve([]),
   ]);
 
   const policies = policiesRaw.map(normalizeRecord);
@@ -225,7 +362,6 @@ export async function loadReportingCenterData({ category = "executive", searchPa
   };
 
   const summary = buildSummary(context);
-  const modules = buildCategoryCards(context, summary).filter(() => canAccessReportCategory(session));
   const report = canAccessReportCategory(session)
     ? buildReport(category, context, summary)
     : buildAccessDeniedReport(category);
@@ -233,7 +369,6 @@ export async function loadReportingCenterData({ category = "executive", searchPa
   return {
     ...context,
     summary,
-    modules,
     report,
     lastUpdated: new Date().toISOString(),
   };
@@ -270,7 +405,6 @@ function emptyReportData(category) {
     users: [],
     audits: [],
     summary: {},
-    modules: [],
     report: null,
     lastUpdated: new Date().toISOString(),
   };
@@ -368,28 +502,6 @@ function buildSummary(context) {
   };
 }
 
-function buildCategoryCards(context, summary) {
-  const cardKpis = {
-    executive: `${formatCurrency(summary.totalPremium)} premium`,
-    policies: `${summary.totalPolicies} policies`,
-    customers: `${summary.totalCustomers} customers`,
-    renewals: `${summary.dueWeek} due this week`,
-    claims: `${summary.pendingClaims} pending claims`,
-    endorsements: `${summary.pendingEndorsements} pending endorsements`,
-    "lead-generation": `${summary.profilingCount} lead records`,
-    "service-requests": "No service request table",
-    team: `${context.users.length} users`,
-    operations: `${context.audits.length} recent activities`,
-    documents: `${summary.uploadCount} uploads`,
-  };
-
-  return REPORT_CATEGORIES.map((item) => ({
-    ...item,
-    kpi: cardKpis[item.id] || "-",
-    lastUpdated: new Date().toISOString(),
-  }));
-}
-
 function buildReport(category, context, summary) {
   const base = {
     category,
@@ -397,7 +509,7 @@ function buildReport(category, context, summary) {
     description: REPORT_CATEGORIES.find((item) => item.id === category)?.description || "",
     kpis: [],
     health: [],
-    actions: buildActionCenter(summary),
+    actions: buildActionCenter(summary, category),
     charts: [],
     tables: [],
     unavailable: [],
@@ -822,8 +934,24 @@ function buildReport(category, context, summary) {
   return base;
 }
 
-function buildActionCenter(summary) {
-  return [
+const CATEGORY_ACTIONS = {
+  policies: new Set([
+    "Renewals Due Today",
+    "Renewals Due This Week",
+    "Overdue Renewals",
+    "Missing PDFs",
+  ]),
+  customers: new Set(["Renewals Due This Week", "Overdue Renewals"]),
+  renewals: new Set(["Renewals Due Today", "Renewals Due This Week", "Overdue Renewals"]),
+  claims: new Set(["Pending Claims", "Delayed Claims"]),
+  endorsements: new Set(["Pending Endorsements", "Delayed Endorsements"]),
+  "lead-generation": new Set(["Lead Follow-ups Pending"]),
+  "service-requests": new Set(["Pending Service Requests"]),
+  documents: new Set(["Missing PDFs", "OCR Failures"]),
+};
+
+function buildActionCenter(summary, category) {
+  const rows = [
     ["Renewals Due Today", summary.dueToday],
     ["Renewals Due This Week", summary.dueWeek],
     ["Overdue Renewals", summary.overdueRenewals],
@@ -836,6 +964,8 @@ function buildActionCenter(summary) {
     ["OCR Failures", summary.ocrFailures],
     ["Lead Follow-ups Pending", summary.leadFollowupsPending],
   ];
+  const selected = CATEGORY_ACTIONS[category];
+  return selected ? rows.filter(([label]) => selected.has(label)) : rows;
 }
 
 function buildHealth(summary) {

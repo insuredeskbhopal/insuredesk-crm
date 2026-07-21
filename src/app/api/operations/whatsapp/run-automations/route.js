@@ -29,7 +29,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const organizationId = session.role === "SUPER_ADMIN" ? session.organizationId || null : session.organizationId;
+    const organizationId = session.role === "SUPER_ADMIN" ? session.organizationId || undefined : session.organizationId;
     if (!organizationId && session.role !== "SUPER_ADMIN") {
       return NextResponse.json({ error: "Organization scope is required" }, { status: 400 });
     }

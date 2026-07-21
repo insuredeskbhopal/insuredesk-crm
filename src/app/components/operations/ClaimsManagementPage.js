@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import {
@@ -31,27 +31,25 @@ import {
   CLAIM_WIZARD_STEPS,
   CLIENT_DETAIL_FIELDS,
   COMMON_CLAIM_FIELDS,
-  DETAIL_FIELDS,
   EMPTY_CLAIM,
   FILTERS,
   SURVEYOR_FIELDS,
 } from "./claims/config";
-import { ClaimField, DocumentList, RemarkList } from "./claims/components";
+import { ClaimField, DocumentList } from "./claims/components";
 import { ClaimDeleteModal, ClaimRemarkModal } from "./claims/modals";
-import { printClaim } from "./claims/print";
 import {
   createClaimId,
   createEmptyClaim,
   createInternalId,
   formatDate,
   getClaimSpecificFields,
-  getFilterCounts,
   getMissingFieldsForStep,
   getStatusTone,
-  matchesClaimFilter,
   readFileAsDataUrl,
   readJsonResponse,
 } from "./claims/utils";
+
+const PAGE_SIZE = 25;
 
 export default function ClaimsManagementPage() {
   const searchParams = useSearchParams();
@@ -63,6 +61,7 @@ export default function ClaimsManagementPage() {
   const [formStep, setFormStep] = useState(0);
   const [editingId, setEditingId] = useState("");
   const [selectedClaimId, setSelectedClaimId] = useState("");
+  const [selectedClaimDetail, setSelectedClaimDetail] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
   const [openMenuId, setOpenMenuId] = useState("");
   const [deleteCandidate, setDeleteCandidate] = useState(null);
@@ -75,44 +74,49 @@ export default function ClaimsManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filterCounts, setFilterCounts] = useState({});
+  const listRequestRef = useRef(null);
+  const detailRequestRef = useRef(null);
 
-  const handlePrint = printClaim;
-
-  useEffect(() => {
-    loadClaims();
-  }, []);
+  const handlePrint = async (record) => {
+    const { printClaim } = await import("./claims/print");
+    printClaim(record);
+  };
 
   useEffect(() => {
     setQuery(urlQuery);
+    setPage(1);
   }, [urlQuery]);
 
-  const filteredClaims = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    return claims.filter(
-      (item) =>
-        matchesClaimFilter(item, activeFilter) &&
-        (!normalized ||
-          [
-            item.insuredName,
-            item.mobileNo,
-            item.contactPerson,
-            item.policyNo,
-            item.claimNo,
-            item.groupName,
-            item.claimDescription,
-            item.claimType,
-            item.claimStatus,
-            item.currentRemark,
-          ]
-            .join(" ")
-            .toLowerCase()
-            .includes(normalized)),
-    );
-  }, [activeFilter, claims, query]);
+  useEffect(() => {
+    const timer = window.setTimeout(loadClaims, query ? 300 : 0);
+    return () => {
+      window.clearTimeout(timer);
+      listRequestRef.current?.abort();
+    };
+  }, [activeFilter, page, query]);
 
-  const filterCounts = useMemo(() => getFilterCounts(claims), [claims]);
+  useEffect(
+    () => () => {
+      listRequestRef.current?.abort();
+      detailRequestRef.current?.abort();
+    },
+    [],
+  );
 
-  const selectedClaim = claims.find((item) => item.id === selectedClaimId) || null;
+  useEffect(() => {
+    if (!selectedClaimId) {
+      detailRequestRef.current?.abort();
+      detailRequestRef.current = null;
+      setSelectedClaimDetail(null);
+    }
+  }, [selectedClaimId]);
+
+  const filteredClaims = claims;
+  const selectedClaim = selectedClaimDetail?.id === selectedClaimId ? selectedClaimDetail : null;
 
   function openAddForm() {
     setClaim(createEmptyClaim());
@@ -125,19 +129,58 @@ export default function ClaimsManagementPage() {
     setIsFormOpen(true);
   }
 
-  function openEditForm(item) {
+  async function fetchClaimDetail(id) {
+    detailRequestRef.current?.abort();
+    const controller = new window.AbortController();
+    detailRequestRef.current = controller;
+    try {
+      const response = await fetch(`/api/claims/${id}`, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      return await readJsonResponse(response);
+    } finally {
+      if (detailRequestRef.current === controller) detailRequestRef.current = null;
+    }
+  }
+
+  async function openClaimDetails(item) {
+    setSelectedClaimId(item.id);
+    setSelectedClaimDetail(null);
+    setOpenMenuId("");
+    setErrorMessage("");
+    try {
+      setSelectedClaimDetail(await fetchClaimDetail(item.id));
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+      setSelectedClaimId("");
+      setErrorMessage(getUserFacingErrorMessage(error, "Claim details could not be loaded. Please try again."));
+    }
+  }
+
+  async function openEditForm(item) {
+    let detail = item;
+    if (item.isSummary) {
+      try {
+        detail = await fetchClaimDetail(item.id);
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+        setErrorMessage(getUserFacingErrorMessage(error, "Claim details could not be loaded for editing."));
+        return;
+      }
+    }
     setClaim({
       ...createEmptyClaim(),
-      ...item,
-      internalClaimId: item.internalClaimId || item.id || createInternalId("CLM"),
-      customerId: item.customerId || createInternalId("CUST"),
-      claimDetails: item.claimDetails || {},
-      surveyorDetails: { ...EMPTY_CLAIM.surveyorDetails, ...(item.surveyorDetails || {}) },
-      documents: item.documents || [],
-      remarks: item.remarks || [],
+      ...detail,
+      internalClaimId: detail.internalClaimId || detail.id || createInternalId("CLM"),
+      customerId: detail.customerId || createInternalId("CUST"),
+      claimDetails: detail.claimDetails || {},
+      surveyorDetails: { ...EMPTY_CLAIM.surveyorDetails, ...(detail.surveyorDetails || {}) },
+      documents: detail.documents || [],
+      remarks: detail.remarks || [],
     });
     setFormStep(0);
-    setEditingId(item.id);
+    setEditingId(detail.id);
     setDocumentName("");
     setDocumentError("");
     setOpenMenuId("");
@@ -194,17 +237,40 @@ export default function ClaimsManagementPage() {
   }
 
   async function loadClaims() {
+    listRequestRef.current?.abort();
+    const controller = new window.AbortController();
+    listRequestRef.current = controller;
     setIsLoading(true);
     setErrorMessage("");
     try {
-      const response = await fetch("/api/claims?limit=500", { cache: "no-store" });
+      const params = new window.URLSearchParams({
+        page: String(page),
+        limit: String(PAGE_SIZE),
+        filter: activeFilter,
+      });
+      if (query.trim()) params.set("q", query.trim());
+      const response = await fetch(`/api/claims?${params}`, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
       const payload = await readJsonResponse(response);
       setClaims(Array.isArray(payload.claims) ? payload.claims : []);
+      setTotalCount(Number(payload.total || 0));
+      setTotalPages(Math.max(1, Number(payload.totalPages || 1)));
+      setFilterCounts(payload.filterCounts || {});
+      if (page > Number(payload.totalPages || 1)) setPage(Math.max(1, Number(payload.totalPages || 1)));
+      return payload;
     } catch (error) {
-      setErrorMessage(getUserFacingErrorMessage(error, "Claims could not be loaded. Please try again."));
-      setClaims([]);
+      if (error?.name !== "AbortError") {
+        setErrorMessage(getUserFacingErrorMessage(error, "Claims could not be loaded. Please try again."));
+        setClaims([]);
+      }
+      return null;
     } finally {
-      setIsLoading(false);
+      if (listRequestRef.current === controller) {
+        listRequestRef.current = null;
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
     }
   }
 
@@ -225,11 +291,9 @@ export default function ClaimsManagementPage() {
         body: JSON.stringify(claim),
       });
       const savedClaim = await readJsonResponse(response);
-      setClaims((current) => {
-        if (editingId) return current.map((item) => (item.id === editingId ? savedClaim : item));
-        return [savedClaim, ...current];
-      });
+      if (selectedClaimId === savedClaim.id) setSelectedClaimDetail(savedClaim);
       closeForm();
+      await loadClaims();
     } catch (error) {
       setErrorMessage(getUserFacingErrorMessage(error, "Claim could not be saved. Please try again."));
     } finally {
@@ -256,10 +320,11 @@ export default function ClaimsManagementPage() {
         body: JSON.stringify({ text: remarkDraft.trim(), followUpDate: followUpDraft }),
       });
       const updatedClaim = await readJsonResponse(response);
-      setClaims((current) => current.map((item) => (item.id === updatedClaim.id ? updatedClaim : item)));
+      if (selectedClaimId === updatedClaim.id) setSelectedClaimDetail(updatedClaim);
       setRemarkTarget(null);
       setRemarkDraft("");
       setFollowUpDraft("");
+      await loadClaims();
     } catch (error) {
       setErrorMessage(
         getUserFacingErrorMessage(error, "Claim remark could not be saved. Please try again."),
@@ -311,11 +376,11 @@ export default function ClaimsManagementPage() {
     try {
       const response = await fetch(`/api/claims/${id}`, { method: "DELETE" });
       if (!response.ok) await readJsonResponse(response);
-      setClaims((current) => current.filter((item) => item.id !== id));
       if (selectedClaimId === id) setSelectedClaimId("");
       setDeleteCandidate(null);
       setDeleteConfirmText("");
       setOpenMenuId("");
+      await loadClaims();
     } catch (error) {
       setErrorMessage(getUserFacingErrorMessage(error, "Claim could not be deleted. Please try again."));
     } finally {
@@ -522,6 +587,19 @@ export default function ClaimsManagementPage() {
       />
     </>
   );
+
+  if (selectedClaimId && !selectedClaim) {
+    return (
+      <div className="operations-module-page claims-management-page">
+        <button className="customer-portfolio-back" type="button" onClick={() => setSelectedClaimId("")}>
+          <ArrowLeft size={15} /> Back to Claims
+        </button>
+        <section className="claims-register-panel">
+          <p className="claims-empty-row">Loading claim details...</p>
+        </section>
+      </div>
+    );
+  }
 
   if (selectedClaim) {
     return (
@@ -860,7 +938,10 @@ export default function ClaimsManagementPage() {
             key={filter.id}
             type="button"
             className={`claims-filter-card accent-${filter.accent}${activeFilter === filter.id ? " active" : ""}`}
-            onClick={() => setActiveFilter(filter.id)}
+            onClick={() => {
+              setActiveFilter(filter.id);
+              setPage(1);
+            }}
           >
             <strong>{(filterCounts[filter.id] || 0).toLocaleString("en-IN")}</strong>
             <span>{filter.label}</span>
@@ -874,7 +955,7 @@ export default function ClaimsManagementPage() {
             <span>
               <ClipboardList size={18} /> Claim Register
             </span>
-            <strong>{claims.length.toLocaleString("en-IN")} records</strong>
+            <strong>{totalCount.toLocaleString("en-IN")} records</strong>
           </div>
           <label className="operations-search claims-search">
             <Search size={18} />
@@ -882,7 +963,10 @@ export default function ClaimsManagementPage() {
               type="search"
               value={query}
               placeholder="Search claims..."
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
             />
           </label>
         </div>
@@ -915,7 +999,7 @@ export default function ClaimsManagementPage() {
               ) : filteredClaims.length ? (
                 filteredClaims.map((item, index) => (
                   <tr key={item.id} className={openMenuId === item.id ? "row-has-open-menu" : ""}>
-                    <td>{index + 1}</td>
+                    <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
                     <td>{item.insuredName || "-"}</td>
                     <td>{item.mobileNo || "-"}</td>
                     <td>{item.contactPerson || "-"}</td>
@@ -925,7 +1009,7 @@ export default function ClaimsManagementPage() {
                     <td>{item.claimStatus || "Open"}</td>
                     <td>{formatDate(item.followUpDate)}</td>
                     <td>{item.currentRemark || "-"}</td>
-                    <td>{(item.documents || []).length.toLocaleString("en-IN")}</td>
+                    <td>{Number(item.documentCount || 0).toLocaleString("en-IN")}</td>
                     <td>
                       <div className="claims-action-menu">
                         <button
@@ -940,8 +1024,7 @@ export default function ClaimsManagementPage() {
                             <button
                               type="button"
                               onClick={() => {
-                                setSelectedClaimId(item.id);
-                                setOpenMenuId("");
+                                openClaimDetails(item);
                               }}
                             >
                               <Eye size={15} /> View More
@@ -984,315 +1067,30 @@ export default function ClaimsManagementPage() {
             </tbody>
           </table>
         </div>
-      </section>
-
-      {typeof window !== "undefined" &&
-        selectedClaim &&
-        createPortal(
-          <div
-            className="tb-modal-backdrop"
-            onClick={() => setSelectedClaimId("")}
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(15, 23, 42, 0.25)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              zIndex: 2000,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "24px",
-            }}
-          >
-            <div
-              className="tb-modal-card"
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: "#ffffff",
-                borderRadius: "24px",
-                boxShadow:
-                  "0 25px 70px -10px rgba(0, 0, 0, 0.08), 0 10px 30px -15px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03)",
-                width: "100%",
-                maxWidth: "1040px",
-                maxHeight: "85vh",
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-                border: "none",
-                animation: "modal-pop 320ms cubic-bezier(0.2, 0, 0, 1) both",
-              }}
-            >
-              {/* Modal Header */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "20px 24px",
-                  borderBottom: "1px solid #f1f5f9",
-                  backgroundColor: "#ffffff",
-                  color: "#0f172a",
-                }}
+        {totalPages > 1 ? (
+          <div className="table-pagination" aria-label="Claims pagination">
+            <span>
+              Page {page} of {totalPages} ({totalCount} claims)
+            </span>
+            <div className="table-page-list">
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                disabled={page <= 1 || isLoading}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  <Image
-                    src="/brand/main-logo-wide.webp"
-                    alt="Bima Headquarter"
-                    width={133}
-                    height={74}
-                    style={{ height: "74px", width: "auto", objectFit: "contain" }}
-                  />
-                  <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        textTransform: "uppercase",
-                        letterSpacing: "1px",
-                        color: "#64748b",
-                      }}
-                    >
-                      Claim Details
-                    </span>
-                    <h2 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "800", color: "#0f172a" }}>
-                      {selectedClaim.claimNo || "No Claim Number"}
-                    </h2>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedClaimId("")}
-                  aria-label="Close details"
-                  style={{
-                    background: "rgba(15, 23, 42, 0.05)",
-                    border: "none",
-                    color: "#64748b",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "44px",
-                    height: "44px",
-                    borderRadius: "50%",
-                    transition: "background-color 0.2s, color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.1)";
-                    e.currentTarget.style.color = "#0f172a";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "rgba(15, 23, 42, 0.05)";
-                    e.currentTarget.style.color = "#64748b";
-                  }}
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div
-                style={{
-                  padding: "24px",
-                  overflowY: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "24px",
-                  backgroundColor: "#ffffff",
-                }}
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                disabled={page >= totalPages || isLoading}
               >
-                <div className="claims-detail-grid">
-                  {DETAIL_FIELDS.map(([label, key]) => (
-                    <div key={key}>
-                      <span>{label}</span>
-                      <strong>
-                        {["claimDate", "followUpDate", "dateOfLoss", "policyStartDate", "policyExpiryDate"].includes(key)
-                          ? formatDate(selectedClaim[key])
-                          : selectedClaim[key] || "-"}
-                      </strong>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="claims-detail-grid">
-                  {getClaimSpecificFields(selectedClaim.claimType).map((field) => (
-                    <div key={field.key}>
-                      <span>{field.label}</span>
-                      <strong>
-                        {field.type === "date"
-                          ? formatDate((selectedClaim.claimDetails || {})[field.key])
-                          : (selectedClaim.claimDetails || {})[field.key] || "-"}
-                      </strong>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="claims-detail-grid">
-                  {SURVEYOR_FIELDS.map((field) => (
-                    <div key={field.key}>
-                      <span>{field.label}</span>
-                      <strong>
-                        {field.type === "date"
-                          ? formatDate((selectedClaim.surveyorDetails || {})[field.key])
-                          : (selectedClaim.surveyorDetails || {})[field.key] || "-"}
-                      </strong>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="claims-document-uploader view-only">
-                  <div>
-                    <span>
-                      <Paperclip size={17} /> Uploaded Documents
-                    </span>
-                    <strong>
-                      {(selectedClaim.documents || []).length.toLocaleString("en-IN")} files available for
-                      download.
-                    </strong>
-                  </div>
-                  <DocumentList documents={selectedClaim.documents || []} />
-                </div>
-
-                <div className="claims-document-uploader view-only">
-                  <div>
-                    <span>
-                      <MessageSquarePlus size={17} /> Remarks & Follow-up
-                    </span>
-                    <strong>
-                      {(selectedClaim.remarks || []).length.toLocaleString("en-IN")} saved remarks.
-                    </strong>
-                  </div>
-                  <RemarkList remarks={selectedClaim.remarks || []} />
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px 24px",
-                  borderTop: "1px solid #f1f5f9",
-                  backgroundColor: "#ffffff",
-                }}
-              >
-                <button
-                  onClick={() => openEditForm(selectedClaim)}
-                  style={{
-                    padding: "10px 24px",
-                    borderRadius: "12px",
-                    border: "1px solid #cbd5e1",
-                    backgroundColor: "#ffffff",
-                    color: "#0f172a",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    fontSize: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    transition: "background-color 0.2s, border-color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f8fafc";
-                    e.currentTarget.style.borderColor = "#0f172a";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "#ffffff";
-                    e.currentTarget.style.borderColor = "#cbd5e1";
-                  }}
-                >
-                  <Pencil size={15} />
-                  Edit Claim
-                </button>
-                <button
-                  onClick={() => openRemarkForm(selectedClaim)}
-                  style={{
-                    padding: "10px 24px",
-                    borderRadius: "12px",
-                    border: "1px solid #cbd5e1",
-                    backgroundColor: "#ffffff",
-                    color: "#0f172a",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    fontSize: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    transition: "background-color 0.2s, border-color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f8fafc";
-                    e.currentTarget.style.borderColor = "#0f172a";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "#ffffff";
-                    e.currentTarget.style.borderColor = "#cbd5e1";
-                  }}
-                >
-                  <MessageSquarePlus size={15} />
-                  Add Remark
-                </button>
-                <button
-                  onClick={() => handlePrint(selectedClaim)}
-                  style={{
-                    padding: "10px 24px",
-                    borderRadius: "12px",
-                    border: "1px solid #cbd5e1",
-                    backgroundColor: "#ffffff",
-                    color: "#0f172a",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    fontSize: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    transition: "background-color 0.2s, border-color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f8fafc";
-                    e.currentTarget.style.borderColor = "#0f172a";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "#ffffff";
-                    e.currentTarget.style.borderColor = "#cbd5e1";
-                  }}
-                >
-                  <Printer size={16} />
-                  Print Details
-                </button>
-                <button
-                  onClick={() => setSelectedClaimId("")}
-                  style={{
-                    padding: "10px 24px",
-                    borderRadius: "12px",
-                    border: "1px solid #cbd5e1",
-                    backgroundColor: "#ffffff",
-                    color: "#475569",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    fontSize: "14px",
-                    transition: "background-color 0.2s, border-color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f8fafc";
-                    e.currentTarget.style.borderColor = "#94a3b8";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "#ffffff";
-                    e.currentTarget.style.borderColor = "#cbd5e1";
-                  }}
-                >
-                  Close
-                </button>
-              </div>
+                Next
+              </button>
             </div>
-          </div>,
-          document.body,
-        )}
+          </div>
+        ) : null}
+      </section>
 
       {claimActionModals}
     </div>

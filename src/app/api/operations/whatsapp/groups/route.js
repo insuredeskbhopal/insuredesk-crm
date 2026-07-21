@@ -22,11 +22,12 @@ export async function GET(request) {
       const match = await matchWhatsAppGroups(phone);
       return NextResponse.json({ success: true, ...match });
     }
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "30", 10) || 30));
     return NextResponse.json({
       success: true,
       groups: await getWhatsAppGroups({
         search: searchParams.get("search") || "",
-        limit: searchParams.get("limit") || 30,
+        limit,
       }),
     });
   } catch (error) {

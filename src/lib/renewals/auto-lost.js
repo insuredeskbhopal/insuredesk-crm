@@ -6,7 +6,8 @@ const CLOSED_RENEWAL_STATUSES = ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUM
 
 export const AUTO_LOST_REASON = "Automatically moved to Lost after 30 days overdue";
 
-export async function moveOverdueRenewalsToLost({ organizationId = null, referenceDate = new Date() } = {}) {
+export async function moveOverdueRenewalsToLost({ organizationId, referenceDate = new Date() } = {}) {
+  const organizationFilter = organizationId === undefined ? {} : { organizationId: organizationId ?? null };
   const openStatusFilter = {
     OR: [{ renewalStatus: null }, { renewalStatus: { notIn: CLOSED_RENEWAL_STATUSES } }],
   };
@@ -14,7 +15,7 @@ export async function moveOverdueRenewalsToLost({ organizationId = null, referen
     where: {
       deletedAt: null,
       isActivePolicy: true,
-      ...(organizationId ? { organizationId } : {}),
+      ...organizationFilter,
       ...openStatusFilter,
     },
     select: { id: true, data: true, reviewedData: true },
@@ -33,7 +34,7 @@ export async function moveOverdueRenewalsToLost({ organizationId = null, referen
       id: { in: policyIds },
       deletedAt: null,
       isActivePolicy: true,
-      ...(organizationId ? { organizationId } : {}),
+      ...organizationFilter,
       ...openStatusFilter,
     },
     data: {

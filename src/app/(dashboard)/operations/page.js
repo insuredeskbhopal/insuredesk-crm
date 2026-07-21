@@ -59,23 +59,21 @@ export default function OperationsHubPage() {
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new window.AbortController();
 
     async function loadOperationsSummary() {
       try {
-        const [profilesRes, recordsRes] = await Promise.all([
-          fetch("/api/customer-profiles?limit=1", { cache: "no-store" }),
-          fetch("/api/records?limit=1", { cache: "no-store" }),
-        ]);
-
-        const [profilesPayload, recordsPayload] = await Promise.all([
-          profilesRes.ok ? profilesRes.json() : Promise.resolve(null),
-          recordsRes.ok ? recordsRes.json() : Promise.resolve(null),
-        ]);
+        const response = await fetch("/api/operations/summary", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const payload = response.ok ? await response.json() : null;
 
         if (cancelled) return;
 
-        const latestProfile = profilesPayload?.profiles?.[0];
-        const latestRecord = recordsPayload?.records?.[0];
+        const summary = payload?.summary || {};
+        const latestProfile = summary.latestProfile;
+        const latestRecord = summary.latestPolicy;
         const activities = [];
 
         if (latestProfile) {
@@ -95,16 +93,16 @@ export default function OperationsHubPage() {
         }
 
         setMetrics({
-          customerProfiles: profilesPayload?.total || 0,
-          policyRecords: recordsPayload?.total || 0,
-          openActivities:
-            (profilesPayload?.counters?.followUpRequired || 0) + (profilesPayload?.counters?.newLeads || 0),
+          customerProfiles: summary.customerProfiles || 0,
+          policyRecords: summary.policyRecords || 0,
+          openActivities: summary.openActivities || 0,
           activeModules: OPERATIONS_MODULES.length,
           latestProfileActivity: formatActivityDate(latestProfile?.updatedAt || latestProfile?.createdAt),
           latestPolicyActivity: formatActivityDate(latestRecord?.savedAt || latestRecord?.createdAt),
         });
         setRecentActivity(activities);
-      } catch {
+      } catch (error) {
+        if (error?.name === "AbortError") return;
         if (!cancelled) {
           setMetrics(DEFAULT_METRICS);
           setRecentActivity([]);
@@ -116,6 +114,7 @@ export default function OperationsHubPage() {
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, []);
 

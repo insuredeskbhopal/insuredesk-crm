@@ -56,6 +56,22 @@ describe("automatic renewal loss after 30 days", () => {
     ).resolves.toBe(0);
     expect(prismaMock.policyRecord.updateMany).not.toHaveBeenCalled();
   });
+
+  it("keeps a legacy null-organization user inside the null tenant boundary", async () => {
+    prismaMock.policyRecord.findMany.mockResolvedValue([renewalRecord("legacy-overdue", "2026-06-20")]);
+
+    await moveOverdueRenewalsToLost({
+      organizationId: null,
+      referenceDate: new Date("2026-07-21T12:00:00+05:30"),
+    });
+
+    expect(prismaMock.policyRecord.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ organizationId: null }) }),
+    );
+    expect(prismaMock.policyRecord.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ organizationId: null }) }),
+    );
+  });
 });
 
 function renewalRecord(id, expiryDate) {

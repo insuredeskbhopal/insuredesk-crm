@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import {
   Phone,
@@ -20,9 +21,10 @@ import {
   MapPin,
   Shield,
 } from "lucide-react";
-import WhatsAppContactCard from "@/app/components/renewals/WhatsAppContactCard";
 import BrandLogo from "@/app/components/brand/BrandLogo";
-import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
+
+const WhatsAppContactCard = dynamic(() => import("@/app/components/renewals/WhatsAppContactCard"));
+const WhatsAppRecipientPicker = dynamic(() => import("@/app/components/whatsapp/WhatsAppRecipientPicker"));
 
 const COL_HEADERS = [
   "Policy Number",
@@ -139,6 +141,9 @@ export default function CustomerProfilePage(props) {
   const [profileAuditLogs, setProfileAuditLogs] = useState([]);
   const [activeDropdownRowId, setActiveDropdownRowId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState(null);
+  const resizeCleanupRef = useRef(() => {});
+
+  useEffect(() => () => resizeCleanupRef.current(), []);
 
   // Forms states
   const [remarkForm, setRemarkForm] = useState({
@@ -196,6 +201,11 @@ export default function CustomerProfilePage(props) {
   const [teamMembers, setTeamMembers] = useState([]);
   const [portfolioOptions, setPortfolioOptions] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
+  const profileRequestRef = useRef(null);
+  const teamRequestRef = useRef(null);
+  const portfolioRequestRef = useRef(null);
+  const teamLoadedRef = useRef(false);
+  const portfoliosLoadedRef = useRef(false);
   const openedRequestedAction = useRef("");
 
   // Resizable columns
@@ -220,6 +230,7 @@ export default function CustomerProfilePage(props) {
   });
 
   const handleResizeStart = (index, e) => {
+    resizeCleanupRef.current();
     e.preventDefault();
     const startX = e.clientX;
     const headerEl = e.target.closest("th");
@@ -235,10 +246,14 @@ export default function CustomerProfilePage(props) {
         return next;
       });
     };
-    const onUp = () => {
+    const cleanup = () => {
       handle.classList.remove("resizing");
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
+      resizeCleanupRef.current = () => {};
+    };
+    const onUp = () => {
+      cleanup();
       setColWidths((prev) => {
         try {
           window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prev));
@@ -246,6 +261,7 @@ export default function CustomerProfilePage(props) {
         return prev;
       });
     };
+    resizeCleanupRef.current = cleanup;
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
   };
@@ -279,12 +295,19 @@ export default function CustomerProfilePage(props) {
   };
 
   const fetchCustomerProfile = async () => {
+    profileRequestRef.current?.abort();
+    const controller = new window.AbortController();
+    profileRequestRef.current = controller;
+
     try {
       setLoading(true);
       const policyQuery = requestedPolicyId ? `?policyId=${encodeURIComponent(requestedPolicyId)}` : "";
-      const res = await fetch(`/api/renewals/customers/${phone}${policyQuery}`, { cache: "no-store" });
+      const res = await fetch(`/api/renewals/customers/${phone}${policyQuery}`, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
       const data = await res.json();
-      if (res.ok && data.success) {
+      if (profileRequestRef.current === controller && !controller.signal.aborted && res.ok && data.success) {
         setProfile(data.profile);
         setPolicies(data.policies || []);
         setCompanies(data.companies || []);
@@ -292,37 +315,66 @@ export default function CustomerProfilePage(props) {
         setTimeline(data.timeline || []);
       }
     } catch (error) {
-      console.error("Failed to load customer profile details:", error);
+      if (error.name !== "AbortError") console.error("Failed to load customer profile details:", error);
     } finally {
-      setLoading(false);
+      if (profileRequestRef.current === controller) {
+        profileRequestRef.current = null;
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchCustomerProfile();
+    void fetchCustomerProfile();
+    return () => profileRequestRef.current?.abort();
   }, [phone, requestedPolicyId]);
 
-  useEffect(() => {
-    const fetchTeam = async () => {
-      try {
-        const res = await fetch("/api/renewals/team");
-        const data = await res.json();
-        if (res.ok && data.users) {
-          setTeamMembers(data.users);
-        }
-      } catch (err) {
-        console.error("Failed to fetch team:", err);
+  const loadTeamMembers = async () => {
+    if (teamLoadedRef.current || teamRequestRef.current) return;
+    const controller = new window.AbortController();
+    teamRequestRef.current = controller;
+    try {
+      const res = await fetch("/api/renewals/team", { signal: controller.signal });
+      const data = await res.json();
+      if (res.ok && data.users && !controller.signal.aborted) {
+        setTeamMembers(data.users);
+        teamLoadedRef.current = true;
       }
-    };
-    fetchTeam();
-  }, []);
+    } catch (error) {
+      if (error.name !== "AbortError") console.error("Failed to fetch team:", error);
+    } finally {
+      if (teamRequestRef.current === controller) teamRequestRef.current = null;
+    }
+  };
 
-  useEffect(() => {
-    fetch("/api/renewals/portfolios", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((data) => setPortfolioOptions(data.portfolios || []))
-      .catch((error) => console.error("Failed to fetch customer portfolios:", error));
-  }, []);
+  const loadPortfolioOptions = async () => {
+    if (portfoliosLoadedRef.current || portfolioRequestRef.current) return;
+    const controller = new window.AbortController();
+    portfolioRequestRef.current = controller;
+    try {
+      const response = await fetch("/api/renewals/portfolios", {
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      const data = await response.json();
+      if (response.ok && !controller.signal.aborted) {
+        setPortfolioOptions(data.portfolios || []);
+        portfoliosLoadedRef.current = true;
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") console.error("Failed to fetch customer portfolios:", error);
+    } finally {
+      if (portfolioRequestRef.current === controller) portfolioRequestRef.current = null;
+    }
+  };
+
+  useEffect(
+    () => () => {
+      teamRequestRef.current?.abort();
+      portfolioRequestRef.current?.abort();
+    },
+    [],
+  );
 
   const toInputDate = (dateStr) => {
     if (!dateStr) return "";
@@ -452,6 +504,8 @@ export default function CustomerProfilePage(props) {
 
   // Edit Renewal
   const handleEditRenewal = (policy) => {
+    void loadTeamMembers();
+    void loadPortfolioOptions();
     setSelectedPolicy(policy);
 
     const fmtDate = (dStr) => {
@@ -612,6 +666,7 @@ export default function CustomerProfilePage(props) {
 
   // Reassign User
   const handleReassignUser = (policy) => {
+    void loadTeamMembers();
     setSelectedPolicy(policy);
     setReassignForm({ assignedToUserId: "", note: "" });
     setReassignModalOpen(true);

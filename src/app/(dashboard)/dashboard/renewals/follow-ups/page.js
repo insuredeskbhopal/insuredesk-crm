@@ -1,15 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Phone, MessageSquare, AlertCircle } from "lucide-react";
 import { formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
 import ModalPortal from "@/app/components/shared/ModalPortal";
+
+const PAGE_SIZE = 25;
 
 export default function FollowUpsPage() {
   // Data state
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("today"); // today, tomorrow, this_week, overdue
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filterCounts, setFilterCounts] = useState({
+    today: 0,
+    tomorrow: 0,
+    this_week: 0,
+    overdue: 0,
+  });
+  const requestRef = useRef(null);
 
   // Modal actions state
   const [selectedPolicy, setSelectedPolicy] = useState(null);
@@ -24,64 +36,49 @@ export default function FollowUpsPage() {
   });
   const [actionLoading, setActionLoading] = useState(false);
 
-  const fetchFollowUps = async () => {
+  const fetchFollowUps = useCallback(async () => {
+    requestRef.current?.abort();
+    const controller = new window.AbortController();
+    requestRef.current = controller;
+
     try {
       setLoading(true);
-      // Fetch all active policies in the renewal window
-      const res = await fetch("/api/renewals/policies?tab=all&limit=500", { cache: "no-store" });
+      const params = new window.URLSearchParams({
+        filter: activeFilter,
+        page: String(page),
+        limit: String(PAGE_SIZE),
+      });
+      const res = await fetch(`/api/renewals/follow-ups?${params}`, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
       const data = await res.json();
-      if (res.ok && data.policies) {
-        // Filter out policies that have a scheduled follow-up date and are not renewed/lost
-        const hasFollowUp = data.policies.filter(
-          (p) =>
-            p.nextFollowUpDate &&
-            !["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(
-              p.renewalStatus,
-            ),
-        );
-        setPolicies(hasFollowUp);
+      if (!res.ok) throw new Error(data.error || "Failed to load follow-ups.");
+
+      const nextTotalPages = Math.max(1, Number(data.pages) || 1);
+      if (page > nextTotalPages) {
+        setPage(nextTotalPages);
+        return;
       }
+
+      setPolicies(Array.isArray(data.followUps) ? data.followUps : []);
+      setTotalCount(Number(data.totalCount) || 0);
+      setTotalPages(nextTotalPages);
+      setFilterCounts((current) => ({ ...current, ...(data.filterCounts || {}) }));
     } catch (error) {
-      console.error("Failed to load follow-ups:", error);
+      if (error.name !== "AbortError") console.error("Failed to load follow-ups:", error);
     } finally {
-      setLoading(false);
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        setLoading(false);
+      }
     }
-  };
+  }, [activeFilter, page]);
 
   useEffect(() => {
     fetchFollowUps();
-  }, []);
-
-  const getFilteredFollowUps = () => {
-    const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split("T")[0];
-
-    const endOfWeek = new Date(today);
-    endOfWeek.setDate(endOfWeek.getDate() + 7);
-    const endOfWeekStr = endOfWeek.toISOString().split("T")[0];
-
-    return policies.filter((p) => {
-      const fupDate = p.nextFollowUpDate.split("T")[0];
-
-      if (activeFilter === "today") {
-        return fupDate === todayStr;
-      }
-      if (activeFilter === "tomorrow") {
-        return fupDate === tomorrowStr;
-      }
-      if (activeFilter === "this_week") {
-        return fupDate >= todayStr && fupDate <= endOfWeekStr;
-      }
-      if (activeFilter === "overdue") {
-        return fupDate < todayStr;
-      }
-      return false;
-    });
-  };
+    return () => requestRef.current?.abort();
+  }, [fetchFollowUps]);
 
   const handleCall = (policy) => {
     const phone = policy.renewalRecipientMobile || policy.contactNumber || "";
@@ -197,8 +194,6 @@ export default function FollowUpsPage() {
     }
   };
 
-  const filtered = getFilteredFollowUps();
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* Pills filter row */}
@@ -213,9 +208,13 @@ export default function FollowUpsPage() {
             key={f.key}
             type="button"
             className={`rn-btn ${activeFilter === f.key ? "rn-btn-primary" : ""}`}
-            onClick={() => setActiveFilter(f.key)}
+            onClick={() => {
+              setPage(1);
+              setActiveFilter(f.key);
+            }}
+            disabled={loading && activeFilter === f.key}
           >
-            {f.label}
+            {f.label} ({filterCounts[f.key] || 0})
           </button>
         ))}
       </div>
@@ -238,7 +237,7 @@ export default function FollowUpsPage() {
             {activeFilter === "overdue" && "Overdue Follow-Ups"}
           </h3>
           <span style={{ fontSize: "12px", color: "var(--rn-text-secondary)" }}>
-            {filtered.length} tasks scheduled
+            {totalCount} tasks scheduled
           </span>
         </div>
 
@@ -246,7 +245,7 @@ export default function FollowUpsPage() {
           <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
             <p>Loading follow-ups...</p>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : policies.length === 0 ? (
           <div
             style={{
               display: "flex",
@@ -275,7 +274,7 @@ export default function FollowUpsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
+              {policies.map((p) => (
                 <tr key={p.id}>
                   <td>
                     <div style={{ fontWeight: "600", color: "var(--rn-text-primary)" }}>{p.insuredName}</div>
@@ -329,6 +328,30 @@ export default function FollowUpsPage() {
             </tbody>
           </table>
         )}
+
+        <div className="rn-pagination">
+          <span>
+            Page {page} of {totalPages} ({totalCount} follow-up tasks)
+          </span>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              type="button"
+              className="rn-btn"
+              disabled={page <= 1 || loading}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              className="rn-btn"
+              disabled={page >= totalPages || loading}
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* MODAL: Reschedule Follow-Up */}

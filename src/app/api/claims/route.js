@@ -4,11 +4,13 @@ import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import {
   claimInclude,
+  claimListSelect,
   getClaimWhere,
   requireClaimSession,
   sanitizeClaimDocuments,
   sanitizeClaimPayload,
   serializeClaim,
+  serializeClaimSummary,
 } from "./utils";
 
 export const runtime = "nodejs";
@@ -21,13 +23,16 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const q = String(searchParams.get("q") || "").trim();
-    const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
-    const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "100", 10), 1), 500);
+    const page = Math.max(parseInt(searchParams.get("page") || "1", 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "25", 10) || 25, 1), 100);
+    const filter = String(searchParams.get("filter") || "all").toLowerCase();
     const skip = (page - 1) * limit;
 
-    const where = getClaimWhere(session, "read");
+    const baseWhere = getClaimWhere(session, "read");
+    const where = { ...baseWhere };
+    const andFilters = [];
     if (q) {
-      where.OR = [
+      andFilters.push({ OR: [
         { insuredName: { contains: q, mode: "insensitive" } },
         { mobileNo: { contains: q, mode: "insensitive" } },
         { contactPerson: { contains: q, mode: "insensitive" } },
@@ -38,26 +43,74 @@ export async function GET(request) {
         { claimType: { contains: q, mode: "insensitive" } },
         { claimStatus: { contains: q, mode: "insensitive" } },
         { currentRemark: { contains: q, mode: "insensitive" } },
-      ];
+      ] });
     }
 
-    const [claims, total] = await Promise.all([
+    if (filter === "open") {
+      andFilters.push({ claimStatus: { equals: "Open", mode: "insensitive" } });
+    } else if (filter === "follow-up") {
+      andFilters.push({
+        OR: [
+          { claimStatus: { equals: "Follow Up", mode: "insensitive" } },
+          { followUpDate: { not: null } },
+        ],
+      });
+    } else if (filter === "documents") {
+      andFilters.push({ claimStatus: { equals: "Documents Pending", mode: "insensitive" } });
+    } else if (filter === "settled") {
+      andFilters.push({ claimStatus: { equals: "Settled", mode: "insensitive" } });
+    } else if (filter === "rejected") {
+      andFilters.push({ claimStatus: { equals: "Rejected", mode: "insensitive" } });
+    }
+    if (andFilters.length) where.AND = andFilters;
+
+    const [claims, total, statusCounts, followUpCount] = await Promise.all([
       prisma.claim.findMany({
         where,
-        include: claimInclude,
+        select: claimListSelect,
         orderBy: { updatedAt: "desc" },
         skip,
         take: limit,
       }),
       prisma.claim.count({ where }),
+      prisma.claim.groupBy({
+        by: ["claimStatus"],
+        where: baseWhere,
+        _count: { id: true },
+      }),
+      prisma.claim.count({
+        where: {
+          ...baseWhere,
+          OR: [
+            { claimStatus: { equals: "Follow Up", mode: "insensitive" } },
+            { followUpDate: { not: null } },
+          ],
+        },
+      }),
     ]);
 
+    const countStatus = (status) =>
+      statusCounts.reduce(
+        (sum, item) =>
+          String(item.claimStatus || "").toLowerCase() === status ? sum + (item._count?.id || 0) : sum,
+        0,
+      );
+    const allCount = statusCounts.reduce((sum, item) => sum + (item._count?.id || 0), 0);
+
     return NextResponse.json({
-      claims: claims.map(serializeClaim),
+      claims: claims.map(serializeClaimSummary),
       total,
       page,
       limit,
       totalPages: Math.ceil(total / limit) || 1,
+      filterCounts: {
+        all: allCount,
+        open: countStatus("open"),
+        "follow-up": followUpCount,
+        documents: countStatus("documents pending"),
+        settled: countStatus("settled"),
+        rejected: countStatus("rejected"),
+      },
     });
   } catch (error) {
     return NextResponse.json(

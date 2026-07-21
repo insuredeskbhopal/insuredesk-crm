@@ -192,8 +192,8 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
         <section className="glass-panel bi-action-center">
           <div className="panel-head">
             <div>
-              <p className="eyebrow">Management Action Center</p>
-              <h2>Immediate work requiring attention</h2>
+              <p className="eyebrow">Category Action Center</p>
+              <h2>Actions for this report</h2>
             </div>
           </div>
           <div className="bi-action-grid">

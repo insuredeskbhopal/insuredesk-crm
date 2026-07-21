@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import {
   Search,
@@ -20,9 +21,10 @@ import {
   Clipboard,
 } from "lucide-react";
 import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
-import WhatsAppContactCard from "@/app/components/renewals/WhatsAppContactCard";
 import BrandLogo from "@/app/components/brand/BrandLogo";
-import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
+
+const WhatsAppContactCard = dynamic(() => import("@/app/components/renewals/WhatsAppContactCard"));
+const WhatsAppRecipientPicker = dynamic(() => import("@/app/components/whatsapp/WhatsAppRecipientPicker"));
 
 const COL_HEADERS = [
   "Contact Person Name",
@@ -93,6 +95,17 @@ export default function CustomerRenewalsPage() {
   const [activeDropdownRowId, setActiveDropdownRowId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState(null);
   const [hoverCard, setHoverCard] = useState(null);
+  const resizeCleanupRef = useRef(() => {});
+  const customersRequestRef = useRef(null);
+  const categoryCountsKeyRef = useRef("");
+
+  useEffect(
+    () => () => {
+      resizeCleanupRef.current();
+      customersRequestRef.current?.abort();
+    },
+    [],
+  );
 
   // Lazy load side drawer state
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
@@ -165,6 +178,10 @@ export default function CustomerRenewalsPage() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [portfolioOptions, setPortfolioOptions] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
+  const teamRequestRef = useRef(null);
+  const portfolioRequestRef = useRef(null);
+  const teamLoadedRef = useRef(false);
+  const portfoliosLoadedRef = useRef(false);
 
   // Resizable columns
   const STORAGE_KEY = "rn-customer-col-widths-v2";
@@ -188,6 +205,7 @@ export default function CustomerRenewalsPage() {
   });
 
   const handleResizeStart = (index, e) => {
+    resizeCleanupRef.current();
     e.preventDefault();
     const startX = e.clientX;
     const headerEl = e.target.closest("th");
@@ -203,10 +221,14 @@ export default function CustomerRenewalsPage() {
         return next;
       });
     };
-    const onUp = () => {
+    const cleanup = () => {
       handle.classList.remove("resizing");
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
+      resizeCleanupRef.current = () => {};
+    };
+    const onUp = () => {
+      cleanup();
       setColWidths((prev) => {
         try {
           window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prev));
@@ -214,6 +236,7 @@ export default function CustomerRenewalsPage() {
         return prev;
       });
     };
+    resizeCleanupRef.current = cleanup;
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
   };
@@ -290,44 +313,33 @@ export default function CustomerRenewalsPage() {
     );
   };
 
-  const fetchCustomers = async (silent = false) => {
+  const fetchCustomers = async (silent = false, refreshCounts = false) => {
+    customersRequestRef.current?.abort();
+    const controller = new window.AbortController();
+    customersRequestRef.current = controller;
     try {
       if (!silent) setLoading(true);
-      const url = `/api/renewals/customers?q=${encodeURIComponent(q)}&status=${statusFilter}&page=${page}&limit=10&company=${encodeURIComponent(activeCompanyFilter)}&policyType=${encodeURIComponent(activePolicyTypeFilter)}`;
-      const res = await fetch(url, { cache: "no-store" });
+      const categoryCountsKey = JSON.stringify([q.trim(), statusFilter, activeCompanyFilter]);
+      const includeCategoryCounts = refreshCounts || categoryCountsKeyRef.current !== categoryCountsKey;
+      const url = `/api/renewals/customers?q=${encodeURIComponent(q)}&status=${statusFilter}&page=${page}&limit=10&company=${encodeURIComponent(activeCompanyFilter)}&policyType=${encodeURIComponent(activePolicyTypeFilter)}&includeCategoryCounts=${includeCategoryCounts}`;
+      const res = await fetch(url, { cache: "no-store", signal: controller.signal });
       const data = await res.json();
       if (res.ok && data.customers) {
         setCustomers(data.customers);
         setTotalPages(data.pages || 1);
         setTotalCount(data.totalCount || 0);
+        if (data.categoryCounts) {
+          setTabCounts(data.categoryCounts);
+          categoryCountsKeyRef.current = categoryCountsKey;
+        }
       }
-
-      // Fetch LOB Category counts in parallel
-      const qEncoded = encodeURIComponent(q);
-      const companyEncoded = encodeURIComponent(activeCompanyFilter);
-      const [allRes, motorRes, fireRes, otherRes] = await Promise.all([
-        fetch(`/api/renewals/customers?q=${qEncoded}&status=${statusFilter}&page=1&limit=1&company=${companyEncoded}&policyType=All`),
-        fetch(`/api/renewals/customers?q=${qEncoded}&status=${statusFilter}&page=1&limit=1&company=${companyEncoded}&policyType=Motor`),
-        fetch(`/api/renewals/customers?q=${qEncoded}&status=${statusFilter}&page=1&limit=1&company=${companyEncoded}&policyType=Fire`),
-        fetch(`/api/renewals/customers?q=${qEncoded}&status=${statusFilter}&page=1&limit=1&company=${companyEncoded}&policyType=Other`),
-      ]);
-      const [allData, motorData, fireData, otherData] = await Promise.all([
-        allRes.json(),
-        motorRes.json(),
-        fireRes.json(),
-        otherRes.json(),
-      ]);
-      setTabCounts({
-        all: allData.totalCount || 0,
-        motor: motorData.totalCount || 0,
-        warehouse: fireData.totalCount || 0,
-        other: otherData.totalCount || 0,
-      });
-
     } catch (error) {
-      console.error("Failed to load customer renewals:", error);
+      if (error.name !== "AbortError") console.error("Failed to load customer renewals:", error);
     } finally {
-      setLoading(false);
+      if (customersRequestRef.current === controller) {
+        customersRequestRef.current = null;
+        if (!controller.signal.aborted) setLoading(false);
+      }
     }
   };
 
@@ -352,27 +364,52 @@ export default function CustomerRenewalsPage() {
     if (savedScroll > 0) window.requestAnimationFrame(() => window.scrollTo({ top: savedScroll }));
   }, [loading, customers.length]);
 
-  useEffect(() => {
-    const fetchTeam = async () => {
-      try {
-        const res = await fetch("/api/renewals/team");
-        const data = await res.json();
-        if (res.ok && data.users) {
-          setTeamMembers(data.users);
-        }
-      } catch (err) {
-        console.error("Failed to fetch team:", err);
+  const loadTeamMembers = async () => {
+    if (teamLoadedRef.current || teamRequestRef.current) return;
+    const controller = new window.AbortController();
+    teamRequestRef.current = controller;
+    try {
+      const res = await fetch("/api/renewals/team", { signal: controller.signal });
+      const data = await res.json();
+      if (res.ok && data.users && !controller.signal.aborted) {
+        setTeamMembers(data.users);
+        teamLoadedRef.current = true;
       }
-    };
-    fetchTeam();
-  }, []);
+    } catch (error) {
+      if (error.name !== "AbortError") console.error("Failed to fetch team:", error);
+    } finally {
+      if (teamRequestRef.current === controller) teamRequestRef.current = null;
+    }
+  };
 
-  useEffect(() => {
-    fetch("/api/renewals/portfolios", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((data) => setPortfolioOptions(data.portfolios || []))
-      .catch((error) => console.error("Failed to fetch customer portfolios:", error));
-  }, []);
+  const loadPortfolioOptions = async () => {
+    if (portfoliosLoadedRef.current || portfolioRequestRef.current) return;
+    const controller = new window.AbortController();
+    portfolioRequestRef.current = controller;
+    try {
+      const response = await fetch("/api/renewals/portfolios", {
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      const data = await response.json();
+      if (response.ok && !controller.signal.aborted) {
+        setPortfolioOptions(data.portfolios || []);
+        portfoliosLoadedRef.current = true;
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") console.error("Failed to fetch customer portfolios:", error);
+    } finally {
+      if (portfolioRequestRef.current === controller) portfolioRequestRef.current = null;
+    }
+  };
+
+  useEffect(
+    () => () => {
+      teamRequestRef.current?.abort();
+      portfolioRequestRef.current?.abort();
+    },
+    [],
+  );
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -517,6 +554,8 @@ export default function CustomerRenewalsPage() {
 
   // Edit Renewal
   const handleEditRenewal = (cust, policyId) => {
+    void loadTeamMembers();
+    void loadPortfolioOptions();
     setSelectedCustomer(cust);
     fetchAndSelectPolicy(cust, (policy) => {
       const fmtDate = (dStr) => {
@@ -598,7 +637,7 @@ export default function CustomerRenewalsPage() {
       });
       if (res.ok) {
         setEditModalOpen(false);
-        await fetchCustomers(true);
+        await fetchCustomers(true, true);
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to update renewal policy.");
@@ -678,7 +717,7 @@ export default function CustomerRenewalsPage() {
       });
       if (res.ok) {
         setLostModalOpen(false);
-        await fetchCustomers(true);
+        await fetchCustomers(true, true);
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to mark policy as lost.");
@@ -692,6 +731,7 @@ export default function CustomerRenewalsPage() {
 
   // Reassign User
   const handleReassignUser = (cust) => {
+    void loadTeamMembers();
     setSelectedCustomer(cust);
     setReassignForm({ assignedToUserId: "", note: "" });
     setReassignModalOpen(true);

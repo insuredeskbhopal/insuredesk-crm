@@ -48,6 +48,7 @@ export async function GET(request) {
     const companyFilter = searchParams.get("company") || "All";
     const companyFilterTerms = getRenewalCompanyFilterTerms(companyFilter);
     const policyTypeFilter = searchParams.get("policyType") || "All";
+    const includeCategoryCounts = searchParams.get("includeCategoryCounts") === "true";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10", 10) || 10));
     const offset = (page - 1) * limit;
@@ -420,9 +421,19 @@ export async function GET(request) {
       LIMIT $10::integer OFFSET $11::integer
     `;
 
-    const [countResult, dataResult] = await Promise.all([
-      prisma.$queryRawUnsafe(countQuery, ...queryParams),
+    const countPromise = prisma.$queryRawUnsafe(countQuery, ...queryParams);
+    const categoryPolicyTypes = ["All", "Motor", "Fire", "Other"];
+    const categoryCountPromises = includeCategoryCounts
+      ? categoryPolicyTypes.map((category) =>
+          category.toLowerCase() === policyTypeFilter.toLowerCase()
+            ? countPromise
+            : prisma.$queryRawUnsafe(countQuery, ...queryParams.slice(0, -1), category),
+        )
+      : [];
+    const [countResult, dataResult, ...categoryCountResults] = await Promise.all([
+      countPromise,
       prisma.$queryRawUnsafe(dataQuery, ...queryParams, limit, offset),
+      ...categoryCountPromises,
     ]);
 
     const totalCount = countResult[0]?.count || 0;
@@ -512,6 +523,16 @@ export async function GET(request) {
       totalCount,
       pages: Math.ceil(totalCount / limit) || 1,
       currentPage: page,
+      ...(includeCategoryCounts
+        ? {
+            categoryCounts: {
+              all: categoryCountResults[0]?.[0]?.count || 0,
+              motor: categoryCountResults[1]?.[0]?.count || 0,
+              warehouse: categoryCountResults[2]?.[0]?.count || 0,
+              other: categoryCountResults[3]?.[0]?.count || 0,
+            },
+          }
+        : {}),
     });
   } catch (error) {
     console.error("Customers list fetch failed:", error);

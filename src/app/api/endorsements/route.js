@@ -27,7 +27,7 @@ export async function GET(request) {
     const from = parseDate(searchParams.get("from"));
     const to = parseDate(searchParams.get("to"), true);
     const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
-    const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "100", 10), 1), 500);
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "25", 10) || 25));
     const skip = (page - 1) * limit;
 
     const where = getEndorsementWhere(session, "read");
@@ -69,10 +69,10 @@ export async function GET(request) {
         take: limit,
       }),
       prisma.endorsement.count({ where }),
-      prisma.endorsement.findMany({
+      prisma.endorsement.groupBy({
+        by: ["status"],
         where,
-        select: { status: true },
-        take: 10000,
+        _count: { id: true },
       }),
     ]);
 

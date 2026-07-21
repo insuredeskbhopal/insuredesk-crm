@@ -1,27 +1,21 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { AlertCircle, MoreVertical, Eye, CheckCircle, XCircle, PlusCircle } from "lucide-react";
+import {
+  AlertCircle,
+  MoreVertical,
+  Eye,
+  CheckCircle,
+  XCircle,
+  PlusCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import ModalPortal from "@/app/components/shared/ModalPortal";
 
-const CLOSED_RENEWAL_STATUSES = new Set([
-  "RENEWED",
-  "LOST",
-  "NOT_INTERESTED",
-  "WRONG_NUMBER",
-  "RENEWED_ELSEWHERE",
-]);
-
-function isClosedRenewalStatus(status) {
-  return CLOSED_RENEWAL_STATUSES.has(
-    String(status || "")
-      .trim()
-      .toUpperCase()
-      .replace(/\s+/g, "_"),
-  );
-}
+const PAGE_SIZE = 25;
 
 export default function DailyWorkPage() {
   const router = useRouter();
@@ -33,9 +27,17 @@ export default function DailyWorkPage() {
   const [activeDropdownRowId, setActiveDropdownRowId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState(null);
   const [activeLobFilter, setActiveLobFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [lobCounts, setLobCounts] = useState({ all: 0, motor: 0, warehouse: 0, other: 0 });
+  const [loadError, setLoadError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const countsKeyRef = useRef("");
 
   // Counters
   const [counts, setCounts] = useState({
+    allWork: 0,
     dueToday: 0,
     followUpToday: 0,
     overdueFollowUp: 0,
@@ -69,73 +71,52 @@ export default function DailyWorkPage() {
   const [lostForm, setLostForm] = useState({ lostReason: "Premium High", remarks: "" });
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Fetch all daily work components
-  const fetchDailyWork = async (silent = false) => {
-    try {
-      if (!silent) setLoading(true);
-
-      // 1. Fetch Today's Work stats/activities from API
-      const workRes = await fetch("/api/renewals/today-work", { cache: "no-store" });
-      const workData = await workRes.json();
-
-      // 2. Fetch policies for today's grid
-      // We will pull:
-      // - Upcoming policies (limit 100)
-      // - Overdue followups
-      const policiesRes = await fetch("/api/renewals/policies?tab=all&limit=500", { cache: "no-store" });
-      const policiesData = await policiesRes.json();
-
-      if (policiesRes.ok && policiesData.policies) {
-        setPolicies(policiesData.policies);
-      }
-
-      // Compute counters based on current policy data & today's work report
-      const todayStr = new Date().toISOString().split("T")[0];
-      let dueToday = 0;
-      let followUpToday = 0;
-      let overdueFollowUp = 0;
-
-      policiesData.policies.forEach((p) => {
-        const isClosed = isClosedRenewalStatus(p.renewalStatus);
-        if (!isClosed) {
-          // Due Today
-          if (p.expiryDate && p.expiryDate.startsWith(todayStr)) {
-            dueToday++;
-          }
-          // Follow up today
-          if (p.nextFollowUpDate && p.nextFollowUpDate.startsWith(todayStr)) {
-            followUpToday++;
-          }
-          // Overdue follow up
-          if (p.nextFollowUpDate && p.nextFollowUpDate < todayStr) {
-            overdueFollowUp++;
-          }
-        }
-      });
-
-      // Today's completed actions from audit logs
-      const completedToday = workData.summary?.total || 0;
-      const renewedToday = workData.summary?.renewed || 0;
-      const lostToday = workData.summary?.lost || 0;
-
-      setCounts({
-        dueToday,
-        followUpToday,
-        overdueFollowUp,
-        completedToday,
-        renewedToday,
-        lostToday,
-      });
-    } catch (err) {
-      console.error("Failed to fetch daily work records:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const controller = new window.AbortController();
+    const countsKey = `${activeCardFilter}:${activeLobFilter}:${refreshKey}`;
+    const includeCounts = countsKeyRef.current !== countsKey;
+
+    const fetchDailyWork = async () => {
+      setLoading(true);
+      setLoadError("");
+      try {
+        const params = new window.URLSearchParams({
+          filter: activeCardFilter,
+          lob: activeLobFilter,
+          page: String(page),
+          limit: String(PAGE_SIZE),
+          includeCounts: String(includeCounts),
+        });
+        const response = await fetch(`/api/renewals/daily-work?${params}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Daily work could not be loaded.");
+
+        setPolicies(payload.policies || []);
+        if (payload.summaryCounts) setCounts(payload.summaryCounts);
+        if (payload.categoryCounts) setLobCounts(payload.categoryCounts);
+        if (payload.totalCount !== undefined) setTotalCount(payload.totalCount || 0);
+        if (payload.pages !== undefined) {
+          const nextTotalPages = payload.pages || 1;
+          setTotalPages(nextTotalPages);
+          if (page > nextTotalPages) setPage(nextTotalPages);
+        }
+        if (includeCounts) countsKeyRef.current = countsKey;
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Failed to fetch daily work records:", error);
+          setLoadError(error.message || "Daily work could not be loaded.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+
     fetchDailyWork();
-  }, []);
+    return () => controller.abort();
+  }, [activeCardFilter, activeLobFilter, page, refreshKey]);
 
   const openActionMenu = (rowId, event) => {
     event.stopPropagation();
@@ -164,85 +145,6 @@ export default function DailyWorkPage() {
     setActiveDropdownRowId(null);
     setDropdownPosition(null);
   };
-
-  // Reset LOB filter when card selection changes
-  useEffect(() => {
-    setActiveLobFilter("all");
-  }, [activeCardFilter]);
-
-  // Helper to categorize policy LOB
-  const getPolicyCategory = (policy) => {
-    const type = String(policy.displayPolicyType || policy.policyType || "").toLowerCase();
-    const motorTerms = [
-      "motor", "vehicle", "private car", "two wheeler", "bike", "scooter",
-      "commercial vehicle", "taxi", "school bus", "goods carrying",
-      "passenger carrying", "auto secure", "liability only", "comprehensive", "own damage"
-    ];
-    const warehouseTerms = [
-      "fire", "sfsp", "burglary", "msme", "warehouse", "stock", "property",
-      "business guard", "laghu", "sookshma", "fidelity", "guarantee", "house breaking"
-    ];
-
-    if (motorTerms.some((term) => type.includes(term))) return "motor";
-    if (warehouseTerms.some((term) => type.includes(term))) return "warehouse";
-    return "other";
-  };
-
-  // Filter policies based on active card selection
-  const activeCardPolicies = useMemo(() => {
-    const todayStr = new Date().toISOString().split("T")[0];
-
-    return policies.filter((p) => {
-      const isClosed = isClosedRenewalStatus(p.renewalStatus);
-
-      if (activeCardFilter === "due_today") {
-        return !isClosed && p.expiryDate && p.expiryDate.startsWith(todayStr);
-      }
-      if (activeCardFilter === "followup_today") {
-        return !isClosed && p.nextFollowUpDate && p.nextFollowUpDate.startsWith(todayStr);
-      }
-      if (activeCardFilter === "overdue_followup") {
-        return !isClosed && p.nextFollowUpDate && p.nextFollowUpDate < todayStr;
-      }
-      if (activeCardFilter === "completed_today") {
-        return isClosed && p.renewalDate && p.renewalDate.startsWith(todayStr);
-      }
-
-      return (
-        !isClosed &&
-        ((p.expiryDate && p.expiryDate.startsWith(todayStr)) ||
-          (p.nextFollowUpDate && p.nextFollowUpDate.startsWith(todayStr)) ||
-          (p.nextFollowUpDate && p.nextFollowUpDate < todayStr))
-      );
-    });
-  }, [policies, activeCardFilter]);
-
-  // Compute LOB counts from the active card policies
-  const lobCounts = useMemo(() => {
-    let motor = 0;
-    let warehouse = 0;
-    let other = 0;
-
-    activeCardPolicies.forEach((p) => {
-      const cat = getPolicyCategory(p);
-      if (cat === "motor") motor++;
-      else if (cat === "warehouse") warehouse++;
-      else other++;
-    });
-
-    return {
-      all: activeCardPolicies.length,
-      motor,
-      warehouse,
-      other,
-    };
-  }, [activeCardPolicies]);
-
-  // Get final filtered list to display in the table
-  const finalFilteredPolicies = useMemo(() => {
-    if (activeLobFilter === "all") return activeCardPolicies;
-    return activeCardPolicies.filter((p) => getPolicyCategory(p) === activeLobFilter);
-  }, [activeCardPolicies, activeLobFilter]);
 
   // Actions
   const handleViewProfile = (policy) => {
@@ -284,7 +186,7 @@ export default function DailyWorkPage() {
           priority: "Normal",
           nextAction: "",
         });
-        await fetchDailyWork(true);
+        setRefreshKey((current) => current + 1);
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to submit remark.");
@@ -345,7 +247,7 @@ export default function DailyWorkPage() {
       if (res.ok) {
         setLostModalOpen(false);
         setLostForm({ lostReason: "Premium High", remarks: "" });
-        await fetchDailyWork(true);
+        setRefreshKey((current) => current + 1);
       } else {
         const err = await res.json();
         window.alert(err.error || "Failed to mark policy as lost.");
@@ -357,7 +259,18 @@ export default function DailyWorkPage() {
     }
   };
 
-  const filtered = finalFilteredPolicies;
+  const filtered = policies;
+  const selectCardFilter = (nextFilter) => {
+    setActiveCardFilter(nextFilter);
+    setActiveLobFilter("all");
+    setPage(1);
+    closeActionMenu();
+  };
+  const selectLobFilter = (nextLob) => {
+    setActiveLobFilter(nextLob);
+    setPage(1);
+    closeActionMenu();
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -378,7 +291,7 @@ export default function DailyWorkPage() {
           {
             key: "all_work",
             title: "All Daily Tasks",
-            count: counts.dueToday + counts.followUpToday + counts.overdueFollowUp,
+            count: counts.allWork,
             color: "var(--rn-primary)",
           },
           { key: "due_today", title: "Due Today", count: counts.dueToday, color: "var(--rn-warning)" },
@@ -399,7 +312,7 @@ export default function DailyWorkPage() {
           <div
             key={card.key}
             className="renewals-card"
-            onClick={() => setActiveCardFilter(card.key)}
+            onClick={() => selectCardFilter(card.key)}
             style={{
               borderLeft: `4px solid ${card.color}`,
               cursor: "pointer",
@@ -437,7 +350,7 @@ export default function DailyWorkPage() {
             {activeCardFilter === "completed_today" && "Tasks Completed Today"}
           </h3>
           <span style={{ fontSize: "12px", color: "var(--rn-text-secondary)" }}>
-            {filtered.length} records found
+            {totalCount.toLocaleString("en-IN")} records found
           </span>
         </div>
 
@@ -446,7 +359,7 @@ export default function DailyWorkPage() {
           <button
             className={activeLobFilter === "all" ? "active" : ""}
             type="button"
-            onClick={() => setActiveLobFilter("all")}
+            onClick={() => selectLobFilter("all")}
           >
             All Tasks
             <span>{lobCounts.all}</span>
@@ -454,7 +367,7 @@ export default function DailyWorkPage() {
           <button
             className={activeLobFilter === "motor" ? "active" : ""}
             type="button"
-            onClick={() => setActiveLobFilter("motor")}
+            onClick={() => selectLobFilter("motor")}
           >
             Motor Policy
             <span>{lobCounts.motor}</span>
@@ -462,7 +375,7 @@ export default function DailyWorkPage() {
           <button
             className={activeLobFilter === "warehouse" ? "active" : ""}
             type="button"
-            onClick={() => setActiveLobFilter("warehouse")}
+            onClick={() => selectLobFilter("warehouse")}
           >
             Warehouse Policy
             <span>{lobCounts.warehouse}</span>
@@ -470,7 +383,7 @@ export default function DailyWorkPage() {
           <button
             className={activeLobFilter === "other" ? "active" : ""}
             type="button"
-            onClick={() => setActiveLobFilter("other")}
+            onClick={() => selectLobFilter("other")}
           >
             Other Policies
             <span>{lobCounts.other}</span>
@@ -480,6 +393,10 @@ export default function DailyWorkPage() {
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
             <p>Loading daily tasks...</p>
+          </div>
+        ) : loadError ? (
+          <div style={{ display: "flex", justifyContent: "center", padding: "40px 16px" }}>
+            <p style={{ color: "var(--rn-danger)", margin: 0 }}>{loadError}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div
@@ -654,6 +571,31 @@ export default function DailyWorkPage() {
               })}
             </tbody>
           </table>
+        )}
+        {!loadError && (
+          <footer className="rn-pagination" style={{ padding: "12px 16px" }}>
+            <span>
+              Page {page} of {totalPages} · {totalCount.toLocaleString("en-IN")} task rows
+            </span>
+            <div>
+              <button
+                type="button"
+                className="rn-btn"
+                disabled={page <= 1 || loading}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+              >
+                <ChevronLeft size={15} /> Previous
+              </button>
+              <button
+                type="button"
+                className="rn-btn"
+                disabled={page >= totalPages || loading}
+                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              >
+                Next <ChevronRight size={15} />
+              </button>
+            </div>
+          </footer>
         )}
       </div>
 

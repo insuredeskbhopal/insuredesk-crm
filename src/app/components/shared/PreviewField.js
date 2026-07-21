@@ -117,7 +117,8 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
 
   useEffect(() => {
     if (value && value.length === 36) {
-      fetch(`/api/client-accounts/${value}`)
+      const controller = new window.AbortController();
+      fetch(`/api/client-accounts/${value}`, { signal: controller.signal })
         .then((res) => res.json())
         .then((data) => {
           if (data?.name) {
@@ -125,9 +126,11 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
           }
         })
         .catch(() => {});
+      return () => controller.abort();
     } else {
       setSelectedClientName("");
     }
+    return undefined;
   }, [value]);
 
   useEffect(() => {
@@ -136,6 +139,7 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
       return;
     }
 
+    const controller = new window.AbortController();
     const runAutoMatch = async () => {
       const cleanPhone = contactNumber ? contactNumber.replace(/[^0-9]/g, "") : "";
       const searchTerms = [];
@@ -153,7 +157,9 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
       setAutoSuggestedClient(null);
       try {
         for (const term of searchTerms) {
-          const res = await fetch(`/api/client-accounts?page=1&limit=5&q=${encodeURIComponent(term)}`);
+          const res = await fetch(`/api/client-accounts?page=1&limit=5&q=${encodeURIComponent(term)}`, {
+            signal: controller.signal,
+          });
           if (res.ok) {
             const data = await res.json();
             const matches = data.accounts || data.profiles || [];
@@ -167,12 +173,15 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
           }
         }
       } catch (err) {
-        console.error("Auto-match check error:", err);
+        if (err?.name !== "AbortError") console.error("Auto-match check error:", err);
       }
     };
 
     const timer = window.setTimeout(runAutoMatch, 600);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
   }, [value, insuredName, contactNumber, email]);
 
   useEffect(() => {
@@ -181,17 +190,35 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
     if (cleanPhone?.length !== 10) return;
 
     let active = true;
+    let timer;
+    let inFlight = false;
+    let shouldPoll = true;
+    const controller = new window.AbortController();
+    const scheduleNextCheck = () => {
+      window.clearTimeout(timer);
+      if (!active || !shouldPoll || document.hidden) return;
+      timer = window.setTimeout(() => {
+        timer = undefined;
+        checkRequest();
+      }, 10000);
+    };
     const checkRequest = async () => {
+      if (!active || inFlight || document.hidden) return;
+      inFlight = true;
       try {
         const params = new window.URLSearchParams({
           mine: "1",
           phone: cleanPhone,
           name: insuredName.trim(),
         });
-        const res = await fetch(`/api/client-id-requests?${params}`);
-        if (!res.ok || !active) return;
+        const res = await fetch(`/api/client-id-requests?${params}`, { signal: controller.signal });
+        if (!res.ok || !active) {
+          shouldPoll = true;
+          return;
+        }
         const data = await res.json();
         const item = data.requests?.[0] || null;
+        shouldPoll = Boolean(item?.id && item.status !== "COMPLETED");
         setClientIdRequest(item);
         if (item?.status === "COMPLETED" && item.resolvedClientId) {
           setSelectedClientName(item.resolvedClientName || "Client");
@@ -204,38 +231,60 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
           notifiedRequestId.current = item.id;
           onClientIdRequestChange?.(item.id);
         }
-      } catch {
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+        shouldPoll = true;
         // The normal client search remains available if request status cannot be loaded.
+      } finally {
+        inFlight = false;
+        scheduleNextCheck();
       }
     };
 
     checkRequest();
-    const timer = window.setInterval(checkRequest, 10000);
+    const resumeWhenVisible = () => {
+      if (!document.hidden && shouldPoll && !timer && !inFlight) checkRequest();
+    };
+    document.addEventListener("visibilitychange", resumeWhenVisible);
     return () => {
       active = false;
-      window.clearInterval(timer);
+      controller.abort();
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", resumeWhenVisible);
     };
   }, [value, insuredName, contactNumber, onChange, onClientIdRequestChange]);
 
-  const handleSearch = async (val) => {
-    setQuery(val);
-    if (val.trim().length < 2) {
+  useEffect(() => {
+    const normalizedQuery = query.trim();
+    if (normalizedQuery.length < 2) {
       setResults([]);
-      return;
-    }
-    setSearching(true);
-    try {
-      const res = await fetch(`/api/client-accounts?page=1&limit=5&q=${encodeURIComponent(val)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setResults(data.accounts || data.profiles || []);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
       setSearching(false);
+      return undefined;
     }
-  };
+
+    const controller = new window.AbortController();
+    const timer = window.setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/client-accounts?page=1&limit=5&q=${encodeURIComponent(normalizedQuery)}`, {
+          signal: controller.signal,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setResults(data.accounts || data.profiles || []);
+        }
+      } catch (err) {
+        if (err?.name !== "AbortError") console.error(err);
+      } finally {
+        if (!controller.signal.aborted) setSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query]);
 
   const handleClientIdRequest = async () => {
     setRequestError("");
@@ -338,7 +387,7 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
             className="client-id-search-input"
             placeholder="Type name, phone or email..."
             value={query}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
             style={{
               width: "100%",
               padding: "4px 8px",

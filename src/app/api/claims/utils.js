@@ -112,11 +112,40 @@ export function serializeClaim(claim) {
   };
 }
 
+export function serializeClaimSummary(claim) {
+  return {
+    ...serializeClaim({ ...claim, remarks: [], documents: [] }),
+    isSummary: true,
+    documentCount: claim._count?.documents || 0,
+    remarkCount: claim._count?.remarks || 0,
+  };
+}
+
 export const claimInclude = {
   createdBy: { select: { name: true, email: true } },
   updatedBy: { select: { name: true, email: true } },
   remarks: { orderBy: { createdAt: "desc" } },
   documents: { orderBy: { uploadedAt: "desc" } },
+};
+
+export const claimListSelect = {
+  id: true,
+  insuredName: true,
+  mobileNo: true,
+  contactPerson: true,
+  policyNo: true,
+  claimNo: true,
+  groupName: true,
+  claimDescription: true,
+  claimDate: true,
+  claimType: true,
+  claimStatus: true,
+  followUpDate: true,
+  currentRemark: true,
+  metadata: true,
+  createdAt: true,
+  updatedAt: true,
+  _count: { select: { remarks: true, documents: true } },
 };
 
 function sanitizeClaimMetadata(payload = {}) {

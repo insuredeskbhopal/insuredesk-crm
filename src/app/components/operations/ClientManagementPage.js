@@ -1,7 +1,7 @@
 /* global navigator */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ModalPortal from "@/app/components/shared/ModalPortal";
 import {
   Users,
@@ -39,6 +39,7 @@ export default function ClientManagementPage() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const limit = 10;
+  const clientsRequestRef = useRef(null);
 
   // Copy State Tracking
   const [copiedId, setCopiedId] = useState("");
@@ -77,7 +78,11 @@ export default function ClientManagementPage() {
   const [correctionEmail, setCorrectionEmail] = useState("");
 
   useEffect(() => {
-    fetchClients();
+    const timer = window.setTimeout(fetchClients, searchQuery ? 300 : 0);
+    return () => {
+      window.clearTimeout(timer);
+      clientsRequestRef.current?.abort();
+    };
   }, [page, searchQuery]);
 
   useEffect(() => {
@@ -86,19 +91,27 @@ export default function ClientManagementPage() {
   }, []);
 
   async function fetchClients() {
+    clientsRequestRef.current?.abort();
+    const controller = new window.AbortController();
+    clientsRequestRef.current = controller;
     setLoading(true);
     setError("");
     try {
       const queryParam = searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : "";
-      const res = await fetch(`/api/client-accounts?page=${page}&limit=${limit}${queryParam}`);
+      const res = await fetch(`/api/client-accounts?page=${page}&limit=${limit}${queryParam}`, {
+        signal: controller.signal,
+      });
       if (!res.ok) throw new Error("Failed to fetch client accounts");
       const data = await res.json();
       setProfiles(data.accounts || data.profiles || []);
       setTotalCount(data.total || 0);
     } catch (err) {
-      setError(err.message || "Failed to load profiles");
+      if (err?.name !== "AbortError") setError(err.message || "Failed to load profiles");
     } finally {
-      setLoading(false);
+      if (clientsRequestRef.current === controller) {
+        clientsRequestRef.current = null;
+        if (!controller.signal.aborted) setLoading(false);
+      }
     }
   }
 
@@ -176,24 +189,36 @@ export default function ClientManagementPage() {
     setResolutionError("");
   };
 
-  const searchExistingClients = async (query) => {
-    setResolutionSearch(query);
-    if (query.trim().length < 2) {
+  useEffect(() => {
+    const query = resolutionSearch.trim();
+    if (!resolutionRequest || resolutionAction !== "LINK_EXISTING" || query.length < 2) {
       setResolutionResults([]);
-      return;
-    }
-    setResolutionSearching(true);
-    try {
-      const res = await fetch(`/api/client-accounts?page=1&limit=8&q=${encodeURIComponent(query)}`);
-      if (!res.ok) throw new Error("Client search failed");
-      const data = await res.json();
-      setResolutionResults(data.accounts || data.profiles || []);
-    } catch (err) {
-      setResolutionError(err.message || "Client search failed");
-    } finally {
       setResolutionSearching(false);
+      return undefined;
     }
-  };
+
+    const controller = new window.AbortController();
+    const timer = window.setTimeout(async () => {
+      setResolutionSearching(true);
+      try {
+        const res = await fetch(`/api/client-accounts?page=1&limit=8&q=${encodeURIComponent(query)}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error("Client search failed");
+        const data = await res.json();
+        setResolutionResults(data.accounts || data.profiles || []);
+      } catch (err) {
+        if (err?.name !== "AbortError") setResolutionError(err.message || "Client search failed");
+      } finally {
+        if (!controller.signal.aborted) setResolutionSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [resolutionAction, resolutionRequest, resolutionSearch]);
 
   const resolveClientIdRequest = async (request, action, clientId = "") => {
     setResolutionError("");
@@ -773,7 +798,7 @@ export default function ClientManagementPage() {
                     <input
                       type="search"
                       value={resolutionSearch}
-                      onChange={(event) => searchExistingClients(event.target.value)}
+                      onChange={(event) => setResolutionSearch(event.target.value)}
                       placeholder="Search name, phone or email"
                       className="w-full rounded-lg border border-slate-300 py-2.5 pl-9 pr-3 text-sm focus:border-emerald-500 focus:outline-none"
                     />

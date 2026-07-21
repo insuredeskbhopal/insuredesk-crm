@@ -33,23 +33,27 @@ export default function RenewalsDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new window.AbortController();
     const fetchDashboardStats = async () => {
       try {
         setLoading(true);
-        // Fetch stats from main policies route
-        const policiesRes = await fetch("/api/renewals/policies?tab=upcoming&limit=1", { cache: "no-store" });
+        const policiesRes = await fetch("/api/renewals/policies?tab=upcoming&summaryOnly=true", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
         const policiesData = await policiesRes.json();
 
         if (policiesData.summaryCounts) {
           setStats(policiesData.summaryCounts);
         }
       } catch (error) {
-        console.error("Failed to load renewals dashboard stats:", error);
+        if (error?.name !== "AbortError") console.error("Failed to load renewals dashboard stats:", error);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
     fetchDashboardStats();
+    return () => controller.abort();
   }, []);
 
   const kpis = [

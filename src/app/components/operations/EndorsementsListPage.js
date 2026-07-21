@@ -33,6 +33,7 @@ const TYPES = [
   "Correction in Policy Details",
   "Other Endorsement",
 ];
+const PAGE_SIZE = 25;
 
 export default function EndorsementsListPage() {
   const searchParams = useSearchParams();
@@ -49,8 +50,12 @@ export default function EndorsementsListPage() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState("");
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
+    setPage(1);
     setFilters((current) => (current.q === urlQuery ? current : { ...current, q: urlQuery }));
   }, [urlQuery]);
 
@@ -59,43 +64,52 @@ export default function EndorsementsListPage() {
     Object.entries(filters).forEach(([key, value]) => {
       if (value && value !== "All") params.set(key, value);
     });
-    params.set("limit", "500");
+    params.set("page", String(page));
+    params.set("limit", String(PAGE_SIZE));
     return params.toString();
-  }, [filters]);
+  }, [filters, page]);
 
   useEffect(() => {
+    const controller = new window.AbortController();
     const timeout = window.setTimeout(
       () => {
-        loadRecords(queryString);
+        loadRecords(queryString, controller.signal);
       },
       filters.q ? 250 : 0,
     );
-    return () => window.clearTimeout(timeout);
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
   }, [queryString, filters.q]);
 
-  async function loadRecords(nextQuery = queryString) {
+  async function loadRecords(nextQuery = queryString, signal) {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`/api/endorsements?${nextQuery}`, { cache: "no-store" });
+      const response = await fetch(`/api/endorsements?${nextQuery}`, { cache: "no-store", signal });
       const payload = await readJsonResponse(response);
       setRecords(Array.isArray(payload.endorsements) ? payload.endorsements : []);
       setSummary(payload.summary || summary);
+      setTotal(Number(payload.total || 0));
+      setTotalPages(Math.max(1, Number(payload.totalPages || 1)));
     } catch (err) {
+      if (err?.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "Endorsements could not be loaded.");
       setRecords([]);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }
 
   function updateFilter(key, value) {
+    setPage(1);
     setFilters((current) => ({ ...current, [key]: value }));
   }
 
-  async function applyFilters(event) {
+  function applyFilters(event) {
     event.preventDefault();
-    await loadRecords(queryString);
+    setPage(1);
   }
 
   async function updateStatus(record, status) {
@@ -140,7 +154,7 @@ export default function EndorsementsListPage() {
           <p>Operations Module</p>
           <h1>Endorsements</h1>
         </div>
-        <Link className="endorsement-primary-btn" href="/dashboard/endorsements/create">
+        <Link className="endorsement-primary-btn" href="/dashboard/endorsements/create" prefetch={false}>
           <FilePlus2 size={18} /> Create Endorsement
         </Link>
       </header>
@@ -227,7 +241,7 @@ export default function EndorsementsListPage() {
               <tbody>
                 {records.map((record, index) => (
                   <tr key={record.id}>
-                    <td>{index + 1}</td>
+                    <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
                     <td>
                       <strong>{record.endorsementNo}</strong>
                     </td>
@@ -248,10 +262,10 @@ export default function EndorsementsListPage() {
                     <td>{formatDate(record.createdAt)}</td>
                     <td>
                       <div className="endorsement-actions">
-                        <Link href={`/dashboard/endorsements/${record.id}`} title="View">
+                        <Link href={`/dashboard/endorsements/${record.id}`} prefetch={false} title="View">
                           <Eye size={15} />
                         </Link>
-                        <Link href={`/dashboard/endorsements/${record.id}?mode=edit`} title="Edit">
+                        <Link href={`/dashboard/endorsements/${record.id}?mode=edit`} prefetch={false} title="Edit">
                           <Edit size={15} />
                         </Link>
                         {record.generatedLetterPdfUrl ? (
@@ -265,6 +279,7 @@ export default function EndorsementsListPage() {
                         ) : null}
                         <Link
                           href={`/dashboard/endorsements/${record.id}?upload=company-letter`}
+                          prefetch={false}
                           title="Upload Insurance Company Letter"
                         >
                           <Upload size={15} />
@@ -309,6 +324,19 @@ export default function EndorsementsListPage() {
           </div>
         )}
       </section>
+      <div className="table-pagination" aria-label="Endorsement pagination">
+        <span>
+          Page {page} of {totalPages} ({total} endorsements)
+        </span>
+        <div>
+          <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1 || loading}>
+            Previous
+          </button>
+          <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page >= totalPages || loading}>
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

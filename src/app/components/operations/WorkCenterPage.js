@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Bell,
@@ -36,29 +36,49 @@ export default function WorkCenterPage() {
   const [activeView, setActiveView] = useState("Agenda");
   const [filter, setFilter] = useState("all");
   const [error, setError] = useState("");
+  const requestRef = useRef(null);
 
-  const load = async () => {
-    setLoading(true);
+  const load = useCallback(async ({ silent = false, force = false } = {}) => {
+    if (requestRef.current) {
+      if (!force) return;
+      requestRef.current.abort();
+      requestRef.current = null;
+    }
+    const controller = new window.AbortController();
+    requestRef.current = controller;
+    if (!silent) setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/work-center", { cache: "no-store" });
+      const response = await fetch("/api/work-center", { cache: "no-store", signal: controller.signal });
       const payload = await response.json();
       if (!response.ok || !payload.success) {
         throw new Error(getUserFacingErrorMessage(payload.error, "Work center could not be loaded. Please try again."));
       }
-      setData(payload);
+      if (!controller.signal.aborted) setData(payload);
     } catch (err) {
-      setError(getUserFacingErrorMessage(err, "Work center could not be loaded. Please try again."));
+      if (err?.name !== "AbortError") {
+        setError(getUserFacingErrorMessage(err, "Work center could not be loaded. Please try again."));
+      }
     } finally {
-      setLoading(false);
+      if (requestRef.current === controller) requestRef.current = null;
+      if (!controller.signal.aborted) setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-    const timer = window.setInterval(load, 30000);
-    return () => window.clearInterval(timer);
-  }, []);
+    const refreshVisiblePage = () => {
+      if (!document.hidden) load({ silent: true });
+    };
+    const timer = window.setInterval(refreshVisiblePage, 30000);
+    document.addEventListener("visibilitychange", refreshVisiblePage);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshVisiblePage);
+      requestRef.current?.abort();
+      requestRef.current = null;
+    };
+  }, [load]);
 
   const tasks = useMemo(() => {
     const allTasks = data?.tasks || [];
@@ -90,7 +110,7 @@ export default function WorkCenterPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "COMPLETED" }),
     });
-    if (response.ok) load();
+    if (response.ok) load({ force: true });
   };
 
   return (

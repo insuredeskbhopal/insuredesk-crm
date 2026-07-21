@@ -8,6 +8,9 @@ describe("production API pagination limits", () => {
   it.each([
     "src/app/api/records/route.js",
     "src/app/api/customer-profiles/route.js",
+    "src/app/api/client-accounts/route.js",
+    "src/app/api/endorsements/route.js",
+    "src/app/api/operations/whatsapp/queue/route.js",
   ])("caps %s list responses at 100 records", (file) => {
     const source = read(file);
     expect(source).toContain("Math.min(100, Math.max(1,");

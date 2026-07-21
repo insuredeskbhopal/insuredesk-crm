@@ -17,7 +17,7 @@ import {
 import SearchBox from "@/app/components/shared/SearchBox";
 import ModalPortal from "@/app/components/shared/ModalPortal";
 import BrandLogo from "@/app/components/brand/BrandLogo";
-import { cachedJson } from "@/app/lib/client-api";
+import { cachedJson, clearClientApiCache } from "@/app/lib/client-api";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -94,7 +94,10 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
     fetchNotificationCount();
     const fetchUser = async () => {
       try {
-        const data = await cachedJson("/api/auth/me", { ttlMs: 10000 });
+        const data = await cachedJson("/api/auth/me", {
+          ttlMs: 10000,
+          fetchOptions: { cache: "no-store" },
+        });
         if (data.success && data.user) {
           setUser({
             id: data.user.id,
@@ -543,6 +546,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                   setToast("Logging out...");
                   try {
                     await fetch("/api/auth/logout", { method: "POST" });
+                    clearClientApiCache();
                     setToast("Logged out successfully. Redirecting...");
                     setTimeout(() => {
                       window.location.href = "/";

@@ -61,8 +61,8 @@ export async function loadScopedPolicyRecords(options = {}) {
       ? {
           records: [],
           totalCount: 0,
-          page: parseInt(options.page || "1", 10),
-          limit: parseInt(options.limit || "20", 10),
+          page: Math.max(1, parseInt(options.page || "1", 10) || 1),
+          limit: Math.min(100, Math.max(1, parseInt(options.limit || "20", 10) || 20)),
           totalPages: 1,
           serverLoadError: true,
         }
@@ -75,8 +75,8 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
   if (!session) return options.page ? { records: [], totalCount: 0, page: 1, limit: 20, totalPages: 1 } : [];
   const tenantFilter = getTenantFilter(session, "read");
 
-  const page = parseInt(options.page || "1", 10);
-  const limit = parseInt(options.limit || "20", 10);
+  const page = Math.max(1, parseInt(options.page || "1", 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(options.limit || "20", 10) || 20));
   const skip = (page - 1) * limit;
 
   const q = options.q || "";
@@ -443,6 +443,170 @@ async function loadDuplicatePolicyRecords({
   };
 }
 
+export async function loadScopedCustomerPolicyPage(options = {}) {
+  const page = Math.max(1, parseInt(options.page || "1", 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(options.limit || "12", 10) || 12));
+  try {
+    const session = await getCurrentSessionFromCookies();
+    if (!session) return { records: [], totalCount: 0, page, limit, totalPages: 1 };
+
+    const isSuperAdmin = session.role === "SUPER_ADMIN";
+    const orgId = session.organizationId ?? null;
+    const queryParams = [isSuperAdmin, orgId];
+    const normalizedQuery = String(options.q || "").trim().toLowerCase();
+    let searchWhere = "";
+    if (normalizedQuery) {
+      queryParams.push(`%${normalizedQuery}%`);
+      const placeholder = `$${queryParams.length}`;
+      searchWhere = `
+        AND LOWER(CONCAT_WS(' ',
+          pr.reviewed_data->>'insuredName', pr.data->>'insuredName',
+          pr.reviewed_data->>'customerName', pr.data->>'customerName',
+          pr.reviewed_data->>'policyNumber', pr.data->>'policyNumber',
+          pr.reviewed_data->>'contactNumber', pr.data->>'contactNumber',
+          pr.reviewed_data->>'customerMobile', pr.data->>'customerMobile',
+          pr.reviewed_data->>'mobileNumber', pr.data->>'mobileNumber',
+          pr.reviewed_data->>'phone', pr.data->>'phone',
+          pr.reviewed_data->>'contactPerson', pr.data->>'contactPerson',
+          pr.reviewed_data->>'contactPersonName', pr.data->>'contactPersonName',
+          pr.contact_person_name, pr.contact_person_mobile,
+          pr.renewal_recipient_name, pr.renewal_recipient_mobile,
+          pr.reviewed_data->>'whatsappGroupName', pr.data->>'whatsappGroupName',
+          pr.reviewed_data->>'groupName', pr.data->>'groupName',
+          pr.reviewed_data->>'policyType', pr.data->>'policyType',
+          pr.selected_policy_type,
+          pr.reviewed_data->>'vehicleNumber', pr.data->>'vehicleNumber',
+          pr.reviewed_data->>'registrationNumber', pr.data->>'registrationNumber',
+          pr.reviewed_data->>'engineNumber', pr.data->>'engineNumber',
+          pr.reviewed_data->>'chassisNumber', pr.data->>'chassisNumber',
+          pr.reviewed_data->>'makeModel', pr.data->>'makeModel',
+          pr.reviewed_data->>'vehicleMake', pr.data->>'vehicleMake',
+          pr.reviewed_data->>'vehicleModel', pr.data->>'vehicleModel',
+          pr.reviewed_data->>'rtoLocation', pr.data->>'rtoLocation',
+          pr.reviewed_data->>'rto', pr.data->>'rto',
+          pr.reviewed_data->>'district', pr.data->>'district',
+          pr.reviewed_data->>'tehsil', pr.data->>'tehsil',
+          pr.reviewed_data->>'insuranceCompany', pr.data->>'insuranceCompany',
+          pr.selected_company,
+          creator.name, creator.email, pr.source_file, pr.pdf_file_name
+        )) LIKE ${placeholder}
+      `;
+    }
+
+    const baseCTE = `
+      WITH filtered_records AS (
+        SELECT
+          pr.id,
+          pr.saved_at,
+          COALESCE(
+            NULLIF(BTRIM(pr.reviewed_data->>'insuredName'), ''),
+            NULLIF(BTRIM(pr.data->>'insuredName'), ''),
+            NULLIF(BTRIM(pr.reviewed_data->>'customerName'), ''),
+            NULLIF(BTRIM(pr.data->>'customerName'), ''),
+            NULLIF(BTRIM(pr.reviewed_data->>'Insured Name'), ''),
+            NULLIF(BTRIM(pr.data->>'Insured Name'), ''),
+            'Unnamed insured'
+          ) AS customer_name
+        FROM pdf_records pr
+        LEFT JOIN users creator ON creator.id = pr.created_by_id
+        WHERE pr.deleted_at IS NULL
+          AND pr.is_active_policy = true
+          AND ($1::boolean OR pr.organization_id IS NOT DISTINCT FROM $2::uuid)
+          ${MANUAL_RENEWAL_SQL_EXCLUSION}
+          ${searchWhere}
+      )
+    `;
+    const offset = (page - 1) * limit;
+    const limitPlaceholder = `$${queryParams.length + 1}`;
+    const offsetPlaceholder = `$${queryParams.length + 2}`;
+    const [countRows, idRows] = await Promise.all([
+      prisma.$queryRawUnsafe(
+        `${baseCTE} SELECT COUNT(DISTINCT customer_name)::integer AS count FROM filtered_records`,
+        ...queryParams,
+      ),
+      prisma.$queryRawUnsafe(
+        `${baseCTE}
+         , customer_page AS (
+           SELECT customer_name, MAX(saved_at) AS latest_saved_at
+           FROM filtered_records
+           GROUP BY customer_name
+           ORDER BY latest_saved_at DESC NULLS LAST, customer_name ASC
+           LIMIT ${limitPlaceholder}::integer OFFSET ${offsetPlaceholder}::integer
+         )
+         SELECT filtered_records.id
+         FROM filtered_records
+         INNER JOIN customer_page USING (customer_name)
+         ORDER BY customer_page.latest_saved_at DESC NULLS LAST, customer_name ASC, filtered_records.saved_at DESC`,
+        ...queryParams,
+        limit,
+        offset,
+      ),
+    ]);
+
+    const ids = idRows.map((row) => row.id);
+    const tenantFilter = getTenantFilter(session, "read");
+    const rows = ids.length
+      ? await prisma.policyRecord.findMany({
+          where: { ...tenantFilter, id: { in: ids } },
+          select: POLICY_RECORD_SELECT,
+        })
+      : [];
+    const rowMap = new Map(rows.map((record) => [record.id, record]));
+    const totalCount = countRows[0]?.count || 0;
+    return {
+      records: ids.map((id) => rowMap.get(id)).filter(Boolean),
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit) || 1,
+    };
+  } catch (error) {
+    console.error("Customer policy page server load failed:", getServerLoadErrorMessage(error));
+    return { records: [], totalCount: 0, page, limit, totalPages: 1, serverLoadError: true };
+  }
+}
+
+export async function loadScopedCustomerPolicies(customerName) {
+  try {
+    const session = await getCurrentSessionFromCookies();
+    if (!session) return [];
+    const isSuperAdmin = session.role === "SUPER_ADMIN";
+    const orgId = session.organizationId ?? null;
+    const idRows = await prisma.$queryRawUnsafe(
+      `SELECT id
+       FROM pdf_records
+       WHERE deleted_at IS NULL
+         AND is_active_policy = true
+         AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
+         ${MANUAL_RENEWAL_SQL_EXCLUSION}
+         AND COALESCE(
+           NULLIF(BTRIM(reviewed_data->>'insuredName'), ''),
+           NULLIF(BTRIM(data->>'insuredName'), ''),
+           NULLIF(BTRIM(reviewed_data->>'customerName'), ''),
+           NULLIF(BTRIM(data->>'customerName'), ''),
+           NULLIF(BTRIM(reviewed_data->>'Insured Name'), ''),
+           NULLIF(BTRIM(data->>'Insured Name'), ''),
+           'Unnamed insured'
+         ) = $3
+       ORDER BY saved_at DESC`,
+      isSuperAdmin,
+      orgId,
+      customerName,
+    );
+    const ids = idRows.map((row) => row.id);
+    if (!ids.length) return [];
+    const rows = await prisma.policyRecord.findMany({
+      where: { ...getTenantFilter(session, "read"), id: { in: ids } },
+      select: POLICY_RECORD_SELECT,
+    });
+    const rowMap = new Map(rows.map((record) => [record.id, record]));
+    return ids.map((id) => rowMap.get(id)).filter(Boolean);
+  } catch (error) {
+    console.error("Customer policies server load failed:", getServerLoadErrorMessage(error));
+    return [];
+  }
+}
+
 export async function loadScopedUploads(options = {}) {
   try {
     return await loadScopedUploadsUnsafe(options);
@@ -452,8 +616,8 @@ export async function loadScopedUploads(options = {}) {
       ? {
           uploads: [],
           totalCount: 0,
-          page: parseInt(options.page || "1", 10),
-          limit: parseInt(options.limit || "20", 10),
+          page: Math.max(1, parseInt(options.page || "1", 10) || 1),
+          limit: Math.min(100, Math.max(1, parseInt(options.limit || "20", 10) || 20)),
           totalPages: 1,
           serverLoadError: true,
         }
@@ -476,8 +640,8 @@ async function loadScopedUploadsUnsafe(options = {}) {
   }
 
   if (options.page || options.limit) {
-    const page = parseInt(options.page || "1", 10);
-    const limit = parseInt(options.limit || "20", 10);
+    const page = Math.max(1, parseInt(options.page || "1", 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(options.limit || "20", 10) || 20));
     const skip = (page - 1) * limit;
 
     const [uploads, totalCount] = await Promise.all([

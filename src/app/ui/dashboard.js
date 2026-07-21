@@ -90,6 +90,7 @@ export default function Dashboard({
   initialEndDate = "",
   initialDatePreset = "all",
   tabCounts = null,
+  serverPaginatedCustomers = false,
   serverLoadError = "",
 }) {
   const [activePage, setActivePage] = useState(routeActivePage || "bulk-entry");
@@ -536,17 +537,24 @@ export default function Dashboard({
     (recordDatePreset === "custom" && recordEndDate ? 1 : 0);
   const clientProfiles = buildClientProfiles(filteredRecords, parseMoney);
   const CUSTOMERS_PER_PAGE = 12;
-  const customerPageCount = Math.max(1, Math.ceil(clientProfiles.length / CUSTOMERS_PER_PAGE));
-  const customerStartIndex = (customerPage - 1) * CUSTOMERS_PER_PAGE;
+  const displayedCustomerPage = serverPaginatedCustomers ? currentPage : customerPage;
+  const customerTotalCount = serverPaginatedCustomers ? totalCount : clientProfiles.length;
+  const customerPageCount = serverPaginatedCustomers
+    ? totalPages
+    : Math.max(1, Math.ceil(clientProfiles.length / CUSTOMERS_PER_PAGE));
+  const customerStartIndex = (displayedCustomerPage - 1) * CUSTOMERS_PER_PAGE;
   const paginatedClients = useMemo(() => {
+    if (serverPaginatedCustomers) return clientProfiles;
     return clientProfiles.slice(customerStartIndex, customerStartIndex + CUSTOMERS_PER_PAGE);
-  }, [clientProfiles, customerStartIndex]);
+  }, [clientProfiles, customerStartIndex, serverPaginatedCustomers]);
   const customerPageNumbers = useMemo(
-    () => getPageNumbers(customerPage, customerPageCount),
-    [customerPage, customerPageCount],
+    () => getPageNumbers(displayedCustomerPage, customerPageCount),
+    [displayedCustomerPage, customerPageCount],
   );
   const goToPage = (page) => {
-    setCustomerPage(Math.min(Math.max(1, page), customerPageCount));
+    const nextPage = Math.min(Math.max(1, page), customerPageCount);
+    if (serverPaginatedCustomers) handleRecordPageChange(nextPage);
+    else setCustomerPage(nextPage);
   };
 
   const selectedClient = selectedClientName
@@ -1748,7 +1756,30 @@ export default function Dashboard({
               placeholder="Search policy, insured, district..."
               onChange={(event) => setQuery(event.target.value)}
             />
-            <RecordsTable records={filteredRecords} />
+            <RecordsTable records={filteredRecords} paginate={false} />
+            {totalPages > 1 ? (
+              <div className="table-pagination" aria-label="Extracted policy pagination">
+                <span>
+                  Page {currentPage} of {totalPages} ({totalCount} records)
+                </span>
+                <div className="table-page-list">
+                  <button
+                    type="button"
+                    onClick={() => handleRecordPageChange(currentPage - 1)}
+                    disabled={currentPage <= 1 || isNavigating}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRecordPageChange(currentPage + 1)}
+                    disabled={currentPage >= totalPages || isNavigating}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </section>
         </>
       )}
@@ -2509,8 +2540,8 @@ export default function Dashboard({
               <div className="customer-controls-row">
                 <span className="customer-count-label">
                   Showing {clientProfiles.length ? customerStartIndex + 1 : 0}-
-                  {Math.min(customerStartIndex + CUSTOMERS_PER_PAGE, clientProfiles.length)} of{" "}
-                  {clientProfiles.length} customers
+                  {Math.min(customerStartIndex + clientProfiles.length, customerTotalCount)} of{" "}
+                  {customerTotalCount} customers
                 </span>
                 <div className="view-type-toggles">
                   <button
@@ -2639,18 +2670,18 @@ export default function Dashboard({
                 <EmptyState>No saved customers yet.</EmptyState>
               )}
 
-              {clientProfiles.length > CUSTOMERS_PER_PAGE ? (
+              {customerTotalCount > CUSTOMERS_PER_PAGE ? (
                 <div className="table-pagination customer-pagination" aria-label="Customer pagination">
                   <span>
                     Showing {customerStartIndex + 1}-
-                    {Math.min(customerStartIndex + CUSTOMERS_PER_PAGE, clientProfiles.length)} of{" "}
-                    {clientProfiles.length}
+                    {Math.min(customerStartIndex + clientProfiles.length, customerTotalCount)} of{" "}
+                    {customerTotalCount}
                   </span>
                   <div className="table-page-list">
                     <button
                       type="button"
-                      onClick={() => goToPage(customerPage - 1)}
-                      disabled={customerPage === 1}
+                      onClick={() => goToPage(displayedCustomerPage - 1)}
+                      disabled={displayedCustomerPage === 1}
                     >
                       Prev
                     </button>
@@ -2674,8 +2705,8 @@ export default function Dashboard({
                         </span>
                       ) : (
                         <button
-                          aria-current={customerPage === page ? "page" : undefined}
-                          className={customerPage === page ? "active" : ""}
+                          aria-current={displayedCustomerPage === page ? "page" : undefined}
+                          className={displayedCustomerPage === page ? "active" : ""}
                           key={page}
                           type="button"
                           onClick={() => goToPage(page)}
@@ -2686,8 +2717,8 @@ export default function Dashboard({
                     )}
                     <button
                       type="button"
-                      onClick={() => goToPage(customerPage + 1)}
-                      disabled={customerPage === customerPageCount}
+                      onClick={() => goToPage(displayedCustomerPage + 1)}
+                      disabled={displayedCustomerPage === customerPageCount}
                     >
                       Next
                     </button>

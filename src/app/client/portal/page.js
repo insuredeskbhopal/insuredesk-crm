@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
   LogOut,
   Shield,
@@ -27,11 +28,18 @@ import {
   ShieldCheck,
   RefreshCw,
 } from "lucide-react";
-import ClientExperienceCenter, {
-  ClaimDocumentManager,
-  ClientProfileManager,
-  PolicyDetailModal,
-} from "./ClientExperienceCenter";
+const ClientExperienceCenter = dynamic(() =>
+  import("./ClientExperienceCenter").then((module) => module.default),
+);
+const ClaimDocumentManager = dynamic(() =>
+  import("./ClientExperienceCenter").then((module) => module.ClaimDocumentManager),
+);
+const ClientProfileManager = dynamic(() =>
+  import("./ClientExperienceCenter").then((module) => module.ClientProfileManager),
+);
+const PolicyDetailModal = dynamic(() =>
+  import("./ClientExperienceCenter").then((module) => module.PolicyDetailModal),
+);
 
 function ClientPolicyCard({ policy, onStartClaim, onViewDetails, onServiceRequest, formatDate }) {
   const payload = policy.reviewedData || policy.data || {};
@@ -220,10 +228,11 @@ export default function ClientPortal() {
   ];
 
   useEffect(() => {
+    const controller = new window.AbortController();
     const fetchPortalData = async () => {
       try {
         // 1. Fetch Profile
-        const profileRes = await fetch("/api/client/profile");
+        const profileRes = await fetch("/api/client/profile", { signal: controller.signal });
         if (!profileRes.ok) {
           await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
           window.location.replace("/login");
@@ -232,27 +241,30 @@ export default function ClientPortal() {
         const profileData = await profileRes.json();
         setProfile(profileData.profile);
 
-        // 2. Fetch Policies
-        const policiesRes = await fetch("/api/client/policies");
+        // Policies and claims are independent after authentication, so avoid a network waterfall.
+        const [policiesRes, claimsRes] = await Promise.all([
+          fetch("/api/client/policies", { signal: controller.signal }),
+          fetch("/api/client/claims", { signal: controller.signal }),
+        ]);
         if (policiesRes.ok) {
           const policiesData = await policiesRes.json();
           setPolicies(policiesData.policies || []);
         }
 
-        // 3. Fetch Claims
-        const claimsRes = await fetch("/api/client/claims");
         if (claimsRes.ok) {
           const claimsData = await claimsRes.json();
           setClaims(claimsData.claims || []);
         }
       } catch (err) {
+        if (err?.name === "AbortError") return;
         console.error("Failed to load portal data:", err);
         window.location.href = "/login";
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
     fetchPortalData();
+    return () => controller.abort();
   }, []);
 
   // Carousel Auto Cycle
@@ -1740,18 +1752,20 @@ export default function ClientPortal() {
           })}
         </div>
       </div>
-      <PolicyDetailModal
-        policy={selectedPolicy}
-        onClose={() => setSelectedPolicy(null)}
-        onStartClaim={(policy) => {
-          setSelectedPolicy(null);
-          openClaimForPolicy(policy);
-        }}
-        onServiceRequest={(type, policy) => {
-          setSelectedPolicy(null);
-          openServiceRequest(type, policy);
-        }}
-      />
+      {selectedPolicy ? (
+        <PolicyDetailModal
+          policy={selectedPolicy}
+          onClose={() => setSelectedPolicy(null)}
+          onStartClaim={(policy) => {
+            setSelectedPolicy(null);
+            openClaimForPolicy(policy);
+          }}
+          onServiceRequest={(type, policy) => {
+            setSelectedPolicy(null);
+            openServiceRequest(type, policy);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

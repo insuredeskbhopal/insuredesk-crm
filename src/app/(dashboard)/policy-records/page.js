@@ -24,8 +24,8 @@ async function getCachedTabCounts({ key, fetcher }) {
 
 export default async function PolicyRecordsPage(props) {
   const searchParams = await props.searchParams;
-  const page = parseInt(searchParams.page || "1", 10);
-  const limit = parseInt(searchParams.limit || "20", 10);
+  const page = Math.max(1, parseInt(searchParams.page || "1", 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.limit || "20", 10) || 20));
   const q = searchParams.q || "";
   const filterField = searchParams.filterField || "";
   const filterValue = searchParams.filterValue || "";

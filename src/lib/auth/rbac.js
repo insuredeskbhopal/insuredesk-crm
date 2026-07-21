@@ -97,7 +97,7 @@ export function getOrgFilter(user, action = "read") {
   }
 
   const baseFilter = {
-    organizationId: user.organizationId,
+    organizationId: user.organizationId ?? null,
     deletedAt: null,
   };
 

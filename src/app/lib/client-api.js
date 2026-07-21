@@ -1,6 +1,6 @@
 const globalCache = globalThis;
-const MAX_CACHE_ENTRIES = 100;
-const MAX_CACHE_AGE_MS = 5 * 60 * 1000;
+const MAX_CACHE_ENTRIES = 25;
+const MAX_CACHE_AGE_MS = 2 * 60 * 1000;
 
 function getCache() {
   if (!globalCache.__bimaClientApiCache) {
@@ -47,4 +47,8 @@ export async function cachedJson(url, options = {}) {
 
   cache.set(cacheKey, { promise, timestamp: now });
   return promise;
+}
+
+export function clearClientApiCache() {
+  getCache().clear();
 }

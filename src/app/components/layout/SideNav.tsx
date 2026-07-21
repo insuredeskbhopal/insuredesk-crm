@@ -3,7 +3,7 @@
 import { ChevronDown, CircleHelp, LayoutDashboard, LogOut } from "lucide-react";
 import BrandLogo from "@/app/components/brand/BrandLogo";
 import ModalPortal from "@/app/components/shared/ModalPortal";
-import { cachedJson } from "@/app/lib/client-api";
+import { cachedJson, clearClientApiCache } from "@/app/lib/client-api";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -43,7 +43,10 @@ export default function SideNav({
 
     const loadUser = async () => {
       try {
-        const payload = await cachedJson("/api/auth/me", { ttlMs: 10000 });
+        const payload = await cachedJson("/api/auth/me", {
+          ttlMs: 10000,
+          fetchOptions: { cache: "no-store" },
+        });
         if (isMounted && payload?.success) {
           setUserRole(payload.user?.role || "");
         }
@@ -208,6 +211,7 @@ export default function SideNav({
                   if (onCloseSidebar) onCloseSidebar();
                   try {
                     await fetch("/api/auth/logout", { method: "POST" });
+                    clearClientApiCache();
                     window.location.href = "/";
                   } catch (err) {
                     console.error("Failed to log out:", err);

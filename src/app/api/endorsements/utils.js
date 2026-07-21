@@ -174,14 +174,18 @@ export function serializeEndorsement(record) {
 }
 
 export function getSummary(records) {
-  return {
-    total: records.length,
-    draft: records.filter((item) => item.status === "Draft").length,
-    generated: records.filter((item) => item.status === "Letter Generated").length,
-    approved: records.filter((item) => item.status === "Approved").length,
-    rejectedCancelled: records.filter((item) => item.status === "Rejected" || item.status === "Cancelled")
-      .length,
-  };
+  return records.reduce(
+    (summary, item) => {
+      const count = Number(item._count?.id ?? 1);
+      summary.total += count;
+      if (item.status === "Draft") summary.draft += count;
+      if (item.status === "Letter Generated") summary.generated += count;
+      if (item.status === "Approved") summary.approved += count;
+      if (item.status === "Rejected" || item.status === "Cancelled") summary.rejectedCancelled += count;
+      return summary;
+    },
+    { total: 0, draft: 0, generated: 0, approved: 0, rejectedCancelled: 0 },
+  );
 }
 
 export function normalizePolicyData(data = {}) {

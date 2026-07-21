@@ -151,7 +151,7 @@ export async function triggerDailyBirthdays({ organizationId = null } = {}) {
 
 // Triggers upcoming renewals scan. These automated renewal alerts are internal only;
 // agents can still manually send WhatsApp reminders to clients from the UI.
-export async function triggerUpcomingRenewals({ organizationId = null } = {}) {
+export async function triggerUpcomingRenewals({ organizationId } = {}) {
   console.log('Running internal upcoming renewals scan...');
 
   const now = new Date();
