@@ -47,7 +47,94 @@ Sum Insured opted:2000000
 Branch :HDFC ERGO General Insurance Co. Ltd., Stellar IT Park, Noida
 `;
 
+const jagatHealthText = `
+HDFC ERGO General Insurance Company Limited
+Policy Schedule
+my: Optima Secure
+UIN: HDFHLIP26058V082526
+This is to certify that we have received an amount of \` 36021 towards premium.
+Insured Person’s Premium Details
+Name of Insured PersonRelation with policy holderGenderDate of Birth Premium
+Jagat SinghSelfMale01/09/196325772.97
+Mrs Dropti ThakurSpouseFemale17/09/196710248.15
+Note:
+Policy Number : 2856 2047 7933 9604 000 Issuance Date : 13/07/2026
+Period of Insurance : From 14/07/2026 00:01 hrs To 13/07/2027 Midnight
+Invoice No. : 204779339604000 Premium Frequency : Single
+Policyholder Name : Mr Jagat Singh Policy Type : FAMILY Floater
+Previous Policy : 2856204779339603000
+Renewal : Yes
+Email ID : n.xxxxxxxx58@gxxxx.com
+MR JAGAT SINGH
+H.NO-24/3, A SECTOR, SAINATH NAGAR KOLAR ROAD
+DAMKHEDA, BHOPAL, MADHYA PRADESH-462042
+Contact No : 94XXXXXXX2
+Intermediary NameIntermediary CodeIntermediary Contact Number
+INSUREDESK IMF PRIVATE LIMITED20042720796791-8827731100
+Insured Person’s Details and Sum Insured - Optima Secure
+Jagat SinghSelfMale01/09/1963Mrs Dropti
+Thakur
+Wife13/07/202050000025000500000
+Yes
+No
+Mrs Dropti ThakurSpouseFemale17/09/1967  13/07/2020
+No
+The nominee must be an immediate relative of the policyholder.
+Sum Insured opted:500000
+Branch :unit nos.16,18,19 and 30, maple high street, bhopal
+`;
+
 describe("HDFC ERGO Optima Secure Health training", () => {
+  it("extracts Jagat Singh's decimal-premium member rows and country-prefixed intermediary", () => {
+    const result = extractPolicyFromText(jagatHealthText, "hdfc-jagat-optima-secure-health.pdf");
+
+    expect(result).toMatchObject({
+      insuranceCompany: "HDFC ERGO General Insurance Company Limited",
+      documentCategory: "Health Insurance",
+      documentFormat: "HDFC_ERGO_HEALTH_OPTIMA_SECURE_V1",
+      policyNumber: "2856204779339604000",
+      policyType: "FAMILY Floater",
+      newOrRenewal: "Renewal",
+      startDate: "14/07/2026",
+      expiryDate: "13/07/2027",
+      sumInsured: "5,00,000.00",
+      totalPremium: "36,021.00",
+      previousPolicyNumber: "2856204779339603000",
+      nomineeName: "Dropti Thakur",
+      nomineeRelationship: "Wife",
+      agentName: "INSUREDESK IMF PRIVATE LIMITED",
+      agentCode: "200427207967",
+      agentMobile: "8827731100",
+      numberOfInsuredMembers: 2,
+      engineNumber: "",
+      chassisNumber: "",
+    });
+    expect(result.insuredMembers).toEqual([
+      {
+        name: "Jagat Singh",
+        relationship: "Self",
+        gender: "Male",
+        dateOfBirth: "01/09/1963",
+        age: "62",
+        abhaId: "",
+        preExistingDiseases: "",
+        firstPolicyInceptionDate: "13/07/2020",
+        specificConditions: "",
+      },
+      {
+        name: "Dropti Thakur",
+        relationship: "Spouse",
+        gender: "Female",
+        dateOfBirth: "17/09/1967",
+        age: "58",
+        abhaId: "",
+        preExistingDiseases: "",
+        firstPolicyInceptionDate: "13/07/2020",
+        specificConditions: "",
+      },
+    ]);
+  });
+
   it("routes the exact HDFC Optima Secure document to an isolated Health format", () => {
     const result = extractPolicyFromText(healthText, "hdfc-optima-secure-health.pdf");
 

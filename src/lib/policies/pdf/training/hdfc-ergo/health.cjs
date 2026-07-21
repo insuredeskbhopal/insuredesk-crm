@@ -40,7 +40,7 @@ function calculateAge(dateOfBirth = "", effectiveDate = "") {
 function extractMemberRows(text = "") {
   const premiumSection = sliceText(text, /Insured\s+Person[’']s\s+Premium\s+Details/i, /\bNote\s*:/i);
   const pattern = new RegExp(
-    `^([A-Za-z][A-Za-z .'-]+?)(${RELATIONSHIPS})(Male|Female|Other)(${DATE})\\d+$`,
+    `^([A-Za-z][A-Za-z .'-]+?)(${RELATIONSHIPS})(Male|Female|Other)(${DATE})\\d+(?:\\.\\d+)?$`,
     "gim",
   );
   return [...premiumSection.matchAll(pattern)].map((match) => ({
@@ -102,8 +102,14 @@ function extractNominee(text = "", members = []) {
   const row = schedule.slice(schedule.indexOf(marker) + marker.length);
   const match = row.match(/^(.+?)(Wife|Husband|Spouse|Son|Daughter|Father|Mother)(?=\d{1,2}\/\d{1,2}\/\d{4})/i);
   const compactName = match?.[1] || "";
+  const personKey = (value = "") =>
+    String(value)
+      .replace(/[^a-z]/gi, "")
+      .toLowerCase();
+  const nomineeKey = personKey(compactName);
+  const nomineeKeyWithoutTitle = nomineeKey.replace(/^(?:mrs|miss|mr|ms|dr)/, "");
   const linkedMember = members.find(
-    (member) => member.name.replace(/\s+/g, "").toLowerCase() === compactName.toLowerCase(),
+    (member) => [nomineeKey, nomineeKeyWithoutTitle].includes(personKey(member.name)),
   );
   return {
     name: linkedMember?.name || compactName,
@@ -117,7 +123,9 @@ function extractIntermediary(text = "") {
     /Intermediary\s+NameIntermediary\s+CodeIntermediary\s+Contact\s+Number\s*\n([^\n]+)/i,
   );
   const mobile = matchGroup(row, /([6-9]\d{9})$/);
-  const withoutMobile = mobile ? row.slice(0, -mobile.length) : row;
+  const withoutMobile = mobile
+    ? row.slice(0, -mobile.length).replace(/(?:\+?91[-\s]?)$/, "")
+    : row;
   const code = matchGroup(withoutMobile, /(\d{8,})$/);
   const name = cleanHdfcValue(code ? withoutMobile.slice(0, -code.length) : withoutMobile);
   return { name, code, mobile };

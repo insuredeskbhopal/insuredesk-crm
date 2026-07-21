@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/db/prisma";
+import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import { deleteFile } from "@/lib/storage";
 import { UPLOAD_STATUS } from "@/lib/uploads/status";
 
 export function getUploadFailureMessage(error) {
-  return error instanceof Error ? error.message : "Unknown extraction error.";
+  return getUserFacingErrorMessage(
+    error,
+    "Upload service is temporarily unavailable. Please retry shortly.",
+  );
 }
 
 export async function persistFailedUploadedFile({
