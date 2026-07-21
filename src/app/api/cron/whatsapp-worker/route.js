@@ -48,6 +48,7 @@ async function handleWorker(request) {
       scansResult = {
         birthdaysQueued: birthdays.queuedCount,
         renewalsQueued: renewals.queuedCount,
+        renewalsAutoLost: renewals.autoLostCount,
         internalDigestQueued: internalDigest.queuedCount,
       };
     }

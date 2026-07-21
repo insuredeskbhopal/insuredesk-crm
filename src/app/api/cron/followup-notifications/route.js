@@ -46,6 +46,7 @@ export async function GET(request) {
       whatsappScans = {
         birthdaysQueued: birthdays.queuedCount,
         renewalsQueued: renewals.queuedCount,
+        renewalsAutoLost: renewals.autoLostCount,
         internalDigestQueued: internalDigest.queuedCount,
       };
     } catch (err) {

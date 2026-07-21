@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
 import { enqueueMessage } from "./queue-manager";
+import { moveOverdueRenewalsToLost } from "@/lib/renewals/auto-lost";
 
 const INTERNAL_AUTOMATION_PHONE = process.env.INTERNAL_WHATSAPP_ALERT_PHONE || "8818889660";
 const OPEN_TASK_STATUSES = [
@@ -161,6 +162,7 @@ export async function triggerUpcomingRenewals({ organizationId = null } = {}) {
   const currentYear = ist.getFullYear();
 
   const todayStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDate).padStart(2, '0')}`;
+  const autoLostCount = await moveOverdueRenewalsToLost({ organizationId, referenceDate: now });
 
   // Find all active policy records
   const policies = await prisma.policyRecord.findMany({
@@ -231,7 +233,7 @@ export async function triggerUpcomingRenewals({ organizationId = null } = {}) {
   }
 
   console.log(`Internal renewal notice scan complete. Queued ${queuedCount} messages.`);
-  return { queuedCount };
+  return { queuedCount, autoLostCount };
 }
 
 export async function triggerInternalOperationsDigest({ organizationId = null } = {}) {

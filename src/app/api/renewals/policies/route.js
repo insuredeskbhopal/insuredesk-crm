@@ -3,6 +3,7 @@ import { verifyJWT } from "@/lib/auth";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
 import { normalizeRenewalRegisterMonth } from "@/lib/renewals/register";
+import { moveOverdueRenewalsToLost } from "@/lib/renewals/auto-lost";
 import {
   getRenewalCompanyFilterTerms,
   normalizeRenewalInsuranceCompany,
@@ -52,6 +53,8 @@ export async function GET(request) {
     const isSuperAdmin = user.role === "SUPER_ADMIN";
     const orgId = user.organizationId || null;
     const actorId = user.userId || user.id || null;
+
+    await moveOverdueRenewalsToLost({ organizationId: isSuperAdmin ? null : orgId, referenceDate: today });
 
     const queryParams = [
       isSuperAdmin,
@@ -184,6 +187,7 @@ export async function GET(request) {
           ($4 = 'register' AND (extraction_method = 'renewal_excel_import' OR manual_renewal_source = true))
           OR (expiry_date IS NOT NULL AND (expiry_date - $3::date) >= -30 AND (expiry_date - $3::date) <= 30)
           OR (is_active_policy = true AND expiry_date IS NOT NULL AND (expiry_date - $3::date) < -30 AND LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval'))
+          OR ($4 IN ('renewed', 'lost', 'not_interested', 'wrong_number', 'renewed_elsewhere') AND renewal_status IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE'))
           OR (expiry_state IN ('missing', 'invalid'))
       ),
       filtered_policies AS (
