@@ -114,6 +114,41 @@ describe("sanitizeRecordPayload", () => {
     expect(validation.valid).toBe(true);
   });
 
+  it("never requires Motor identifiers when an authoritative Health category is present", () => {
+    const record = sanitizeRecordPayload({
+      documentCategory: "Health Insurance",
+      documentFormat: "ICICI_LOMBARD_HEALTH_ELEVATE_V1",
+      insuredName: "Apurv Gour",
+      policyNumber: "100012108201",
+      insuranceCompany: "ICICI Lombard General Insurance Company Limited",
+      policyType: "FLOATER",
+      premium: "24614.00",
+      startDate: "30/07/2026",
+      expiryDate: "29/07/2027",
+      contactPerson: "Apurv Gour",
+      contactNumber: "9876543210",
+      clientId: "11111111-1111-4111-8111-111111111111",
+      vehicleNumber: "FALSEPOSITIVE",
+      makeModel: "False motor extraction noise",
+      engineNumber: "",
+      chassisNumber: "",
+    });
+    const validation = getReviewValidation({
+      sourceFile: "Apurv Gour- health policy- 26-27.pdf",
+      extractedData: record,
+      manualFields: Object.keys(record),
+    });
+
+    expect(validation.resolvedSchema?.groupId).toBe("health");
+    expect(validation.requiredKeys).not.toEqual(
+      expect.arrayContaining(["engineNumber", "chassisNumber"]),
+    );
+    expect(validation.missingRequired).not.toEqual(
+      expect.arrayContaining(["Engine Number", "Chassis Number"]),
+    );
+    expect(validation.valid).toBe(true);
+  });
+
   it("allows saving a complete review when only Client ID is pending through a request", () => {
     const validation = {
       valid: false,

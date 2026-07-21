@@ -1,8 +1,10 @@
 const tataAigWarehouse = require("./tata-aig/warehouse.cjs");
 const iciciLombardHealth = require("./icici-lombard/health.cjs");
+const hdfcErgoHealth = require("./hdfc-ergo/health.cjs");
 
-const trainers = [tataAigWarehouse, iciciLombardHealth];
+const trainers = [tataAigWarehouse, iciciLombardHealth, hdfcErgoHealth];
 const ICICI_LOMBARD_HEALTH_FORMAT = "ICICI_LOMBARD_HEALTH_ELEVATE_V1";
+const HDFC_ERGO_HEALTH_FORMAT = "HDFC_ERGO_HEALTH_OPTIMA_SECURE_V1";
 const protectedScopeFields = [
   "sourceFile",
   "insuranceCompany",
@@ -65,24 +67,47 @@ function isIciciLombardElevateHealth(result = {}, context = {}) {
   );
 }
 
+function isHdfcErgoOptimaSecureHealth(result = {}, context = {}) {
+  const insurer = normalizeInsurer(result.insuranceCompany || result.companyName);
+  const text = String(context.text || result.sourceText || "");
+  return (
+    insurer === "hdfc-ergo" &&
+    /\bmy\s*:\s*Optima\s+Secure\b/i.test(text) &&
+    /\bHDFHLIP\d{5}[A-Z]\d{6}\b/i.test(text) &&
+    /Insured\s+Person[’']s\s+Details\s+and\s+Sum\s+Insured\s*[-–]\s*Optima\s+Secure/i.test(text) &&
+    /Policy\s+Type\s*:\s*Family\s+Floater/i.test(text)
+  );
+}
+
 function deriveTrainingScope(result = {}, context = {}) {
   const insurer = normalizeInsurer(result.insuranceCompany || result.companyName);
   return {
     insurer,
-    category: isIciciLombardElevateHealth(result, context)
+    category:
+      isIciciLombardElevateHealth(result, context) || isHdfcErgoOptimaSecureHealth(result, context)
       ? "health"
       : normalizeCategory(result.documentCategory),
   };
 }
 
 function establishTrainingIdentity(result = {}, context = {}) {
-  if (!isIciciLombardElevateHealth(result, context)) return result;
-  return {
-    ...result,
-    documentCategory: "Health Insurance",
-    documentFormat: ICICI_LOMBARD_HEALTH_FORMAT,
-    sourceDocumentType: ICICI_LOMBARD_HEALTH_FORMAT,
-  };
+  if (isIciciLombardElevateHealth(result, context)) {
+    return {
+      ...result,
+      documentCategory: "Health Insurance",
+      documentFormat: ICICI_LOMBARD_HEALTH_FORMAT,
+      sourceDocumentType: ICICI_LOMBARD_HEALTH_FORMAT,
+    };
+  }
+  if (isHdfcErgoOptimaSecureHealth(result, context)) {
+    return {
+      ...result,
+      documentCategory: "Health Insurance",
+      documentFormat: HDFC_ERGO_HEALTH_FORMAT,
+      sourceDocumentType: HDFC_ERGO_HEALTH_FORMAT,
+    };
+  }
+  return result;
 }
 
 function selectScopedTraining(result = {}, context = {}) {

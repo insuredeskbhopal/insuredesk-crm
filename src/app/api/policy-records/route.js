@@ -645,6 +645,8 @@ function toLegacyPayload(data) {
     whatsappGroupName: data.whatsappGroupName,
     groupName: data.groupName,
     sourceDocumentType: data.sourceDocumentType,
+    documentCategory: data.documentCategory,
+    documentFormat: data.documentFormat,
     productName: data.productName,
     mailingAddress: data.mailingAddress,
     premisesAddress: data.premisesAddress || data.riskLocation,
