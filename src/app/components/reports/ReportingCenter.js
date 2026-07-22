@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   BarChart3,
   BriefcaseBusiness,
+  CalendarRange,
   ChevronRight,
   ClipboardList,
   Download,
@@ -23,6 +24,7 @@ import {
 const ICONS = {
   executive: TrendingUp,
   policies: FileText,
+  "monthly-policies": CalendarRange,
   customers: Users,
   renewals: RefreshCw,
   claims: ShieldCheck,
@@ -112,7 +114,7 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
           <ArrowLeft size={16} /> Back to Reports
         </Link>
       </div>
-      <ReportFilters filters={filters} users={users} />
+      <ReportFilters filters={filters} users={users} report={report} />
 
       <section className="bi-action-strip">
         <div>
@@ -235,7 +237,32 @@ function ReportHero({ title, subtitle, lastUpdated }) {
   );
 }
 
-function ReportFilters({ filters, users }) {
+function ReportFilters({ filters, users, report }) {
+  if (report.category === "monthly-policies") {
+    return (
+      <form className="bi-filter-bar bi-monthly-filter-bar">
+        <label>
+          <span>Report Month</span>
+          <input type="month" name="month" defaultValue={filters.month} required />
+        </label>
+        <label>
+          <span>Policy Type</span>
+          <select name="policyType" defaultValue={filters.policyType}>
+            <option value="">All Policy Types</option>
+            {(report.filterOptions?.policyTypes || []).map((policyType) => (
+              <option key={policyType} value={policyType}>
+                {policyType}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="submit" className="primary-action">
+          View Monthly Report
+        </button>
+      </form>
+    );
+  }
+
   return (
     <form className="bi-filter-bar">
       <label>
@@ -287,6 +314,10 @@ function ReportFilters({ filters, users }) {
 }
 
 function ChartCard({ chart }) {
+  if (chart.type === "line") {
+    return <LineChartCard chart={chart} />;
+  }
+
   const max = Math.max(1, ...chart.rows.map((row) => Number(row[1]) || 0));
   return (
     <section className="glass-panel bi-chart-card">
@@ -312,6 +343,57 @@ function ChartCard({ chart }) {
           <p className="bi-empty">No records found for this filter.</p>
         )}
       </div>
+    </section>
+  );
+}
+
+function LineChartCard({ chart }) {
+  const width = 720;
+  const height = 240;
+  const padding = 34;
+  const values = chart.rows.map((row) => Number(row[1]) || 0);
+  const max = Math.max(1, ...values);
+  const plotWidth = width - padding * 2;
+  const plotHeight = height - padding * 2;
+  const points = chart.rows.map((row, index) => {
+    const x = padding + (index / Math.max(1, chart.rows.length - 1)) * plotWidth;
+    const y = height - padding - ((Number(row[1]) || 0) / max) * plotHeight;
+    return { label: row[0], value: Number(row[1]) || 0, x, y };
+  });
+
+  return (
+    <section className="glass-panel bi-chart-card">
+      <div>
+        <p className="eyebrow">Line chart</p>
+        <h2>{chart.title}</h2>
+      </div>
+      {points.length ? (
+        <div className="bi-line-chart">
+          <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={chart.title}>
+            {[0, 0.5, 1].map((ratio) => {
+              const y = padding + ratio * plotHeight;
+              return <line key={ratio} x1={padding} x2={width - padding} y1={y} y2={y} />;
+            })}
+            <polyline points={points.map((point) => `${point.x},${point.y}`).join(" ")} />
+            {points.map((point, index) => (
+              <g key={`${point.label}-${index}`}>
+                <circle cx={point.x} cy={point.y} r="4">
+                  <title>{`${point.label}: ${point.value}`}</title>
+                </circle>
+                {(index === 0 || index === points.length - 1 || index % 5 === 0) && (
+                  <text x={point.x} y={height - 10} textAnchor="middle">
+                    {point.label}
+                  </text>
+                )}
+              </g>
+            ))}
+            <text x="4" y={padding + 4}>{max}</text>
+            <text x="16" y={height - padding + 4}>0</text>
+          </svg>
+        </div>
+      ) : (
+        <p className="bi-empty">No records found for this filter.</p>
+      )}
     </section>
   );
 }

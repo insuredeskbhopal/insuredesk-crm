@@ -74,6 +74,44 @@ describe("business intelligence category query plan", () => {
       uploads: "detail",
       audits: false,
     });
+    expect(getReportQueryPlan("monthly-policies")).toMatchObject({
+      policies: "detail",
+      claims: "none",
+      endorsements: "none",
+      profiles: "none",
+      uploads: "none",
+      audits: false,
+    });
+  });
+
+  it("loads the selected month with policy-type filtering and monthly report visuals", async () => {
+    prismaMock.policyRecord.findMany.mockImplementation(async (query) =>
+      query.distinct ? [{ selectedPolicyType: "Motor Policy" }] : [],
+    );
+
+    const data = await loadReportingCenterData({
+      category: "monthly-policies",
+      searchParams: { month: "2026-07", policyType: "Motor" },
+    });
+
+    expect(allCalls()).toBe(4);
+    expect(prismaMock.policyRecord.findMany.mock.calls[0][0].where).toEqual(
+      expect.objectContaining({
+        organizationId: "org-1",
+        deletedAt: null,
+        savedAt: expect.objectContaining({ gte: expect.any(Date), lte: expect.any(Date) }),
+        AND: expect.any(Array),
+      }),
+    );
+    expect(data.dateRange.start.getFullYear()).toBe(2026);
+    expect(data.dateRange.start.getMonth()).toBe(6);
+    expect(data.report.filterOptions.policyTypes).toContain("Motor Policy");
+    expect(data.report.actions).toEqual([]);
+    expect(data.report.charts.map((chart) => chart.type)).toEqual(["bar", "line"]);
+    expect(data.report.tables.map((table) => table.title)).toEqual([
+      "Insurance Company Summary",
+      "Monthly Policy Records",
+    ]);
   });
 
   it("loads a claims report without querying unrelated datasets", async () => {
@@ -187,5 +225,16 @@ describe("business intelligence category query plan", () => {
     expect(component).toContain("Category Action Center");
     expect(component).toContain("Actions for this report");
     expect(component).not.toContain("Management Action Center");
+  });
+
+  it("renders dedicated monthly selectors and a true line chart", () => {
+    const component = fs.readFileSync("src/app/components/reports/ReportingCenter.js", "utf8");
+    const reporting = fs.readFileSync("src/app/lib/reporting/business-intelligence.js", "utf8");
+
+    expect(reporting).toContain('title: "Monthly Policy Report"');
+    expect(component).toContain('type="month"');
+    expect(component).toContain("All Policy Types");
+    expect(component).toContain("function LineChartCard");
+    expect(component).toContain("<polyline");
   });
 });

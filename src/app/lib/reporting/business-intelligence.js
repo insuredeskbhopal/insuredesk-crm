@@ -22,6 +22,13 @@ export const REPORT_CATEGORIES = [
     href: "/dashboard/reports/policies",
   },
   {
+    id: "monthly-policies",
+    title: "Monthly Policy Report",
+    description: "Choose a month and policy type to review insurer-wise business, policy records, and trends.",
+    phase: "Phase 1",
+    href: "/dashboard/reports/monthly-policies",
+  },
+  {
     id: "customers",
     title: "Customer Intelligence",
     description: "Customer base, new customers, repeat customers, retention signals, and portfolio value.",
@@ -184,7 +191,7 @@ const UPLOAD_SELECT = {
 const UPLOAD_SUMMARY_SELECT = { status: true };
 
 const DETAIL_CATEGORIES = {
-  policies: new Set(["executive", "policies", "customers", "renewals", "team"]),
+  policies: new Set(["executive", "policies", "monthly-policies", "customers", "renewals", "team"]),
   claims: new Set(["executive", "claims", "team"]),
   endorsements: new Set(["endorsements", "team"]),
   profiles: new Set(["lead-generation", "team"]),
@@ -224,7 +231,10 @@ export async function loadReportingCenterData({ category = "executive", searchPa
   }
 
   const filters = normalizeFilters(searchParams);
-  const dateRange = getDateRange(filters.range, filters.from, filters.to);
+  const dateRange =
+    category === "monthly-policies"
+      ? getMonthRange(filters.month)
+      : getDateRange(filters.range, filters.from, filters.to);
   const sharedWhere = getTenantFilter(session, "read");
   const auditBaseWhere =
     session.role === "SUPER_ADMIN" ? {} : { organizationId: session.organizationId ?? null };
@@ -264,6 +274,7 @@ export async function loadReportingCenterData({ category = "executive", searchPa
     uploadTotal,
     users,
     audits,
+    policyTypeRows,
   ] = await Promise.all([
     queryPlan.policies === "none"
       ? Promise.resolve([])
@@ -339,6 +350,17 @@ export async function loadReportingCenterData({ category = "executive", searchPa
           take: 1000,
         })
       : Promise.resolve([]),
+    category === "monthly-policies"
+      ? prisma.policyRecord.findMany({
+          where: {
+            ...withoutManualRenewalSources({ ...sharedWhere }),
+            selectedPolicyType: { not: null },
+          },
+          select: { selectedPolicyType: true },
+          distinct: ["selectedPolicyType"],
+          orderBy: { selectedPolicyType: "asc" },
+        })
+      : Promise.resolve([]),
   ]);
 
   const policies = policiesRaw.map(normalizeRecord);
@@ -359,6 +381,7 @@ export async function loadReportingCenterData({ category = "executive", searchPa
     uploadTotal,
     users,
     audits,
+    policyTypeOptions: policyTypeRows.map((row) => row.selectedPolicyType).filter(Boolean),
   };
 
   const summary = buildSummary(context);
@@ -617,6 +640,55 @@ function buildReport(category, context, summary) {
         topGroups(policies, (r) => r.policyType || "Unknown", "sumInsured"),
       ),
       table("Branch Summary", ["Branch", "Policies", "Premium"], [["No branch table configured", "-", "-"]]),
+    ];
+    return base;
+  }
+
+  if (category === "monthly-policies") {
+    const insurerRows = buildInsurerSummary(policies);
+    const policyTypeOptions = Array.from(
+      new Set([
+        ...context.policyTypeOptions,
+        ...policies.map((item) => item.policyType).filter(Boolean),
+      ]),
+    ).sort((a, b) => a.localeCompare(b));
+    base.filterOptions = { policyTypes: policyTypeOptions };
+    base.kpis = [
+      kpi("Policies Saved", summary.totalPolicies, context.dateRange.label),
+      kpi("Insurance Companies", insurerRows.length),
+      kpi("Total Premium", formatCurrency(summary.totalPremium)),
+      kpi("Total Sum Insured", formatCurrency(summary.totalSumInsured)),
+    ];
+    base.charts = [
+      chart(
+        "Policies by Insurance Company",
+        insurerRows.map((row) => [row.company, row.policies]),
+      ),
+      lineChart("Daily Policy Trend", dailyTrend(policies, "savedAt", context.dateRange)),
+    ];
+    base.tables = [
+      table(
+        "Insurance Company Summary",
+        ["Insurance Company", "Policies", "Premium", "Sum Insured"],
+        insurerRows.map((row) => [
+          row.company,
+          row.policies,
+          formatCurrency(row.premium),
+          formatCurrency(row.sumInsured),
+        ]),
+      ),
+      table(
+        "Monthly Policy Records",
+        ["Saved Date", "Policy No.", "Insured Name", "Policy Type", "Insurance Company", "Premium"],
+        policies.map((record) => [
+          formatDate(record.savedAt || record.createdAt),
+          record.policyNumber || "-",
+          record.insuredName || "-",
+          record.policyType || "-",
+          record.insuranceCompany || "-",
+          formatCurrency(parseMoney(record.netPremium || record.totalPremium || record.premium)),
+        ]),
+      ),
     ];
     return base;
   }
@@ -935,6 +1007,7 @@ function buildReport(category, context, summary) {
 }
 
 const CATEGORY_ACTIONS = {
+  "monthly-policies": new Set(),
   policies: new Set([
     "Renewals Due Today",
     "Renewals Due This Week",
@@ -1012,6 +1085,7 @@ function buildUserScores(context) {
 }
 
 function normalizeFilters(searchParams = {}) {
+  const today = new Date();
   return {
     range: String(searchParams.range || "this_month"),
     from: String(searchParams.from || ""),
@@ -1024,6 +1098,23 @@ function normalizeFilters(searchParams = {}) {
     policyType: String(searchParams.policyType || ""),
     status: String(searchParams.status || ""),
     lob: String(searchParams.lob || ""),
+    month: String(
+      searchParams.month || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`,
+    ),
+  };
+}
+
+function getMonthRange(value = "") {
+  const fallback = new Date();
+  const match = /^(\d{4})-(\d{2})$/.exec(value);
+  const year = match ? Number(match[1]) : fallback.getFullYear();
+  const monthIndex = match ? Number(match[2]) - 1 : fallback.getMonth();
+  const start = new Date(year, monthIndex, 1);
+  const end = endOfDay(new Date(year, monthIndex + 1, 0));
+  return {
+    start,
+    end,
+    label: start.toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
   };
 }
 
@@ -1109,7 +1200,11 @@ function kpi(label, value, hint = "") {
 }
 
 function chart(title, rows) {
-  return { title, rows: rows.slice(0, 8) };
+  return { title, type: "bar", rows: rows.slice(0, 8) };
+}
+
+function lineChart(title, rows) {
+  return { title, type: "line", rows: rows.slice(0, 31) };
 }
 
 function table(title, headers, rows) {
@@ -1175,6 +1270,41 @@ function monthlyTrend(items, dateField, mode) {
     month.label,
     mode === "customers" ? month.customers.size : Math.round(month.value),
   ]);
+}
+
+function dailyTrend(items, dateField, range) {
+  const days = [];
+  const cursor = new Date(range.start);
+  while (cursor <= range.end) {
+    days.push({
+      key: `${cursor.getFullYear()}-${cursor.getMonth()}-${cursor.getDate()}`,
+      label: String(cursor.getDate()),
+      value: 0,
+    });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  items.forEach((item) => {
+    const date = item[dateField] ? new Date(item[dateField]) : null;
+    if (!date || Number.isNaN(date.getTime())) return;
+    const bucket = days.find(
+      (day) => day.key === `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
+    );
+    if (bucket) bucket.value += 1;
+  });
+  return days.map((day) => [day.label, day.value]);
+}
+
+function buildInsurerSummary(policies) {
+  const groups = new Map();
+  policies.forEach((policy) => {
+    const company = policy.insuranceCompany || "Unknown";
+    const current = groups.get(company) || { company, policies: 0, premium: 0, sumInsured: 0 };
+    current.policies += 1;
+    current.premium += parseMoney(policy.netPremium || policy.totalPremium || policy.premium);
+    current.sumInsured += parseMoney(policy.sumInsured);
+    groups.set(company, current);
+  });
+  return Array.from(groups.values()).sort((a, b) => b.policies - a.policies);
 }
 
 function statusTrend(items, field) {
