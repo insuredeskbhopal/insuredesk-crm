@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Download, Pencil, Eye, Trash2, CheckSquare, Square, MinusSquare, X } from "lucide-react";
+import { Download, Pencil, Eye, Trash2, CheckSquare, Square, MinusSquare } from "lucide-react";
 import PolicyDetailCard from "@/app/components/shared/PolicyDetailCard";
-import ModalPortal from "@/app/components/shared/ModalPortal";
 import { inferUploadSchema } from "@/app/lib/dashboard-helpers";
 
 
@@ -54,7 +53,7 @@ function formatMoneyValue(value) {
   return `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(amount)}`;
 }
 
-function renderCell(record, column, onViewLongText) {
+function renderCell(record, column, isExpanded, onToggleLongText) {
   const fallbackKeys = [column.fallbackKey, ...(column.fallbackKeys || [])].filter(Boolean);
   let rawValue = [record[column.key], ...fallbackKeys.map((key) => record[key])].find(
     (candidate) => candidate !== undefined && candidate !== null && candidate !== "",
@@ -79,14 +78,15 @@ function renderCell(record, column, onViewLongText) {
         : rawValue || "";
   if (column.compact && String(value).length > 32) {
     return (
-      <div className="record-compact-text">
+      <div className={`record-compact-text${isExpanded ? " expanded" : ""}`}>
         <span title={String(value)}>{String(value)}</span>
         <button
           type="button"
-          onClick={() => onViewLongText({ label: column.label, value: String(value) })}
-          aria-label={`See full ${column.label}`}
+          onClick={onToggleLongText}
+          aria-expanded={isExpanded}
+          aria-label={`${isExpanded ? "Collapse" : "See full"} ${column.label}`}
         >
-          See more
+          {isExpanded ? "Show less" : "See more"}
         </button>
       </div>
     );
@@ -640,7 +640,15 @@ export default function RecordsTable({
                         className={getStickyClassName(index)}
                         style={getStickyStyle(index)}
                       >
-                        {renderCell(record, column, setExpandedCell)}
+                        {renderCell(
+                          record,
+                          column,
+                          expandedCell === `${record.id}:${column.key}`,
+                          () =>
+                            setExpandedCell((current) =>
+                              current === `${record.id}:${column.key}` ? null : `${record.id}:${column.key}`,
+                            ),
+                        )}
                       </td>
                     ))}
                     <td>
@@ -758,31 +766,6 @@ export default function RecordsTable({
           onPrint={handlePrint}
         />
       )}
-
-      {expandedCell ? (
-        <ModalPortal>
-          <div className="record-text-modal-backdrop" onMouseDown={() => setExpandedCell(null)}>
-            <section
-              className="record-text-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="record-text-modal-title"
-              onMouseDown={(event) => event.stopPropagation()}
-            >
-              <div className="record-text-modal-header">
-                <div>
-                  <span>Policy record</span>
-                  <h2 id="record-text-modal-title">{expandedCell.label}</h2>
-                </div>
-                <button type="button" onClick={() => setExpandedCell(null)} aria-label="Close full text">
-                  <X size={20} />
-                </button>
-              </div>
-              <p>{expandedCell.value}</p>
-            </section>
-          </div>
-        </ModalPortal>
-      ) : null}
 
       {/* Floating action bar when records are marked */}
       {canDelete &&

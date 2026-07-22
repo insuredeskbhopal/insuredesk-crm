@@ -61,9 +61,10 @@ describe("warehouse-centric policy record table", () => {
     const table = read("src/app/components/RecordsTable.js");
 
     expect(dashboard.match(/compact: true/g)).toHaveLength(3);
-    expect(table).toContain('className="record-compact-text"');
+    expect(table).toContain("record-compact-text");
     expect(table).toContain("See more");
-    expect(table).toContain("<ModalPortal>");
+    expect(table).toContain("Show less");
+    expect(table).not.toContain("<ModalPortal>");
   });
 
   it("does not modify Motor extraction or schema code", () => {
