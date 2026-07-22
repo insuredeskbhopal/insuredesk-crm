@@ -128,6 +128,49 @@ const POLICY_SUMMARY_SELECT = {
   isActivePolicy: true,
 };
 
+const MONTHLY_POLICY_CATEGORIES = [
+  { value: "motor", label: "Motor Policy" },
+  { value: "warehouse", label: "Warehouse Policy" },
+  { value: "health", label: "Health Policy" },
+  { value: "other", label: "Other Policy" },
+];
+
+const POLICY_CATEGORY_TERMS = {
+  motor: [
+    "motor",
+    "vehicle",
+    "private car",
+    "two wheeler",
+    "bike",
+    "scooter",
+    "commercial vehicle",
+    "taxi",
+    "school bus",
+    "goods carrying",
+    "passenger carrying",
+    "auto secure",
+    "liability only",
+    "comprehensive",
+    "own damage",
+  ],
+  warehouse: [
+    "fire",
+    "sfsp",
+    "burglary",
+    "msme",
+    "warehouse",
+    "stock",
+    "property",
+    "business guard",
+    "laghu",
+    "sookshma",
+    "fidelity",
+    "guarantee",
+    "house breaking",
+  ],
+  health: ["health", "mediclaim", "hospital", "family floater", "health insurance"],
+};
+
 const CLAIM_SELECT = {
   id: true,
   insuredName: true,
@@ -274,7 +317,6 @@ export async function loadReportingCenterData({ category = "executive", searchPa
     uploadTotal,
     users,
     audits,
-    policyTypeRows,
   ] = await Promise.all([
     queryPlan.policies === "none"
       ? Promise.resolve([])
@@ -350,17 +392,6 @@ export async function loadReportingCenterData({ category = "executive", searchPa
           take: 1000,
         })
       : Promise.resolve([]),
-    category === "monthly-policies"
-      ? prisma.policyRecord.findMany({
-          where: {
-            ...withoutManualRenewalSources({ ...sharedWhere }),
-            selectedPolicyType: { not: null },
-          },
-          select: { selectedPolicyType: true },
-          distinct: ["selectedPolicyType"],
-          orderBy: { selectedPolicyType: "asc" },
-        })
-      : Promise.resolve([]),
   ]);
 
   const policies = policiesRaw.map(normalizeRecord);
@@ -381,7 +412,6 @@ export async function loadReportingCenterData({ category = "executive", searchPa
     uploadTotal,
     users,
     audits,
-    policyTypeOptions: policyTypeRows.map((row) => row.selectedPolicyType).filter(Boolean),
   };
 
   const summary = buildSummary(context);
@@ -646,21 +676,14 @@ function buildReport(category, context, summary) {
 
   if (category === "monthly-policies") {
     const insurerRows = buildInsurerSummary(policies);
-    const policyTypeOptions = Array.from(
-      new Set([
-        ...context.policyTypeOptions,
-        ...policies.map((item) => item.policyType).filter(Boolean),
-      ]),
-    ).sort((a, b) => a.localeCompare(b));
-    base.filterOptions = { policyTypes: policyTypeOptions };
+    base.filterOptions = { policyCategories: MONTHLY_POLICY_CATEGORIES };
     base.kpis = [
       kpi("Policies Saved", summary.totalPolicies, context.dateRange.label),
       kpi("Insurance Companies", insurerRows.length),
       kpi("Total Premium", formatCurrency(summary.totalPremium)),
-      kpi("Total Sum Insured", formatCurrency(summary.totalSumInsured)),
     ];
     base.charts = [
-      chart(
+      donutChart(
         "Policies by Insurance Company",
         insurerRows.map((row) => [row.company, row.policies]),
       ),
@@ -669,12 +692,11 @@ function buildReport(category, context, summary) {
     base.tables = [
       table(
         "Insurance Company Summary",
-        ["Insurance Company", "Policies", "Premium", "Sum Insured"],
+        ["Insurance Company", "Policies", "Premium"],
         insurerRows.map((row) => [
           row.company,
           row.policies,
           formatCurrency(row.premium),
-          formatCurrency(row.sumInsured),
         ]),
       ),
       table(
@@ -1096,6 +1118,7 @@ function normalizeFilters(searchParams = {}) {
     branch: String(searchParams.branch || ""),
     company: String(searchParams.company || ""),
     policyType: String(searchParams.policyType || ""),
+    policyCategory: String(searchParams.policyCategory || ""),
     status: String(searchParams.status || ""),
     lob: String(searchParams.lob || ""),
     month: String(
@@ -1171,10 +1194,39 @@ function applyPolicyFilters(where, filters, dateRange) {
       ],
     });
   }
+  if (filters.policyCategory) {
+    const category = filters.policyCategory.toLowerCase();
+    if (category === "other") {
+      and.push({
+        NOT: {
+          OR: buildPolicyCategoryClauses(Object.values(POLICY_CATEGORY_TERMS).flat()),
+        },
+      });
+    } else if (POLICY_CATEGORY_TERMS[category]) {
+      and.push({ OR: buildPolicyCategoryClauses(POLICY_CATEGORY_TERMS[category]) });
+    }
+  }
   if (filters.status) where.renewalStatus = filters.status;
   if (filters.user || filters.agent) where.createdById = filters.user || filters.agent;
-  if (and.length) where.AND = and;
+  if (and.length) {
+    const existingAnd = where.AND ? (Array.isArray(where.AND) ? where.AND : [where.AND]) : [];
+    where.AND = [...existingAnd, ...and];
+  }
   return where;
+}
+
+function buildPolicyCategoryClauses(terms) {
+  return terms.flatMap((term) => [
+    { selectedPolicyType: { contains: term, mode: "insensitive" } },
+    { detectedPolicyType: { contains: term, mode: "insensitive" } },
+    { selectedServiceCategory: { contains: term, mode: "insensitive" } },
+    { detectedServiceCategory: { contains: term, mode: "insensitive" } },
+    { sourceFile: { contains: term, mode: "insensitive" } },
+    { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+    { reviewedData: { path: ["documentCategory"], string_contains: term, mode: "insensitive" } },
+    { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+    { data: { path: ["documentCategory"], string_contains: term, mode: "insensitive" } },
+  ]);
 }
 
 function applyProfileFilters(where, filters, dateRange) {
@@ -1205,6 +1257,10 @@ function chart(title, rows) {
 
 function lineChart(title, rows) {
   return { title, type: "line", rows: rows.slice(0, 31) };
+}
+
+function donutChart(title, rows) {
+  return { title, type: "donut", rows: rows.slice(0, 8) };
 }
 
 function table(title, headers, rows) {
@@ -1298,10 +1354,9 @@ function buildInsurerSummary(policies) {
   const groups = new Map();
   policies.forEach((policy) => {
     const company = policy.insuranceCompany || "Unknown";
-    const current = groups.get(company) || { company, policies: 0, premium: 0, sumInsured: 0 };
+    const current = groups.get(company) || { company, policies: 0, premium: 0 };
     current.policies += 1;
     current.premium += parseMoney(policy.netPremium || policy.totalPremium || policy.premium);
-    current.sumInsured += parseMoney(policy.sumInsured);
     groups.set(company, current);
   });
   return Array.from(groups.values()).sort((a, b) => b.policies - a.policies);

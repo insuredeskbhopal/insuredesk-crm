@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useId, useState, useTransition } from "react";
 import {
   Activity,
   ArrowLeft,
@@ -105,6 +107,14 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
   }
 
   const exportRows = flattenReportRows(report);
+  const isMonthlyPolicyReport = report.category === "monthly-policies";
+  const reportTables = (
+    <section className={`bi-table-grid${isMonthlyPolicyReport ? " bi-monthly-table-grid" : ""}`}>
+      {report.tables.map((table) => (
+        <ReportTable table={table} key={table.title} />
+      ))}
+    </section>
+  );
 
   return (
     <main className="bi-page">
@@ -211,15 +221,14 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
 
       <section className="bi-chart-grid">
         {report.charts.map((chart) => (
-          <ChartCard chart={chart} key={chart.title} />
+          <ChartCard
+            chart={chart}
+            key={`${chart.title}-${chart.rows.map((row) => `${row[0]}:${row[1]}`).join("|")}`}
+          />
         ))}
       </section>
 
-      <section className="bi-table-grid">
-        {report.tables.map((table) => (
-          <ReportTable table={table} key={table.title} />
-        ))}
-      </section>
+      {reportTables}
     </main>
   );
 }
@@ -238,26 +247,62 @@ function ReportHero({ title, subtitle, lastUpdated }) {
 }
 
 function ReportFilters({ filters, users, report }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
+
+  const updateMonthlyReport = (changes = {}) => {
+    const month = changes.month ?? filters.month;
+    const policyCategory = changes.policyCategory ?? filters.policyCategory;
+    const params = new URLSearchParams();
+    params.set("month", month);
+    if (policyCategory) params.set("policyCategory", policyCategory);
+    startTransition(() => router.replace(`${pathname}?${params.toString()}`, { scroll: false }));
+  };
+
   if (report.category === "monthly-policies") {
     return (
-      <form className="bi-filter-bar bi-monthly-filter-bar">
+      <form
+        className="bi-filter-bar bi-monthly-filter-bar"
+        key={`${filters.month}-${filters.policyCategory}`}
+        onSubmit={(event) => {
+          event.preventDefault();
+          const formData = new FormData(event.currentTarget);
+          updateMonthlyReport({
+            month: String(formData.get("month") || filters.month),
+            policyCategory: String(formData.get("policyCategory") || ""),
+          });
+        }}
+      >
         <label>
           <span>Report Month</span>
-          <input type="month" name="month" defaultValue={filters.month} required />
+          <input
+            type="month"
+            name="month"
+            defaultValue={filters.month}
+            onChange={(event) => updateMonthlyReport({ month: event.currentTarget.value })}
+            required
+          />
         </label>
         <label>
-          <span>Policy Type</span>
-          <select name="policyType" defaultValue={filters.policyType}>
+          <span>Policy Category</span>
+          <select
+            name="policyCategory"
+            defaultValue={filters.policyCategory}
+            onChange={(event) =>
+              updateMonthlyReport({ policyCategory: event.currentTarget.value })
+            }
+          >
             <option value="">All Policy Types</option>
-            {(report.filterOptions?.policyTypes || []).map((policyType) => (
-              <option key={policyType} value={policyType}>
-                {policyType}
+            {(report.filterOptions?.policyCategories || []).map((category) => (
+              <option key={category.value} value={category.value}>
+                {category.label}
               </option>
             ))}
           </select>
         </label>
-        <button type="submit" className="primary-action">
-          View Monthly Report
+        <button type="submit" className="primary-action" disabled={isPending}>
+          {isPending ? "Updating Report..." : "View Monthly Report"}
         </button>
       </form>
     );
@@ -318,24 +363,50 @@ function ChartCard({ chart }) {
     return <LineChartCard chart={chart} />;
   }
 
-  const max = Math.max(1, ...chart.rows.map((row) => Number(row[1]) || 0));
+  if (chart.type === "donut") {
+    return <DonutChartCard chart={chart} />;
+  }
+
+  const values = chart.rows.map((row) => Number(row[1]) || 0);
+  const max = Math.max(1, ...values);
+  const total = values.reduce((sum, value) => sum + value, 0);
+
   return (
-    <section className="glass-panel bi-chart-card">
-      <div>
-        <p className="eyebrow">Chart</p>
-        <h2>{chart.title}</h2>
+    <section className="glass-panel bi-chart-card bi-bar-chart-card">
+      <div className="bi-chart-header">
+        <div>
+          <p className="eyebrow">Portfolio distribution</p>
+          <h2>{chart.title}</h2>
+          <p className="bi-chart-caption">Ranked by policy volume for the selected report</p>
+        </div>
+        <div className="bi-chart-metrics" aria-label="Chart summary">
+          <span><small>Total policies</small><strong>{total.toLocaleString("en-IN")}</strong></span>
+          <span><small>Companies</small><strong>{chart.rows.length}</strong></span>
+        </div>
       </div>
       <div className="bi-bars">
         {chart.rows.length ? (
-          chart.rows.map((row) => {
+          chart.rows.map((row, index) => {
             const value = Number(row[1]) || 0;
+            const share = total ? (value / total) * 100 : 0;
             return (
               <div className="bi-bar-row" key={`${chart.title}-${row[0]}`}>
-                <span>{row[0]}</span>
-                <div>
-                  <i style={{ width: `${Math.max(4, (value / max) * 100)}%` }} />
+                <div className="bi-bar-label">
+                  <b>{index + 1}</b>
+                  <span title={row[0]}>{row[0]}</span>
                 </div>
-                <strong>{row[1]}</strong>
+                <div className="bi-bar-value">
+                  <strong>{value.toLocaleString("en-IN")}</strong>
+                  <small>{share.toFixed(1)}%</small>
+                </div>
+                <div className="bi-bar-track" title={`${row[0]}: ${value} policies (${share.toFixed(1)}%)`}>
+                  <i
+                    style={{
+                      "--bar-width": `${Math.max(3, (value / max) * 100)}%`,
+                      "--bar-delay": `${index * 45}ms`,
+                    }}
+                  />
+                </div>
               </div>
             );
           })
@@ -347,48 +418,228 @@ function ChartCard({ chart }) {
   );
 }
 
-function LineChartCard({ chart }) {
-  const width = 720;
-  const height = 240;
-  const padding = 34;
+function DonutChartCard({ chart }) {
+  const palette = ["#247f74", "#527fd5", "#e5a23b", "#df7477", "#8b75d1", "#2e9b7e", "#7a8b98", "#65a6cf"];
   const values = chart.rows.map((row) => Number(row[1]) || 0);
-  const max = Math.max(1, ...values);
-  const plotWidth = width - padding * 2;
-  const plotHeight = height - padding * 2;
-  const points = chart.rows.map((row, index) => {
-    const x = padding + (index / Math.max(1, chart.rows.length - 1)) * plotWidth;
-    const y = height - padding - ((Number(row[1]) || 0) / max) * plotHeight;
-    return { label: row[0], value: Number(row[1]) || 0, x, y };
+  const total = values.reduce((sum, value) => sum + value, 0);
+  const outerRadius = 88;
+  const innerRadius = 59;
+  let angle = 0;
+
+  const segments = chart.rows.map((row, index) => {
+    const value = values[index];
+    const percentage = total ? (value / total) * 100 : 0;
+    const sweep = total ? (value / total) * 360 : 0;
+    const gap = chart.rows.length > 1 ? Math.min(1.8, sweep * 0.18) : 0;
+    const startAngle = angle + gap / 2;
+    const endAngle = angle + sweep - gap / 2;
+    const segment = {
+      row,
+      value,
+      percentage,
+      path: describeDonutSegment(110, 110, outerRadius, innerRadius, startAngle, endAngle),
+      color: palette[index % palette.length],
+    };
+    angle += sweep;
+    return segment;
   });
 
   return (
-    <section className="glass-panel bi-chart-card">
-      <div>
-        <p className="eyebrow">Line chart</p>
-        <h2>{chart.title}</h2>
+    <section className="glass-panel bi-chart-card bi-donut-chart-card">
+      <div className="bi-chart-header">
+        <div>
+          <p className="eyebrow">Portfolio distribution</p>
+          <h2>{chart.title}</h2>
+          <p className="bi-chart-caption">Insurance company share for the selected report</p>
+        </div>
+        <div className="bi-chart-metrics" aria-label="Chart summary">
+          <span><small>Total policies</small><strong>{total.toLocaleString("en-IN")}</strong></span>
+          <span><small>Companies</small><strong>{chart.rows.length}</strong></span>
+        </div>
+      </div>
+
+      {segments.length ? (
+        <div className="bi-donut-layout">
+          <div className="bi-donut-visual">
+            <svg viewBox="0 0 220 220" role="img" aria-label={chart.title}>
+              <circle className="bi-donut-base" cx="110" cy="110" r={(outerRadius + innerRadius) / 2} />
+              {segments.map((segment, index) => (
+                <path
+                  className="bi-donut-segment"
+                  d={segment.path}
+                  fill={segment.color}
+                  key={`${segment.row[0]}-${index}`}
+                  style={{ "--segment-delay": `${index * 70}ms` }}
+                >
+                  <title>{`${segment.row[0]}: ${segment.value} policies (${segment.percentage.toFixed(1)}%)`}</title>
+                </path>
+              ))}
+              <g className="bi-donut-center-content">
+                <circle className="bi-donut-center" cx="110" cy="110" r="58" />
+                <text className="bi-donut-total" x="110" y="106" textAnchor="middle">{total.toLocaleString("en-IN")}</text>
+                <text className="bi-donut-total-label" x="110" y="127" textAnchor="middle">Policies</text>
+                <text className="bi-donut-company-count" x="110" y="145" textAnchor="middle">
+                  {chart.rows.length} {chart.rows.length === 1 ? "company" : "companies"}
+                </text>
+              </g>
+            </svg>
+          </div>
+
+          <div className="bi-donut-legend">
+            {segments.map((segment, index) => (
+              <div
+                className="bi-donut-legend-row"
+                key={`${segment.row[0]}-legend-${index}`}
+                style={{ "--legend-delay": `${180 + index * 55}ms` }}
+              >
+                <i style={{ background: segment.color }} />
+                <span title={segment.row[0]}>{segment.row[0]}</span>
+                <strong>{segment.value.toLocaleString("en-IN")}</strong>
+                <small>{segment.percentage.toFixed(1)}%</small>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="bi-empty">No records found for this filter.</p>
+      )}
+    </section>
+  );
+}
+
+function LineChartCard({ chart }) {
+  const gradientId = useId().replace(/:/g, "");
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const width = 760;
+  const height = 300;
+  const padding = { top: 22, right: 24, bottom: 38, left: 48 };
+  const values = chart.rows.map((row) => Number(row[1]) || 0);
+  const rawMax = Math.max(0, ...values);
+  const max = niceChartMaximum(Math.max(1, rawMax));
+  const total = values.reduce((sum, value) => sum + value, 0);
+  const activeDays = values.filter((value) => value > 0).length;
+  const average = chart.rows.length ? total / chart.rows.length : 0;
+  const peakIndex = rawMax > 0 ? values.indexOf(rawMax) : -1;
+  const peakLabel = peakIndex >= 0 ? chart.rows[peakIndex]?.[0] : "-";
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const points = chart.rows.map((row, index) => {
+    const x = padding.left + (index / Math.max(1, chart.rows.length - 1)) * plotWidth;
+    const y = height - padding.bottom - ((Number(row[1]) || 0) / max) * plotHeight;
+    return { label: row[0], value: Number(row[1]) || 0, x, y };
+  });
+  const baseline = height - padding.bottom;
+  const linePath = buildSmoothPath(points);
+  const areaPath = points.length
+    ? `${linePath} L ${points[points.length - 1].x} ${baseline} L ${points[0].x} ${baseline} Z`
+    : "";
+  const averageY = baseline - (average / max) * plotHeight;
+  const hoveredPoint = hoveredIndex === null ? null : points[hoveredIndex];
+
+  return (
+    <section className="glass-panel bi-chart-card bi-trend-chart-card">
+      <div className="bi-chart-header">
+        <div>
+          <p className="eyebrow">Activity trend</p>
+          <h2>{chart.title}</h2>
+          <p className="bi-chart-caption">Daily policies saved during the selected month</p>
+        </div>
+        <div className="bi-chart-metrics" aria-label="Trend summary">
+          <span><small>Total</small><strong>{total.toLocaleString("en-IN")}</strong></span>
+          <span><small>Daily avg.</small><strong>{average.toFixed(1)}</strong></span>
+          <span><small>Active days</small><strong>{activeDays}</strong></span>
+          <span><small>Peak</small><strong>{rawMax.toLocaleString("en-IN")}</strong><em>{peakIndex >= 0 ? `Day ${peakLabel}` : "No activity"}</em></span>
+        </div>
       </div>
       {points.length ? (
         <div className="bi-line-chart">
-          <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={chart.title}>
-            {[0, 0.5, 1].map((ratio) => {
-              const y = padding + ratio * plotHeight;
-              return <line key={ratio} x1={padding} x2={width - padding} y1={y} y2={y} />;
+          <div className="bi-line-legend" aria-hidden="true">
+            <span><i />Policy volume</span>
+            <span><i className="average" />Daily average</span>
+          </div>
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            role="img"
+            aria-label={chart.title}
+            onMouseLeave={() => setHoveredIndex(null)}
+          >
+            <defs>
+              <linearGradient id={`${gradientId}-area`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
+                <stop offset="52%" stopColor="#3b82f6" stopOpacity="0.14" />
+                <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.015" />
+              </linearGradient>
+              <linearGradient id={`${gradientId}-line`} x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#2563eb" />
+                <stop offset="48%" stopColor="#6366f1" />
+                <stop offset="100%" stopColor="#0d9488" />
+              </linearGradient>
+              <filter id={`${gradientId}-shadow`} x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#4f46e5" floodOpacity="0.2" />
+              </filter>
+            </defs>
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+              const y = padding.top + ratio * plotHeight;
+              const tick = Math.round(max * (1 - ratio));
+              return (
+                <g key={ratio}>
+                  <line className="bi-grid-line" x1={padding.left} x2={width - padding.right} y1={y} y2={y} />
+                  <text className="bi-axis-label" x={padding.left - 12} y={y + 4} textAnchor="end">{tick}</text>
+                </g>
+              );
             })}
-            <polyline points={points.map((point) => `${point.x},${point.y}`).join(" ")} />
+            {average > 0 && (
+              <g className="bi-average-line">
+                <line x1={padding.left} x2={width - padding.right} y1={averageY} y2={averageY} />
+                <text x={width - padding.right - 4} y={averageY - 7} textAnchor="end">Avg {average.toFixed(1)}</text>
+              </g>
+            )}
+            <path className="bi-line-area" d={areaPath} fill={`url(#${gradientId}-area)`} />
+            <path
+              className="bi-line-series"
+              d={linePath}
+              pathLength="1"
+              stroke={`url(#${gradientId}-line)`}
+              filter={`url(#${gradientId}-shadow)`}
+            />
             {points.map((point, index) => (
               <g key={`${point.label}-${index}`}>
-                <circle cx={point.x} cy={point.y} r="4">
-                  <title>{`${point.label}: ${point.value}`}</title>
-                </circle>
+                <rect
+                  className="bi-line-hit-area"
+                  x={point.x - plotWidth / Math.max(1, points.length) / 2}
+                  y={padding.top}
+                  width={plotWidth / Math.max(1, points.length)}
+                  height={plotHeight}
+                  onMouseEnter={() => setHoveredIndex(index)}
+                />
+                {index === peakIndex && <circle className="bi-peak-halo" cx={point.x} cy={point.y} r="10" style={{ "--point-delay": `${420 + index * 18}ms` }} />}
+                {point.value > 0 && (
+                  <circle
+                    className={index === peakIndex ? "bi-line-point peak" : "bi-line-point"}
+                    cx={point.x}
+                    cy={point.y}
+                    r={index === peakIndex ? 5 : 3.5}
+                    style={{ "--point-delay": `${420 + index * 18}ms` }}
+                  />
+                )}
                 {(index === 0 || index === points.length - 1 || index % 5 === 0) && (
-                  <text x={point.x} y={height - 10} textAnchor="middle">
+                  <text className="bi-axis-label" x={point.x} y={height - 12} textAnchor="middle">
                     {point.label}
                   </text>
                 )}
               </g>
             ))}
-            <text x="4" y={padding + 4}>{max}</text>
-            <text x="16" y={height - padding + 4}>0</text>
+            {hoveredPoint && (
+              <g className="bi-line-tooltip" pointerEvents="none">
+                <line x1={hoveredPoint.x} x2={hoveredPoint.x} y1={padding.top} y2={baseline} />
+                <circle cx={hoveredPoint.x} cy={hoveredPoint.y} r="6" />
+                <g transform={`translate(${Math.min(width - 142, Math.max(8, hoveredPoint.x - 66))}, ${Math.max(8, hoveredPoint.y - 62)})`}>
+                  <rect width="134" height="48" rx="8" />
+                  <text x="12" y="19">Day {hoveredPoint.label}</text>
+                  <text className="bi-tooltip-value" x="12" y="37">{hoveredPoint.value} policies</text>
+                </g>
+              </g>
+            )}
           </svg>
         </div>
       ) : (
@@ -396,6 +647,58 @@ function LineChartCard({ chart }) {
       )}
     </section>
   );
+}
+
+function niceChartMaximum(value) {
+  if (value <= 5) return 5;
+  const magnitude = 10 ** Math.floor(Math.log10(value));
+  const normalized = value / magnitude;
+  const step = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10;
+  return step * magnitude;
+}
+
+function buildSmoothPath(points) {
+  if (!points.length) return "";
+  return points.reduce((path, point, index) => {
+    if (index === 0) return `M ${point.x} ${point.y}`;
+    const previous = points[index - 1];
+    const midpoint = (previous.x + point.x) / 2;
+    return `${path} C ${midpoint} ${previous.y}, ${midpoint} ${point.y}, ${point.x} ${point.y}`;
+  }, "");
+}
+
+function describeDonutSegment(cx, cy, outerRadius, innerRadius, startAngle, endAngle) {
+  if (endAngle <= startAngle) return "";
+  const outerStart = polarPoint(cx, cy, outerRadius, startAngle);
+  const outerEnd = polarPoint(cx, cy, outerRadius, endAngle);
+  const innerEnd = polarPoint(cx, cy, innerRadius, endAngle);
+  const innerStart = polarPoint(cx, cy, innerRadius, startAngle);
+  if (endAngle - startAngle >= 359.999) {
+    const outerMiddle = polarPoint(cx, cy, outerRadius, startAngle + 180);
+    const innerMiddle = polarPoint(cx, cy, innerRadius, startAngle + 180);
+    return [
+      `M ${outerStart.x} ${outerStart.y}`,
+      `A ${outerRadius} ${outerRadius} 0 0 1 ${outerMiddle.x} ${outerMiddle.y}`,
+      `A ${outerRadius} ${outerRadius} 0 0 1 ${outerEnd.x} ${outerEnd.y}`,
+      `L ${innerEnd.x} ${innerEnd.y}`,
+      `A ${innerRadius} ${innerRadius} 0 0 0 ${innerMiddle.x} ${innerMiddle.y}`,
+      `A ${innerRadius} ${innerRadius} 0 0 0 ${innerStart.x} ${innerStart.y}`,
+      "Z",
+    ].join(" ");
+  }
+  const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+  return [
+    `M ${outerStart.x} ${outerStart.y}`,
+    `A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
+    `L ${innerEnd.x} ${innerEnd.y}`,
+    `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${innerStart.x} ${innerStart.y}`,
+    "Z",
+  ].join(" ");
+}
+
+function polarPoint(cx, cy, radius, angle) {
+  const radians = ((angle - 90) * Math.PI) / 180;
+  return { x: cx + radius * Math.cos(radians), y: cy + radius * Math.sin(radians) };
 }
 
 function ReportTable({ table }) {
