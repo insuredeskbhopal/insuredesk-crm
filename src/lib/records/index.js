@@ -193,6 +193,8 @@ export function normalizeRecord(record) {
     brokerMobile: payload.brokerMobile || legacy.brokerMobile || "",
     brokerEmail: payload.brokerEmail || legacy.brokerEmail || "",
     contentsSumInsured: payload.contentsSumInsured || legacy.contentsSumInsured || "",
+    buildingSumInsured: payload.buildingSumInsured || legacy.buildingSumInsured || "",
+    stockSumInsured: payload.stockSumInsured || legacy.stockSumInsured || "",
     burglarySumInsured: payload.burglarySumInsured || legacy.burglarySumInsured || "",
     fidelitySumInsured: payload.fidelitySumInsured || legacy.fidelitySumInsured || "",
     coverages: Array.isArray(payload.coverages)

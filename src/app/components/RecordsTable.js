@@ -46,8 +46,18 @@ function formatDateTime(value) {
   });
 }
 
+function formatMoneyValue(value) {
+  if (value === undefined || value === null || value === "") return "-";
+  const amount = Number(String(value).replace(/[^0-9.-]/g, ""));
+  if (!Number.isFinite(amount)) return String(value);
+  return `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(amount)}`;
+}
+
 function renderCell(record, column) {
-  let rawValue = record[column.key] || (column.fallbackKey ? record[column.fallbackKey] : "");
+  const fallbackKeys = [column.fallbackKey, ...(column.fallbackKeys || [])].filter(Boolean);
+  let rawValue = [record[column.key], ...fallbackKeys.map((key) => record[key])].find(
+    (candidate) => candidate !== undefined && candidate !== null && candidate !== "",
+  );
   
   if (column.key === "vehicleNumber" && !rawValue) {
     const fallbackValue = record.tehsil || record.policyType || "";
@@ -63,6 +73,8 @@ function renderCell(record, column) {
       ? formatDateTime(rawValue)
       : column.format === "date"
         ? formatDate(rawValue)
+        : column.format === "money"
+          ? formatMoneyValue(rawValue)
         : rawValue || "";
   if (column.primary) {
     return (
@@ -475,10 +487,13 @@ export default function RecordsTable({
     }
     return pages;
   }, [currentPage, pageCount]);
-  const tableMinWidth =
-    columns.length < DEFAULT_RECORD_COLUMNS.length
-      ? Math.max(980, columns.length * 132 + (canEdit ? 88 : 0) + (canDelete ? 48 : 0) + 64)
-      : undefined;
+  const tableMinWidth = Math.max(
+    980,
+    columns.reduce(
+      (total, column) => total + (COLUMN_WIDTHS[column.className || "col-default"] || 150),
+      (canEdit ? 88 : 0) + (canDelete ? 48 : 0) + 64,
+    ),
+  );
 
   useEffect(() => {
     setCurrentPage(1);

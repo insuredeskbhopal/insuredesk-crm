@@ -74,6 +74,59 @@ const FIELD_OPTIONS = {
   ],
 };
 
+const WAREHOUSE_RECORD_COLUMNS = [
+  { key: "customerId", label: "Customer ID", className: "col-customer" },
+  { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
+  { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
+  { key: "contactPerson", label: "Contact Person", className: "col-contact-person" },
+  { key: "contactNumber", label: "Phone Number", className: "col-contact" },
+  { key: "whatsappGroupName", label: "WP Group Name", className: "col-group" },
+  { key: "newOrRenewal", label: "New / Renewal", className: "col-default" },
+  { key: "policyType", label: "Policy Type", className: "col-type" },
+  { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
+  {
+    key: "riskLocation",
+    fallbackKeys: ["premisesAddress"],
+    label: "Risk Location",
+    className: "col-location",
+  },
+  { key: "district", label: "District", className: "col-district" },
+  { key: "tehsil", label: "Tehsil", className: "col-tehsil" },
+  { key: "occupancy", label: "Occupancy", className: "col-occupancy" },
+  {
+    key: "description",
+    fallbackKeys: ["businessDescription"],
+    label: "Risk Description",
+    className: "col-description",
+  },
+  {
+    key: "sumInsured",
+    fallbackKeys: ["contentsSumInsured", "burglarySumInsured", "fidelitySumInsured"],
+    label: "Sum Insured",
+    className: "col-money",
+    format: "money",
+  },
+  { key: "buildingSumInsured", label: "Building SI", className: "col-money", format: "money" },
+  { key: "stockSumInsured", label: "Stock SI", className: "col-money", format: "money" },
+  { key: "contentsSumInsured", label: "Contents SI", className: "col-money", format: "money" },
+  { key: "burglarySumInsured", label: "Burglary SI", className: "col-money", format: "money" },
+  { key: "fidelitySumInsured", label: "Fidelity SI", className: "col-money", format: "money" },
+  {
+    key: "totalPremium",
+    fallbackKeys: ["netPremium", "premium"],
+    label: "Premium",
+    className: "col-money",
+    format: "money",
+  },
+  { key: "startDate", label: "Start Date", className: "col-date", format: "date" },
+  { key: "expiryDate", label: "Expiry Date", className: "col-date", format: "date" },
+  { key: "duration", label: "Duration", className: "col-duration" },
+  { key: "pptMpwlc", label: "PPT / MPWLC", className: "col-ppt" },
+  { key: "validIn", label: "Valid In", className: "col-valid" },
+  { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },
+  { key: "sourceFile", label: "Source File", className: "col-source" },
+];
+
 export default function Dashboard({
   initialRecords,
   activePage: routeActivePage,
@@ -471,6 +524,9 @@ export default function Dashboard({
         { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },
         { key: "sourceFile", label: "Source File", className: "col-source" },
       ];
+    }
+    if (recordViewCategory === "warehouse" || recordViewCategory === "fire") {
+      return WAREHOUSE_RECORD_COLUMNS;
     }
 
     const fieldLabels = new Map(FIELD_SETUP.map(([label, key]) => [key, label]));
