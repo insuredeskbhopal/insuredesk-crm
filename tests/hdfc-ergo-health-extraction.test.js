@@ -63,7 +63,7 @@ Period of Insurance : From 14/07/2026 00:01 hrs To 13/07/2027 Midnight
 Invoice No. : 204779339604000 Premium Frequency : Single
 Policyholder Name : Mr Jagat Singh Policy Type : FAMILY Floater
 Previous Policy : 2856204779339603000
-Renewal : Yes
+Customer Id : 101852476134 Renewal : Yes
 Email ID : n.xxxxxxxx58@gxxxx.com
 MR JAGAT SINGH
 H.NO-24/3, A SECTOR, SAINATH NAGAR KOLAR ROAD
@@ -81,6 +81,8 @@ Mrs Dropti ThakurSpouseFemale17/09/1967  13/07/2020
 No
 The nominee must be an immediate relative of the policyholder.
 Sum Insured opted:500000
+Instrument details OPS27242351132201 Date 13/07/2026 Bank Name BIZDIRECT
+Processing Centre
 Branch :unit nos.16,18,19 and 30, maple high street, bhopal
 `;
 
@@ -97,18 +99,37 @@ describe("HDFC ERGO Optima Secure Health training", () => {
       newOrRenewal: "Renewal",
       startDate: "14/07/2026",
       expiryDate: "13/07/2027",
+      policyStartDate: "14/07/2026",
+      policyEndDate: "13/07/2027",
       sumInsured: "5,00,000.00",
       totalPremium: "36,021.00",
       previousPolicyNumber: "2856204779339603000",
+      customerId: "101852476134",
       nomineeName: "Dropti Thakur",
       nomineeRelationship: "Wife",
       agentName: "INSUREDESK IMF PRIVATE LIMITED",
       agentCode: "200427207967",
       agentMobile: "8827731100",
+      paymentReference: "OPS27242351132201",
+      bankName: "BIZDIRECT",
       numberOfInsuredMembers: 2,
       engineNumber: "",
       chassisNumber: "",
+      vehicleMake: "",
+      vehicleModel: "",
+      totalPackagePremium: "",
+      cscContactNumber: "",
+      extractionMethod: "scoped_training",
+      confidenceScore: 0.98,
     });
+    expect(result.extractionQuality).toMatchObject({
+      quality: "ready_for_review",
+      schemaName: "HDFC ERGO Optima Secure Health training",
+      warnings: [],
+    });
+    expect(result.policyUnderstanding).toEqual({});
+    expect(result.schemaExtraction).toEqual({});
+    expect(result.fieldConfidence).toEqual({});
     expect(result.insuredMembers).toEqual([
       {
         name: "Jagat Singh",

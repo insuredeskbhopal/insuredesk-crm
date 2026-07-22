@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { matchesClientAccountIdentity } from "../src/lib/client-accounts/utils";
+import {
+  attachClientIdRequestToMatchingUploads,
+  matchesClientAccountIdentity,
+} from "../src/lib/client-accounts/utils";
 
 describe("client account auto-matching", () => {
   const abhishek = {
@@ -37,5 +40,39 @@ describe("client account auto-matching", () => {
 
   it("does not auto-match from the insured name alone", () => {
     expect(matchesClientAccountIdentity(abhishek, { insuredName: "Abhishek Verma" })).toBe(false);
+  });
+
+  it("carries one pending Client ID request across every queued policy for the same client", () => {
+    const uploads = [
+      ...["health.pdf", "fire.pdf", "marine.pdf", "burglary.pdf"].map((sourceFile, index) => ({
+        id: sourceFile,
+        sourceFile,
+        extractedData: {
+          insuredName: index === 0 ? "Mr. Abhishek Verma" : "Abhishek Verma",
+          contactNumber: "8839707135",
+        },
+        manualFields: [],
+      })),
+      {
+        id: "other.pdf",
+        sourceFile: "other.pdf",
+        extractedData: {
+          insuredName: "Abhishek Verma",
+          contactNumber: "9000000000",
+          email: "abhishek@example.com",
+        },
+        manualFields: [],
+      },
+    ];
+
+    const result = attachClientIdRequestToMatchingUploads(uploads, uploads[0], "request-1");
+
+    expect(result.slice(0, 4).every((upload) => upload.extractedData.clientIdRequestId === "request-1")).toBe(
+      true,
+    );
+    expect(result.slice(0, 4).every((upload) => upload.manualFields.includes("clientIdRequestId"))).toBe(
+      true,
+    );
+    expect(result[4].extractedData.clientIdRequestId).toBeUndefined();
   });
 });

@@ -18,6 +18,7 @@ const { prismaMock, txMock, verifyJWTMock } = vi.hoisted(() => {
     verifyJWTMock: vi.fn(),
     prismaMock: {
       task: { findFirst: vi.fn() },
+      clientAccount: { findFirst: vi.fn(), create: vi.fn() },
       $transaction: vi.fn((callback) => callback(tx)),
     },
   };
@@ -57,6 +58,7 @@ describe("Client ID request correction workflow", () => {
     txMock.policyRecord.updateMany.mockResolvedValue({ count: 2 });
     txMock.notification.create.mockResolvedValue({ id: "notification-1" });
     txMock.task.update.mockImplementation(({ data }) => Promise.resolve({ ...requestItem, ...data }));
+    prismaMock.clientAccount.findFirst.mockResolvedValue(null);
   });
 
   it.each(["NEEDS_CORRECTION", "REJECT"])("requires an administrator note for %s", async (action) => {
@@ -68,39 +70,44 @@ describe("Client ID request correction workflow", () => {
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
-  it.each(["NEEDS_CORRECTION", "REJECT"])("preserves the request and policies while recording %s", async (action) => {
-    const { PATCH } = await import("../src/app/api/client-id-requests/route.js");
-    const response = await PATCH(
-      patchRequest({ requestId: requestItem.id, action, note: "Correct the client identity." }),
-    );
-    const body = await response.json();
+  it.each(["NEEDS_CORRECTION", "REJECT"])(
+    "preserves the request and policies while recording %s",
+    async (action) => {
+      const { PATCH } = await import("../src/app/api/client-id-requests/route.js");
+      const response = await PATCH(
+        patchRequest({ requestId: requestItem.id, action, note: "Correct the client identity." }),
+      );
+      const body = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(body.id).toBe(requestItem.id);
-    expect(body.status).toBe("WAITING_DOCUMENTS");
-    expect(txMock.policyRecord.updateMany).toHaveBeenCalledWith({
-      where: { clientIdRequestId: requestItem.id, clientIdPending: true, deletedAt: null },
-      data: { clientIdStatus: "ACTION_REQUIRED" },
-    });
-    expect(txMock.task.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: requestItem.id } }));
-    const metadata = txMock.task.update.mock.calls.at(-1)[0].data.metadata;
-    expect(metadata.history.at(-1)).toMatchObject({
-      event: action,
-      note: "Correct the client identity.",
-      actorId: "40000000-0000-4000-8000-000000000001",
-      identity: { name: "Original Client", phone: "9876543210", email: "old@example.com" },
-    });
-    expect(metadata.history.at(-1).at).toBeTruthy();
-    expect(txMock.notification.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          userId: requestItem.createdById,
-          severity: "WARNING",
-          recordId: requestItem.id,
+      expect(response.status).toBe(200);
+      expect(body.id).toBe(requestItem.id);
+      expect(body.status).toBe("WAITING_DOCUMENTS");
+      expect(txMock.policyRecord.updateMany).toHaveBeenCalledWith({
+        where: { clientIdRequestId: requestItem.id, clientIdPending: true, deletedAt: null },
+        data: { clientIdStatus: "ACTION_REQUIRED" },
+      });
+      expect(txMock.task.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: requestItem.id } }),
+      );
+      const metadata = txMock.task.update.mock.calls.at(-1)[0].data.metadata;
+      expect(metadata.history.at(-1)).toMatchObject({
+        event: action,
+        note: "Correct the client identity.",
+        actorId: "40000000-0000-4000-8000-000000000001",
+        identity: { name: "Original Client", phone: "9876543210", email: "old@example.com" },
+      });
+      expect(metadata.history.at(-1).at).toBeTruthy();
+      expect(txMock.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            userId: requestItem.createdById,
+            severity: "WARNING",
+            recordId: requestItem.id,
+          }),
         }),
-      }),
-    );
-  });
+      );
+    },
+  );
 
   it("synchronizes identity fields and resubmits the same request without duplicating policies", async () => {
     const waitingItem = {
@@ -157,10 +164,17 @@ describe("Client ID request correction workflow", () => {
         }),
       }),
     );
-    expect(txMock.policyRecord.update).toHaveBeenNthCalledWith(2, expect.objectContaining({ where: { id: "policy-2" } }));
+    expect(txMock.policyRecord.update).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ where: { id: "policy-2" } }),
+    );
     const taskUpdate = txMock.task.update.mock.calls.at(-1)[0];
     expect(taskUpdate.where).toEqual({ id: requestItem.id });
-    expect(taskUpdate.data).toMatchObject({ status: "OPEN", customerName: "Corrected Client", customerMobile: "9123456789" });
+    expect(taskUpdate.data).toMatchObject({
+      status: "OPEN",
+      customerName: "Corrected Client",
+      customerMobile: "9123456789",
+    });
     expect(taskUpdate.data.metadata.history.at(-1)).toMatchObject({
       event: "RESUBMITTED",
       before: { name: "Original Client", phone: "9876543210", email: "old@example.com" },
@@ -168,6 +182,42 @@ describe("Client ID request correction workflow", () => {
       actorId: requestItem.createdById,
     });
     expect(txMock.notification.create).not.toHaveBeenCalled();
+  });
+
+  it("attaches a newly created Client ID to every policy saved under one request", async () => {
+    const account = {
+      id: "50000000-0000-4000-8000-000000000001",
+      name: requestItem.customerName,
+    };
+    prismaMock.clientAccount.create.mockResolvedValue(account);
+    txMock.policyRecord.findMany.mockResolvedValue(
+      [1, 2, 3, 4].map((number) => ({
+        id: `policy-${number}`,
+        data: { policyNumber: `POL-${number}`, clientId: "PENDING_CLIENT_ID" },
+        reviewedData: { policyNumber: `POL-${number}` },
+        extractedData: { policyNumber: `POL-${number}` },
+      })),
+    );
+    txMock.policyRecord.update.mockResolvedValue({});
+
+    const { PATCH } = await import("../src/app/api/client-id-requests/route.js");
+    const response = await PATCH(patchRequest({ requestId: requestItem.id, action: "CREATE_NEW" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.mappedPolicyCount).toBe(4);
+    expect(prismaMock.clientAccount.create).toHaveBeenCalledTimes(1);
+    expect(txMock.policyRecord.update).toHaveBeenCalledTimes(4);
+    for (const call of txMock.policyRecord.update.mock.calls) {
+      expect(call[0].data).toMatchObject({
+        data: expect.objectContaining({ clientId: account.id }),
+        reviewedData: expect.objectContaining({ clientId: account.id }),
+        extractedData: expect.objectContaining({ clientId: account.id }),
+        clientIdPending: false,
+        clientIdStatus: "LINKED",
+      });
+    }
+    expect(txMock.task.update.mock.calls.at(-1)[0].data.metadata.mappedPolicyCount).toBe(4);
   });
 });
 

@@ -100,7 +100,9 @@ function extractNominee(text = "", members = []) {
     "",
   );
   const row = schedule.slice(schedule.indexOf(marker) + marker.length);
-  const match = row.match(/^(.+?)(Wife|Husband|Spouse|Son|Daughter|Father|Mother)(?=\d{1,2}\/\d{1,2}\/\d{4})/i);
+  const match = row.match(
+    /^(.+?)(Wife|Husband|Spouse|Son|Daughter|Father|Mother)(?=\d{1,2}\/\d{1,2}\/\d{4})/i,
+  );
   const compactName = match?.[1] || "";
   const personKey = (value = "") =>
     String(value)
@@ -108,8 +110,8 @@ function extractNominee(text = "", members = []) {
       .toLowerCase();
   const nomineeKey = personKey(compactName);
   const nomineeKeyWithoutTitle = nomineeKey.replace(/^(?:mrs|miss|mr|ms|dr)/, "");
-  const linkedMember = members.find(
-    (member) => [nomineeKey, nomineeKeyWithoutTitle].includes(personKey(member.name)),
+  const linkedMember = members.find((member) =>
+    [nomineeKey, nomineeKeyWithoutTitle].includes(personKey(member.name)),
   );
   return {
     name: linkedMember?.name || compactName,
@@ -123,19 +125,14 @@ function extractIntermediary(text = "") {
     /Intermediary\s+NameIntermediary\s+CodeIntermediary\s+Contact\s+Number\s*\n([^\n]+)/i,
   );
   const mobile = matchGroup(row, /([6-9]\d{9})$/);
-  const withoutMobile = mobile
-    ? row.slice(0, -mobile.length).replace(/(?:\+?91[-\s]?)$/, "")
-    : row;
+  const withoutMobile = mobile ? row.slice(0, -mobile.length).replace(/(?:\+?91[-\s]?)$/, "") : row;
   const code = matchGroup(withoutMobile, /(\d{8,})$/);
   const name = cleanHdfcValue(code ? withoutMobile.slice(0, -code.length) : withoutMobile);
   return { name, code, mobile };
 }
 
 function extractMailingAddress(text = "") {
-  const block = matchGroup(
-    text,
-    /Email\s+ID\s*:[^\n]*\n[^\n]*\n([\s\S]+?)\nContact\s+No\s*:/i,
-  );
+  const block = matchGroup(text, /Email\s+ID\s*:[^\n]*\n[^\n]*\n([\s\S]+?)\nContact\s+No\s*:/i);
   return cleanHdfcValue(block.replace(/\s*\n\s*/g, " "));
 }
 
@@ -153,14 +150,15 @@ function train({ text = "", result }) {
   const primaryInsured = insuredMembers[0]?.name || policyholderName;
   const nominee = extractNominee(text, insuredMembers);
   const intermediary = extractIntermediary(text);
-  const totalPremium = formatAmount(
-    matchGroup(text, /received\s*an\s*amount\s*of\s*[^0-9]{0,3}([0-9,]+)/i),
-  );
+  const totalPremium = formatAmount(matchGroup(text, /received\s*an\s*amount\s*of\s*[^0-9]{0,3}([0-9,]+)/i));
   const sumInsured = formatAmount(matchGroup(text, /Sum\s+Insured\s+opted\s*:\s*([0-9,]+)/i));
   const productName = matchGroup(
     text,
     /Insured\s+Person[’']s\s+Details\s+and\s+Sum\s+Insured\s*[-–]\s*([^\n]+)/i,
   );
+  const customerId = matchGroup(schedule, /Customer\s+Id\s*:\s*(\d+)/i);
+  const paymentReference = matchGroup(text, /Instrument\s+details\s*([A-Z]+\d+)(?=Date|\s|$)/i);
+  const bankName = matchGroup(text, /Bank\s+Name\s*([A-Z0-9 ]+?)(?=Processing\s+Centre|\n)/i);
 
   return {
     productName: productName || "Optima Secure",
@@ -173,6 +171,8 @@ function train({ text = "", result }) {
     policyTenure: startDate && expiryDate ? "1 Year" : result.policyTenure,
     startDate: startDate || result.startDate,
     expiryDate: expiryDate || result.expiryDate,
+    policyStartDate: startDate || result.startDate,
+    policyEndDate: expiryDate || result.expiryDate,
     proposerName: policyholderName || result.proposerName,
     customerName: policyholderName || result.customerName,
     insuredName: primaryInsured || result.insuredName,
@@ -187,6 +187,9 @@ function train({ text = "", result }) {
     policyholderEmailMasked: matchGroup(schedule, /Email\s+ID\s*:\s*([^\n]+)/i),
     policyholderMobileMasked: matchGroup(schedule, /Contact\s+No\s*:\s*([0-9Xx*]+)/i),
     invoiceNumber: matchGroup(schedule, /Invoice\s+No\.\s*:\s*([0-9]+)/i),
+    issuanceDate:
+      normalizeDate(matchGroup(schedule, /Issuance\s+Date\s*:\s*([0-9/]+)/i)) || result.issuanceDate,
+    customerId: customerId || result.customerId,
     sumInsured: sumInsured || result.sumInsured,
     basicPremium: totalPremium || result.basicPremium,
     netPremium: totalPremium || result.netPremium,
@@ -204,11 +207,14 @@ function train({ text = "", result }) {
     agentName: intermediary.name || result.agentName,
     agentCode: intermediary.code || result.agentCode,
     agentMobile: intermediary.mobile || result.agentMobile,
-    servicingBranchAddress:
-      matchGroup(text, /Branch\s*:\s*([^\n]+)/i) || result.servicingBranchAddress,
+    paymentReference: paymentReference || result.paymentReference,
+    bankName: cleanHdfcValue(bankName) || result.bankName,
+    servicingBranchAddress: matchGroup(text, /Branch\s*:\s*([^\n]+)/i) || result.servicingBranchAddress,
     vehicleNumber: "",
     registrationNumber: "",
     makeModel: "",
+    vehicleMake: "",
+    vehicleModel: "",
     variant: "",
     manufacturingYear: "",
     registrationDate: "",
@@ -219,9 +225,25 @@ function train({ text = "", result }) {
     seatingCapacity: "",
     grossVehicleWeight: "",
     idv: "",
+    totalPackagePremium: "",
     ncb: "",
     rtoLocation: "",
     policyCoverType: "",
+    cscContactNumber: "",
+    confidenceScore: 0.98,
+    extractionMethod: "scoped_training",
+    extractionQuality: {
+      quality: "ready_for_review",
+      schemaName: "HDFC ERGO Optima Secure Health training",
+      schemaVersion: 1,
+      schemaMatch: 1,
+      understandingConfidence: 1,
+      schemaLoadError: "",
+      warnings: [],
+    },
+    policyUnderstanding: {},
+    schemaExtraction: {},
+    fieldConfidence: {},
     extractionTrainingVersion: "HDFC_ERGO_HEALTH_OPTIMA_SECURE_V1",
   };
 }

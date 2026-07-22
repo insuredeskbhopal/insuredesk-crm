@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import "./dashboard.css";
 import { cachedJson } from "@/app/lib/client-api";
 import { getRecordSearchText } from "@/lib/records/search";
+import { attachClientIdRequestToMatchingUploads } from "@/lib/client-accounts/utils";
 import { validateContactNumber, validateContactPerson } from "@/lib/records/validation";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 import { formatMoney, parseMoney } from "@/lib/records/analytics";
@@ -595,8 +596,7 @@ export default function Dashboard({
     null;
   const reviewCounts = getReviewCounts(selectedFiles);
 
-  const showRecordSaveActions =
-    activePage === "bulk-entry" || activePage === "manual-entry";
+  const showRecordSaveActions = activePage === "bulk-entry" || activePage === "manual-entry";
 
   useEffect(() => {
     const savedView = loadDashboardView(DASHBOARD_VIEW_KEY);
@@ -776,6 +776,10 @@ export default function Dashboard({
       delete next[key];
       return next;
     });
+    if (key === "clientIdRequestId" && value) {
+      setSelectedFiles((current) => attachClientIdRequestToMatchingUploads(current, selectedUpload, value));
+      return;
+    }
     updateSelectedUpload({
       extractedData: {
         ...(selectedUpload.extractedData || {}),
@@ -827,7 +831,8 @@ export default function Dashboard({
         setEditError("");
         setEditFieldErrors({});
         if (!editForm.clientId && !editForm.clientIdRequestId) {
-          const message = "You must link this policy to a Client ID before saving. Please use the search assistant under Client ID to link an existing client, or request the admin to create a new client first.";
+          const message =
+            "You must link this policy to a Client ID before saving. Please use the search assistant under Client ID to link an existing client, or request the admin to create a new client first.";
           setEditError(message);
           setEditFieldErrors({ clientId: "Client ID is required." });
           setToast("Client ID is required");
@@ -1025,14 +1030,17 @@ export default function Dashboard({
         const reviewedUploadData = isDynamicPolicySave ? prepareUploadReviewData(selectedUpload) : null;
 
         const targetClientId = isDynamicPolicySave
-          ? (reviewedUploadData?.clientId || selectedUpload?.reviewedData?.clientId || selectedUpload?.extractedData?.clientId)
+          ? reviewedUploadData?.clientId ||
+            selectedUpload?.reviewedData?.clientId ||
+            selectedUpload?.extractedData?.clientId
           : form.clientId;
         const targetClientIdRequestId = isDynamicPolicySave
           ? reviewedUploadData?.clientIdRequestId
           : form.clientIdRequestId;
 
         if (!targetClientId && !targetClientIdRequestId) {
-          const message = "You must link this policy to a Client ID before saving. Please use the search assistant under Client ID to link an existing client, or request the admin to create a new client first.";
+          const message =
+            "You must link this policy to a Client ID before saving. Please use the search assistant under Client ID to link an existing client, or request the admin to create a new client first.";
           setReviewError(message);
           setReviewFieldErrors({ clientId: "Client ID is required." });
           setAlert({
@@ -1073,7 +1081,10 @@ export default function Dashboard({
           const validation = getReviewValidation({
             ...selectedUpload,
             extractedData: reviewedUploadData,
-            manualFields: uniqueValues([...(selectedUpload.manualFields || []), ...Object.keys(reviewedUploadData || {})]),
+            manualFields: uniqueValues([
+              ...(selectedUpload.manualFields || []),
+              ...Object.keys(reviewedUploadData || {}),
+            ]),
           });
           const pendingClientIdOnly = canSaveWithPendingClientId(validation, targetClientIdRequestId);
           if (!validation.valid && !pendingClientIdOnly) {
@@ -1627,8 +1638,6 @@ export default function Dashboard({
               </article>
             ))}
           </section>
-
-
 
           <section className="bento-grid">
             <div className="left-stack">

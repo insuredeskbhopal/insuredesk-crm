@@ -32,14 +32,45 @@ export function matchesClientAccountIdentity(profile, { insuredName, contactNumb
 
   const expectedPhone = normalizePhone(contactNumber);
   const phoneMatches = expectedPhone && normalizePhone(profile?.phone) === expectedPhone;
-  const expectedEmail = String(email || "").trim().toLowerCase();
+  const expectedEmail = String(email || "")
+    .trim()
+    .toLowerCase();
   const emailMatches =
     expectedEmail &&
     [profile?.email, profile?.googleEmail].some(
-      (candidate) => String(candidate || "").trim().toLowerCase() === expectedEmail,
+      (candidate) =>
+        String(candidate || "")
+          .trim()
+          .toLowerCase() === expectedEmail,
     );
 
   return Boolean(phoneMatches || emailMatches);
+}
+
+export function attachClientIdRequestToMatchingUploads(uploads = [], sourceUpload, requestId) {
+  if (!requestId || !sourceUpload) return uploads;
+  const source = sourceUpload.reviewedData || sourceUpload.extractedData || {};
+  const sourceName = normalizeName(source.insuredName);
+  const sourcePhone = normalizePhone(source.contactNumber || source.customerMobile);
+  if (!sourceName || sourcePhone.length !== 10) return uploads;
+
+  return uploads.map((upload) => {
+    const data = upload.reviewedData || upload.extractedData || {};
+    if (
+      data.clientId ||
+      data.clientIdRequestId ||
+      normalizeName(data.insuredName) !== sourceName ||
+      normalizePhone(data.contactNumber || data.customerMobile) !== sourcePhone
+    ) {
+      return upload;
+    }
+
+    return {
+      ...upload,
+      extractedData: { ...(upload.extractedData || {}), clientIdRequestId: requestId },
+      manualFields: [...new Set([...(upload.manualFields || []), "clientIdRequestId"])],
+    };
+  });
 }
 
 function normalizePhone(value) {
@@ -54,6 +85,7 @@ function normalizePhone(value) {
 function normalizeName(value) {
   return String(value || "")
     .normalize("NFKC")
+    .replace(/^\s*(?:m\/s|mr|mrs|miss|ms)\.?\s+/i, "")
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
 }
