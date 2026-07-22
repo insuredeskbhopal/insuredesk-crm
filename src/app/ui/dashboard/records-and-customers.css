@@ -194,13 +194,22 @@ th {
 }
 
 .records-table .record-compact-text > button {
+  display: inline;
   flex: 0 0 auto;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: #047857;
-  font-size: 11px;
-  font-weight: 800;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #047857 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -216,13 +225,13 @@ th {
 }
 
 .records-table .record-compact-text.expanded > span {
-  display: block;
+  display: inline;
   overflow: visible;
   white-space: normal;
 }
 
 .records-table .record-compact-text.expanded > button {
-  margin-top: 6px;
+  margin: 0 0 0 6px !important;
 }
 
 .renewal-policy-table.records-table {
