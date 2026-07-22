@@ -1,4 +1,9 @@
+import { useEffect, useRef, useState } from "react";
+import { matchesClientAccountIdentity } from "@/lib/client-accounts/utils";
+import { normalizeContactNumber } from "@/lib/records/validation";
+
 export default function PreviewField({
+  fieldKey,
   label,
   meta,
   value,
@@ -25,10 +30,15 @@ export default function PreviewField({
     </span>
   );
 
+  const isContactNumber = fieldKey === "contactNumber" || label === "Contact Number";
+  const isWhatsAppGroup = fieldKey === "whatsappGroupName" || label === "WhatsApp Group Name";
+  const handleTextChange = (event) =>
+    onChange(isContactNumber ? normalizeContactNumber(event.target.value) : event.target.value);
+
   let inputEl;
   if (wide) {
     inputEl = (
-      <textarea value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} />
+      <textarea value={value} onChange={handleTextChange} disabled={disabled} />
     );
   } else if (options?.length) {
     inputEl = (
@@ -45,7 +55,10 @@ export default function PreviewField({
       <input
         type={type}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={handleTextChange}
+        onBlur={() => {
+          if (isContactNumber) onChange(normalizeContactNumber(value));
+        }}
         disabled={disabled}
       />
     );
@@ -72,6 +85,14 @@ export default function PreviewField({
           onClientIdRequestChange={onClientIdRequestChange}
         />
       )}
+      {isWhatsAppGroup ? (
+        <WhatsAppGroupSuggestions
+          contactNumber={contactNumber}
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+        />
+      ) : null}
       {hasSuggestion ? (
         <div className="ai-suggestion-card">
           <div>
@@ -98,9 +119,82 @@ export default function PreviewField({
     </label>
   );
 }
+function WhatsAppGroupSuggestions({ contactNumber, value, onChange, disabled }) {
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const [error, setError] = useState("");
 
-import { useState, useEffect, useRef } from "react";
-import { matchesClientAccountIdentity } from "@/lib/client-accounts/utils";
+  useEffect(() => {
+    const phone = normalizeContactNumber(contactNumber);
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      setGroups([]);
+      setLoading(false);
+      setChecked(false);
+      setError("");
+      return undefined;
+    }
+
+    const controller = new globalThis.AbortController();
+    setGroups([]);
+    setChecked(false);
+    setError("");
+    const timer = globalThis.setTimeout(async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await fetch(`/api/operations/whatsapp/groups?phone=${encodeURIComponent(phone)}`, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || "WhatsApp group lookup failed.");
+        setGroups(Array.isArray(payload.groups) ? payload.groups : []);
+        setChecked(true);
+      } catch (lookupError) {
+        if (lookupError?.name === "AbortError") return;
+        setGroups([]);
+        setChecked(true);
+        setError(lookupError.message || "WhatsApp group lookup failed.");
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      globalThis.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [contactNumber]);
+
+  if (loading) return <span className="whatsapp-group-lookup-state">Checking associated groups…</span>;
+  if (error) return <span className="whatsapp-group-lookup-state error">{error}</span>;
+  if (!checked) return null;
+  if (!groups.length) {
+    return <span className="whatsapp-group-lookup-state">No associated WhatsApp group found.</span>;
+  }
+
+  return (
+    <div className="whatsapp-group-suggestions">
+      <strong>Associated WhatsApp groups</strong>
+      <div>
+        {groups.slice(0, 5).map((group) => (
+          <button
+            key={group.id || group.name}
+            type="button"
+            className={value === group.name ? "selected" : ""}
+            onClick={() => onChange(group.name)}
+            disabled={disabled}
+            title={group.name}
+          >
+            <span>{group.name}</span>
+            {group.participants ? <small>{group.participants} members</small> : null}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber, email, onClientIdRequestChange }) {
   const [showSearch, setShowSearch] = useState(false);

@@ -438,6 +438,7 @@ export default function PolicyDetailCard({
                       return (
                         <PreviewField
                           key={key}
+                          fieldKey={key}
                           label={label}
                           value={editForm[key] || ""}
                           onChange={(value) => updateEditField(key, value)}

@@ -198,6 +198,7 @@ export default function FixedPolicyPreview({
                       return (
                         <PreviewField
                           key={key}
+                          fieldKey={key}
                           label={label}
                           meta={getFieldMeta(key)}
                           value={getPreviewValue(key)}
@@ -286,6 +287,7 @@ function HealthInsuredMembersFields({ members, onChange }) {
               {HEALTH_MEMBER_FIELDS.map(([label, key]) => (
                 <PreviewField
                   key={key}
+                  fieldKey={key}
                   label={label}
                   value={member?.[key] || ""}
                   onChange={(value) => updateMember(index, key, value)}

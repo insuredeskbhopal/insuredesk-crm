@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   sanitizeRecordPayload,
+  normalizeContactNumber,
   validateContactNumber,
   validateContactPerson,
 } from "../src/lib/records/validation";
@@ -140,9 +141,7 @@ describe("sanitizeRecordPayload", () => {
     });
 
     expect(validation.resolvedSchema?.groupId).toBe("health");
-    expect(validation.requiredKeys).not.toEqual(
-      expect.arrayContaining(["engineNumber", "chassisNumber"]),
-    );
+    expect(validation.requiredKeys).not.toEqual(expect.arrayContaining(["engineNumber", "chassisNumber"]));
     expect(validation.missingRequired).not.toEqual(
       expect.arrayContaining(["Engine Number", "Chassis Number"]),
     );
@@ -158,8 +157,15 @@ describe("sanitizeRecordPayload", () => {
 
     expect(canSaveWithPendingClientId(validation, "10000000-0000-4000-8000-000000000001")).toBe(true);
     expect(canSaveWithPendingClientId(validation, "")).toBe(false);
-    expect(canSaveWithPendingClientId({ ...validation, missingRequired: ["Client ID", "Policy Number"] }, "request-id")).toBe(false);
-    expect(canSaveWithPendingClientId({ ...validation, contactErrors: ["Invalid phone"] }, "request-id")).toBe(false);
+    expect(
+      canSaveWithPendingClientId(
+        { ...validation, missingRequired: ["Client ID", "Policy Number"] },
+        "request-id",
+      ),
+    ).toBe(false);
+    expect(
+      canSaveWithPendingClientId({ ...validation, contactErrors: ["Invalid phone"] }, "request-id"),
+    ).toBe(false);
   });
 
   it("validates contact person as required and name-only", () => {
@@ -175,15 +181,24 @@ describe("sanitizeRecordPayload", () => {
     expect(validateContactNumber("9876543210")).toBe("");
     expect(validateContactNumber("XXXXXX4257")).toBe("");
     expect(validateContactNumber("91******92")).toBe("");
-    expect(validateContactNumber("98765 43210")).toBe(
-      "Contact Number must be exactly 10 digits or a masked policy contact number.",
-    );
+    expect(validateContactNumber("98765 43210")).toBe("");
     expect(validateContactNumber("987654321")).toBe(
       "Contact Number must be exactly 10 digits or a masked policy contact number.",
     );
     expect(validateContactNumber("987654321A")).toBe(
       "Contact Number must be exactly 10 digits or a masked policy contact number.",
     );
+  });
+
+  it.each([
+    ["+91 8818889660", "8818889660"],
+    ["88188 89660", "8818889660"],
+    ["91 88188 89660", "8818889660"],
+    ["918818889660", "8818889660"],
+    ["08818889660", "8818889660"],
+  ])("normalizes pasted Indian contact number %s", (input, expected) => {
+    expect(normalizeContactNumber(input)).toBe(expected);
+    expect(sanitizeRecordPayload({ contactNumber: input }).contactNumber).toBe(expected);
   });
 
   it("includes contact format errors in review validation", () => {
@@ -198,7 +213,7 @@ describe("sanitizeRecordPayload", () => {
           startDate: "01/01/2026",
           expiryDate: "01/01/2027",
           contactPerson: "Example 42",
-          contactNumber: "98765 43210",
+          contactNumber: "987654321",
         },
       },
       {

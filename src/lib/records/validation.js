@@ -1,4 +1,5 @@
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
+import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 
 const { normalizeInsuranceCompanyName } = insuranceCompanyMaster;
 const TEXT_LIMIT = 2000;
@@ -21,7 +22,7 @@ export function sanitizeRecordPayload(payload = {}) {
     proposerName: asText(payload.proposerName, 260),
     policyNumber: asText(payload.policyNumber, 120),
     clientId: asText(payload.clientId, 120),
-    contactNumber: asText(payload.contactNumber, 40),
+    contactNumber: normalizeContactNumber(payload.contactNumber),
     contactPerson: asText(payload.contactPerson, 180),
     whatsappGroupName: asText(payload.whatsappGroupName, 180),
     groupName: asText(payload.groupName, 120),
@@ -225,7 +226,7 @@ export function validateContactNumber(value) {
   const digits = cleanValue.replace(/\D/g, "");
   const hasMask = /[xX*•]/.test(cleanValue);
 
-  if (/^\d{10}$/.test(cleanValue)) {
+  if (normalizeIndianPhone(cleanValue)) {
     return "";
   }
 
@@ -234,6 +235,12 @@ export function validateContactNumber(value) {
   }
 
   return "Contact Number must be exactly 10 digits or a masked policy contact number.";
+}
+
+export function normalizeContactNumber(value) {
+  const cleanValue = asText(value, 40);
+  if (!cleanValue || /[xX*•]/.test(cleanValue)) return cleanValue;
+  return normalizeIndianPhone(cleanValue) || cleanValue;
 }
 
 export function normalizeDateToYMD(dateStr) {
