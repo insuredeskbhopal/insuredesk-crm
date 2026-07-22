@@ -56,6 +56,16 @@ describe("warehouse-centric policy record table", () => {
     expect(table).toContain("COLUMN_WIDTHS[column.className");
   });
 
+  it("keeps long warehouse fields compact and opens the full value on demand", () => {
+    const dashboard = read("src/app/ui/dashboard.js");
+    const table = read("src/app/components/RecordsTable.js");
+
+    expect(dashboard.match(/compact: true/g)).toHaveLength(3);
+    expect(table).toContain('className="record-compact-text"');
+    expect(table).toContain("See more");
+    expect(table).toContain("<ModalPortal>");
+  });
+
   it("does not modify Motor extraction or schema code", () => {
     const stagedFiles = ["src/app/ui/dashboard.js", "src/app/components/RecordsTable.js"];
     expect(stagedFiles.some((file) => /motor\.cjs|training.*motor|motor.*schema/i.test(file))).toBe(false);

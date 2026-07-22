@@ -89,15 +89,17 @@ const WAREHOUSE_RECORD_COLUMNS = [
     fallbackKeys: ["premisesAddress"],
     label: "Risk Location",
     className: "col-location",
+    compact: true,
   },
   { key: "district", label: "District", className: "col-district" },
   { key: "tehsil", label: "Tehsil", className: "col-tehsil" },
-  { key: "occupancy", label: "Occupancy", className: "col-occupancy" },
+  { key: "occupancy", label: "Occupancy", className: "col-occupancy", compact: true },
   {
     key: "description",
     fallbackKeys: ["businessDescription"],
     label: "Risk Description",
     className: "col-description",
+    compact: true,
   },
   {
     key: "sumInsured",

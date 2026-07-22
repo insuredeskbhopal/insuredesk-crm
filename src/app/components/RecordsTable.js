@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Download, Pencil, Eye, Trash2, CheckSquare, Square, MinusSquare } from "lucide-react";
+import { Download, Pencil, Eye, Trash2, CheckSquare, Square, MinusSquare, X } from "lucide-react";
 import PolicyDetailCard from "@/app/components/shared/PolicyDetailCard";
+import ModalPortal from "@/app/components/shared/ModalPortal";
 import { inferUploadSchema } from "@/app/lib/dashboard-helpers";
 
 
@@ -53,7 +54,7 @@ function formatMoneyValue(value) {
   return `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(amount)}`;
 }
 
-function renderCell(record, column) {
+function renderCell(record, column, onViewLongText) {
   const fallbackKeys = [column.fallbackKey, ...(column.fallbackKeys || [])].filter(Boolean);
   let rawValue = [record[column.key], ...fallbackKeys.map((key) => record[key])].find(
     (candidate) => candidate !== undefined && candidate !== null && candidate !== "",
@@ -76,6 +77,20 @@ function renderCell(record, column) {
         : column.format === "money"
           ? formatMoneyValue(rawValue)
         : rawValue || "";
+  if (column.compact && String(value).length > 32) {
+    return (
+      <div className="record-compact-text">
+        <span title={String(value)}>{String(value)}</span>
+        <button
+          type="button"
+          onClick={() => onViewLongText({ label: column.label, value: String(value) })}
+          aria-label={`See full ${column.label}`}
+        >
+          See more
+        </button>
+      </div>
+    );
+  }
   if (column.primary) {
     return (
       <div>
@@ -147,6 +162,7 @@ export default function RecordsTable({
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [expandedCell, setExpandedCell] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
   const getStickyStyle = (colIndex) => {
@@ -624,7 +640,7 @@ export default function RecordsTable({
                         className={getStickyClassName(index)}
                         style={getStickyStyle(index)}
                       >
-                        {renderCell(record, column)}
+                        {renderCell(record, column, setExpandedCell)}
                       </td>
                     ))}
                     <td>
@@ -742,6 +758,31 @@ export default function RecordsTable({
           onPrint={handlePrint}
         />
       )}
+
+      {expandedCell ? (
+        <ModalPortal>
+          <div className="record-text-modal-backdrop" onMouseDown={() => setExpandedCell(null)}>
+            <section
+              className="record-text-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="record-text-modal-title"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <div className="record-text-modal-header">
+                <div>
+                  <span>Policy record</span>
+                  <h2 id="record-text-modal-title">{expandedCell.label}</h2>
+                </div>
+                <button type="button" onClick={() => setExpandedCell(null)} aria-label="Close full text">
+                  <X size={20} />
+                </button>
+              </div>
+              <p>{expandedCell.value}</p>
+            </section>
+          </div>
+        </ModalPortal>
+      ) : null}
 
       {/* Floating action bar when records are marked */}
       {canDelete &&
