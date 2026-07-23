@@ -175,24 +175,22 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
           const Icon = KPI_ICONS[index % KPI_ICONS.length];
           return (
             <article className="bi-metric-card" key={item.label}>
-              <div className="bi-metric-card-head">
-                <span className="bi-metric-icon" aria-hidden="true">
-                  <Icon size={20} strokeWidth={2.2} />
-                </span>
-                <span className="bi-metric-index" aria-hidden="true">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-              </div>
+              <span className="bi-metric-icon" aria-hidden="true">
+                <Icon size={18} strokeWidth={2.2} />
+              </span>
               <div className="bi-metric-copy">
                 <p>{item.label}</p>
                 <strong>{item.value}</strong>
+                {item.hint ? (
+                  <small>
+                    <CalendarRange size={12} aria-hidden="true" />
+                    {item.hint}
+                  </small>
+                ) : null}
               </div>
-              {item.hint ? (
-                <small>
-                  <CalendarRange size={13} aria-hidden="true" />
-                  {item.hint}
-                </small>
-              ) : null}
+              <span className="bi-metric-index" aria-hidden="true">
+                {String(index + 1).padStart(2, "0")}
+              </span>
             </article>
           );
         })}
