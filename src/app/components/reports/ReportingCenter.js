@@ -119,7 +119,7 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
   );
 
   return (
-    <main className="bi-page">
+    <main className={`bi-page bi-report-detail bi-report-detail-${report.category}`}>
       <ReportHero title={report.title} subtitle={report.description} lastUpdated={lastUpdated} />
       <div className="bi-report-nav">
         <Link className="bi-back-link" href="/dashboard/reports" prefetch={false}>
