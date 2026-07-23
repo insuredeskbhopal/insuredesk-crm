@@ -541,24 +541,28 @@
 }
 
 .bi-monthly-table-grid > .bi-table-card:first-child table {
-  min-width: 720px;
+  min-width: 820px;
   table-layout: fixed;
 }
 
 .bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(1) {
-  width: 42%;
+  width: 36%;
 }
 
 .bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(2) {
-  width: 20%;
-}
-
-.bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(3) {
   width: 16%;
 }
 
+.bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(3) {
+  width: 12%;
+}
+
 .bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(4) {
-  width: 22%;
+  width: 18%;
+}
+
+.bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(5) {
+  width: 18%;
 }
 
 .bi-monthly-table-grid > .bi-table-card:last-child table {

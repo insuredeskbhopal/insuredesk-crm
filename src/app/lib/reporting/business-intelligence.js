@@ -692,12 +692,13 @@ function buildReport(category, context, summary) {
     base.tables = [
       table(
         "Insurance Company Summary",
-        ["Insurance Company", "Month", "Policies", "Premium"],
+        ["Insurance Company", "Month", "Policies", "Premium", "Sum Insured"],
         insurerRows.map((row) => [
           row.company,
           context.dateRange.label,
           row.policies,
           formatCurrency(row.premium),
+          formatCurrency(row.sumInsured),
         ]),
       ),
       table(
@@ -1355,9 +1356,10 @@ function buildInsurerSummary(policies) {
   const groups = new Map();
   policies.forEach((policy) => {
     const company = policy.insuranceCompany || "Unknown";
-    const current = groups.get(company) || { company, policies: 0, premium: 0 };
+    const current = groups.get(company) || { company, policies: 0, premium: 0, sumInsured: 0 };
     current.policies += 1;
     current.premium += parseMoney(policy.netPremium || policy.totalPremium || policy.premium);
+    current.sumInsured += parseMoney(policy.sumInsured);
     groups.set(company, current);
   });
   return Array.from(groups.values()).sort((a, b) => b.policies - a.policies);
