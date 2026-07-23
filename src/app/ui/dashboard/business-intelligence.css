@@ -541,7 +541,24 @@
 }
 
 .bi-monthly-table-grid > .bi-table-card:first-child table {
-  min-width: 640px;
+  min-width: 720px;
+  table-layout: fixed;
+}
+
+.bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(1) {
+  width: 42%;
+}
+
+.bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(2) {
+  width: 20%;
+}
+
+.bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(3) {
+  width: 16%;
+}
+
+.bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(4) {
+  width: 22%;
 }
 
 .bi-monthly-table-grid > .bi-table-card:last-child table {
@@ -625,9 +642,9 @@
   font-weight: 700;
 }
 
-.bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(n + 3),
-.bi-monthly-table-grid > .bi-table-card:first-child td:nth-child(n + 3) {
-  text-align: right;
+.bi-monthly-table-grid > .bi-table-card:first-child th:not(:first-child),
+.bi-monthly-table-grid > .bi-table-card:first-child td:not(:first-child) {
+  text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
