@@ -625,13 +625,13 @@
   font-weight: 700;
 }
 
-.bi-monthly-table-grid > .bi-table-card:first-child th:not(:first-child),
-.bi-monthly-table-grid > .bi-table-card:first-child td:not(:first-child) {
+.bi-monthly-table-grid > .bi-table-card:first-child th:nth-child(n + 3),
+.bi-monthly-table-grid > .bi-table-card:first-child td:nth-child(n + 3) {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-.bi-monthly-table-grid > .bi-table-card:first-child td:not(:first-child) {
+.bi-monthly-table-grid > .bi-table-card:first-child td:nth-child(n + 3) {
   color: #101828;
   font-weight: 750;
 }

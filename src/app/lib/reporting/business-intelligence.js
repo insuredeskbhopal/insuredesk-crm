@@ -692,9 +692,10 @@ function buildReport(category, context, summary) {
     base.tables = [
       table(
         "Insurance Company Summary",
-        ["Insurance Company", "Policies", "Premium"],
+        ["Insurance Company", "Month", "Policies", "Premium"],
         insurerRows.map((row) => [
           row.company,
+          context.dateRange.label,
           row.policies,
           formatCurrency(row.premium),
         ]),
