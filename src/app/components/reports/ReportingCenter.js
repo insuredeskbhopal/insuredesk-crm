@@ -38,6 +38,8 @@ const ICONS = {
   documents: FileBarChart,
 };
 
+const KPI_ICONS = [FileText, BriefcaseBusiness, TrendingUp, Activity];
+
 const RANGE_OPTIONS = [
   ["today", "Today"],
   ["yesterday", "Yesterday"],
@@ -169,13 +171,31 @@ export function ReportDetailPage({ report, filters, users, lastUpdated }) {
       ) : null}
 
       <section className="bi-kpi-grid">
-        {report.kpis.map((item) => (
-          <div className="metric-card" key={item.label}>
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
-            {item.hint ? <small>{item.hint}</small> : null}
-          </div>
-        ))}
+        {report.kpis.map((item, index) => {
+          const Icon = KPI_ICONS[index % KPI_ICONS.length];
+          return (
+            <article className="bi-metric-card" key={item.label}>
+              <div className="bi-metric-card-head">
+                <span className="bi-metric-icon" aria-hidden="true">
+                  <Icon size={20} strokeWidth={2.2} />
+                </span>
+                <span className="bi-metric-index" aria-hidden="true">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+              </div>
+              <div className="bi-metric-copy">
+                <p>{item.label}</p>
+                <strong>{item.value}</strong>
+              </div>
+              {item.hint ? (
+                <small>
+                  <CalendarRange size={13} aria-hidden="true" />
+                  {item.hint}
+                </small>
+              ) : null}
+            </article>
+          );
+        })}
       </section>
 
       {report.health?.length ? (

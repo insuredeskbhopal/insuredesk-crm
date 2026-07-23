@@ -264,7 +264,140 @@
 }
 
 .bi-kpi-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+}
+
+.bi-metric-card {
+  --metric-accent: #2563eb;
+  --metric-soft: #eff6ff;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  box-sizing: border-box;
+  grid-template-columns: 36px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  min-width: 0;
+  min-height: 112px;
+  overflow: hidden;
+  align-items: center;
+  gap: 5px 12px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--metric-accent) 18%, #e5e7eb);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--metric-accent) 12%, transparent) 0, transparent 42%),
+    linear-gradient(145deg, #ffffff 0%, color-mix(in srgb, var(--metric-soft) 55%, #ffffff) 100%);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.bi-metric-card::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 16px;
+  width: 48px;
+  height: 3px;
+  border-radius: 0 0 999px 999px;
+  background: var(--metric-accent);
+  content: "";
+}
+
+.bi-metric-card:nth-child(4n + 2) {
+  --metric-accent: #7c3aed;
+  --metric-soft: #f5f3ff;
+}
+
+.bi-metric-card:nth-child(4n + 3) {
+  --metric-accent: #059669;
+  --metric-soft: #ecfdf5;
+}
+
+.bi-metric-card:nth-child(4n) {
+  --metric-accent: #ea580c;
+  --metric-soft: #fff7ed;
+}
+
+.bi-metric-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--metric-accent) 34%, #e5e7eb);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.09);
+}
+
+.bi-metric-card-head {
+  display: contents;
+}
+
+.bi-metric-icon {
+  display: inline-flex;
+  grid-row: 1 / span 2;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--metric-accent) 18%, transparent);
+  border-radius: 10px;
+  background: var(--metric-soft);
+  color: var(--metric-accent);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+
+.bi-metric-index {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  color: color-mix(in srgb, var(--metric-accent) 52%, #64748b);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.bi-metric-copy {
+  display: grid;
+  grid-column: 2;
+  gap: 4px;
+  min-width: 0;
+  padding-right: 28px;
+}
+
+.bi-metric-copy p {
+  margin: 0;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bi-metric-copy strong {
+  overflow: hidden;
+  color: #101828;
+  font-size: clamp(26px, 2vw, 32px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bi-metric-card small {
+  display: flex;
+  align-items: center;
+  grid-column: 2;
+  gap: 5px;
+  margin-top: 1px;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.bi-metric-card small svg {
+  flex: 0 0 auto;
+  color: var(--metric-accent);
 }
 
 .bi-health-panel,
@@ -952,6 +1085,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .bi-metric-card,
   .bi-chart-card,
   .bi-chart-metrics > span,
   .bi-donut-segment,
@@ -997,6 +1131,16 @@
   .bi-filter-bar {
     position: static;
     grid-template-columns: 1fr;
+  }
+
+  .bi-kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  }
+
+  .bi-metric-card {
+    min-height: 104px;
+    padding: 12px 14px;
+    border-radius: 13px;
   }
 
   .bi-monthly-filter-bar {
