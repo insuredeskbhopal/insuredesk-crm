@@ -254,7 +254,7 @@ function ReportFilters({ filters, users, report }) {
   const updateMonthlyReport = (changes = {}) => {
     const month = changes.month ?? filters.month;
     const policyCategory = changes.policyCategory ?? filters.policyCategory;
-    const params = new URLSearchParams();
+    const params = new globalThis.URLSearchParams();
     params.set("month", month);
     if (policyCategory) params.set("policyCategory", policyCategory);
     startTransition(() => router.replace(`${pathname}?${params.toString()}`, { scroll: false }));
