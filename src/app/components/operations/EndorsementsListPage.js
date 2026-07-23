@@ -31,9 +31,28 @@ const TYPES = [
   "Change in Hypothecation / Bank Details",
   "Correction in Insured Name",
   "Correction in Policy Details",
-  "Other Endorsement",
 ];
+
 const PAGE_SIZE = 25;
+
+function statusClass(status) {
+  return String(status || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-");
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("en-IN");
+}
+
+async function readJsonResponse(response) {
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || "Database request failed.");
+  return payload;
+}
 
 export default function EndorsementsListPage() {
   const searchParams = useSearchParams();
@@ -348,23 +367,4 @@ function SummaryCard({ label, value }) {
       <strong>{Number(value || 0).toLocaleString("en-IN")}</strong>
     </div>
   );
-}
-
-function statusClass(status) {
-  return String(status || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-");
-}
-
-function formatDate(value) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString("en-IN");
-}
-
-async function readJsonResponse(response) {
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error || "Database request failed.");
-  return payload;
 }

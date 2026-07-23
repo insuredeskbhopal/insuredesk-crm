@@ -23,10 +23,54 @@ export const ENDORSEMENT_TYPES = [
   "Change in Occupancy",
   "Change in Stock Description",
   "Change in Hypothecation / Bank Details",
-  "Correction in Insured Name",
-  "Correction in Policy Details",
   "Other Endorsement",
 ];
+
+function stringValue(value, required = false) {
+  const text = String(value || "").trim();
+  if (!text && required) return "";
+  return text || null;
+}
+
+function dateValue(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function formatDateInput(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
+function objectValue(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function uuidOrNull(value) {
+  const text = stringValue(value);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text || "")
+    ? text
+    : null;
+}
+
+function numberOrNull(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const num = parseFloat(String(value).replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(num) ? num : null;
+}
+
+export function generateEndorsementNo() {
+  const now = new Date();
+  const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+  const suffix = Math.random().toString(36).slice(2, 7).toUpperCase();
+  return `END-${date}-${suffix}`;
+}
+
+export const generateEndorsementNumber = generateEndorsementNo;
 
 export async function requireEndorsementSession(request, write = false) {
   const token = request.cookies.get("token")?.value;
@@ -238,48 +282,4 @@ export function normalizePolicyData(data = {}) {
     coverages: source.coverages || [],
     raw: source,
   };
-}
-
-export function generateEndorsementNumber() {
-  const now = new Date();
-  const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-  const suffix = Math.random().toString(36).slice(2, 7).toUpperCase();
-  return `END-${date}-${suffix}`;
-}
-
-function stringValue(value, required = false) {
-  const text = String(value || "").trim();
-  if (!text && required) return "";
-  return text || null;
-}
-
-function dateValue(value) {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date;
-}
-
-function formatDateInput(value) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-}
-
-function objectValue(value) {
-  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
-}
-
-function uuidOrNull(value) {
-  const text = stringValue(value);
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text || "")
-    ? text
-    : null;
-}
-
-function numberOrNull(value) {
-  if (value === null || value === undefined || value === "") return null;
-  const num = parseFloat(String(value).replace(/[^0-9.-]/g, ""));
-  return Number.isFinite(num) ? num : null;
 }

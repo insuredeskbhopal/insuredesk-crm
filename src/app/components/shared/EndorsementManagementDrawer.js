@@ -28,13 +28,6 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
   const [showAddModal, setShowAddModal] = useState(false);
   const [verifyingEndorsement, setVerifyingEndorsement] = useState(null);
 
-  useEffect(() => {
-    setMounted(true);
-    if (record) fetchPolicyEndorsements();
-  }, [record]);
-
-  if (!mounted || !record) return null;
-
   const fetchPolicyEndorsements = async () => {
     setLoading(true);
     try {
@@ -49,6 +42,13 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setMounted(true);
+    if (record) fetchPolicyEndorsements();
+  }, [record]);
+
+  if (!mounted || !record) return null;
 
   const financials = getPolicyFinancialsAsOf(record, endorsements);
 
