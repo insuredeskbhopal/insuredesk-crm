@@ -1839,7 +1839,9 @@
   .bi-report-detail-monthly-policies {
     display: grid !important;
     width: 100% !important;
-    gap: 8px !important;
+    height: 196mm !important;
+    grid-template-rows: 18mm 16mm 105mm minmax(0, 1fr) !important;
+    gap: 2mm !important;
     color: #000000;
   }
 
@@ -1849,6 +1851,8 @@
   }
 
   .bi-report-detail-monthly-policies .bi-hero {
+    box-sizing: border-box !important;
+    height: 100% !important;
     min-height: 0 !important;
     padding: 6px 10px !important;
     border-radius: 6px !important;
@@ -1872,12 +1876,13 @@
   }
 
   .bi-report-detail-monthly-policies .bi-kpi-grid {
+    height: 100% !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 8px !important;
   }
 
   .bi-report-detail-monthly-policies .bi-metric-card {
-    height: 52px !important;
+    height: 100% !important;
     min-height: 0 !important;
     grid-template-columns: 24px minmax(0, 1fr) !important;
     gap: 7px !important;
@@ -1929,12 +1934,16 @@
   }
 
   .bi-report-detail-monthly-policies .bi-chart-grid {
+    height: 100% !important;
+    min-height: 0 !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
   }
 
   .bi-report-detail-monthly-policies .bi-chart-card {
-    height: 245px !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
     gap: 4px !important;
     padding: 7px !important;
     border-radius: 7px !important;
@@ -1976,13 +1985,13 @@
   .bi-report-detail-monthly-policies .bi-donut-layout {
     grid-template-columns: 34% 66% !important;
     min-height: 0 !important;
-    height: 180px !important;
+    height: 100% !important;
     gap: 6px !important;
   }
 
   .bi-report-detail-monthly-policies .bi-donut-visual svg {
-    width: 155px !important;
-    max-height: 155px !important;
+    width: min(100%, 220px) !important;
+    max-height: 220px !important;
   }
 
   .bi-report-detail-monthly-policies .bi-donut-segment,
@@ -2004,7 +2013,9 @@
   }
 
   .bi-report-detail-monthly-policies .bi-line-chart {
-    height: 180px !important;
+    box-sizing: border-box !important;
+    height: 100% !important;
+    min-height: 0 !important;
     overflow: hidden !important;
     padding: 4px !important;
     border-radius: 6px !important;
@@ -2013,7 +2024,7 @@
   .bi-report-detail-monthly-policies .bi-line-chart svg {
     width: 100% !important;
     min-width: 0 !important;
-    height: 172px !important;
+    height: 100% !important;
   }
 
   .bi-report-detail-monthly-policies .bi-line-series {
@@ -2023,6 +2034,8 @@
 
   .bi-report-detail-monthly-policies .bi-table-grid.bi-monthly-table-grid {
     display: grid !important;
+    height: 100% !important;
+    min-height: 0 !important;
     gap: 8px !important;
   }
 
@@ -2031,6 +2044,9 @@
   }
 
   .bi-report-detail-monthly-policies .bi-table-card {
+    box-sizing: border-box !important;
+    height: 100% !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
     gap: 5px !important;
     padding: 8px !important;
     border-radius: 8px !important;
@@ -2051,11 +2067,13 @@
   }
 
   .bi-report-detail-monthly-policies .bi-table-card .table-wrap {
+    height: 100% !important;
     overflow: visible !important;
     border-radius: 6px !important;
   }
 
   .bi-report-detail-monthly-policies .bi-table-card table {
+    height: 100% !important;
     width: 100% !important;
     min-width: 0 !important;
     table-layout: fixed !important;
