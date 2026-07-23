@@ -3,8 +3,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { AlertTriangle, X, Printer, Pencil, LoaderCircle, CheckCircle, FileText } from "lucide-react";
-import EndorsementModal from "@/app/components/shared/EndorsementModal";
+import { AlertTriangle, X, Printer, Pencil, LoaderCircle, CheckCircle, FileText, Layers } from "lucide-react";
+import EndorsementManagementDrawer from "@/app/components/shared/EndorsementManagementDrawer";
 import {
   FIELD_GROUPS,
   FUEL_TYPE_OPTIONS,
@@ -642,13 +642,9 @@ export default function PolicyDetailCard({
         </div>
       </div>
       {showEndorsementModal && (
-        <EndorsementModal
+        <EndorsementManagementDrawer
           record={record}
           onClose={() => setShowEndorsementModal(false)}
-          onSuccess={() => {
-            setShowEndorsementModal(false);
-            if (onClose) onClose();
-          }}
         />
       )}
     </div>,
