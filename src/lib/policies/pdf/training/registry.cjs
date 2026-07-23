@@ -1,8 +1,11 @@
 const tataAigWarehouse = require("./tata-aig/warehouse.cjs");
 const iciciLombardHealth = require("./icici-lombard/health.cjs");
 const hdfcErgoHealth = require("./hdfc-ergo/health.cjs");
+const iffcoTokioMotor = require("./iffco-tokio/motor.cjs");
+const libertyMotor = require("./liberty/motor.cjs");
+const goDigitMotor = require("./go-digit/motor.cjs");
 
-const trainers = [tataAigWarehouse, iciciLombardHealth, hdfcErgoHealth];
+const trainers = [tataAigWarehouse, iciciLombardHealth, hdfcErgoHealth, iffcoTokioMotor, libertyMotor, goDigitMotor];
 const ICICI_LOMBARD_HEALTH_FORMAT = "ICICI_LOMBARD_HEALTH_ELEVATE_V1";
 const HDFC_ERGO_HEALTH_FORMAT = "HDFC_ERGO_HEALTH_OPTIMA_SECURE_V1";
 const protectedScopeFields = [
@@ -79,8 +82,18 @@ function isHdfcErgoOptimaSecureHealth(result = {}, context = {}) {
   );
 }
 
+function isGoDigitMotor(result = {}, context = {}) {
+  const text = String(context.text || result.sourceText || "");
+  return (
+    /Go\s+Digit|godigit\.com|Digit\s+Two-Wheeler/i.test(text) &&
+    /Motor|Two-Wheeler|Private\s+Car|Commercial\s+Vehicle/i.test(result.documentCategory || result.policyType || text)
+  );
+}
+
 function deriveTrainingScope(result = {}, context = {}) {
-  const insurer = normalizeInsurer(result.insuranceCompany || result.companyName);
+  const insurer = isGoDigitMotor(result, context)
+    ? "go-digit"
+    : normalizeInsurer(result.insuranceCompany || result.companyName);
   return {
     insurer,
     category:
@@ -105,6 +118,13 @@ function establishTrainingIdentity(result = {}, context = {}) {
       documentCategory: "Health Insurance",
       documentFormat: HDFC_ERGO_HEALTH_FORMAT,
       sourceDocumentType: HDFC_ERGO_HEALTH_FORMAT,
+    };
+  }
+  if (isGoDigitMotor(result, context)) {
+    return {
+      ...result,
+      insuranceCompany: "Go Digit General Insurance Limited",
+      companyName: "Go Digit General Insurance Limited",
     };
   }
   return result;
