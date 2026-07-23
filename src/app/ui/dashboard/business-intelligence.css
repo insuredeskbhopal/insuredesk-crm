@@ -2026,6 +2026,10 @@
     gap: 5px !important;
   }
 
+  .bi-report-detail-monthly-policies .bi-monthly-table-grid > .bi-table-card:last-child {
+    display: none !important;
+  }
+
   .bi-report-detail-monthly-policies .bi-table-card {
     gap: 3px !important;
     padding: 5px !important;
@@ -2067,10 +2071,4 @@
     white-space: nowrap !important;
   }
 
-  .bi-report-detail-monthly-policies .bi-table-card:last-child th:nth-child(1) { width: 10%; }
-  .bi-report-detail-monthly-policies .bi-table-card:last-child th:nth-child(2) { width: 15%; }
-  .bi-report-detail-monthly-policies .bi-table-card:last-child th:nth-child(3) { width: 18%; }
-  .bi-report-detail-monthly-policies .bi-table-card:last-child th:nth-child(4) { width: 15%; }
-  .bi-report-detail-monthly-policies .bi-table-card:last-child th:nth-child(5) { width: 27%; }
-  .bi-report-detail-monthly-policies .bi-table-card:last-child th:nth-child(6) { width: 15%; }
 }
