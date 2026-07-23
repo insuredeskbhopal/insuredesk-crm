@@ -104,6 +104,28 @@ button:focus-visible {
   animation: buttonPulse 0.4s ease-out;
 }
 
+button.btn-add-endorsement,
+button.btn-primary-dark,
+.tb-modal-card button.btn-add-endorsement {
+  background-color: #0f172a !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+}
+
+button.btn-add-endorsement:hover,
+button.btn-primary-dark:hover,
+.tb-modal-card button.btn-add-endorsement:hover {
+  background-color: #1e293b !important;
+  background: #1e293b !important;
+  color: #ffffff !important;
+}
+
+button.btn-add-endorsement *,
+button.btn-primary-dark *,
+.tb-modal-card button.btn-add-endorsement * {
+  color: #ffffff !important;
+}
+
 @keyframes buttonPulse {
   0% {
     box-shadow: none;

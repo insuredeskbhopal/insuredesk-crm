@@ -107,6 +107,8 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <button
+              type="button"
+              className="btn-add-endorsement"
               onClick={() => setShowAddModal(true)}
               style={{
                 padding: "9px 18px",
@@ -116,14 +118,14 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
                 color: "#ffffff",
                 fontWeight: "700",
                 fontSize: "13px",
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
                 cursor: "pointer",
                 boxShadow: "0 2px 8px rgba(15, 23, 42, 0.2)",
               }}
             >
-              <PlusCircle size={16} color="#ffffff" />
+              <PlusCircle size={16} color="#ffffff" style={{ color: "#ffffff" }} />
               <span style={{ color: "#ffffff", fontWeight: "700" }}>+ Add Endorsement</span>
             </button>
 
