@@ -260,7 +260,69 @@
 
 .bi-monthly-filter-bar {
   position: static;
-  grid-template-columns: minmax(190px, 0.7fr) minmax(220px, 1fr) auto;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(220px, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 10px 12px;
+  border-color: #dce5f0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.055);
+}
+
+.bi-monthly-filter-bar label {
+  gap: 4px;
+}
+
+.bi-monthly-filter-bar label > span {
+  color: #475569;
+  font-size: 10px;
+  letter-spacing: 0.045em;
+}
+
+.bi-monthly-filter-bar input,
+.bi-monthly-filter-bar select {
+  height: 36px;
+  min-height: 36px;
+  padding: 6px 11px;
+  border-color: #d6dee8;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.025);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.bi-monthly-filter-bar input:focus,
+.bi-monthly-filter-bar select:focus {
+  border-color: #60a5fa;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.11);
+}
+
+.bi-page .bi-monthly-filter-bar .primary-action {
+  min-height: 36px;
+  padding: 0 16px;
+  border-color: #2563eb !important;
+  border-radius: 10px;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.2) !important;
+  white-space: nowrap;
+}
+
+.bi-page .bi-monthly-filter-bar .primary-action:hover:not(:disabled) {
+  border-color: #1d4ed8 !important;
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.26) !important;
+  transform: translateY(-1px);
+}
+
+.bi-page .bi-monthly-filter-bar .primary-action:disabled {
+  opacity: 0.65;
+  cursor: wait;
 }
 
 .bi-kpi-grid {
