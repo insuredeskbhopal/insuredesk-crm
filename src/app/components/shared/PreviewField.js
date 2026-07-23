@@ -207,8 +207,6 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
   const [requestError, setRequestError] = useState("");
   const notifiedRequestId = useRef("");
 
-  const [autoSuggestedClient, setAutoSuggestedClient] = useState(null);
-
   useEffect(() => {
     if (value && value.length === 36) {
       const controller = new window.AbortController();
@@ -228,10 +226,7 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
   }, [value]);
 
   useEffect(() => {
-    if (value) {
-      setAutoSuggestedClient(null);
-      return;
-    }
+    if (value) return;
 
     const controller = new window.AbortController();
     const runAutoMatch = async () => {
@@ -244,11 +239,9 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
         searchTerms.push(email);
       }
       if (!insuredName?.trim() || searchTerms.length === 0) {
-        setAutoSuggestedClient(null);
         return;
       }
 
-      setAutoSuggestedClient(null);
       try {
         for (const term of searchTerms) {
           const res = await fetch(`/api/client-accounts?page=1&limit=5&q=${encodeURIComponent(term)}`, {
@@ -261,7 +254,10 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
               matchesClientAccountIdentity(profile, { insuredName, contactNumber, email }),
             );
             if (identityMatch) {
-              setAutoSuggestedClient(identityMatch);
+              notifiedRequestId.current = "";
+              onClientIdRequestChange?.("");
+              setSelectedClientName(identityMatch.name);
+              onChange(identityMatch.id);
               break;
             }
           }
@@ -406,47 +402,6 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
       {selectedClientName && (
         <div className="client-id-linked-status">
           ✓ Linked Client: {selectedClientName}
-        </div>
-      )}
-      {!value && autoSuggestedClient && (
-        <div style={{
-          fontSize: "11px",
-          color: "#0369a1",
-          background: "#f0f9ff",
-          border: "1px dashed #bae6fd",
-          borderRadius: "6px",
-          padding: "8px",
-          marginBottom: "6px",
-          display: "block"
-        }}>
-          💡 <strong>Auto-Match Found:</strong> Suggesting client profile:
-          <div style={{ margin: "3px 0", fontWeight: "750", color: "#0f172a" }}>
-            {autoSuggestedClient.name} ({autoSuggestedClient.phone || "No phone"})
-          </div>
-          <button
-            type="button"
-            style={{
-              background: "#0284c7",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "4px",
-              padding: "4px 8px",
-              fontSize: "10px",
-              fontWeight: "700",
-              cursor: "pointer",
-              marginTop: "4px",
-              display: "inline-block"
-            }}
-            onClick={() => {
-              onChange(autoSuggestedClient.id);
-              notifiedRequestId.current = "";
-              onClientIdRequestChange?.("");
-              setSelectedClientName(autoSuggestedClient.name);
-              setAutoSuggestedClient(null);
-            }}
-          >
-            Link Client Profile
-          </button>
         </div>
       )}
       <button

@@ -838,13 +838,20 @@ export default function Dashboard({
       setSelectedFiles((current) => attachClientIdRequestToMatchingUploads(current, selectedUpload, value));
       return;
     }
-    updateSelectedUpload({
-      extractedData: {
-        ...(selectedUpload.extractedData || {}),
-        [key]: value,
-      },
-      manualFields: uniqueValues([...(selectedUpload.manualFields || []), key]),
-    });
+    setSelectedFiles((current) =>
+      current.map((file) =>
+        file.id === selectedUpload.id
+          ? {
+              ...file,
+              extractedData: {
+                ...(file.extractedData || {}),
+                [key]: value,
+              },
+              manualFields: uniqueValues([...(file.manualFields || []), key]),
+            }
+          : file,
+      ),
+    );
   }
 
   function startEditRecord(record) {
