@@ -26,13 +26,28 @@ const FIELD_OPTIONS = {
 
 const formatDate = (dateVal) => {
   if (!dateVal) return "";
-  const d = new Date(dateVal);
-  if (isNaN(d.getTime())) return String(dateVal);
-  return d.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  const str = String(dateVal).trim();
+  const num = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  if (num) {
+    const day = num[1].padStart(2, "0");
+    const month = num[2].padStart(2, "0");
+    const year = num[3].length === 2 ? `20${num[3]}` : num[3];
+    return `${day}-${month}-${year}`;
+  }
+  const named = str.match(/^(\d{1,2})[/-]([A-Za-z]{3})[/-](\d{2,4})$/);
+  if (named) {
+    const monthMap = { JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06", JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12" };
+    const day = named[1].padStart(2, "0");
+    const month = monthMap[named[2].toUpperCase()] || "01";
+    const year = named[3].length === 2 ? `20${named[3]}` : named[3];
+    return `${day}-${month}-${year}`;
+  }
+  const d = new Date(str);
+  if (isNaN(d.getTime())) return str;
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}-${month}-${year}`;
 };
 
 const formatDateTime = (dateVal) => {

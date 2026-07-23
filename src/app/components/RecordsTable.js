@@ -6,8 +6,6 @@ import { Download, Pencil, Eye, Trash2, CheckSquare, Square, MinusSquare } from 
 import PolicyDetailCard from "@/app/components/shared/PolicyDetailCard";
 import { inferUploadSchema } from "@/app/lib/dashboard-helpers";
 
-
-
 const PAGE_SIZE = 10;
 const DEFAULT_RECORD_COLUMNS = [
   { key: "customerId", label: "Customer ID", className: "col-customer" },
@@ -28,9 +26,28 @@ const DEFAULT_RECORD_COLUMNS = [
 
 function formatDate(value) {
   if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleDateString("en-IN");
+  const str = String(value).trim();
+  const num = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  if (num) {
+    const day = num[1].padStart(2, "0");
+    const month = num[2].padStart(2, "0");
+    const year = num[3].length === 2 ? `20${num[3]}` : num[3];
+    return `${day}-${month}-${year}`;
+  }
+  const named = str.match(/^(\d{1,2})[/-]([A-Za-z]{3})[/-](\d{2,4})$/);
+  if (named) {
+    const monthMap = { JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06", JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12" };
+    const day = named[1].padStart(2, "0");
+    const month = monthMap[named[2].toUpperCase()] || "01";
+    const year = named[3].length === 2 ? `20${named[3]}` : named[3];
+    return `${day}-${month}-${year}`;
+  }
+  const date = new Date(str);
+  if (Number.isNaN(date.getTime())) return str;
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 }
 
 function formatDateTime(value) {

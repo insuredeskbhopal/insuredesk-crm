@@ -60,20 +60,57 @@ function money(value) {
 
 function date(value) {
   if (!value) return "Not available";
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  const str = String(value).trim();
+  const num = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  if (num) {
+    const day = num[1].padStart(2, "0");
+    const month = num[2].padStart(2, "0");
+    const year = num[3].length === 2 ? `20${num[3]}` : num[3];
+    return `${day}-${month}-${year}`;
+  }
+  const named = str.match(/^(\d{1,2})[/-]([A-Za-z]{3})[/-](\d{2,4})$/);
+  if (named) {
+    const monthMap = { JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06", JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12" };
+    const day = named[1].padStart(2, "0");
+    const month = monthMap[named[2].toUpperCase()] || "01";
+    const year = named[3].length === 2 ? `20${named[3]}` : named[3];
+    return `${day}-${month}-${year}`;
+  }
+  const parsed = new Date(str);
+  if (Number.isNaN(parsed.getTime())) return str;
+  const day = String(parsed.getDate()).padStart(2, "0");
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const year = parsed.getFullYear();
+  return `${day}-${month}-${year}`;
 }
 
 function duration(startValue, endValue, provided) {
-  if (provided) return String(provided);
-  const start = new Date(startValue);
-  const end = new Date(endValue);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return "Not available";
-  const days = Math.ceil((end - start) / 86400000);
-  const months = Math.round(days / 30.44);
-  if (months < 1) return `${days} day${days === 1 ? "" : "s"}`;
-  if (months >= 12 && months % 12 === 0) return `${months / 12} year${months === 12 ? "" : "s"}`;
-  return `${months} months`;
+  const parseDate = (val) => {
+    if (!val) return null;
+    const str = String(val).trim();
+    const num = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+    if (num) {
+      const year = Number(num[3]) < 100 ? 2000 + Number(num[3]) : Number(num[3]);
+      return new Date(year, Number(num[2]) - 1, Number(num[1]));
+    }
+    const d = new Date(str);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const start = parseDate(startValue);
+  const end = parseDate(endValue);
+  if (start && end && end > start) {
+    const diffDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const effectiveDays = diffDays >= 30 ? diffDays + 1 : diffDays;
+    const months = Math.round(effectiveDays / 30.4375);
+    if (months < 1) return `${diffDays} day${diffDays === 1 ? "" : "s"}`;
+    if (months >= 12 && months % 12 === 0) {
+      const years = months / 12;
+      return `${years} year${years === 1 ? "" : "s"}`;
+    }
+    return `${months} month${months === 1 ? "" : "s"}`;
+  }
+  return provided ? String(provided) : "Not available";
 }
 
 function display(value) {
