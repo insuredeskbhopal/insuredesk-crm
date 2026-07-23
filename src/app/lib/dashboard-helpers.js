@@ -25,738 +25,23 @@ export const FUEL_TYPE_OPTIONS = [
   { value: "Hybrid", label: "Hybrid" },
 ];
 
-export const FIELD_GROUPS = [
-  {
-    title: "Policy Details",
-    fields: [
-      "insuredName",
-      "insuranceCompany",
-      "policyNumber",
-      "policyType",
-      "newOrRenewal",
-      "startDate",
-      "expiryDate",
-      "policyTenure",
-      "sumInsured",
-      "premium",
-      "duration",
-      "policyCoverType",
-      "pptMpwlc",
-    ],
-  },
-  {
-    title: "Vehicle Details",
-    fields: [
-      "vehicleNumber",
-      "registrationNumber",
-      "makeModel",
-      "variant",
-      "manufacturingYear",
-      "registrationDate",
-      "engineNumber",
-      "chassisNumber",
-      "fuelType",
-      "cubicCapacity",
-      "seatingCapacity",
-      "grossVehicleWeight",
-      "idv",
-      "ncb",
-      "rtoLocation",
-    ],
-  },
-  {
-    title: "Contact & Parties",
-    fields: [
-      "contactPerson",
-      "contactNumber",
-      "mailingAddress",
-      "whatsappGroupName",
-      "clientId",
-    ],
-  },
-  {
-    title: "Payment",
-    fields: [
-      "totalPremium",
-      "basicPremium",
-      "taxAmount",
-      "netPremium",
-      "gstAmount",
-      "stampDuty",
-      "gstin",
-      "tpDriverOwner",
-      "odPremium",
-      "dueCollection",
-      "collectedAmount",
-      "modeOfPayment",
-      "remark",
-    ],
-  },
-  {
-    title: "Health & Members",
-    fields: [
-      "insuredMembers",
-      "numberOfInsuredMembers",
-      "previousPolicyNumber",
-      "nomineeName",
-      "nomineeRelationship",
-      "nomineeDateOfBirth",
-    ],
-  },
-  {
-    title: "Risk & Locations",
-    fields: ["riskLocation", "district", "tehsil", "occupancy", "description", "validIn"],
-  },
-];
-
-export const FIELD_SETUP = [
-  ["Client ID", "clientId"],
-  ["Customer ID", "customerId"],
-  ["Source File", "sourceFile"],
-  ["Insured Name", "insuredName"],
-  ["Policy Number", "policyNumber"],
-  ["Contact Person", "contactPerson"],
-  ["Contact Number", "contactNumber"],
-  ["WP Group Name", "whatsappGroupName"],
-  ["Group Name", "groupName"],
-  ["New / Renewal", "newOrRenewal"],
-  ["Policy Type", "policyType"],
-  ["Premium", "premium"],
-  ["Total Premium", "totalPremium"],
-  ["Net Premium", "netPremium"],
-  ["GST", "gstAmount"],
-  ["TP + Driver + Owner", "tpDriverOwner"],
-  ["OD Premium", "odPremium"],
-  ["Due Collection", "dueCollection"],
-  ["Collected Amount", "collectedAmount"],
-  ["Mode Of Payment", "modeOfPayment"],
-  ["Remark", "remark"],
-  ["Sum Insured", "sumInsured"],
-  ["Start Date", "startDate"],
-  ["Expiry Date", "expiryDate"],
-  ["Duration", "duration"],
-  ["Risk Location", "riskLocation"],
-  ["District", "district"],
-  ["Tehsil", "tehsil"],
-  ["Insurance Company", "insuranceCompany"],
-  ["Description", "description"],
-  ["PPT / MPWLC", "pptMpwlc"],
-  ["Occupancy", "occupancy"],
-  ["Valid In", "validIn"],
-  ["Vehicle Number", "vehicleNumber"],
-  ["Registration Number", "registrationNumber"],
-  ["Make / Model", "makeModel"],
-  ["Variant", "variant"],
-  ["Manufacturing Year", "manufacturingYear"],
-  ["Registration Date", "registrationDate"],
-  ["Engine Number", "engineNumber"],
-  ["Chassis Number", "chassisNumber"],
-  ["Fuel Type", "fuelType"],
-  ["Cubic Capacity", "cubicCapacity"],
-  ["Seating Capacity", "seatingCapacity"],
-  ["Gross Vehicle Weight", "grossVehicleWeight"],
-  ["IDV", "idv"],
-  ["NCB", "ncb"],
-  ["Cover Type", "policyCoverType"],
-  ["RTO Location", "rtoLocation"],
-  ["Nominee Name", "nomineeName"],
-  ["Customer Name", "customerName"],
-  ["Proposer Name", "proposerName"],
-  ["Product Name", "productName"],
-  ["Product UIN", "productUin"],
-  ["Policy Tenure", "policyTenure"],
-  ["Zone", "zone"],
-  ["Premium Payment Frequency", "premiumPaymentFrequency"],
-  ["Premium Payment Mode", "premiumPaymentMode"],
-  ["Policyholder Address", "mailingAddress"],
-  ["Policyholder Email (Masked)", "policyholderEmailMasked"],
-  ["Policyholder Mobile (Masked)", "policyholderMobileMasked"],
-  ["Email", "email"],
-  ["Invoice Number", "invoiceNumber"],
-  ["Basic Premium", "basicPremium"],
-  ["Total Tax", "taxAmount"],
-  ["Stamp Duty", "stampDuty"],
-  ["Nominee Relationship", "nomineeRelationship"],
-  ["Nominee Date of Birth", "nomineeDateOfBirth"],
-  ["Appointee Name", "appointeeName"],
-  ["Insured Members", "insuredMembers"],
-  ["Number of Insured Members", "numberOfInsuredMembers"],
-  ["Previous Policy Number", "previousPolicyNumber"],
-  ["Loyalty Bonus", "loyaltyBonus"],
-  ["Power Booster", "powerBooster"],
-  ["Servicing Branch", "servicingBranchName"],
-  ["Servicing Branch Address", "servicingBranchAddress"],
-  ["Agent Name", "agentName"],
-  ["Agent Code", "agentCode"],
-  ["Agent Mobile", "agentMobile"],
-  ["Financer Name", "financerName"],
-  ["GST Number", "gstin"],
-];
-
-const MOTOR_COMMON_FIELDS = [
-  "insuredName",
-  "policyNumber",
-  "policyType",
-  "policyCoverType",
-  "vehicleNumber",
-  "registrationNumber",
-  "makeModel",
-  "variant",
-  "manufacturingYear",
-  "registrationDate",
-  "engineNumber",
-  "chassisNumber",
-  "fuelType",
-  "insuranceCompany",
-  "premium",
-  "idv",
-  "startDate",
-  "expiryDate",
-  "duration",
-  "ncb",
-  "rtoLocation",
-  "contactPerson",
-  "contactNumber",
-  "totalPremium",
-  "netPremium",
-  "tpDriverOwner",
-  "odPremium",
-  "dueCollection",
-  "collectedAmount",
-  "modeOfPayment",
-  "remark",
-];
-
-export const POLICY_SCHEMA_LIBRARY = [
-  {
-    id: "fire",
-    label: "Fire Policy",
-    description: "Property and stock protection policies.",
-    policies: [
-      {
-        id: "fire-standard",
-        name: "Standard Fire",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "policyType",
-          "sumInsured",
-          "premium",
-          "gstAmount",
-          "gstin",
-          "startDate",
-          "expiryDate",
-          "riskLocation",
-          "district",
-          "tehsil",
-          "insuranceCompany",
-          "description",
-          "occupancy",
-          "validIn",
-        ],
-      },
-      {
-        id: "fire-sfsp",
-        name: "SFSP",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "policyType",
-          "sumInsured",
-          "premium",
-          "gstAmount",
-          "gstin",
-          "startDate",
-          "expiryDate",
-          "duration",
-          "riskLocation",
-          "district",
-          "tehsil",
-          "insuranceCompany",
-          "description",
-          "occupancy",
-        ],
-      },
-      {
-        id: "fire-burglary",
-        name: "Burglary",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "policyType",
-          "sumInsured",
-          "premium",
-          "gstAmount",
-          "gstin",
-          "startDate",
-          "expiryDate",
-          "riskLocation",
-          "district",
-          "tehsil",
-          "insuranceCompany",
-          "description",
-        ],
-      },
-    ],
-  },
-  {
-    id: "motor",
-    label: "Motor Policy",
-    description: "Car, bike, and commercial vehicle cover.",
-    policies: [
-      {
-        id: "motor-private-car-package",
-        name: "Private Car - Package",
-        fields: [...MOTOR_COMMON_FIELDS, "sumInsured", "seatingCapacity"],
-      },
-      {
-        id: "motor-private-car-third-party",
-        name: "Private Car - Third Party",
-        fields: MOTOR_COMMON_FIELDS.filter((key) => key !== "idv" && key !== "ncb").concat([
-          "seatingCapacity",
-        ]),
-      },
-      {
-        id: "motor-two-wheeler-package",
-        name: "Two Wheeler - Package",
-        fields: [...MOTOR_COMMON_FIELDS, "sumInsured", "cubicCapacity"],
-      },
-      {
-        id: "motor-two-wheeler-third-party",
-        name: "Two Wheeler - Third Party",
-        fields: MOTOR_COMMON_FIELDS.filter((key) => key !== "idv" && key !== "ncb").concat(["cubicCapacity"]),
-      },
-      {
-        id: "motor-goods-carrying",
-        name: "Goods Carrying Vehicle",
-        fields: [...MOTOR_COMMON_FIELDS, "grossVehicleWeight", "sumInsured"],
-      },
-      {
-        id: "motor-passenger-carrying",
-        name: "Passenger Carrying Vehicle",
-        fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "grossVehicleWeight", "sumInsured"],
-      },
-      {
-        id: "motor-taxi-cab",
-        name: "Taxi / Cab",
-        fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "sumInsured"],
-      },
-      {
-        id: "motor-school-bus",
-        name: "School Bus",
-        fields: [...MOTOR_COMMON_FIELDS, "seatingCapacity", "grossVehicleWeight"],
-      },
-      { id: "motor-fleet", name: "Fleet Policy", fields: [...MOTOR_COMMON_FIELDS, "sumInsured"] },
-    ],
-  },
-  {
-    id: "life",
-    label: "Life Policy",
-    description: "Term, endowment, and savings-linked life policies.",
-    policies: [
-      {
-        id: "life-term",
-        name: "Term Life",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "contactPerson",
-          "contactNumber",
-          "policyType",
-          "premium",
-          "gstAmount",
-          "startDate",
-          "expiryDate",
-          "duration",
-          "insuranceCompany",
-          "description",
-        ],
-      },
-      {
-        id: "life-endowment",
-        name: "Endowment",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "contactNumber",
-          "groupName",
-          "policyType",
-          "premium",
-          "gstAmount",
-          "startDate",
-          "expiryDate",
-          "duration",
-          "insuranceCompany",
-          "validIn",
-        ],
-      },
-    ],
-  },
-  {
-    id: "health",
-    label: "Health Policy",
-    description: "Individual, family, and group mediclaim.",
-    policies: [
-      {
-        id: "health-icici-elevate",
-        name: "ICICI Lombard Elevate",
-        fields: [
-          "proposerName",
-          "customerName",
-          "insuredName",
-          "contactNumber",
-          "email",
-          "policyNumber",
-          "productName",
-          "productUin",
-          "policyType",
-          "policyTenure",
-          "startDate",
-          "expiryDate",
-          "zone",
-          "premiumPaymentFrequency",
-          "premiumPaymentMode",
-          "mailingAddress",
-          "policyholderEmailMasked",
-          "policyholderMobileMasked",
-          "invoiceNumber",
-          "sumInsured",
-          "basicPremium",
-          "gstAmount",
-          "stampDuty",
-          "totalPremium",
-          "nomineeName",
-          "nomineeRelationship",
-          "nomineeDateOfBirth",
-          "appointeeName",
-          "insuredMembers",
-          "numberOfInsuredMembers",
-          "previousPolicyNumber",
-          "loyaltyBonus",
-          "powerBooster",
-          "servicingBranchName",
-          "servicingBranchAddress",
-          "agentName",
-          "agentCode",
-          "agentMobile",
-          "remark",
-          "insuranceCompany",
-        ],
-      },
-      {
-        id: "health-individual",
-        name: "Individual Health",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "contactPerson",
-          "contactNumber",
-          "policyType",
-          "sumInsured",
-          "premium",
-          "gstAmount",
-          "startDate",
-          "expiryDate",
-          "duration",
-          "insuranceCompany",
-        ],
-      },
-      {
-        id: "health-family",
-        name: "Family Floater",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "contactNumber",
-          "groupName",
-          "policyType",
-          "sumInsured",
-          "premium",
-          "gstAmount",
-          "startDate",
-          "expiryDate",
-          "duration",
-          "insuranceCompany",
-          "description",
-        ],
-      },
-    ],
-  },
-  {
-    id: "home",
-    label: "Home Policy",
-    description: "Home building and contents cover.",
-    policies: [
-      {
-        id: "home-building",
-        name: "Home Building",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "policyType",
-          "sumInsured",
-          "premium",
-          "gstAmount",
-          "startDate",
-          "expiryDate",
-          "riskLocation",
-          "district",
-          "tehsil",
-          "insuranceCompany",
-          "description",
-        ],
-      },
-      {
-        id: "home-contents",
-        name: "Home Contents",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "policyType",
-          "sumInsured",
-          "premium",
-          "gstAmount",
-          "startDate",
-          "expiryDate",
-          "riskLocation",
-          "district",
-          "tehsil",
-          "insuranceCompany",
-          "occupancy",
-        ],
-      },
-    ],
-  },
-  {
-    id: "cyber",
-    label: "Cyber Policy",
-    description: "Cyber liability and breach response cover.",
-    policies: [
-      {
-        id: "cyber-sme",
-        name: "Cyber SME",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "contactPerson",
-          "contactNumber",
-          "policyType",
-          "premium",
-          "gstAmount",
-          "startDate",
-          "expiryDate",
-          "duration",
-          "insuranceCompany",
-          "description",
-          "validIn",
-        ],
-      },
-      {
-        id: "cyber-enterprise",
-        name: "Cyber Enterprise",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "groupName",
-          "policyType",
-          "premium",
-          "gstAmount",
-          "startDate",
-          "expiryDate",
-          "duration",
-          "riskLocation",
-          "insuranceCompany",
-          "description",
-        ],
-      },
-    ],
-  },
-  {
-    id: "misc",
-    label: "Other Policies",
-    description: "Marine, travel, liability, and custom formats.",
-    policies: [
-      {
-        id: "marine",
-        name: "Marine",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "policyType",
-          "sumInsured",
-          "premium",
-          "gstAmount",
-          "startDate",
-          "expiryDate",
-          "insuranceCompany",
-          "description",
-          "validIn",
-        ],
-      },
-      {
-        id: "travel",
-        name: "Travel",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "contactNumber",
-          "policyType",
-          "premium",
-          "gstAmount",
-          "startDate",
-          "expiryDate",
-          "duration",
-          "insuranceCompany",
-          "validIn",
-        ],
-      },
-      {
-        id: "liability",
-        name: "Liability",
-        fields: [
-          "insuredName",
-          "policyNumber",
-          "groupName",
-          "policyType",
-          "sumInsured",
-          "premium",
-          "gstAmount",
-          "startDate",
-          "expiryDate",
-          "insuranceCompany",
-          "description",
-        ],
-      },
-    ],
-  },
-];
-
-export function getReviewCounts(files) {
-  return files.reduce(
-    (counts, file) => {
-      const status = normalizeUploadStatus(file.status);
-      if (status === UPLOAD_STATUS.APPROVED) counts.saved += 1;
-      else if (status === UPLOAD_STATUS.FAILED) counts.failed += 1;
-      else if (status === UPLOAD_STATUS.PROCESSING || status === UPLOAD_STATUS.PENDING)
-        counts.processing += 1;
-      else counts.pending += 1;
-      return counts;
-    },
-    { pending: 0, saved: 0, failed: 0, processing: 0 },
-  );
-}
-
-export function queueSummaryLabel({ isUploading, selectedFiles, reviewCounts }) {
-  if (isUploading) return "Extracting";
-  if (!selectedFiles.length) return "No files";
-  if (reviewCounts.pending) return `${reviewCounts.pending} ready for review`;
-  if (reviewCounts.failed && !reviewCounts.saved) return `${reviewCounts.failed} failed`;
-  if (reviewCounts.failed) return `${reviewCounts.saved} saved, ${reviewCounts.failed} failed`;
-  return `${reviewCounts.saved} saved`;
-}
-
-export function getMissingRequiredFields(upload, visibleFields = FIELD_SETUP, requiredKeys) {
-  const visibleKeys = new Set(visibleFields.map(([, key]) => key));
-  const fieldLabels = new Map(FIELD_SETUP.map(([label, key]) => [key, label]));
-  const activeRequiredKeys = new Set(requiredKeys?.length ? requiredKeys : ["insuredName", "policyNumber"]);
-  return Array.from(activeRequiredKeys)
-    .filter((key) => visibleKeys.has(key) && !hasValue(getReviewFieldValue(upload, key)))
-    .map((key) => fieldLabels.get(key) || key);
-}
-
-export function getReviewValidation(upload, options = {}) {
-  const resolvedSchema = options.resolvedSchema || inferUploadSchema(upload);
-  const manualRequiredFields = MANUAL_REQUIRED_FIELDS;
-  const schemaVisibleFields = resolvedSchema?.fields?.length
-    ? FIELD_SETUP.filter(([, key]) => resolvedSchema.fields.includes(key))
-    : FIELD_SETUP;
-  const visibleFields = addFields(schemaVisibleFields, [...manualRequiredFields, ...COMMON_REVIEW_FIELDS, "newOrRenewal"]);
-  const requiredKeys = addUnique(
-    resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : ["insuredName", "policyNumber"],
-    manualRequiredFields,
-  );
-  const missingRequired = getMissingRequiredFields(upload, visibleFields, requiredKeys);
-
-  const contactPersonVal = getReviewFieldValue(upload, "contactPerson");
-  const contactNumberVal = getReviewFieldValue(upload, "contactNumber");
-  const contactPersonErr = validateContactPerson(contactPersonVal);
-  const contactNumberErr = validateContactNumber(contactNumberVal);
-  const contactErrors = [contactPersonErr, contactNumberErr].filter(Boolean);
-
-  return {
-    resolvedSchema,
-    visibleFields,
-    requiredKeys,
-    missingRequired,
-    contactErrors,
-    contactFieldErrors: {
-      contactPerson: contactPersonErr,
-      contactNumber: contactNumberErr,
-    },
-    valid: missingRequired.length === 0 && contactErrors.length === 0,
-  };
-}
-
-export function canSaveWithPendingClientId(validation, clientIdRequestId) {
-  return (
-    Boolean(clientIdRequestId) &&
-    validation.contactErrors.length === 0 &&
-    validation.missingRequired.every((field) => field === "clientId" || field === "Client ID")
-  );
-}
-
-export function formatReviewValidationError(missingRequired, contactErrors = []) {
-  if (contactErrors.length) return contactErrors.join(" ");
-  return `Fill required field${missingRequired.length === 1 ? "" : "s"} before saving: ${missingRequired.join(", ")}.`;
-}
-
-export function resolvePolicySchema(groupId, policyId) {
-  const group = POLICY_SCHEMA_LIBRARY.find((item) => item.id === groupId);
-  if (!group) return null;
-
-  const policy = group.policies.find((item) => item.id === policyId) || group.policies[0];
-  if (!policy) return null;
-
-  return {
-    groupId: group.id,
-    groupLabel: group.label,
-    policyId: policy.id,
-    policyName: policy.name,
-    fields: policy.fields || [],
-    requiredFields: inferRequiredFields(group.id, policy.id),
-  };
-}
-
-export function reviewStatusLabel(upload, missingRequired) {
-  if (!upload) return "Waiting";
-  const status = normalizeUploadStatus(upload.status);
-  if (status === UPLOAD_STATUS.APPROVED) return "Saved";
-  if (status === UPLOAD_STATUS.FAILED) return "Failed";
-  if (status === UPLOAD_STATUS.PROCESSING || status === UPLOAD_STATUS.PENDING) return "Extracting";
-  if (missingRequired.length) return "Needs manual input";
-  return "Ready for Review";
-}
-
 export function hasValue(value) {
   if (typeof value === "boolean") return true;
   return String(value ?? "").trim().length > 0;
 }
 
-export function isManualRequiredField(key) {
-  return MANUAL_REQUIRED_FIELDS.includes(key) || MOTOR_MANUAL_REQUIRED_FIELDS.includes(key);
+function addFields(fields, keys) {
+  const existing = new Set(fields.map(([, key]) => key));
+  const extras = FIELD_SETUP.filter(([, key]) => keys.includes(key) && !existing.has(key));
+  return [...fields, ...extras];
 }
 
-export function isFieldManualForUpload(upload, key) {
-  if (key === "fuelType" && shouldUseExtractedFuelType(upload?.extractedData)) return false;
-  return isManualRequiredField(key);
+function addUnique(values, extras) {
+  return Array.from(new Set([...(values || []), ...extras]));
 }
 
-export function shouldUseExtractedVariant(data = {}, upload = {}) {
-  const haystack = [data.insuranceCompany, data.companyName, data.sourceFile, upload.sourceFile]
-    .filter(Boolean)
-    .join(" ");
-
-  return /\bnew\s+india\b/i.test(haystack);
+function isRecognizedFuelType(value = "") {
+  return /^(petrol|diesel|cng|lpg|electric|ev|hybrid)$/i.test(String(value || "").trim());
 }
 
 export function shouldUseExtractedFuelType(data = {}) {
@@ -777,6 +62,23 @@ export function shouldUseExtractedFuelType(data = {}) {
   );
 }
 
+export function shouldUseExtractedVariant(data = {}, upload = {}) {
+  const haystack = [data.insuranceCompany, data.companyName, data.sourceFile, upload.sourceFile]
+    .filter(Boolean)
+    .join(" ");
+
+  return /\bnew\s+india\b/i.test(haystack);
+}
+
+export function isManualRequiredField(key) {
+  return MANUAL_REQUIRED_FIELDS.includes(key) || MOTOR_MANUAL_REQUIRED_FIELDS.includes(key);
+}
+
+export function isFieldManualForUpload(upload, key) {
+  if (key === "fuelType" && shouldUseExtractedFuelType(upload?.extractedData)) return false;
+  return isManualRequiredField(key);
+}
+
 export function getReviewFieldValue(upload, key) {
   if (key === "fuelType" && shouldUseExtractedFuelType(upload?.extractedData))
     return upload?.extractedData?.[key] || "";
@@ -785,55 +87,8 @@ export function getReviewFieldValue(upload, key) {
   return upload?.extractedData?.[key] || "";
 }
 
-function addFields(fields, keys) {
-  const existing = new Set(fields.map(([, key]) => key));
-  const extras = FIELD_SETUP.filter(([, key]) => keys.includes(key) && !existing.has(key));
-  return [...fields, ...extras];
-}
-
-function addUnique(values, extras) {
-  return Array.from(new Set([...(values || []), ...extras]));
-}
-
-function isRecognizedFuelType(value = "") {
-  return /^(petrol|diesel|cng|lpg|electric|ev|hybrid)$/i.test(String(value || "").trim());
-}
-
-export function inferUploadSchema(upload) {
-  if (!upload) return null;
-
-  const extracted = upload.extractedData || {};
-  const haystack = [
-    upload.sourceFile,
-    extracted.policyType,
-    extracted.insuranceCompany,
-    extracted.description,
-    extracted.vehicleNumber,
-    extracted.registrationNumber,
-    extracted.makeModel,
-    extracted.riskLocation,
-    extracted.documentCategory,
-    extracted.documentFormat,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  const family = inferPolicyFamily(haystack, extracted);
-  if (!family) return null;
-
-  const group = POLICY_SCHEMA_LIBRARY.find((item) => item.id === family);
-  if (!group) return null;
-
-  const policy = inferPolicySchemaWithinGroup(group, haystack, extracted);
-  return {
-    groupId: group.id,
-    groupLabel: group.label,
-    policyId: policy?.id || group.policies?.[0]?.id || "",
-    policyName: policy?.name || group.policies?.[0]?.name || group.label,
-    fields: policy?.fields || group.policies?.[0]?.fields || [],
-    requiredFields: inferRequiredFields(group.id, policy?.id),
-  };
+function getPremiumValue(record = {}) {
+  return record.netPremium || record.totalPremium || record.premium || "";
 }
 
 export function inferRequiredFields(groupId, policyId) {
@@ -892,15 +147,12 @@ export function inferRequiredFields(groupId, policyId) {
 }
 
 export function inferPolicyFamily(haystack, extracted) {
-  // Check explicit document category/format FIRST — these are authoritative signals
-  // set by company-specific parsers (e.g. documentCategory: "Fire Insurance")
   const docCategory = String(extracted.documentCategory || "").toLowerCase();
   const docFormat = String(extracted.documentFormat || "").toLowerCase();
   const explicitNonMotor = docCategory + " " + docFormat;
   if (/health|medical|mediclaim/i.test(explicitNonMotor)) return "health";
   if (/warehouse|fire|msme|suraksha|sfsp|burglary|property|workmen/i.test(explicitNonMotor)) return "fire";
 
-  // Check policyType for explicit non-motor indicators before motor signals
   const policyType = String(extracted.policyType || "").toLowerCase();
   if (/warehouse|fire|sfsp|msme|suraksha|burglary|property|stock|contents/i.test(policyType)) return "fire";
 
@@ -972,6 +224,331 @@ export function inferPolicySchemaWithinGroup(group, haystack, extracted) {
   return group.policies?.[0] || null;
 }
 
+export const FIELD_GROUPS = [
+  {
+    title: "Policy Details",
+    fields: [
+      "insuredName",
+      "insuranceCompany",
+      "policyNumber",
+      "policyType",
+      "newOrRenewal",
+      "startDate",
+      "expiryDate",
+      "policyTenure",
+      "sumInsured",
+      "premium",
+      "duration",
+      "policyCoverType",
+      "pptMpwlc",
+    ],
+  },
+  {
+    title: "Vehicle Details",
+    fields: [
+      "vehicleNumber",
+      "registrationNumber",
+      "makeModel",
+      "variant",
+      "manufacturingYear",
+      "registrationDate",
+      "engineNumber",
+      "chassisNumber",
+      "fuelType",
+      "cubicCapacity",
+      "seatingCapacity",
+      "grossVehicleWeight",
+      "idv",
+      "ncb",
+      "rtoLocation",
+    ],
+  },
+  {
+    title: "Contact & Parties",
+    fields: [
+      "contactPerson",
+      "contactNumber",
+      "mailingAddress",
+      "whatsappGroupName",
+      "clientId",
+    ],
+  },
+  {
+    title: "Payment",
+    fields: [
+      "totalPremium",
+      "netPremium",
+      "basicPremium",
+      "taxAmount",
+      "gstAmount",
+      "stampDuty",
+      "cgst",
+      "sgst",
+      "igst",
+      "collectedAmount",
+      "modeOfPayment",
+      "dueCollection",
+      "invoiceNumber",
+      "invoiceDate",
+      "gstin",
+      "placeOfSupply",
+    ],
+  },
+  {
+    title: "Warehouse & Property",
+    fields: [
+      "riskLocation",
+      "district",
+      "tehsil",
+      "occupancy",
+      "description",
+      "premisesAddress",
+      "businessDescription",
+      "contentsSumInsured",
+      "buildingSumInsured",
+      "stockSumInsured",
+      "burglarySumInsured",
+      "fidelitySumInsured",
+    ],
+  },
+  {
+    title: "Document & Source",
+    fields: [
+      "sourceFile",
+      "sourceDocumentType",
+      "documentCategory",
+      "documentFormat",
+      "productName",
+      "productUin",
+      "validIn",
+      "issuedAt",
+      "hypothecationDetails",
+      "bankChargeType",
+      "financerName",
+      "brokerCode",
+      "brokerName",
+      "brokerMobile",
+      "brokerEmail",
+    ],
+  },
+  {
+    title: "Health & Members",
+    fields: [
+      "nomineeName",
+      "nomineeRelationship",
+      "nomineeDateOfBirth",
+      "appointeeName",
+      "numberOfInsuredMembers",
+      "loyaltyBonus",
+      "powerBooster",
+      "servicingBranchName",
+      "servicingBranchAddress",
+    ],
+  },
+  {
+    title: "Internal Remarks",
+    fields: ["remark"],
+  },
+];
+
+export const FIELD_SETUP = FIELD_GROUPS.flatMap((group) => group.fields.map((key) => [group.title, key]));
+
+export const POLICY_SCHEMA_LIBRARY = [
+  {
+    id: "motor",
+    label: "Motor Insurance",
+    policies: [
+      { id: "motor-private-car-package", name: "Private Car Comprehensive / Package Policy" },
+      { id: "motor-private-car-third-party", name: "Private Car Third Party Liability Only" },
+      { id: "motor-two-wheeler-package", name: "Two Wheeler Comprehensive / Package Policy" },
+      { id: "motor-two-wheeler-third-party", name: "Two Wheeler Third Party Liability Only" },
+      { id: "motor-goods-carrying", name: "Goods Carrying Commercial Vehicle Policy" },
+      { id: "motor-passenger-carrying", name: "Passenger Carrying Commercial Vehicle Policy" },
+      { id: "motor-taxi-cab", name: "Taxi / Cab Commercial Vehicle Policy" },
+      { id: "motor-school-bus", name: "School Bus / Passenger Vehicle Policy" },
+      { id: "motor-fleet", name: "Fleet Motor Policy" },
+    ],
+  },
+  {
+    id: "fire",
+    label: "Warehouse / Fire / Property",
+    policies: [
+      { id: "fire-warehouse", name: "Warehouse & Storage Property Insurance" },
+      { id: "fire-sfsp", name: "Standard Fire & Special Perils Policy (SFSP)" },
+      { id: "fire-burglary", name: "Burglary & Housebreaking Policy" },
+      { id: "fire-msme", name: "MSME / Bharat Sookshma & Laghu Udyam Suraksha" },
+      { id: "fire-fidelity", name: "Fidelity Guarantee Policy" },
+    ],
+  },
+  {
+    id: "health",
+    label: "Health Insurance",
+    policies: [
+      { id: "health-individual", name: "Individual Mediclaim Policy" },
+      { id: "health-family-floater", name: "Family Floater Health Insurance" },
+      { id: "health-group", name: "Group Mediclaim Policy (GMC)" },
+    ],
+  },
+  {
+    id: "life",
+    label: "Life Insurance",
+    policies: [
+      { id: "life-term", name: "Term Life Insurance" },
+      { id: "life-endowment", name: "Endowment / Savings Life Plan" },
+      { id: "life-group", name: "Group Term Life Policy (GTL)" },
+    ],
+  },
+];
+
+export function canSaveWithPendingClientId(validation, clientIdRequestId) {
+  return (
+    Boolean(clientIdRequestId) &&
+    validation.contactErrors.length === 0 &&
+    validation.missingRequired.every((field) => field === "clientId" || field === "Client ID")
+  );
+}
+
+export function formatReviewValidationError(missingRequired, contactErrors = []) {
+  if (contactErrors.length) return contactErrors.join(" ");
+  return `Fill required field${missingRequired.length === 1 ? "" : "s"} before saving: ${missingRequired.join(", ")}.`;
+}
+
+export function resolvePolicySchema(groupId, policyId) {
+  const group = POLICY_SCHEMA_LIBRARY.find((item) => item.id === groupId);
+  if (!group) return null;
+
+  const policy = group.policies.find((item) => item.id === policyId) || group.policies[0];
+  if (!policy) return null;
+
+  return {
+    groupId: group.id,
+    groupLabel: group.label,
+    policyId: policy.id,
+    policyName: policy.name,
+    fields: policy.fields || [],
+    requiredFields: inferRequiredFields(group.id, policy.id),
+  };
+}
+
+export function reviewStatusLabel(upload, missingRequired) {
+  if (!upload) return "Waiting";
+  const status = normalizeUploadStatus(upload.status);
+  if (status === UPLOAD_STATUS.APPROVED) return "Saved";
+  if (status === UPLOAD_STATUS.FAILED) return "Failed";
+  if (status === UPLOAD_STATUS.PROCESSING || status === UPLOAD_STATUS.PENDING) return "Extracting";
+  if (missingRequired.length) return "Needs manual input";
+  return "Ready for Review";
+}
+
+export function inferUploadSchema(upload) {
+  if (!upload) return null;
+
+  const extracted = upload.extractedData || {};
+  const haystack = [
+    upload.sourceFile,
+    extracted.policyType,
+    extracted.insuranceCompany,
+    extracted.description,
+    extracted.vehicleNumber,
+    extracted.registrationNumber,
+    extracted.makeModel,
+    extracted.riskLocation,
+    extracted.documentCategory,
+    extracted.documentFormat,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  const family = inferPolicyFamily(haystack, extracted);
+  if (!family) return null;
+
+  const group = POLICY_SCHEMA_LIBRARY.find((item) => item.id === family);
+  if (!group) return null;
+
+  const policy = inferPolicySchemaWithinGroup(group, haystack, extracted);
+  return {
+    groupId: group.id,
+    groupLabel: group.label,
+    policyId: policy?.id || group.policies?.[0]?.id || "",
+    policyName: policy?.name || group.policies?.[0]?.name || group.label,
+    fields: policy?.fields || group.policies?.[0]?.fields || [],
+    requiredFields: inferRequiredFields(group.id, policy?.id),
+  };
+}
+
+export function getReviewValidation(upload) {
+  if (!upload) return { missingRequired: [], contactErrors: [], isReady: false, schema: null };
+
+  const schema = inferUploadSchema(upload);
+  const manualRequired = isManualRequiredField;
+  const visibleKeys = new Set(
+    schema ? schema.fields.map(([, key]) => key) : FIELD_SETUP.map(([, key]) => key),
+  );
+
+  const missingRequired = Array.from(visibleKeys).filter((key) => {
+    if (isFieldManualForUpload(upload, key)) {
+      return !hasValue(getReviewFieldValue(upload, key));
+    }
+    return schema?.requiredFields.includes(key) && !hasValue(getReviewFieldValue(upload, key));
+  });
+
+  const contactPersonErr = validateContactPerson(getReviewFieldValue(upload, "contactPerson"));
+  const contactNumberErr = validateContactNumber(getReviewFieldValue(upload, "contactNumber"));
+  const contactErrors = [contactPersonErr, contactNumberErr].filter(Boolean);
+
+  return {
+    missingRequired,
+    contactErrors,
+    isReady: missingRequired.length === 0 && contactErrors.length === 0,
+    schema,
+  };
+}
+
+export function getReviewCounts(uploads = []) {
+  let pendingCount = 0;
+  let readyCount = 0;
+  let needsInputCount = 0;
+  let savedCount = 0;
+  let failedCount = 0;
+
+  uploads.forEach((upload) => {
+    const status = normalizeUploadStatus(upload.status);
+    if (status === UPLOAD_STATUS.APPROVED) {
+      savedCount += 1;
+    } else if (status === UPLOAD_STATUS.FAILED) {
+      failedCount += 1;
+    } else if (status === UPLOAD_STATUS.PROCESSING || status === UPLOAD_STATUS.PENDING) {
+      pendingCount += 1;
+    } else {
+      const validation = getReviewValidation(upload);
+      if (validation.missingRequired.length) {
+        needsInputCount += 1;
+      } else {
+        readyCount += 1;
+      }
+    }
+  });
+
+  return {
+    pendingCount,
+    readyCount,
+    needsInputCount,
+    savedCount,
+    failedCount,
+    totalCount: uploads.length,
+  };
+}
+
+export function queueSummaryLabel(counts) {
+  if (counts.needsInputCount > 0) return `${counts.needsInputCount} need manual input`;
+  if (counts.readyCount > 0) return `${counts.readyCount} ready to save`;
+  if (counts.pendingCount > 0) return `${counts.pendingCount} extracting`;
+  if (counts.savedCount > 0) return `${counts.savedCount} saved to policy records`;
+  if (counts.failedCount > 0) return `${counts.failedCount} failed`;
+  return "Upload queue is empty";
+}
+
 export function uniqueValues(values) {
   return Array.from(new Set(values.filter(Boolean)));
 }
@@ -1029,10 +606,6 @@ export function buildClientProfiles(records, parseMoney) {
   });
 
   return Array.from(profiles.values()).sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function getPremiumValue(record = {}) {
-  return record.netPremium || record.totalPremium || record.premium || "";
 }
 
 export function loadDashboardView(DASHBOARD_VIEW_KEY) {
