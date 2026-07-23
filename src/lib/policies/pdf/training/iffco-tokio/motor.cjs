@@ -1,5 +1,4 @@
 const { normalizeAmount } = require("../../utils/amounts.cjs");
-const { sliceText } = require("../../utils/text.cjs");
 
 const scope = { insurer: "iffco-tokio", category: "motor" };
 

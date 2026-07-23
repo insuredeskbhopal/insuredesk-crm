@@ -46,8 +46,8 @@ function train({ text = "", result = {} }) {
   }
 
   // Vehicle Make / Model / Variant
-  const makeModelMatch = text.match(/(SKODA|MARUTI|HYUNDAI|HONDA|TATA|MAHINDRA|TOYOTA|VOLKSWAGEN|RENAULT|FORD|NISSAN|KIA|MG)\/([A-Z0-9\s-]+)\/([A-Z0-9\.\s-]+?)(?=-Sedan|Sedan|\n)/i) ||
-                         text.match(/(SKODA|MARUTI|HYUNDAI|HONDA|TATA|MAHINDRA|TOYOTA|VOLKSWAGEN|RENAULT|FORD|NISSAN|KIA|MG)\s*(RAPID|SWIFT|BALENO|I20|CRETA|CITY|NEXON|HARRIER|SELTOS)\s*([A-Z0-9\.\s-]+)?/i);
+  const makeModelMatch = text.match(/(SKODA|MARUTI|HYUNDAI|HONDA|TATA|MAHINDRA|TOYOTA|VOLKSWAGEN|RENAULT|FORD|NISSAN|KIA|MG)\/([A-Z0-9\s-]+)\/([A-Z0-9.\s-]+?)(?=-Sedan|Sedan|\n)/i) ||
+                         text.match(/(SKODA|MARUTI|HYUNDAI|HONDA|TATA|MAHINDRA|TOYOTA|VOLKSWAGEN|RENAULT|FORD|NISSAN|KIA|MG)\s*(RAPID|SWIFT|BALENO|I20|CRETA|CITY|NEXON|HARRIER|SELTOS)\s*([A-Z0-9.\s-]+)?/i);
   if (makeModelMatch) {
     patch.vehicleMake = makeModelMatch[1].trim();
     patch.vehicleModel = makeModelMatch[2].trim();
