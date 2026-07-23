@@ -7,6 +7,7 @@ import EmptyState from "../shared/EmptyState";
 import InsurerLogo from "@/app/components/brand/InsurerLogo";
 import {
   FIELD_GROUPS,
+  FIELD_SETUP,
   FUEL_TYPE_OPTIONS,
   PAYMENT_MODE_OPTIONS,
   getReviewValidation,
@@ -39,7 +40,8 @@ export default function FixedPolicyPreview({
   reviewFieldErrors = {},
 }) {
   const validation = getReviewValidation(upload);
-  const { resolvedSchema, visibleFields, requiredKeys, missingRequired } = validation;
+  const { resolvedSchema, requiredKeys, missingRequired } = validation;
+  const visibleFields = validation.visibleFields || FIELD_SETUP;
   const clientIdRequestId =
     upload?.reviewedData?.clientIdRequestId || upload?.extractedData?.clientIdRequestId || "";
   const pendingClientIdOnly = canSaveWithPendingClientId(validation, clientIdRequestId);

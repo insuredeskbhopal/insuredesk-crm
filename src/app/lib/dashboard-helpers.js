@@ -30,17 +30,7 @@ export function hasValue(value) {
   return String(value ?? "").trim().length > 0;
 }
 
-function addFields(fields, keys) {
-  const existing = new Set(fields.map(([, key]) => key));
-  const extras = FIELD_SETUP.filter(([, key]) => keys.includes(key) && !existing.has(key));
-  return [...fields, ...extras];
-}
-
-function addUnique(values, extras) {
-  return Array.from(new Set([...(values || []), ...extras]));
-}
-
-function isRecognizedFuelType(value = "") {
+export function isRecognizedFuelType(value = "") {
   return /^(petrol|diesel|cng|lpg|electric|ev|hybrid)$/i.test(String(value || "").trim());
 }
 
@@ -146,7 +136,7 @@ export function inferRequiredFields(groupId, policyId) {
   return ["insuredName", "policyNumber"];
 }
 
-export function inferPolicyFamily(haystack, extracted) {
+export function inferPolicyFamily(haystack, extracted = {}) {
   const docCategory = String(extracted.documentCategory || "").toLowerCase();
   const docFormat = String(extracted.documentFormat || "").toLowerCase();
   const explicitNonMotor = docCategory + " " + docFormat;
@@ -177,7 +167,7 @@ export function inferPolicyFamily(haystack, extracted) {
   return null;
 }
 
-export function inferPolicySchemaWithinGroup(group, haystack, extracted) {
+export function inferPolicySchemaWithinGroup(group, haystack, extracted = {}) {
   if (group.id !== "motor") {
     if (group.id === "fire") {
       if (/\bburglary\b/.test(haystack)) return group.policies.find((item) => item.id === "fire-burglary");
@@ -403,12 +393,12 @@ export const POLICY_SCHEMA_LIBRARY = [
 export function canSaveWithPendingClientId(validation, clientIdRequestId) {
   return (
     Boolean(clientIdRequestId) &&
-    validation.contactErrors.length === 0 &&
-    validation.missingRequired.every((field) => field === "clientId" || field === "Client ID")
+    validation.contactErrors?.length === 0 &&
+    validation.missingRequired?.every((field) => field === "clientId" || field === "Client ID")
   );
 }
 
-export function formatReviewValidationError(missingRequired, contactErrors = []) {
+export function formatReviewValidationError(missingRequired = [], contactErrors = []) {
   if (contactErrors.length) return contactErrors.join(" ");
   return `Fill required field${missingRequired.length === 1 ? "" : "s"} before saving: ${missingRequired.join(", ")}.`;
 }
@@ -430,7 +420,7 @@ export function resolvePolicySchema(groupId, policyId) {
   };
 }
 
-export function reviewStatusLabel(upload, missingRequired) {
+export function reviewStatusLabel(upload, missingRequired = []) {
   if (!upload) return "Waiting";
   const status = normalizeUploadStatus(upload.status);
   if (status === UPLOAD_STATUS.APPROVED) return "Saved";
@@ -438,6 +428,16 @@ export function reviewStatusLabel(upload, missingRequired) {
   if (status === UPLOAD_STATUS.PROCESSING || status === UPLOAD_STATUS.PENDING) return "Extracting";
   if (missingRequired.length) return "Needs manual input";
   return "Ready for Review";
+}
+
+function addFields(fields, keys) {
+  const existing = new Set(fields.map(([, key]) => key));
+  const extras = FIELD_SETUP.filter(([, key]) => keys.includes(key) && !existing.has(key));
+  return [...fields, ...extras];
+}
+
+function addUnique(values, extras) {
+  return Array.from(new Set([...(values || []), ...extras]));
 }
 
 export function inferUploadSchema(upload) {
@@ -477,31 +477,59 @@ export function inferUploadSchema(upload) {
   };
 }
 
-export function getReviewValidation(upload) {
-  if (!upload) return { missingRequired: [], contactErrors: [], isReady: false, schema: null };
+export function getMissingRequiredFields(upload, visibleFields = FIELD_SETUP, requiredKeys = []) {
+  const visibleKeys = new Set(visibleFields.map(([, key]) => key));
+  const fieldLabels = new Map(FIELD_SETUP.map(([label, key]) => [key, label]));
+  const activeRequiredKeys = new Set(requiredKeys.length ? requiredKeys : ["insuredName", "policyNumber"]);
+  return Array.from(activeRequiredKeys)
+    .filter((key) => visibleKeys.has(key) && !hasValue(getReviewFieldValue(upload, key)))
+    .map((key) => fieldLabels.get(key) || key);
+}
 
-  const schema = inferUploadSchema(upload);
-  const manualRequired = isManualRequiredField;
-  const visibleKeys = new Set(
-    schema ? schema.fields.map(([, key]) => key) : FIELD_SETUP.map(([, key]) => key),
+export function getReviewValidation(upload, options = {}) {
+  if (!upload) {
+    return {
+      resolvedSchema: null,
+      visibleFields: FIELD_SETUP,
+      requiredKeys: ["insuredName", "policyNumber"],
+      missingRequired: [],
+      contactErrors: [],
+      contactFieldErrors: { contactPerson: "", contactNumber: "" },
+      valid: false,
+      isReady: false,
+    };
+  }
+
+  const resolvedSchema = options.resolvedSchema || inferUploadSchema(upload);
+  const manualRequiredFields = MANUAL_REQUIRED_FIELDS;
+  const schemaVisibleFields = resolvedSchema?.fields?.length
+    ? FIELD_SETUP.filter(([, key]) => resolvedSchema.fields.includes(key))
+    : FIELD_SETUP;
+  const visibleFields = addFields(schemaVisibleFields, [...manualRequiredFields, ...COMMON_REVIEW_FIELDS, "newOrRenewal"]);
+  const requiredKeys = addUnique(
+    resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : ["insuredName", "policyNumber"],
+    manualRequiredFields,
   );
+  const missingRequired = getMissingRequiredFields(upload, visibleFields, requiredKeys);
 
-  const missingRequired = Array.from(visibleKeys).filter((key) => {
-    if (isFieldManualForUpload(upload, key)) {
-      return !hasValue(getReviewFieldValue(upload, key));
-    }
-    return schema?.requiredFields.includes(key) && !hasValue(getReviewFieldValue(upload, key));
-  });
-
-  const contactPersonErr = validateContactPerson(getReviewFieldValue(upload, "contactPerson"));
-  const contactNumberErr = validateContactNumber(getReviewFieldValue(upload, "contactNumber"));
+  const contactPersonVal = getReviewFieldValue(upload, "contactPerson");
+  const contactNumberVal = getReviewFieldValue(upload, "contactNumber");
+  const contactPersonErr = validateContactPerson(contactPersonVal);
+  const contactNumberErr = validateContactNumber(contactNumberVal);
   const contactErrors = [contactPersonErr, contactNumberErr].filter(Boolean);
 
   return {
+    resolvedSchema,
+    visibleFields,
+    requiredKeys,
     missingRequired,
     contactErrors,
+    contactFieldErrors: {
+      contactPerson: contactPersonErr,
+      contactNumber: contactNumberErr,
+    },
+    valid: missingRequired.length === 0 && contactErrors.length === 0,
     isReady: missingRequired.length === 0 && contactErrors.length === 0,
-    schema,
   };
 }
 

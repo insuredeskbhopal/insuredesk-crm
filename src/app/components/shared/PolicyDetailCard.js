@@ -7,6 +7,7 @@ import { AlertTriangle, X, Printer, Pencil, LoaderCircle, CheckCircle, FileText,
 import EndorsementManagementDrawer from "@/app/components/shared/EndorsementManagementDrawer";
 import {
   FIELD_GROUPS,
+  FIELD_SETUP,
   FUEL_TYPE_OPTIONS,
   PAYMENT_MODE_OPTIONS,
   getReviewValidation,
@@ -211,16 +212,17 @@ export default function PolicyDetailCard({
   }, [record, editForm, mode]);
 
   const fieldGroups = useMemo(() => {
+    const visibleFields = validation?.visibleFields || FIELD_SETUP;
     return FIELD_GROUPS.map((group) => {
       const fieldsInGroup = group.fields
-        .map((key) => validation.visibleFields.find(([, visibleKey]) => visibleKey === key))
+        .map((key) => visibleFields.find(([, visibleKey]) => visibleKey === key))
         .filter(Boolean);
       return {
         title: group.title,
         fields: fieldsInGroup,
       };
     }).filter((group) => group.fields.length > 0);
-  }, [validation.visibleFields]);
+  }, [validation?.visibleFields]);
 
   if (!mounted || !record) return null;
 

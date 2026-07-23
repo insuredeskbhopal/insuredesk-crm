@@ -701,7 +701,7 @@ export default function Dashboard({
       .map(({ validation }) => validation);
     const visibleKeys = new Set(["customerId", "savedAt", "uploadedAt", "uploadedBy", "insuredName"]);
     selectedSchemas.forEach((validation) => {
-      validation.visibleFields.forEach(([, key]) => visibleKeys.add(key));
+      (validation.visibleFields || []).forEach(([, key]) => visibleKeys.add(key));
     });
     visibleKeys.add("sourceFile");
 
@@ -1051,7 +1051,7 @@ export default function Dashboard({
           setToast("Fix highlighted fields before saving");
           return;
         }
-        const reviewedData = editValidation.visibleFields.reduce(
+        const reviewedData = (editValidation.visibleFields || []).reduce(
           (payload, [, key]) => ({
             ...payload,
             [key]: editForm[key] ?? "",
