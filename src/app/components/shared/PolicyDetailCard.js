@@ -3,7 +3,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { AlertTriangle, X, Printer, Pencil, LoaderCircle, CheckCircle } from "lucide-react";
+import { AlertTriangle, X, Printer, Pencil, LoaderCircle, CheckCircle, FileText } from "lucide-react";
+import EndorsementModal from "@/app/components/shared/EndorsementModal";
 import {
   FIELD_GROUPS,
   FUEL_TYPE_OPTIONS,
@@ -197,6 +198,7 @@ export default function PolicyDetailCard({
   onPrint,
 }) {
   const [mounted, setMounted] = useState(false);
+  const [showEndorsementModal, setShowEndorsementModal] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -524,6 +526,35 @@ export default function PolicyDetailCard({
                 Print Details
               </button>
               <button
+                type="button"
+                onClick={() => setShowEndorsementModal(true)}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "12px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: "#ffffff",
+                  color: "#0f172a",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  transition: "background-color 0.2s, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#0f172a";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                }}
+              >
+                <FileText size={16} />
+                Endorsement
+              </button>
+              <button
                 onClick={onClose}
                 style={{
                   padding: "10px 24px",
@@ -610,6 +641,16 @@ export default function PolicyDetailCard({
           )}
         </div>
       </div>
+      {showEndorsementModal && (
+        <EndorsementModal
+          record={record}
+          onClose={() => setShowEndorsementModal(false)}
+          onSuccess={() => {
+            setShowEndorsementModal(false);
+            if (onClose) onClose();
+          }}
+        />
+      )}
     </div>,
     document.body
   );
