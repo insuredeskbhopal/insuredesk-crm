@@ -1,39 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { verifyJWT } from "@/lib/auth";
+import { requireClient } from "@/lib/client-portal/session";
 
 export async function GET(request) {
   try {
-    const token = request.cookies.get("token")?.value;
-    if (!token) {
-      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
-    }
-
-    const session = await verifyJWT(token);
-    if (
-      !session ||
-      session.role !== "CLIENT" ||
-      !session.customerId ||
-      session.organizationId === undefined
-    ) {
-      return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
-    }
-
-    const orgId = session.organizationId;
-    const customerId = session.customerId;
-
-    const customer = await prisma.clientAccount.findFirst({
-      where: {
-        id: customerId,
-        organizationId: orgId,
-        deletedAt: null,
-      },
-      select: { id: true },
-    });
-
-    if (!customer) {
-      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
-    }
+    const auth = await requireClient(request);
+    if (auth.error) return auth.error;
+    const orgId = auth.organizationId;
+    const customerId = auth.customer.id;
 
     // Fetch matched policy IDs from DB via SQL query (matching manually entered clientId JSON property)
     const matchedRows = await prisma.$queryRaw`
@@ -41,10 +15,7 @@ export async function GET(request) {
         FROM pdf_records
         WHERE deleted_at IS NULL
           AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
-          AND (
-            reviewed_data->>'clientId' = ${customerId} OR
-            data->>'clientId' = ${customerId}
-          )
+          AND LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
       `;
 
     const matchedPolicyIds = matchedRows.map((row) => row.id);

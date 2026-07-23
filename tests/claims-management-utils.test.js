@@ -51,6 +51,7 @@ describe("claims management helpers", () => {
 
     expect(getFilterCounts(claims)).toEqual({
       all: 6,
+      pending: 4,
       open: 2,
       "follow-up": 2,
       documents: 1,

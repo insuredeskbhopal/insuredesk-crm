@@ -356,7 +356,8 @@ export function ClientProfileManager({ profile, onUpdated }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "MPIN update failed");
       setMpin({ currentMpin: "", newMpin: "" });
-      setMessage(data.message);
+      setMessage(`${data.message}. Sign in again with your new MPIN.`);
+      window.setTimeout(() => { window.location.href = "/login"; }, 1200);
     } catch (error) { setMessage(error.message); } finally { setSaving(false); }
   }
 

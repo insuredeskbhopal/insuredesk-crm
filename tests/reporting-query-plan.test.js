@@ -108,7 +108,7 @@ describe("business intelligence category query plan", () => {
       { value: "other", label: "Other Policy" },
     ]);
     expect(data.report.actions).toEqual([]);
-    expect(data.report.charts.map((chart) => chart.type)).toEqual(["bar", "line"]);
+    expect(data.report.charts.map((chart) => chart.type)).toEqual(["donut", "line"]);
     expect(data.report.tables.map((table) => table.title)).toEqual([
       "Insurance Company Summary",
       "Monthly Policy Records",
@@ -236,6 +236,6 @@ describe("business intelligence category query plan", () => {
     expect(component).toContain('type="month"');
     expect(component).toContain("All Policy Types");
     expect(component).toContain("function LineChartCard");
-    expect(component).toContain("<polyline");
+    expect(component).toContain('className="bi-line-series"');
   });
 });

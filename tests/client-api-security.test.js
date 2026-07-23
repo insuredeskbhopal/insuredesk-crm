@@ -8,13 +8,20 @@ const { prismaMock, verifyJWTMock } = vi.hoisted(() => ({
     $queryRaw: vi.fn(),
     clientAccount: {
       findFirst: vi.fn(),
+      update: vi.fn(),
     },
+    task: { upsert: vi.fn(), findUnique: vi.fn(), create: vi.fn() },
     policyRecord: {
       findMany: vi.fn(),
     },
     claim: {
       create: vi.fn(),
+      findFirst: vi.fn(),
       findMany: vi.fn(),
+    },
+    claimDocument: {
+      create: vi.fn(),
+      findFirst: vi.fn(),
     },
   },
   verifyJWTMock: vi.fn(),
@@ -74,6 +81,29 @@ describe("client API data isolation", () => {
     );
   });
 
+  it("revokes an old client session after the MPIN credential changes", async () => {
+    const { GET } = await import("../src/app/api/client/profile/route.js");
+    verifyJWTMock.mockResolvedValueOnce({
+      role: "CLIENT",
+      customerId: "client-1",
+      organizationId: "org-1",
+      credentialVersion: 1,
+    });
+    prismaMock.clientAccount.findFirst.mockResolvedValueOnce({
+      id: "client-1",
+      name: "Client One",
+      phone: "9876543210",
+      email: "",
+      organizationId: "org-1",
+    });
+    prismaMock.task.findUnique.mockResolvedValueOnce({ metadata: { credentialVersion: 2 } });
+
+    const response = await GET(nextRequest("http://localhost/api/client/profile"));
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get("set-cookie")).toContain("Max-Age=0");
+  });
+
   it("returns portal-safe policy fields without raw CRM data", async () => {
     const { GET } = await import("../src/app/api/client/policies/route.js");
     prismaMock.clientAccount.findFirst.mockResolvedValueOnce({ id: "client-1" });
@@ -114,11 +144,38 @@ describe("client API data isolation", () => {
     expect(body.policies[0].reviewedData).not.toHaveProperty("whatsappGroupName");
     expect(body.policies[0].reviewedData).not.toHaveProperty("dueCollection");
     expect(body.policies[0]).not.toHaveProperty("pdfFileName");
+    expect(prismaMock.$queryRaw.mock.calls[0][0].join(" ")).toContain(
+      "LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId'))",
+    );
+  });
+
+  it("prevents a client from taking another active Client ID's phone number", async () => {
+    const { PATCH } = await import("../src/app/api/client/profile/route.js");
+    prismaMock.clientAccount.findFirst
+      .mockResolvedValueOnce({
+        id: "client-1",
+        name: "Client One",
+        phone: "9876543210",
+        email: "client@example.com",
+        organizationId: "org-1",
+      })
+      .mockResolvedValueOnce({ id: "client-2" });
+
+    const response = await PATCH(
+      nextRequest("http://localhost/api/client/profile", {
+        phone: "9123456789",
+        email: "client@example.com",
+      }),
+    );
+
+    expect(response.status).toBe(409);
+    expect(prismaMock.clientAccount.update).not.toHaveBeenCalled();
   });
 
   it("does not create a client claim for a policy outside the client account", async () => {
     const { POST } = await import("../src/app/api/client/claims/route.js");
     prismaMock.clientAccount.findFirst.mockResolvedValueOnce({
+      id: "client-1",
       name: "Client One",
       phone: "9876543210",
     });
@@ -137,9 +194,58 @@ describe("client API data isolation", () => {
     expect(prismaMock.claim.create).not.toHaveBeenCalled();
   });
 
+  it("rechecks claim policy ownership after acquiring the policy lock", async () => {
+    const { POST } = await import("../src/app/api/client/claims/route.js");
+    prismaMock.clientAccount.findFirst.mockResolvedValueOnce({
+      id: "client-1",
+      name: "Client One",
+      phone: "9876543210",
+      organizationId: "org-1",
+    });
+    prismaMock.$queryRaw
+      .mockResolvedValueOnce([{ id: "policy-1", policy_number: "POL-1" }])
+      .mockResolvedValueOnce([]);
+
+    const response = await POST(
+      nextRequest("http://localhost/api/client/claims", {
+        policyNo: "POL-1",
+        claimType: "Motor",
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(2);
+    expect(prismaMock.claim.create).not.toHaveBeenCalled();
+  });
+
+  it("rechecks service-request policy ownership after acquiring the policy lock", async () => {
+    const { POST } = await import("../src/app/api/client/service-requests/route.js");
+    prismaMock.clientAccount.findFirst.mockResolvedValueOnce({
+      id: "client-1",
+      name: "Client One",
+      phone: "9876543210",
+      email: "client@example.com",
+      organizationId: "org-1",
+    });
+    prismaMock.$queryRaw.mockResolvedValueOnce([{ id: "policy-1" }]).mockResolvedValueOnce([]);
+
+    const response = await POST(
+      nextRequest("http://localhost/api/client/service-requests", {
+        requestType: "SUPPORT",
+        policyNo: "POL-1",
+        details: "Please review this policy.",
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(2);
+    expect(prismaMock.task.create).not.toHaveBeenCalled();
+  });
+
   it("fetches client claims only for policy numbers linked to the client account", async () => {
     const { GET } = await import("../src/app/api/client/claims/route.js");
     prismaMock.clientAccount.findFirst.mockResolvedValueOnce({
+      id: "client-1",
       phone: "9876543210",
     });
     prismaMock.$queryRaw.mockResolvedValueOnce([{ id: "policy-1", policy_number: "POL-1" }]);
@@ -151,11 +257,75 @@ describe("client API data isolation", () => {
       expect.objectContaining({
         where: expect.objectContaining({
           organizationId: "org-1",
-          policyNo: { in: ["POL-1"] },
-          mobileNo: { endsWith: "9876543210" },
+          OR: expect.arrayContaining([
+            { metadata: { path: ["customerId"], equals: "client-1" } },
+            {
+              policyNo: { in: ["POL-1"] },
+              mobileNo: { endsWith: "9876543210" },
+            },
+          ]),
         }),
       }),
     );
+
+    const [query, organizationId, customerId] = prismaMock.$queryRaw.mock.calls[0];
+    expect(query.join(" ")).toContain("organization_id IS NOT DISTINCT FROM");
+    expect(query.join(" ")).toContain(
+      "LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId'))",
+    );
+    expect(organizationId).toBe("org-1");
+    expect(customerId).toBe("client-1");
+  });
+
+  it("does not expose a claim assigned to another Client ID through a recycled phone or policy", async () => {
+    const { GET } = await import("../src/app/api/client/claims/route.js");
+    prismaMock.clientAccount.findFirst.mockResolvedValueOnce({
+      id: "client-1",
+      phone: "9876543210",
+    });
+    prismaMock.$queryRaw.mockResolvedValueOnce([{ id: "policy-1", policy_number: "POL-1" }]);
+    prismaMock.claim.findMany.mockResolvedValueOnce([
+      {
+        id: "claim-1",
+        policyNo: "POL-1",
+        mobileNo: "9876543210",
+        metadata: { customerId: "client-2" },
+        remarks: [],
+        documents: [],
+      },
+    ]);
+
+    const response = await GET(nextRequest("http://localhost/api/client/claims"));
+    const body = await response.json();
+
+    expect(body.claims).toEqual([]);
+  });
+
+  it("denies claim document access when claim metadata belongs to another Client ID", async () => {
+    const { GET } = await import("../src/app/api/client/claims/[id]/documents/route.js");
+    prismaMock.clientAccount.findFirst.mockResolvedValueOnce({
+      id: "client-1",
+      name: "Client One",
+      phone: "9876543210",
+      organizationId: "org-1",
+    });
+    prismaMock.claim.findFirst.mockResolvedValueOnce({
+      id: "claim-1",
+      policyNo: "POL-1",
+      mobileNo: "9876543210",
+      metadata: { customerId: "client-2" },
+    });
+
+    const response = await GET(
+      nextRequest("http://localhost/api/client/claims/claim-1/documents?documentId=document-1"),
+      { params: Promise.resolve({ id: "claim-1" }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("Claim not found");
+    expect(prismaMock.claimDocument.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.$queryRaw).not.toHaveBeenCalled();
   });
 });
 

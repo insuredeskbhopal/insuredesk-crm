@@ -61,7 +61,7 @@ export async function POST(request) {
           textResult,
           sourceFile: file.name || "",
         });
-        const data = sanitizeRecordPayload(extraction.data);
+        const data = { ...sanitizeRecordPayload(extraction.data), clientId: "" };
         const validation = getReviewValidation({
           sourceFile: file.name || data.sourceFile,
           extractedData: data,

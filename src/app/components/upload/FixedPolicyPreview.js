@@ -197,7 +197,7 @@ export default function FixedPolicyPreview({
 
                       return (
                         <PreviewField
-                          key={key}
+                          key={key === "clientId" ? `${upload.id}-${key}` : key}
                           fieldKey={key}
                           label={label}
                           meta={getFieldMeta(key)}
@@ -221,6 +221,7 @@ export default function FixedPolicyPreview({
                           insuredName={getPreviewValue("insuredName")}
                           contactNumber={getPreviewValue("contactNumber")}
                           email={getPreviewValue("email")}
+                          clientIdRequestId={clientIdRequestId}
                           onClientIdRequestChange={(requestId) =>
                             onFieldChange("clientIdRequestId", requestId)
                           }

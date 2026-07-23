@@ -72,7 +72,9 @@ export async function POST(request) {
           textResult,
           sourceFile: file.name || "",
         });
-        const extractedData = sanitizeRecordPayload(extraction.data);
+        // A value printed on an insurer PDF is not a verified portal Client ID.
+        // Keep this field empty until the agent selects or auto-matches an active client.
+        const extractedData = { ...sanitizeRecordPayload(extraction.data), clientId: "" };
         const detection = buildUploadDetection(extractedData);
 
         // 3. Save UploadedFile record to database, referencing storage path and excluding binary bytes

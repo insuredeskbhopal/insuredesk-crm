@@ -31,6 +31,7 @@ export function getMissingFieldsForStep(claim, step) {
 
 export function matchesClaimFilter(item, filter) {
   const status = (item.claimStatus || "Open").toLowerCase();
+  if (filter === "pending") return !["settled", "rejected"].includes(status);
   if (filter === "open") return status === "open";
   if (filter === "follow-up") return status === "follow up" || Boolean(item.followUpDate);
   if (filter === "documents") return status === "documents pending";

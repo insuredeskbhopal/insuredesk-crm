@@ -177,6 +177,7 @@ export default function PolicyDetailCard({
   isSaving = false,
   editError = "",
   editFieldErrors = {},
+  clientIdLocked = false,
   // View mode specific props:
   onPrint,
 }) {
@@ -449,6 +450,8 @@ export default function PolicyDetailCard({
                           insuredName={editForm.insuredName}
                           contactNumber={editForm.contactNumber}
                           email={editForm.email}
+                          clientIdRequestId={editForm.clientIdRequestId}
+                          clientIdLocked={clientIdLocked}
                           onClientIdRequestChange={(requestId) =>
                             updateEditField("clientIdRequestId", requestId)
                           }

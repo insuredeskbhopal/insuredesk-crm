@@ -19,6 +19,11 @@ const ALLOWED_STATUSES = new Set([
   "CANCELLED",
   "CLOSED",
 ]);
+const SPECIALIZED_WORKFLOW_MODULES = new Set([
+  "CLIENT_ID_REQUEST",
+  "CLIENT_PORTAL_SECURITY",
+  "CLIENT_PORTAL_PROFILE",
+]);
 
 export async function PATCH(request, context) {
   try {
@@ -76,6 +81,25 @@ export async function PATCH(request, context) {
       .toUpperCase();
     if (!ALLOWED_STATUSES.has(status)) {
       return NextResponse.json({ error: "Invalid task status." }, { status: 422 });
+    }
+
+    const workflowTask = await prisma.task.findFirst({
+      where: {
+        id,
+        ...(auth.session.role === "SUPER_ADMIN" && !auth.session.organizationId
+          ? {}
+          : { organizationId: auth.session.organizationId ?? null }),
+      },
+      select: { module: true },
+    });
+    if (!workflowTask) {
+      return NextResponse.json({ error: "Task not found." }, { status: 404 });
+    }
+    if (SPECIALIZED_WORKFLOW_MODULES.has(workflowTask.module)) {
+      return NextResponse.json(
+        { error: "Use this task's dedicated workflow action instead of changing its status directly." },
+        { status: 409 },
+      );
     }
 
     const task = await updateTaskStatus(auth.session, id, status);

@@ -11,8 +11,18 @@ import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dash
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import { getSavedAtDateFilter } from "@/lib/records/scoped-data";
-import { MANUAL_RENEWAL_IMPORT_METHOD, withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
+import {
+  MANUAL_RENEWAL_IMPORT_METHOD,
+  withoutManualRenewalSources,
+} from "@/lib/records/manual-renewal-source";
 import { buildPolicyCustomerNameFields } from "@/lib/renewals/customer-name";
+import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
+import {
+  findActiveClientAccount,
+  withClientIdLock,
+  withClientIdRequestLock,
+  withClientPhoneLock,
+} from "@/lib/client-accounts/server";
 
 export const runtime = "nodejs";
 
@@ -291,29 +301,82 @@ export async function POST(request) {
 
     const payload = await request.json();
 
-    const incomingReviewedData = payload.reviewedData || payload.extractedData || {};
+    const incomingReviewedData = payload.reviewedData || {};
     const incomingClientId = String(incomingReviewedData.clientId || "").trim();
+    const policyCustomerName = String(
+      incomingReviewedData.insuredName || incomingReviewedData.customerName || "",
+    ).trim();
+    const policyCustomerMobile = normalizeIndianPhone(
+      incomingReviewedData.contactNumber || incomingReviewedData.customerMobile || "",
+    );
+    let clientIdRequestId = payload.clientIdRequestId || null;
+    if (!clientIdRequestId) {
+      if (policyCustomerName && policyCustomerMobile) {
+        const matchingActiveRequest = await prisma.task.findFirst({
+          where: {
+            module: "CLIENT_ID_REQUEST",
+            status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"] },
+            customerName: { equals: policyCustomerName, mode: "insensitive" },
+            customerMobile: policyCustomerMobile,
+            ...(user.organizationId ? { organizationId: user.organizationId } : { createdById: actorId }),
+          },
+          select: { id: true },
+        });
+        if (matchingActiveRequest && incomingClientId) {
+          return Response.json(
+            {
+              error: "An active Client ID request already exists for this client and must be resolved first.",
+            },
+            { status: 409 },
+          );
+        }
+        clientIdRequestId = matchingActiveRequest?.id || null;
+      }
+    }
     let clientIdRequest = null;
-    if (!incomingClientId && payload.clientIdRequestId) {
+    if (clientIdRequestId) {
       clientIdRequest = await prisma.task.findFirst({
         where: {
-          id: String(payload.clientIdRequestId),
+          id: String(clientIdRequestId),
           module: "CLIENT_ID_REQUEST",
           status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS", "COMPLETED"] },
           ...(user.organizationId ? { organizationId: user.organizationId } : { createdById: actorId }),
         },
       });
       if (!clientIdRequest || !matchesClientIdRequest(clientIdRequest, incomingReviewedData)) {
-        return Response.json({ error: "The Client ID request is invalid or does not match this policy." }, { status: 400 });
+        return Response.json(
+          { error: "The Client ID request is invalid or does not match this policy." },
+          { status: 400 },
+        );
       }
       const resolvedClientId = clientIdRequest.metadata?.resolvedClientId || clientIdRequest.recordId;
       if (clientIdRequest.status === "COMPLETED" && resolvedClientId) {
+        if (incomingClientId && incomingClientId.toLowerCase() !== String(resolvedClientId).toLowerCase()) {
+          return Response.json({ error: "Use the Client ID approved for this request." }, { status: 409 });
+        }
         payload.reviewedData = { ...incomingReviewedData, clientId: resolvedClientId };
-        payload.extractedData = { ...(payload.extractedData || {}), clientId: resolvedClientId };
+      } else if (clientIdRequest.status === "COMPLETED") {
+        return Response.json({ error: "This Client ID request has no resolved client." }, { status: 409 });
+      } else if (incomingClientId) {
+        return Response.json(
+          { error: "This Client ID request must be resolved before a client can be linked directly." },
+          { status: 409 },
+        );
       }
     }
-    const resolvedRequestClientId = String(payload.reviewedData?.clientId || payload.extractedData?.clientId || "").trim();
-    const clientIdPending = Boolean(clientIdRequest && !resolvedRequestClientId);
+    let resolvedRequestClientId = String(payload.reviewedData?.clientId || "").trim();
+    let clientIdPending = Boolean(clientIdRequest && !resolvedRequestClientId);
+    if (resolvedRequestClientId) {
+      const activeClient = await findActiveClientAccount(resolvedRequestClientId, user.organizationId);
+      if (!activeClient) {
+        return Response.json(
+          { error: "Select an active Client ID from this organization before saving." },
+          { status: 400 },
+        );
+      }
+      resolvedRequestClientId = activeClient.id;
+      payload.reviewedData = { ...(payload.reviewedData || incomingReviewedData), clientId: activeClient.id };
+    }
 
     // Find the uploaded file enforcing tenant scope boundary
     const uploadedFile = payload.uploadedFileId
@@ -337,10 +400,11 @@ export async function POST(request) {
       return Response.json({ error: "Uploaded file was not found or access denied." }, { status: 404 });
     }
 
-    const extractedData = standardizePolicyCompany(payload.extractedData || {});
-    if (!Object.keys(extractedData).length) {
+    const incomingExtractedData = standardizePolicyCompany(payload.extractedData || {});
+    if (!Object.keys(incomingExtractedData).length) {
       return Response.json({ error: "No reviewed policy data was provided." }, { status: 400 });
     }
+    const extractedData = { ...incomingExtractedData, clientId: "" };
     const reviewedData = standardizePolicyCompany(payload.reviewedData || extractedData);
     const detectedCompany = normalizeInsuranceCompanyName(
       payload.detectedCompany ||
@@ -390,46 +454,160 @@ export async function POST(request) {
       );
     }
 
-    const customerNameFields = buildPolicyCustomerNameFields(reviewedData, legacyPayload, extractedData);
-    const record = await prisma.policyRecord.create({
-      data: {
-        id: randomUUID(),
-        savedAt: new Date(),
-        data: legacyPayload,
-        pdfFileName: uploadedFile?.sourceFile || payload.sourceFile || legacyPayload.sourceFile,
-        pdfMimeType: uploadedFile?.mimeType || "application/pdf",
-        sourceFile: uploadedFile?.sourceFile || payload.sourceFile || legacyPayload.sourceFile,
-        rawText: uploadedFile?.rawText || payload.rawText || "",
-        detectedBankSource: payload.detectedBankSource || uploadedFile?.detectedBankSourceName || "",
-        detectedCompany,
-        detectedServiceCategory:
-          payload.detectedServiceCategory || uploadedFile?.detectedServiceCategoryName || "",
-        detectedPolicyType: payload.detectedPolicyType || uploadedFile?.detectedPolicyTypeName || "",
-        selectedBankSource: payload.selectedBankSource || "",
-        selectedCompany,
-        selectedServiceCategory: payload.selectedServiceCategory || "",
-        selectedPolicyType: payload.selectedPolicyType || "",
-        confidenceScore: Number(payload.confidenceScore ?? uploadedFile?.confidenceScore ?? 0),
-        extractedData,
-        reviewedData,
-        extractionMethod: payload.extractionMethod || uploadedFile?.extractionMethod || "",
-        extractionQuality: payload.extractionQuality || uploadedFile?.extractionQuality || {},
-        extractionLog: payload.extractionLog || uploadedFile?.extractionLog || {},
-        schemaVersion: Number(payload.schemaVersion || uploadedFile?.schemaVersion || 1),
-        uploadedFileId: uploadedFile?.id,
-        policySchemaId: payload.policySchemaId || undefined,
-        organizationId: user.organizationId,
-        createdById: actorId,
-        clientIdRequestId: clientIdPending ? clientIdRequest.id : null,
-        clientIdPending,
-        clientIdStatus: clientIdPending
-          ? clientIdRequest.status === "WAITING_DOCUMENTS"
-            ? "ACTION_REQUIRED"
-            : "PENDING"
-          : "LINKED",
-        ...customerNameFields,
-      },
-    });
+    const createRecord = (database) => {
+      const customerNameFields = buildPolicyCustomerNameFields(reviewedData, legacyPayload, extractedData);
+      return database.policyRecord.create({
+        data: {
+          id: randomUUID(),
+          savedAt: new Date(),
+          data: legacyPayload,
+          pdfFileName: uploadedFile?.sourceFile || payload.sourceFile || legacyPayload.sourceFile,
+          pdfMimeType: uploadedFile?.mimeType || "application/pdf",
+          sourceFile: uploadedFile?.sourceFile || payload.sourceFile || legacyPayload.sourceFile,
+          rawText: uploadedFile?.rawText || payload.rawText || "",
+          detectedBankSource: payload.detectedBankSource || uploadedFile?.detectedBankSourceName || "",
+          detectedCompany,
+          detectedServiceCategory:
+            payload.detectedServiceCategory || uploadedFile?.detectedServiceCategoryName || "",
+          detectedPolicyType: payload.detectedPolicyType || uploadedFile?.detectedPolicyTypeName || "",
+          selectedBankSource: payload.selectedBankSource || "",
+          selectedCompany,
+          selectedServiceCategory: payload.selectedServiceCategory || "",
+          selectedPolicyType: payload.selectedPolicyType || "",
+          confidenceScore: Number(payload.confidenceScore ?? uploadedFile?.confidenceScore ?? 0),
+          extractedData,
+          reviewedData,
+          extractionMethod: payload.extractionMethod || uploadedFile?.extractionMethod || "",
+          extractionQuality: payload.extractionQuality || uploadedFile?.extractionQuality || {},
+          extractionLog: payload.extractionLog || uploadedFile?.extractionLog || {},
+          schemaVersion: Number(payload.schemaVersion || uploadedFile?.schemaVersion || 1),
+          uploadedFileId: uploadedFile?.id,
+          policySchemaId: payload.policySchemaId || undefined,
+          organizationId: user.organizationId,
+          createdById: actorId,
+          clientIdRequestId: clientIdPending ? clientIdRequest.id : null,
+          clientIdPending,
+          clientIdStatus: clientIdPending
+            ? clientIdRequest.status === "WAITING_DOCUMENTS"
+              ? "ACTION_REQUIRED"
+              : "PENDING"
+            : "LINKED",
+          ...customerNameFields,
+        },
+      });
+    };
+
+    const persistRecord = async (database) => {
+      const matchingActiveRequest =
+        policyCustomerName && policyCustomerMobile
+          ? await database.task.findFirst({
+              where: {
+                module: "CLIENT_ID_REQUEST",
+                status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"] },
+                customerName: { equals: policyCustomerName, mode: "insensitive" },
+                customerMobile: policyCustomerMobile,
+                ...(user.organizationId ? { organizationId: user.organizationId } : { createdById: actorId }),
+              },
+            })
+          : null;
+
+      if (matchingActiveRequest && matchingActiveRequest.id !== clientIdRequest?.id) {
+        if (resolvedRequestClientId || reviewedData.clientId) {
+          return {
+            error: "An active Client ID request already exists for this client and must be resolved first.",
+            status: 409,
+          };
+        }
+        clientIdRequest = matchingActiveRequest;
+        clientIdRequestId = matchingActiveRequest.id;
+        clientIdPending = true;
+      }
+
+      if (clientIdRequest) {
+        return withClientIdRequestLock(
+          clientIdRequest.id,
+          async (requestDatabase) => {
+            const currentRequest = await requestDatabase.task.findFirst({
+              where: {
+                id: clientIdRequest.id,
+                module: "CLIENT_ID_REQUEST",
+                ...(user.organizationId ? { organizationId: user.organizationId } : { createdById: actorId }),
+              },
+            });
+            if (!currentRequest || !matchesClientIdRequest(currentRequest, reviewedData)) {
+              return {
+                error: "The Client ID request changed and no longer matches this policy.",
+                status: 409,
+              };
+            }
+
+            const resolvedClientId = currentRequest.metadata?.resolvedClientId || currentRequest.recordId;
+            if (currentRequest.status === "COMPLETED") {
+              if (!resolvedClientId) {
+                return { error: "This Client ID request has no resolved client.", status: 409 };
+              }
+              return withClientIdLock(
+                resolvedClientId,
+                async (lockedDatabase) => {
+                  const activeClient = await findActiveClientAccount(
+                    resolvedClientId,
+                    user.organizationId,
+                    lockedDatabase,
+                  );
+                  if (!activeClient) {
+                    return { error: "The approved Client ID is no longer active.", status: 409 };
+                  }
+                  reviewedData.clientId = activeClient.id;
+                  legacyPayload.clientId = activeClient.id;
+                  resolvedRequestClientId = activeClient.id;
+                  clientIdPending = false;
+                  clientIdRequest = currentRequest;
+                  return { record: await createRecord(lockedDatabase) };
+                },
+                requestDatabase,
+              );
+            }
+            if (!["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"].includes(currentRequest.status)) {
+              return { error: "This Client ID request is no longer active.", status: 409 };
+            }
+            clientIdRequest = currentRequest;
+            clientIdPending = true;
+            return { record: await createRecord(requestDatabase) };
+          },
+          database,
+        );
+      }
+      if (resolvedRequestClientId) {
+        return withClientIdLock(
+          resolvedRequestClientId,
+          async (clientDatabase) => {
+            const activeClient = await findActiveClientAccount(
+              resolvedRequestClientId,
+              user.organizationId,
+              clientDatabase,
+            );
+            if (!activeClient) {
+              return {
+                error: "Select an active Client ID from this organization before saving.",
+                status: 400,
+              };
+            }
+            reviewedData.clientId = activeClient.id;
+            legacyPayload.clientId = activeClient.id;
+            resolvedRequestClientId = activeClient.id;
+            return { record: await createRecord(clientDatabase) };
+          },
+          database,
+        );
+      }
+      return { record: await createRecord(database) };
+    };
+
+    const result = policyCustomerMobile
+      ? await withClientPhoneLock(user.organizationId, policyCustomerMobile, persistRecord)
+      : await persistRecord(prisma);
+    if (result.error) return Response.json({ error: result.error }, { status: result.status });
+    const record = result.record;
     const renewalMatch = await linkRenewalMarkerToPolicy({
       policyRecordId: record.id,
       policyData: legacyPayload,
@@ -530,8 +708,13 @@ async function linkRenewalMarkerToPolicy({ policyRecordId, policyData, user, act
   for (const marker of markers) {
     const markerData = marker.reviewedData || marker.data || {};
     let score = 0;
-    if (vehicle && vehicle === normalizeLookup(markerData.vehicleNumber || markerData.registrationNumber)) score += 4;
-    if (phone && phone === normalizePhone(markerData.contactNumber || markerData.customerMobile || markerData.phone)) score += 3;
+    if (vehicle && vehicle === normalizeLookup(markerData.vehicleNumber || markerData.registrationNumber))
+      score += 4;
+    if (
+      phone &&
+      phone === normalizePhone(markerData.contactNumber || markerData.customerMobile || markerData.phone)
+    )
+      score += 3;
     if (name && name === normalizeLookup(markerData.insuredName || markerData.customerName)) score += 2;
     if (score > bestScore) {
       best = marker;
@@ -744,7 +927,9 @@ function hasMotorPayloadSignals(data) {
 }
 
 function matchesClientIdRequest(request, policyData) {
-  const requestPhone = String(request.customerMobile || "").replace(/\D/g, "").slice(-10);
+  const requestPhone = String(request.customerMobile || "")
+    .replace(/\D/g, "")
+    .slice(-10);
   const policyPhone = String(policyData.contactNumber || policyData.customerMobile || "")
     .replace(/\D/g, "")
     .slice(-10);

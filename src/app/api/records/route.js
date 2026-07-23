@@ -1,14 +1,9 @@
 import { prisma } from "@/lib/db/prisma";
 import { normalizeRecord } from "@/lib/records";
-import { sanitizeRecordPayload } from "@/lib/records/validation";
-import { randomUUID } from "node:crypto";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
-import { logAudit, getAuditMetadata } from "@/lib/audit";
-import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import { withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
-import { buildPolicyCustomerNameFields } from "@/lib/renewals/customer-name";
 
 export async function GET(request) {
   try {
@@ -175,92 +170,11 @@ export async function GET(request) {
   }
 }
 
-export async function POST(request) {
-  try {
-    const token = request.cookies.get("token")?.value;
-    if (!token) {
-      return Response.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    const user = await verifyJWT(token);
-    if (!user || user.role === "VIEWER") {
-      return Response.json({ error: "Unauthorized" }, { status: 403 });
-    }
-    const actorId = user.userId || user.id;
-
-    const payload = await request.json();
-    const data = sanitizeRecordPayload(payload);
-    const validation = getReviewValidation({
-      sourceFile: data.sourceFile,
-      extractedData: data,
-    });
-
-    if (validation.contactErrors.length) {
-      return Response.json({ error: validation.contactErrors.join(" ") }, { status: 400 });
-    }
-
-    if (!validation.valid) {
-      return Response.json(
-        {
-          error: formatReviewValidationError(validation.missingRequired, validation.contactErrors),
-          missingRequired: validation.missingRequired,
-          schema: validation.resolvedSchema
-            ? {
-                groupId: validation.resolvedSchema.groupId,
-                policyId: validation.resolvedSchema.policyId,
-                policyName: validation.resolvedSchema.policyName,
-              }
-            : null,
-        },
-        { status: 422 },
-      );
-    }
-
-    const customerNameFields = buildPolicyCustomerNameFields(data);
-    const record = await prisma.policyRecord.create({
-      data: {
-        id: randomUUID(),
-        savedAt: new Date(),
-        data,
-        sourceFile: data.sourceFile || "Manual Entry",
-        selectedCompany: data.insuranceCompany || "",
-        selectedPolicyType: data.policyType || "",
-        reviewedData: data,
-        extractedData: data,
-        organizationId: user.organizationId,
-        createdById: actorId,
-        ...customerNameFields,
-      },
-    });
-
-    // Record creation audit
-    const { ipAddress, userAgent } = getAuditMetadata(request);
-    await logAudit({
-      action: "RECORD_CREATE",
-      entityType: "PolicyRecord",
-      entityId: record.id,
-      severity: "INFO",
-      source: "API",
-      ipAddress,
-      userAgent,
-      userId: actorId,
-      organizationId: user.organizationId,
-      metadata: { sourceFile: record.sourceFile },
-    });
-
-    return Response.json(
-      normalizeRecord({
-        ...record,
-        createdBy: { name: user.name, email: user.email },
-      }),
-      { status: 201 },
-    );
-  } catch (error) {
-    return Response.json(
-      { error: getUserFacingErrorMessage(error, "Failed to create policy record") },
-      { status: 500 },
-    );
-  }
+export async function POST() {
+  return Response.json(
+    { error: "This legacy writer is retired. Save policies through /api/policy-records." },
+    { status: 410 },
+  );
 }
 
 export async function DELETE() {

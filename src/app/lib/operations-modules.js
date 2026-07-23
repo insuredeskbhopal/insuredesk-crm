@@ -155,13 +155,13 @@ export const OPERATIONS_MODULES = [
   {
     id: "client-management",
     name: "Client Management",
-    description: "Manage client access portals, view Client IDs, configure Client MPINs, and manage credentials.",
+    description: "Manage client portal profiles, view Client IDs, and maintain secure access details.",
     route: "/operations/client-management",
     buttonLabel: "Open Client Management",
     accent: "emerald",
     functions: [
       "View Client ID",
-      "Configure Client MPIN",
+      "Review portal access",
       "Create new client login",
       "Search client list",
       "Update profile phone/email",

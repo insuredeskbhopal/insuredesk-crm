@@ -7,7 +7,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import "./dashboard.css";
 import { cachedJson } from "@/app/lib/client-api";
 import { getRecordSearchText } from "@/lib/records/search";
-import { attachClientIdRequestToMatchingUploads } from "@/lib/client-accounts/utils";
+import {
+  attachClientIdRequestToMatchingUploads,
+  getConfirmedClientId,
+} from "@/lib/client-accounts/utils";
 import { validateContactNumber, validateContactPerson } from "@/lib/records/validation";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 import { formatMoney, parseMoney } from "@/lib/records/analytics";
@@ -688,6 +691,8 @@ export default function Dashboard({
   function handleFilePick(fileList) {
     const files = Array.from(fileList || []);
     if (!files.length) return;
+    setReviewError("");
+    setReviewFieldErrors({});
 
     setAlert({
       type: "info",
@@ -817,6 +822,8 @@ export default function Dashboard({
     setSelectedFiles(nextFiles);
 
     if (selectedUploadId === fileId) {
+      setReviewError("");
+      setReviewFieldErrors({});
       const nextSelected =
         nextFiles.find((file) => normalizeUploadStatus(file.status) !== UPLOAD_STATUS.FAILED) ||
         nextFiles[0] ||
@@ -870,6 +877,7 @@ export default function Dashboard({
       }),
       {},
     );
+    nextForm.clientIdRequestId = record?.clientIdRequestId || "";
     setEditingRecord(record);
     setEditForm(nextForm);
     setEditError("");
@@ -1083,6 +1091,8 @@ export default function Dashboard({
       });
       return;
     }
+    setReviewError("");
+    setReviewFieldErrors({});
     handleFilePick([file.fileObject]);
   }
 
@@ -1095,9 +1105,7 @@ export default function Dashboard({
         const reviewedUploadData = isDynamicPolicySave ? prepareUploadReviewData(selectedUpload) : null;
 
         const targetClientId = isDynamicPolicySave
-          ? reviewedUploadData?.clientId ||
-            selectedUpload?.reviewedData?.clientId ||
-            selectedUpload?.extractedData?.clientId
+          ? getConfirmedClientId(selectedUpload)
           : form.clientId;
         const targetClientIdRequestId = isDynamicPolicySave
           ? reviewedUploadData?.clientIdRequestId
@@ -1166,14 +1174,18 @@ export default function Dashboard({
             { sourceFile: form.sourceFile, extractedData: form },
             { resolvedSchema },
           );
-          if (!validation.valid) {
+          const pendingClientIdOnly = canSaveWithPendingClientId(
+            validation,
+            form.clientIdRequestId,
+          );
+          if (!validation.valid && !pendingClientIdOnly) {
             const message = formatReviewValidationError(validation.missingRequired, validation.contactErrors);
             setAlert({ type: "error", title: "Review incomplete", message });
             setToast("Fix contact details before saving");
             return;
           }
         }
-        const response = await fetch(isDynamicPolicySave ? "/api/policy-records" : "/api/records", {
+        const response = await fetch("/api/policy-records", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(
@@ -1199,7 +1211,18 @@ export default function Dashboard({
                   schemaVersion: 1,
                   policySchemaId: "",
                 }
-              : form,
+              : {
+                  sourceFile: form.sourceFile || "Manual Entry",
+                  detectedCompany: form.insuranceCompany || "",
+                  detectedPolicyType: form.policyType || "",
+                  selectedCompany: form.insuranceCompany || "",
+                  selectedPolicyType: form.policyType || "",
+                  extractedData: form,
+                  reviewedData: form,
+                  clientIdRequestId: form.clientIdRequestId || null,
+                  extractionMethod: "manual_entry",
+                  schemaVersion: 1,
+                },
           ),
         });
 
@@ -1758,9 +1781,17 @@ export default function Dashboard({
                         key={file.id || file.name}
                         role="button"
                         tabIndex={0}
-                        onClick={() => setSelectedUploadId(file.id)}
+                        onClick={() => {
+                          setReviewError("");
+                          setReviewFieldErrors({});
+                          setSelectedUploadId(file.id);
+                        }}
                         onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") setSelectedUploadId(file.id);
+                          if (event.key === "Enter" || event.key === " ") {
+                            setReviewError("");
+                            setReviewFieldErrors({});
+                            setSelectedUploadId(file.id);
+                          }
                         }}
                       >
                         <div className="file-icon">
@@ -2536,6 +2567,11 @@ export default function Dashboard({
           updateEditField={updateEditField}
           editError={editError}
           editFieldErrors={editFieldErrors}
+          clientIdLocked={
+            currentUserRole === "AGENT" &&
+            editingRecord.clientIdStatus === "LINKED" &&
+            Boolean(editingRecord.clientId)
+          }
           onClose={() => {
             setEditingRecord(null);
             setEditError("");
@@ -2599,6 +2635,10 @@ export default function Dashboard({
                         insuredName={form.insuredName}
                         contactNumber={form.contactNumber}
                         email={form.email}
+                        clientIdRequestId={form.clientIdRequestId}
+                        onClientIdRequestChange={(requestId) =>
+                          updateField("clientIdRequestId", requestId)
+                        }
                       />
                     );
                   })}
@@ -2858,6 +2898,7 @@ function prepareUploadReviewData(upload) {
   if (!manualFields.includes("contactPerson")) {
     data.contactPerson = "";
   }
+  data.clientId = getConfirmedClientId(upload);
 
   if (!isMotorPolicyData(data)) return data;
 

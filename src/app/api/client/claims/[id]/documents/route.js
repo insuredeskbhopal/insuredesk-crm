@@ -6,6 +6,14 @@ export const runtime = "nodejs";
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
 
 async function findOwnedClaim({ id, customer, organizationId }) {
+  const claim = await prisma.claim.findFirst({
+    where: { id, organizationId, deletedAt: null },
+  });
+  if (!claim) return null;
+
+  const storedCustomerId = String(claim.metadata?.customerId || "");
+  if (storedCustomerId) return storedCustomerId === customer.id ? claim : null;
+
   const phone = String(customer.phone || "").replace(/\D/g, "").slice(-10);
   if (!phone) return null;
 
@@ -13,17 +21,13 @@ async function findOwnedClaim({ id, customer, organizationId }) {
     SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
     FROM pdf_records
     WHERE deleted_at IS NULL AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-      AND (reviewed_data->>'clientId' = ${customer.id} OR data->>'clientId' = ${customer.id})`;
+      AND LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customer.id})`;
 
-  return prisma.claim.findFirst({
-    where: {
-      id,
-      organizationId,
-      deletedAt: null,
-      mobileNo: { endsWith: phone },
-      policyNo: { in: policies.map((item) => item.policy_number).filter(Boolean) },
-    },
-  });
+  const policyNumbers = policies.map((item) => item.policy_number).filter(Boolean);
+  return policyNumbers.includes(claim.policyNo) &&
+    String(claim.mobileNo || "").replace(/\D/g, "").endsWith(phone)
+    ? claim
+    : null;
 }
 
 export async function POST(request, { params }) {

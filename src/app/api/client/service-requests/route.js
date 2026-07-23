@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { getOwnedPolicy, requireClient } from "@/lib/client-portal/session";
+import {
+  findActiveClientAccount,
+  withClientIdLock,
+  withPolicyRecordLock,
+} from "@/lib/client-accounts/server";
 
 const REQUEST_TYPES = {
   NEW_POLICY_QUOTE: { type: "SERVICE_REQUEST", title: "New policy quotation request", priority: "HIGH" },
@@ -65,6 +70,7 @@ export async function POST(request) {
     if (!config) return NextResponse.json({ success: false, error: "Invalid request type" }, { status: 400 });
 
     const policyNo = String(body.policyNo || "").trim();
+    let ownedPolicyId = "";
     if (policyNo) {
       const policy = await getOwnedPolicy({
         customerId: auth.customer.id,
@@ -72,6 +78,7 @@ export async function POST(request) {
         policyNo,
       });
       if (!policy) return NextResponse.json({ success: false, error: "Policy not found for this client" }, { status: 403 });
+      ownedPolicyId = policy.id;
     }
 
     const details = String(body.details || "").trim().slice(0, 4000);
@@ -79,32 +86,74 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Please provide request details" }, { status: 400 });
     }
 
-    const task = await prisma.task.create({
-      data: {
-        organizationId: auth.organizationId,
-        title: config.title,
-        description: details || `${config.title} submitted from the secured client portal.`,
-        type: config.type,
-        status: "OPEN",
-        priority: config.priority,
-        module: "CLIENT_PORTAL",
-        recordId: auth.customer.id,
-        recordLabel: auth.customer.name,
-        customerName: auth.customer.name,
-        customerMobile: auth.customer.phone,
-        policyNumber: policyNo || null,
-        amount: body.amount ? String(body.amount).replace(/[^0-9.]/g, "") || null : null,
-        dueAt: body.dueAt ? new Date(body.dueAt) : null,
-        metadata: {
-          requestType,
-          clientId: auth.customer.id,
-          email: auth.customer.email || "",
-          preferredContact: body.preferredContact || "PHONE",
-          submittedValues: body.values || {},
+    const createTask = (database) =>
+      withClientIdLock(
+        auth.customer.id,
+        async (clientDatabase) => {
+          const activeCustomer = await findActiveClientAccount(
+            auth.customer.id,
+            auth.organizationId,
+            clientDatabase,
+          );
+          if (!activeCustomer) return { inactiveCustomer: true };
+
+          return {
+            task: await clientDatabase.task.create({
+              data: {
+                organizationId: auth.organizationId,
+                title: config.title,
+                description: details || `${config.title} submitted from the secured client portal.`,
+                type: config.type,
+                status: "OPEN",
+                priority: config.priority,
+                module: "CLIENT_PORTAL",
+                recordId: activeCustomer.id,
+                recordLabel: activeCustomer.name,
+                customerName: activeCustomer.name,
+                customerMobile: activeCustomer.phone,
+                policyNumber: policyNo || null,
+                amount: body.amount ? String(body.amount).replace(/[^0-9.]/g, "") || null : null,
+                dueAt: body.dueAt ? new Date(body.dueAt) : null,
+                metadata: {
+                  requestType,
+                  clientId: activeCustomer.id,
+                  email: activeCustomer.email || "",
+                  preferredContact: body.preferredContact || "PHONE",
+                  submittedValues: body.values || {},
+                },
+              },
+              select: { id: true, title: true, type: true, status: true, policyNumber: true, metadata: true, createdAt: true },
+            }),
+          };
         },
-      },
-      select: { id: true, title: true, type: true, status: true, policyNumber: true, metadata: true, createdAt: true },
-    });
+        database,
+      );
+
+    const createResult = ownedPolicyId
+      ? await withPolicyRecordLock(ownedPolicyId, async (policyDatabase) => {
+          const currentPolicy = await getOwnedPolicy({
+            customerId: auth.customer.id,
+            organizationId: auth.organizationId,
+            policyId: ownedPolicyId,
+            database: policyDatabase,
+          });
+          if (!currentPolicy) return { ownershipLost: true };
+          return createTask(policyDatabase);
+        })
+      : await createTask(prisma);
+    if (createResult.ownershipLost) {
+      return NextResponse.json(
+        { success: false, error: "Policy not found for this client" },
+        { status: 403 },
+      );
+    }
+    if (createResult.inactiveCustomer) {
+      return NextResponse.json(
+        { success: false, error: "Client account is no longer active." },
+        { status: 401 },
+      );
+    }
+    const task = createResult.task;
 
     return NextResponse.json({ success: true, request: task });
   } catch (error) {

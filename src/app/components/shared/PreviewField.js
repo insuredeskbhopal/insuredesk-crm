@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { matchesClientAccountIdentity } from "@/lib/client-accounts/utils";
+import { findUniqueClientIdentityMatch } from "@/lib/client-accounts/utils";
 import { normalizeContactNumber } from "@/lib/records/validation";
 
 export default function PreviewField({
@@ -18,6 +18,8 @@ export default function PreviewField({
   insuredName,
   contactNumber,
   email,
+  clientIdRequestId,
+  clientIdLocked = false,
   onClientIdRequestChange,
 }) {
   const metaClass = meta ? `meta-${meta.toLowerCase().replace(" ", "-")}` : "";
@@ -32,6 +34,7 @@ export default function PreviewField({
 
   const isContactNumber = fieldKey === "contactNumber" || label === "Contact Number";
   const isWhatsAppGroup = fieldKey === "whatsappGroupName" || label === "WhatsApp Group Name";
+  const isClientId = fieldKey === "clientId" || label === "Client ID";
   const handleTextChange = (event) =>
     onChange(isContactNumber ? normalizeContactNumber(event.target.value) : event.target.value);
 
@@ -55,11 +58,13 @@ export default function PreviewField({
       <input
         type={type}
         value={value}
-        onChange={handleTextChange}
+        onChange={isClientId ? undefined : handleTextChange}
         onBlur={() => {
           if (isContactNumber) onChange(normalizeContactNumber(value));
         }}
         disabled={disabled}
+        readOnly={isClientId}
+        aria-readonly={isClientId || undefined}
       />
     );
   }
@@ -67,8 +72,6 @@ export default function PreviewField({
   const classes = [wide ? "wide" : "", error ? "has-error" : "", disabled ? "is-disabled" : ""]
     .filter(Boolean)
     .join(" ");
-
-  const isClientId = label === "Client ID";
 
   return (
     <label className={classes}>
@@ -82,6 +85,8 @@ export default function PreviewField({
           insuredName={insuredName}
           contactNumber={contactNumber}
           email={email}
+          currentRequestId={clientIdRequestId}
+          clientIdLocked={clientIdLocked}
           onClientIdRequestChange={onClientIdRequestChange}
         />
       )}
@@ -196,7 +201,17 @@ function WhatsAppGroupSuggestions({ contactNumber, value, onChange, disabled }) 
   );
 }
 
-function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber, email, onClientIdRequestChange }) {
+function ClientIdSearch({
+  value,
+  onChange,
+  disabled,
+  insuredName,
+  contactNumber,
+  email,
+  currentRequestId,
+  clientIdLocked,
+  onClientIdRequestChange,
+}) {
   const [showSearch, setShowSearch] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -205,13 +220,52 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
   const [clientIdRequest, setClientIdRequest] = useState(null);
   const [requesting, setRequesting] = useState(false);
   const [requestError, setRequestError] = useState("");
-  const notifiedRequestId = useRef("");
+  const [requestLookupComplete, setRequestLookupComplete] = useState(false);
+  const [autoMatchStatus, setAutoMatchStatus] = useState("idle");
+  const identityKey = `${String(insuredName || "").trim().toLowerCase()}|${String(contactNumber || "").replace(/\D/g, "").slice(-10)}|${String(email || "").trim().toLowerCase()}`;
+  const identityKeyRef = useRef(identityKey);
+  const previousIdentityKey = useRef(identityKey);
+  const notifiedRequestId = useRef(String(currentRequestId || ""));
+  const autoMatchSuppressedKey = useRef("");
+  const requestControllerRef = useRef(null);
+  identityKeyRef.current = identityKey;
 
   useEffect(() => {
+    notifiedRequestId.current = String(currentRequestId || "");
+  }, [currentRequestId]);
+
+  useEffect(
+    () => () => {
+      requestControllerRef.current?.abort();
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (previousIdentityKey.current === identityKey) return;
+    previousIdentityKey.current = identityKey;
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = null;
+    autoMatchSuppressedKey.current = "";
+    notifiedRequestId.current = "";
+    setSelectedClientName("");
+    setClientIdRequest(null);
+    setRequestLookupComplete(false);
+    setAutoMatchStatus("idle");
+    setRequesting(false);
+    setRequestError("");
+    setQuery("");
+    setResults([]);
+    onClientIdRequestChange?.("");
+    if (value && !clientIdLocked) onChange("");
+  }, [clientIdLocked, identityKey, onChange, onClientIdRequestChange, value]);
+
+  useEffect(() => {
+    setSelectedClientName("");
     if (value && value.length === 36) {
       const controller = new window.AbortController();
       fetch(`/api/client-accounts/${value}`, { signal: controller.signal })
-        .then((res) => res.json())
+        .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data?.name) {
             setSelectedClientName(data.name);
@@ -226,9 +280,17 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
   }, [value]);
 
   useEffect(() => {
-    if (value) return;
+    if (
+      !requestLookupComplete ||
+      value ||
+      clientIdRequest?.id ||
+      autoMatchSuppressedKey.current === identityKey
+    )
+      return;
 
     const controller = new window.AbortController();
+    const lookupIdentityKey = identityKey;
+    let active = true;
     const runAutoMatch = async () => {
       const cleanPhone = contactNumber ? contactNumber.replace(/[^0-9]/g, "") : "";
       const searchTerms = [];
@@ -239,51 +301,97 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
         searchTerms.push(email);
       }
       if (!insuredName?.trim() || searchTerms.length === 0) {
+        if (active && identityKeyRef.current === lookupIdentityKey) setAutoMatchStatus("idle");
         return;
       }
 
+      setAutoMatchStatus("checking");
+      setRequestError("");
       try {
+        const candidates = new Map();
+        let lookupFailed = false;
         for (const term of searchTerms) {
           const res = await fetch(`/api/client-accounts?page=1&limit=5&q=${encodeURIComponent(term)}`, {
             signal: controller.signal,
           });
+          if (!active || controller.signal.aborted || identityKeyRef.current !== lookupIdentityKey) return;
           if (res.ok) {
             const data = await res.json();
-            const matches = data.accounts || data.profiles || [];
-            const identityMatch = matches.find((profile) =>
-              matchesClientAccountIdentity(profile, { insuredName, contactNumber, email }),
-            );
-            if (identityMatch) {
-              notifiedRequestId.current = "";
-              onClientIdRequestChange?.("");
-              setSelectedClientName(identityMatch.name);
-              onChange(identityMatch.id);
-              break;
-            }
+            if (!active || controller.signal.aborted || identityKeyRef.current !== lookupIdentityKey) return;
+            for (const profile of data.accounts || data.profiles || []) candidates.set(profile.id, profile);
+          } else {
+            lookupFailed = true;
           }
         }
+        const { match: identityMatch, matchCount } = findUniqueClientIdentityMatch(
+          [...candidates.values()],
+          { insuredName, contactNumber, email },
+        );
+        if (!active || controller.signal.aborted || identityKeyRef.current !== lookupIdentityKey) return;
+        if (identityMatch) {
+          setAutoMatchStatus("matched");
+          autoMatchSuppressedKey.current = "";
+          notifiedRequestId.current = "";
+          onClientIdRequestChange?.("");
+          setSelectedClientName(identityMatch.name);
+          onChange(identityMatch.id);
+        } else if (matchCount > 1) {
+          setAutoMatchStatus("ambiguous");
+          setRequestError("Phone and email match different Client IDs. Select the correct client manually.");
+        } else if (lookupFailed) {
+          setAutoMatchStatus("error");
+          setRequestError("Existing Client IDs could not be checked. Try again before requesting a new one.");
+        } else {
+          setAutoMatchStatus("no-match");
+        }
       } catch (err) {
-        if (err?.name !== "AbortError") console.error("Auto-match check error:", err);
+        if (err?.name !== "AbortError" && active && identityKeyRef.current === lookupIdentityKey) {
+          setAutoMatchStatus("error");
+          setRequestError("Existing Client IDs could not be checked. Try again before requesting a new one.");
+        }
       }
     };
 
     const timer = window.setTimeout(runAutoMatch, 600);
     return () => {
+      active = false;
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [value, insuredName, contactNumber, email]);
+  }, [
+    value,
+    insuredName,
+    contactNumber,
+    email,
+    clientIdRequest?.id,
+    identityKey,
+    requestLookupComplete,
+    onChange,
+    onClientIdRequestChange,
+  ]);
 
   useEffect(() => {
-    if (value || !insuredName?.trim()) return;
+    if (
+      value ||
+      !insuredName?.trim() ||
+      autoMatchSuppressedKey.current === identityKey
+    ) {
+      setRequestLookupComplete(false);
+      return;
+    }
     const cleanPhone = contactNumber?.replace(/[^0-9]/g, "").slice(-10);
-    if (cleanPhone?.length !== 10) return;
+    if (cleanPhone?.length !== 10) {
+      setRequestLookupComplete(false);
+      return;
+    }
 
     let active = true;
     let timer;
     let inFlight = false;
     let shouldPoll = true;
+    const lookupIdentityKey = identityKey;
     const controller = new window.AbortController();
+    setRequestLookupComplete(false);
     const scheduleNextCheck = () => {
       window.clearTimeout(timer);
       if (!active || !shouldPoll || document.hidden) return;
@@ -307,19 +415,32 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
           return;
         }
         const data = await res.json();
+        if (!active || controller.signal.aborted || identityKeyRef.current !== lookupIdentityKey) return;
         const item = data.requests?.[0] || null;
-        shouldPoll = Boolean(item?.id && item.status !== "COMPLETED");
-        setClientIdRequest(item);
-        if (item?.status === "COMPLETED" && item.resolvedClientId) {
+        const isActiveRequest = ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"].includes(item?.status);
+        shouldPoll = Boolean(item?.id && isActiveRequest);
+        setRequestLookupComplete(true);
+        if (!item || (!isActiveRequest && item.status !== "COMPLETED")) {
+          setClientIdRequest(null);
+          if (currentRequestId || notifiedRequestId.current) onClientIdRequestChange?.("");
+          notifiedRequestId.current = "";
+        } else if (item.status === "COMPLETED" && item.resolvedClientId) {
+          setClientIdRequest(item);
           setSelectedClientName(item.resolvedClientName || "Client");
-          if (notifiedRequestId.current) {
-            notifiedRequestId.current = "";
-            onClientIdRequestChange?.("");
-          }
+          if (currentRequestId || notifiedRequestId.current) onClientIdRequestChange?.("");
+          notifiedRequestId.current = "";
           onChange(item.resolvedClientId);
+        } else if (item.status === "COMPLETED") {
+          setClientIdRequest(null);
+          if (currentRequestId || notifiedRequestId.current) onClientIdRequestChange?.("");
+          notifiedRequestId.current = "";
+          setRequestError("This Client ID request was completed without an active client. Request a new Client ID.");
         } else if (item?.id && notifiedRequestId.current !== item.id) {
+          setClientIdRequest(item);
           notifiedRequestId.current = item.id;
           onClientIdRequestChange?.(item.id);
+        } else {
+          setClientIdRequest(item);
         }
       } catch (error) {
         if (error?.name === "AbortError") return;
@@ -342,7 +463,15 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
       window.clearTimeout(timer);
       document.removeEventListener("visibilitychange", resumeWhenVisible);
     };
-  }, [value, insuredName, contactNumber, onChange, onClientIdRequestChange]);
+  }, [
+    value,
+    insuredName,
+    contactNumber,
+    onChange,
+    onClientIdRequestChange,
+    identityKey,
+    currentRequestId,
+  ]);
 
   useEffect(() => {
     const normalizedQuery = query.trim();
@@ -355,6 +484,8 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
     const controller = new window.AbortController();
     const timer = window.setTimeout(async () => {
       setSearching(true);
+      setResults([]);
+      setRequestError("");
       try {
         const res = await fetch(`/api/client-accounts?page=1&limit=5&q=${encodeURIComponent(normalizedQuery)}`, {
           signal: controller.signal,
@@ -362,9 +493,14 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
         if (res.ok) {
           const data = await res.json();
           setResults(data.accounts || data.profiles || []);
+        } else {
+          setRequestError("Client search could not be completed.");
         }
       } catch (err) {
-        if (err?.name !== "AbortError") console.error(err);
+        if (err?.name !== "AbortError") {
+          setResults([]);
+          setRequestError("Client search could not be completed.");
+        }
       } finally {
         if (!controller.signal.aborted) setSearching(false);
       }
@@ -377,6 +513,12 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
   }, [query]);
 
   const handleClientIdRequest = async () => {
+    if (!requestLookupComplete || autoMatchStatus !== "no-match") return;
+    const requestIdentityKey = identityKey;
+    const controller = new window.AbortController();
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = controller;
+    autoMatchSuppressedKey.current = "";
     setRequestError("");
     setRequesting(true);
     try {
@@ -384,16 +526,29 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: insuredName, phone: contactNumber, email }),
+        signal: controller.signal,
       });
       const data = await res.json();
+      if (controller.signal.aborted || identityKeyRef.current !== requestIdentityKey) return;
+      if (data?.profile?.id) {
+        setSelectedClientName(data.profile.name || "Client");
+        onClientIdRequestChange?.("");
+        onChange(data.profile.id);
+        return;
+      }
       if (!res.ok) throw new Error(data.error || "Client ID request could not be submitted.");
       setClientIdRequest(data);
       notifiedRequestId.current = data.id;
       onClientIdRequestChange?.(data.id);
     } catch (err) {
-      setRequestError(err.message);
+      if (err?.name !== "AbortError" && identityKeyRef.current === requestIdentityKey) {
+        setRequestError(err.message);
+      }
     } finally {
-      setRequesting(false);
+      if (requestControllerRef.current === controller) {
+        requestControllerRef.current = null;
+        if (identityKeyRef.current === requestIdentityKey) setRequesting(false);
+      }
     }
   };
 
@@ -404,25 +559,45 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
           ✓ Linked Client: {selectedClientName}
         </div>
       )}
-      <button
-        type="button"
-        className="client-id-search-toggle"
-        style={{
-          background: "none",
-          border: "none",
-          padding: 0,
-          color: "#2563eb",
-          textDecoration: "underline",
-          fontSize: "11px",
-          fontWeight: "600",
-          cursor: "pointer",
-        }}
-        onClick={() => setShowSearch(!showSearch)}
-        disabled={disabled}
-      >
-        {showSearch ? "Hide client search" : "🔍 Search & Link Client Profile"}
-      </button>
-      {showSearch && (
+      {value && !disabled && !clientIdLocked ? (
+        <button
+          type="button"
+          className="client-id-search-toggle"
+          onClick={() => {
+            autoMatchSuppressedKey.current = identityKey;
+            notifiedRequestId.current = "";
+            setSelectedClientName("");
+            setClientIdRequest(null);
+            setRequestError("");
+            onClientIdRequestChange?.("");
+            onChange("");
+            setShowSearch(true);
+          }}
+        >
+          Clear linked Client ID
+        </button>
+      ) : null}
+      {!clientIdLocked ? (
+        <button
+          type="button"
+          className="client-id-search-toggle"
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            color: "#111827",
+            textDecoration: "underline",
+            fontSize: "11px",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+          onClick={() => setShowSearch(!showSearch)}
+          disabled={disabled}
+        >
+          {showSearch ? "Hide client search" : "🔍 Search & Link Client Profile"}
+        </button>
+      ) : null}
+      {showSearch && !clientIdLocked && (
         <div className="client-id-search-panel" style={{
           marginTop: "6px",
           padding: "8px",
@@ -473,6 +648,13 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
                       overflow: "hidden",
                     }}
                     onClick={() => {
+                      if (clientIdRequest?.id && clientIdRequest.status !== "COMPLETED") {
+                        setRequestError(
+                          "A Client ID request is already active. Resolve it from Client Management to keep every attached policy in sync.",
+                        );
+                        return;
+                      }
+                      autoMatchSuppressedKey.current = "";
                       onChange(profile.id);
                       notifiedRequestId.current = "";
                       onClientIdRequestChange?.("");
@@ -523,7 +705,11 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
               ))}
             </ul>
           )}
-          {!value && !clientIdRequest && (
+          {!value &&
+            !clientIdRequest &&
+            onClientIdRequestChange &&
+            requestLookupComplete &&
+            autoMatchStatus === "no-match" && (
             <button
               type="button"
               onClick={handleClientIdRequest}
@@ -545,12 +731,22 @@ function ClientIdSearch({ value, onChange, disabled, insuredName, contactNumber,
             </button>
           )}
           {clientIdRequest && clientIdRequest.status !== "COMPLETED" && (
-            <div style={{ marginTop: "8px", padding: "7px 9px", borderRadius: "6px", background: "#fffbeb", color: "#92400e", fontSize: "10.5px", fontWeight: "650" }}>
-              Client ID request sent to Super Admin. This field will fill automatically after approval.
+            <div role={clientIdRequest.status === "WAITING_DOCUMENTS" ? "alert" : "status"} aria-live="polite" style={{ marginTop: "8px", padding: "7px 9px", borderRadius: "6px", background: clientIdRequest.status === "WAITING_DOCUMENTS" ? "#fff1f2" : "#fffbeb", color: clientIdRequest.status === "WAITING_DOCUMENTS" ? "#9f1239" : "#92400e", fontSize: "10.5px", fontWeight: "650" }}>
+              {clientIdRequest.status === "WAITING_DOCUMENTS" ? (
+                <>
+                  <strong>Client ID request needs correction.</strong>
+                  {clientIdRequest.correctionNote ? ` ${clientIdRequest.correctionNote}` : ""}{" "}
+                  <a href={`/operations/client-management?clientIdRequest=${clientIdRequest.id}`} style={{ color: "inherit", textDecoration: "underline" }}>
+                    Review request
+                  </a>
+                </>
+              ) : (
+                "Client ID request sent to Super Admin. This field will fill automatically after approval."
+              )}
             </div>
           )}
           {requestError && (
-            <div style={{ marginTop: "6px", color: "#be123c", fontSize: "10px" }}>{requestError}</div>
+            <div role="alert" style={{ marginTop: "6px", color: "#be123c", fontSize: "10px" }}>{requestError}</div>
           )}
         </div>
       )}

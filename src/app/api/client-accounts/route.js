@@ -5,11 +5,14 @@ import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import {
   normalizeClientPhone,
+  isValidClientEmail,
   sanitizeClientAccountPayload,
   serializeClientAccount,
 } from "@/lib/client-accounts/utils";
 import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
+import { withClientPhoneLock } from "@/lib/client-accounts/server";
+import { generateTemporaryClientMpin, provisionClientMpin } from "@/lib/client-portal/credentials";
 
 export const runtime = "nodejs";
 
@@ -61,6 +64,7 @@ export async function GET(request) {
       page,
       limit,
       totalPages: Math.ceil(total / limit) || 1,
+      canResetMpin: session.role === "SUPER_ADMIN",
     });
   } catch (error) {
     return NextResponse.json(
@@ -85,42 +89,53 @@ export async function POST(request) {
         { status: 400 },
       );
     }
+    if (!isValidClientEmail(data.email)) {
+      return NextResponse.json({ error: "Please enter a valid client email address." }, { status: 400 });
+    }
 
-    const existing = await prisma.clientAccount.findFirst({
-      where: {
-        ...getTenantFilter(session, "read"),
-        deletedAt: null,
-        phone: data.phone,
-      },
-      include: {
-        createdBy: { select: { name: true, email: true } },
-        updatedBy: { select: { name: true, email: true } },
-      },
+    const actorId = session.userId || session.id;
+    const temporaryMpin = generateTemporaryClientMpin();
+    const result = await withClientPhoneLock(session.organizationId, data.phone, async (database) => {
+      const existing = await database.clientAccount.findFirst({
+        where: {
+          organizationId: session.organizationId ?? null,
+          deletedAt: null,
+          phone: data.phone,
+        },
+        include: {
+          createdBy: { select: { name: true, email: true } },
+          updatedBy: { select: { name: true, email: true } },
+        },
+      });
+      if (existing) return { existing };
+
+      const account = await database.clientAccount.create({
+        data: {
+          ...data,
+          organizationId: session.organizationId,
+          createdById: actorId,
+          updatedById: actorId,
+        },
+        include: {
+          createdBy: { select: { name: true, email: true } },
+          updatedBy: { select: { name: true, email: true } },
+        },
+      });
+      await provisionClientMpin(account, temporaryMpin, database);
+      return { account, temporaryMpin };
     });
 
-    if (existing) {
+    if (result.existing) {
       return NextResponse.json(
         {
           error: "This phone number already has a Client ID.",
-          profile: serializeClientAccount(existing),
+          profile: serializeClientAccount(result.existing),
         },
         { status: 409 },
       );
     }
 
-    const actorId = session.userId || session.id;
-    const account = await prisma.clientAccount.create({
-      data: {
-        ...data,
-        organizationId: session.organizationId,
-        createdById: actorId,
-        updatedById: actorId,
-      },
-      include: {
-        createdBy: { select: { name: true, email: true } },
-        updatedBy: { select: { name: true, email: true } },
-      },
-    });
+    const account = result.account;
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
     await logAudit({
@@ -136,7 +151,10 @@ export async function POST(request) {
       metadata: { phone: account.phone },
     });
 
-    return NextResponse.json(serializeClientAccount(account), { status: 201 });
+    return NextResponse.json(
+      { ...serializeClientAccount(account), temporaryMpin: result.temporaryMpin },
+      { status: 201 },
+    );
   } catch (error) {
     return NextResponse.json(
       { error: getUserFacingErrorMessage(error, "Client account could not be saved.") },

@@ -22,6 +22,10 @@ import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
 
+const CLIENT_GOOGLE_CLIENT_ID =
+  process.env.NEXT_PUBLIC_CLIENT_GOOGLE_CLIENT_ID ||
+  "780359724362-m0i25gff41i2dgru6atnkjc02n2hcq74.apps.googleusercontent.com";
+
 export default function ClientLoginPage() {
   const [regularCustomerId, setRegularCustomerId] = useState("");
   const [regularMpin, setRegularMpin] = useState("");
@@ -32,6 +36,7 @@ export default function ClientLoginPage() {
   const [loginMode, setLoginMode] = useState("regular");
   const [googleStage, setGoogleStage] = useState("verify_link");
   const [googleEmail, setGoogleEmail] = useState("");
+  const [googleAccessToken, setGoogleAccessToken] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [mpin, setMpin] = useState("");
   const isVerified = Boolean(success);
@@ -75,23 +80,25 @@ export default function ClientLoginPage() {
 
     try {
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: "780359724362-m0i25gff41i2dgru6atnkjc02n2hcq74.apps.googleusercontent.com",
+        client_id: CLIENT_GOOGLE_CLIENT_ID,
         scope: "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
         callback: async (tokenResponse) => {
           if (!tokenResponse?.access_token) return;
           setLoading(true);
           try {
-            const profileResponse = await fetch(
-              `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenResponse.access_token}`,
-            );
+            const profileResponse = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+              headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+              cache: "no-store",
+            });
             if (!profileResponse.ok) throw new Error("Failed to retrieve Google user details.");
             const userInfo = await profileResponse.json();
             setGoogleEmail(userInfo.email);
+            setGoogleAccessToken(tokenResponse.access_token);
 
             const loginResponse = await fetch("/api/auth/client/google-mpin-login", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ googleEmail: userInfo.email }),
+              body: JSON.stringify({ accessToken: tokenResponse.access_token }),
             });
             const loginData = await loginResponse.json();
             if (loginData.success && loginData.linked) {
@@ -132,7 +139,7 @@ export default function ClientLoginPage() {
       const response = await fetch("/api/auth/client/google-mpin-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ googleEmail, customerId, mpin }),
+        body: JSON.stringify({ accessToken: googleAccessToken, customerId, mpin }),
       });
       const data = await response.json();
       if (!response.ok || !data.success) throw new Error(data.error || "Invalid verification details.");
@@ -153,6 +160,7 @@ export default function ClientLoginPage() {
     setSuccess("");
     setMpin("");
     setCustomerId("");
+    setGoogleAccessToken("");
   };
 
   const features = [

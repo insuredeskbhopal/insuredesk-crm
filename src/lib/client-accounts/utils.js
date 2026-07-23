@@ -4,7 +4,7 @@ export function sanitizeClientAccountPayload(payload = {}) {
   return {
     name: asText(payload.name, 220),
     phone: normalizePhone(payload.phone),
-    email: asText(payload.email, 180),
+    email: asText(payload.email, 180).toLowerCase(),
   };
 }
 
@@ -24,6 +24,11 @@ export function serializeClientAccount(account) {
 
 export function normalizeClientPhone(value) {
   return normalizePhone(value);
+}
+
+export function isValidClientEmail(value) {
+  const email = String(value || "").trim();
+  return !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 export function matchesClientAccountIdentity(profile, { insuredName, contactNumber, email } = {}) {
@@ -47,6 +52,17 @@ export function matchesClientAccountIdentity(profile, { insuredName, contactNumb
   return Boolean(phoneMatches || emailMatches);
 }
 
+export function findUniqueClientIdentityMatch(profiles, identity) {
+  const matches = new Map();
+  for (const profile of profiles || []) {
+    if (matchesClientAccountIdentity(profile, identity)) matches.set(profile.id, profile);
+  }
+  return {
+    match: matches.size === 1 ? matches.values().next().value : null,
+    matchCount: matches.size,
+  };
+}
+
 export function attachClientIdRequestToMatchingUploads(uploads = [], sourceUpload, requestId) {
   if (!requestId || !sourceUpload) return uploads;
   const source = sourceUpload.reviewedData || sourceUpload.extractedData || {};
@@ -56,9 +72,10 @@ export function attachClientIdRequestToMatchingUploads(uploads = [], sourceUploa
 
   return uploads.map((upload) => {
     const data = upload.reviewedData || upload.extractedData || {};
+    const manualFields = upload.manualFields || [];
     if (
-      data.clientId ||
-      data.clientIdRequestId ||
+      (manualFields.includes("clientId") && data.clientId) ||
+      (manualFields.includes("clientIdRequestId") && data.clientIdRequestId) ||
       normalizeName(data.insuredName) !== sourceName ||
       normalizePhone(data.contactNumber || data.customerMobile) !== sourcePhone
     ) {
@@ -71,6 +88,12 @@ export function attachClientIdRequestToMatchingUploads(uploads = [], sourceUploa
       manualFields: [...new Set([...(upload.manualFields || []), "clientIdRequestId"])],
     };
   });
+}
+
+export function getConfirmedClientId(upload) {
+  if (!upload?.manualFields?.includes("clientId")) return "";
+  const data = upload.reviewedData || upload.extractedData || {};
+  return String(data.clientId || "").trim();
 }
 
 function normalizePhone(value) {

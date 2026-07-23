@@ -214,6 +214,7 @@ export async function POST(request) {
         }
 
         payload.manualRenewalSource = true;
+        delete payload.clientId;
 
         payload.premium = payload.premium || payload.totalPremium || payload.netPremium || "";
         payload.totalPremium = payload.totalPremium || payload.premium || "";
@@ -309,7 +310,7 @@ export async function POST(request) {
           continue;
         }
 
-        const sanitizedData = { ...payload, sourceFile: sourceFileName };
+        const sanitizedData = { ...payload, clientId: "", sourceFile: sourceFileName };
 
         const statusLower = String(status || "")
           .trim()

@@ -96,7 +96,8 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
       <div>
         <strong className="record-primary">{value}</strong>
         {record.clientIdPending ? (
-          <span
+          <a
+            href={`/operations/client-management?clientIdRequest=${record.clientIdRequestId}`}
             className={`client-id-pending-badge${record.clientIdStatus === "ACTION_REQUIRED" ? " client-id-action-required-badge" : ""}`}
             title={`Request ID: ${record.clientIdRequestId}`}
             style={{
@@ -113,7 +114,7 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
             }}
           >
             {record.clientIdStatus === "ACTION_REQUIRED" ? "Client ID Action Required" : "Client ID Pending"} · {record.clientIdRequestId?.slice(0, 8)}…
-          </span>
+          </a>
         ) : null}
       </div>
     );

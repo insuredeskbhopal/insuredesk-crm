@@ -1,66 +1,40 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { verifyJWT } from "@/lib/auth";
+import { requireClient } from "@/lib/client-portal/session";
+import {
+  findActiveClientAccount,
+  withClientIdLock,
+  withPolicyRecordLock,
+} from "@/lib/client-accounts/server";
 
 export async function GET(request) {
   try {
-    const token = request.cookies.get("token")?.value;
-    if (!token) {
-      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
-    }
+    const auth = await requireClient(request);
+    if (auth.error) return auth.error;
+    const customerId = auth.customer.id;
+    const orgId = auth.organizationId;
+    const customer = auth.customer;
 
-    const session = await verifyJWT(token);
-    if (
-      !session ||
-      session.role !== "CLIENT" ||
-      !session.customerId ||
-      session.organizationId === undefined
-    ) {
-      return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
-    }
-
-    const customerId = session.customerId;
-    const orgId = session.organizationId;
-
-    // Fetch the client's phone number
-    const customer = await prisma.clientAccount.findFirst({
-      where: {
-        id: customerId,
-        organizationId: orgId,
-        deletedAt: null,
-      },
-      select: { phone: true },
-    });
-
-    if (!customer || !customer.phone) {
-      return NextResponse.json({ success: true, claims: [] });
-    }
-
-    // Clean phone number (last 10 digits)
-    const cleanPhone = customer.phone.replace(/[^0-9]/g, "");
-    if (!cleanPhone || cleanPhone.length < 10) {
-      return NextResponse.json({ success: true, claims: [] });
-    }
-    const phoneSuffix = cleanPhone.slice(-10);
+    const cleanPhone = String(customer.phone || "").replace(/[^0-9]/g, "");
+    const phoneSuffix = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : "";
 
     const policyRows = await getClientPolicyRows({ orgId, customerId });
     const policyNumbers = policyRows
       .map((row) => row.policy_number)
       .filter(Boolean);
 
-    if (!policyNumbers.length) {
-      return NextResponse.json({ success: true, claims: [] });
-    }
-
-    // Fetch claims matching this customer's own policy numbers and mobile number.
+    const legacyOwnership =
+      phoneSuffix && policyNumbers.length
+        ? { policyNo: { in: policyNumbers }, mobileNo: { endsWith: phoneSuffix } }
+        : null;
     const claims = await prisma.claim.findMany({
       where: {
         deletedAt: null,
         organizationId: orgId,
-        policyNo: { in: policyNumbers },
-        mobileNo: {
-          endsWith: phoneSuffix,
-        },
+        OR: [
+          { metadata: { path: ["customerId"], equals: customerId } },
+          ...(legacyOwnership ? [legacyOwnership] : []),
+        ],
       },
       orderBy: { createdAt: "desc" },
       select: {
@@ -75,6 +49,8 @@ export async function GET(request) {
         currentRemark: true,
         createdAt: true,
         updatedAt: true,
+        mobileNo: true,
+        metadata: true,
         remarks: {
           orderBy: { createdAt: "asc" },
           select: { id: true, text: true, followUpDate: true, createdAt: true },
@@ -86,7 +62,24 @@ export async function GET(request) {
       },
     });
 
-    return NextResponse.json({ success: true, claims });
+    const ownedClaims = claims
+      .filter((claim) => {
+        const storedCustomerId = String(claim.metadata?.customerId || "");
+        if (storedCustomerId) return storedCustomerId === customerId;
+        return Boolean(
+          legacyOwnership &&
+            policyNumbers.includes(claim.policyNo) &&
+            String(claim.mobileNo || "").replace(/\D/g, "").endsWith(phoneSuffix),
+        );
+      })
+      .map((claim) => {
+        const publicClaim = { ...claim };
+        delete publicClaim.metadata;
+        delete publicClaim.mobileNo;
+        return publicClaim;
+      });
+
+    return NextResponse.json({ success: true, claims: ownedClaims });
   } catch (error) {
     console.error("Client Claims Error:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
@@ -95,36 +88,10 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const token = request.cookies.get("token")?.value;
-    if (!token) {
-      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
-    }
-
-    const session = await verifyJWT(token);
-    if (
-      !session ||
-      session.role !== "CLIENT" ||
-      !session.customerId ||
-      session.organizationId === undefined
-    ) {
-      return NextResponse.json({ success: false, error: "Access Denied" }, { status: 403 });
-    }
-
-    const customerId = session.customerId;
-    const orgId = session.organizationId;
-
-    const customer = await prisma.clientAccount.findFirst({
-      where: {
-        id: customerId,
-        organizationId: orgId,
-        deletedAt: null,
-      },
-      select: { name: true, phone: true },
-    });
-
-    if (!customer) {
-      return NextResponse.json({ success: false, error: "Client account not found" }, { status: 404 });
-    }
+    const auth = await requireClient(request);
+    if (auth.error) return auth.error;
+    const customerId = auth.customer.id;
+    const orgId = auth.organizationId;
 
     const payload = await request.json();
     const { policyNo, insuranceCompany, claimType, claimDescription, claimDate } = payload;
@@ -144,23 +111,58 @@ export async function POST(request) {
     const rand = Math.floor(1000 + Math.random() * 9000);
     const claimNo = `CLM-CLI-${datePrefix}-${rand}`;
 
-    const newClaim = await prisma.claim.create({
-      data: {
-        insuredName: customer.name || "Client",
-        mobileNo: customer.phone || "",
+    const claimResult = await withPolicyRecordLock(policy[0].id, async (policyDatabase) => {
+      const currentPolicy = await getClientPolicyRows({
+        orgId,
+        customerId,
         policyNo,
-        claimNo,
-        claimType,
-        claimDescription: claimDescription || "",
-        claimDate: claimDate ? new Date(claimDate) : new Date(),
-        claimStatus: "Open",
-        organizationId: orgId,
-        metadata: {
-          insuranceCompany: insuranceCompany || "",
-          customerId,
+        policyId: policy[0].id,
+        database: policyDatabase,
+      });
+      if (!currentPolicy.length) return { ownershipLost: true };
+
+      return withClientIdLock(
+        customerId,
+        async (database) => {
+          const activeCustomer = await findActiveClientAccount(customerId, orgId, database);
+          if (!activeCustomer) return { inactiveCustomer: true };
+
+          return {
+            claim: await database.claim.create({
+              data: {
+                insuredName: activeCustomer.name || "Client",
+                mobileNo: activeCustomer.phone || "",
+                policyNo,
+                claimNo,
+                claimType,
+                claimDescription: claimDescription || "",
+                claimDate: claimDate ? new Date(claimDate) : new Date(),
+                claimStatus: "Open",
+                organizationId: orgId,
+                metadata: {
+                  insuranceCompany: insuranceCompany || "",
+                  customerId,
+                },
+              },
+            }),
+          };
         },
-      },
+        policyDatabase,
+      );
     });
+    if (claimResult.ownershipLost) {
+      return NextResponse.json(
+        { success: false, error: "Policy not found for this client." },
+        { status: 403 },
+      );
+    }
+    if (claimResult.inactiveCustomer) {
+      return NextResponse.json(
+        { success: false, error: "Client account is no longer active." },
+        { status: 401 },
+      );
+    }
+    const newClaim = claimResult.claim;
 
     return NextResponse.json({ success: true, claim: newClaim });
   } catch (error) {
@@ -169,17 +171,29 @@ export async function POST(request) {
   }
 }
 
-function getClientPolicyRows({ orgId, customerId, policyNo = "" }) {
+function getClientPolicyRows({ orgId, customerId, policyNo = "", policyId = "", database = prisma }) {
+  if (policyId) {
+    return database.$queryRaw`
+      SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
+      FROM pdf_records
+      WHERE id = ${policyId}::uuid
+        AND deleted_at IS NULL
+        AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
+        AND LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
+        AND (
+          reviewed_data->>'policyNumber' = ${policyNo} OR
+          data->>'policyNumber' = ${policyNo}
+        )
+      LIMIT 1
+    `;
+  }
   if (policyNo) {
-    return prisma.$queryRaw`
+    return database.$queryRaw`
       SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
       FROM pdf_records
       WHERE deleted_at IS NULL
         AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
-        AND (
-          reviewed_data->>'clientId' = ${customerId} OR
-          data->>'clientId' = ${customerId}
-        )
+        AND LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
         AND (
           reviewed_data->>'policyNumber' = ${policyNo} OR
           data->>'policyNumber' = ${policyNo}
@@ -188,14 +202,11 @@ function getClientPolicyRows({ orgId, customerId, policyNo = "" }) {
     `;
   }
 
-  return prisma.$queryRaw`
+  return database.$queryRaw`
     SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
     FROM pdf_records
     WHERE deleted_at IS NULL
       AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
-      AND (
-        reviewed_data->>'clientId' = ${customerId} OR
-        data->>'clientId' = ${customerId}
-      )
+      AND LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
   `;
 }
