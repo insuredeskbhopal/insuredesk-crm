@@ -271,22 +271,22 @@
 }
 
 .rn-policy-register__table {
-  width: 100% !important;
+  width: auto !important;
+  max-width: 100%;
   table-layout: auto !important;
   border-collapse: collapse;
 }
 
 .rn-policy-register__table th,
 .rn-policy-register__table td {
-  padding: 8px 10px !important;
+  padding: 8px 14px !important;
   font-size: 12.5px !important;
   white-space: nowrap;
-  width: 1px;
 }
 
 .rn-policy-register__table th:first-child,
 .rn-policy-register__table td:first-child {
-  width: auto !important;
+  max-width: 220px;
   white-space: normal !important;
   word-break: break-word !important;
   overflow-wrap: anywhere !important;
