@@ -468,224 +468,277 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* Decoupled Dates Section */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-            <div>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#64748b", marginBottom: "4px" }}>
-                Transaction Date *
-              </label>
-              <input
-                type="date"
-                value={form.transactionDate}
-                onChange={(e) => handleChange("transactionDate", e.target.value)}
-                required
-                style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#64748b", marginBottom: "4px" }}>
-                Effective Date (Policy Activation) *
-              </label>
-              <input
-                type="date"
-                value={form.effectiveDate}
-                onChange={(e) => handleChange("effectiveDate", e.target.value)}
-                required
-                style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#64748b", marginBottom: "4px" }}>
-                Payment Date (Revenue Date) *
-              </label>
-              <input
-                type="date"
-                value={form.paymentDate}
-                onChange={(e) => handleChange("paymentDate", e.target.value)}
-                required
-                style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
-              />
-            </div>
-          </div>
-
-          {/* Multi-Impact Selection Checkboxes */}
-          <div style={{ marginBottom: "20px" }}>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "8px" }}>
-              SELECT ENDORSEMENT IMPACTS
-            </label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {IMPACT_CATEGORIES.map((cat) => {
-                const active = selectedImpacts.includes(cat.id);
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => toggleImpact(cat.id)}
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: "8px",
-                      border: active ? "1px solid #3b82f6" : "1px solid #cbd5e1",
-                      backgroundColor: active ? "#eff6ff" : "#ffffff",
-                      color: active ? "#1d4ed8" : "#64748b",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {active ? "✓ " : "+ "}
-                    {cat.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Premium & Sum Insured Impact Inputs */}
-          {selectedImpacts.includes("PREMIUM") && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "4px" }}>
-                  Premium Change Type
-                </label>
-                <select
-                  value={form.premiumChangeType}
-                  onChange={(e) => handleChange("premiumChangeType", e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+          {/* Conditional Body Content based on Creation Method */}
+          {creationMethod === "PDF_UPLOAD" ? (
+            <div style={{ marginBottom: "20px" }}>
+              <div
+                style={{
+                  border: "2px dashed #cbd5e1",
+                  borderRadius: "14px",
+                  padding: "36px 20px",
+                  textAlign: "center",
+                  backgroundColor: "#f8fafc",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "#2563eb";
+                  e.currentTarget.style.backgroundColor = "#eff6ff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                  e.currentTarget.style.backgroundColor = "#f8fafc";
+                }}
+              >
+                <FileUp size={36} color="#2563eb" style={{ margin: "0 auto 12px auto", display: "block" }} />
+                <h4 style={{ margin: "0 0 4px 0", fontSize: "15px", fontWeight: "700", color: "#0f172a" }}>
+                  Upload Endorsement PDF Document
+                </h4>
+                <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#64748b" }}>
+                  Drag & drop endorsement PDF here or click to browse file
+                </p>
+                <input type="file" accept=".pdf" style={{ display: "none" }} id="endorsement-pdf-file-input" />
+                <label
+                  htmlFor="endorsement-pdf-file-input"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "9px 18px",
+                    borderRadius: "8px",
+                    backgroundColor: "#2563eb",
+                    color: "#ffffff",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                  }}
                 >
-                  <option value="INCREASE">Increase (+)</option>
-                  <option value="DECREASE">Decrease (-)</option>
-                </select>
+                  <FileUp size={16} /> Select PDF File
+                </label>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Decoupled Dates Section */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#64748b", marginBottom: "4px" }}>
+                    Transaction Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={form.transactionDate}
+                    onChange={(e) => handleChange("transactionDate", e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#64748b", marginBottom: "4px" }}>
+                    Effective Date (Policy Activation) *
+                  </label>
+                  <input
+                    type="date"
+                    value={form.effectiveDate}
+                    onChange={(e) => handleChange("effectiveDate", e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#64748b", marginBottom: "4px" }}>
+                    Payment Date (Revenue Date) *
+                  </label>
+                  <input
+                    type="date"
+                    value={form.paymentDate}
+                    onChange={(e) => handleChange("paymentDate", e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "4px" }}>
-                  Premium Net Amount (₹)
+              {/* Multi-Impact Selection Checkboxes */}
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "8px" }}>
+                  SELECT ENDORSEMENT IMPACTS
                 </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="2500.00"
-                  value={form.premiumChangeAmount}
-                  onChange={(e) => handleChange("premiumChangeAmount", e.target.value)}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {IMPACT_CATEGORIES.map((cat) => {
+                    const active = selectedImpacts.includes(cat.id);
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => toggleImpact(cat.id)}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          border: active ? "1px solid #3b82f6" : "1px solid #cbd5e1",
+                          backgroundColor: active ? "#eff6ff" : "#ffffff",
+                          color: active ? "#1d4ed8" : "#64748b",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {active ? "✓ " : "+ "}
+                        {cat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Premium & Sum Insured Impact Inputs */}
+              {selectedImpacts.includes("PREMIUM") && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "4px" }}>
+                      Premium Change Type
+                    </label>
+                    <select
+                      value={form.premiumChangeType}
+                      onChange={(e) => handleChange("premiumChangeType", e.target.value)}
+                      style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                    >
+                      <option value="INCREASE">Increase (+)</option>
+                      <option value="DECREASE">Decrease (-)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "4px" }}>
+                      Premium Net Amount (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="2500.00"
+                      value={form.premiumChangeAmount}
+                      onChange={(e) => handleChange("premiumChangeAmount", e.target.value)}
+                      style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {selectedImpacts.includes("SUM_INSURED") && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "4px" }}>
+                      Sum Insured Change Type
+                    </label>
+                    <select
+                      value={form.sumInsuredChangeType}
+                      onChange={(e) => handleChange("sumInsuredChangeType", e.target.value)}
+                      style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                    >
+                      <option value="INCREASE">Increase (+)</option>
+                      <option value="DECREASE">Decrease (-)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "4px" }}>
+                      Sum Insured Amount (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="2500000.00"
+                      value={form.sumInsuredChangeAmount}
+                      onChange={(e) => handleChange("sumInsuredChangeAmount", e.target.value)}
+                      style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Revenue Breakdown */}
+              <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "16px", marginBottom: "20px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "12px", fontWeight: "700", color: "#0f172a", display: "block", marginBottom: "10px" }}>
+                  FINANCIAL REVENUE LEDGER
+                </span>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+                      Collected Amount (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="2950.00"
+                      value={form.collectedAmount}
+                      onChange={(e) => handleChange("collectedAmount", e.target.value)}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+                      Net Premium Part
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="2500.00"
+                      value={form.premiumPart}
+                      onChange={(e) => handleChange("premiumPart", e.target.value)}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+                      GST Amount
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="450.00"
+                      value={form.gstPart}
+                      onChange={(e) => handleChange("gstPart", e.target.value)}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+                      Payment Mode
+                    </label>
+                    <select
+                      value={form.paymentMode}
+                      onChange={(e) => handleChange("paymentMode", e.target.value)}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                    >
+                      <option value="BANK_TRANSFER">Bank Transfer / NEFT</option>
+                      <option value="CHEQUE">Cheque</option>
+                      <option value="UPI">UPI</option>
+                      <option value="CARD">Credit / Debit Card</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "4px" }}>
+                  Remarks / Description
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Enter endorsement notes..."
+                  value={form.remarks}
+                  onChange={(e) => handleChange("remarks", e.target.value)}
                   style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
                 />
               </div>
-            </div>
+            </>
           )}
-
-          {selectedImpacts.includes("SUM_INSURED") && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "4px" }}>
-                  Sum Insured Change Type
-                </label>
-                <select
-                  value={form.sumInsuredChangeType}
-                  onChange={(e) => handleChange("sumInsuredChangeType", e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
-                >
-                  <option value="INCREASE">Increase (+)</option>
-                  <option value="DECREASE">Decrease (-)</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "4px" }}>
-                  Sum Insured Amount (₹)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="2500000.00"
-                  value={form.sumInsuredChangeAmount}
-                  onChange={(e) => handleChange("sumInsuredChangeAmount", e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Revenue Breakdown */}
-          <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "16px", marginBottom: "20px", border: "1px solid #e2e8f0" }}>
-            <span style={{ fontSize: "12px", fontWeight: "700", color: "#0f172a", display: "block", marginBottom: "10px" }}>
-              FINANCIAL REVENUE LEDGER
-            </span>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "12px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
-                  Collected Amount (₹)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="2950.00"
-                  value={form.collectedAmount}
-                  onChange={(e) => handleChange("collectedAmount", e.target.value)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
-                  Net Premium Part
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="2500.00"
-                  value={form.premiumPart}
-                  onChange={(e) => handleChange("premiumPart", e.target.value)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
-                  GST Amount
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="450.00"
-                  value={form.gstPart}
-                  onChange={(e) => handleChange("gstPart", e.target.value)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
-                  Payment Mode
-                </label>
-                <select
-                  value={form.paymentMode}
-                  onChange={(e) => handleChange("paymentMode", e.target.value)}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
-                >
-                  <option value="BANK_TRANSFER">Bank Transfer / NEFT</option>
-                  <option value="CHEQUE">Cheque</option>
-                  <option value="UPI">UPI</option>
-                  <option value="CARD">Credit / Debit Card</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: "20px" }}>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#475569", marginBottom: "4px" }}>
-              Remarks / Description
-            </label>
-            <textarea
-              rows={2}
-              placeholder="Enter endorsement notes..."
-              value={form.remarks}
-              onChange={(e) => handleChange("remarks", e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
-            />
-          </div>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "16px", borderTop: "1px solid #e2e8f0" }}>
             <button
