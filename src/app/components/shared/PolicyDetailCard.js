@@ -629,7 +629,10 @@ export default function PolicyDetailCard({
       {showEndorsementModal && (
         <EndorsementManagementDrawer
           record={record}
-          onClose={() => setShowEndorsementModal(false)}
+          onClose={() => {
+            setShowEndorsementModal(false);
+            if (onClose) onClose();
+          }}
         />
       )}
     </div>,
