@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import {
   X,
   CheckCircle,
@@ -237,13 +238,22 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
             background: "#ffffff",
           }}
         >
-          <div>
-            <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "0.05em", color: "#2563eb", textTransform: "uppercase" }}>
-              New Warehouse Endorsement
-            </span>
-            <h3 style={{ margin: "2px 0 0 0", fontSize: "18px", fontWeight: "800", color: "#0f172a" }}>
-              Policy #{policyNo || "Warehouse"}
-            </h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <Image
+              src="/brand/main-logo-wide.webp"
+              alt="Bima Headquarter"
+              width={133}
+              height={74}
+              style={{ height: "64px", width: "auto", objectFit: "contain" }}
+            />
+            <div style={{ borderLeft: "1px solid #e2e8f0", paddingLeft: "16px" }}>
+              <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "0.05em", color: "#2563eb", textTransform: "uppercase" }}>
+                New Warehouse Endorsement
+              </span>
+              <h3 style={{ margin: "2px 0 0 0", fontSize: "18px", fontWeight: "800", color: "#0f172a" }}>
+                Policy #{policyNo || "Warehouse"}
+              </h3>
+            </div>
           </div>
           <button
             onClick={onClose}
