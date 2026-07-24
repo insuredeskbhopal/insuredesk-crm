@@ -175,21 +175,43 @@ export function normalizeRecord(record) {
     issuedAt: payload.issuedAt || legacy.issuedAt || payload.validIn || legacy.validIn || "",
     policyType: payload.policyType || legacy.policyType || payload["Policy Type"] || "",
     policyTenure: payload.policyTenure || legacy.policyTenure || "",
-    premium: payload.premium || legacy.premium || payload.Premium || "",
+    premium:
+      payload.premium ||
+      legacy.premium ||
+      payload.totalPremium ||
+      legacy.totalPremium ||
+      payload.netPremium ||
+      legacy.netPremium ||
+      payload.basicPremium ||
+      legacy.basicPremium ||
+      payload.collectedAmount ||
+      legacy.collectedAmount ||
+      payload.Premium ||
+      payload["Total Premium"] ||
+      payload["Net Premium"] ||
+      "",
     premiumIncludingGst:
       payload.premiumIncludingGst ||
       legacy.premiumIncludingGst ||
       payload.totalPremium ||
       legacy.totalPremium ||
+      payload.netPremium ||
+      legacy.netPremium ||
       payload.premium ||
       legacy.premium ||
       "",
     totalPremium:
       payload.totalPremium ||
       legacy.totalPremium ||
-      payload["Total Premium"] ||
+      payload.netPremium ||
+      legacy.netPremium ||
       payload.premium ||
       legacy.premium ||
+      payload.basicPremium ||
+      legacy.basicPremium ||
+      payload.collectedAmount ||
+      legacy.collectedAmount ||
+      payload["Total Premium"] ||
       "",
     netPremium: payload.netPremium || legacy.netPremium || payload["Net Premium"] || "",
     basicPremium: payload.basicPremium || legacy.basicPremium || "",
