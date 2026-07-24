@@ -320,20 +320,6 @@ export default function RenewalPoliciesPage() {
     else window.alert("No contact number available for this policy.");
   };
 
-  const LOCKED_COLUMN_WIDTHS = {
-    insuredName: 200,
-    policyNumber: 160,
-    displayPolicyType: 130,
-    asset: 130,
-    startDate: 100,
-    expiryDate: 110,
-    sumInsured: 110,
-    premium: 100,
-    renewalMobile: 110,
-    status: 90,
-    actions: 44,
-  };
-
   const selectedMonthLabel = renewalMonth === "All" ? "" : getRenewalRegisterMonthLabel(renewalMonth);
   const contextTitle = {
     all: "Pending Renewals",
@@ -342,11 +328,6 @@ export default function RenewalPoliciesPage() {
     due_30: "Renewals Due Within 30 Days",
   }[contextTab];
   const isMotorView = policyType === "Motor";
-
-  const activeCols = isMotorView
-    ? ["insuredName", "policyNumber", "displayPolicyType", "asset", "expiryDate", "premium", "renewalMobile", "status", "actions"]
-    : ["insuredName", "policyNumber", "displayPolicyType", "asset", "startDate", "expiryDate", "sumInsured", "premium", "renewalMobile", "status", "actions"];
-  const totalTableWidth = activeCols.reduce((acc, col) => acc + (LOCKED_COLUMN_WIDTHS[col] || 100), 0);
 
   return (
     <section className="rn-policy-register">
@@ -409,20 +390,20 @@ export default function RenewalPoliciesPage() {
         ) : policies.length === 0 ? (
           <div className="rn-policy-register__state"><AlertCircle size={22} /> No renewal policies match these filters.</div>
         ) : (
-          <table className="rn-table rn-policy-register__table" style={{ width: `${totalTableWidth}px` }}>
+          <table className="rn-table rn-policy-register__table">
             <thead>
               <tr>
-                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.insuredName}px` }}>Policyholder</th>
-                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.policyNumber}px` }}>Policy Number</th>
-                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.displayPolicyType}px` }}>Policy Type</th>
-                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.asset}px` }}>Vehicle / Risk</th>
-                {!isMotorView ? <th style={{ width: `${LOCKED_COLUMN_WIDTHS.startDate}px` }}>Start Date</th> : null}
-                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.expiryDate}px` }}>Expiry Date</th>
-                {!isMotorView ? <th style={{ width: `${LOCKED_COLUMN_WIDTHS.sumInsured}px` }}>Sum Insured / IDV</th> : null}
-                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.premium}px` }}>Premium</th>
-                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.renewalMobile}px` }}>Renewal Mobile</th>
-                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.status}px` }}>Status</th>
-                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.actions}px` }}>Actions</th>
+                <th style={{ width: isMotorView ? "24%" : "18%" }}>Policyholder</th>
+                <th style={{ width: isMotorView ? "17%" : "14%" }}>Policy Number</th>
+                <th style={{ width: isMotorView ? "12%" : "10%" }}>Policy Type</th>
+                <th style={{ width: isMotorView ? "12%" : "10%" }}>Vehicle / Risk</th>
+                {!isMotorView ? <th style={{ width: "8%" }}>Start Date</th> : null}
+                <th style={{ width: isMotorView ? "11%" : "8%" }}>Expiry Date</th>
+                {!isMotorView ? <th style={{ width: "9%" }}>Sum Insured / IDV</th> : null}
+                <th style={{ width: isMotorView ? "9%" : "8%" }}>Premium</th>
+                <th style={{ width: isMotorView ? "11%" : "9%" }}>Renewal Mobile</th>
+                <th style={{ width: isMotorView ? "8%" : "7%" }}>Status</th>
+                <th style={{ width: "4%" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
