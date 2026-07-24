@@ -105,38 +105,46 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
             {insuredName && <p style={{ margin: "2px 0 0 0", fontSize: "13px", color: "#475569" }}>{insuredName}</p>}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <button
               type="button"
-              className="btn-add-endorsement"
               onClick={() => setShowAddModal(true)}
               style={{
-                padding: "9px 18px",
+                padding: "8px 16px",
                 borderRadius: "10px",
-                border: "none",
-                backgroundColor: "#0f172a",
-                color: "#ffffff",
+                border: "1px solid #cbd5e1",
+                backgroundColor: "#ffffff",
+                color: "#0f172a",
                 fontWeight: "700",
                 fontSize: "13px",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
                 cursor: "pointer",
-                boxShadow: "0 2px 8px rgba(15, 23, 42, 0.2)",
+                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#f8fafc";
+                e.currentTarget.style.borderColor = "#0f172a";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#ffffff";
+                e.currentTarget.style.borderColor = "#cbd5e1";
               }}
             >
-              <PlusCircle size={16} color="#ffffff" style={{ color: "#ffffff", strokeWidth: "2" }} />
-              <span style={{ color: "#ffffff", fontWeight: "700" }}>Add Endorsement</span>
+              <PlusCircle size={16} color="#0f172a" style={{ strokeWidth: "2" }} />
+              <span style={{ color: "#0f172a", fontWeight: "700" }}>Add Endorsement</span>
             </button>
 
             <button
               onClick={onClose}
               aria-label="Close"
               style={{
-                width: "36px",
-                height: "36px",
-                minWidth: "36px",
-                minHeight: "36px",
+                width: "32px",
+                height: "32px",
+                minWidth: "32px",
+                minHeight: "32px",
                 borderRadius: "50%",
                 border: "1px solid #cbd5e1",
                 backgroundColor: "#ffffff",
@@ -144,12 +152,21 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                color: "#475569",
+                color: "#64748b",
                 padding: 0,
-                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#f8fafc";
+                e.currentTarget.style.borderColor = "#64748b";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#ffffff";
+                e.currentTarget.style.borderColor = "#cbd5e1";
               }}
             >
-              <X size={18} color="#475569" style={{ strokeWidth: "2" }} />
+              <X size={15} color="#64748b" style={{ strokeWidth: "2" }} />
             </button>
           </div>
         </div>
