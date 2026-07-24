@@ -274,8 +274,8 @@
 }
 
 .rn-policy-register__table {
-  width: max-content !important;
-  min-width: 100%;
+  width: auto !important;
+  min-width: 0 !important;
   table-layout: fixed !important;
   border-collapse: collapse;
   box-sizing: border-box;

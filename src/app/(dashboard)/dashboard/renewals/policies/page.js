@@ -367,6 +367,11 @@ export default function RenewalPoliciesPage() {
   }[contextTab];
   const isMotorView = policyType === "Motor";
 
+  const activeCols = isMotorView
+    ? ["insuredName", "policyNumber", "displayPolicyType", "asset", "expiryDate", "premium", "renewalMobile", "status", "actions"]
+    : ["insuredName", "policyNumber", "displayPolicyType", "asset", "startDate", "expiryDate", "sumInsured", "premium", "renewalMobile", "status", "actions"];
+  const totalTableWidth = activeCols.reduce((acc, col) => acc + (columnWidths[col] || 100), 0);
+
   return (
     <section className="rn-policy-register">
       <div className="rn-policy-register__intro">
@@ -428,7 +433,7 @@ export default function RenewalPoliciesPage() {
         ) : policies.length === 0 ? (
           <div className="rn-policy-register__state"><AlertCircle size={22} /> No renewal policies match these filters.</div>
         ) : (
-          <table className="rn-table rn-policy-register__table">
+          <table className="rn-table rn-policy-register__table" style={{ width: `${totalTableWidth}px` }}>
             <thead>
               <tr>
                 <th style={{ width: `${columnWidths.insuredName}px`, position: "relative" }}>
