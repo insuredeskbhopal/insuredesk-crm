@@ -34,7 +34,10 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
   const [errorMessage, setErrorMessage] = useState("");
 
   const policyNo = record?.policyNumber || record?.policyNo || record?.data?.policyNumber || "";
-  const insuredName = record?.insuredName || record?.data?.insuredName || "";
+  const insuredName = record?.insuredName || record?.data?.insuredName || record?.proposerName || "";
+  const insuranceCompany = record?.insuranceCompany || record?.data?.insuranceCompany || "";
+  const policyType = record?.policyType || record?.data?.policyType || "";
+  const clientId = record?.clientId || record?.data?.clientId || "";
 
   // Selected Multi-Impact Categories
   const [selectedImpacts, setSelectedImpacts] = useState(["PREMIUM", "SUM_INSURED"]);
@@ -295,6 +298,50 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
               {errorMessage}
             </div>
           )}
+
+          {/* Auto-Fetched Client & Policy Context Card */}
+          <div
+            style={{
+              marginBottom: "20px",
+              padding: "16px",
+              borderRadius: "14px",
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+              <span style={{ fontSize: "11px", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.5px", color: "#2563eb", background: "#eff6ff", padding: "3px 10px", borderRadius: "6px", border: "1px solid #bfdbfe" }}>
+                Auto-Fetched Policy Context
+              </span>
+              {clientId && (
+                <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>
+                  Client ID: <strong style={{ color: "#0f172a" }}>{clientId}</strong>
+                </span>
+              )}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Insured Name</span>
+                <strong style={{ fontSize: "13px", color: "#0f172a" }}>{insuredName || "N/A"}</strong>
+              </div>
+
+              <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Insurance Company</span>
+                <strong style={{ fontSize: "13px", color: "#0f172a" }}>{insuranceCompany || "N/A"}</strong>
+              </div>
+
+              <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Policy Number</span>
+                <strong style={{ fontSize: "13px", color: "#0f172a" }}>{policyNo || "N/A"}</strong>
+              </div>
+
+              <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Policy Type</span>
+                <strong style={{ fontSize: "13px", color: "#0f172a" }}>{policyType || "Warehouse Policy"}</strong>
+              </div>
+            </div>
+          </div>
 
           {/* Creation Method Selector */}
           <div style={{ marginBottom: "20px" }}>
@@ -578,10 +625,28 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={isSaving}
-              style={{ padding: "10px 24px", borderRadius: "10px", border: "none", backgroundColor: "#0f172a", color: "#ffffff", fontWeight: "700", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
+              className="btn-submit-endorsement"
+              style={{
+                padding: "10px 24px",
+                borderRadius: "10px",
+                border: "none",
+                backgroundColor: "#0f172a",
+                color: "#ffffff",
+                fontWeight: "700",
+                fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(15, 23, 42, 0.2)",
+              }}
             >
-              {isSaving ? <LoaderCircle size={16} className="spin" /> : <CheckCircle size={16} />}
-              Save Endorsement
+              {isSaving ? (
+                <LoaderCircle size={16} className="spin" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+              ) : (
+                <CheckCircle size={16} style={{ color: "#ffffff", stroke: "#ffffff" }} />
+              )}
+              <span style={{ color: "#ffffff", fontWeight: "700" }}>Save Endorsement</span>
             </button>
           </div>
         </form>

@@ -681,3 +681,20 @@ tbody tr:hover {
   background-color: #1e293b !important;
 }
 
+.btn-submit-endorsement,
+.btn-submit-endorsement *,
+.btn-submit-endorsement span,
+.btn-submit-endorsement svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.btn-submit-endorsement:hover,
+.btn-submit-endorsement:hover *,
+.btn-submit-endorsement:focus,
+.btn-submit-endorsement:focus * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  background-color: #1e293b !important;
+}
+
