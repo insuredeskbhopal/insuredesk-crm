@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -10,12 +10,6 @@ import {
   LoaderCircle,
   FileUp,
   Edit3,
-  DollarSign,
-  Plus,
-  Trash2,
-  AlertCircle,
-  Building,
-  Layers,
 } from "lucide-react";
 
 export const IMPACT_CATEGORIES = [
@@ -452,7 +446,7 @@ export default function AddEndorsementModal({ record, onClose, onSuccess, onRedi
                   } else if (onClose) {
                     onClose();
                   }
-                  const qParams = new URLSearchParams();
+                  const qParams = new globalThis.URLSearchParams();
                   qParams.set("mode", "endorsement");
                   if (policyNo) qParams.set("policyNo", policyNo);
                   if (insuredName) qParams.set("insuredName", insuredName);
