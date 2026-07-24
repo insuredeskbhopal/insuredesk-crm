@@ -267,21 +267,26 @@
 
 .rn-policy-register__table-shell {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  box-sizing: border-box;
 }
 
 .rn-policy-register__table {
   width: 100% !important;
+  max-width: 100% !important;
   table-layout: fixed !important;
   border-collapse: collapse;
+  box-sizing: border-box;
 }
 
 .rn-policy-register__table th,
 .rn-policy-register__table td {
-  padding: 4px 5px !important;
-  font-size: 11px !important;
+  padding: 4px 3px !important;
+  font-size: 10.5px !important;
   overflow: hidden;
   line-height: 1.25 !important;
+  box-sizing: border-box;
 }
 
 .rn-policy-register__table th:first-child,
@@ -292,15 +297,15 @@
 }
 
 .rn-policy-register__table th {
-  font-size: 9.5px !important;
+  font-size: 9px !important;
   font-weight: 750 !important;
   letter-spacing: 0.02em !important;
-  padding: 5px 5px !important;
+  padding: 5px 3px !important;
 }
 
 .rn-policy-register__mono {
   font-family: var(--font-mono, monospace);
-  font-size: 10px !important;
+  font-size: 9.5px !important;
   word-break: break-all;
   overflow-wrap: anywhere;
   display: block;
@@ -311,8 +316,8 @@
   white-space: normal !important;
   word-break: break-word !important;
   overflow-wrap: anywhere !important;
-  line-height: 1.25 !important;
-  font-size: 11px !important;
+  line-height: 1.2 !important;
+  font-size: 10.5px !important;
   font-weight: 700 !important;
 }
 
