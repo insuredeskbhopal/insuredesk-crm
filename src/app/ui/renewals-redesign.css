@@ -265,6 +265,55 @@
   background-color: #dcfce7 !important;
 }
 
+.rn-policy-register__table-shell {
+  width: 100%;
+  overflow-x: auto;
+}
+
+@media (min-width: 1024px) {
+  .rn-policy-register__table-shell {
+    overflow-x: hidden !important;
+  }
+}
+
+.rn-policy-register__table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse;
+}
+
+.rn-policy-register__table th,
+.rn-policy-register__table td {
+  padding: 8px 6px !important;
+  font-size: 12px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rn-policy-register__table th {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em !important;
+  padding: 9px 6px !important;
+}
+
+.rn-policy-register__mono {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px !important;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  display: block;
+}
+
+.rn-policy-register__primary {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.25;
+  font-size: 12px;
+}
+
 .rn-table-actions {
   display: flex;
   gap: 4px;
