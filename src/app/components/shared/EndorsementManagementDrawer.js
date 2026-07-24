@@ -111,13 +111,13 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
               className="btn-add-endorsement"
               onClick={() => setShowAddModal(true)}
               style={{
-                padding: "9px 18px",
+                padding: "10px 20px",
                 borderRadius: "10px",
                 border: "none",
                 backgroundColor: "#0f172a",
                 color: "#ffffff",
                 fontWeight: "700",
-                fontSize: "13px",
+                fontSize: "14px",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
@@ -125,15 +125,18 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
                 boxShadow: "0 2px 8px rgba(15, 23, 42, 0.2)",
               }}
             >
-              <PlusCircle size={16} color="#ffffff" style={{ color: "#ffffff" }} />
+              <PlusCircle size={18} color="#ffffff" style={{ color: "#ffffff", strokeWidth: "2.5" }} />
               <span style={{ color: "#ffffff", fontWeight: "700" }}>+ Add Endorsement</span>
             </button>
 
             <button
               onClick={onClose}
+              aria-label="Close"
               style={{
-                width: "36px",
-                height: "36px",
+                width: "40px",
+                height: "40px",
+                minWidth: "40px",
+                minHeight: "40px",
                 borderRadius: "50%",
                 border: "1px solid #cbd5e1",
                 backgroundColor: "#ffffff",
@@ -142,9 +145,10 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
                 justifyContent: "center",
                 cursor: "pointer",
                 color: "#0f172a",
+                padding: 0,
               }}
             >
-              <X size={18} color="#0f172a" />
+              <X size={22} color="#0f172a" style={{ width: "22px", height: "22px", strokeWidth: "2.5" }} />
             </button>
           </div>
         </div>

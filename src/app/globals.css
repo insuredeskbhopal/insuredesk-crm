@@ -663,3 +663,21 @@ tbody tr:hover {
   color: #000000 !important;
   stroke: currentColor !important;
 }
+
+/* Add Endorsement Button Color Overrides */
+.btn-add-endorsement,
+.btn-add-endorsement *,
+.btn-add-endorsement span,
+.btn-add-endorsement svg {
+  color: #ffffff !important;
+  fill: none !important;
+}
+
+.btn-add-endorsement:hover,
+.btn-add-endorsement:hover *,
+.btn-add-endorsement:focus,
+.btn-add-endorsement:focus * {
+  color: #ffffff !important;
+  background-color: #1e293b !important;
+}
+
