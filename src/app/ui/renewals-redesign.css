@@ -257,6 +257,14 @@
   color: var(--rn-text-primary);
 }
 
+.rn-table tbody tr.rn-row-whatsapp-sent td {
+  background-color: #f0fdf4 !important;
+}
+
+.rn-table tbody tr.rn-row-whatsapp-sent:hover td {
+  background-color: #dcfce7 !important;
+}
+
 .rn-table-actions {
   display: flex;
   gap: 4px;

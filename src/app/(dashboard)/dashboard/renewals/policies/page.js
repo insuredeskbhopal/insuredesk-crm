@@ -397,7 +397,7 @@ export default function RenewalPoliciesPage() {
                 {!isMotorView ? <th>Start Date</th> : null}
                 <th>Expiry Date</th>
                 {!isMotorView ? <th>Sum Insured / IDV</th> : null}
-                <th>Premium</th><th>Renewal Mobile</th><th>WhatsApp Status</th><th>Status</th><th>Actions</th>
+                <th>Premium</th><th>Renewal Mobile</th><th>Status</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -483,7 +483,7 @@ function PolicyRegisterRow({
   onRowClick,
 }) {
   return (
-    <tr onClick={(event) => onRowClick(policy, event)}>
+    <tr className={policy.whatsappMessageSentAt ? "rn-row-whatsapp-sent" : ""} onClick={(event) => onRowClick(policy, event)}>
       <td><strong className="rn-policy-register__primary">{policy.insuredName || "Name not available"}</strong></td>
       <td><span className="rn-policy-register__mono">{policy.policyNumber || "—"}</span></td>
       <td>{policy.displayPolicyType || policy.policyType || "—"}</td>
@@ -493,12 +493,6 @@ function PolicyRegisterRow({
       {!isMotorView ? <td>{formatRenewalRegisterAmount(policy.sumInsured || policy.idv)}</td> : null}
       <td>{formatRenewalRegisterAmount(policy.totalPremium || policy.premium)}</td>
       <td>{policy.renewalRecipientMobile || policy.contactNumber || "—"}</td>
-      <td>
-        <span className={`rn-policy-register__status rn-policy-register__status--${policy.whatsappMessageSentAt ? "success" : "neutral"}`}>
-          {policy.whatsappMessageSentAt ? "Sent" : "Not sent"}
-        </span>
-        {policy.whatsappMessageSentAt ? <small>{formatRenewalRegisterDate(policy.whatsappMessageSentAt)}</small> : null}
-      </td>
       <td><span className={`rn-policy-register__status rn-policy-register__status--${statusTone}`}>{String(policy.renewalStatus || "unknown").replaceAll("_", " ")}</span></td>
       <td className="rn-policy-register__actions">
         <div className="rn-dropdown">
