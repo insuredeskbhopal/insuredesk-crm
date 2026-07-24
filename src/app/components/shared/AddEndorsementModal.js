@@ -323,7 +323,7 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
             </div>
           )}
 
-          {/* Auto-Fetched Policy Context Summary */}
+          {/* Auto-Fetched Policy Context Summary (Executive Accent Card) */}
           <div
             style={{
               marginBottom: "14px",
@@ -331,6 +331,7 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
               borderRadius: "10px",
               background: "#f8fafc",
               border: "1px solid #e2e8f0",
+              borderLeft: "4px solid #2563eb",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px", paddingBottom: "6px", borderBottom: "1px solid #e2e8f0" }}>
@@ -344,12 +345,12 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
               )}
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px 14px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1.15fr 1.25fr 0.9fr", gap: "8px 14px" }}>
               <div>
                 <span style={{ display: "block", fontSize: "9px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "1px" }}>
                   Insured Name
                 </span>
-                <strong style={{ fontSize: "11.5px", fontWeight: "700", color: "#0f172a", wordBreak: "break-word", lineHeight: "1.2" }}>
+                <strong style={{ fontSize: "11px", fontWeight: "700", color: "#0f172a", wordBreak: "break-word", lineHeight: "1.2" }}>
                   {insuredName || "N/A"}
                 </strong>
               </div>
@@ -358,7 +359,7 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
                 <span style={{ display: "block", fontSize: "9px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "1px" }}>
                   Insurance Company
                 </span>
-                <strong style={{ fontSize: "11.5px", fontWeight: "700", color: "#0f172a", wordBreak: "break-word", lineHeight: "1.2" }}>
+                <strong style={{ fontSize: "11px", fontWeight: "700", color: "#0f172a", wordBreak: "break-word", lineHeight: "1.2" }}>
                   {insuranceCompany || "N/A"}
                 </strong>
               </div>
@@ -367,7 +368,7 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
                 <span style={{ display: "block", fontSize: "9px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "1px" }}>
                   Policy Number
                 </span>
-                <strong style={{ fontSize: "11.5px", fontWeight: "700", color: "#0f172a", wordBreak: "break-all", lineHeight: "1.2" }}>
+                <strong style={{ fontSize: "11px", fontWeight: "700", color: "#0f172a", wordBreak: "break-all", lineHeight: "1.2" }}>
                   {policyNo || "N/A"}
                 </strong>
               </div>
@@ -376,7 +377,7 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
                 <span style={{ display: "block", fontSize: "9px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "1px" }}>
                   Policy Type
                 </span>
-                <strong style={{ fontSize: "11.5px", fontWeight: "700", color: "#0f172a", wordBreak: "break-word", lineHeight: "1.2" }}>
+                <strong style={{ fontSize: "11px", fontWeight: "700", color: "#0f172a", wordBreak: "break-word", lineHeight: "1.2" }}>
                   {policyType || "Warehouse Policy"}
                 </strong>
               </div>
@@ -385,7 +386,7 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
                 <span style={{ display: "block", fontSize: "9px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "1px" }}>
                   Policy Period & Duration
                 </span>
-                <strong style={{ fontSize: "11.5px", fontWeight: "700", color: "#0f172a", lineHeight: "1.2" }}>
+                <strong style={{ fontSize: "11px", fontWeight: "700", color: "#0f172a", lineHeight: "1.2" }}>
                   {formatDateVal(startDate)} – {formatDateVal(expiryDate)} {duration ? `(${duration})` : ""}
                 </strong>
               </div>
@@ -394,38 +395,50 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
                 <span style={{ display: "block", fontSize: "9px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "1px" }}>
                   Sum Insured / Premium
                 </span>
-                <strong style={{ fontSize: "11.5px", fontWeight: "700", color: "#0f172a", lineHeight: "1.2" }}>
+                <strong style={{ fontSize: "11px", fontWeight: "700", color: "#0f172a", lineHeight: "1.2" }}>
                   {formatAmountVal(sumInsured)} / {formatAmountVal(premium)}
                 </strong>
               </div>
             </div>
           </div>
 
-          {/* Creation Method Selector */}
-          <div style={{ marginBottom: "20px" }}>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#475569", marginBottom: "8px" }}>
-              CREATION METHOD *
+          {/* Creation Method Segmented Control */}
+          <div style={{ marginBottom: "18px" }}>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+              Creation Method *
             </label>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "4px",
+                padding: "4px",
+                borderRadius: "10px",
+                backgroundColor: "#f1f5f9",
+                border: "1px solid #e2e8f0",
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setCreationMethod("MANUAL_ENTRY")}
                 style={{
-                  padding: "12px 16px",
-                  borderRadius: "12px",
-                  border: creationMethod === "MANUAL_ENTRY" ? "2px solid #3b82f6" : "1px solid #cbd5e1",
-                  backgroundColor: creationMethod === "MANUAL_ENTRY" ? "#eff6ff" : "#ffffff",
-                  color: creationMethod === "MANUAL_ENTRY" ? "#1d4ed8" : "#475569",
+                  padding: "8px 14px",
+                  borderRadius: "8px",
+                  border: "none",
+                  backgroundColor: creationMethod === "MANUAL_ENTRY" ? "#ffffff" : "transparent",
+                  color: creationMethod === "MANUAL_ENTRY" ? "#2563eb" : "#64748b",
                   fontWeight: "700",
                   fontSize: "13px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "8px",
+                  gap: "6px",
                   cursor: "pointer",
+                  boxShadow: creationMethod === "MANUAL_ENTRY" ? "0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)" : "none",
+                  transition: "all 0.2s ease",
                 }}
               >
-                <Edit3 size={16} />
+                <Edit3 size={15} color={creationMethod === "MANUAL_ENTRY" ? "#2563eb" : "#64748b"} />
                 Manual Entry (Instant Revenue)
               </button>
 
@@ -433,21 +446,23 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
                 type="button"
                 onClick={() => setCreationMethod("PDF_UPLOAD")}
                 style={{
-                  padding: "12px 16px",
-                  borderRadius: "12px",
-                  border: creationMethod === "PDF_UPLOAD" ? "2px solid #3b82f6" : "1px solid #cbd5e1",
-                  backgroundColor: creationMethod === "PDF_UPLOAD" ? "#eff6ff" : "#ffffff",
-                  color: creationMethod === "PDF_UPLOAD" ? "#1d4ed8" : "#475569",
+                  padding: "8px 14px",
+                  borderRadius: "8px",
+                  border: "none",
+                  backgroundColor: creationMethod === "PDF_UPLOAD" ? "#ffffff" : "transparent",
+                  color: creationMethod === "PDF_UPLOAD" ? "#2563eb" : "#64748b",
                   fontWeight: "700",
                   fontSize: "13px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "8px",
+                  gap: "6px",
                   cursor: "pointer",
+                  boxShadow: creationMethod === "PDF_UPLOAD" ? "0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)" : "none",
+                  transition: "all 0.2s ease",
                 }}
               >
-                <FileUp size={16} />
+                <FileUp size={15} color={creationMethod === "PDF_UPLOAD" ? "#2563eb" : "#64748b"} />
                 Upload Endorsement PDF
               </button>
             </div>
