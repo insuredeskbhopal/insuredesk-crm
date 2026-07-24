@@ -1,19 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import {
   X,
   CheckCircle,
   LoaderCircle,
   FileUp,
   Edit3,
-  DollarSign,
-  Plus,
-  Trash2,
-  AlertCircle,
-  Building,
-  Layers,
 } from "lucide-react";
 
 export const IMPACT_CATEGORIES = [
@@ -196,75 +191,39 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
 
   return createPortal(
     <div
-      className="tb-modal-overlay"
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(15, 23, 42, 0.4)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        zIndex: 3200,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
-      }}
+      className="tb-modal-overlay endorsement-create-modal__overlay"
       onClick={onClose}
     >
       <div
-        className="tb-modal-card"
+        className="tb-modal-card endorsement-create-modal"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#ffffff",
-          borderRadius: "24px",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-          width: "100%",
-          maxWidth: "750px",
-          maxHeight: "90vh",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
       >
         {/* Header */}
-        <div
-          style={{
-            padding: "20px 24px",
-            borderBottom: "1px solid #e2e8f0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            background: "#f8fafc",
-          }}
-        >
-          <div>
-            <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "0.05em", color: "#3b82f6", textTransform: "uppercase" }}>
-              New Warehouse Endorsement
-            </span>
-            <h3 style={{ margin: "2px 0 0 0", fontSize: "18px", fontWeight: "800", color: "#0f172a" }}>
-              Policy #{policyNo || "Warehouse"}
-            </h3>
+        <div className="tb-modal-header endorsement-create-modal__header">
+          <div className="tb-modal-header-content endorsement-create-modal__header-content">
+            <Image
+              className="tb-modal-logo"
+              src="/brand/main-logo-wide.webp"
+              alt="Bima Headquarter"
+              width={133}
+              height={74}
+            />
+            <div className="tb-modal-header-text endorsement-create-modal__title">
+              <span>New Warehouse Endorsement</span>
+              <h3>Policy #{policyNo || "Warehouse"}</h3>
+            </div>
           </div>
           <button
             onClick={onClose}
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "50%",
-              border: "1px solid #cbd5e1",
-              backgroundColor: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
+            aria-label="Close"
+            className="endorsement-create-modal__close"
           >
-            <X size={18} />
+            <X size={24} />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
+        <form onSubmit={handleSubmit} className="endorsement-create-modal__form">
           {errorMessage && (
             <div style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "10px", backgroundColor: "#fef2f2", color: "#991b1b", fontSize: "13px" }}>
               {errorMessage}
@@ -553,7 +512,7 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={isSaving}
-              style={{ padding: "10px 24px", borderRadius: "10px", border: "none", backgroundColor: "#0f172a", color: "#ffffff", fontWeight: "700", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
+              style={{ padding: "10px 24px", borderRadius: "10px", border: "1px solid #cbd5e1", backgroundColor: "#ffffff", color: "#0f172a", fontWeight: "700", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
             >
               {isSaving ? <LoaderCircle size={16} className="spin" /> : <CheckCircle size={16} />}
               Save Endorsement
