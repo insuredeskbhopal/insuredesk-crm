@@ -185,15 +185,16 @@
   right: 0;
   top: 0;
   bottom: 0;
-  width: 5px;
+  width: 8px;
   cursor: col-resize;
   background: transparent;
+  z-index: 10;
 }
 
 .rn-table th .rn-resize-handle:hover,
 .rn-table th .rn-resize-handle.resizing {
-  background: var(--rn-primary);
-  opacity: 0.4;
+  background: var(--rn-primary, #2563eb);
+  opacity: 0.8;
 }
 
 .rn-table td {
@@ -273,8 +274,8 @@
 }
 
 .rn-policy-register__table {
-  width: 100% !important;
-  max-width: 100% !important;
+  width: max-content !important;
+  min-width: 100%;
   table-layout: fixed !important;
   border-collapse: collapse;
   box-sizing: border-box;

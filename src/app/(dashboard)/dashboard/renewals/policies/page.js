@@ -320,6 +320,44 @@ export default function RenewalPoliciesPage() {
     else window.alert("No contact number available for this policy.");
   };
 
+  const [columnWidths, setColumnWidths] = useState({
+    insuredName: 200,
+    policyNumber: 160,
+    displayPolicyType: 130,
+    asset: 130,
+    startDate: 100,
+    expiryDate: 110,
+    sumInsured: 110,
+    premium: 100,
+    renewalMobile: 110,
+    status: 90,
+    actions: 44,
+  });
+  const [resizingCol, setResizingCol] = useState(null);
+
+  const startColumnResize = (colKey, event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const startX = event.clientX;
+    const startWidth = columnWidths[colKey] || 100;
+    setResizingCol(colKey);
+
+    const onMouseMove = (moveEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const newWidth = Math.max(50, startWidth + delta);
+      setColumnWidths((prev) => ({ ...prev, [colKey]: newWidth }));
+    };
+
+    const onMouseUp = () => {
+      setResizingCol(null);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
+
   const selectedMonthLabel = renewalMonth === "All" ? "" : getRenewalRegisterMonthLabel(renewalMonth);
   const contextTitle = {
     all: "Pending Renewals",
@@ -393,17 +431,51 @@ export default function RenewalPoliciesPage() {
           <table className="rn-table rn-policy-register__table">
             <thead>
               <tr>
-                <th style={{ width: isMotorView ? "18%" : "15%" }}>Policyholder</th>
-                <th style={{ width: isMotorView ? "15%" : "13%" }}>Policy Number</th>
-                <th style={{ width: isMotorView ? "12%" : "10%" }}>Policy Type</th>
-                <th style={{ width: isMotorView ? "12%" : "10%" }}>Vehicle / Risk</th>
-                {!isMotorView ? <th style={{ width: "8%" }}>Start Date</th> : null}
-                <th style={{ width: isMotorView ? "11%" : "8%" }}>Expiry Date</th>
-                {!isMotorView ? <th style={{ width: "9%" }}>Sum Insured / IDV</th> : null}
-                <th style={{ width: isMotorView ? "9%" : "8%" }}>Premium</th>
-                <th style={{ width: isMotorView ? "11%" : "9%" }}>Renewal Mobile</th>
-                <th style={{ width: isMotorView ? "8%" : "6%" }}>Status</th>
-                <th style={{ width: "4%" }}>Actions</th>
+                <th style={{ width: `${columnWidths.insuredName}px`, position: "relative" }}>
+                  Policyholder
+                  <div className={`rn-resize-handle ${resizingCol === "insuredName" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("insuredName", e)} />
+                </th>
+                <th style={{ width: `${columnWidths.policyNumber}px`, position: "relative" }}>
+                  Policy Number
+                  <div className={`rn-resize-handle ${resizingCol === "policyNumber" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("policyNumber", e)} />
+                </th>
+                <th style={{ width: `${columnWidths.displayPolicyType}px`, position: "relative" }}>
+                  Policy Type
+                  <div className={`rn-resize-handle ${resizingCol === "displayPolicyType" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("displayPolicyType", e)} />
+                </th>
+                <th style={{ width: `${columnWidths.asset}px`, position: "relative" }}>
+                  Vehicle / Risk
+                  <div className={`rn-resize-handle ${resizingCol === "asset" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("asset", e)} />
+                </th>
+                {!isMotorView ? (
+                  <th style={{ width: `${columnWidths.startDate}px`, position: "relative" }}>
+                    Start Date
+                    <div className={`rn-resize-handle ${resizingCol === "startDate" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("startDate", e)} />
+                  </th>
+                ) : null}
+                <th style={{ width: `${columnWidths.expiryDate}px`, position: "relative" }}>
+                  Expiry Date
+                  <div className={`rn-resize-handle ${resizingCol === "expiryDate" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("expiryDate", e)} />
+                </th>
+                {!isMotorView ? (
+                  <th style={{ width: `${columnWidths.sumInsured}px`, position: "relative" }}>
+                    Sum Insured / IDV
+                    <div className={`rn-resize-handle ${resizingCol === "sumInsured" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("sumInsured", e)} />
+                  </th>
+                ) : null}
+                <th style={{ width: `${columnWidths.premium}px`, position: "relative" }}>
+                  Premium
+                  <div className={`rn-resize-handle ${resizingCol === "premium" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("premium", e)} />
+                </th>
+                <th style={{ width: `${columnWidths.renewalMobile}px`, position: "relative" }}>
+                  Renewal Mobile
+                  <div className={`rn-resize-handle ${resizingCol === "renewalMobile" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("renewalMobile", e)} />
+                </th>
+                <th style={{ width: `${columnWidths.status}px`, position: "relative" }}>
+                  Status
+                  <div className={`rn-resize-handle ${resizingCol === "status" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("status", e)} />
+                </th>
+                <th style={{ width: `${columnWidths.actions}px` }}>Actions</th>
               </tr>
             </thead>
             <tbody>
