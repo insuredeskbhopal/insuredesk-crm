@@ -37,6 +37,11 @@ export default function FixedPolicyPreview({
   onSave,
   reviewError = "",
   reviewFieldErrors = {},
+  isEndorsementMode = false,
+  endorsementPolicyNo = "",
+  endorsementInsuredName = "",
+  endorsementInsurer = "",
+  endorsementPolicyType = "",
 }) {
   const validation = getReviewValidation(upload);
   const { resolvedSchema, visibleFields, requiredKeys, missingRequired } = validation;
@@ -101,10 +106,79 @@ export default function FixedPolicyPreview({
 
       {!upload ? (
         <div className="preview-body">
-          <EmptyState>Upload a policy PDF to load its dynamic preview.</EmptyState>
+          {isEndorsementMode ? (
+            <div
+              style={{
+                padding: "24px 20px",
+                textAlign: "center",
+                borderRadius: "12px",
+                background: "#eff6ff",
+                border: "1.5px dashed #3b82f6",
+              }}
+            >
+              <div style={{ marginBottom: "8px" }}>
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: "800",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    color: "#1d4ed8",
+                    background: "#dbeafe",
+                    padding: "3px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid #93c5fd",
+                  }}
+                >
+                  Endorsement Review Target
+                </span>
+              </div>
+              <h4 style={{ margin: "0 0 6px 0", fontSize: "14px", fontWeight: "700", color: "#0f172a" }}>
+                Upload Endorsement PDF for Policy #{endorsementPolicyNo || "Target Policy"}
+              </h4>
+              {endorsementInsuredName && (
+                <p style={{ margin: "0 0 4px 0", fontSize: "12px", fontWeight: "600", color: "#334155" }}>
+                  Insured Name: <strong>{endorsementInsuredName}</strong>
+                </p>
+              )}
+              {endorsementInsurer && (
+                <p style={{ margin: "0 0 12px 0", fontSize: "12px", color: "#64748b" }}>
+                  {endorsementInsurer} {endorsementPolicyType ? `• ${endorsementPolicyType}` : ""}
+                </p>
+              )}
+              <p style={{ margin: 0, fontSize: "11.5px", color: "#2563eb", fontWeight: "600" }}>
+                Upload a PDF file above to extract endorsement changes automatically for your review & approval.
+              </p>
+            </div>
+          ) : (
+            <EmptyState>Upload a policy PDF to load its dynamic preview.</EmptyState>
+          )}
         </div>
       ) : (
         <>
+          {isEndorsementMode && (
+            <div
+              style={{
+                margin: "12px 16px 0 16px",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                background: "#eff6ff",
+                border: "1px solid #bfdbfe",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <span style={{ fontSize: "11px", fontWeight: "700", color: "#1d4ed8" }}>
+                Endorsement Review linked to Policy #{endorsementPolicyNo || upload.extractedData?.policyNumber}
+              </span>
+              {endorsementInsuredName && (
+                <span style={{ fontSize: "11px", color: "#475569" }}>
+                  Insured: <strong>{endorsementInsuredName}</strong>
+                </span>
+              )}
+            </div>
+          )}
           <div className="detection-summary">
             <div>
               <span>Source File</span>

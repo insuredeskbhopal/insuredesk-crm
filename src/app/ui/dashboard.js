@@ -1924,6 +1924,11 @@ export default function Dashboard({
               onFieldChange={updateExtractedField}
               reviewError={reviewError}
               reviewFieldErrors={reviewFieldErrors}
+              isEndorsementMode={isEndorsementMode}
+              endorsementPolicyNo={endorsementPolicyNo}
+              endorsementInsuredName={endorsementInsuredName}
+              endorsementInsurer={endorsementInsurer}
+              endorsementPolicyType={endorsementPolicyType}
               onClear={() => {
                 setReviewError("");
                 setReviewFieldErrors({});
