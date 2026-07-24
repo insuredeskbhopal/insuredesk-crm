@@ -57,25 +57,25 @@ function DetailField({ label, value, wide }) {
         display: "flex",
         flexDirection: "column",
         gap: "4px",
-        padding: "8px 12px",
+        padding: "10px 14px",
         background: "#f8fafc",
-        borderRadius: "8px",
-        border: "1px solid #f1f5f9",
+        borderRadius: "10px",
+        border: "1px solid #e2e8f0",
         gridColumn: wide ? "span 2" : undefined,
       }}
     >
       <span
         style={{
-          fontSize: "10px",
-          fontWeight: "600",
-          color: "#64748b",
+          fontSize: "11px",
+          fontWeight: "700",
+          color: "#475569",
           textTransform: "uppercase",
           letterSpacing: "0.5px",
         }}
       >
         {label}
       </span>
-      <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a", wordBreak: "break-all" }}>
+      <span style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a", wordBreak: "break-word" }}>
         {String(value)}
       </span>
     </div>

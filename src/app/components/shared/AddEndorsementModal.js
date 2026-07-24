@@ -234,11 +234,11 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            background: "#f8fafc",
+            background: "#ffffff",
           }}
         >
           <div>
-            <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "0.05em", color: "#3b82f6", textTransform: "uppercase" }}>
+            <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "0.05em", color: "#2563eb", textTransform: "uppercase" }}>
               New Warehouse Endorsement
             </span>
             <h3 style={{ margin: "2px 0 0 0", fontSize: "18px", fontWeight: "800", color: "#0f172a" }}>
@@ -247,9 +247,12 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             style={{
-              width: "36px",
-              height: "36px",
+              width: "32px",
+              height: "32px",
+              minWidth: "32px",
+              minHeight: "32px",
               borderRadius: "50%",
               border: "1px solid #cbd5e1",
               backgroundColor: "#ffffff",
@@ -257,9 +260,21 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
+              color: "#64748b",
+              padding: 0,
+              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#f8fafc";
+              e.currentTarget.style.borderColor = "#64748b";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#ffffff";
+              e.currentTarget.style.borderColor = "#cbd5e1";
             }}
           >
-            <X size={18} />
+            <X size={15} color="#64748b" style={{ strokeWidth: "2" }} />
           </button>
         </div>
 
