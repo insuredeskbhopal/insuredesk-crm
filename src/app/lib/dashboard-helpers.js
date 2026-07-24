@@ -611,6 +611,13 @@ export function getReviewValidation(upload, options = {}) {
     const vehicleFields = new Set(FIELD_GROUPS.find((g) => g.title === "Vehicle Details")?.fields || []);
     visibleFields = visibleFields.filter(([, key]) => !vehicleFields.has(key) || hasValue(upload?.extractedData?.[key]));
   }
+  if (resolvedSchema?.groupId === "motor") {
+    const nonMotorFields = new Set([
+      ...(FIELD_GROUPS.find((g) => g.title === "Warehouse & Property")?.fields || []),
+      ...(FIELD_GROUPS.find((g) => g.title === "Health & Members")?.fields || []),
+    ]);
+    visibleFields = visibleFields.filter(([, key]) => !nonMotorFields.has(key) || hasValue(upload?.extractedData?.[key]));
+  }
   const requiredKeys = addUnique(
     resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : ["insuredName", "policyNumber"],
     manualRequiredFields,
