@@ -28,7 +28,7 @@ export const IMPACT_CATEGORIES = [
   { id: "CORRECTION", label: "Name / GST / Address Correction" },
 ];
 
-export default function AddEndorsementModal({ record, onClose, onSuccess }) {
+export default function AddEndorsementModal({ record, onClose, onSuccess, onRedirectToUpload }) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [creationMethod, setCreationMethod] = useState(null); // null (unselected), "MANUAL_ENTRY"
@@ -447,7 +447,11 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
               <button
                 type="button"
                 onClick={() => {
-                  if (onClose) onClose();
+                  if (onRedirectToUpload) {
+                    onRedirectToUpload();
+                  } else if (onClose) {
+                    onClose();
+                  }
                   const qParams = new URLSearchParams();
                   qParams.set("mode", "endorsement");
                   if (policyNo) qParams.set("policyNo", policyNo);

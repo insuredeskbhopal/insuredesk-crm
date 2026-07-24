@@ -329,6 +329,10 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
         <AddEndorsementModal
           record={record}
           onClose={() => setShowAddModal(false)}
+          onRedirectToUpload={() => {
+            setShowAddModal(false);
+            if (onClose) onClose();
+          }}
           onSuccess={() => {
             setShowAddModal(false);
             fetchPolicyEndorsements();
