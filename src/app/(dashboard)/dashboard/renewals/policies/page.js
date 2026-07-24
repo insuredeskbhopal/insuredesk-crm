@@ -393,7 +393,7 @@ export default function RenewalPoliciesPage() {
           <table className="rn-table rn-policy-register__table">
             <thead>
               <tr>
-                <th>Policyholder</th><th>Policy Number</th><th>Policy Type</th><th>Company</th><th>Vehicle / Risk</th>
+                <th>Policyholder</th><th>Policy Number</th><th>Policy Type</th><th>Vehicle / Risk</th>
                 {!isMotorView ? <th>Start Date</th> : null}
                 <th>Expiry Date</th>
                 {!isMotorView ? <th>Sum Insured / IDV</th> : null}
@@ -487,7 +487,6 @@ function PolicyRegisterRow({
       <td><strong className="rn-policy-register__primary">{policy.insuredName || "Name not available"}</strong></td>
       <td><span className="rn-policy-register__mono">{policy.policyNumber || "—"}</span></td>
       <td>{policy.displayPolicyType || policy.policyType || "—"}</td>
-      <td>{policy.insuranceCompany || "—"}</td>
       <td>{asset}</td>
       {!isMotorView ? <td>{formatRenewalRegisterDate(policy.startDate)}</td> : null}
       <td><strong>{formatRenewalRegisterDate(policy.expiryDate)}</strong>{!isMotorView ? <small>{policy.daysStatus || ""}</small> : null}</td>
