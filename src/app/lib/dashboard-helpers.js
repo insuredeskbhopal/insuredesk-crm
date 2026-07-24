@@ -58,7 +58,7 @@ export const FIELD_LABELS = {
   fuelType: "Fuel Type",
   grossVehicleWeight: "Gross Vehicle Weight",
   groupName: "Group Name",
-  gstAmount: "GST Amount",
+  gstAmount: "GST",
   gstin: "GSTIN",
   hypothecationDetails: "Hypothecation Details",
   idv: "IDV",
@@ -269,6 +269,11 @@ export function inferPolicyFamily(haystack, extracted = {}) {
 
 export function inferPolicySchemaWithinGroup(group, haystack, extracted = {}) {
   if (group.id !== "motor") {
+    if (group.id === "health") {
+      if (extracted.documentFormat === "ICICI_LOMBARD_HEALTH_ELEVATE_V1" || /\belevate\b/.test(haystack)) {
+        return group.policies.find((item) => item.id === "health-icici-elevate") || group.policies?.[0] || null;
+      }
+    }
     if (group.id === "fire") {
       if (/\bburglary\b/.test(haystack)) return group.policies.find((item) => item.id === "fire-burglary");
       if (/\bsfsp\b/.test(haystack)) return group.policies.find((item) => item.id === "fire-sfsp");
@@ -325,12 +330,9 @@ export const FIELD_GROUPS = [
       "newOrRenewal",
       "startDate",
       "expiryDate",
-      "policyTenure",
       "sumInsured",
-      "premium",
       "duration",
       "policyCoverType",
-      "pptMpwlc",
     ],
   },
   {
@@ -347,7 +349,6 @@ export const FIELD_GROUPS = [
       "fuelType",
       "cubicCapacity",
       "seatingCapacity",
-      "grossVehicleWeight",
       "idv",
       "ncb",
       "rtoLocation",
@@ -368,23 +369,11 @@ export const FIELD_GROUPS = [
     fields: [
       "totalPremium",
       "netPremium",
-      "basicPremium",
-      "odPremium",
-      "tpPremium",
       "tpDriverOwner",
-      "taxAmount",
-      "gstAmount",
-      "stampDuty",
-      "cgst",
-      "sgst",
-      "igst",
+      "odPremium",
+      "dueCollection",
       "collectedAmount",
       "modeOfPayment",
-      "dueCollection",
-      "invoiceNumber",
-      "invoiceDate",
-      "gstin",
-      "placeOfSupply",
     ],
   },
   {
@@ -395,13 +384,6 @@ export const FIELD_GROUPS = [
       "tehsil",
       "occupancy",
       "description",
-      "premisesAddress",
-      "businessDescription",
-      "contentsSumInsured",
-      "buildingSumInsured",
-      "stockSumInsured",
-      "burglarySumInsured",
-      "fidelitySumInsured",
     ],
   },
   {
@@ -411,8 +393,6 @@ export const FIELD_GROUPS = [
       "sourceDocumentType",
       "documentCategory",
       "documentFormat",
-      "productName",
-      "productUin",
       "validIn",
       "issuedAt",
       "hypothecationDetails",
@@ -428,16 +408,11 @@ export const FIELD_GROUPS = [
     title: "Health & Members",
     fields: [
       "insuredMembers",
+      "numberOfInsuredMembers",
       "previousPolicyNumber",
       "nomineeName",
       "nomineeRelationship",
       "nomineeDateOfBirth",
-      "appointeeName",
-      "numberOfInsuredMembers",
-      "loyaltyBonus",
-      "powerBooster",
-      "servicingBranchName",
-      "servicingBranchAddress",
     ],
   },
   {
@@ -479,6 +454,52 @@ export const POLICY_SCHEMA_LIBRARY = [
     id: "health",
     label: "Health Insurance",
     policies: [
+      {
+        id: "health-icici-elevate",
+        name: "ICICI Lombard Elevate",
+        fields: [
+          "proposerName",
+          "customerName",
+          "insuredName",
+          "contactNumber",
+          "email",
+          "policyNumber",
+          "productName",
+          "productUin",
+          "policyType",
+          "policyTenure",
+          "startDate",
+          "expiryDate",
+          "zone",
+          "premiumPaymentFrequency",
+          "premiumPaymentMode",
+          "mailingAddress",
+          "policyholderEmailMasked",
+          "policyholderMobileMasked",
+          "invoiceNumber",
+          "sumInsured",
+          "basicPremium",
+          "gstAmount",
+          "stampDuty",
+          "totalPremium",
+          "nomineeName",
+          "nomineeRelationship",
+          "nomineeDateOfBirth",
+          "appointeeName",
+          "insuredMembers",
+          "numberOfInsuredMembers",
+          "previousPolicyNumber",
+          "loyaltyBonus",
+          "powerBooster",
+          "servicingBranchName",
+          "servicingBranchAddress",
+          "agentName",
+          "agentCode",
+          "agentMobile",
+          "remark",
+          "insuranceCompany",
+        ],
+      },
       { id: "health-individual", name: "Individual Mediclaim Policy" },
       { id: "health-family-floater", name: "Family Floater Health Insurance" },
       { id: "health-group", name: "Group Mediclaim Policy (GMC)" },
@@ -615,15 +636,110 @@ export function getReviewValidation(upload, options = {}) {
 
   if (resolvedSchema?.groupId === "health") {
     const vehicleFields = new Set(FIELD_GROUPS.find((g) => g.title === "Vehicle Details")?.fields || []);
-    visibleFields = visibleFields.filter(([, key]) => !vehicleFields.has(key) || hasValue(upload?.extractedData?.[key]));
+    const warehouseFields = new Set(FIELD_GROUPS.find((g) => g.title === "Warehouse & Property")?.fields || []);
+    const nonHealthFields = new Set([
+      ...vehicleFields,
+      ...warehouseFields,
+      "tpDriverOwner",
+      "odPremium",
+      "policyTenure",
+      "pptMpwlc",
+      "grossVehicleWeight",
+      "gstAmount",
+      "premium",
+      "basicPremium",
+      "taxAmount",
+      "stampDuty",
+      "cgst",
+      "sgst",
+      "igst",
+      "mailingAddress",
+    ]);
+    visibleFields = visibleFields.filter(([, key]) => !nonHealthFields.has(key));
   }
+  if (resolvedSchema?.groupId === "fire") {
+    const vehicleFields = new Set(FIELD_GROUPS.find((g) => g.title === "Vehicle Details")?.fields || []);
+    const healthFields = new Set(FIELD_GROUPS.find((g) => g.title === "Health & Members")?.fields || []);
+    const nonFireFields = new Set([
+      ...vehicleFields,
+      ...healthFields,
+      "tpDriverOwner",
+      "odPremium",
+      "policyTenure",
+      "pptMpwlc",
+      "grossVehicleWeight",
+      "gstAmount",
+      "premium",
+      "basicPremium",
+      "taxAmount",
+      "stampDuty",
+      "cgst",
+      "sgst",
+      "igst",
+      "mailingAddress",
+      "contentsSumInsured",
+      "buildingSumInsured",
+      "stockSumInsured",
+      "burglarySumInsured",
+      "fidelitySumInsured",
+      "premisesAddress",
+      "businessDescription",
+    ]);
+    visibleFields = visibleFields.filter(([, key]) => !nonFireFields.has(key));
+  }
+  const docAndSourceFields = new Set(FIELD_GROUPS.find((g) => g.title === "Document & Source")?.fields || []);
+  visibleFields = visibleFields.filter(([, key]) => !docAndSourceFields.has(key));
+
   if (resolvedSchema?.groupId === "motor") {
     const nonMotorFields = new Set([
       ...(FIELD_GROUPS.find((g) => g.title === "Warehouse & Property")?.fields || []),
       ...(FIELD_GROUPS.find((g) => g.title === "Health & Members")?.fields || []),
+      ...(FIELD_GROUPS.find((g) => g.title === "Document & Source")?.fields || []),
+      "mailingAddress",
+      "policyTenure",
+      "pptMpwlc",
+      "grossVehicleWeight",
+      "gstAmount",
+      "premium",
+      "basicPremium",
+      "taxAmount",
+      "stampDuty",
+      "cgst",
+      "sgst",
+      "igst",
     ]);
-    visibleFields = visibleFields.filter(([, key]) => !nonMotorFields.has(key) || hasValue(upload?.extractedData?.[key]));
+    visibleFields = visibleFields.filter(([, key]) => !nonMotorFields.has(key));
   }
+
+  const hideIfEmptyFields = new Set([
+    "sourceDocumentType",
+    "documentCategory",
+    "documentFormat",
+    "validIn",
+    "issuedAt",
+    "hypothecationDetails",
+    "bankChargeType",
+    "financerName",
+    "brokerCode",
+    "brokerName",
+    "brokerMobile",
+    "brokerEmail",
+    "pptMpwlc",
+    "grossVehicleWeight",
+    "policyTenure",
+    "taxAmount",
+    "stampDuty",
+    "cgst",
+    "sgst",
+    "igst",
+    "basicPremium",
+    "gstAmount",
+    "premium",
+  ]);
+
+  visibleFields = visibleFields.filter(
+    ([, key]) => !hideIfEmptyFields.has(key) || hasValue(getReviewFieldValue(upload, key))
+  );
   const requiredKeys = addUnique(
     resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : ["insuredName", "policyNumber"],
     manualRequiredFields,

@@ -95,9 +95,7 @@ describe("record customer ID", () => {
     expect(visibleKeys).toEqual(
       expect.arrayContaining([
         "insuredMembers",
-        "policyTenure",
         "previousPolicyNumber",
-        "basicPremium",
         "nomineeRelationship",
       ]),
     );
