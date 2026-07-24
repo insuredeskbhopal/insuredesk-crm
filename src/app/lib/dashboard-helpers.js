@@ -421,6 +421,8 @@ export const FIELD_GROUPS = [
   {
     title: "Health & Members",
     fields: [
+      "insuredMembers",
+      "previousPolicyNumber",
       "nomineeName",
       "nomineeRelationship",
       "nomineeDateOfBirth",
@@ -599,10 +601,16 @@ export function getReviewValidation(upload, options = {}) {
 
   const resolvedSchema = options.resolvedSchema || inferUploadSchema(upload);
   const manualRequiredFields = MANUAL_REQUIRED_FIELDS;
+  const extractedKeys = Object.keys(upload?.extractedData || {}).filter((key) => hasValue(upload?.extractedData?.[key]));
   const schemaVisibleFields = resolvedSchema?.fields?.length
     ? FIELD_SETUP.filter(([, key]) => resolvedSchema.fields.includes(key))
     : FIELD_SETUP;
-  const visibleFields = addFields(schemaVisibleFields, [...manualRequiredFields, ...COMMON_REVIEW_FIELDS, "newOrRenewal"]);
+  let visibleFields = addFields(schemaVisibleFields, [...manualRequiredFields, ...COMMON_REVIEW_FIELDS, ...extractedKeys, "newOrRenewal"]);
+
+  if (resolvedSchema?.groupId === "health") {
+    const vehicleFields = new Set(FIELD_GROUPS.find((g) => g.title === "Vehicle Details")?.fields || []);
+    visibleFields = visibleFields.filter(([, key]) => !vehicleFields.has(key) || hasValue(upload?.extractedData?.[key]));
+  }
   const requiredKeys = addUnique(
     resolvedSchema?.requiredFields?.length ? resolvedSchema.requiredFields : ["insuredName", "policyNumber"],
     manualRequiredFields,
