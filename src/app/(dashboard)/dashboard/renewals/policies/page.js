@@ -320,8 +320,7 @@ export default function RenewalPoliciesPage() {
     else window.alert("No contact number available for this policy.");
   };
 
-  const COLUMN_WIDTH_STORAGE_KEY = "rn_register_col_widths_locked_v1";
-  const DEFAULT_COLUMN_WIDTHS = {
+  const LOCKED_COLUMN_WIDTHS = {
     insuredName: 200,
     policyNumber: 160,
     displayPolicyType: 130,
@@ -333,48 +332,6 @@ export default function RenewalPoliciesPage() {
     renewalMobile: 110,
     status: 90,
     actions: 44,
-  };
-
-  const [columnWidths, setColumnWidths] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = window.localStorage.getItem(COLUMN_WIDTH_STORAGE_KEY);
-        if (saved) return { ...DEFAULT_COLUMN_WIDTHS, ...JSON.parse(saved) };
-      } catch {}
-    }
-    return DEFAULT_COLUMN_WIDTHS;
-  });
-  const [resizingCol, setResizingCol] = useState(null);
-
-  const startColumnResize = (colKey, event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const startX = event.clientX;
-    const startWidth = columnWidths[colKey] || 100;
-    setResizingCol(colKey);
-
-    const onMouseMove = (moveEvent) => {
-      const delta = moveEvent.clientX - startX;
-      const newWidth = Math.max(50, startWidth + delta);
-      setColumnWidths((prev) => {
-        const next = { ...prev, [colKey]: newWidth };
-        if (typeof window !== "undefined") {
-          try {
-            window.localStorage.setItem(COLUMN_WIDTH_STORAGE_KEY, JSON.stringify(next));
-          } catch {}
-        }
-        return next;
-      });
-    };
-
-    const onMouseUp = () => {
-      setResizingCol(null);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
   };
 
   const selectedMonthLabel = renewalMonth === "All" ? "" : getRenewalRegisterMonthLabel(renewalMonth);
@@ -389,7 +346,7 @@ export default function RenewalPoliciesPage() {
   const activeCols = isMotorView
     ? ["insuredName", "policyNumber", "displayPolicyType", "asset", "expiryDate", "premium", "renewalMobile", "status", "actions"]
     : ["insuredName", "policyNumber", "displayPolicyType", "asset", "startDate", "expiryDate", "sumInsured", "premium", "renewalMobile", "status", "actions"];
-  const totalTableWidth = activeCols.reduce((acc, col) => acc + (columnWidths[col] || 100), 0);
+  const totalTableWidth = activeCols.reduce((acc, col) => acc + (LOCKED_COLUMN_WIDTHS[col] || 100), 0);
 
   return (
     <section className="rn-policy-register">
@@ -455,51 +412,17 @@ export default function RenewalPoliciesPage() {
           <table className="rn-table rn-policy-register__table" style={{ width: `${totalTableWidth}px` }}>
             <thead>
               <tr>
-                <th style={{ width: `${columnWidths.insuredName}px`, position: "relative" }}>
-                  Policyholder
-                  <div className={`rn-resize-handle ${resizingCol === "insuredName" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("insuredName", e)} />
-                </th>
-                <th style={{ width: `${columnWidths.policyNumber}px`, position: "relative" }}>
-                  Policy Number
-                  <div className={`rn-resize-handle ${resizingCol === "policyNumber" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("policyNumber", e)} />
-                </th>
-                <th style={{ width: `${columnWidths.displayPolicyType}px`, position: "relative" }}>
-                  Policy Type
-                  <div className={`rn-resize-handle ${resizingCol === "displayPolicyType" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("displayPolicyType", e)} />
-                </th>
-                <th style={{ width: `${columnWidths.asset}px`, position: "relative" }}>
-                  Vehicle / Risk
-                  <div className={`rn-resize-handle ${resizingCol === "asset" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("asset", e)} />
-                </th>
-                {!isMotorView ? (
-                  <th style={{ width: `${columnWidths.startDate}px`, position: "relative" }}>
-                    Start Date
-                    <div className={`rn-resize-handle ${resizingCol === "startDate" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("startDate", e)} />
-                  </th>
-                ) : null}
-                <th style={{ width: `${columnWidths.expiryDate}px`, position: "relative" }}>
-                  Expiry Date
-                  <div className={`rn-resize-handle ${resizingCol === "expiryDate" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("expiryDate", e)} />
-                </th>
-                {!isMotorView ? (
-                  <th style={{ width: `${columnWidths.sumInsured}px`, position: "relative" }}>
-                    Sum Insured / IDV
-                    <div className={`rn-resize-handle ${resizingCol === "sumInsured" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("sumInsured", e)} />
-                  </th>
-                ) : null}
-                <th style={{ width: `${columnWidths.premium}px`, position: "relative" }}>
-                  Premium
-                  <div className={`rn-resize-handle ${resizingCol === "premium" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("premium", e)} />
-                </th>
-                <th style={{ width: `${columnWidths.renewalMobile}px`, position: "relative" }}>
-                  Renewal Mobile
-                  <div className={`rn-resize-handle ${resizingCol === "renewalMobile" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("renewalMobile", e)} />
-                </th>
-                <th style={{ width: `${columnWidths.status}px`, position: "relative" }}>
-                  Status
-                  <div className={`rn-resize-handle ${resizingCol === "status" ? "resizing" : ""}`} onMouseDown={(e) => startColumnResize("status", e)} />
-                </th>
-                <th style={{ width: `${columnWidths.actions}px` }}>Actions</th>
+                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.insuredName}px` }}>Policyholder</th>
+                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.policyNumber}px` }}>Policy Number</th>
+                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.displayPolicyType}px` }}>Policy Type</th>
+                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.asset}px` }}>Vehicle / Risk</th>
+                {!isMotorView ? <th style={{ width: `${LOCKED_COLUMN_WIDTHS.startDate}px` }}>Start Date</th> : null}
+                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.expiryDate}px` }}>Expiry Date</th>
+                {!isMotorView ? <th style={{ width: `${LOCKED_COLUMN_WIDTHS.sumInsured}px` }}>Sum Insured / IDV</th> : null}
+                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.premium}px` }}>Premium</th>
+                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.renewalMobile}px` }}>Renewal Mobile</th>
+                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.status}px` }}>Status</th>
+                <th style={{ width: `${LOCKED_COLUMN_WIDTHS.actions}px` }}>Actions</th>
               </tr>
             </thead>
             <tbody>
