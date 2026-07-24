@@ -448,8 +448,13 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
                 type="button"
                 onClick={() => {
                   if (onClose) onClose();
-                  const targetQuery = policyNo ? `?q=${encodeURIComponent(policyNo)}` : "";
-                  router.push(`/bulk-upload${targetQuery}`);
+                  const qParams = new URLSearchParams();
+                  qParams.set("mode", "endorsement");
+                  if (policyNo) qParams.set("policyNo", policyNo);
+                  if (insuredName) qParams.set("insuredName", insuredName);
+                  if (insuranceCompany) qParams.set("insuranceCompany", insuranceCompany);
+                  if (policyType) qParams.set("policyType", policyType);
+                  router.push(`/bulk-upload?${qParams.toString()}`);
                 }}
                 style={{
                   padding: "8px 14px",
