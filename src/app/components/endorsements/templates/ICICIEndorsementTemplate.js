@@ -1,4 +1,6 @@
-import Image from "next/image";
+function valueOrDash(value) {
+  return String(value || "").trim() || "-";
+}
 
 export function ICICIEndorsementTemplate({ data, previewRef }) {
   return (
@@ -207,8 +209,4 @@ function FooterRow({ label, value }) {
       <span>{value}</span>
     </div>
   );
-}
-
-function valueOrDash(value) {
-  return String(value || "").trim() || "-";
 }

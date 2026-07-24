@@ -4,6 +4,113 @@ import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 const { normalizeInsuranceCompanyName } = insuranceCompanyMaster;
 const TEXT_LIMIT = 2000;
 
+function asText(value, limit) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, limit);
+}
+
+function asRegistrationNumber(value) {
+  return asText(value, 80)
+    .replace(/[\s-]+/g, "")
+    .toUpperCase();
+}
+
+function asNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function asJson(value) {
+  if (!value || typeof value !== "object") return null;
+  return JSON.parse(JSON.stringify(value));
+}
+
+export function normalizeDateToYMD(dateStr) {
+  if (!dateStr || typeof dateStr !== "string") return "";
+  let cleanStr = dateStr.trim();
+  if (!cleanStr) return "";
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(cleanStr)) {
+    return cleanStr;
+  }
+
+  const dmyMatch = cleanStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  if (dmyMatch) {
+    let [, day, month, year] = dmyMatch;
+    if (year.length === 2) {
+      year = parseInt(year, 10) > 50 ? `19${year}` : `20${year}`;
+    }
+    const d = parseInt(day, 10);
+    const m = parseInt(month, 10);
+    if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+      return `${year}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    }
+  }
+
+  const parsed = new Date(cleanStr);
+  if (!Number.isNaN(parsed.getTime())) {
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, "0");
+    const d = String(parsed.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  return "";
+}
+
+function sanitizeInsuredMembers(value) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 50).map((member) => ({
+    name: asText(member?.name, 260),
+    dateOfBirth: normalizeDateToYMD(member?.dateOfBirth || ""),
+    age: asText(member?.age, 3),
+    gender: asText(member?.gender, 40),
+    abhaId: asText(member?.abhaId, 40),
+    relationship: asText(member?.relationship, 80),
+    preExistingDiseases: asText(member?.preExistingDiseases, 500),
+    firstPolicyInceptionDate: normalizeDateToYMD(member?.firstPolicyInceptionDate || ""),
+    specificConditions: asText(member?.specificConditions, 500),
+  }));
+}
+
+export function validateContactPerson(value) {
+  const cleanValue = String(value || "").trim();
+  if (!cleanValue) {
+    return "Contact Person is required.";
+  }
+  if (/[0-9]/.test(cleanValue) || /[^A-Za-z\s.]/.test(cleanValue)) {
+    return "Contact Person cannot contain numbers.";
+  }
+  return "";
+}
+
+export function validateContactNumber(value) {
+  const cleanValue = String(value || "").trim();
+  if (!cleanValue) {
+    return "Contact Number is required.";
+  }
+  const digits = cleanValue.replace(/\D/g, "");
+  const hasMask = /[xX*•]/.test(cleanValue);
+
+  if (normalizeIndianPhone(cleanValue)) {
+    return "";
+  }
+
+  if (hasMask && digits.length >= 2 && digits.length <= 10) {
+    return "";
+  }
+
+  return "Contact Number must be exactly 10 digits or a masked policy contact number.";
+}
+
+export function normalizeContactNumber(value) {
+  const cleanValue = asText(value, 40);
+  if (!cleanValue || /[xX*•]/.test(cleanValue)) return cleanValue;
+  return normalizeIndianPhone(cleanValue) || cleanValue;
+}
+
 export function sanitizeRecordPayload(payload = {}) {
   const standardInsuranceCompany = normalizeInsuranceCompanyName(
     payload.insuranceCompany ||
@@ -167,122 +274,4 @@ export function sanitizeRecordPayload(payload = {}) {
     paymentLink: asText(payload.paymentLink, 1000),
     call: asText(payload.call, 500),
   };
-}
-
-function asText(value, limit) {
-  return String(value || "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, limit);
-}
-
-function asRegistrationNumber(value) {
-  return asText(value, 80)
-    .replace(/[\s-]+/g, "")
-    .toUpperCase();
-}
-
-function asNumber(value) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
-}
-
-function asJson(value) {
-  if (!value || typeof value !== "object") return null;
-  return JSON.parse(JSON.stringify(value));
-}
-
-function sanitizeInsuredMembers(value) {
-  if (!Array.isArray(value)) return [];
-  return value.slice(0, 50).map((member) => ({
-    name: asText(member?.name, 260),
-    dateOfBirth: normalizeDateToYMD(member?.dateOfBirth || ""),
-    age: asText(member?.age, 3),
-    gender: asText(member?.gender, 40),
-    abhaId: asText(member?.abhaId, 40),
-    relationship: asText(member?.relationship, 80),
-    preExistingDiseases: asText(member?.preExistingDiseases, 500),
-    firstPolicyInceptionDate: normalizeDateToYMD(member?.firstPolicyInceptionDate || ""),
-    specificConditions: asText(member?.specificConditions, 500),
-  }));
-}
-
-export function validateContactPerson(value) {
-  const cleanValue = String(value || "").trim();
-  if (!cleanValue) {
-    return "Contact Person is required.";
-  }
-  if (/[0-9]/.test(cleanValue) || /[^A-Za-z\s.]/.test(cleanValue)) {
-    return "Contact Person cannot contain numbers.";
-  }
-  return "";
-}
-
-export function validateContactNumber(value) {
-  const cleanValue = String(value || "").trim();
-  if (!cleanValue) {
-    return "Contact Number is required.";
-  }
-  const digits = cleanValue.replace(/\D/g, "");
-  const hasMask = /[xX*•]/.test(cleanValue);
-
-  if (normalizeIndianPhone(cleanValue)) {
-    return "";
-  }
-
-  if (hasMask && digits.length >= 2 && digits.length <= 10) {
-    return "";
-  }
-
-  return "Contact Number must be exactly 10 digits or a masked policy contact number.";
-}
-
-export function normalizeContactNumber(value) {
-  const cleanValue = asText(value, 40);
-  if (!cleanValue || /[xX*•]/.test(cleanValue)) return cleanValue;
-  return normalizeIndianPhone(cleanValue) || cleanValue;
-}
-
-export function normalizeDateToYMD(dateStr) {
-  if (!dateStr || typeof dateStr !== "string") return "";
-  let cleanStr = dateStr.trim();
-  if (!cleanStr) return "";
-
-  // Remove prefixes like "00:00 of ", "00:00 of the "
-  cleanStr = cleanStr.replace(/^[0-9]{2}:[0-9]{2}(?:\s+of\s+the|\s+of)?\s+/i, "");
-
-  // If already YYYY-MM-DD
-  if (/^\d{4}-(?:0[1-9]|1[0-2])-(?:[0-2][0-9]|3[0-1])$/.test(cleanStr)) {
-    return cleanStr;
-  }
-
-  // DD/MM/YYYY or DD-MM-YYYY
-  const dmYMatch = cleanStr.match(/^([0-2]?[0-9]|3[0-1])[/-](0?[1-9]|1[0-2])[/-](\d{4})$/);
-  if (dmYMatch) {
-    const d = dmYMatch[1].padStart(2, "0");
-    const m = dmYMatch[2].padStart(2, "0");
-    const y = dmYMatch[3];
-    return `${y}-${m}-${d}`;
-  }
-
-  // DD/MM/YY or DD-MM-YY
-  const dmY2Match = cleanStr.match(/^([0-2]?[0-9]|3[0-1])[/-](0?[1-9]|1[0-2])[/-](\d{2})$/);
-  if (dmY2Match) {
-    const d = dmY2Match[1].padStart(2, "0");
-    const m = dmY2Match[2].padStart(2, "0");
-    const yShort = dmY2Match[3];
-    const y = Number(yShort) > 50 ? `19${yShort}` : `20${yShort}`;
-    return `${y}-${m}-${d}`;
-  }
-
-  const parsed = Date.parse(cleanStr);
-  if (!isNaN(parsed)) {
-    const dateObj = new Date(parsed);
-    const y = dateObj.getFullYear();
-    const m = String(dateObj.getMonth() + 1).padStart(2, "0");
-    const d = String(dateObj.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
-  return dateStr.trim();
 }

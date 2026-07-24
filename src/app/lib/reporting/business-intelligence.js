@@ -5,6 +5,7 @@ import { getCurrentSessionFromCookies } from "@/lib/records/scoped-data";
 import { withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
 import { parseMoney } from "@/app/lib/reporting/totals";
 import { parsePolicyDate, startOfDay } from "@/app/lib/reporting/filters";
+import { normalizeInsuranceCompanyName } from "@/lib/master/insurance-companies.cjs";
 
 export const REPORT_CATEGORIES = [
   {
@@ -1355,7 +1356,8 @@ function dailyTrend(items, dateField, range) {
 function buildInsurerSummary(policies) {
   const groups = new Map();
   policies.forEach((policy) => {
-    const company = policy.insuranceCompany || "Unknown";
+    const rawCompany = policy.insuranceCompany || policy.companyName || "Unknown";
+    const company = normalizeInsuranceCompanyName(rawCompany) || rawCompany;
     const current = groups.get(company) || { company, policies: 0, premium: 0, sumInsured: 0 };
     current.policies += 1;
     current.premium += parseMoney(policy.netPremium || policy.totalPremium || policy.premium);

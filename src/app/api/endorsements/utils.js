@@ -23,10 +23,54 @@ export const ENDORSEMENT_TYPES = [
   "Change in Occupancy",
   "Change in Stock Description",
   "Change in Hypothecation / Bank Details",
-  "Correction in Insured Name",
-  "Correction in Policy Details",
   "Other Endorsement",
 ];
+
+function stringValue(value, required = false) {
+  const text = String(value || "").trim();
+  if (!text && required) return "";
+  return text || null;
+}
+
+function dateValue(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function formatDateInput(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
+function objectValue(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function uuidOrNull(value) {
+  const text = stringValue(value);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text || "")
+    ? text
+    : null;
+}
+
+function numberOrNull(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const num = parseFloat(String(value).replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(num) ? num : null;
+}
+
+export function generateEndorsementNo() {
+  const now = new Date();
+  const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+  const suffix = Math.random().toString(36).slice(2, 7).toUpperCase();
+  return `END-${date}-${suffix}`;
+}
+
+export const generateEndorsementNumber = generateEndorsementNo;
 
 export async function requireEndorsementSession(request, write = false) {
   const token = request.cookies.get("token")?.value;
@@ -110,7 +154,22 @@ export function sanitizeEndorsementPayload(payload = {}) {
     generatedLetterFileName: stringValue(payload.generatedLetterFileName),
     insuranceCompanyLetterPdfUrl: stringValue(payload.insuranceCompanyLetterPdfUrl),
     insuranceCompanyLetterFileName: stringValue(payload.insuranceCompanyLetterFileName),
-    status: ENDORSEMENT_STATUSES.includes(status) ? status : "Draft",
+    status: payload.status || "Draft",
+    creationMethod: stringValue(payload.creationMethod),
+    premiumChangeType: stringValue(payload.premiumChangeType),
+    premiumChangeAmount: numberOrNull(payload.premiumChangeAmount || payload.premiumDelta),
+    sumInsuredChangeType: stringValue(payload.sumInsuredChangeType),
+    sumInsuredChangeAmount: numberOrNull(payload.sumInsuredChangeAmount || payload.sumInsuredDelta),
+    paymentReceived: Boolean(payload.paymentReceived),
+    paymentAmount: numberOrNull(payload.paymentAmount || payload.collectedAmount),
+    paymentDate: dateValue(payload.paymentDate),
+    paymentMode: stringValue(payload.paymentMode),
+    transactionReference: stringValue(payload.transactionReference),
+    documentStatus: stringValue(payload.documentStatus) || "AWAITING_UPLOAD",
+    impacts: Array.isArray(payload.impacts) ? payload.impacts : objectValue(payload.impacts),
+    gstPart: numberOrNull(payload.gstPart),
+    stampDuty: numberOrNull(payload.stampDuty),
+    cancellationReason: stringValue(payload.cancellationReason),
   };
 }
 
@@ -156,6 +215,21 @@ export function serializeEndorsement(record) {
     insuranceCompanyLetterPdfUrl: record.insuranceCompanyLetterPdfUrl || "",
     insuranceCompanyLetterFileName: record.insuranceCompanyLetterFileName || "",
     status: record.status || "Draft",
+    creationMethod: record.creationMethod || "MANUAL_ENTRY",
+    premiumChangeType: record.premiumChangeType || "NO_CHANGE",
+    premiumChangeAmount: record.premiumChangeAmount ? String(record.premiumChangeAmount) : "0",
+    sumInsuredChangeType: record.sumInsuredChangeType || "NO_CHANGE",
+    sumInsuredChangeAmount: record.sumInsuredChangeAmount ? String(record.sumInsuredChangeAmount) : "0",
+    paymentReceived: Boolean(record.paymentReceived),
+    paymentAmount: record.paymentAmount ? String(record.paymentAmount) : "0",
+    paymentDate: formatDateInput(record.paymentDate),
+    paymentMode: record.paymentMode || "",
+    transactionReference: record.transactionReference || "",
+    documentStatus: record.documentStatus || "AWAITING_UPLOAD",
+    impacts: record.impacts || [],
+    gstPart: record.gstPart ? String(record.gstPart) : "0",
+    stampDuty: record.stampDuty ? String(record.stampDuty) : "0",
+    cancellationReason: record.cancellationReason || "",
     createdAt: record.createdAt?.toISOString?.() || record.createdAt,
     updatedAt: record.updatedAt?.toISOString?.() || record.updatedAt,
     createdBy: record.createdBy ? { name: record.createdBy.name, email: record.createdBy.email } : null,
@@ -208,42 +282,4 @@ export function normalizePolicyData(data = {}) {
     coverages: source.coverages || [],
     raw: source,
   };
-}
-
-export function generateEndorsementNumber() {
-  const now = new Date();
-  const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-  const suffix = Math.random().toString(36).slice(2, 7).toUpperCase();
-  return `END-${date}-${suffix}`;
-}
-
-function stringValue(value, required = false) {
-  const text = String(value || "").trim();
-  if (!text && required) return "";
-  return text || null;
-}
-
-function dateValue(value) {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date;
-}
-
-function formatDateInput(value) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-}
-
-function objectValue(value) {
-  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
-}
-
-function uuidOrNull(value) {
-  const text = stringValue(value);
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text || "")
-    ? text
-    : null;
 }

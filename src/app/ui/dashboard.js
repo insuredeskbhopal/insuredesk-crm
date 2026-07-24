@@ -77,6 +77,85 @@ const FIELD_OPTIONS = {
   ],
 };
 
+function addDays(date, days) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+function formatClientVehicleNumbers(client) {
+  const values = Array.from(
+    new Set(
+      (client?.policies || [])
+        .map((record) => record.vehicleNumber || record.registrationNumber || "")
+        .map((value) => String(value || "").trim())
+        .filter(Boolean),
+    ),
+  );
+
+  if (!values.length) return "-";
+  if (values.length <= 2) return values.join(", ");
+  return `${values.slice(0, 2).join(", ")} +${values.length - 2}`;
+}
+
+function isMotorPolicyData(data) {
+  return Boolean(
+    data.vehicleNumber ||
+    data.registrationNumber ||
+    data.engineNumber ||
+    data.chassisNumber ||
+    /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(data.policyType || ""),
+  );
+}
+
+function compactDuplicateValue(value = "") {
+  return String(value || "")
+    .replace(/[^a-z0-9]/gi, "")
+    .toLowerCase();
+}
+
+function getDuplicatePolicyKey(record = {}) {
+  const policyNumber = compactDuplicateValue(record.policyNumber);
+  if (policyNumber) return `policy:${policyNumber}`;
+
+  const fallbackParts = [
+    record.insuranceCompany,
+    record.insuredName,
+    record.vehicleNumber || record.registrationNumber,
+    record.expiryDate,
+  ].map(compactDuplicateValue);
+
+  if (fallbackParts.filter(Boolean).length < 3) return "";
+  return `fallback:${fallbackParts.join("|")}`;
+}
+
+function getPageNumbers(currentPage, totalPages) {
+  const pages = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    let start = Math.max(2, currentPage - 1);
+    let end = Math.min(totalPages - 1, currentPage + 1);
+    if (currentPage <= 4) {
+      end = 5;
+    } else if (currentPage >= totalPages - 3) {
+      start = totalPages - 4;
+    }
+    if (start > 2) {
+      pages.push("...");
+    }
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    if (end < totalPages - 1) {
+      pages.push("...");
+    }
+    pages.push(totalPages);
+  }
+  return pages;
+}
+
 const WAREHOUSE_RECORD_COLUMNS = [
   { key: "customerId", label: "Customer ID", className: "col-customer" },
   { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
@@ -131,6 +210,53 @@ const WAREHOUSE_RECORD_COLUMNS = [
   { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },
   { key: "sourceFile", label: "Source File", className: "col-source" },
 ];
+
+function prepareUploadReviewData(upload) {
+  const data = { ...(upload?.extractedData || {}) };
+  const manualFields = upload?.manualFields || [];
+
+  if (!manualFields.includes("contactNumber")) {
+    data.contactNumber = "";
+  }
+  if (!manualFields.includes("contactPerson")) {
+    data.contactPerson = "";
+  }
+  data.clientId = getConfirmedClientId(upload);
+
+  if (!isMotorPolicyData(data)) return data;
+
+  data.riskLocation = "";
+  data.district = "";
+  data.tehsil = "";
+  data.validIn = "";
+  data.nomineeName = "";
+  data.financerName = "";
+  if (!manualFields.includes("fuelType") && !shouldUseExtractedFuelType(data)) {
+    data.fuelType = "";
+  }
+
+  if (!manualFields.includes("variant") && !shouldUseExtractedVariant(data, upload)) {
+    data.variant = "";
+  }
+
+  return data;
+}
+
+function buildEditFieldErrors(validation) {
+  const labelToKey = new Map(FIELD_SETUP.map(([label, key]) => [label, key]));
+  const errors = {};
+
+  (validation?.missingRequired || []).forEach((labelOrKey) => {
+    const key = labelToKey.get(labelOrKey) || labelOrKey;
+    errors[key] = `${labelOrKey} is required.`;
+  });
+
+  Object.entries(validation?.contactFieldErrors || {}).forEach(([key, message]) => {
+    if (message) errors[key] = message;
+  });
+
+  return errors;
+}
 
 export default function Dashboard({
   initialRecords,
@@ -580,7 +706,7 @@ export default function Dashboard({
       .map(({ validation }) => validation);
     const visibleKeys = new Set(["customerId", "savedAt", "uploadedAt", "uploadedBy", "insuredName"]);
     selectedSchemas.forEach((validation) => {
-      validation.visibleFields.forEach(([, key]) => visibleKeys.add(key));
+      (validation.visibleFields || []).forEach(([, key]) => visibleKeys.add(key));
     });
     visibleKeys.add("sourceFile");
 
@@ -930,7 +1056,7 @@ export default function Dashboard({
           setToast("Fix highlighted fields before saving");
           return;
         }
-        const reviewedData = editValidation.visibleFields.reduce(
+        const reviewedData = (editValidation.visibleFields || []).reduce(
           (payload, [, key]) => ({
             ...payload,
             [key]: editForm[key] ?? "",
@@ -1458,33 +1584,6 @@ export default function Dashboard({
     }
   }
 
-  async function fetchAllPolicyRecordsForExport() {
-    const pageSize = 500;
-    const firstParams = buildPolicyRecordExportParams(1, pageSize);
-    const firstResponse = await fetch(`/api/policy-records?${firstParams.toString()}`, { cache: "no-store" });
-    if (!firstResponse.ok) {
-      const payload = await firstResponse.json().catch(() => ({}));
-      throw new Error(payload.error || "Could not load policy records for export.");
-    }
-
-    const firstPayload = await firstResponse.json();
-    const allRecords = Array.isArray(firstPayload.records) ? [...firstPayload.records] : [];
-    const pages = Number(firstPayload.totalPages || 1);
-
-    for (let page = 2; page <= pages; page += 1) {
-      const params = buildPolicyRecordExportParams(page, pageSize);
-      const response = await fetch(`/api/policy-records?${params.toString()}`, { cache: "no-store" });
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload.error || `Could not load export page ${page}.`);
-      }
-      const payload = await response.json();
-      if (Array.isArray(payload.records)) allRecords.push(...payload.records);
-    }
-
-    return allRecords;
-  }
-
   function buildPolicyRecordExportParams(page, pageSize) {
     const params = new window.URLSearchParams();
     params.set("page", String(page));
@@ -1568,6 +1667,33 @@ export default function Dashboard({
     }
 
     return list;
+  }
+
+  async function fetchAllPolicyRecordsForExport() {
+    const pageSize = 500;
+    const firstParams = buildPolicyRecordExportParams(1, pageSize);
+    const firstResponse = await fetch(`/api/policy-records?${firstParams.toString()}`, { cache: "no-store" });
+    if (!firstResponse.ok) {
+      const payload = await firstResponse.json().catch(() => ({}));
+      throw new Error(payload.error || "Could not load policy records for export.");
+    }
+
+    const firstPayload = await firstResponse.json();
+    const allRecords = Array.isArray(firstPayload.records) ? [...firstPayload.records] : [];
+    const pages = Number(firstPayload.totalPages || 1);
+
+    for (let page = 2; page <= pages; page += 1) {
+      const params = buildPolicyRecordExportParams(page, pageSize);
+      const response = await fetch(`/api/policy-records?${params.toString()}`, { cache: "no-store" });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || `Could not load export page ${page}.`);
+      }
+      const payload = await response.json();
+      if (Array.isArray(payload.records)) allRecords.push(...payload.records);
+    }
+
+    return allRecords;
   }
 
   function getExportRecordDate(record) {
@@ -2897,124 +3023,4 @@ export default function Dashboard({
       ) : null}
     </>
   );
-}
-
-function prepareUploadReviewData(upload) {
-  const data = { ...(upload?.extractedData || {}) };
-  const manualFields = upload?.manualFields || [];
-
-  if (!manualFields.includes("contactNumber")) {
-    data.contactNumber = "";
-  }
-  if (!manualFields.includes("contactPerson")) {
-    data.contactPerson = "";
-  }
-  data.clientId = getConfirmedClientId(upload);
-
-  if (!isMotorPolicyData(data)) return data;
-
-  data.riskLocation = "";
-  data.district = "";
-  data.tehsil = "";
-  data.validIn = "";
-  data.nomineeName = "";
-  data.financerName = "";
-  if (!manualFields.includes("fuelType") && !shouldUseExtractedFuelType(data)) {
-    data.fuelType = "";
-  }
-
-  if (!manualFields.includes("variant") && !shouldUseExtractedVariant(data, upload)) {
-    data.variant = "";
-  }
-
-  return data;
-}
-
-function buildEditFieldErrors(validation) {
-  const labelToKey = new Map(FIELD_SETUP.map(([label, key]) => [label, key]));
-  const errors = {};
-
-  (validation?.missingRequired || []).forEach((labelOrKey) => {
-    const key = labelToKey.get(labelOrKey) || labelOrKey;
-    errors[key] = `${labelOrKey} is required.`;
-  });
-
-  Object.entries(validation?.contactFieldErrors || {}).forEach(([key, message]) => {
-    if (message) errors[key] = message;
-  });
-
-  return errors;
-}
-
-function formatClientVehicleNumbers(client) {
-  const values = Array.from(
-    new Set(
-      (client?.policies || [])
-        .map((record) => record.vehicleNumber || record.registrationNumber || "")
-        .map((value) => String(value || "").trim())
-        .filter(Boolean),
-    ),
-  );
-
-  if (!values.length) return "-";
-  if (values.length <= 2) return values.join(", ");
-  return `${values.slice(0, 2).join(", ")} +${values.length - 2}`;
-}
-
-function isMotorPolicyData(data) {
-  return Boolean(
-    data.vehicleNumber ||
-    data.registrationNumber ||
-    data.engineNumber ||
-    data.chassisNumber ||
-    /\b(motor|private\s+car|two\s+wheeler|commercial\s+vehicle)\b/i.test(data.policyType || ""),
-  );
-}
-
-function getDuplicatePolicyKey(record = {}) {
-  const policyNumber = compactDuplicateValue(record.policyNumber);
-  if (policyNumber) return `policy:${policyNumber}`;
-
-  const fallbackParts = [
-    record.insuranceCompany,
-    record.insuredName,
-    record.vehicleNumber || record.registrationNumber,
-    record.expiryDate,
-  ].map(compactDuplicateValue);
-
-  if (fallbackParts.filter(Boolean).length < 3) return "";
-  return `fallback:${fallbackParts.join("|")}`;
-}
-
-function compactDuplicateValue(value = "") {
-  return String(value || "")
-    .replace(/[^a-z0-9]/gi, "")
-    .toLowerCase();
-}
-
-function getPageNumbers(currentPage, totalPages) {
-  const pages = [];
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-  } else {
-    pages.push(1);
-    let start = Math.max(2, currentPage - 1);
-    let end = Math.min(totalPages - 1, currentPage + 1);
-    if (currentPage <= 4) {
-      end = 5;
-    } else if (currentPage >= totalPages - 3) {
-      start = totalPages - 4;
-    }
-    if (start > 2) {
-      pages.push("...");
-    }
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    if (end < totalPages - 1) {
-      pages.push("...");
-    }
-    pages.push(totalPages);
-  }
-  return pages;
 }

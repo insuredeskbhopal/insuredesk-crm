@@ -45,10 +45,124 @@ const STATUS_OPTIONS = [
   "Sent to Customer",
   "Pending Insurance Company Letter",
   "Insurance Company Letter Received",
-  "Approved",
-  "Rejected",
   "Cancelled",
 ];
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function makeEndorsementNo() {
+  const now = new Date();
+  return `END-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+}
+
+function toDateInput(value) {
+  if (!value) return "";
+  const text = String(value).trim();
+  const slashDate = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (slashDate) {
+    return `${slashDate[3]}-${slashDate[2].padStart(2, "0")}-${slashDate[1].padStart(2, "0")}`;
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
+function displayDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-IN");
+}
+
+function getRelevantFields(type) {
+  if (type === "Increase in Sum Insured" || type === "Decrease in Sum Insured") {
+    return [
+      { bucket: "oldValues", key: "sumInsured", label: "Old Sum Insured" },
+      { bucket: "newValues", key: "sumInsured", label: "New Sum Insured" },
+      { bucket: "newValues", key: "differenceAmount", label: "Difference Amount" },
+      { bucket: "newValues", key: "reason", label: "Reason / Description" },
+    ];
+  }
+  if (type === "Change in Situation / Location") {
+    return [
+      { bucket: "oldValues", key: "location", label: "Old Location" },
+      { bucket: "newValues", key: "location", label: "New Location" },
+      { bucket: "newValues", key: "reason", label: "Reason / Description" },
+    ];
+  }
+  if (type === "Change in Address") {
+    return [
+      { bucket: "oldValues", key: "address", label: "Old Address" },
+      { bucket: "newValues", key: "address", label: "New Address" },
+      { bucket: "newValues", key: "reason", label: "Reason / Description" },
+    ];
+  }
+  if (type.includes("Warehouse") || type.includes("Property")) {
+    return [
+      { bucket: "oldValues", key: "propertyDetails", label: "Old Warehouse / Property" },
+      { bucket: "newValues", key: "propertyDetails", label: "New Warehouse / Property" },
+      { bucket: "newValues", key: "reason", label: "Reason / Description" },
+    ];
+  }
+  if (type.includes("Bank") || type.includes("Hypothecation")) {
+    return [
+      { bucket: "oldValues", key: "bankDetails", label: "Old Bank Details" },
+      { bucket: "newValues", key: "bankDetails", label: "New Bank Details" },
+      { bucket: "newValues", key: "reason", label: "Reason / Description" },
+    ];
+  }
+  return [
+    { bucket: "oldValues", key: "value", label: "Old Value" },
+    { bucket: "newValues", key: "value", label: "New Value" },
+    { bucket: "newValues", key: "reason", label: "Reason / Description" },
+  ];
+}
+
+function normalizeExtractedPolicy(data, upload) {
+  return {
+    policyNo: data.policyNumber || data.policyNo || "",
+    insuredName: data.insuredName || data.customerName || "",
+    insuranceCompany: data.insuranceCompany || upload?.selected?.companyName || "",
+    policyType: data.productName || data.policyType || upload?.selected?.policyTypeName || "",
+    policyStartDate: toDateInput(data.policyStartDate || data.startDate),
+    policyExpiryDate: toDateInput(data.policyEndDate || data.expiryDate),
+    sumInsured: data.sumInsured || data.contentsSumInsured || data.idv || "",
+    mailingAddress: data.mailingAddress || data.communicationAddress || "",
+    address: data.riskLocation || data.premisesAddress || data.address || data.propertyAddress || "",
+    warehouseDetails: data.warehouseDetails || data.propertyDetails || data.description || "",
+    issuedAt: data.issuedAt || data.validIn || "",
+    financerDetails: data.hypothecationDetails || data.financerName || "",
+    premium: data.premiumIncludingGst || data.totalPremium || data.premium || "",
+    raw: data,
+  };
+}
+
+function seedOldValues(type, extracted, existing) {
+  if (Object.keys(existing || {}).length) return existing;
+  if (type.includes("Address")) return { address: extracted.address || "" };
+  if (type.includes("Situation") || type.includes("Location")) return { location: extracted.address || "" };
+  if (type.includes("Sum Insured")) return { sumInsured: extracted.sumInsured || "" };
+  if (type.includes("Warehouse") || type.includes("Property"))
+    return { propertyDetails: extracted.warehouseDetails || "" };
+  return {};
+}
+
+function formatFileSize(size) {
+  if (!size) return "0 KB";
+  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new window.FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 const EMPTY_FORM = {
   endorsementNo: "",
@@ -843,122 +957,6 @@ function SavedEndorsementsTable({ records }) {
       </table>
     </div>
   );
-}
-
-function getRelevantFields(type) {
-  if (type === "Increase in Sum Insured" || type === "Decrease in Sum Insured") {
-    return [
-      { bucket: "oldValues", key: "sumInsured", label: "Old Sum Insured" },
-      { bucket: "newValues", key: "sumInsured", label: "New Sum Insured" },
-      { bucket: "newValues", key: "differenceAmount", label: "Difference Amount" },
-      { bucket: "newValues", key: "reason", label: "Reason / Description" },
-    ];
-  }
-  if (type === "Change in Situation / Location") {
-    return [
-      { bucket: "oldValues", key: "location", label: "Old Location" },
-      { bucket: "newValues", key: "location", label: "New Location" },
-      { bucket: "newValues", key: "reason", label: "Reason / Description" },
-    ];
-  }
-  if (type === "Change in Address") {
-    return [
-      { bucket: "oldValues", key: "address", label: "Old Address" },
-      { bucket: "newValues", key: "address", label: "New Address" },
-      { bucket: "newValues", key: "reason", label: "Reason / Description" },
-    ];
-  }
-  if (type.includes("Warehouse") || type.includes("Property")) {
-    return [
-      { bucket: "oldValues", key: "propertyDetails", label: "Old Warehouse / Property" },
-      { bucket: "newValues", key: "propertyDetails", label: "New Warehouse / Property" },
-      { bucket: "newValues", key: "reason", label: "Reason / Description" },
-    ];
-  }
-  if (type.includes("Bank") || type.includes("Hypothecation")) {
-    return [
-      { bucket: "oldValues", key: "bankDetails", label: "Old Bank Details" },
-      { bucket: "newValues", key: "bankDetails", label: "New Bank Details" },
-      { bucket: "newValues", key: "reason", label: "Reason / Description" },
-    ];
-  }
-  return [
-    { bucket: "oldValues", key: "value", label: "Old Value" },
-    { bucket: "newValues", key: "value", label: "New Value" },
-    { bucket: "newValues", key: "reason", label: "Reason / Description" },
-  ];
-}
-
-function normalizeExtractedPolicy(data, upload) {
-  return {
-    policyNo: data.policyNumber || data.policyNo || "",
-    insuredName: data.insuredName || data.customerName || "",
-    insuranceCompany: data.insuranceCompany || upload?.selected?.companyName || "",
-    policyType: data.productName || data.policyType || upload?.selected?.policyTypeName || "",
-    policyStartDate: toDateInput(data.policyStartDate || data.startDate),
-    policyExpiryDate: toDateInput(data.policyEndDate || data.expiryDate),
-    sumInsured: data.sumInsured || data.contentsSumInsured || data.idv || "",
-    mailingAddress: data.mailingAddress || data.communicationAddress || "",
-    address: data.riskLocation || data.premisesAddress || data.address || data.propertyAddress || "",
-    warehouseDetails: data.warehouseDetails || data.propertyDetails || data.description || "",
-    issuedAt: data.issuedAt || data.validIn || "",
-    financerDetails: data.hypothecationDetails || data.financerName || "",
-    premium: data.premiumIncludingGst || data.totalPremium || data.premium || "",
-    raw: data,
-  };
-}
-
-function seedOldValues(type, extracted, existing) {
-  if (Object.keys(existing || {}).length) return existing;
-  if (type.includes("Address")) return { address: extracted.address || "" };
-  if (type.includes("Situation") || type.includes("Location")) return { location: extracted.address || "" };
-  if (type.includes("Sum Insured")) return { sumInsured: extracted.sumInsured || "" };
-  if (type.includes("Warehouse") || type.includes("Property"))
-    return { propertyDetails: extracted.warehouseDetails || "" };
-  return {};
-}
-
-function displayDate(value) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-IN");
-}
-
-function toDateInput(value) {
-  if (!value) return "";
-  const text = String(value).trim();
-  const slashDate = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-  if (slashDate) {
-    return `${slashDate[3]}-${slashDate[2].padStart(2, "0")}-${slashDate[1].padStart(2, "0")}`;
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-}
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function makeEndorsementNo() {
-  const now = new Date();
-  return `END-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-}
-
-function formatFileSize(size) {
-  if (!size) return "0 KB";
-  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new window.FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
 
 async function readJsonResponse(response) {

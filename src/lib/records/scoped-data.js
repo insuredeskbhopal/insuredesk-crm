@@ -44,6 +44,99 @@ export const POLICY_RECORD_SELECT = {
   },
 };
 
+function getServerLoadErrorMessage(error) {
+  return error instanceof Error ? error.message : String(error || "Unknown server data load error");
+}
+
+export function getPresetDates(preset) {
+  const now = new Date();
+  const start = new Date(now);
+  const end = new Date(now);
+
+  switch (preset) {
+    case "today":
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    case "yesterday":
+      start.setDate(now.getDate() - 1);
+      start.setHours(0, 0, 0, 0);
+      end.setDate(now.getDate() - 1);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    case "last-3-days":
+      start.setDate(now.getDate() - 2);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    case "this-week": {
+      const day = now.getDay();
+      start.setDate(now.getDate() - day);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    }
+    case "last-week": {
+      const day = now.getDay();
+      start.setDate(now.getDate() - day - 7);
+      start.setHours(0, 0, 0, 0);
+      end.setDate(now.getDate() - day - 1);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    }
+    case "this-month":
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    case "last-month":
+      start.setMonth(now.getMonth() - 1);
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      end.setMonth(now.getMonth());
+      end.setDate(0);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    case "last-3-months":
+      start.setMonth(now.getMonth() - 3);
+      start.setDate(now.getDate() + 1);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    case "last-6-months":
+      start.setMonth(now.getMonth() - 6);
+      start.setDate(now.getDate() + 1);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    case "this-year":
+      start.setMonth(0, 1);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    case "last-year":
+      start.setFullYear(now.getFullYear() - 1, 0, 1);
+      start.setHours(0, 0, 0, 0);
+      end.setFullYear(now.getFullYear() - 1, 11, 31);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    default:
+      return null;
+  }
+}
+
+export function getSavedAtDateFilter(options = {}) {
+  if (options.datePreset && options.datePreset !== "all" && options.datePreset !== "custom") {
+    const range = getPresetDates(options.datePreset);
+    return range ? { gte: range.start, lte: range.end } : null;
+  }
+
+  const filter = {};
+  if (options.startDate) filter.gte = new Date(options.startDate + "T00:00:00.000Z");
+  if (options.endDate) filter.lte = new Date(options.endDate + "T23:59:59.999Z");
+  return Object.keys(filter).length ? filter : null;
+}
+
 export async function getCurrentSessionFromCookies() {
   const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
@@ -682,97 +775,4 @@ async function loadScopedUploadsUnsafe(options = {}) {
     ...(options.take ? { take: options.take } : {}),
     ...(options.select ? { select: options.select } : {}),
   });
-}
-
-function getServerLoadErrorMessage(error) {
-  return error instanceof Error ? error.message : String(error || "Unknown server data load error");
-}
-
-export function getPresetDates(preset) {
-  const now = new Date();
-  const start = new Date(now);
-  const end = new Date(now);
-
-  switch (preset) {
-    case "today":
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
-    case "yesterday":
-      start.setDate(now.getDate() - 1);
-      start.setHours(0, 0, 0, 0);
-      end.setDate(now.getDate() - 1);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
-    case "last-3-days":
-      start.setDate(now.getDate() - 2);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
-    case "this-week": {
-      const day = now.getDay();
-      start.setDate(now.getDate() - day);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
-    }
-    case "last-week": {
-      const day = now.getDay();
-      start.setDate(now.getDate() - day - 7);
-      start.setHours(0, 0, 0, 0);
-      end.setDate(now.getDate() - day - 1);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
-    }
-    case "this-month":
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
-    case "last-month":
-      start.setMonth(now.getMonth() - 1);
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
-      end.setMonth(now.getMonth());
-      end.setDate(0);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
-    case "last-3-months":
-      start.setMonth(now.getMonth() - 3);
-      start.setDate(now.getDate() + 1);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
-    case "last-6-months":
-      start.setMonth(now.getMonth() - 6);
-      start.setDate(now.getDate() + 1);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
-    case "this-year":
-      start.setMonth(0, 1);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
-    case "last-year":
-      start.setFullYear(now.getFullYear() - 1, 0, 1);
-      start.setHours(0, 0, 0, 0);
-      end.setFullYear(now.getFullYear() - 1, 11, 31);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
-    default:
-      return null;
-  }
-}
-
-export function getSavedAtDateFilter(options = {}) {
-  if (options.datePreset && options.datePreset !== "all" && options.datePreset !== "custom") {
-    const range = getPresetDates(options.datePreset);
-    return range ? { gte: range.start, lte: range.end } : null;
-  }
-
-  const filter = {};
-  if (options.startDate) filter.gte = new Date(options.startDate + "T00:00:00.000Z");
-  if (options.endDate) filter.lte = new Date(options.endDate + "T23:59:59.999Z");
-  return Object.keys(filter).length ? filter : null;
 }

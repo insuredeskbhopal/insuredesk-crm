@@ -3,6 +3,23 @@ import { resolvePolicyCustomerName } from "@/lib/renewals/customer-name";
 
 const { normalizeInsuranceCompanyName } = insuranceCompanyMaster;
 
+export function stripNameSalutation(value = "") {
+  return String(value || "")
+    .replace(/^\s*(?:m\/s|mr|mrs|miss|ms)\.?\s+/i, "")
+    .trim();
+}
+
+export function buildCustomerId(insuredName = "", contactNumber = "") {
+  const namePart = stripNameSalutation(insuredName)
+    .replace(/[^A-Za-z]/g, "")
+    .slice(0, 4)
+    .toUpperCase();
+  const phoneText = String(contactNumber || "");
+  const phoneDigits = /[*xX•]/.test(phoneText) ? "" : phoneText.replace(/\D/g, "");
+  const phonePart = phoneDigits.length >= 4 ? phoneDigits.slice(-4) : "";
+  return `${namePart}${phonePart}`;
+}
+
 export function normalizeRecord(record) {
   if (!record || typeof record !== "object") return {};
   const payload = record.reviewedData || record.data || {};
@@ -308,21 +325,4 @@ export function normalizeRecord(record) {
     isActivePolicy: record.isActivePolicy ?? true,
     newOrRenewal: payload.newOrRenewal || legacy.newOrRenewal || payload["New / Renewal"] || "",
   };
-}
-
-export function buildCustomerId(insuredName = "", contactNumber = "") {
-  const namePart = stripNameSalutation(insuredName)
-    .replace(/[^A-Za-z]/g, "")
-    .slice(0, 4)
-    .toUpperCase();
-  const phoneText = String(contactNumber || "");
-  const phoneDigits = /[*xX•]/.test(phoneText) ? "" : phoneText.replace(/\D/g, "");
-  const phonePart = phoneDigits.length >= 4 ? phoneDigits.slice(-4) : "";
-  return `${namePart}${phonePart}`;
-}
-
-function stripNameSalutation(value = "") {
-  return String(value || "")
-    .replace(/^\s*(?:m\/s|mr|mrs|miss|ms)\.?\s+/i, "")
-    .trim();
 }

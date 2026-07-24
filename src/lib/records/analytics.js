@@ -10,6 +10,86 @@ import {
 import { buildOverviewReport } from "@/app/lib/reporting/overview";
 import { formatMoney, parseMoney } from "@/app/lib/reporting/totals";
 
+function getReportPremiumValue(record = {}) {
+  return record.netPremium || record.totalPremium || record.premium || "";
+}
+
+function makeReportItem(id, label, value, hint, report) {
+  return { id, label, value, hint, report: { ...report, id, title: report.title || label } };
+}
+
+function groupRecords(records, getKey, type) {
+  const groups = new Map();
+
+  records.forEach((record) => {
+    const key = getKey(record);
+    const current = groups.get(key) || { records: [], premium: 0, sumInsured: 0 };
+    current.records.push(record);
+    current.premium += parseMoney(getReportPremiumValue(record));
+    current.sumInsured += parseMoney(record.sumInsured);
+    groups.set(key, current);
+  });
+
+  return Array.from(groups.entries())
+    .map(([key, group]) => {
+      const id = `${type}-${key}`;
+      return {
+        id,
+        label: key,
+        count: group.records.length,
+        value: group.records.length,
+        premium: group.premium,
+        sumInsured: group.sumInsured,
+        hint: formatMoney(group.premium),
+        report: {
+          id,
+          type,
+          value: key,
+          title: key,
+          label: `${group.records.length} polic${group.records.length === 1 ? "y" : "ies"}`,
+        },
+      };
+    })
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+}
+
+function buildClientProfiles(records) {
+  const profiles = new Map();
+
+  records.forEach((record) => {
+    const name = record.insuredName || "Unnamed insured";
+    const id = `customer-${name}`;
+    const current = profiles.get(name) || {
+      id,
+      name,
+      policies: [],
+      premiumTotal: 0,
+      sumInsuredTotal: 0,
+      district: record.district || "",
+      tehsil: record.tehsil || "",
+      contactNumber: record.contactNumber || "",
+      report: {
+        id,
+        type: "customerName",
+        value: name,
+        title: name,
+        label: "Customer policy portfolio",
+      },
+    };
+
+    current.policies.push(record);
+    current.premiumTotal += parseMoney(getReportPremiumValue(record));
+    current.sumInsuredTotal += parseMoney(record.sumInsured);
+    current.district ||= record.district || "";
+    current.tehsil ||= record.tehsil || "";
+    current.contactNumber ||= record.contactNumber || "";
+    profiles.set(name, current);
+  });
+
+  return Array.from(profiles.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function buildAnalytics(records) {
   const clients = buildClientProfiles(records);
   const overview = buildOverviewReport(records, clients);
@@ -99,239 +179,226 @@ export function buildAnalytics(records) {
     .slice(0, 5)
     .map((record) =>
       makeReportItem(
-        `high-value-${record.id}`,
-        record.policyNumber || record.insuredName || "Policy record",
-        formatMoney(record.sumInsured),
-        record.insuredName || record.policyType || "High value policy",
+        `high-val-${record.id}`,
+        record.insuredName || "Unnamed insured",
+        parseMoney(record.sumInsured),
+        record.policyNumber || "No policy number",
         {
-          type: "recordIds",
-          value: [record.id],
-          title: record.policyNumber || "High Value Policy",
-          label: "Single high-value policy record",
+          id: `high-val-${record.id}`,
+          type: "policyNumber",
+          value: record.policyNumber,
+          title: record.insuredName || "High-value policy",
+          label: "Policy details",
         },
       ),
     );
 
+  const keyMetricReports = [
+    makeReportItem("total-policies", "Total Policies", records.length, "All stored policies", {
+      type: "all",
+      title: "All Policies",
+      label: "Complete policy list",
+    }),
+
+    makeReportItem("active-policies", "Active Policies", records.length - expired.length, "Currently in-force", {
+      type: "active",
+      title: "Active Policies",
+      label: "In-force policies",
+    }),
+
+    makeReportItem("expired-policies", "Expired Policies", expired.length, "Requires renewal review", {
+      type: "expired",
+      title: "Expired Policies",
+      label: "Expired policy list",
+    }),
+
+    makeReportItem("pdf-coverage", "PDF Available", pdfRecords.length, "Source document linked", {
+      type: "pdf",
+      title: "Policies with PDF",
+      label: "Verified document list",
+    }),
+  ];
+
+  const actionReports = [
+    makeReportItem("expiring-7-action", "Renew 7-Day Expiring", expiring7.length, "High priority outreach", {
+      type: "expiring-7",
+      title: "Expiring within 7 Days",
+      label: "Urgent renewals",
+    }),
+
+    makeReportItem("expiring-30-action", "Prepare 30-Day Renewals", expiring30.length, "Standard renewal workflow", {
+      type: "expiring-30",
+      title: "Expiring within 30 Days",
+      label: "Upcoming renewals",
+    }),
+
+    makeReportItem("missing-policy-num", "Missing Policy No.", missingPolicyNumber.length, "Data cleanup required", {
+      type: "missing-policy-number",
+      title: "Missing Policy Numbers",
+      label: "Incomplete records",
+    }),
+
+    makeReportItem("missing-premium-val", "Missing Premium", missingPremium.length, "Financial record update", {
+      type: "missing-premium",
+      title: "Missing Premium Values",
+      label: "Financial data cleanup",
+    }),
+  ];
+
   return {
-    kpis: overview.kpis,
-    renewals: [
-      makeReportItem("expired", "Already expired", expired.length, "Needs immediate review", {
-        type: "renewal",
-        value: "expired",
-        title: "Expired Policies",
-        label: "Policies with expiry date before today",
-      }),
-      makeReportItem("expiring-7", "Expiring in 7 days", expiring7.length, "Urgent follow-up", {
-        type: "renewal",
-        value: "7",
-        title: "Expiring in 7 Days",
-        label: "Policies expiring within 7 days",
-      }),
-      makeReportItem("expiring-30", "Expiring in 30 days", expiring30.length, "Renewal pipeline", {
-        type: "renewal",
-        value: "30",
-        title: "Expiring in 30 Days",
-        label: "Policies expiring within 30 days",
-      }),
-      makeReportItem("expiring-60", "Expiring in 60 days", expiring60.length, "Upcoming renewals", {
-        type: "renewal",
-        value: "60",
-        title: "Expiring in 60 Days",
-        label: "Policies expiring within 60 days",
-      }),
-    ],
-    pdfDistribution: [
-      makeReportItem("pdf-available", "With PDF", pdfRecords.length, "Download available", {
-        type: "hasPdf",
-        value: true,
-        title: "Policies With PDF",
-        label: "Records with PDF documents",
-      }),
-      makeReportItem("pdf-missing", "Missing PDF", missingPdf.length, "Document pending", {
-        type: "hasPdf",
-        value: false,
-        title: "Missing PDF",
-        label: "Records without PDF documents",
-      }),
-    ],
+    overview,
+    keyMetricReports,
+    actionReports,
     policyFamilies,
     familyPremium,
-    makeModels,
-    vehicleTypes,
-    ncbBrackets,
-    districts,
-    districtPremium,
-    tehsils,
     insurers,
     policyTypes,
     highValuePolicies,
-    customers: clients
-      .slice()
-      .sort((a, b) => b.premiumTotal - a.premiumTotal)
-      .slice(0, 6),
-    quality: [
-      makeReportItem("quality-pdf", "Missing PDF", missingPdf.length, "Upload document", {
-        type: "hasPdf",
-        value: false,
-        title: "Missing PDF",
-        label: "Policies without PDF documents",
-      }),
-      makeReportItem(
-        "quality-policy",
-        "Missing policy number",
-        missingPolicyNumber.length,
-        "Fix policy identity",
-        {
-          type: "missing",
-          value: "policyNumber",
-          title: "Missing Policy Number",
-          label: "Records without policy number",
-        },
-      ),
-      makeReportItem("quality-premium", "Missing premium", missingPremium.length, "Fix financial data", {
-        type: "missing",
-        value: "premium",
-        title: "Missing Premium",
-        label: "Records without premium",
-      }),
-      makeReportItem("quality-expiry", "Missing expiry date", missingExpiry.length, "Fix renewal tracking", {
-        type: "missing",
-        value: "expiryDate",
-        title: "Missing Expiry Date",
-        label: "Records without expiry date",
-      }),
-      makeReportItem("quality-contact", "Missing contact", missingContact.length, "Fix customer follow-up", {
-        type: "missing",
-        value: "contactNumber",
-        title: "Missing Contact",
-        label: "Records without contact number",
-      }),
-    ],
-    maxDistrictCount: Math.max(1, ...districts.map((item) => item.count)),
-    maxDistrictPremium: Math.max(1, ...districtPremium.map((item) => item.amount)),
-    maxTehsilCount: Math.max(1, ...tehsils.map((item) => item.count)),
-    maxInsurerCount: Math.max(1, ...insurers.map((item) => item.count)),
-    maxPolicyTypeCount: Math.max(1, ...policyTypes.map((item) => item.count)),
-    maxFamilyCount: Math.max(1, ...policyFamilies.map((item) => item.count)),
-    maxFamilyPremium: Math.max(1, ...familyPremium.map((item) => item.amount)),
-    maxMakeModelCount: Math.max(1, ...makeModels.map((item) => item.count)),
-    maxVehicleTypeCount: Math.max(1, ...vehicleTypes.map((item) => item.count)),
-    maxNcbBracketCount: Math.max(1, ...ncbBrackets.map((item) => item.count)),
-  };
-}
 
-export function getReportRecords(records, report) {
-  return filterRecordsForReport(records, report);
+    motor: {
+      makeModels,
+      vehicleTypes,
+      ncbBrackets,
+    },
+
+    fire: {
+      districts,
+      districtPremium,
+      tehsils,
+    },
+
+    quality: {
+      missingPdf: missingPdf.length,
+      missingPolicyNumber: missingPolicyNumber.length,
+      missingPremium: missingPremium.length,
+      missingExpiry: missingExpiry.length,
+      missingContact: missingContact.length,
+    },
+
+    expiry: {
+      expired: expired.length,
+      expiring7: expiring7.length,
+      expiring30: expiring30.length,
+      expiring60: expiring60.length,
+    },
+  };
 }
 
 export function findReportById(records, reportId) {
   const analytics = buildAnalytics(records);
-  const groups = [
-    analytics.kpis,
-    analytics.renewals,
-    analytics.pdfDistribution,
+
+  const collections = [
+    analytics.keyMetricReports,
+    analytics.actionReports,
     analytics.policyFamilies,
     analytics.familyPremium,
-    analytics.makeModels,
-    analytics.vehicleTypes,
-    analytics.ncbBrackets,
-    analytics.districts,
-    analytics.districtPremium,
-    analytics.tehsils,
     analytics.insurers,
     analytics.policyTypes,
     analytics.highValuePolicies,
-    analytics.customers,
-    analytics.quality,
-  ];
+    analytics.motor?.makeModels,
+    analytics.motor?.vehicleTypes,
+    analytics.motor?.ncbBrackets,
+    analytics.fire?.districts,
+    analytics.fire?.districtPremium,
+    analytics.fire?.tehsils,
+  ].filter(Boolean);
 
-  for (const group of groups) {
-    const match = group.find((item) => item.id === reportId);
-
-    if (match) return match;
+  for (const list of collections) {
+    const found = list.find((item) => item.id === reportId || item.report?.id === reportId);
+    if (found) return found;
   }
 
   return null;
 }
 
-function groupRecords(records, getKey, type) {
-  const groups = new Map();
+export function getReportRecords(records, report) {
+  if (!report) return records;
+  const { type, value } = report;
 
-  records.forEach((record) => {
-    const key = getKey(record);
-    const current = groups.get(key) || { records: [], premium: 0, sumInsured: 0 };
-    current.records.push(record);
-    current.premium += parseMoney(getReportPremiumValue(record));
-    current.sumInsured += parseMoney(record.sumInsured);
-    groups.set(key, current);
-  });
+  if (!type || type === "all") return records;
 
-  return Array.from(groups.entries())
-    .map(([key, group]) => {
-      const id = `${type}-${key}`;
-      return {
-        id,
-        label: key,
-        count: group.records.length,
-        value: group.records.length,
-        premium: group.premium,
-        sumInsured: group.sumInsured,
-        hint: formatMoney(group.premium),
-        report: {
-          id,
-          type,
-          value: key,
-          title: key,
-          label: `${group.records.length} polic${group.records.length === 1 ? "y" : "ies"}`,
-        },
-      };
-    })
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
-}
+  const today = startOfDay(new Date());
 
-function makeReportItem(id, label, value, hint, report) {
-  return { id, label, value, hint, report: { ...report, id, title: report.title || label } };
-}
+  if (type === "active") {
+    return records.filter((r) => {
+      const exp = parsePolicyDate(r.expiryDate);
+      return !exp || exp >= today;
+    });
+  }
 
-function buildClientProfiles(records) {
-  const profiles = new Map();
+  if (type === "expired") {
+    return records.filter((r) => {
+      const exp = parsePolicyDate(r.expiryDate);
+      return exp && exp < today;
+    });
+  }
 
-  records.forEach((record) => {
-    const name = record.insuredName || "Unnamed insured";
-    const id = `customer-${name}`;
-    const current = profiles.get(name) || {
-      id,
-      name,
-      policies: [],
-      premiumTotal: 0,
-      sumInsuredTotal: 0,
-      district: record.district || "",
-      tehsil: record.tehsil || "",
-      contactNumber: record.contactNumber || "",
-      report: {
-        id,
-        type: "customerName",
-        value: name,
-        title: name,
-        label: "Customer policy portfolio",
-      },
-    };
+  if (type === "pdf") {
+    return records.filter((r) => r.hasPdf);
+  }
 
-    current.policies.push(record);
-    current.premiumTotal += parseMoney(getReportPremiumValue(record));
-    current.sumInsuredTotal += parseMoney(record.sumInsured);
-    current.district ||= record.district || "";
-    current.tehsil ||= record.tehsil || "";
-    current.contactNumber ||= record.contactNumber || "";
-    profiles.set(name, current);
-  });
+  if (type === "expiring-7") {
+    return records.filter((r) => isExpiringWithin(r, today, 7));
+  }
 
-  return Array.from(profiles.values()).sort((a, b) => a.name.localeCompare(b.name));
-}
+  if (type === "expiring-30") {
+    return records.filter((r) => isExpiringWithin(r, today, 30));
+  }
 
-function getReportPremiumValue(record = {}) {
-  return record.netPremium || record.totalPremium || record.premium || "";
+  if (type === "missing-policy-number") {
+    return records.filter((r) => !r.policyNumber);
+  }
+
+  if (type === "missing-premium") {
+    return records.filter((r) => !getReportPremiumValue(r));
+  }
+
+  if (type === "insuranceCompany") {
+    return records.filter((r) => normalizeInsuranceCompanyReportName(r.insuranceCompany) === value);
+  }
+
+  if (type === "policyType") {
+    return records.filter((r) => (r.policyType || "Unknown policy type") === value);
+  }
+
+  if (type === "policyFamily") {
+    return records.filter((r) => (FAMILY_LABELS[getRecordFamily(r)] || "Other Policies") === value);
+  }
+
+  if (type === "customerName") {
+    return records.filter((r) => (r.insuredName || "Unnamed insured") === value);
+  }
+
+  if (type === "district") {
+    return records.filter((r) => (r.district || "Unknown district") === value);
+  }
+
+  if (type === "tehsil") {
+    return records.filter((r) => (r.tehsil || "Unknown tehsil") === value);
+  }
+
+  if (type === "makeModel") {
+    return records.filter((r) => {
+      const rawMake = String(r.makeModel || "").trim().split(/\s+/)[0] || "Unknown";
+      const normalized = rawMake.charAt(0).toUpperCase() + rawMake.slice(1).toLowerCase();
+      return normalized === value;
+    });
+  }
+
+  if (type === "vehicleType") {
+    return records.filter((r) => (r.policyType || "Unknown Motor Type") === value);
+  }
+
+  if (type === "ncbBracket") {
+    return records.filter((r) => {
+      const ncbDigits = String(r.ncb || "").replace(/[^0-9]/g, "");
+      const ncbVal = ncbDigits ? parseInt(ncbDigits, 10) : 0;
+      const bracket = ncbVal > 0 ? `${ncbVal}% NCB` : "0% / No NCB";
+      return bracket === value;
+    });
+  }
+
+  return records;
 }
 
 export { formatMoney, parseMoney };
