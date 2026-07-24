@@ -126,24 +126,22 @@ export default function FixedPolicyPreview({
                   aria-label="Cancel Endorsement Mode"
                   style={{
                     position: "absolute",
-                    top: "12px",
-                    right: "12px",
+                    top: "10px",
+                    right: "10px",
                     zIndex: 10,
-                    width: "28px",
-                    height: "28px",
-                    padding: 0,
-                    margin: 0,
-                    borderRadius: "50%",
-                    backgroundColor: "#ffffff",
-                    border: "1.5px solid #cbd5e1",
-                    color: "#64748b",
                     display: "inline-flex",
                     alignItems: "center",
-                    justifyContent: "center",
+                    gap: "4px",
+                    padding: "3px 9px",
+                    borderRadius: "12px",
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #cbd5e1",
+                    color: "#64748b",
+                    fontSize: "11px",
+                    fontWeight: "700",
                     cursor: "pointer",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08)",
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.06)",
                     transition: "all 0.15s ease",
-                    outline: "none",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = "#dc2626";
@@ -156,7 +154,7 @@ export default function FixedPolicyPreview({
                     e.currentTarget.style.backgroundColor = "#ffffff";
                   }}
                 >
-                  <X size={16} strokeWidth={2.5} style={{ display: "block", color: "inherit" }} />
+                  Cancel <X size={12} strokeWidth={2.5} />
                 </button>
               )}
               <div style={{ marginBottom: "8px" }}>
