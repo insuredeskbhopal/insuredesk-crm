@@ -25,12 +25,13 @@ describe("renewal insurance company names", () => {
     expect(normalizeRenewalInsuranceCompany(input)).toBe(expected);
   });
 
-  it("uses canonical names for old and renewed policy displays", () => {
+  it("uses short display names for old and renewed policy displays", () => {
     expect(
       withRenewalCompanyDisplay({ insuranceCompany: "ICICI", renewedInsuranceCompany: "ICICI Lombard" }),
     ).toMatchObject({
-      insuranceCompany: "ICICI Lombard General Insurance Company Limited",
-      renewedInsuranceCompany: "ICICI Lombard General Insurance Company Limited",
+      insuranceCompany: "ICICI Lombard",
+      canonicalInsuranceCompany: "ICICI Lombard General Insurance Company Limited",
+      renewedInsuranceCompany: "ICICI Lombard",
     });
   });
 
