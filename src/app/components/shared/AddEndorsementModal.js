@@ -38,6 +38,24 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
   const insuranceCompany = record?.insuranceCompany || record?.data?.insuranceCompany || "";
   const policyType = record?.policyType || record?.data?.policyType || "";
   const clientId = record?.clientId || record?.data?.clientId || "";
+  const startDate = record?.startDate || record?.data?.startDate || "";
+  const expiryDate = record?.expiryDate || record?.data?.expiryDate || "";
+  const sumInsured = record?.sumInsured || record?.data?.sumInsured || record?.basicSumInsured || "";
+  const premium = record?.netPremium || record?.premium || record?.totalPremium || record?.data?.netPremium || record?.data?.premium || "";
+
+  const formatDateVal = (val) => {
+    if (!val) return "";
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    return d.toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+  };
+
+  const formatAmountVal = (val) => {
+    if (val === undefined || val === null || val === "") return "N/A";
+    const num = parseFloat(val);
+    if (isNaN(num)) return String(val);
+    return `₹${num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
 
   // Selected Multi-Impact Categories
   const [selectedImpacts, setSelectedImpacts] = useState(["PREMIUM", "SUM_INSURED"]);
@@ -320,7 +338,7 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
               )}
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
               <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
                 <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Insured Name</span>
                 <strong style={{ fontSize: "13px", color: "#0f172a" }}>{insuredName || "N/A"}</strong>
@@ -339,6 +357,26 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
               <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
                 <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Policy Type</span>
                 <strong style={{ fontSize: "13px", color: "#0f172a" }}>{policyType || "Warehouse Policy"}</strong>
+              </div>
+
+              <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Start Date</span>
+                <strong style={{ fontSize: "13px", color: "#0f172a" }}>{formatDateVal(startDate) || "N/A"}</strong>
+              </div>
+
+              <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Expiry Date</span>
+                <strong style={{ fontSize: "13px", color: "#0f172a" }}>{formatDateVal(expiryDate) || "N/A"}</strong>
+              </div>
+
+              <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Current Sum Insured</span>
+                <strong style={{ fontSize: "13px", color: "#0f172a" }}>{formatAmountVal(sumInsured)}</strong>
+              </div>
+
+              <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Current Premium</span>
+                <strong style={{ fontSize: "13px", color: "#0f172a" }}>{formatAmountVal(premium)}</strong>
               </div>
             </div>
           </div>
