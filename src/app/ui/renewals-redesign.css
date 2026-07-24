@@ -267,22 +267,20 @@
 
 .rn-policy-register__table-shell {
   width: 100%;
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
 }
 
 .rn-policy-register__table {
   width: 100% !important;
-  min-width: 1050px;
+  table-layout: fixed !important;
   border-collapse: collapse;
 }
 
 .rn-policy-register__table th,
 .rn-policy-register__table td {
-  padding: 8px 6px !important;
+  padding: 6px 5px !important;
   font-size: 12px !important;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .rn-policy-register__table th {
