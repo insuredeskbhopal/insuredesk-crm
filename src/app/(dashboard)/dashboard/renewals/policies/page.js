@@ -393,16 +393,16 @@ export default function RenewalPoliciesPage() {
           <table className="rn-table rn-policy-register__table">
             <thead>
               <tr>
-                <th style={{ width: isMotorView ? "24%" : "18%" }}>Policyholder</th>
-                <th style={{ width: isMotorView ? "17%" : "14%" }}>Policy Number</th>
-                <th style={{ width: isMotorView ? "12%" : "10%" }}>Policy Type</th>
-                <th style={{ width: isMotorView ? "12%" : "10%" }}>Vehicle / Risk</th>
-                {!isMotorView ? <th style={{ width: "8%" }}>Start Date</th> : null}
-                <th style={{ width: isMotorView ? "11%" : "8%" }}>Expiry Date</th>
-                {!isMotorView ? <th style={{ width: "9%" }}>Sum Insured / IDV</th> : null}
-                <th style={{ width: isMotorView ? "9%" : "8%" }}>Premium</th>
-                <th style={{ width: isMotorView ? "11%" : "9%" }}>Renewal Mobile</th>
-                <th style={{ width: isMotorView ? "8%" : "7%" }}>Status</th>
+                <th style={{ width: isMotorView ? "21%" : "16%" }}>Policyholder</th>
+                <th style={{ width: isMotorView ? "15%" : "13%" }}>Policy Number</th>
+                <th style={{ width: isMotorView ? "11%" : "10%" }}>Policy Type</th>
+                <th style={{ width: isMotorView ? "11%" : "10%" }}>Vehicle / Risk</th>
+                {!isMotorView ? <th style={{ width: "7.5%" }}>Start Date</th> : null}
+                <th style={{ width: isMotorView ? "10%" : "7.5%" }}>Expiry Date</th>
+                {!isMotorView ? <th style={{ width: "8.5%" }}>Sum Insured / IDV</th> : null}
+                <th style={{ width: isMotorView ? "8.5%" : "7.5%" }}>Premium</th>
+                <th style={{ width: isMotorView ? "10.5%" : "8.5%" }}>Renewal Mobile</th>
+                <th style={{ width: isMotorView ? "8.5%" : "7%" }}>Status</th>
                 <th style={{ width: "4%" }}>Actions</th>
               </tr>
             </thead>
