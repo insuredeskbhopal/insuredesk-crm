@@ -122,34 +122,41 @@ export default function FixedPolicyPreview({
                 <button
                   type="button"
                   onClick={onCancelEndorsementMode}
-                  title="Cancel Endorsement Upload Mode"
+                  title="Cancel Endorsement Mode"
+                  aria-label="Cancel Endorsement Mode"
                   style={{
                     position: "absolute",
-                    top: "10px",
-                    right: "10px",
-                    background: "#ffffff",
-                    border: "1px solid #bfdbfe",
+                    top: "12px",
+                    right: "12px",
+                    zIndex: 10,
+                    width: "28px",
+                    height: "28px",
+                    padding: 0,
+                    margin: 0,
                     borderRadius: "50%",
-                    width: "26px",
-                    height: "26px",
-                    display: "flex",
+                    backgroundColor: "#ffffff",
+                    border: "1.5px solid #cbd5e1",
+                    color: "#64748b",
+                    display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#64748b",
                     cursor: "pointer",
-                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.08)",
-                    transition: "all 0.2s ease",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08)",
+                    transition: "all 0.15s ease",
+                    outline: "none",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#ef4444";
+                    e.currentTarget.style.color = "#dc2626";
                     e.currentTarget.style.borderColor = "#fca5a5";
+                    e.currentTarget.style.backgroundColor = "#fef2f2";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.color = "#64748b";
-                    e.currentTarget.style.borderColor = "#bfdbfe";
+                    e.currentTarget.style.borderColor = "#cbd5e1";
+                    e.currentTarget.style.backgroundColor = "#ffffff";
                   }}
                 >
-                  <X size={14} />
+                  <X size={16} strokeWidth={2.5} style={{ display: "block", color: "inherit" }} />
                 </button>
               )}
               <div style={{ marginBottom: "8px" }}>
