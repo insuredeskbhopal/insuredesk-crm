@@ -111,13 +111,13 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
               className="btn-add-endorsement"
               onClick={() => setShowAddModal(true)}
               style={{
-                padding: "10px 20px",
+                padding: "9px 18px",
                 borderRadius: "10px",
                 border: "none",
                 backgroundColor: "#0f172a",
                 color: "#ffffff",
                 fontWeight: "700",
-                fontSize: "14px",
+                fontSize: "13px",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
@@ -125,18 +125,18 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
                 boxShadow: "0 2px 8px rgba(15, 23, 42, 0.2)",
               }}
             >
-              <PlusCircle size={18} color="#ffffff" style={{ color: "#ffffff", strokeWidth: "2.5" }} />
-              <span style={{ color: "#ffffff", fontWeight: "700" }}>+ Add Endorsement</span>
+              <PlusCircle size={16} color="#ffffff" style={{ color: "#ffffff", strokeWidth: "2" }} />
+              <span style={{ color: "#ffffff", fontWeight: "700" }}>Add Endorsement</span>
             </button>
 
             <button
               onClick={onClose}
               aria-label="Close"
               style={{
-                width: "40px",
-                height: "40px",
-                minWidth: "40px",
-                minHeight: "40px",
+                width: "36px",
+                height: "36px",
+                minWidth: "36px",
+                minHeight: "36px",
                 borderRadius: "50%",
                 border: "1px solid #cbd5e1",
                 backgroundColor: "#ffffff",
@@ -144,11 +144,12 @@ export default function EndorsementManagementDrawer({ record, onClose, onRefresh
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                color: "#0f172a",
+                color: "#475569",
                 padding: 0,
+                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
               }}
             >
-              <X size={22} color="#0f172a" style={{ width: "22px", height: "22px", strokeWidth: "2.5" }} />
+              <X size={18} color="#475569" style={{ strokeWidth: "2" }} />
             </button>
           </div>
         </div>
