@@ -320,7 +320,8 @@ export default function RenewalPoliciesPage() {
     else window.alert("No contact number available for this policy.");
   };
 
-  const [columnWidths, setColumnWidths] = useState({
+  const COLUMN_WIDTH_STORAGE_KEY = "rn_register_col_widths_locked_v1";
+  const DEFAULT_COLUMN_WIDTHS = {
     insuredName: 200,
     policyNumber: 160,
     displayPolicyType: 130,
@@ -332,6 +333,16 @@ export default function RenewalPoliciesPage() {
     renewalMobile: 110,
     status: 90,
     actions: 44,
+  };
+
+  const [columnWidths, setColumnWidths] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = window.localStorage.getItem(COLUMN_WIDTH_STORAGE_KEY);
+        if (saved) return { ...DEFAULT_COLUMN_WIDTHS, ...JSON.parse(saved) };
+      } catch {}
+    }
+    return DEFAULT_COLUMN_WIDTHS;
   });
   const [resizingCol, setResizingCol] = useState(null);
 
@@ -345,7 +356,15 @@ export default function RenewalPoliciesPage() {
     const onMouseMove = (moveEvent) => {
       const delta = moveEvent.clientX - startX;
       const newWidth = Math.max(50, startWidth + delta);
-      setColumnWidths((prev) => ({ ...prev, [colKey]: newWidth }));
+      setColumnWidths((prev) => {
+        const next = { ...prev, [colKey]: newWidth };
+        if (typeof window !== "undefined") {
+          try {
+            window.localStorage.setItem(COLUMN_WIDTH_STORAGE_KEY, JSON.stringify(next));
+          } catch {}
+        }
+        return next;
+      });
     };
 
     const onMouseUp = () => {
