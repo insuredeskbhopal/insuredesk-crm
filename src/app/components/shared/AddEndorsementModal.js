@@ -323,7 +323,7 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
             </div>
           )}
 
-          {/* Auto-Fetched Policy Context Summary (Borderless, Strictly Aligned Grid) */}
+          {/* Auto-Fetched Policy Context Summary */}
           <div
             style={{
               marginBottom: "16px",
@@ -344,37 +344,57 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
               )}
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 24px", fontSize: "13px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "baseline" }}>
-                <span style={{ color: "#64748b", fontWeight: "700" }}>Insured Name:</span>
-                <strong style={{ color: "#0f172a", wordBreak: "break-word" }}>{insuredName || "N/A"}</strong>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px 16px" }}>
+              <div>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "2px" }}>
+                  Insured Name
+                </span>
+                <strong style={{ fontSize: "13px", fontWeight: "700", color: "#0f172a", wordBreak: "break-word" }}>
+                  {insuredName || "N/A"}
+                </strong>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "baseline" }}>
-                <span style={{ color: "#64748b", fontWeight: "700" }}>Insurance Company:</span>
-                <strong style={{ color: "#0f172a", wordBreak: "break-word" }}>{insuranceCompany || "N/A"}</strong>
+              <div>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "2px" }}>
+                  Insurance Company
+                </span>
+                <strong style={{ fontSize: "13px", fontWeight: "700", color: "#0f172a", wordBreak: "break-word" }}>
+                  {insuranceCompany || "N/A"}
+                </strong>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "baseline" }}>
-                <span style={{ color: "#64748b", fontWeight: "700" }}>Policy Number:</span>
-                <strong style={{ color: "#0f172a", wordBreak: "break-all" }}>{policyNo || "N/A"}</strong>
+              <div>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "2px" }}>
+                  Policy Number
+                </span>
+                <strong style={{ fontSize: "13px", fontWeight: "700", color: "#0f172a", wordBreak: "break-all" }}>
+                  {policyNo || "N/A"}
+                </strong>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "baseline" }}>
-                <span style={{ color: "#64748b", fontWeight: "700" }}>Policy Type:</span>
-                <strong style={{ color: "#0f172a", wordBreak: "break-word" }}>{policyType || "Warehouse Policy"}</strong>
+              <div>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "2px" }}>
+                  Policy Type
+                </span>
+                <strong style={{ fontSize: "13px", fontWeight: "700", color: "#0f172a", wordBreak: "break-word" }}>
+                  {policyType || "Warehouse Policy"}
+                </strong>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "baseline" }}>
-                <span style={{ color: "#64748b", fontWeight: "700" }}>Policy Tenure:</span>
-                <strong style={{ color: "#0f172a" }}>
+              <div>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "2px" }}>
+                  Policy Period & Duration
+                </span>
+                <strong style={{ fontSize: "13px", fontWeight: "700", color: "#0f172a" }}>
                   {formatDateVal(startDate)} – {formatDateVal(expiryDate)} {duration ? `(${duration})` : ""}
                 </strong>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "baseline" }}>
-                <span style={{ color: "#64748b", fontWeight: "700" }}>Sum Insured / Premium:</span>
-                <strong style={{ color: "#0f172a" }}>
+              <div>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "2px" }}>
+                  Sum Insured / Premium
+                </span>
+                <strong style={{ fontSize: "13px", fontWeight: "700", color: "#0f172a" }}>
                   {formatAmountVal(sumInsured)} / {formatAmountVal(premium)}
                 </strong>
               </div>
