@@ -63,13 +63,95 @@ export function normalizePolicyFamily(record = {}) {
   return cleanPolicyType(record.policyType || record.selectedPolicyType || "General Policy");
 }
 
+export function formatPolicySubType(record = {}) {
+  const rawType = String(record.policyType || record.selectedPolicyType || record.productName || "").trim();
+
+  const haystack = [
+    record.policyType,
+    record.selectedPolicyType,
+    record.productName,
+    record.documentCategory,
+    record.policyCoverType,
+    record.insuranceCompany,
+    record.companyName,
+    record.sourceFile,
+    record.description,
+    record.makeModel,
+    record.vehicleNumber,
+    record.registrationNumber,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (!haystack.trim()) return "Policy";
+
+  const family = normalizePolicyFamily(record);
+
+  if (family === "Motor Policy") {
+    if (/\b(two\s*wheeler|scooter|bike|motorcycle|2\s*w(?:heeler)?)\b/.test(haystack)) {
+      return "Two Wheeler";
+    }
+    if (/\b(goods\s*carrying|gcv|truck|tractor|lorry|dumper|jcb|trailer)\b/.test(haystack)) {
+      return "Commercial Vehicle";
+    }
+    if (/\b(passenger\s*carrying|pcv|taxi|cab|bus|auto\s*rickshaw)\b/.test(haystack)) {
+      return "Commercial Vehicle";
+    }
+    if (/\b(commercial\s*vehicle|commercial|heavy\s*vehicle|gcv|pcv)\b/.test(haystack)) {
+      return "Commercial Vehicle";
+    }
+    if (/\b(private\s*car|car|hatchback|sedan|suv|saloon|private)\b/.test(haystack)) {
+      return "Private Car";
+    }
+    if (rawType && !/^(motor|motor policy|policy)$/i.test(rawType)) {
+      const cleaned = cleanPolicyType(rawType);
+      if (cleaned) return cleaned;
+    }
+    return "Motor Policy";
+  }
+
+  if (family === "Fire Policy") {
+    if (/\b(sfsp|standard\s+fire)\b/.test(haystack)) return "Fire & Special Perils";
+    if (/\bburglary\b/.test(haystack)) return "Burglary Policy";
+    if (/\bfidelity\b/.test(haystack)) return "Fidelity Guarantee";
+    if (/\b(warehouse|stock|storage)\b/.test(haystack)) return "Warehouse Policy";
+    if (/\b(msme|sookshma|laghu)\b/.test(haystack)) return "MSME Property Policy";
+    if (rawType && !/^(fire|fire policy|policy)$/i.test(rawType)) {
+      const cleaned = cleanPolicyType(rawType);
+      if (cleaned) return cleaned;
+    }
+    return "Fire Policy";
+  }
+
+  if (family === "Health Policy") {
+    if (/\b(family\s+floater|floater)\b/.test(haystack)) return "Family Floater Health";
+    if (/\b(gmc|group)\b/.test(haystack)) return "Group Health";
+    if (/\bindividual\b/.test(haystack)) return "Individual Health";
+    if (rawType && !/^(health|health policy|policy)$/i.test(rawType)) {
+      const cleaned = cleanPolicyType(rawType);
+      if (cleaned) return cleaned;
+    }
+    return "Health Policy";
+  }
+
+  if (rawType && !/^(general policy|policy)$/i.test(rawType)) {
+    const cleaned = cleanPolicyType(rawType);
+    if (cleaned) return cleaned;
+  }
+
+  return family || "Policy";
+}
+
 export function withRenewalPolicyDisplay(record = {}) {
   const originalPolicyType = record.policyType || "";
-  const displayPolicyType = normalizePolicyFamily(record);
+  const policyFamily = normalizePolicyFamily(record);
+  const displayPolicyType = formatPolicySubType(record);
 
   return {
     ...record,
     originalPolicyType,
+    policyFamily,
     displayPolicyType,
     policyType: displayPolicyType || originalPolicyType,
   };
