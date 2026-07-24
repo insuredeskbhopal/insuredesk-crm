@@ -393,16 +393,16 @@ export default function RenewalPoliciesPage() {
           <table className="rn-table rn-policy-register__table">
             <thead>
               <tr>
-                <th style={{ width: isMotorView ? "16%" : "13%" }}>Policyholder</th>
-                <th style={{ width: isMotorView ? "13%" : "11%" }}>Policy Number</th>
-                <th style={{ width: isMotorView ? "13%" : "11%" }}>Policy Type</th>
-                <th style={{ width: isMotorView ? "13%" : "11%" }}>Vehicle / Risk</th>
-                {!isMotorView ? <th style={{ width: "9%" }}>Start Date</th> : null}
-                <th style={{ width: isMotorView ? "12%" : "9%" }}>Expiry Date</th>
-                {!isMotorView ? <th style={{ width: "10%" }}>Sum Insured / IDV</th> : null}
-                <th style={{ width: isMotorView ? "11%" : "8%" }}>Premium</th>
-                <th style={{ width: isMotorView ? "11%" : "9%" }}>Renewal Mobile</th>
-                <th style={{ width: isMotorView ? "11%" : "9%" }}>Status</th>
+                <th>Policyholder</th>
+                <th>Policy Number</th>
+                <th>Policy Type</th>
+                <th>Vehicle / Risk</th>
+                {!isMotorView ? <th>Start Date</th> : null}
+                <th>Expiry Date</th>
+                {!isMotorView ? <th>Sum Insured / IDV</th> : null}
+                <th>Premium</th>
+                <th>Renewal Mobile</th>
+                <th>Status</th>
                 <th style={{ width: "40px" }}>Actions</th>
               </tr>
             </thead>
