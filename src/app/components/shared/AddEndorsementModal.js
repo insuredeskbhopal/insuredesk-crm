@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   X,
   CheckCircle,
@@ -28,8 +29,9 @@ export const IMPACT_CATEGORIES = [
 ];
 
 export default function AddEndorsementModal({ record, onClose, onSuccess }) {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [creationMethod, setCreationMethod] = useState("MANUAL_ENTRY"); // PDF_UPLOAD vs MANUAL_ENTRY
+  const [creationMethod, setCreationMethod] = useState(null); // null (unselected), "MANUAL_ENTRY"
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -444,13 +446,17 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
 
               <button
                 type="button"
-                onClick={() => setCreationMethod("PDF_UPLOAD")}
+                onClick={() => {
+                  if (onClose) onClose();
+                  const targetQuery = policyNo ? `?q=${encodeURIComponent(policyNo)}` : "";
+                  router.push(`/bulk-upload${targetQuery}`);
+                }}
                 style={{
                   padding: "8px 14px",
                   borderRadius: "8px",
                   border: "none",
-                  backgroundColor: creationMethod === "PDF_UPLOAD" ? "#ffffff" : "transparent",
-                  color: creationMethod === "PDF_UPLOAD" ? "#2563eb" : "#64748b",
+                  backgroundColor: "transparent",
+                  color: "#64748b",
                   fontWeight: "700",
                   fontSize: "13px",
                   display: "flex",
@@ -458,66 +464,17 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
                   justifyContent: "center",
                   gap: "6px",
                   cursor: "pointer",
-                  boxShadow: creationMethod === "PDF_UPLOAD" ? "0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)" : "none",
                   transition: "all 0.2s ease",
                 }}
               >
-                <FileUp size={15} color={creationMethod === "PDF_UPLOAD" ? "#2563eb" : "#64748b"} />
+                <FileUp size={15} color="#64748b" />
                 Upload Endorsement PDF
               </button>
             </div>
           </div>
 
-          {/* Conditional Body Content based on Creation Method */}
-          {creationMethod === "PDF_UPLOAD" ? (
-            <div style={{ marginBottom: "20px" }}>
-              <div
-                style={{
-                  border: "2px dashed #cbd5e1",
-                  borderRadius: "14px",
-                  padding: "36px 20px",
-                  textAlign: "center",
-                  backgroundColor: "#f8fafc",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#2563eb";
-                  e.currentTarget.style.backgroundColor = "#eff6ff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "#cbd5e1";
-                  e.currentTarget.style.backgroundColor = "#f8fafc";
-                }}
-              >
-                <FileUp size={36} color="#2563eb" style={{ margin: "0 auto 12px auto", display: "block" }} />
-                <h4 style={{ margin: "0 0 4px 0", fontSize: "15px", fontWeight: "700", color: "#0f172a" }}>
-                  Upload Endorsement PDF Document
-                </h4>
-                <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#64748b" }}>
-                  Drag & drop endorsement PDF here or click to browse file
-                </p>
-                <input type="file" accept=".pdf" style={{ display: "none" }} id="endorsement-pdf-file-input" />
-                <label
-                  htmlFor="endorsement-pdf-file-input"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "9px 18px",
-                    borderRadius: "8px",
-                    backgroundColor: "#2563eb",
-                    color: "#ffffff",
-                    fontSize: "13px",
-                    fontWeight: "700",
-                    cursor: "pointer",
-                  }}
-                >
-                  <FileUp size={16} /> Select PDF File
-                </label>
-              </div>
-            </div>
-          ) : (
+          {/* Conditional Manual Entry Form Fields */}
+          {creationMethod === "MANUAL_ENTRY" && (
             <>
               {/* Decoupled Dates Section */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
@@ -748,32 +705,34 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="btn-submit-endorsement"
-              style={{
-                padding: "10px 24px",
-                borderRadius: "10px",
-                border: "none",
-                backgroundColor: "#0f172a",
-                color: "#ffffff",
-                fontWeight: "700",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                cursor: "pointer",
-                boxShadow: "0 2px 8px rgba(15, 23, 42, 0.2)",
-              }}
-            >
-              {isSaving ? (
-                <LoaderCircle size={16} className="spin" style={{ color: "#ffffff", stroke: "#ffffff" }} />
-              ) : (
-                <CheckCircle size={16} style={{ color: "#ffffff", stroke: "#ffffff" }} />
-              )}
-              <span style={{ color: "#ffffff", fontWeight: "700" }}>Save Endorsement</span>
-            </button>
+            {creationMethod === "MANUAL_ENTRY" && (
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="btn-submit-endorsement"
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "10px",
+                  border: "none",
+                  backgroundColor: "#0f172a",
+                  color: "#ffffff",
+                  fontWeight: "700",
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(15, 23, 42, 0.2)",
+                }}
+              >
+                {isSaving ? (
+                  <LoaderCircle size={16} className="spin" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                ) : (
+                  <CheckCircle size={16} style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                )}
+                <span style={{ color: "#ffffff", fontWeight: "700" }}>Save Endorsement</span>
+              </button>
+            )}
           </div>
         </form>
       </div>
