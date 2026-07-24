@@ -396,7 +396,7 @@ export default function RenewalPoliciesPage() {
                 <th>Policyholder</th><th>Policy Number</th><th>Policy Type</th><th>Company</th><th>Vehicle / Risk</th>
                 {!isMotorView ? <th>Start Date</th> : null}
                 <th>Expiry Date</th>
-                {isMotorView ? <th>Due In</th> : <th>Sum Insured / IDV</th>}
+                {!isMotorView ? <th>Sum Insured / IDV</th> : null}
                 <th>Premium</th><th>Renewal Mobile</th><th>WhatsApp Status</th><th>Status</th><th>Actions</th>
               </tr>
             </thead>
@@ -491,7 +491,7 @@ function PolicyRegisterRow({
       <td>{asset}</td>
       {!isMotorView ? <td>{formatRenewalRegisterDate(policy.startDate)}</td> : null}
       <td><strong>{formatRenewalRegisterDate(policy.expiryDate)}</strong>{!isMotorView ? <small>{policy.daysStatus || ""}</small> : null}</td>
-      {isMotorView ? <td><strong>{formatRenewalRegisterDueIn(policy.daysRemaining)}</strong></td> : <td>{formatRenewalRegisterAmount(policy.sumInsured || policy.idv)}</td>}
+      {!isMotorView ? <td>{formatRenewalRegisterAmount(policy.sumInsured || policy.idv)}</td> : null}
       <td>{formatRenewalRegisterAmount(policy.totalPremium || policy.premium)}</td>
       <td>{policy.renewalRecipientMobile || policy.contactNumber || "—"}</td>
       <td>
