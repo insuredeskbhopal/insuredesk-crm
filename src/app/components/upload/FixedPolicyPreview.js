@@ -233,7 +233,7 @@ export default function FixedPolicyPreview({
                 )}
               </div>
             </div>
-          )})}
+          )}
           <div className="detection-summary">
             <div>
               <span>Source File</span>
