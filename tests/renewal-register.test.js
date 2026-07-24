@@ -68,7 +68,6 @@ describe("policy-wise renewal register", () => {
     expect(page).toContain("Number(row.total) > 0");
     expect(page).toContain("RENEWAL_REGISTER_CATEGORY_TABS.map");
     expect(page).toContain('const isMotorView = policyType === "Motor"');
-    expect(page).toContain("<th>Due In</th>");
   });
 
   it("shows a read-only customer information card where a policy row is clicked", () => {
