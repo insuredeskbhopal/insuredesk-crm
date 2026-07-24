@@ -42,6 +42,12 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
   const expiryDate = record?.expiryDate || record?.data?.expiryDate || "";
   const sumInsured = record?.sumInsured || record?.data?.sumInsured || record?.basicSumInsured || "";
   const premium = record?.netPremium || record?.premium || record?.totalPremium || record?.data?.netPremium || record?.data?.premium || "";
+  const rawDuration = record?.policyTenure || record?.duration || record?.data?.policyTenure || record?.data?.duration || "";
+  const duration = rawDuration
+    ? String(rawDuration)
+    : (startDate && expiryDate
+      ? `${Math.round((new Date(expiryDate) - new Date(startDate)) / (1000 * 60 * 60 * 24 * 30.4375))} Month`
+      : "");
 
   const formatDateVal = (val) => {
     if (!val) return "";
@@ -367,6 +373,11 @@ export default function AddEndorsementModal({ record, onClose, onSuccess }) {
               <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
                 <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Expiry Date</span>
                 <strong style={{ fontSize: "13px", color: "#0f172a" }}>{formatDateVal(expiryDate) || "N/A"}</strong>
+              </div>
+
+              <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                <span style={{ display: "block", fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Duration</span>
+                <strong style={{ fontSize: "13px", color: "#0f172a" }}>{duration || "N/A"}</strong>
               </div>
 
               <div style={{ background: "#ffffff", padding: "10px 14px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
