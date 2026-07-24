@@ -1612,68 +1612,6 @@ export default function Dashboard({
 
       {activePage === "bulk-entry" && currentUserRole !== "VIEWER" && (
         <>
-          {/* Endorsement Target Policy Context Banner */}
-          {isEndorsementMode && (
-            <div
-              style={{
-                marginBottom: "20px",
-                padding: "14px 18px",
-                borderRadius: "12px",
-                backgroundColor: "#eff6ff",
-                border: "1.5px solid #3b82f6",
-                boxShadow: "0 2px 8px rgba(37, 99, 235, 0.08)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: "800",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.6px",
-                    color: "#1d4ed8",
-                    backgroundColor: "#dbeafe",
-                    padding: "3px 10px",
-                    borderRadius: "6px",
-                    border: "1px solid #93c5fd",
-                  }}
-                >
-                  Endorsement Upload Mode — Target Policy Context
-                </span>
-                <span style={{ fontSize: "12px", color: "#2563eb", fontWeight: "600" }}>
-                  Upload PDF below to extract endorsement details automatically
-                </span>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "8px 16px", fontSize: "13px" }}>
-                {endorsementPolicyNo && (
-                  <div>
-                    <span style={{ fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Policy Number</span>
-                    <strong style={{ display: "block", color: "#0f172a" }}>{endorsementPolicyNo}</strong>
-                  </div>
-                )}
-                {endorsementInsuredName && (
-                  <div>
-                    <span style={{ fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Insured Name</span>
-                    <strong style={{ display: "block", color: "#0f172a" }}>{endorsementInsuredName}</strong>
-                  </div>
-                )}
-                {endorsementInsurer && (
-                  <div>
-                    <span style={{ fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Insurance Company</span>
-                    <strong style={{ display: "block", color: "#0f172a" }}>{endorsementInsurer}</strong>
-                  </div>
-                )}
-                {endorsementPolicyType && (
-                  <div>
-                    <span style={{ fontSize: "10px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Policy Type</span>
-                    <strong style={{ display: "block", color: "#0f172a" }}>{endorsementPolicyType}</strong>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Renewal Counters Grid */}
           <section
             className="rn-counters-grid"
@@ -1929,6 +1867,7 @@ export default function Dashboard({
               endorsementInsuredName={endorsementInsuredName}
               endorsementInsurer={endorsementInsurer}
               endorsementPolicyType={endorsementPolicyType}
+              onCancelEndorsementMode={() => router.push("/bulk-upload")}
               onClear={() => {
                 setReviewError("");
                 setReviewFieldErrors({});

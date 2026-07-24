@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, LoaderCircle, ShieldCheck, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle, LoaderCircle, ShieldCheck, Trash2, X } from "lucide-react";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 import PreviewField from "../shared/PreviewField";
 import { applyAiSuggestionToReviewField, getEligibleAiSuggestion } from "./aiSuggestionHelpers";
@@ -42,6 +42,7 @@ export default function FixedPolicyPreview({
   endorsementInsuredName = "",
   endorsementInsurer = "",
   endorsementPolicyType = "",
+  onCancelEndorsementMode,
 }) {
   const validation = getReviewValidation(upload);
   const { resolvedSchema, visibleFields, requiredKeys, missingRequired } = validation;
@@ -109,6 +110,7 @@ export default function FixedPolicyPreview({
           {isEndorsementMode ? (
             <div
               style={{
+                position: "relative",
                 padding: "24px 20px",
                 textAlign: "center",
                 borderRadius: "12px",
@@ -116,6 +118,40 @@ export default function FixedPolicyPreview({
                 border: "1.5px dashed #3b82f6",
               }}
             >
+              {onCancelEndorsementMode && (
+                <button
+                  type="button"
+                  onClick={onCancelEndorsementMode}
+                  title="Cancel Endorsement Upload Mode"
+                  style={{
+                    position: "absolute",
+                    top: "10px",
+                    right: "10px",
+                    background: "#ffffff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "50%",
+                    width: "26px",
+                    height: "26px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#64748b",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.08)",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = "#ef4444";
+                    e.currentTarget.style.borderColor = "#fca5a5";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = "#64748b";
+                    e.currentTarget.style.borderColor = "#bfdbfe";
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              )}
               <div style={{ marginBottom: "8px" }}>
                 <span
                   style={{
@@ -172,13 +208,32 @@ export default function FixedPolicyPreview({
               <span style={{ fontSize: "11px", fontWeight: "700", color: "#1d4ed8" }}>
                 Endorsement Review linked to Policy #{endorsementPolicyNo || upload.extractedData?.policyNumber}
               </span>
-              {endorsementInsuredName && (
-                <span style={{ fontSize: "11px", color: "#475569" }}>
-                  Insured: <strong>{endorsementInsuredName}</strong>
-                </span>
-              )}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {endorsementInsuredName && (
+                  <span style={{ fontSize: "11px", color: "#475569" }}>
+                    Insured: <strong>{endorsementInsuredName}</strong>
+                  </span>
+                )}
+                {onCancelEndorsementMode && (
+                  <button
+                    type="button"
+                    onClick={onCancelEndorsementMode}
+                    title="Exit Endorsement Mode"
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      color: "#64748b",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
             </div>
-          )}
+          )})}
           <div className="detection-summary">
             <div>
               <span>Source File</span>
