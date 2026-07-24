@@ -393,16 +393,17 @@ export default function RenewalPoliciesPage() {
           <table className="rn-table rn-policy-register__table">
             <thead>
               <tr>
-                <th style={{ width: isMotorView ? "25%" : "20%" }}>Policyholder & Number</th>
-                <th style={{ width: isMotorView ? "13%" : "11%" }}>Policy Type</th>
-                <th style={{ width: isMotorView ? "13%" : "11%" }}>Vehicle / Risk</th>
-                {!isMotorView ? <th style={{ width: "8.5%" }}>Start Date</th> : null}
-                <th style={{ width: isMotorView ? "12%" : "8.5%" }}>Expiry Date</th>
-                {!isMotorView ? <th style={{ width: "9.5%" }}>Sum Insured / IDV</th> : null}
-                <th style={{ width: isMotorView ? "10%" : "8.5%" }}>Premium</th>
-                <th style={{ width: isMotorView ? "12%" : "9.5%" }}>Renewal Mobile</th>
-                <th style={{ width: isMotorView ? "10%" : "8.5%" }}>Status</th>
-                <th style={{ width: "4.5%" }}>Actions</th>
+                <th style={{ width: isMotorView ? "21%" : "16%" }}>Policyholder</th>
+                <th style={{ width: isMotorView ? "15%" : "13%" }}>Policy Number</th>
+                <th style={{ width: isMotorView ? "11%" : "10%" }}>Policy Type</th>
+                <th style={{ width: isMotorView ? "11%" : "10%" }}>Vehicle / Risk</th>
+                {!isMotorView ? <th style={{ width: "7.5%" }}>Start Date</th> : null}
+                <th style={{ width: isMotorView ? "10%" : "7.5%" }}>Expiry Date</th>
+                {!isMotorView ? <th style={{ width: "8.5%" }}>Sum Insured / IDV</th> : null}
+                <th style={{ width: isMotorView ? "8.5%" : "7.5%" }}>Premium</th>
+                <th style={{ width: isMotorView ? "10.5%" : "8.5%" }}>Renewal Mobile</th>
+                <th style={{ width: isMotorView ? "8.5%" : "7%" }}>Status</th>
+                <th style={{ width: "4%" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -448,25 +449,25 @@ export default function RenewalPoliciesPage() {
           <h4 className="rn-hover-title">
             {hoverCard.details?.name || hoverCard.policy.contactPersonName || hoverCard.policy.insuredName || "Contact Details"}
           </h4>
-          {hoverCard.loading ? (
-            <div className="rn-hover-loading">Loading customer profile...</div>
-          ) : (
-            <div className="rn-hover-content">
-              <HoverInfo label="Phone" value={hoverCard.details?.phone || "N/A"} />
-              <HoverInfo label="Total Companies" value={hoverCard.details?.totalCompanies ?? "—"} />
-              <HoverInfo label="Total Policies" value={hoverCard.details?.totalPolicies ?? "—"} />
-              <HoverInfo label="Policies Due" value={hoverCard.details?.policiesDue ?? "—"} />
-              <HoverInfo label="Nearest Expiry" value={formatRenewalRegisterDate(hoverCard.details?.nearestExpiry)} />
-              <HoverInfo label="Assigned Agent" value={hoverCard.details?.assignee || "Unassigned"} />
-              <div className="rn-policy-register__hover-section-title">Policy Details</div>
-              <HoverInfo full label="Policyholder" value={hoverCard.policy.insuredName || "N/A"} />
-              <HoverInfo label="Policy Number" value={String(hoverCard.policy.policyNumber || "N/A").replace(/:+$/, "").trim()} />
-              <HoverInfo label="Policy Type" value={hoverCard.policy.displayPolicyType || hoverCard.policy.policyType || "N/A"} />
-              <HoverInfo label="Insurance Company" value={hoverCard.policy.companyName || "N/A"} />
-              <HoverInfo label="Expiry Date" value={formatRenewalRegisterDate(hoverCard.policy.expiryDate)} />
-              <HoverInfo label="Due In" value={formatRenewalRegisterDueIn(hoverCard.policy.dueDays)} />
-            </div>
-          )}
+          <div className="rn-hover-grid rn-policy-register__customer-grid">
+            <HoverInfo label="Phone" value={hoverCard.details?.phone || hoverCard.policy.renewalRecipientMobile || hoverCard.policy.contactNumber || "N/A"} />
+            <HoverInfo label="Status" value={formatHoverStatus(hoverCard.details?.status || hoverCard.policy.renewalStatus)} />
+            <HoverInfo label="Companies" value={hoverCard.details?.totalCompanies ?? (hoverCard.loading ? "Loading…" : "—")} />
+            <HoverInfo label="Total Policies" value={hoverCard.details?.totalPolicies ?? (hoverCard.loading ? "Loading…" : "—")} />
+            <HoverInfo label="Policies Due" value={hoverCard.details?.policiesDue ?? (hoverCard.loading ? "Loading…" : "—")} />
+            <HoverInfo label="Nearest Expiry" value={formatRenewalRegisterDate(hoverCard.details?.nearestExpiry || hoverCard.policy.expiryDate)} />
+            <HoverInfo full label="Assignee" value={hoverCard.details?.assignee || hoverCard.policy.assignedTo || "Unassigned"} />
+          </div>
+          <div className="rn-policy-register__hover-section-title">Policy Details</div>
+          <div className="rn-hover-grid rn-policy-register__hover-policy-grid">
+            <HoverInfo full label="Policyholder" value={hoverCard.policy.insuredName || "Name not available"} />
+            <HoverInfo label="Policy Number" value={hoverCard.policy.policyNumber || "—"} />
+            <HoverInfo label="Policy Type" value={hoverCard.policy.displayPolicyType || hoverCard.policy.policyType || "—"} />
+            <HoverInfo label="Insurance Company" value={hoverCard.policy.insuranceCompany || "—"} />
+            <HoverInfo label="Vehicle / Risk" value={hoverCard.policy.vehicleNumber || hoverCard.policy.registrationNumber || hoverCard.policy.riskLocation || "—"} />
+            <HoverInfo label="Expiry Date" value={formatRenewalRegisterDate(hoverCard.policy.expiryDate)} />
+            <HoverInfo label="Due In" value={formatRenewalRegisterDueIn(hoverCard.policy.daysRemaining)} />
+          </div>
         </div>,
         document.body,
       ) : null}
@@ -490,10 +491,8 @@ function PolicyRegisterRow({
   const cleanPolicyNo = String(policy.policyNumber || "—").replace(/:+$/, "").trim();
   return (
     <tr className={policy.whatsappMessageSentAt ? "rn-row-whatsapp-sent" : ""} onClick={(event) => onRowClick(policy, event)}>
-      <td>
-        <strong className="rn-policy-register__primary">{policy.insuredName || "Name not available"}</strong>
-        <span className="rn-policy-register__mono" style={{ fontSize: "11px", color: "var(--rn-text-muted)", marginTop: "2px" }}>{cleanPolicyNo}</span>
-      </td>
+      <td><strong className="rn-policy-register__primary">{policy.insuredName || "Name not available"}</strong></td>
+      <td><span className="rn-policy-register__mono">{cleanPolicyNo}</span></td>
       <td>{policy.displayPolicyType || policy.policyType || "—"}</td>
       <td><span className="rn-policy-register__mono">{asset}</span></td>
       {!isMotorView ? <td style={{ whiteSpace: "nowrap" }}>{formatRenewalRegisterDate(policy.startDate)}</td> : null}
