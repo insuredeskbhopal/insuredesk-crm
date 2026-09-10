@@ -87,20 +87,20 @@ export default function BlogFeedClient({ initialPosts = [], initialSearch = "" }
           {/* Blog Hero Section */}
           <section className="blog-hero">
             <div className="blog-hero-inner">
-              <span className="blog-eyebrow">
+              <span className="blog-eyebrow entry-anim" style={{ animationDelay: "60ms" }}>
                 INSURANCE KNOWLEDGE HUB
               </span>
 
-              <h1 className="blog-hero-title">
+              <h1 className="blog-hero-title entry-anim" style={{ animationDelay: "140ms" }}>
                 Insurance Insights &amp; Expert Guides
               </h1>
 
-              <p className="blog-hero-subtitle">
+              <p className="blog-hero-subtitle entry-anim" style={{ animationDelay: "220ms" }}>
                 Independent analysis, claims advocacy roadmaps, and policy decision checklists from licensed IRDAI insurance specialists.
               </p>
 
               {/* Search Bar */}
-              <div className="blog-search-stage">
+              <div className="blog-search-stage entry-anim" style={{ animationDelay: "300ms" }}>
                 <div className="blog-search-box">
                   <span className="material-symbols-outlined search-icon" aria-hidden="true">search</span>
                   <input
@@ -124,7 +124,7 @@ export default function BlogFeedClient({ initialPosts = [], initialSearch = "" }
           <section className="blog-workspace">
             <div className="blog-workspace-inner">
               {/* Category Filter Tabs */}
-              <div className="blog-category-bar">
+              <div className="blog-category-bar reveal">
                 {categories.map((cat) => (
                   <button
                     key={cat}
@@ -185,7 +185,7 @@ export default function BlogFeedClient({ initialPosts = [], initialSearch = "" }
                   <>
                     <div className="blog-grid" key={`${activeCategory}-${searchQuery}-${currentPage}`}>
                       {paginatedPosts.map((post) => (
-                        <Link key={post.slug} href={`/blog/${post.slug}`} className="blog-card reveal active">
+                        <Link key={post.slug} href={`/blog/${post.slug}`} className="blog-card reveal">
                           <div
                             className="blog-card-media"
                             style={{ backgroundImage: `url(${post.coverImage})` }}

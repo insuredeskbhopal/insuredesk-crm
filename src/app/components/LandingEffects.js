@@ -33,6 +33,9 @@ export default function LandingEffects() {
       ".landing-shell .company-overview-item",
       ".landing-shell .claims-process-step",
       ".landing-shell .home-faq-card",
+      ".landing-shell .blog-featured-card",
+      ".landing-shell .blog-category-bar",
+      ".landing-shell .blog-card",
     ];
 
     const autoRevealElements = document.querySelectorAll(autoRevealSelectors.join(", "));
@@ -44,7 +47,7 @@ export default function LandingEffects() {
 
     // Add staggered cascade delays to sibling cards
     const gridContainers = document.querySelectorAll(
-      ".services-grid, .sh-services-grid, .hero-stats-container, .company-overview-details, .claims-process-timeline, .contact-bottom-grid"
+      ".services-grid, .sh-services-grid, .hero-stats-container, .company-overview-details, .claims-process-timeline, .contact-bottom-grid, .blog-grid"
     );
     gridContainers.forEach((container) => {
       const children = container.querySelectorAll(".reveal, .landing-auto-reveal");
@@ -85,7 +88,7 @@ export default function LandingEffects() {
 
     // 4. Interactive 3D Perspective Tilt & Specular Spotlight
     const interactiveCards = document.querySelectorAll(
-      ".glass-card, .service-card, .sh-service-card, .leadership-card, .home-cta-action-card, .contact-action-panel, .blog-card"
+      ".glass-card, .service-card, .sh-service-card, .leadership-card, .home-cta-action-card, .contact-action-panel, .blog-card, .blog-featured-card"
     );
     const cardCleanups = [];
 
