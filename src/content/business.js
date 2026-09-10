@@ -39,7 +39,7 @@ export const LEADERSHIP = [
     role: "Founder Director",
     company: "InsureDesk IMF Pvt. Ltd.",
     bio: "Anand Soni is the Founder Director of InsureDesk IMF Pvt. Ltd., the company that owns and operates Bima Headquarter. Since 2015, he has led the firm in corporate risk advisory, claims assistance, and customized insurance consulting for individuals and businesses across India.",
-    image: "/Anand Soni.png",
+    image: "/brand/anand-soni.png",
     linkedin: "https://www.linkedin.com/in/anand-soni-976b7024/",
     education: "Pune University Alumnus",
   },

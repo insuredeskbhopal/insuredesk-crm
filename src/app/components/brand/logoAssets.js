@@ -40,6 +40,26 @@ export const INSURER_LOGOS = [
     aliases: ["royal sundaram", "royal-sundaram"],
   },
   {
+    name: "SBI General",
+    src: "/logo/sbi-general-insurance.png",
+    aliases: ["sbi general", "sbi general insurance", "sbi"],
+  },
+  {
+    name: "National Insurance",
+    src: "/logo/national-insurance-company.svg",
+    aliases: ["national insurance", "national insurance company"],
+  },
+  {
+    name: "Oriental Insurance",
+    src: "/logo/oriental-insurance-company.svg",
+    aliases: ["oriental insurance", "the oriental insurance company"],
+  },
+  {
+    name: "Reliance General",
+    src: "/logo/reliance-general-insurance.svg",
+    aliases: ["reliance general", "reliance general insurance", "reliance"],
+  },
+  {
     name: "Future Generali",
     src: "/logo/future-generali-logo.png",
     aliases: ["future generali", "generali central", "generali"],

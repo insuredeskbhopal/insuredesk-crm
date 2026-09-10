@@ -34,6 +34,10 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/brand") ||
     pathname.startsWith("/images") ||
     pathname.startsWith("/docs") ||
+    pathname === "/OFFICE.png" ||
+    pathname === "/office.png" ||
+    pathname === "/ABOUT.png" ||
+    pathname === "/about.png" ||
     pathname === "/ai.txt" ||
     pathname === "/apple-icon.png" ||
     pathname === "/favicon.ico" ||

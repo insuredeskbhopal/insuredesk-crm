@@ -367,7 +367,8 @@ export default function RootPage() {
                 width: 100% !important;
             }
         }
-        .typing-headline {
+        .typing-headline,
+        .hero-headline {
             text-align: left !important;
             display: flex !important;
             flex-direction: column !important;
@@ -395,27 +396,45 @@ export default function RootPage() {
           >
             <div className="hero-inner-container max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
               <div className="hero-content flex flex-col items-start text-left justify-center max-w-[680px]">
-                <h1 className="typing-headline font-display-lg text-display-lg text-primary mb-3 leading-tight text-[40px] md:text-[48px] font-bold text-left">
-                  {HOMEPAGE_CONTENT.hero.heading}
+                {/* Live Status Pill Badge */}
+                <div className="hero-badge-pill mb-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/15 bg-white/90 backdrop-blur-md shadow-xs">
+                  <span className="hero-badge-dot" aria-hidden="true" />
+                  <span className="text-[11px] md:text-[12px] font-bold tracking-wide uppercase text-primary">
+                    IRDAI Licensed IMF Advisory • Bhopal
+                  </span>
+                </div>
+
+                {/* Main Headline with Shimmering Gradient Accent */}
+                <h1 className="hero-headline typing-headline font-display-lg text-display-lg text-primary mb-3 leading-tight text-[40px] md:text-[48px] font-bold text-left">
+                  Insurance Guidance for Your{" "}
+                  <span className="hero-shimmer-text">Life &amp; Business</span>
                 </h1>
-                <p className="text-secondary text-[20px] md:text-[24px] font-bold mb-5">
+
+                <p className="hero-subheading text-secondary text-[20px] md:text-[24px] font-bold mb-5">
                   {HOMEPAGE_CONTENT.hero.subheading}
                 </p>
-                <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-left">
+                <p className="hero-description font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-left">
                   {HOMEPAGE_CONTENT.hero.description}
                 </p>
-                <div className="flex flex-wrap gap-4 justify-start">
+                <div className="hero-actions flex flex-wrap gap-4 justify-start">
                   <a
                     href="#solutions"
-                    className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all border-0 min-h-0 text-[14px] inline-block text-center"
+                    className="hero-btn-primary px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all border-0 min-h-0 text-[14px] inline-flex items-center justify-center relative overflow-hidden"
                   >
-                    {HOMEPAGE_CONTENT.hero.ctaConsultationText}
+                    <span className="relative z-10">{HOMEPAGE_CONTENT.hero.ctaConsultationText}</span>
+                    <span className="hero-btn-sheen" aria-hidden="true" />
                   </a>
                   <a
                     href="#process"
-                    className="px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all bg-transparent min-h-0 text-[14px] inline-block text-center"
+                    className="hero-btn-secondary px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all bg-transparent min-h-0 text-[14px] inline-flex items-center justify-center group"
                   >
-                    {HOMEPAGE_CONTENT.hero.ctaClaimsText}
+                    <span>{HOMEPAGE_CONTENT.hero.ctaClaimsText}</span>
+                    <span
+                      className="material-symbols-outlined ml-1.5 text-[18px] transition-transform duration-200 group-hover:translate-x-1"
+                      aria-hidden="true"
+                    >
+                      arrow_forward
+                    </span>
                   </a>
                 </div>
                 <div className="hero-stats-container">
@@ -433,29 +452,74 @@ export default function RootPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Floating Glass Trust Chips (Desktop Visual Layer) */}
+              <div className="hero-floating-visual hidden lg:block" aria-hidden="true">
+                <div className="hero-chip hero-chip-1">
+                  <div className="hero-chip-icon-box bg-blue-50 text-blue-600">
+                    <span className="material-symbols-outlined text-[22px]">verified_user</span>
+                  </div>
+                  <div>
+                    <div className="hero-chip-title">IRDAI Licensed IMF</div>
+                    <div className="hero-chip-sub">100% Client Fiduciary</div>
+                  </div>
+                </div>
+
+                <div className="hero-chip hero-chip-2">
+                  <div className="hero-chip-icon-box bg-emerald-50 text-emerald-600">
+                    <span className="material-symbols-outlined text-[22px]">verified</span>
+                  </div>
+                  <div>
+                    <div className="hero-chip-title">98.6% Settlement</div>
+                    <div className="hero-chip-sub">₹50Cr+ Claims Settled</div>
+                  </div>
+                </div>
+
+                <div className="hero-chip hero-chip-3">
+                  <div className="hero-chip-icon-box bg-indigo-50 text-indigo-600">
+                    <span className="material-symbols-outlined text-[22px]">assured_workload</span>
+                  </div>
+                  <div>
+                    <div className="hero-chip-title">25+ Partner Carriers</div>
+                    <div className="hero-chip-sub">Multi-Quote Auditing</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </header>
 
           {/* Partner Slider */}
           <section
-            className="pt-4 pb-8 bg-surface-container-lowest overflow-hidden border-t border-b border-outline-variant/30"
+            className="partner-strip-section"
             id="partners"
+            aria-label="Authorized Partner Insurers"
           >
-            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-2 text-center reveal">
-              <p className="font-label-md text-on-surface-variant uppercase tracking-widest text-[12px] font-semibold">
+            <div className="partner-strip-header max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center reveal">
+              <p className="partner-strip-title">
                 {HOMEPAGE_CONTENT.partnerSliderTitle}
               </p>
             </div>
-            <div className="flex partner-slider whitespace-nowrap gap-10 items-center">
-              {partnerLogos.map((logo, index) => (
-                <span
-                  className={`partner-logo-card ${logo.className || ""}`.trim()}
-                  key={`${logo.src}-${index}`}
-                  aria-hidden={index >= INSURER_LOGOS.length ? true : undefined}
-                >
-                  <Image unoptimized src={logo.src} alt={`${logo.name} logo`} width={136} height={44} />
-                </span>
-              ))}
+
+            <div className="partner-strip-track">
+              <div className="flex partner-slider whitespace-nowrap items-center">
+                {partnerLogos.map((logo, index) => (
+                  <div
+                    className={`partner-logo-item ${logo.className || ""}`.trim()}
+                    key={`${logo.src}-${index}`}
+                    aria-hidden={index >= INSURER_LOGOS.length ? true : undefined}
+                    title={logo.name}
+                  >
+                    <Image
+                      unoptimized
+                      src={logo.src}
+                      alt={`${logo.name} authorized insurance partner`}
+                      width={140}
+                      height={42}
+                      className="partner-logo-img"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 

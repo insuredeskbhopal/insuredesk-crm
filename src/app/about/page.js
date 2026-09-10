@@ -1,9 +1,24 @@
+import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import LandingEffects from "@/app/components/LandingEffects";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import { BUSINESS_DETAILS, LEADERSHIP, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo/site";
+import { HOMEPAGE_CONTENT } from "@/content/homepage";
+
+export const metadata = {
+  title: "About Us | Bima Headquarter by InsureDesk IMF Pvt. Ltd.",
+  description:
+    "Learn about Bima Headquarter, an institutional insurance consulting and policyholder claims advocacy brand by InsureDesk IMF Pvt. Ltd. based in Bhopal, serving clients across India.",
+  openGraph: {
+    title: "About Us | Bima Headquarter by InsureDesk IMF Pvt. Ltd.",
+    description:
+      "Institutional insurance advisory, policy fine-print audits, and claims settlement advocacy backed by InsureDesk IMF Pvt. Ltd.",
+    url: `${SITE_URL}/about`,
+    images: [{ url: "/brand/office.png", width: 1200, height: 675, alt: "Bima Headquarter Corporate Headquarters" }],
+  },
+};
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -13,8 +28,8 @@ const structuredData = {
       "@id": `${SITE_URL}/about#webpage`,
       url: `${SITE_URL}/about`,
       name: `About Us | ${SITE_NAME}`,
-      headline: `About Bima Headquarter`,
-      description: `Learn about Bima Headquarter, an insurance and claim consulting brand by InsureDesk IMF Pvt. Ltd. serving individuals and businesses in India.`,
+      headline: `About Bima Headquarter by InsureDesk IMF Pvt. Ltd.`,
+      description: `Learn about Bima Headquarter, an institutional insurance consulting and claim advocacy brand by InsureDesk IMF Pvt. Ltd. serving individuals and enterprises across India.`,
       isPartOf: {
         "@id": `${SITE_URL}/#website`,
       },
@@ -34,9 +49,18 @@ const structuredData = {
       email: BUSINESS_DETAILS.email,
       telephone: BUSINESS_DETAILS.phoneHref,
       description: SITE_DESCRIPTION,
+      foundingDate: BUSINESS_DETAILS.foundingDate,
       areaServed: { "@type": "Country", name: BUSINESS_DETAILS.serviceArea },
       founder: { "@id": `${SITE_URL}/about#anand-soni` },
       parentOrganization: { "@id": `${SITE_URL}/#company` },
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: BUSINESS_DETAILS.address.streetAddress,
+        addressLocality: BUSINESS_DETAILS.address.addressLocality,
+        addressRegion: BUSINESS_DETAILS.address.addressRegion,
+        postalCode: BUSINESS_DETAILS.address.postalCode,
+        addressCountry: BUSINESS_DETAILS.address.addressCountry,
+      },
     },
     {
       "@type": "Person",
@@ -49,7 +73,60 @@ const structuredData = {
   ],
 };
 
+const TIMELINE_MILESTONES = [
+  {
+    year: "2015",
+    title: "Foundation of InsureDesk IMF in Bhopal",
+    desc: "Established by Founder Director Anand Soni as an independent corporate insurance advisory to protect individuals and businesses from one-sided policy clauses and fine-print traps.",
+  },
+  {
+    year: "2018",
+    title: "Corporate Fleet & Commercial Underwriting",
+    desc: "Expanded institutional advisory capabilities into commercial vehicles, transport logistics, heavy industrial fire policies, and warehouse stock coverage across Central India.",
+  },
+  {
+    year: "2021",
+    title: "Dedicated Claims Advocacy Division",
+    desc: "Launched a specialized technical representation unit to assist policyholders in pre-audit claim documentation, surveyor negotiations, and Ombudsman escalations, surpassing ₹25Cr+ settled.",
+  },
+  {
+    year: "2024",
+    title: "Proprietary CRM & Multi-Carrier Intranet",
+    desc: "Deployed the Bima Headquarter digital policy management infrastructure, providing real-time policy extraction, automated renewal safeguards, and client portfolio transparency.",
+  },
+  {
+    year: "Present",
+    title: "National Fiduciary Leadership",
+    desc: "Managing 10,000+ active policies and ₹50Cr+ in total settlements, partnering with 25+ leading public and private insurers under strict IRDAI compliance.",
+  },
+];
+
+const FIDUCIARY_PILLARS = [
+  {
+    icon: "policy",
+    title: "Pre-Loss Technical Policy Auditing",
+    desc: "We rigorously inspect existing policies for hidden deductibles, room-rent sub-limits, salvage deduction clauses, and under-insurance before an adverse event strikes.",
+  },
+  {
+    icon: "balance",
+    title: "Multi-Carrier Independence",
+    desc: "Zero sales quotas or insurer bias. We benchmark terms, premiums, and Incurred Claim Ratios (ICR) across 25+ top-rated national carriers purely for our clients' security.",
+  },
+  {
+    icon: "gavel",
+    title: "Assertive Claims Advocacy",
+    desc: "When a loss happens, we coordinate technical documentation, scrutinize surveyor loss assessments, and champion policyholders through legal dispute channels if required.",
+  },
+  {
+    icon: "verified_user",
+    title: "IRDAI Statutory Governance",
+    desc: "Operating strictly under the regulatory compliance of an authorized Insurance Marketing Firm (IMF) with zero third-party data monetization and bank-grade privacy.",
+  },
+];
+
 export default function AboutPage() {
+  const founder = LEADERSHIP[0];
+
   return (
     <>
       <LandingEffects />
@@ -60,572 +137,251 @@ export default function AboutPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
 
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            vertical-align: middle;
-        }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0px 10px 30px rgba(26, 43, 78, 0.05);
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .glass-card::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.4) 0%, transparent 50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-        }
-
-        .glass-card:hover::before {
-            opacity: 1;
-        }
-
-        .glass-card {
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-            transform: perspective(1000px) rotateX(calc(var(--tilt-y, 0) * -4deg)) rotateY(calc(var(--tilt-x, 0) * 4deg)) translateY(0);
-            transform-style: preserve-3d;
-        }
-
-        .glass-card:hover {
-            transform: perspective(1000px) rotateX(calc(var(--tilt-y, 0) * -6deg)) rotateY(calc(var(--tilt-x, 0) * 6deg)) translateY(-7px) scale3d(1.015, 1.015, 1.015);
-            box-shadow: 0px 24px 50px rgba(26, 43, 78, 0.12), 0 0 0 1px rgba(22, 163, 74, 0.2);
-        }
-
-        .reveal {
-            opacity: 0;
-            transform: translateY(24px);
-            transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-            transition-delay: var(--reveal-delay, 0ms);
-            will-change: opacity, transform;
-        }
-
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .entry-anim {
-            opacity: 0;
-            animation: crispEntry 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes crispEntry {
-            0% {
-                opacity: 0;
-                transform: translateY(18px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        nav#mainNav.scrolled {
-            height: 72px !important;
-            background: linear-gradient(90deg, #F8FAFC 0%, #EEF4FF 50%, #F8FAFC 100%) !important;
-            box-shadow: none !important;
-            border: none !important;
-        }
-
-        .landing-page,
-        .landing-page * {
-            color: inherit !important;
-        }
-
-        .landing-page svg,
-        .landing-page [class*="icon"],
-        .landing-page [class^="icon"],
-        .landing-page .icon {
-            color: inherit !important;
-        }
-
-        .landing-page button {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 8px !important;
-            transition: all 0.2s !important;
-            box-shadow: none !important;
-            animation: none !important;
-            transform: none !important;
-            border-radius: 0.75rem !important;
-            font-weight: 600 !important;
-        }
-
-        .landing-page button.bg-primary {
-            background-color: #031638 !important;
-            color: #ffffff !important;
-        }
-        .landing-page button.bg-primary:hover {
-            background-color: #0d2554 !important;
-            color: #ffffff !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 10px 15px -3px rgba(3, 22, 56, 0.3) !important;
-        }
-
-        .landing-page button.bg-secondary {
-            background-color: #1c6c39 !important;
-            color: #ffffff !important;
-        }
-        .landing-page button.bg-secondary:hover {
-            background-color: #16552d !important;
-            color: #ffffff !important;
-        }
-
-        .landing-page button.bg-white {
-            background-color: #ffffff !important;
-            color: #031638 !important;
-        }
-        .landing-page button.bg-white:hover {
-            background-color: #f1f5f9 !important;
-            color: #031638 !important;
-            transform: scale(1.05) !important;
-        }
-
-        .landing-page button.bg-transparent,
-        .landing-page button.p-2 {
-            background-color: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            color: inherit !important;
-        }
-        .landing-page button.p-2:hover {
-            background-color: rgba(229, 238, 255, 0.5) !important;
-        }
-
-        .landing-page body,
-        .landing-page .bg-background {
-            background-color: #f8f9ff !important;
-            color: #0b1c30 !important;
-        }
-
-        .landing-page h1,
-        .landing-page h2,
-        .landing-page h3,
-        .landing-page h4,
-        .landing-page h5 {
-            color: #031638 !important;
-        }
-
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-15px) rotate(1deg); }
-        }
-
-        .leadership-section {
-            padding-top: 88px;
-            padding-bottom: 88px;
-            background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
-        }
-
-        .leadership-card {
-            display: grid !important;
-            grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
-            align-items: center;
-            gap: 48px;
-            padding: 38px;
-            border-radius: 22px;
-            background: #ffffff;
-            border: 0;
-            box-shadow: 0 22px 56px rgba(3, 22, 56, 0.07);
-        }
-
-        .leadership-photo-wrap {
-            width: 100%;
-            max-width: 360px;
-            justify-self: center;
-        }
-
-        .leadership-photo {
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-            aspect-ratio: 1;
-            border-radius: 999px;
-            padding: 4px;
-            background: linear-gradient(145deg, #ffffff 0%, #f2f6fc 48%, #dfe7f2 100%);
-            border: 1px solid rgba(3, 22, 56, 0.08);
-            box-shadow:
-                0 18px 38px rgba(3, 22, 56, 0.1),
-                inset 0 2px 3px rgba(255, 255, 255, 0.95),
-                inset 0 -2px 4px rgba(3, 22, 56, 0.1);
-        }
-
-        .leadership-photo img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center top;
-            border-radius: inherit;
-            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.92);
-        }
-
-        .leadership-photo::after {
-            content: "";
-            position: absolute;
-            inset: 4px;
-            pointer-events: none;
-            border-radius: inherit;
-            box-shadow:
-                inset 0 0 0 1px rgba(255, 255, 255, 0.86),
-                inset 0 -10px 22px rgba(3, 22, 56, 0.08);
-        }
-
-        .leadership-copy {
-            max-width: 760px;
-        }
-
-        .leadership-copy p {
-            max-width: 70ch;
-        }
-
-        .leadership-badge {
-            margin-bottom: 14px;
-        }
-
-        @media (max-width: 900px) {
-            .leadership-section {
-                padding-top: 64px;
-                padding-bottom: 64px;
-            }
-
-            .leadership-card {
-                grid-template-columns: 1fr;
-                gap: 28px;
-                padding: 24px;
-            }
-
-            .leadership-photo-wrap {
-                max-width: 320px;
-            }
-
-            .leadership-copy {
-                text-align: center;
-                align-items: center !important;
-            }
-
-            .leadership-copy p {
-                max-width: none;
-            }
-        }
-
-        @media (max-width: 520px) {
-            .leadership-card {
-                padding: 18px;
-                border-radius: 18px;
-            }
-
-            .leadership-photo-wrap {
-                max-width: 260px;
-            }
-        }
-      `,
-        }}
-      />
-
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
         <main>
-          {/* Hero Section */}
-          <header className="relative pt-24 pb-32 overflow-hidden flex items-center justify-center min-h-[500px] bg-gradient-to-b from-surface-container/30 to-background">
-            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center flex flex-col items-center justify-center relative z-10">
-              <div className="entry-anim flex flex-col items-center">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[12px] mb-6">
-                  <span
-                    className="material-symbols-outlined text-[16px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    verified
+          <header className="about-hero-section relative isolate overflow-hidden min-h-[640px] lg:min-h-[700px] flex items-center pt-28 lg:pt-32 pb-16 lg:pb-20" id="hero">
+            {/* Background Artwork */}
+            <div className="absolute inset-0 -z-10 w-full h-full overflow-hidden">
+              <Image
+                unoptimized
+                src="/brand/about-hero.png"
+                alt="Bima Headquarter Insurance Advisory"
+                fill
+                priority
+                className="object-cover object-[78%_center] lg:object-right w-full h-full"
+              />
+              {/* Subtle Global Whitewash (15% tint for bright airy aesthetic without washing out faces) */}
+              <div className="absolute inset-0 bg-white/15 pointer-events-none" />
+
+              {/* Directional Whitewash: Pure white behind text transitioning smoothly across the middle */}
+              <div
+                className="absolute inset-0 pointer-events-none hidden md:block"
+                style={{
+                  background:
+                    "linear-gradient(90deg, #ffffff 0%, #ffffff 36%, rgba(255, 255, 255, 0.92) 50%, rgba(255, 255, 255, 0.6) 65%, rgba(255, 255, 255, 0.2) 80%, transparent 95%)",
+                }}
+              />
+
+              {/* Mobile Whitewash: Clean high-legibility wash */}
+              <div
+                className="absolute inset-0 pointer-events-none md:hidden"
+                style={{
+                  background: "rgba(255, 255, 255, 0.92)",
+                }}
+              />
+            </div>
+
+            <div className="about-container relative z-10 w-full">
+              <div className="about-hero-content max-w-[680px] flex flex-col items-start text-left justify-center">
+                {/* Live Status Pill Badge */}
+                <div className="hero-badge-pill mb-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/15 bg-white/90 backdrop-blur-md shadow-xs">
+                  <span className="hero-badge-dot" aria-hidden="true" />
+                  <span className="text-[11px] md:text-[12px] font-bold tracking-wide uppercase text-primary">
+                    IRDAI Licensed IMF Advisory • Bhopal
                   </span>
-                  BY INSUREDESK IMF PVT. LTD.
                 </div>
-                <h1 className="font-display-lg text-display-lg text-primary mb-6 leading-tight text-[48px] font-bold max-w-4xl">
-                  About <span className="text-secondary">Bima Headquarter</span>
+
+                {/* Main Headline with Shimmering Gradient Accent */}
+                <h1 className="hero-headline typing-headline font-display-lg text-display-lg text-primary mb-3 leading-tight text-[38px] md:text-[46px] lg:text-[48px] font-bold text-left">
+                  Insurance Guidance for Your{" "}
+                  <span className="hero-shimmer-text">Life &amp; Business</span>
                 </h1>
-                <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-3xl mx-auto text-[18px] leading-relaxed">
-                  An institutional consulting and claim assistance brand by{" "}
-                  <strong className="text-primary font-semibold">InsureDesk IMF Pvt. Ltd.</strong>. We bridge
-                  the gap between policyholders and insurance providers across India with absolute integrity,
-                  regulatory precision, and claim settlement advocacy.
+
+                {/* Subheading in Green */}
+                <p className="hero-subheading text-secondary text-[20px] md:text-[24px] font-bold mb-5 text-left">
+                  {HOMEPAGE_CONTENT.hero.subheading}
                 </p>
-                <div className="flex flex-wrap gap-4 justify-center">
+
+                {/* Description */}
+                <p className="hero-description font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[16px] md:text-[18px] leading-relaxed text-left">
+                  {HOMEPAGE_CONTENT.hero.description}
+                </p>
+
+                {/* Hero Actions */}
+                <div className="hero-actions flex flex-wrap gap-4 justify-start">
                   <Link
-                    href="/#cta-banner"
-                    className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all flex items-center justify-center text-[14px] font-bold"
+                    href="/contact"
+                    className="hero-btn-primary px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all border-0 min-h-0 text-[14px] font-bold inline-flex items-center justify-center relative overflow-hidden"
                   >
-                    Schedule Consultation
+                    <span className="relative z-10">{HOMEPAGE_CONTENT.hero.ctaConsultationText}</span>
+                    <span className="hero-btn-sheen" aria-hidden="true" />
                   </Link>
                   <Link
-                    href="/#solutions"
-                    className="px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all flex items-center justify-center bg-transparent text-[14px] font-semibold"
+                    href="/claims"
+                    className="hero-btn-secondary px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all bg-white/90 backdrop-blur-sm min-h-0 text-[14px] font-bold inline-flex items-center justify-center group shadow-xs"
                   >
-                    Explore Consulting Solutions
+                    <span>{HOMEPAGE_CONTENT.hero.ctaClaimsText}</span>
+                    <span
+                      className="material-symbols-outlined ml-1.5 text-[18px] transition-transform duration-200 group-hover:translate-x-1"
+                      aria-hidden="true"
+                    >
+                      arrow_forward
+                    </span>
                   </Link>
+                </div>
+
+                {/* Inline Divider Stats Row */}
+                <div className="hero-stats-container">
+                  {HOMEPAGE_CONTENT.hero.stats.map((stat, idx) => (
+                    <div className="hero-stat-col" key={idx}>
+                      <span className="hero-stat-value">{stat.value}</span>
+                      <span className="hero-stat-label">{stat.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </header>
 
-          {/* Brand Pillars / Mission Vision Values */}
-          <section className="py-24 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop bg-background">
-            <div className="text-center mb-16 reveal">
-              <h2 className="font-headline-lg text-headline-lg text-primary mb-4 text-[32px] font-bold">
-                Our Core Principles
-              </h2>
-              <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto text-[18px]">
-                Every client interaction is driven by our commitment to simplify the insurance lifecycle and
-                deliver positive outcomes.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="glass-card p-10 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20">
-                <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                  <span className="material-symbols-outlined text-[32px]">explore</span>
-                </div>
-                <h3 className="font-headline-md text-[22px] text-primary mb-4 font-bold">Our Mission</h3>
-                <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
-                  To simplify corporate and individual insurance through transparent assessment, identifying
-                  coverage gaps, and championing policyholder rights in complex claim situations.
-                </p>
-              </div>
-
-              <div
-                className="glass-card p-10 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20"
-                style={{ transitionDelay: "0.15s" }}
-              >
-                <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                  <span className="material-symbols-outlined text-[32px]">visibility</span>
-                </div>
-                <h3 className="font-headline-md text-[22px] text-primary mb-4 font-bold">Our Vision</h3>
-                <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
-                  To be India's premier consulting brand for institutional risk advisory and professional
-                  claims advocacy, delivering unbiased advice and prompt settlements.
-                </p>
-              </div>
-
-              <div
-                className="glass-card p-10 rounded-2xl flex flex-col items-center text-center transition-all group reveal border border-outline-variant/20"
-                style={{ transitionDelay: "0.3s" }}
-              >
-                <div className="w-16 h-16 rounded-xl bg-surface-container mb-6 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                  <span className="material-symbols-outlined text-[32px]">gavel</span>
-                </div>
-                <h3 className="font-headline-md text-[22px] text-primary mb-4 font-bold">Core Values</h3>
-                <p className="text-body-md text-on-surface-variant text-[16px] leading-relaxed">
-                  Integrity, client advocacy, and complete regulatory alignment. We stand firmly with
-                  policyholders to verify that legitimate claims are settled fairly and transparently.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section className="py-20 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <article className="glass-card p-10 rounded-2xl reveal">
-                <h2 className="font-headline-lg text-primary mb-5 text-[30px] font-bold">History and Company</h2>
-                <p className="text-on-surface-variant text-[16px] leading-relaxed mb-4">
-                  Bima Headquarter grew from the insurance consulting experience of InsureDesk IMF Pvt. Ltd.,
-                  led by Founder Director Anand Soni since 2015. The brand was established to give individuals
-                  and businesses a clear, specialist point of contact for insurance decisions, renewals, risk
-                  review, and claim documentation.
-                </p>
-                <p className="text-on-surface-variant text-[16px] leading-relaxed">
-                  {BUSINESS_DETAILS.entityStatement} The consultancy is based in Bhopal, Madhya Pradesh, and
-                  serves clients across India.
-                </p>
-              </article>
-              <article className="glass-card p-10 rounded-2xl reveal">
-                <h2 className="font-headline-lg text-primary mb-5 text-[30px] font-bold">Services and Industries Served</h2>
-                <p className="text-on-surface-variant text-[16px] leading-relaxed mb-4">
-                  Bima Headquarter advises on motor, health, life, commercial, fire, marine, warehouse, policy
-                  renewal, and claims assistance needs.
-                </p>
-                <p className="text-on-surface-variant text-[16px] leading-relaxed">
-                  Clients include families, professionals, transport and fleet operators, warehouses,
-                  manufacturers, retailers, logistics companies, SMEs, institutions, and corporate teams
-                  seeking practical coverage and claim-readiness guidance.
-                </p>
-              </article>
-            </div>
-          </section>
-
-          {/* Corporate Background Section */}
-          <section className="py-24 bg-surface-container-low border-t border-b border-outline-variant/20">
-            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+          {/* =========================================================================
+              2. CORPORATE HERITAGE & ORIGIN STORY
+              ========================================================================= */}
+          <section className="py-24 bg-white" id="story">
+            <div className="about-container">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                {/* Story Narrative */}
                 <div className="reveal">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[11px] mb-4">
-                    COMPLIANCE & AUTHORITY
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[11px] font-bold uppercase mb-4">
+                    Our Heritage &amp; Origin
                   </div>
-                  <h2 className="font-headline-lg text-headline-lg text-primary mb-6 text-[32px] font-bold leading-tight">
-                    Licensed Expertise by InsureDesk IMF Pvt. Ltd.
+                  <h2 className="font-headline-lg text-primary text-[32px] md:text-[38px] font-extrabold tracking-tight mb-6 leading-tight">
+                    Forged to Balance the Scale Between Policyholders and Insurers
                   </h2>
-                  <div className="space-y-6 text-on-surface-variant text-[16px] leading-relaxed">
+                  <div className="space-y-5 text-on-surface-variant text-[16px] leading-relaxed">
                     <p>
-                      Bima Headquarter operates as an exclusive consulting and services brand under the
-                      corporate umbrella of <strong>InsureDesk IMF Pvt. Ltd.</strong>. As a licensed Insurance
-                      Marketing Firm registered under the regulations of the Insurance Regulatory and
-                      Development Authority of India (IRDAI), we carry out professional activities with robust
-                      compliance.
+                      In 2015, Founder Director <strong>Anand Soni</strong> established InsureDesk IMF in Bhopal
+                      after recognizing a profound structural imbalance in India&apos;s insurance market. Traditional
+                      agents were incentivized purely on product sales volume, while policyholders were left completely
+                      unsupported when deciphering policy warranties, depreciation schedules, and dispute procedures.
                     </p>
                     <p>
-                      Unlike traditional agents who solely focus on selling policy packages, we offer
-                      comprehensive risk management consulting, policy review to detect exclusions, and expert
-                      assistance in filing or representing claims after losses occur.
+                      Bima Headquarter was built to operate differently: as an independent, client-side fiduciary.
+                      Under the regulatory governance of an <strong>Insurance Marketing Firm (IMF)</strong>, we do not
+                      simply issue policies—we conduct rigorous pre-loss coverage audits, benchmark terms across 25+
+                      leading insurers, and represent our clients aggressively during surveyor meetings and claim filings.
                     </p>
                     <p>
-                      Whether protecting industrial assets, warehouse inventory, employee corporate health, or
-                      commercial transits, Bima Headquarter combines local presence with corporate standards to
-                      safeguard your business.
+                      Over the past decade, that dedication has protected more than 10,000 families, logistics
+                      fleets, warehouses, and industrial plants across India, resolving over ₹50 Crores in legitimate
+                      claims.
                     </p>
                   </div>
-                  <div className="mt-8 flex gap-8">
-                    <div className="flex flex-col">
-                      <span className="font-headline-md text-primary font-bold text-[24px]">10+</span>
-                      <span className="text-sm font-medium uppercase tracking-wider text-on-surface-variant/70 text-[11px]">
-                        National Partners
+
+                  {/* Highlights Checklist */}
+                  <div className="mt-8 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-secondary text-[22px]" aria-hidden="true">
+                        verified
+                      </span>
+                      <span className="text-[15px] font-semibold text-primary">
+                        Licensed Insurance Marketing Firm under IRDAI Regulatory Standards
                       </span>
                     </div>
-                    <div className="w-px h-10 bg-outline-variant"></div>
-                    <div className="flex flex-col">
-                      <span className="font-headline-md text-primary font-bold text-[24px]">100%</span>
-                      <span className="text-sm font-medium uppercase tracking-wider text-on-surface-variant/70 text-[11px]">
-                        Unbiased Consulting
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-secondary text-[22px]" aria-hidden="true">
+                        verified
+                      </span>
+                      <span className="text-[15px] font-semibold text-primary">
+                        100% Unbiased Multi-Carrier Analysis with Zero Carrier Sales Quotas
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-secondary text-[22px]" aria-hidden="true">
+                        verified
+                      </span>
+                      <span className="text-[15px] font-semibold text-primary">
+                        Pre-Claim Documentation Scrubbing to Eliminate Arbitrary Rejections
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Graphic Card */}
-                <div className="relative rounded-3xl p-12 overflow-hidden bg-primary text-white shadow-2xl border border-primary/20 reveal">
-                  <div className="absolute inset-0 -z-10 opacity-10">
-                    <div className="absolute top-0 left-0 w-48 h-48 bg-secondary rounded-full blur-[80px]"></div>
-                    <div className="absolute bottom-0 right-0 w-48 h-48 bg-secondary rounded-full blur-[80px]"></div>
+                {/* Visual Media Showcase */}
+                <div className="about-story-media reveal">
+                  <div className="about-story-frame">
+                    <Image
+                      unoptimized
+                      src="/brand/office.png"
+                      alt="Bima Headquarter Corporate Headquarters"
+                      width={1200}
+                      height={675}
+                      className="about-story-photo"
+                      priority
+                    />
+                    <div className="about-story-badge" aria-hidden="true">
+                      <span className="material-symbols-outlined badge-icon">corporate_fare</span>
+                      <div>
+                        <div className="badge-title">
+                          InsureDesk IMF Corporate Headquarters
+                        </div>
+                        <div className="badge-sub">
+                          Danish Nagar Square, Bhopal • Serving Clients Pan-India
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <h3 className="font-headline-md text-[24px] mb-6 font-bold text-white">
-                    Our Consulting Philosophy
-                  </h3>
-                  <ul className="space-y-6">
-                    <li className="flex gap-4 items-start">
-                      <span className="material-symbols-outlined text-secondary text-[24px] mt-1">
-                        check_circle
-                      </span>
-                      <div>
-                        <h4 className="font-semibold text-[16px] text-white">Detailed Gap Analysis</h4>
-                        <p className="text-white/70 text-sm mt-1">
-                          We inspect existing policies for loopholes, hidden deductibles, and under-insurance
-                          risks.
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex gap-4 items-start">
-                      <span className="material-symbols-outlined text-secondary text-[24px] mt-1">
-                        check_circle
-                      </span>
-                      <div>
-                        <h4 className="font-semibold text-[16px] text-white">Independent Claim Advocacy</h4>
-                        <p className="text-white/70 text-sm mt-1">
-                          We assist in coordinating loss documentation, surveyor meetings, and legal
-                          representation if required.
-                        </p>
-                      </div>
-                    </li>
-                    <li className="flex gap-4 items-start">
-                      <span className="material-symbols-outlined text-secondary text-[24px] mt-1">
-                        check_circle
-                      </span>
-                      <div>
-                        <h4 className="font-semibold text-[16px] text-white">Carrier Agnostic Reviews</h4>
-                        <p className="text-white/70 text-sm mt-1">
-                          We work with multiple top-rated insurers, helping you compare based on premium and
-                          claim settlement speed.
-                        </p>
-                      </div>
-                    </li>
-                  </ul>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Our Leadership Section */}
-          <section className="leadership-section bg-background">
-            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+          {/* =========================================================================
+              3. THE 4 FIDUCIARY ADVISORY PILLARS
+              ========================================================================= */}
+          <section className="py-24 bg-surface-container-lowest border-t border-b border-outline-variant/20">
+            <div className="about-container">
               <div className="text-center mb-16 reveal">
-                <h2 className="font-headline-lg text-headline-lg text-primary mb-4 text-[32px] font-bold">
-                  Our Leadership
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[11px] font-bold uppercase mb-4">
+                  Our Fiduciary Model
+                </div>
+                <h2 className="font-headline-lg text-primary text-[32px] md:text-[38px] font-extrabold tracking-tight mb-4">
+                  The Four Pillars of Policyholder Advocacy
                 </h2>
-                <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto text-[18px]">
-                  Guided by industry veterans committed to transforming the insurance consulting landscape in India.
+                <p className="font-body-lg text-on-surface-variant max-w-2xl mx-auto text-[17px]">
+                  How our institutional advisory standards protect your enterprise and family at every stage of the
+                  policy lifecycle.
                 </p>
               </div>
 
-              <div className="flex flex-col gap-12">
-                {LEADERSHIP.map((leader) => (
-                  <div
-                    key={leader.name}
-                    className="leadership-card reveal"
-                  >
-                    {/* Leader Image */}
-                    <div className="leadership-photo-wrap">
-                      <div className="leadership-photo group">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={leader.image}
-                          alt={`${leader.name}, Founder Director of Bima Headquarter owner InsureDesk IMF Pvt. Ltd.`}
-                          className="transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
+              <div className="about-pillars-grid">
+                {FIDUCIARY_PILLARS.map((pillar, idx) => (
+                  <div className="about-pillar-card reveal" key={idx}>
+                    <div className="about-pillar-icon" aria-hidden="true">
+                      <span className="material-symbols-outlined text-[28px]">{pillar.icon}</span>
                     </div>
+                    <h3 className="font-headline-md text-[20px] font-bold text-primary mb-3">{pillar.title}</h3>
+                    <p className="text-on-surface-variant text-[15px] leading-relaxed">{pillar.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
 
-                    {/* Leader Copy */}
-                    <div className="leadership-copy w-full flex flex-col justify-center text-left items-start">
-                      <div className="leadership-badge inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[11px] w-fit">
-                        {leader.education}
-                      </div>
-                      <h3 className="font-headline-lg text-primary text-[28px] font-bold mb-1">
-                        {leader.name}
-                      </h3>
-                      <p className="text-secondary font-semibold text-[16px] mb-6">
-                        {leader.role}, {leader.company}
-                      </p>
-                      <p className="text-on-surface-variant text-[16px] leading-relaxed mb-8">
-                        {leader.bio}
-                      </p>
-                      
-                      {leader.linkedin && (
-                        <a
-                          href={leader.linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white hover:bg-primary/90 transition-all rounded-xl w-fit text-[14px] font-bold shadow-md hover:translate-y-[-2px]"
-                        >
-                          <svg
-                            className="w-5 h-5 fill-current"
-                            style={{ width: "20px", height: "20px", minWidth: "20px", flexShrink: 0 }}
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.8v8.37h2.8v-4.67c0-.25.02-.5.1-.68a1.14 1.14 0 0 1 1-.77c.76 0 1 .58 1 1.42v4.7zM6.5 8.37a1.37 1.37 0 1 0 0-2.75 1.37 1.37 0 0 0 0 2.75M8 18.5V10.13H5V18.5z"/>
-                          </svg>
-                          Connect on LinkedIn
-                        </a>
-                      )}
+          {/* =========================================================================
+              4. MILESTONE JOURNEY TIMELINE (2015 - PRESENT)
+              ========================================================================= */}
+          <section className="py-24 bg-white">
+            <div className="about-container">
+              <div className="text-center mb-16 reveal">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[11px] font-bold uppercase mb-4">
+                  Our Growth Roadmap
+                </div>
+                <h2 className="font-headline-lg text-primary text-[32px] md:text-[38px] font-extrabold tracking-tight mb-4">
+                  A Decade of Proven Client Protection
+                </h2>
+                <p className="font-body-lg text-on-surface-variant max-w-2xl mx-auto text-[17px]">
+                  Tracing our evolution from a regional advisory in Bhopal to a national claims advocacy institution.
+                </p>
+              </div>
+
+              <div className="about-timeline">
+                {TIMELINE_MILESTONES.map((milestone, idx) => (
+                  <div className="about-timeline-item reveal" key={idx}>
+                    <div className="about-timeline-dot">{milestone.year}</div>
+                    <div className="about-timeline-content">
+                      <h3 className="text-[18px] font-bold text-primary mb-2">{milestone.title}</h3>
+                      <p className="text-on-surface-variant text-[15px] leading-relaxed">{milestone.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -633,42 +389,238 @@ export default function AboutPage() {
             </div>
           </section>
 
-          {/* CTA Banner */}
+          {/* =========================================================================
+              5. EXECUTIVE LEADERSHIP (FOUNDER DIRECTOR ANAND SONI)
+              ========================================================================= */}
+          <section className="py-24 bg-surface-container-lowest border-t border-b border-outline-variant/20">
+            <div className="about-container">
+              <div className="leadership-card reveal">
+                {/* Leader Photo */}
+                <div className="leadership-photo-wrap">
+                  <div className="leadership-photo">
+                    <Image
+                      unoptimized
+                      src={founder.image}
+                      alt="Anand Soni, Founder Director of InsureDesk IMF Pvt. Ltd."
+                      width={420}
+                      height={420}
+                      className="transition-transform duration-500 hover:scale-105"
+                      priority
+                    />
+                  </div>
+                </div>
+
+                  {/* Leader Details with Exact User Content */}
+                  <div className="leadership-copy w-full flex flex-col justify-center text-left items-start">
+                    <div className="leadership-badge inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[12px] font-bold uppercase w-fit mb-3">
+                      FOUNDER &amp; INSURANCE LEADERSHIP
+                    </div>
+
+                    <h2 className="font-display-lg text-primary text-[32px] md:text-[40px] font-extrabold tracking-tight mb-1">
+                      Anand Soni
+                    </h2>
+
+                    <p className="text-secondary font-bold text-[17px] mb-6">
+                      Founder Director, InsureDesk IMF Pvt. Ltd.
+                    </p>
+
+                    <div className="space-y-4 text-on-surface-variant text-[15px] md:text-[16px] leading-relaxed mb-6">
+                      <p>
+                        Anand Soni is the Founder Director of InsureDesk IMF Pvt. Ltd., leading the company with a strong
+                        focus on insurance advisory, risk understanding, policy guidance and client-focused
+                        consultancy.
+                      </p>
+                      <p>
+                        With over 10 years of experience in the insurance industry, he has worked closely with
+                        individuals and businesses to help them understand their coverage, identify protection gaps and
+                        make informed insurance decisions.
+                      </p>
+                      <p>
+                        His approach is built around clear consultation, practical guidance and long-term client
+                        relationships — ensuring insurance is understood properly before it is ever needed.
+                      </p>
+                    </div>
+
+                    {/* Expertise Highlight Pills */}
+                    <div className="flex flex-wrap gap-2.5 mb-6">
+                      <span className="px-3.5 py-1.5 rounded-lg bg-blue-50 text-primary text-[13px] font-bold border border-blue-100/80">
+                        10+ Years in Insurance Advisory
+                      </span>
+                      <span className="px-3.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 text-[13px] font-bold border border-emerald-100/80">
+                        Insurance &amp; Risk Consultancy
+                      </span>
+                      <span className="px-3.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-[13px] font-bold border border-slate-200">
+                        Policy &amp; Claim Guidance
+                      </span>
+                    </div>
+
+                    {/* Founder Quote */}
+                    <blockquote className="border-l-4 border-secondary pl-5 py-2.5 mb-8 bg-secondary/5 rounded-r-xl w-full">
+                      <p className="italic text-[15px] text-slate-800 leading-relaxed font-medium">
+                        &ldquo;Insurance is not just about buying a policy. It is about understanding the risk,
+                        choosing the right protection and having the right guidance when it matters most.&rdquo;
+                      </p>
+                      <div className="mt-2.5">
+                        <strong className="block text-[14px] font-bold text-primary">Anand Soni</strong>
+                        <span className="text-[12px] text-slate-500 italic">
+                          Founder Director, InsureDesk IMF Pvt. Ltd.
+                        </span>
+                      </div>
+                    </blockquote>
+
+                    {founder.linkedin && (
+                      <a
+                        href={founder.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary text-white hover:bg-primary/90 transition-all rounded-xl text-[14px] font-bold shadow-md hover:translate-y-[-2px] group"
+                      >
+                        <svg
+                          className="w-5 h-5 fill-current"
+                          style={{ width: "20px", height: "20px", minWidth: "20px", flexShrink: 0 }}
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.8v8.37h2.8v-4.67c0-.25.02-.5.1-.68a1.14 1.14 0 0 1 1-.77c.76 0 1 .58 1 1.42v4.7zM6.5 8.37a1.37 1.37 0 1 0 0-2.75 1.37 1.37 0 0 0 0 2.75M8 18.5V10.13H5V18.5z" />
+                        </svg>
+                        <span>Connect with Anand Soni on LinkedIn</span>
+                        <span
+                          className="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover:translate-x-1"
+                          aria-hidden="true"
+                        >
+                          arrow_forward
+                        </span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+          </section>
+
+          {/* =========================================================================
+              6. STATUTORY GOVERNANCE & CORPORATE TRANSPARENCY
+              ========================================================================= */}
+          <section className="py-24 bg-white">
+            <div className="about-container">
+              <div className="text-center mb-16 reveal">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-[11px] font-bold uppercase mb-4">
+                  Corporate Governance
+                </div>
+                <h2 className="font-headline-lg text-primary text-[32px] md:text-[38px] font-extrabold tracking-tight mb-4">
+                  Statutory Transparency &amp; Credentials
+                </h2>
+                <p className="font-body-lg text-on-surface-variant max-w-2xl mx-auto text-[17px]">
+                  Operating with absolute compliance under the legal framework of the Insurance Regulatory and
+                  Development Authority of India.
+                </p>
+              </div>
+
+              <div className="about-statutory-grid">
+                <div className="about-statutory-card reveal">
+                  <span className="material-symbols-outlined text-secondary text-[28px] mb-3 block" aria-hidden="true">
+                    domain
+                  </span>
+                  <div className="text-[12px] font-bold uppercase text-slate-400 tracking-wider mb-1">
+                    Corporate Legal Entity
+                  </div>
+                  <div className="text-[16px] font-bold text-primary mb-2">{BUSINESS_DETAILS.legalName}</div>
+                  <p className="text-[13px] text-on-surface-variant leading-relaxed">
+                    Brand: {BUSINESS_DETAILS.brandName}. Registered in India under corporate laws since{" "}
+                    {BUSINESS_DETAILS.foundingDate}.
+                  </p>
+                </div>
+
+                <div className="about-statutory-card reveal">
+                  <span className="material-symbols-outlined text-secondary text-[28px] mb-3 block" aria-hidden="true">
+                    shield
+                  </span>
+                  <div className="text-[12px] font-bold uppercase text-slate-400 tracking-wider mb-1">
+                    Regulatory Standing
+                  </div>
+                  <div className="text-[16px] font-bold text-primary mb-2">IRDAI Insurance Marketing Firm</div>
+                  <p className="text-[13px] text-on-surface-variant leading-relaxed">
+                    Licensed to solicit, compare, service, and assist insurance policies across India.
+                  </p>
+                </div>
+
+                <div className="about-statutory-card reveal">
+                  <span className="material-symbols-outlined text-secondary text-[28px] mb-3 block" aria-hidden="true">
+                    location_on
+                  </span>
+                  <div className="text-[12px] font-bold uppercase text-slate-400 tracking-wider mb-1">
+                    Physical Headquarters
+                  </div>
+                  <div className="text-[16px] font-bold text-primary mb-2">{BUSINESS_DETAILS.address.addressLocality}, MP</div>
+                  <p className="text-[13px] text-on-surface-variant leading-relaxed mb-2">
+                    {BUSINESS_DETAILS.shortAddress}
+                  </p>
+                  <a
+                    href={BUSINESS_DETAILS.mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[12px] font-bold text-secondary hover:underline inline-flex items-center gap-1"
+                  >
+                    View on Google Maps <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                  </a>
+                </div>
+
+                <div className="about-statutory-card reveal">
+                  <span className="material-symbols-outlined text-secondary text-[28px] mb-3 block" aria-hidden="true">
+                    support_agent
+                  </span>
+                  <div className="text-[12px] font-bold uppercase text-slate-400 tracking-wider mb-1">
+                    Advisory Desk &amp; Hours
+                  </div>
+                  <div className="text-[16px] font-bold text-primary mb-2">{BUSINESS_DETAILS.hours}</div>
+                  <p className="text-[13px] text-on-surface-variant leading-relaxed">
+                    Direct:{" "}
+                    <a href={`tel:${BUSINESS_DETAILS.phoneHref}`} className="font-bold text-primary hover:underline">
+                      {BUSINESS_DETAILS.phone}
+                    </a>
+                    <br />
+                    Email:{" "}
+                    <a href={`mailto:${BUSINESS_DETAILS.email}`} className="font-bold text-primary hover:underline">
+                      {BUSINESS_DETAILS.email}
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* =========================================================================
+              7. INSTITUTIONAL CLOSING CTA BANNER
+              ========================================================================= */}
           <section
-            className="py-20 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-margin-desktop mt-12"
+            className="py-20 about-container mb-margin-desktop mt-4"
             id="cta-banner"
           >
-            <div className="relative bg-primary rounded-3xl p-12 lg:p-20 overflow-hidden text-center text-on-primary shadow-2xl reveal border border-primary/20">
+            <div className="relative bg-primary rounded-3xl p-10 md:p-16 lg:p-20 overflow-hidden text-center text-on-primary shadow-2xl reveal border border-primary/20">
               <div className="absolute inset-0 -z-10 opacity-10">
-                <div className="absolute top-0 left-0 w-64 h-64 bg-secondary rounded-full blur-[100px]"></div>
-                <div className="absolute bottom-0 right-0 w-64 h-64 bg-secondary rounded-full blur-[100px]"></div>
+                <div className="absolute top-0 left-0 w-64 h-64 bg-secondary rounded-full blur-[100px]" />
+                <div className="absolute bottom-0 right-0 w-64 h-64 bg-secondary rounded-full blur-[100px]" />
               </div>
-              <h2 className="font-display-lg text-display-lg mb-6 entry-anim text-white text-[48px] font-bold">
-                Discuss Your Policy with Certified Advisors
+              <h2 className="font-display-lg text-display-lg mb-6 text-white text-[34px] md:text-[46px] font-extrabold tracking-tight">
+                Experience Unbiased Insurance Advisory That Actually Protects You
               </h2>
-              <p
-                className="font-body-lg text-body-lg mb-10 opacity-80 max-w-2xl mx-auto entry-anim text-white/80 text-[18px]"
-                style={{ animationDelay: "0.2s" }}
-              >
-                Get a thorough check on your commercial policies or health coverage gaps. Connect with
-                Bima Headquarter today.
+              <p className="font-body-lg text-body-lg mb-10 opacity-80 max-w-2xl mx-auto text-white/85 text-[17px] md:text-[19px] leading-relaxed">
+                Connect directly with certified insurance advisors in Bhopal for a free policy gap audit or immediate claim
+                assistance.
               </p>
-              <div
-                className="flex flex-wrap justify-center gap-6 entry-anim"
-                style={{ animationDelay: "0.4s" }}
-              >
+              <div className="flex flex-wrap justify-center gap-4">
                 <a
                   href={`tel:${BUSINESS_DETAILS.phoneHref}`}
-                  className="px-10 py-5 bg-secondary text-white rounded-xl font-label-md text-label-md flex items-center gap-3 hover:scale-105 transition-all text-[14px]"
+                  className="px-8 py-4 bg-secondary text-white rounded-xl font-label-md text-label-md flex items-center justify-center gap-3 hover:scale-105 transition-all text-[14px] font-bold shadow-lg"
                 >
-                  <span className="material-symbols-outlined">call</span> Call Now: {BUSINESS_DETAILS.phone}
+                  <span className="material-symbols-outlined text-[20px]">call</span> Call Advisor:{" "}
+                  {BUSINESS_DETAILS.phone}
                 </a>
-                <a
-                  href={`mailto:${BUSINESS_DETAILS.email}`}
-                  className="px-10 py-5 bg-white text-primary rounded-xl font-label-md text-label-md flex items-center gap-3 hover:scale-105 transition-all border-0 min-h-0 text-[14px] font-bold"
+                <Link
+                  href="/contact"
+                  className="px-8 py-4 bg-white text-primary rounded-xl font-label-md text-label-md flex items-center justify-center gap-3 hover:scale-105 transition-all text-[14px] font-bold shadow-lg"
                 >
-                  <span className="material-symbols-outlined">mail</span> Email Us
-                </a>
+                  <span className="material-symbols-outlined text-[20px]">calendar_month</span> Book Advisory Meeting
+                </Link>
               </div>
             </div>
           </section>
