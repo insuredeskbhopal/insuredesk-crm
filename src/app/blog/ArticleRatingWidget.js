@@ -40,7 +40,7 @@ export default function ArticleRatingWidget({
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(`blog_rating_${slug}`);
+      const saved = window.localStorage.getItem(`blog_rating_${slug}`);
       if (saved) {
         setUserRating(Number(saved));
         setHasVoted(true);
@@ -54,7 +54,7 @@ export default function ArticleRatingWidget({
     setUserRating(val);
     setHasVoted(true);
     try {
-      localStorage.setItem(`blog_rating_${slug}`, String(val));
+      window.localStorage.setItem(`blog_rating_${slug}`, String(val));
     } catch {
       // Ignore localStorage restrictions
     }
@@ -64,7 +64,7 @@ export default function ArticleRatingWidget({
     setHasVoted(false);
     setUserRating(0);
     try {
-      localStorage.removeItem(`blog_rating_${slug}`);
+      window.localStorage.removeItem(`blog_rating_${slug}`);
     } catch {
       // Ignore localStorage restrictions
     }

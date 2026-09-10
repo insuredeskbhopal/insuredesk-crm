@@ -148,7 +148,7 @@ export default function LandingEffects() {
         if (!parsed || isNaN(parsed.num)) return;
 
         el.setAttribute("data-target-value", targetText);
-        const startTime = performance.now();
+        const startTime = window.performance.now();
         const duration = 1400; // ms
 
         const tick = (currentTime) => {
@@ -170,14 +170,14 @@ export default function LandingEffects() {
           el.textContent = `${parsed.prefix}${formattedNum}${parsed.suffix}`;
 
           if (progress < 1) {
-            const id = requestAnimationFrame(tick);
+            const id = window.requestAnimationFrame(tick);
             counterAnimationFrames.push(id);
           } else {
             el.textContent = targetText;
           }
         };
 
-        const id = requestAnimationFrame(tick);
+        const id = window.requestAnimationFrame(tick);
         counterAnimationFrames.push(id);
       });
     };
@@ -202,7 +202,7 @@ export default function LandingEffects() {
       window.removeEventListener("scroll", handleNavScroll);
       revealObserver.disconnect();
       if (statsObserver) statsObserver.disconnect();
-      counterAnimationFrames.forEach((id) => cancelAnimationFrame(id));
+      counterAnimationFrames.forEach((id) => window.cancelAnimationFrame(id));
       cardCleanups.forEach((cleanup) => cleanup());
     };
   }, []);

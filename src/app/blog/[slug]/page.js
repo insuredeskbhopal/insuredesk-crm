@@ -186,7 +186,7 @@ export default async function BlogPostPage({ params }) {
   post.sections.forEach((s) => {
     if (s.type === "heading") {
       const headingId = `section-${headings.length + 1}`;
-      const cleanText = s.text.replace(/^\d+[\.\)]\s*/, "");
+      const cleanText = s.text.replace(/^\d+[.)]\s*/, "");
       headings.push({ text: cleanText, raw: s.text, id: headingId });
     }
   });
