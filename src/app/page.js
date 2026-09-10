@@ -237,86 +237,32 @@ export default function RootPage() {
         }
 
         .entry-anim {
-            animation: crispEntry 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: entry 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
-        @keyframes crispEntry {
-            0% {
-                opacity: 0;
-                transform: translateY(18px);
+        @keyframes entry {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .landing-shell #hero .hero-inner-container {
+            width: min(100% - 64px, 1500px) !important;
+            max-width: 1500px !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+        }
+        .landing-shell #hero .hero-content {
+            margin: 0 !important;
+            padding: 0 !important;
+            text-align: left !important;
+            align-items: flex-start !important;
+        }
+        @media (max-width: 768px) {
+            .landing-shell #hero .hero-inner-container {
+                width: 100% !important;
+                padding: 0 20px !important;
             }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Shimmer Button Sweep */
-        @keyframes shimmerSweep {
-            0% { transform: translateX(-160%) skewX(-20deg); }
-            100% { transform: translateX(260%) skewX(-20deg); }
-        }
-
-        .btn-shimmer {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        }
-
-        .btn-shimmer::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 60%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
-            transform: translateX(-160%) skewX(-20deg);
-            pointer-events: none;
-        }
-
-        .btn-shimmer:hover::after {
-            animation: shimmerSweep 1s ease-out;
-        }
-
-        .btn-shimmer:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 16px 32px -4px rgba(3, 22, 56, 0.28);
-        }
-
-        .btn-shimmer:active {
-            transform: translateY(0) scale(0.98);
-        }
-
-        /* Hero Badge Pill */
-        .hero-badge-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 16px;
-            border-radius: 9999px;
-            background: rgba(28, 108, 57, 0.08);
-            border: 1px solid rgba(28, 108, 57, 0.2);
-            color: #145d38;
-            font-size: 12.5px;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            margin-bottom: 16px;
-            backdrop-filter: blur(8px);
-        }
-
-        .hero-badge-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #16a34a;
-            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.3);
-            animation: dotPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes dotPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.25); }
         }
 
         .preserve-3d {
@@ -444,39 +390,35 @@ export default function RootPage() {
         <PublicHeader />
         <main>
           <header
-            className="relative pt-24 pb-32 flex items-center justify-start min-h-[640px] lg:min-h-[680px] isolate"
+            className="relative pt-24 pb-32 flex items-center justify-start min-h-[640px] lg:min-h-[calc(100vh-84px)] isolate"
             id="hero"
           >
-            <div className="max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
+            <div className="hero-inner-container max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
               <div className="hero-content flex flex-col items-start text-left justify-center max-w-[680px]">
-                <div className="hero-badge-pill entry-anim" style={{ animationDelay: "60ms" }}>
-                  <span className="hero-badge-dot" />
-                  <span>IRDAI Compliant Advisory • Pan India</span>
-                </div>
-                <h1 className="typing-headline font-display-lg text-display-lg text-primary mb-3 leading-tight text-[40px] md:text-[48px] font-bold text-left entry-anim" style={{ animationDelay: "150ms" }}>
+                <h1 className="typing-headline font-display-lg text-display-lg text-primary mb-3 leading-tight text-[40px] md:text-[48px] font-bold text-left">
                   {HOMEPAGE_CONTENT.hero.heading}
                 </h1>
-                <p className="text-secondary text-[20px] md:text-[24px] font-bold mb-5 entry-anim" style={{ animationDelay: "260ms" }}>
+                <p className="text-secondary text-[20px] md:text-[24px] font-bold mb-5">
                   {HOMEPAGE_CONTENT.hero.subheading}
                 </p>
-                <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-left entry-anim" style={{ animationDelay: "360ms" }}>
+                <p className="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-left">
                   {HOMEPAGE_CONTENT.hero.description}
                 </p>
-                <div className="flex flex-wrap gap-4 justify-start entry-anim" style={{ animationDelay: "460ms" }}>
+                <div className="flex flex-wrap gap-4 justify-start">
                   <a
                     href="#solutions"
-                    className="btn-shimmer px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl border-0 min-h-0 text-[14px] inline-block text-center"
+                    className="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all border-0 min-h-0 text-[14px] inline-block text-center"
                   >
                     {HOMEPAGE_CONTENT.hero.ctaConsultationText}
                   </a>
                   <a
                     href="#process"
-                    className="btn-shimmer px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/10 bg-transparent min-h-0 text-[14px] inline-block text-center"
+                    className="px-8 py-4 border-2 border-secondary text-secondary rounded-xl font-label-md text-label-md hover:bg-secondary/5 transition-all bg-transparent min-h-0 text-[14px] inline-block text-center"
                   >
                     {HOMEPAGE_CONTENT.hero.ctaClaimsText}
                   </a>
                 </div>
-                <div className="hero-stats-container entry-anim" style={{ animationDelay: "560ms" }}>
+                <div className="hero-stats-container">
                   {HOMEPAGE_CONTENT.hero.stats.map((stat, idx) => (
                     <div className="hero-stat-col" key={idx}>
                       <span

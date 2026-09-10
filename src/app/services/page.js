@@ -269,6 +269,31 @@ export default function ServicesPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(servicesSchema) }}
       />
 
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        .landing-shell #hero .hero-inner-container {
+          width: min(100% - 64px, 1500px) !important;
+          max-width: 1500px !important;
+          margin: 0 auto !important;
+          padding: 0 !important;
+        }
+        .landing-shell #hero .hero-content {
+          margin: 0 !important;
+          padding: 0 !important;
+          text-align: left !important;
+          align-items: flex-start !important;
+        }
+        @media (max-width: 768px) {
+          .landing-shell #hero .hero-inner-container {
+            width: 100% !important;
+            padding: 0 20px !important;
+          }
+        }
+      `,
+        }}
+      />
+
       <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
         <main>
@@ -279,7 +304,7 @@ export default function ServicesPage() {
             className="services-hero-header relative pt-24 pb-28 flex items-center justify-start min-h-[640px] lg:min-h-[calc(100vh-84px)] isolate"
             id="hero"
           >
-            <div className="max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
+            <div className="hero-inner-container max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
               <div className="hero-content flex flex-col items-start text-left justify-center max-w-[680px]">
                 <div className="sh-section-kicker text-left mb-3 tracking-wider font-extrabold uppercase">
                   OUR INSURANCE SERVICES

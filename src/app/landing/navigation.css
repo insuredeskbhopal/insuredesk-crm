@@ -60,6 +60,9 @@
   .landing-shell .landing-nav-spacer {
     height: 72px !important;
   }
+  .landing-shell .landing-premium-nav .landing-brand {
+    margin-left: 0 !important;
+  }
 }
 
 .landing-shell .landing-premium-nav .landing-nav-inner {
@@ -77,6 +80,7 @@
 .landing-shell .landing-premium-nav .landing-brand {
   min-width: 0 !important;
   justify-self: start !important;
+  margin-left: 32px !important;
 }
 
 .landing-shell .landing-premium-nav .brand-logo-link {

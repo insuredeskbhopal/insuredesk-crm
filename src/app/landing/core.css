@@ -1604,7 +1604,8 @@ body:has(.seo-page) {
 }
 
 .landing-shell #hero {
-  min-height: 640px;
+  min-height: calc(100vh - 84px);
+  min-height: calc(100svh - 84px);
   isolation: isolate;
   background-position: center, center, right center;
   background-repeat: no-repeat;
