@@ -1038,6 +1038,20 @@ model BlogSection {
   @@map("blog_sections")
 }
 
+model BlogRating {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String
+  rating    Int
+  ipHash    String?  @map("ip_hash")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([slug])
+  @@index([slug, ipHash])
+  @@map("blog_ratings")
+}
+
 model WhatsAppTemplate {
   id             String        @id @default(uuid()) @db.Uuid
   name           String

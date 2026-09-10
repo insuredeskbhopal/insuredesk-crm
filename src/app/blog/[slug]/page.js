@@ -3,26 +3,15 @@ import { notFound } from "next/navigation";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import ArticleRatingWidget from "../ArticleRatingWidget";
-import { getBlogPostBySlug, getBlogPostSlugs, getRelatedPosts } from "@/lib/db/blog";
+import {
+  getBlogPostBySlug,
+  getBlogPostSlugs,
+  getRelatedPosts,
+  getArticleRatingFromDb,
+} from "@/lib/db/blog";
 import { BUSINESS_DETAILS, SITE_URL } from "@/lib/seo/site";
 
 const stripHtml = (value) => value.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-
-function getArticleRating(slug = "") {
-  let hash = 0;
-  for (let i = 0; i < slug.length; i++) {
-    hash = (hash << 5) - hash + slug.charCodeAt(i);
-    hash |= 0;
-  }
-  const absHash = Math.abs(hash);
-  const ratingVal = (4.8 + (absHash % 20) / 100).toFixed(1);
-  const count = 95 + (absHash % 115);
-  return {
-    ratingValue: String(ratingVal),
-    ratingCount: String(count),
-    reviewCount: String(count),
-  };
-}
 
 // Generate static params for Next.js build prerendering
 export async function generateStaticParams() {
@@ -91,8 +80,10 @@ export default async function BlogPostPage({ params }) {
     notFound();
   }
 
-  const relatedPosts = await getRelatedPosts(post.slug, post.category, 2);
-  const rating = getArticleRating(post.slug);
+  const [relatedPosts, rating] = await Promise.all([
+    getRelatedPosts(post.slug, post.category, 2),
+    getArticleRatingFromDb(post.slug),
+  ]);
 
   const postUrl = `${SITE_URL}/blog/${post.slug}`;
   const displayCoverSrc = post.coverImage || "/brand/blog-general.webp";

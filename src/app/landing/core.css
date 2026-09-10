@@ -2954,16 +2954,16 @@ body:has(.seo-page) {
   align-items: center;
   gap: 12px;
   margin-bottom: 14px;
-  color: var(--landing-secondary) !important;
+  color: #031638 !important;
   font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0;
+  letter-spacing: 0.06em;
 }
 
 .landing-shell .services-kicker div {
   width: 42px;
   height: 1px;
-  background: rgba(28, 108, 57, 0.34);
+  background: rgba(3, 22, 56, 0.2);
 }
 
 .landing-shell .services-heading h2 {
@@ -3012,7 +3012,7 @@ body:has(.seo-page) {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(22, 163, 74, 0.12), transparent 60%);
+  background: radial-gradient(450px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(3, 22, 56, 0.06), transparent 60%);
   opacity: 0;
   transition: opacity 300ms ease;
   pointer-events: none;
@@ -3025,12 +3025,12 @@ body:has(.seo-page) {
 
 .landing-shell .service-card:hover {
   transform: perspective(1000px) rotateX(calc(var(--tilt-y, 0) * -6deg)) rotateY(calc(var(--tilt-x, 0) * 6deg)) translateY(-8px) scale3d(1.012, 1.012, 1.012);
-  box-shadow: 0 32px 70px -15px rgba(8, 27, 55, 0.15), 0 10px 24px rgba(22, 163, 74, 0.1);
-  border-color: rgba(22, 163, 74, 0.35);
+  box-shadow: 0 32px 70px -15px rgba(8, 27, 55, 0.15), 0 10px 24px rgba(3, 22, 56, 0.08);
+  border-color: rgba(3, 22, 56, 0.18);
 }
 
 .landing-shell .service-card:focus-visible {
-  outline: 2px solid #0e6245;
+  outline: 2px solid #031638;
   outline-offset: 4px;
 }
 
@@ -3058,13 +3058,14 @@ body:has(.seo-page) {
   align-items: center;
   justify-content: center;
   border-radius: 14px;
-  background: #eaf6ed;
-  color: #15803d !important;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #031638 !important;
 }
 
 .landing-shell .service-card-icon .material-symbols-outlined {
   font-size: 26px !important;
-  color: #15803d !important;
+  color: #031638 !important;
 }
 
 .landing-shell .service-card-pill {
@@ -3072,8 +3073,9 @@ body:has(.seo-page) {
   align-items: center;
   padding: 7px 16px;
   border-radius: 9999px;
-  background: #eaf6ed;
-  color: #166534;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -3131,7 +3133,7 @@ body:has(.seo-page) {
   width: 220px;
   height: 220px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(22, 163, 74, 0.08) 0%, rgba(200, 230, 215, 0.2) 45%, transparent 70%);
+  background: radial-gradient(circle, rgba(3, 22, 56, 0.04) 0%, rgba(226, 232, 240, 0.3) 45%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -3194,15 +3196,16 @@ body:has(.seo-page) {
   height: 26px;
   min-width: 26px;
   border-radius: 50%;
-  background: #eaf6ed;
-  color: #166534;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #031638;
   flex-shrink: 0;
 }
 
 .landing-shell .service-card-check-circle .material-symbols-outlined {
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 800 !important;
-  color: #166534 !important;
+  color: #031638 !important;
 }
 
 .landing-shell .service-card-check-text {
@@ -3240,19 +3243,19 @@ body:has(.seo-page) {
   gap: 10px;
   padding: 12px 24px;
   border-radius: 12px;
-  background: #0e6245;
+  background: #031638;
   color: #ffffff !important;
   font-size: 14.5px;
   font-weight: 700;
   line-height: 1;
-  box-shadow: 0 4px 14px rgba(14, 98, 69, 0.22);
+  box-shadow: 0 4px 14px rgba(3, 22, 56, 0.18);
   transition: background-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
   flex-shrink: 0;
 }
 
 .landing-shell .service-card:hover .service-card-btn {
-  background: #094a34;
-  box-shadow: 0 6px 18px rgba(14, 98, 69, 0.32);
+  background: #0c2b66;
+  box-shadow: 0 6px 20px rgba(3, 22, 56, 0.28);
 }
 
 .landing-shell .service-card-btn .material-symbols-outlined {
@@ -3283,7 +3286,7 @@ body:has(.seo-page) {
 }
 
 .landing-shell .service-card-creed-lines span {
-  color: #728f7f !important;
+  color: #94a3b8 !important;
   font-size: 8.5px !important;
   font-weight: 800 !important;
   letter-spacing: 0.16em !important;
@@ -3296,7 +3299,7 @@ body:has(.seo-page) {
   display: block;
   width: 16px;
   height: 1.5px;
-  background: #728f7f !important;
+  background: #cbd5e1 !important;
   border-radius: 1px;
   margin-top: 4px;
 }
@@ -4366,8 +4369,9 @@ body:has(.seo-page) {
   width: 42px;
   height: 42px;
   border-radius: 8px;
-  background: var(--landing-secondary-soft);
-  color: var(--landing-secondary) !important;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #031638 !important;
 }
 
 .landing-shell .services-trust-item h4 {

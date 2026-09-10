@@ -73,8 +73,10 @@ export async function middleware(request: NextRequest) {
   const isPublicPage = PUBLIC_ROUTE_PATHS.includes(pathname) || pathname === "/not-found" || isAuthPage || isBlogPage;
   const isStaffOnlyPage = !pathname.startsWith("/api/") && !isPublicPage && !isClientRoute;
 
+  const isPublicApi = pathname === "/api/contact" || pathname.startsWith("/api/blog/");
+
   // Handle client / staff API access security
-  if (pathname.startsWith("/api/") && !isAuthApi && !isCronApi && pathname !== "/api/contact" && !pathname.startsWith("/api/client/")) {
+  if (pathname.startsWith("/api/") && !isAuthApi && !isCronApi && !isPublicApi && !pathname.startsWith("/api/client/")) {
     if (!isAuthenticated) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
@@ -97,7 +99,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (isAuthApi || isCronApi || pathname === "/api/contact") {
+  if (isAuthApi || isCronApi || isPublicApi) {
     return NextResponse.next();
   }
 

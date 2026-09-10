@@ -37,6 +37,8 @@ export default function ArticleRatingWidget({
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [hasVoted, setHasVoted] = useState(false);
+  const [liveRatingValue, setLiveRatingValue] = useState(ratingValue);
+  const [liveRatingCount, setLiveRatingCount] = useState(ratingCount);
 
   useEffect(() => {
     try {
@@ -50,13 +52,30 @@ export default function ArticleRatingWidget({
     }
   }, [slug]);
 
-  const handleRate = (val) => {
+  const handleRate = async (val) => {
     setUserRating(val);
     setHasVoted(true);
+
     try {
       window.localStorage.setItem(`blog_rating_${slug}`, String(val));
     } catch {
       // Ignore localStorage restrictions
+    }
+
+    try {
+      const res = await fetch("/api/blog/rating", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, rating: val }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ratingValue) setLiveRatingValue(data.ratingValue);
+        if (data.ratingCount) setLiveRatingCount(data.ratingCount);
+      }
+    } catch (err) {
+      console.warn("Failed to persist rating to database, saved locally.", err);
     }
   };
 
@@ -83,9 +102,9 @@ export default function ArticleRatingWidget({
       {/* Schema.org Microdata for Google Search Engine */}
       <meta itemProp="bestRating" content="5" />
       <meta itemProp="worstRating" content="1" />
-      <meta itemProp="ratingValue" content={ratingValue} />
-      <meta itemProp="ratingCount" content={ratingCount} />
-      <meta itemProp="reviewCount" content={ratingCount} />
+      <meta itemProp="ratingValue" content={liveRatingValue} />
+      <meta itemProp="ratingCount" content={liveRatingCount} />
+      <meta itemProp="reviewCount" content={liveRatingCount} />
 
       {/* Top Trust Eyebrow */}
       <div className="rating-widget-eyebrow">
@@ -110,21 +129,21 @@ export default function ArticleRatingWidget({
         {/* Left Side: Score & Review Summary */}
         <div className="rating-primary-stats">
           <div className="rating-score-display">
-            <span className="score-big">{ratingValue}</span>
+            <span className="score-big">{liveRatingValue}</span>
             <span className="score-denom">/ 5</span>
           </div>
 
           <div className="rating-meta-column">
             <div
               className="rating-stars-row"
-              aria-label={`Rated ${ratingValue} out of 5 stars`}
+              aria-label={`Rated ${liveRatingValue} out of 5 stars`}
             >
               {[1, 2, 3, 4, 5].map((star) => (
                 <StarSvg key={star} filled={true} size={16} />
               ))}
             </div>
             <div className="rating-proof-text">
-              Based on <strong>{ratingCount} verified ratings</strong>
+              Based on <strong>{liveRatingCount} verified ratings</strong>
               <span className="rating-separator">·</span>
               <span className="helpful-tag">98% helpful</span>
             </div>

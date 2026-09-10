@@ -580,19 +580,19 @@ export default function RootPage() {
                         />
                         <path
                           d="M160,30 C120,58 80,98 32,140"
-                          stroke="rgba(22, 163, 74, 0.14)"
+                          stroke="rgba(3, 22, 56, 0.07)"
                           strokeWidth="1.2"
                         />
                         <path
                           d="M160,65 C132,84 102,112 68,140"
-                          stroke="rgba(22, 163, 74, 0.09)"
+                          stroke="rgba(3, 22, 56, 0.04)"
                           strokeWidth="1.2"
                         />
                         <defs>
                           <radialGradient id="cardWaveGrad" cx="100%" cy="100%" r="100%">
-                            <stop offset="0%" stopColor="#16a34a" stopOpacity="0.07" />
-                            <stop offset="65%" stopColor="#16a34a" stopOpacity="0.02" />
-                            <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+                            <stop offset="0%" stopColor="#031638" stopOpacity="0.04" />
+                            <stop offset="65%" stopColor="#031638" stopOpacity="0.015" />
+                            <stop offset="100%" stopColor="#031638" stopOpacity="0" />
                           </radialGradient>
                         </defs>
                       </svg>
