@@ -9,11 +9,10 @@ export default function BlogLoading() {
         <section className="blog-hero">
           <div className="blog-hero-inner">
             <span className="blog-eyebrow">
-              <span className="material-symbols-outlined" aria-hidden="true">menu_book</span>
-              Insurance Knowledge Hub
+              INSURANCE KNOWLEDGE HUB
             </span>
             <h1 className="blog-hero-title">
-              Insurance Insights & <span className="blog-title-gradient">Expert Guides</span>
+              Insurance Insights &amp; Expert Guides
             </h1>
             <p className="blog-hero-subtitle">
               Practical guidance on claims, renewals, and risk management — written by insurance professionals.

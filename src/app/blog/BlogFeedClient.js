@@ -88,12 +88,11 @@ export default function BlogFeedClient({ initialPosts = [], initialSearch = "" }
           <section className="blog-hero">
             <div className="blog-hero-inner">
               <span className="blog-eyebrow">
-                <span className="material-symbols-outlined" aria-hidden="true">menu_book</span>
-                Insurance Knowledge Hub
+                INSURANCE KNOWLEDGE HUB
               </span>
 
               <h1 className="blog-hero-title">
-                Insurance Insights & <span className="blog-title-gradient">Expert Guides</span>
+                Insurance Insights &amp; Expert Guides
               </h1>
 
               <p className="blog-hero-subtitle">
@@ -106,34 +105,17 @@ export default function BlogFeedClient({ initialPosts = [], initialSearch = "" }
                   <span className="material-symbols-outlined search-icon" aria-hidden="true">search</span>
                   <input
                     type="text"
-                    placeholder="Search 50+ guides by topic, claim issue, or policy type..."
+                    placeholder="Search guides by topic, claim issue, or policy type..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     aria-label="Search articles"
                   />
-                  {searchQuery ? (
+                  {searchQuery && (
                     <button type="button" onClick={() => setSearchQuery("")} aria-label="Clear search">
                       <span className="material-symbols-outlined" aria-hidden="true">close</span>
                     </button>
-                  ) : (
-                    <span className="blog-search-badge">50+ Guides</span>
                   )}
                 </div>
-              </div>
-
-              {/* Trending Quick Search Chips */}
-              <div className="blog-trending-tags" aria-label="Trending topics">
-                <span className="trending-label">Trending:</span>
-                {["Motor Claims", "Health Portability", "Warehouse Fire", "Policy Renewals"].map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    className="trending-tag"
-                    onClick={() => setSearchQuery(tag)}
-                  >
-                    {tag}
-                  </button>
-                ))}
               </div>
             </div>
           </section>
