@@ -37,25 +37,46 @@ export default function PublicFooter() {
         <div className="public-footer-top">
           <div className="public-footer-brand-block">
             <div className="footer-brand">
-              <BrandLogo href="/" />
+              <BrandLogo href="/" variant="white" />
             </div>
-            <p><strong>{SITE_NAME}</strong></p>
-            <p>Trusted Insurance Consultancy</p>
-            <p>Powered by {BUSINESS_DETAILS.legalName}</p>
+
+            <div className="footer-brand-badge">
+              <span className="footer-badge-dot" />
+              <span>IRDAI Regd. IMF · Lic. No. IMF182444280220190240</span>
+            </div>
+
+            <p className="footer-brand-desc">
+              Independent insurance consultancy delivering unbiased risk advisory, multi-insurer quote comparisons, and end-to-end claim advocacy across India.
+            </p>
+
+            <div className="footer-brand-chips">
+              <span className="footer-chip">
+                <span className="material-symbols-outlined" aria-hidden="true">verified</span>
+                25+ Insurers
+              </span>
+              <span className="footer-chip">
+                <span className="material-symbols-outlined" aria-hidden="true">support_agent</span>
+                Claims Advocacy
+              </span>
+              <span className="footer-chip">
+                <span className="material-symbols-outlined" aria-hidden="true">shield</span>
+                Est. {BUSINESS_DETAILS.foundingDate || "2015"}
+              </span>
+            </div>
           </div>
 
           <div className="public-footer-actions" aria-label="Contact actions">
-            <a href={`tel:${BUSINESS_DETAILS.phoneHref}`}>
+            <a href={`tel:${BUSINESS_DETAILS.phoneHref}`} className="footer-action-call">
               <span className="material-symbols-outlined">call</span>
-              Call {BUSINESS_DETAILS.phone}
+              <span>Call {BUSINESS_DETAILS.phone}</span>
             </a>
-            <a href={`mailto:${BUSINESS_DETAILS.email}`}>
+            <a href={`mailto:${BUSINESS_DETAILS.email}`} className="footer-action-mail">
               <span className="material-symbols-outlined">mail</span>
-              {BUSINESS_DETAILS.email}
+              <span>{BUSINESS_DETAILS.email}</span>
             </a>
-            <a href={BUSINESS_DETAILS.mapsUrl} target="_blank" rel="noopener noreferrer">
+            <a href={BUSINESS_DETAILS.mapsUrl} target="_blank" rel="noopener noreferrer" className="footer-action-dir">
               <span className="material-symbols-outlined">directions</span>
-              Directions
+              <span>Directions</span>
             </a>
           </div>
         </div>
@@ -125,7 +146,7 @@ export default function PublicFooter() {
         </div>
 
         <div className="public-footer-bottom">
-          <p>© {new Date().getFullYear()} {SITE_NAME}. All rights reserved. Bima Headquarter is a brand owned and operated by InsureDesk IMF Pvt. Ltd. Insurance is the subject matter of solicitation. Policy issuance, terms, rates, and claim settlements are subject to insurer underwriting decisions.</p>
+          <p>© {new Date().getFullYear()} {SITE_NAME}. All rights reserved. Bima Headquarter is a brand owned and operated by InsureDesk IMF Pvt. Ltd. (IRDAI Regd. IMF License No. IMF182444280220190240 · CIN: U66000MP2018PTC046788). Regulated Intermediary under IRDAI guidelines. Insurance is the subject matter of solicitation. Policy issuance, terms, rates, and claim settlements are subject to insurer underwriting decisions.</p>
           <div>
             <Link href="/privacy-policy">Privacy</Link>
             <Link href="/terms-and-conditions">Terms</Link>

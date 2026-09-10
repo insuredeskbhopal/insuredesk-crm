@@ -40,7 +40,9 @@ export async function middleware(request: NextRequest) {
     pathname === "/favicon.png" ||
     pathname === "/llms.txt" ||
     pathname === "/robots.txt" ||
-    pathname === "/sitemap.xml"
+    pathname === "/sitemap.xml" ||
+    pathname === "/white logo.png" ||
+    pathname === "/white%20logo.png"
   ) {
     return NextResponse.next();
   }

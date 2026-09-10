@@ -226,7 +226,7 @@ const NEW_BLOG_POSTS = [
     category: "Claims",
     readTime: "6 min read",
     date: "July 02, 2026",
-    author: { name: "Prakhar Patil", role: "Motor Claims Expert" },
+    author: { name: "Indu Mandrai", role: "Motor Claims Expert" },
     coverImage: "/brand/blog-claims.webp",
     sections: [
       {
@@ -308,7 +308,7 @@ const NEW_BLOG_POSTS = [
     category: "Business Risk",
     readTime: "8 min read",
     date: "July 08, 2026",
-    author: { name: "Saurav Mehra", role: "Engineering Insurance Specialist" },
+    author: { name: "Siya Thakur", role: "Engineering Insurance Specialist" },
     coverImage: "/brand/blog-business.webp",
     sections: [
       {
@@ -554,7 +554,7 @@ const NEW_BLOG_POSTS = [
     category: "Personal Insurance",
     readTime: "6 min read",
     date: "July 26, 2026",
-    author: { name: "Prakhar Patil", role: "Motor Insurance Specialist" },
+    author: { name: "Indu Mandrai", role: "Motor Insurance Specialist" },
     coverImage: "/brand/blog-motor.webp",
     sections: [
       {
@@ -595,7 +595,7 @@ const NEW_BLOG_POSTS = [
     category: "Personal Insurance",
     readTime: "7 min read",
     date: "July 29, 2026",
-    author: { name: "Prakhar Patil", role: "Motor Insurance Specialist" },
+    author: { name: "Indu Mandrai", role: "Motor Insurance Specialist" },
     coverImage: "/brand/blog-motor.webp",
     sections: [
       {

@@ -92,15 +92,23 @@ export default function AboutPage() {
             opacity: 1;
         }
 
+        .glass-card {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+            transform: perspective(1000px) rotateX(calc(var(--tilt-y, 0) * -4deg)) rotateY(calc(var(--tilt-x, 0) * 4deg)) translateY(0);
+            transform-style: preserve-3d;
+        }
+
         .glass-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0px 20px 40px rgba(26, 43, 78, 0.1);
+            transform: perspective(1000px) rotateX(calc(var(--tilt-y, 0) * -6deg)) rotateY(calc(var(--tilt-x, 0) * 6deg)) translateY(-7px) scale3d(1.015, 1.015, 1.015);
+            box-shadow: 0px 24px 50px rgba(26, 43, 78, 0.12), 0 0 0 1px rgba(22, 163, 74, 0.2);
         }
 
         .reveal {
             opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: translateY(24px);
+            transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+            transition-delay: var(--reveal-delay, 0ms);
+            will-change: opacity, transform;
         }
 
         .reveal.active {
@@ -110,12 +118,18 @@ export default function AboutPage() {
 
         .entry-anim {
             opacity: 0;
-            transform: translateY(20px);
-            animation: entry 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: crispEntry 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        @keyframes entry {
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes crispEntry {
+            0% {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         nav#mainNav.scrolled {

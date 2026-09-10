@@ -5,6 +5,7 @@ import Link from "next/link";
 import Script from "next/script";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
+import LandingEffects from "@/app/components/LandingEffects";
 import { SITE_URL } from "@/lib/seo/site";
 import { BLOG_CATEGORIES } from "@/content/blogConfig";
 
@@ -78,50 +79,70 @@ export default function BlogFeedClient({ initialPosts = [], initialSearch = "" }
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
       />
+      <LandingEffects />
       <div className="landing-shell blog-feed-page bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
         <PublicHeader />
 
         <main>
           {/* Blog Hero Section */}
           <section className="blog-hero">
-            <div className="blog-hero-inner max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-              <div className="blog-hero-copy reveal">
-                <span className="blog-eyebrow">
-                  <span className="material-symbols-outlined">menu_book</span>
-                  Insights & Guides
-                </span>
-                <h1>Bima Headquarter Insurance Knowledge Hub</h1>
-                <p>
-                  Explore Bima Headquarter guides on insurance decisions, claims, renewals, health, vehicles,
-                  property, and business risks across India.
-                </p>
-              </div>
+            <div className="blog-hero-inner">
+              <span className="blog-eyebrow">
+                <span className="material-symbols-outlined" aria-hidden="true">menu_book</span>
+                Insurance Knowledge Hub
+              </span>
+
+              <h1 className="blog-hero-title">
+                Insurance Insights & <span className="blog-title-gradient">Expert Guides</span>
+              </h1>
+
+              <p className="blog-hero-subtitle">
+                Independent analysis, claims advocacy roadmaps, and policy decision checklists from licensed IRDAI insurance specialists.
+              </p>
 
               {/* Search Bar */}
-              <div className="blog-search-stage reveal">
+              <div className="blog-search-stage">
                 <div className="blog-search-box">
-                  <span className="material-symbols-outlined">search</span>
+                  <span className="material-symbols-outlined search-icon" aria-hidden="true">search</span>
                   <input
                     type="text"
-                    placeholder="Search articles, guides, or LOB topics..."
+                    placeholder="Search 50+ guides by topic, claim issue, or policy type..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label="Search articles"
                   />
-                  {searchQuery && (
-                    <button type="button" onClick={() => setSearchQuery("")}>
-                      <span className="material-symbols-outlined">close</span>
+                  {searchQuery ? (
+                    <button type="button" onClick={() => setSearchQuery("")} aria-label="Clear search">
+                      <span className="material-symbols-outlined" aria-hidden="true">close</span>
                     </button>
+                  ) : (
+                    <span className="blog-search-badge">50+ Guides</span>
                   )}
                 </div>
+              </div>
+
+              {/* Trending Quick Search Chips */}
+              <div className="blog-trending-tags" aria-label="Trending topics">
+                <span className="trending-label">Trending:</span>
+                {["Motor Claims", "Health Portability", "Warehouse Fire", "Policy Renewals"].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className="trending-tag"
+                    onClick={() => setSearchQuery(tag)}
+                  >
+                    {tag}
+                  </button>
+                ))}
               </div>
             </div>
           </section>
 
           {/* Main Feed Section */}
           <section className="blog-workspace">
-            <div className="blog-workspace-inner max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+            <div className="blog-workspace-inner">
               {/* Category Filter Tabs */}
-              <div className="blog-category-bar reveal">
+              <div className="blog-category-bar">
                 {categories.map((cat) => (
                   <button
                     key={cat}
@@ -255,7 +276,7 @@ export default function BlogFeedClient({ initialPosts = [], initialSearch = "" }
 
           {/* Newsletter Subscribe Banner */}
           <section className="blog-subscribe-section">
-            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+            <div className="blog-subscribe-inner">
               <div className="blog-subscribe-grid reveal">
                 <div>
                   <span>Stay Informed</span>

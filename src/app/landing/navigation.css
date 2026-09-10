@@ -21,6 +21,26 @@
   box-shadow: 0 4px 20px -2px rgba(3, 22, 56, 0.05) !important;
   -webkit-backdrop-filter: blur(24px) saturate(1.28) !important;
   backdrop-filter: blur(24px) saturate(1.28) !important;
+  transition:
+    min-height 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    padding 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 280ms ease,
+    box-shadow 280ms ease !important;
+}
+
+.landing-shell nav#mainNav.landing-premium-nav.scrolled {
+  min-height: 74px !important;
+  padding: 6px 0 !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: 0 10px 30px -4px rgba(3, 22, 56, 0.08) !important;
+}
+
+.landing-shell nav#mainNav.landing-premium-nav.scrolled .brand-logo-image {
+  height: 74px !important;
+}
+
+.landing-shell nav#mainNav.landing-premium-nav.scrolled .brand-logo-link {
+  min-height: 70px !important;
 }
 
 .landing-shell .landing-nav-spacer {

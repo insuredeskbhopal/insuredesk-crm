@@ -19,12 +19,12 @@
 
 @media (max-width: 900px) {
   .landing-shell .blog-hero-inner {
-    grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 20px;
+    padding: 0 16px;
   }
 
   .landing-shell .blog-search-stage {
-    justify-content: flex-start;
+    width: 100%;
   }
 
   .landing-shell .blog-featured-card {

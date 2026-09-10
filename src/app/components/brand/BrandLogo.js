@@ -1,15 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
 
-export default function BrandLogo({ href, className = "", compact = false, prefetch }) {
+export default function BrandLogo({ href, className = "", compact = false, variant = "default", prefetch }) {
+  const isWhite = variant === "white" || variant === "light";
   const content = (
-    <span className={`brand-logo ${compact ? "compact" : ""} ${className}`.trim()}>
+    <span className={`brand-logo ${compact ? "compact" : ""} ${isWhite ? "brand-logo-white" : ""} ${className}`.trim()}>
       <Image
         className="brand-logo-image"
-        src="/brand/main-logo-wide.webp"
+        src={isWhite ? "/brand/white-logo.webp" : "/brand/main-logo-wide.webp"}
         alt="Bima Headquarter"
-        width={1024}
-        height={570}
+        width={isWhite ? 1382 : 1024}
+        height={isWhite ? 763 : 570}
         unoptimized
       />
     </span>

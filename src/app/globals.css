@@ -5,56 +5,28 @@
 
 @import "./styles/tokens.css";
 
-/* Keep decorative motion disabled except for the insurer logo strip.
-   Layered important rules also override page-local animation declarations. */
-@layer static-motion {
+/* Continuous partner insurer marquee scroll */
+.landing-shell .partner-slider {
+  animation: partner-scroll 40s linear infinite;
+}
+
+.landing-shell .partner-slider:hover {
+  animation-play-state: paused;
+}
+
+/* Accessibility: respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation: none !important;
-    transition: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 
-  .reveal,
-  .landing-auto-reveal,
-  .entry-anim {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-
-  .typing-line,
-  .typing-stat {
-    clip-path: none !important;
-  }
-
-  .bi-line-series,
-  .trend-path {
-    stroke-dashoffset: 0 !important;
-  }
-
   .landing-shell .partner-slider {
-    animation: partner-scroll 40s linear infinite !important;
-  }
-
-  .landing-shell .partner-slider:hover {
-    animation-play-state: paused !important;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .landing-shell .partner-slider {
-      animation: none !important;
-    }
-  }
-
-  .landing-shell :is(a, button, .glass-card, .service-card, .service-directory-card):hover,
-  .landing-shell .service-card:hover img,
-  .landing-shell .group:hover [class*="group-hover:"],
-  .landing-shell [class*="hover:translate"],
-  .landing-shell [class*="hover:scale"] {
-    transform: none !important;
-    translate: none !important;
-    scale: none !important;
+    animation: none !important;
   }
 }
 

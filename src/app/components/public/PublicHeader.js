@@ -64,6 +64,18 @@ export default function PublicHeader() {
                 margin-left: -50px !important;
             }
         }
+        @keyframes floatingPulse {
+            0%, 100% {
+                box-shadow: 0 12px 28px rgba(3, 22, 56, 0.28), 0 0 0 0 rgba(28, 108, 57, 0.4);
+            }
+            50% {
+                box-shadow: 0 16px 36px rgba(3, 22, 56, 0.35), 0 0 0 10px rgba(28, 108, 57, 0);
+            }
+        }
+        @keyframes floatShimmer {
+            0% { transform: translateX(-150%) skewX(-20deg); }
+            100% { transform: translateX(250%) skewX(-20deg); }
+        }
         .landing-floating-consultation {
             position: fixed !important;
             bottom: 24px !important;
@@ -75,22 +87,38 @@ export default function PublicHeader() {
             gap: 8px !important;
             padding: 12px 24px !important;
             border-radius: 999px !important;
-            background: linear-gradient(135deg, #031638, #102b5f) !important;
+            background: linear-gradient(135deg, #031638 0%, #102b5f 55%, #1c6c39 100%) !important;
             color: #ffffff !important;
             font-size: 14px !important;
             font-weight: 900 !important;
             text-decoration: none !important;
-            box-shadow: 0 12px 28px rgba(3, 22, 56, 0.25) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease !important;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            overflow: hidden !important;
+            animation: floatingPulse 3.5s ease-in-out infinite !important;
+            transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 260ms ease !important;
+        }
+        .landing-floating-consultation::before {
+            content: "" !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 50% !important;
+            height: 100% !important;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent) !important;
+            transform: translateX(-150%) skewX(-20deg) !important;
+            pointer-events: none !important;
+            animation: floatShimmer 4s ease-in-out infinite !important;
         }
         .landing-floating-consultation:hover {
-            transform: translateY(-2px) scale(1.02) !important;
-            box-shadow: 0 16px 32px rgba(3, 22, 56, 0.35) !important;
-            background: linear-gradient(135deg, #102b5f, #031638) !important;
+            transform: translateY(-4px) scale(1.04) !important;
+            box-shadow: 0 20px 42px rgba(3, 22, 56, 0.42), 0 0 20px rgba(28, 108, 57, 0.3) !important;
         }
         .landing-floating-consultation .material-symbols-outlined {
             font-size: 20px !important;
+            transition: transform 260ms ease !important;
+        }
+        .landing-floating-consultation:hover .material-symbols-outlined {
+            transform: rotate(-12deg) scale(1.15) !important;
         }
         @media (max-width: 640px) {
             .landing-floating-consultation {
