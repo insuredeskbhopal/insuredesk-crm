@@ -47,7 +47,19 @@ export default function PublicHeader() {
     };
   }, [mobileMenuOpen]);
 
-  const isActive = (href) => pathname === href || (href !== "/" && pathname.startsWith(href));
+  const isActive = (href) => {
+    if (!pathname) return false;
+    if (href === "/") return pathname === "/";
+    if (pathname === href) return true;
+    if (href === "/services") {
+      return (
+        pathname.startsWith("/services") &&
+        !pathname.startsWith("/services/claims-assistance") &&
+        !pathname.startsWith("/services/policy-renewals")
+      );
+    }
+    return pathname.startsWith(href);
+  };
 
   return (
     <>
@@ -127,6 +139,14 @@ export default function PublicHeader() {
                 left: auto !important;
                 padding: 10px 18px !important;
                 font-size: 13px !important;
+            }
+        }
+        @media (max-width: 360px) {
+            .landing-floating-consultation {
+                bottom: 12px !important;
+                right: 12px !important;
+                padding: 8px 14px !important;
+                font-size: 12px !important;
             }
         }
       `,
@@ -248,7 +268,11 @@ export default function PublicHeader() {
         </div>
       </aside>}
 
-      <Link href="/contact" className="landing-floating-consultation" aria-label="Get Consultation">
+      <Link
+        href="/contact"
+        className={`landing-floating-consultation ${mobileMenuOpen ? "drawer-open" : ""}`}
+        aria-label="Get Consultation"
+      >
         <span className="material-symbols-outlined" aria-hidden="true">
           support_agent
         </span>

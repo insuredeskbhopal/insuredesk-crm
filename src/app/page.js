@@ -343,27 +343,60 @@ export default function RootPage() {
                 line-height: 1.55 !important;
             }
         }
-        @media (max-width: 480px) {
+        @media (max-width: 540px) {
             .hero-stats-container {
-                column-gap: 20px !important;
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 10px !important;
+                margin-top: 12px !important;
+                margin-bottom: 24px !important;
+                padding: 12px !important;
+                border-radius: 18px !important;
+                background: rgba(255, 255, 255, 0.92) !important;
+                border: 1px solid rgba(8, 27, 55, 0.08) !important;
+                box-shadow: 0 6px 20px rgba(3, 22, 56, 0.04) !important;
+                backdrop-filter: blur(16px) !important;
+                -webkit-backdrop-filter: blur(16px) !important;
+            }
+            .hero-stat-col {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                padding: 10px 12px !important;
+                background: rgba(248, 250, 252, 0.75) !important;
+                border-radius: 12px !important;
+                border: 1px solid rgba(226, 232, 240, 0.8) !important;
             }
             .hero-stat-col:not(:last-child)::after {
-                right: -10px !important;
+                display: none !important;
             }
             .hero-stat-value {
-                font-size: 18px !important;
+                font-size: 20px !important;
+                font-weight: 800 !important;
+                color: #031638 !important;
+                line-height: 1.15 !important;
+                letter-spacing: -0.02em !important;
             }
             .hero-stat-label {
-                font-size: 9px !important;
+                font-size: 9.5px !important;
+                font-weight: 700 !important;
+                color: #64748b !important;
+                margin-top: 4px !important;
                 letter-spacing: 0.05em !important;
+                line-height: 1.25 !important;
+                text-transform: uppercase !important;
             }
             .typing-headline {
-                font-size: 28px !important;
+                font-size: clamp(28px, 7.8vw, 35px) !important;
+                line-height: 1.16 !important;
+                letter-spacing: -0.03em !important;
             }
-            .hero-content .flex-wrap {
+            .hero-content .hero-actions {
                 width: 100% !important;
+                gap: 10px !important;
+                margin-bottom: 20px !important;
             }
-            .hero-content .flex-wrap a {
+            .hero-content .hero-actions a {
                 width: 100% !important;
             }
         }

@@ -67,16 +67,19 @@ export default function PublicFooter() {
 
           <div className="public-footer-actions" aria-label="Contact actions">
             <a href={`tel:${BUSINESS_DETAILS.phoneHref}`} className="footer-action-call">
-              <span className="material-symbols-outlined">call</span>
-              <span>Call {BUSINESS_DETAILS.phone}</span>
+              <span className="material-symbols-outlined" aria-hidden="true">call</span>
+              <span className="footer-action-desktop">Call {BUSINESS_DETAILS.phone}</span>
+              <span className="footer-action-mobile">Call</span>
             </a>
             <a href={`mailto:${BUSINESS_DETAILS.email}`} className="footer-action-mail">
-              <span className="material-symbols-outlined">mail</span>
-              <span>{BUSINESS_DETAILS.email}</span>
+              <span className="material-symbols-outlined" aria-hidden="true">mail</span>
+              <span className="footer-action-desktop">{BUSINESS_DETAILS.email}</span>
+              <span className="footer-action-mobile">Email</span>
             </a>
             <a href={BUSINESS_DETAILS.mapsUrl} target="_blank" rel="noopener noreferrer" className="footer-action-dir">
-              <span className="material-symbols-outlined">directions</span>
-              <span>Directions</span>
+              <span className="material-symbols-outlined" aria-hidden="true">directions</span>
+              <span className="footer-action-desktop">Directions</span>
+              <span className="footer-action-mobile">Directions</span>
             </a>
           </div>
         </div>
