@@ -175,63 +175,129 @@ function getPageNumbers(currentPage, totalPages) {
 const WAREHOUSE_RECORD_COLUMNS = [
   { key: "customerId", label: "Customer ID", className: "col-customer" },
   { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
-  { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
-  { key: "contactPerson", label: "Contact Person", className: "col-contact-person" },
-  { key: "contactNumber", label: "Phone Number", className: "col-contact" },
-  { key: "whatsappGroupName", label: "WP Group Name", className: "col-group" },
-  { key: "newOrRenewal", label: "New / Renewal", className: "col-default" },
-  { key: "policyType", label: "Policy Type", className: "col-type" },
   { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
+  { key: "policyNumber", label: "Policy Number", className: "col-policy", code: true },
+  { key: "newOrRenewal", fallbackKeys: ["lob", "policyCategory"], label: "New / Renewal", className: "col-default" },
+  { key: "policyType", label: "Policy Type", className: "col-type" },
   {
     key: "riskLocation",
-    fallbackKeys: ["premisesAddress"],
+    fallbackKeys: ["premisesAddress", "location"],
     label: "Risk Location",
     className: "col-location",
     compact: true,
   },
-  { key: "district", label: "District", className: "col-district" },
-  { key: "tehsil", label: "Tehsil", className: "col-tehsil" },
   { key: "occupancy", label: "Occupancy", className: "col-occupancy", compact: true },
-  {
-    key: "description",
-    fallbackKeys: ["businessDescription"],
-    label: "Risk Description",
-    className: "col-description",
-    compact: true,
-  },
+  { key: "startDate", fallbackKeys: ["policyStartDate"], label: "Policy Start", className: "col-date", format: "niceDate" },
+  { key: "expiryDate", fallbackKeys: ["policyEndDate"], label: "Policy Expiry", className: "col-date", format: "niceDate" },
   {
     key: "sumInsured",
-    fallbackKeys: ["contentsSumInsured", "burglarySumInsured", "fidelitySumInsured"],
+    fallbackKeys: ["totalSumInsured", "contentsSumInsured", "buildingSumInsured", "stockSumInsured"],
     label: "Sum Insured",
     className: "col-money",
     format: "money",
   },
-  { key: "buildingSumInsured", label: "Building SI", className: "col-money", format: "money" },
-  { key: "stockSumInsured", label: "Stock SI", className: "col-money", format: "money" },
-  { key: "contentsSumInsured", label: "Contents SI", className: "col-money", format: "money" },
-  { key: "burglarySumInsured", label: "Burglary SI", className: "col-money", format: "money" },
-  { key: "fidelitySumInsured", label: "Fidelity SI", className: "col-money", format: "money" },
-  {
-    key: "netPremium",
-    fallbackKeys: ["basicPremium"],
-    label: "Net Premium",
-    className: "col-money",
-    format: "money",
-  },
+  { key: "netPremium", fallbackKeys: ["basicPremium"], label: "Net Premium", className: "col-money", format: "money" },
   {
     key: "grossPremium",
-    fallbackKeys: ["totalPremium", "premium"],
+    fallbackKeys: ["totalPremium", "premium", "premiumIncludingGst"],
     label: "Gross Premium",
     className: "col-money",
     format: "money",
   },
-  { key: "startDate", label: "Start Date", className: "col-date", format: "date" },
-  { key: "expiryDate", label: "Expiry Date", className: "col-date", format: "date" },
-  { key: "duration", label: "Duration", className: "col-duration" },
-  { key: "pptMpwlc", label: "PPT / MPWLC", className: "col-ppt" },
-  { key: "validIn", label: "Valid In", className: "col-valid" },
-  { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },
-  { key: "sourceFile", label: "Source File", className: "col-source" },
+  { key: "contactNumber", fallbackKeys: ["contactPerson", "mobile", "contact"], label: "Contact", className: "col-contact" },
+  { key: "status", fallbackKeys: ["policyStatus", "renewalStatus"], label: "Status", className: "col-default" },
+];
+
+const HEALTH_RECORD_COLUMNS = [
+  { key: "customerId", label: "Customer ID", className: "col-customer" },
+  { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
+  { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
+  { key: "policyNumber", label: "Policy Number", className: "col-policy", code: true },
+  { key: "newOrRenewal", fallbackKeys: ["lob", "policyCategory"], label: "New / Renewal", className: "col-default" },
+  { key: "policyType", fallbackKeys: ["productName", "planType"], label: "Plan / Type", className: "col-type" },
+  { key: "numberOfInsuredMembers", fallbackKeys: ["insuredMembers", "members"], label: "Members", className: "col-default" },
+  { key: "startDate", fallbackKeys: ["policyStartDate"], label: "Policy Start", className: "col-date", format: "niceDate" },
+  { key: "expiryDate", fallbackKeys: ["policyEndDate"], label: "Policy Expiry", className: "col-date", format: "niceDate" },
+  { key: "sumInsured", label: "Sum Insured", className: "col-money", format: "money" },
+  { key: "netPremium", fallbackKeys: ["basicPremium"], label: "Net Premium", className: "col-money", format: "money" },
+  {
+    key: "grossPremium",
+    fallbackKeys: ["totalPremium", "premium", "premiumIncludingGst"],
+    label: "Gross Premium",
+    className: "col-money",
+    format: "money",
+  },
+  { key: "contactNumber", fallbackKeys: ["contactPerson", "mobile", "contact"], label: "Contact", className: "col-contact" },
+  { key: "status", fallbackKeys: ["policyStatus", "renewalStatus"], label: "Status", className: "col-default" },
+];
+
+const NON_MOTOR_RECORD_COLUMNS = [
+  { key: "customerId", label: "Customer ID", className: "col-customer" },
+  { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
+  { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
+  { key: "policyNumber", label: "Policy Number", className: "col-policy", code: true },
+  { key: "newOrRenewal", fallbackKeys: ["lob", "policyCategory"], label: "New / Renewal", className: "col-default" },
+  { key: "policyType", fallbackKeys: ["documentCategory", "category"], label: "Policy Type", className: "col-type" },
+  {
+    key: "riskLocation",
+    fallbackKeys: ["premisesAddress", "description", "businessDescription"],
+    label: "Risk / Description",
+    className: "col-location",
+    compact: true,
+  },
+  { key: "startDate", fallbackKeys: ["policyStartDate"], label: "Policy Start", className: "col-date", format: "niceDate" },
+  { key: "expiryDate", fallbackKeys: ["policyEndDate"], label: "Policy Expiry", className: "col-date", format: "niceDate" },
+  {
+    key: "sumInsured",
+    fallbackKeys: ["totalSumInsured", "idv", "idvAmount"],
+    label: "Sum Insured",
+    className: "col-money",
+    format: "money",
+  },
+  { key: "netPremium", fallbackKeys: ["basicPremium"], label: "Net Premium", className: "col-money", format: "money" },
+  {
+    key: "grossPremium",
+    fallbackKeys: ["totalPremium", "premium", "premiumIncludingGst"],
+    label: "Gross Premium",
+    className: "col-money",
+    format: "money",
+  },
+  { key: "contactNumber", fallbackKeys: ["contactPerson", "mobile", "contact"], label: "Contact", className: "col-contact" },
+  { key: "status", fallbackKeys: ["policyStatus", "renewalStatus"], label: "Status", className: "col-default" },
+];
+
+const ALL_RECORD_COLUMNS = [
+  { key: "customerId", label: "Customer ID", className: "col-customer" },
+  { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
+  { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
+  { key: "policyNumber", label: "Policy Number", className: "col-policy", code: true },
+  { key: "newOrRenewal", fallbackKeys: ["lob", "policyCategory"], label: "New / Renewal", className: "col-default" },
+  { key: "policyType", fallbackKeys: ["policyCoverType", "coverType", "documentCategory"], label: "Policy Type", className: "col-type" },
+  {
+    key: "vehicleLocation",
+    fallbackKeys: ["vehicleNumber", "registrationNumber", "riskLocation", "premisesAddress"],
+    label: "Vehicle / Location",
+    className: "col-default",
+  },
+  { key: "startDate", fallbackKeys: ["policyStartDate"], label: "Policy Start", className: "col-date", format: "niceDate" },
+  { key: "expiryDate", fallbackKeys: ["policyEndDate"], label: "Policy Expiry", className: "col-date", format: "niceDate" },
+  {
+    key: "idv",
+    fallbackKeys: ["sumInsured", "idvAmount", "totalSumInsured"],
+    label: "IDV / Sum Insured",
+    className: "col-money",
+    format: "money",
+  },
+  { key: "netPremium", fallbackKeys: ["basicPremium"], label: "Net Premium", className: "col-money", format: "money" },
+  {
+    key: "grossPremium",
+    fallbackKeys: ["totalPremium", "premium", "premiumIncludingGst"],
+    label: "Gross Premium",
+    className: "col-money",
+    format: "money",
+  },
+  { key: "contactNumber", fallbackKeys: ["contactPerson", "mobile", "contact"], label: "Contact", className: "col-contact" },
+  { key: "status", fallbackKeys: ["policyStatus", "renewalStatus"], label: "Status", className: "col-default" },
 ];
 
 const MOTOR_RECORD_COLUMNS = [
@@ -776,14 +842,14 @@ export default function Dashboard({
       .map(({ record }) => record);
   }, [activePage, records, recordViewCategory, policyRecordResults, duplicateRecordIds, recordsWithSchema]);
   const recordViewColumns = useMemo(() => {
-    if (recordViewCategory === "all") return undefined;
+    if (recordViewCategory === "all") return ALL_RECORD_COLUMNS;
     if (recordViewCategory === "duplicates") {
       return [
         { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
         { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
         { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
         { key: "vehicleNumber", label: "Vehicle / Risk Location", className: "col-default" },
-        { key: "expiryDate", label: "Expiry Date", className: "col-date", format: "date" },
+        { key: "expiryDate", label: "Expiry Date", className: "col-date", format: "niceDate" },
         { key: "savedAt", label: "Saved At", className: "col-saved", format: "dateTime" },
         { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },
         { key: "sourceFile", label: "Source File", className: "col-source" },
@@ -795,78 +861,14 @@ export default function Dashboard({
     if (recordViewCategory === "warehouse" || recordViewCategory === "fire") {
       return WAREHOUSE_RECORD_COLUMNS;
     }
-
-    const fieldLabels = new Map(FIELD_SETUP.map(([label, key]) => [key, label]));
-    const classNames = {
-      customerId: "col-customer",
-      savedAt: "col-saved",
-      uploadedAt: "col-saved",
-      uploadedBy: "col-uploader",
-      insuredName: "col-insured",
-      contactNumber: "col-contact",
-      contactPerson: "col-contact-person",
-      whatsappGroupName: "col-group",
-      groupName: "col-group",
-      policyNumber: "col-policy",
-      policyType: "col-type",
-      sumInsured: "col-money",
-      premium: "col-money",
-      totalPremium: "col-money",
-      grossPremium: "col-money",
-      netPremium: "col-money",
-      tpDriverOwner: "col-money",
-      odPremium: "col-money",
-      dueCollection: "col-money",
-      collectedAmount: "col-money",
-      modeOfPayment: "col-default",
-      remark: "col-description",
-      startDate: "col-date",
-      expiryDate: "col-date",
-      duration: "col-duration",
-      riskLocation: "col-location",
-      district: "col-district",
-      tehsil: "col-tehsil",
-      insuranceCompany: "col-company",
-      description: "col-description",
-      pptMpwlc: "col-ppt",
-      occupancy: "col-occupancy",
-      validIn: "col-valid",
-      sourceFile: "col-source",
-    };
-    const selectedSchemas = recordsWithSchema
-      .filter(({ validation }) => (validation.resolvedSchema?.groupId || "general") === recordViewCategory)
-      .map(({ validation }) => validation);
-    const visibleKeys = new Set(["customerId", "savedAt", "uploadedAt", "uploadedBy", "insuredName"]);
-    selectedSchemas.forEach((validation) => {
-      (validation.visibleFields || []).forEach(([, key]) => visibleKeys.add(key));
-    });
-    visibleKeys.add("sourceFile");
-
-    return [
-      "customerId",
-      "savedAt",
-      "uploadedAt",
-      "uploadedBy",
-      ...FIELD_SETUP.map(([, key]) => key),
-      "sourceFile",
-    ]
-      .filter((key, index, list) => visibleKeys.has(key) && list.indexOf(key) === index)
-      .map((key) => ({
-        key,
-        label:
-          key === "savedAt"
-            ? "Saved At"
-            : key === "uploadedAt"
-              ? "Uploaded At"
-              : key === "uploadedBy"
-                ? "Uploaded By"
-                : fieldLabels.get(key) || key,
-        className: classNames[key] || "col-default",
-        format: key === "savedAt" || key === "uploadedAt" ? "dateTime" : undefined,
-        primary: key === "insuredName",
-        code: key === "policyNumber",
-      }));
-  }, [recordViewCategory, recordsWithSchema]);
+    if (recordViewCategory === "health") {
+      return HEALTH_RECORD_COLUMNS;
+    }
+    if (recordViewCategory === "other") {
+      return NON_MOTOR_RECORD_COLUMNS;
+    }
+    return NON_MOTOR_RECORD_COLUMNS;
+  }, [recordViewCategory]);
   const activeRecordFilterCount =
     (recordFilterField && recordFilterValue.trim() ? 1 : 0) +
     (recordPdfFilter !== "all" ? 1 : 0) +

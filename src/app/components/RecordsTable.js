@@ -10,20 +10,35 @@ const PAGE_SIZE = 10;
 const DEFAULT_RECORD_COLUMNS = [
   { key: "customerId", label: "Customer ID", className: "col-customer" },
   { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
-  { key: "contactPerson", label: "Contact Person Name", className: "col-contact-person" },
-  { key: "contactNumber", label: "Phone Number", className: "col-contact" },
-  { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
-  {
-    key: "vehicleNumber",
-    label: "Vehicle / Risk Location",
-    className: "col-vehicle",
-    code: true,
-    fallbackKey: "registrationNumber",
-  },
   { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
+  { key: "policyNumber", label: "Policy Number", className: "col-policy", code: true },
+  { key: "newOrRenewal", fallbackKeys: ["lob", "policyCategory"], label: "New / Renewal", className: "col-default" },
+  { key: "policyType", fallbackKeys: ["policyCoverType", "coverType", "documentCategory"], label: "Policy Type", className: "col-type" },
+  {
+    key: "vehicleLocation",
+    fallbackKeys: ["vehicleNumber", "registrationNumber", "riskLocation", "premisesAddress"],
+    label: "Vehicle / Location",
+    className: "col-default",
+  },
+  { key: "startDate", fallbackKeys: ["policyStartDate"], label: "Policy Start", className: "col-date", format: "niceDate" },
+  { key: "expiryDate", fallbackKeys: ["policyEndDate"], label: "Policy Expiry", className: "col-date", format: "niceDate" },
+  {
+    key: "idv",
+    fallbackKeys: ["sumInsured", "idvAmount", "totalSumInsured"],
+    label: "IDV / Sum Insured",
+    className: "col-money",
+    format: "money",
+  },
   { key: "netPremium", fallbackKeys: ["basicPremium"], label: "Net Premium", className: "col-money", format: "money" },
-  { key: "grossPremium", fallbackKeys: ["totalPremium", "premium"], label: "Gross Premium", className: "col-money", format: "money" },
-  { key: "whatsappGroupName", label: "WP Group Name", className: "col-group" },
+  {
+    key: "grossPremium",
+    fallbackKeys: ["totalPremium", "premium", "premiumIncludingGst"],
+    label: "Gross Premium",
+    className: "col-money",
+    format: "money",
+  },
+  { key: "contactNumber", fallbackKeys: ["contactPerson", "mobile", "contact"], label: "Contact", className: "col-contact" },
+  { key: "status", fallbackKeys: ["policyStatus", "renewalStatus"], label: "Status", className: "col-default" },
 ];
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -155,13 +170,31 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
     (candidate) => candidate !== undefined && candidate !== null && candidate !== "",
   );
   
-  if (column.key === "vehicleNumber" && !rawValue) {
-    const fallbackValue = record.tehsil || record.policyType || "";
-    if (fallbackValue && fallbackValue.length > 30) {
-      const truncated = fallbackValue.substring(0, 27) + "...";
-      return <span title={fallbackValue}>{truncated}</span>;
+  if (column.key === "vehicleLocation") {
+    const veh = (record.vehicleNumber || record.registrationNumber || "").trim();
+    if (veh) return <span className="record-code">{veh}</span>;
+    const loc = (record.riskLocation || record.premisesAddress || record.district || "").trim();
+    if (loc) {
+      if (loc.length > 28) {
+        return <span title={loc}>{loc.substring(0, 25)}...</span>;
+      }
+      return loc;
     }
-    return fallbackValue ? <span title={fallbackValue}>{fallbackValue}</span> : "";
+    return "-";
+  }
+
+  if (column.key === "numberOfInsuredMembers" || column.key === "members") {
+    if (Array.isArray(rawValue)) return `${rawValue.length} members`;
+    if (rawValue !== undefined && rawValue !== null && String(rawValue).trim() !== "") {
+      const num = parseInt(rawValue, 10);
+      if (!Number.isNaN(num)) return `${num} ${num === 1 ? "member" : "members"}`;
+      return String(rawValue);
+    }
+    return "-";
+  }
+
+  if (column.key === "vehicleNumber" && !rawValue) {
+    return "-";
   }
 
   if (typeof rawValue === "object" && rawValue !== null) {
