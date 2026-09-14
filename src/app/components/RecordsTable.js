@@ -26,6 +26,76 @@ const DEFAULT_RECORD_COLUMNS = [
   { key: "whatsappGroupName", label: "WP Group Name", className: "col-group" },
 ];
 
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function formatNiceDate(value) {
+  if (!value) return "-";
+  const str = String(value).trim().replace(/^["']|["']$/g, "");
+  const ymdMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
+  if (ymdMatch) {
+    const [, year, month, day] = ymdMatch;
+    const mIdx = parseInt(month, 10) - 1;
+    return `${parseInt(day, 10)} ${MONTH_NAMES[mIdx] || month} ${year}`;
+  }
+  const num = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  if (num) {
+    const day = parseInt(num[1], 10);
+    const mIdx = parseInt(num[2], 10) - 1;
+    const year = num[3].length === 2 ? `20${num[3]}` : num[3];
+    return `${day} ${MONTH_NAMES[mIdx] || num[2]} ${year}`;
+  }
+  const named = str.match(/^(\d{1,2})[/-]([A-Za-z]{3})[/-](\d{2,4})$/);
+  if (named) {
+    const day = parseInt(named[1], 10);
+    const month = named[2].charAt(0).toUpperCase() + named[2].slice(1, 3).toLowerCase();
+    const year = named[3].length === 2 ? `20${named[3]}` : named[3];
+    return `${day} ${month} ${year}`;
+  }
+  const date = new Date(str);
+  if (Number.isNaN(date.getTime())) return str;
+  return `${date.getDate()} ${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+function getPolicyStatus(record) {
+  if (record.status && ["Active", "Expiring", "Expired"].includes(record.status)) {
+    return record.status;
+  }
+  const dateStr = record.expiryDate || record.policyEndDate;
+  if (!dateStr) return "Active";
+
+  let expiry = null;
+  const str = String(dateStr).trim().replace(/^["']|["']$/g, "");
+  const ymdMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
+  if (ymdMatch) {
+    expiry = new Date(Number(ymdMatch[1]), Number(ymdMatch[2]) - 1, Number(ymdMatch[3]));
+  } else {
+    const num = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+    if (num) {
+      const year = num[3].length === 2 ? `20${num[3]}` : num[3];
+      expiry = new Date(Number(year), Number(num[2]) - 1, Number(num[1]));
+    } else {
+      const d = new Date(str);
+      if (!Number.isNaN(d.getTime())) expiry = d;
+    }
+  }
+
+  if (!expiry) return "Active";
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  expiry = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
+
+  if (expiry < today) {
+    return "Expired";
+  }
+  const diffTime = expiry.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if (diffDays <= 30) {
+    return "Expiring";
+  }
+  return "Active";
+}
+
 function formatDate(value) {
   if (!value) return "-";
   const str = String(value).trim().replace(/^["']|["']$/g, "");
@@ -108,14 +178,95 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
     }
   }
 
+  if (column.key === "vehicle") {
+    const makeModel = (record.makeModel || record.vehicleMake || record.vehicle || "").trim();
+    const year = (record.manufacturingYear || "").trim();
+    if (makeModel && year) return `${makeModel} · ${year}`;
+    if (makeModel) return makeModel;
+    if (year) return `Year: ${year}`;
+    return record.variant || record.policyType || "-";
+  }
+
+  if (column.key === "policyCoverType") {
+    const raw = String(record.policyCoverType || record.coverType || record.policyType || "").trim();
+    if (!raw) return "-";
+    const upper = raw.toUpperCase();
+    if (upper.includes("PACKAGE") || upper.includes("COMPREHENSIVE") || upper.includes("AUTO SECURE")) {
+      return "Comprehensive";
+    }
+    if (upper.includes("OD") || upper.includes("OWN DAMAGE")) {
+      return "OD";
+    }
+    if (upper.includes("TP") || upper.includes("THIRD PARTY") || upper.includes("LIABILITY")) {
+      return "TP";
+    }
+    return raw;
+  }
+
+  if (column.key === "ncb") {
+    if (rawValue === undefined || rawValue === null || rawValue === "") return "-";
+    const str = String(rawValue).trim();
+    if (!str) return "-";
+    return str.endsWith("%") ? str : `${str}%`;
+  }
+
+  if (column.key === "status") {
+    const status = getPolicyStatus(record);
+    let bg = "#ecfdf5";
+    let color = "#065f46";
+    let border = "#a7f3d0";
+    if (status === "Expiring") {
+      bg = "#fffbeb";
+      color = "#b45309";
+      border = "#fde68a";
+    } else if (status === "Expired") {
+      bg = "#fef2f2";
+      color = "#b91c1c";
+      border = "#fecaca";
+    }
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          padding: "2px 8px",
+          borderRadius: "9999px",
+          fontSize: "11px",
+          fontWeight: 600,
+          backgroundColor: bg,
+          color: color,
+          border: `1px solid ${border}`,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {status}
+      </span>
+    );
+  }
+
+  if (column.key === "contactNumber" || column.key === "contact") {
+    const num = (record.contactNumber || record.mobile || "").trim();
+    const person = (record.contactPerson || "").trim();
+    if (num && person && num !== person) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+          <span style={{ fontWeight: 500 }}>{num}</span>
+          <span style={{ fontSize: "11px", color: "#64748b" }}>{person}</span>
+        </div>
+      );
+    }
+    return num || person || "-";
+  }
+
   const value =
-    column.format === "dateTime"
-      ? formatDateTime(rawValue)
-      : column.format === "date"
-        ? formatDate(rawValue)
-        : column.format === "money"
-          ? formatMoneyValue(rawValue)
-        : rawValue || "";
+    column.format === "niceDate"
+      ? formatNiceDate(rawValue)
+      : column.format === "dateTime"
+        ? formatDateTime(rawValue)
+        : column.format === "date"
+          ? formatDate(rawValue)
+          : column.format === "money"
+            ? formatMoneyValue(rawValue)
+          : rawValue || "";
   if (column.compact && String(value).length > 32) {
     return (
       <div className={`record-compact-text${isExpanded ? " expanded" : ""}`}>
@@ -556,7 +707,7 @@ export default function RecordsTable({
     980,
     columns.reduce(
       (total, column) => total + (COLUMN_WIDTHS[column.className || "col-default"] || 150),
-      (canEdit ? 88 : 0) + (canDelete ? 48 : 0) + 64,
+      (canDelete ? 48 : 0) + 144,
     ),
   );
 
@@ -619,9 +770,8 @@ export default function RecordsTable({
             {columns.map((column) => (
               <col key={column.key} className={column.className || "col-default"} />
             ))}
-            <col className="col-action" />
-            {canEdit ? <col className="col-action" /> : null}
             <col className="col-pdf" />
+            <col className="col-action" />
           </colgroup>
           <thead>
             <tr>
@@ -651,9 +801,8 @@ export default function RecordsTable({
                   {column.label}
                 </th>
               ))}
-              <th>View</th>
-              {canEdit ? <th>Edit</th> : null}
               <th>PDF</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -700,31 +849,7 @@ export default function RecordsTable({
                         )}
                       </td>
                     ))}
-                    <td>
-                      <button
-                        aria-label={`View details of ${record.policyNumber || record.insuredName || "policy record"}`}
-                        className="record-icon-action"
-                        title="View policy details"
-                        type="button"
-                        onClick={() => setSelectedRecord(record)}
-                      >
-                        <Eye size={20} strokeWidth={2.5} />
-                      </button>
-                    </td>
-                    {canEdit ? (
-                      <td>
-                        <button
-                          aria-label={`Edit ${record.policyNumber || record.insuredName || "policy record"}`}
-                          className="record-icon-action"
-                          title="Edit policy record"
-                          type="button"
-                          onClick={() => onEdit?.(record)}
-                        >
-                          <Pencil size={24} strokeWidth={2.7} />
-                        </button>
-                      </td>
-                    ) : null}
-                    <td>
+                    <td className="col-pdf-cell" style={{ textAlign: "center" }}>
                       {record.hasPdf ? (
                         <a
                           className="pdf-icon-link"
@@ -743,12 +868,36 @@ export default function RecordsTable({
                         </span>
                       )}
                     </td>
+                    <td className="col-action-cell" style={{ textAlign: "center" }}>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "center" }}>
+                        <button
+                          aria-label={`View details of ${record.policyNumber || record.insuredName || "policy record"}`}
+                          className="record-icon-action"
+                          title="View policy details"
+                          type="button"
+                          onClick={() => setSelectedRecord(record)}
+                        >
+                          <Eye size={18} strokeWidth={2.2} />
+                        </button>
+                        {canEdit ? (
+                          <button
+                            aria-label={`Edit ${record.policyNumber || record.insuredName || "policy record"}`}
+                            className="record-icon-action"
+                            title="Edit policy record"
+                            type="button"
+                            onClick={() => onEdit?.(record)}
+                          >
+                            <Pencil size={18} strokeWidth={2.2} />
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td className="empty" colSpan={columns.length + 2 + (canEdit ? 1 : 0) + (canDelete ? 1 : 0)}>
+                <td className="empty" colSpan={columns.length + 2 + (canDelete ? 1 : 0)}>
                   No database records yet.
                 </td>
               </tr>

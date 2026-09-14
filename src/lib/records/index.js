@@ -378,6 +378,14 @@ export function normalizeRecord(record) {
     renewalDate: record.renewalDate || null,
     lostReason: record.lostReason || "",
     isActivePolicy: record.isActivePolicy ?? true,
-    newOrRenewal: payload.newOrRenewal || legacy.newOrRenewal || payload["New / Renewal"] || "",
+    newOrRenewal:
+      payload.newOrRenewal ||
+      legacy.newOrRenewal ||
+      payload.lob ||
+      legacy.lob ||
+      payload["New / Renewal"] ||
+      payload["New/Renewal"] ||
+      payload["New / renewal"] ||
+      "",
   };
 }

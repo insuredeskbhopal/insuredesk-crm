@@ -234,6 +234,25 @@ const WAREHOUSE_RECORD_COLUMNS = [
   { key: "sourceFile", label: "Source File", className: "col-source" },
 ];
 
+const MOTOR_RECORD_COLUMNS = [
+  { key: "customerId", label: "Customer ID", className: "col-customer" },
+  { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
+  { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
+  { key: "policyNumber", label: "Policy Number", className: "col-policy", code: true },
+  { key: "newOrRenewal", fallbackKeys: ["lob", "policyCategory"], label: "New / Renewal", className: "col-default" },
+  { key: "policyCoverType", fallbackKeys: ["coverType", "policyType"], label: "Cover Type", className: "col-type" },
+  { key: "vehicleNumber", fallbackKeys: ["registrationNumber"], label: "Vehicle Number", className: "col-vehicle", code: true },
+  { key: "vehicle", fallbackKeys: ["makeModel", "vehicleSummary"], label: "Vehicle", className: "col-default" },
+  { key: "startDate", fallbackKeys: ["policyStartDate"], label: "Policy Start", className: "col-date", format: "niceDate" },
+  { key: "expiryDate", fallbackKeys: ["policyEndDate"], label: "Policy Expiry", className: "col-date", format: "niceDate" },
+  { key: "idv", fallbackKeys: ["sumInsured", "idvAmount"], label: "IDV / Sum Insured", className: "col-money", format: "money" },
+  { key: "ncb", label: "NCB", className: "col-default" },
+  { key: "netPremium", fallbackKeys: ["basicPremium"], label: "Net Premium", className: "col-money", format: "money" },
+  { key: "grossPremium", fallbackKeys: ["totalPremium", "premium"], label: "Gross Premium", className: "col-money", format: "money" },
+  { key: "contactNumber", fallbackKeys: ["contactPerson", "mobile"], label: "Contact", className: "col-contact" },
+  { key: "status", fallbackKeys: ["policyStatus", "renewalStatus"], label: "Status", className: "col-default" },
+];
+
 function prepareUploadReviewData(upload) {
   const data = { ...(upload?.extractedData || {}) };
   const manualFields = upload?.manualFields || [];
@@ -769,6 +788,9 @@ export default function Dashboard({
         { key: "uploadedBy", label: "Uploaded By", className: "col-uploader" },
         { key: "sourceFile", label: "Source File", className: "col-source" },
       ];
+    }
+    if (recordViewCategory === "motor") {
+      return MOTOR_RECORD_COLUMNS;
     }
     if (recordViewCategory === "warehouse" || recordViewCategory === "fire") {
       return WAREHOUSE_RECORD_COLUMNS;
