@@ -246,11 +246,24 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
     return raw;
   }
 
+  if (column.key === "newOrRenewal") {
+    const raw = String(rawValue || "").trim();
+    if (!raw || raw === "-") return "-";
+    if (/renew/i.test(raw)) return "Renewal";
+    if (/new/i.test(raw)) return "New";
+    return raw;
+  }
+
   if (column.key === "ncb") {
     if (rawValue === undefined || rawValue === null || rawValue === "") return "-";
     const str = String(rawValue).trim();
-    if (!str) return "-";
-    return str.endsWith("%") ? str : `${str}%`;
+    if (!str || str === "-") return "-";
+    const numMatch = str.match(/^(\d{1,2})\s*%?$/);
+    if (numMatch) {
+      const num = parseInt(numMatch[1], 10);
+      if (num >= 0 && num <= 65) return `${num}%`;
+    }
+    return "-";
   }
 
   if (column.key === "status") {
@@ -324,7 +337,10 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
         : column.format === "date"
           ? formatDate(rawValue)
           : column.format === "money"
-            ? formatMoneyValue(rawValue)
+            ? (column.key === "idv" || column.key === "sumInsured") &&
+              (!rawValue || Number(String(rawValue).replace(/[^0-9.-]/g, "")) <= 0)
+              ? "-"
+              : formatMoneyValue(rawValue)
           : rawValue || "";
   if (column.compact && String(value).length > 32) {
     return (
