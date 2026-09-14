@@ -187,6 +187,16 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
     return record.variant || record.policyType || "-";
   }
 
+  if (column.key === "contactPerson") {
+    const raw = String(rawValue || "").trim();
+    const isJunk =
+      raw.length > 60 ||
+      /please\s*go\s*through|discrepanc|rectification|mailing address|registered office|e-mail id|fax:|issuing office/i.test(raw) ||
+      /\b(?:road|street|plot|ward|behind|near|nagar|teh\.?|dist\.?|madhya|bhopal|462001|458888)\b/i.test(raw);
+    return isJunk ? "-" : raw || "-";
+  }
+
+
   if (column.key === "policyCoverType") {
     const raw = String(record.policyCoverType || record.coverType || record.policyType || "").trim();
     if (!raw) return "-";
@@ -243,9 +253,17 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
     );
   }
 
+
   if (column.key === "contactNumber" || column.key === "contact") {
     const num = (record.contactNumber || record.mobile || "").trim();
-    const person = (record.contactPerson || "").trim();
+    const rawPerson = (record.contactPerson || "").trim();
+    // Filter out junk contact persons: addresses, boilerplate PDF text, or company name
+    // concatenated with address (typical of ICICI Lombard / New India fire policies)
+    const isJunkPerson =
+      rawPerson.length > 60 ||
+      /please\s*go\s*through|discrepanc|rectification|mailing address|registered office|e-mail id|fax:|issuing office/i.test(rawPerson) ||
+      /\b(?:road|street|plot|ward|behind|near|nagar|teh\.?|dist\.?|madhya|bhopal|462001|458888)\b/i.test(rawPerson);
+    const person = isJunkPerson ? "" : rawPerson;
     if (num && person && num !== person) {
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
@@ -254,8 +272,9 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
         </div>
       );
     }
-    return num || person || "-";
+    return num || (person && !isJunkPerson ? person : "") || "-";
   }
+
 
   const value =
     column.format === "niceDate"
