@@ -1,0 +1,2282 @@
+[
+  {
+    "sno": "67",
+    "date": "20-08-2026",
+    "name": "KAMAL KUMAR SACHDEVA",
+    "veh": "MP04GA4552",
+    "pol": "",
+    "contactName": "VEER JI",
+    "mobile": "9424411103",
+    "gross": "17715",
+    "net": "16781",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "f4d00b06-7754-4ff8-bbd2-f25ef28845b8",
+    "dbStoragePath": "15YyhPvUAaXRxVDL6uqrZfcDMjQcO_7lH",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "KAMAL KUMAR SACHDEVA_MP04GA4552_2026-27 POLICY.pdf",
+      "id": "15YyhPvUAaXRxVDL6uqrZfcDMjQcO_7lH"
+    }
+  },
+  {
+    "sno": "6",
+    "date": "04-08-2026",
+    "name": "Ms Siddharth Indane",
+    "veh": "MP04ZJ0844",
+    "pol": "",
+    "contactName": "Sidd Bhai",
+    "mobile": "8889128888",
+    "gross": "16969",
+    "net": "16049",
+    "company": "BAJAJ",
+    "inDb": true,
+    "dbRecordId": "c9f639fd-fdbb-4534-b552-01c4aa851f85",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "Ms Siddharth Indane_MP04ZJ0844_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "Ms Siddharth Indane_MP04ZJ0844_2026-27 POLICY.pdf",
+      "id": "1MvKQeBF8uKfmwJkt45l9PbTqctd8dZVK"
+    }
+  },
+  {
+    "sno": "49",
+    "date": "14-08-2026",
+    "name": "ABDUL  WAZID",
+    "veh": "MP04YA7511",
+    "pol": "45140031261800004713",
+    "contactName": "DANISH",
+    "mobile": "9516663407",
+    "gross": "760",
+    "net": "644",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "5c6e2166-8dd8-49a4-85ae-396ab37db5bb",
+    "dbStoragePath": "1ZygxhE3MkJ95xXPb90X5e_mDc117c6r9",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "ABDUL WAZID_MP04YA7511_2026-27.pdf",
+      "id": "1ZygxhE3MkJ95xXPb90X5e_mDc117c6r9"
+    }
+  },
+  {
+    "sno": "98",
+    "date": "31-08-2026",
+    "name": "ABHISHEK CHAUDA",
+    "veh": "MP04CB0912",
+    "pol": "N8491786",
+    "contactName": "Abhishek Sir. HDFC",
+    "mobile": "89593 06769",
+    "gross": "4832",
+    "net": "3676",
+    "company": "IFFCO TOKIO",
+    "inDb": true,
+    "dbRecordId": "a2f32b62-afae-4523-87c3-8e9e92a134b0",
+    "dbStoragePath": "1eZ3xhrDp0ROtps_IanH6nXfNKioZhsAZ",
+    "dbStorageProvider": "google_drive",
+    "localPdf": {
+      "filename": "ABHISHEK CHAUDA POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage"
+    },
+    "drivePdf": {
+      "name": "ABHISHEK CHAUDA_MP04CB0912_2026-27_POLICY.pdf",
+      "id": "1eZ3xhrDp0ROtps_IanH6nXfNKioZhsAZ"
+    }
+  },
+  {
+    "sno": "1",
+    "date": "01-08-2026",
+    "name": "ABHISHEK PATIDAR",
+    "veh": "MP04ZL6963",
+    "pol": "N8210099",
+    "contactName": "Ashish Patidar",
+    "mobile": "8889020020",
+    "gross": "28345",
+    "net": "24022",
+    "company": "IFFCO TOKIO",
+    "inDb": true,
+    "dbRecordId": "3ddf7f7a-4d7c-4f81-9f8a-9b71664e0d90",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "ABHISHEK PATIDAR_MP04ZL6963_2026-27 policy.pdf",
+      "id": "1H9hwS5_G-AUo0U1j_4jcLKxU6R9fbzh9"
+    }
+  },
+  {
+    "sno": "82",
+    "date": "25-08-2026",
+    "name": "ABHISHEKH KUMAR MISHRA",
+    "veh": "MP04EB7507",
+    "pol": "N8440402",
+    "contactName": "Abhishek Kumar Mishra",
+    "mobile": "79 7459 2426",
+    "gross": "9998",
+    "net": "8473",
+    "company": "IFFCO TOKIO",
+    "inDb": true,
+    "dbRecordId": "f140f35f-95d9-45c5-b079-f7b245628a31",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "ABHISHEKH KUMAR MISHRA_MP04EB7507_2026-27.pdf",
+      "id": "1AehbklxZUJXfPsRF9epzVXbNFnAFlEEv"
+    }
+  },
+  {
+    "sno": "100",
+    "date": "31-08-2026",
+    "name": "AJAY SHRIVASTAVA",
+    "veh": "MP04CN1508",
+    "pol": "N8411538",
+    "contactName": "ANAND SIR",
+    "mobile": "8818889660",
+    "gross": "5666.36",
+    "net": "4802",
+    "company": "IFFCO TOKIO",
+    "inDb": true,
+    "dbRecordId": "ac068858-c577-459a-ab80-7e0a83ccaa9f",
+    "dbStoragePath": "1-9ARc4FE6JcAhAWuz9bdn4HPfaZ28fzt",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "AJAY SHRIVASTAVA_MP04CN1508_2026-27_POLICY.PDF",
+      "id": "1-9ARc4FE6JcAhAWuz9bdn4HPfaZ28fzt"
+    }
+  },
+  {
+    "sno": "96",
+    "date": "29-08-2026",
+    "name": "ALLAN ERIC VALLES",
+    "veh": "GA07L9228",
+    "pol": "3001/453214193/00/000",
+    "contactName": "RISHABH BHAIYA",
+    "mobile": "9607192219",
+    "gross": "45534",
+    "net": "38588",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "22a10a3a-6343-4e93-83d4-5ccfaaf2d1ef",
+    "dbStoragePath": "1OlJrdJBfFXekCNeFfr2fhmYIyHHM37Kk",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "ALLAN ERIC VALLES_GA07L9228_2026-27.pdf",
+      "id": "1OlJrdJBfFXekCNeFfr2fhmYIyHHM37Kk"
+    }
+  },
+  {
+    "sno": "70",
+    "date": "21-08-2026",
+    "name": "AMARPREET   KAUR",
+    "veh": "MP04CJ2645",
+    "pol": ";45140031260200004899",
+    "contactName": "VEER JI",
+    "mobile": "9424411103",
+    "gross": "2530",
+    "net": "2144",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "0627aac1-2311-4e02-822e-00919238d064",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "AMARPREET KAUR_MP04CJ2645_2026-27 POLICY.pdf",
+      "id": "1lNcFLGrQkGkIBEXSGKzbBZ6ugKeTAbvA"
+    }
+  },
+  {
+    "sno": "7",
+    "date": "04-08-2026",
+    "name": "AMRIT LAL PARWANI",
+    "veh": "MP04CT2032",
+    "pol": "OG-27-2301-1801-00000509",
+    "contactName": "amrit lal parwani",
+    "mobile": "7024611060",
+    "gross": "11196",
+    "net": "9488",
+    "company": "BAJAJ",
+    "inDb": true,
+    "dbRecordId": "1f2ab8cf-50a3-48fd-be00-7e18babb4c97",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "AMRIT LAL PARWANI_MP04CT2032_2026-27 POLICY (1).pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage"
+    },
+    "drivePdf": {
+      "name": "AMRIT LAL PARWANI_MP04CT2032_2026-27 POLICY.pdf",
+      "id": "1ZJbaEejfu3ph3u7H1xamUKFNpfE59veS"
+    }
+  },
+  {
+    "sno": "86",
+    "date": "25-08-2026",
+    "name": "ANKIT SHINDE",
+    "veh": "MP09DS4073",
+    "pol": "",
+    "contactName": "ANKIT SHINDE",
+    "mobile": "99933 19522",
+    "gross": "7648",
+    "net": "6512",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "446ea81f-8233-446d-8733-899efa8b8a09",
+    "dbStoragePath": "1xRefOpu5qt3u1pp6xYCktTPOopbMQdRo",
+    "dbStorageProvider": "google_drive",
+    "localPdf": {
+      "filename": "ANKIT SHINDE_MP09DS4073_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage"
+    },
+    "drivePdf": {
+      "name": "ANKIT SHINDE_MP09DS4073_2026-27.pdf",
+      "id": "1xRefOpu5qt3u1pp6xYCktTPOopbMQdRo"
+    }
+  },
+  {
+    "sno": "23",
+    "date": "07-08-2026",
+    "name": "ARJUN  SONI",
+    "veh": "MP04CU8801",
+    "pol": "",
+    "contactName": "ARJUN SONI",
+    "mobile": "9981134802",
+    "gross": "9996",
+    "net": "8472",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "8c69e649-49b3-486e-936a-e38aec4b5590",
+    "dbStoragePath": "1m0CyU-p5tDh9OSI36AacxHYGE7TfF6To",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "ARJUN SONI_MP04CU8801_2026-27...pdf",
+      "id": "1m0CyU-p5tDh9OSI36AacxHYGE7TfF6To"
+    }
+  },
+  {
+    "sno": "40",
+    "date": "13-08-2026",
+    "name": "ASHISH   PATIDAR",
+    "veh": "MP04CP6963",
+    "pol": "",
+    "contactName": "ASHISH   PATIDAR",
+    "mobile": "88890 20020",
+    "gross": "11553",
+    "net": "9791",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "821cb8c3-48e3-4199-8af0-03638adcc9bd",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "ASHISH PATIDAR_MP04CP6963_2026-27.pdf",
+      "id": "1rpjufentNT9K1Q92VJt67prnBYyygKf4"
+    }
+  },
+  {
+    "sno": "88",
+    "date": "26-08-2026",
+    "name": "CHANDAN KEER",
+    "veh": "MP04QN4304",
+    "pol": "",
+    "contactName": "Chandan Keer",
+    "mobile": "89824 00126",
+    "gross": "2282",
+    "net": "1934",
+    "company": "IFFCO TOKIO",
+    "inDb": true,
+    "dbRecordId": "02963ea0-44b4-4d47-bd04-ab485295fe20",
+    "dbStoragePath": "1_FC4s9uD4E3PWejkgO4cyiieBuKgSBI2",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "CHANDAN KEER_MP04QN4304_2026-27.pdf",
+      "id": "1_FC4s9uD4E3PWejkgO4cyiieBuKgSBI2"
+    }
+  },
+  {
+    "sno": "64",
+    "date": "19-08-2026",
+    "name": "DEEPAK KOTHARI",
+    "veh": "MP04CX5642",
+    "pol": "",
+    "contactName": "Deepak Mehul Kothari",
+    "mobile": "94253 04007",
+    "gross": "8439",
+    "net": "7152",
+    "company": "GO DIGIT",
+    "inDb": true,
+    "dbRecordId": "a82d580d-a190-47c9-9379-7687c42d31cb",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "DEEPAK KOTHARI_MP04CX5642_2026-27 POLICY.pdf",
+      "id": "1zS2L7fslUpgaNVrejwvJatT_hGprM6sq"
+    }
+  },
+  {
+    "sno": "51",
+    "date": "14-08-2026",
+    "name": "DILIP KUMAR BHILALA",
+    "veh": "MP04VF6074",
+    "pol": "",
+    "contactName": "",
+    "mobile": "",
+    "gross": "687",
+    "net": "583",
+    "company": "IFFCO TOKIO",
+    "inDb": true,
+    "dbRecordId": "02f4c66c-120c-4e0a-8c0a-63619646a2d1",
+    "dbStoragePath": "1xuD-ZLxltSTWEM92UO8q27l9pIZZmbFb",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "DILIP KUMAR BHILALA_MP04VF6074_2026-27.pdf",
+      "id": "1xuD-ZLxltSTWEM92UO8q27l9pIZZmbFb"
+    }
+  },
+  {
+    "sno": "22",
+    "date": "07-08-2026",
+    "name": "DILPREET SALUJA",
+    "veh": "MP04SF1726",
+    "pol": "",
+    "contactName": "VEER JI",
+    "mobile": "9424411103",
+    "gross": "1282",
+    "net": "1087",
+    "company": "IFFCO TOKIO",
+    "inDb": true,
+    "dbRecordId": "87c7f632-b154-4cc6-a1f6-cc62e76aecd8",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "DILPREET SALUJA_MP04SF1726_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage"
+    },
+    "drivePdf": {
+      "name": "DILPREET SALUJA_MP04SF1726_2026-27 POLICY.pdf",
+      "id": "1Yif27eaT1L2GsCM-E6pU4fYY0KN6u0nj"
+    }
+  },
+  {
+    "sno": "66",
+    "date": "20-08-2026",
+    "name": "DINESH DUBEY",
+    "veh": "MP04YB2059",
+    "pol": "",
+    "contactName": "DINESH DUBEY",
+    "mobile": "94250 27993",
+    "gross": "513",
+    "net": "435",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "471b0e4d-0deb-46ea-9232-64bd5995e7a4",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "DINESH DUBEY_MP04YB2059_2026-27 POLICY.pdf",
+      "id": "1VkyufJenup5czbjdR-PHTTWC4T-5_gX4"
+    }
+  },
+  {
+    "sno": "56",
+    "date": "17-08-2026",
+    "name": "DINESH KUMAR RAI",
+    "veh": "MP04CN1498",
+    "pol": "",
+    "contactName": "D  K RAI",
+    "mobile": "94253 91732",
+    "gross": "5230",
+    "net": "4432",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "5a6b1e78-202c-4273-8321-0989feec9009",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "Dinesh kumar rai _MP04CN1498_2026-27.pdf",
+      "id": "10Z1uVbOUc8Tgpw0XnJYD3ydswj2oTA-O"
+    }
+  },
+  {
+    "sno": "65",
+    "date": "19-08-2026",
+    "name": "GAURAV RAGHUWANSHI",
+    "veh": "MP04ZK2023",
+    "pol": "",
+    "contactName": "GAURAV RAGHUWANSHI",
+    "mobile": "98930 77787",
+    "gross": "15597",
+    "net": "13218",
+    "company": "BAJAJ",
+    "inDb": true,
+    "dbRecordId": "2b7ec3f6-4a17-43a0-a448-bc97335fb453",
+    "dbStoragePath": "12ws-rvTAWXMtmWhD2pOX0dzdXcGdqcCg",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "GAURAV RAGHUWANSHI_MP04ZK2023_2026-27 policy.pdf",
+      "id": "12ws-rvTAWXMtmWhD2pOX0dzdXcGdqcCg"
+    }
+  },
+  {
+    "sno": "39",
+    "date": "12-08-2026",
+    "name": "HARMINDER  SINGH",
+    "veh": "MP04UG1132",
+    "pol": "",
+    "contactName": "VEER JI",
+    "mobile": "9424411103",
+    "gross": "1418",
+    "net": "1202",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "1fbb3fb2-9c6f-4a2b-b6c4-bcd03e017117",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "HARMINDER SINGH_MP04UG1132_2026-27 POLICY.pdf",
+      "id": "1ERMD6RLOEwXNCpZG4Ie3Jk18ukxjqp-5"
+    }
+  },
+  {
+    "sno": "33",
+    "date": "10-08-2026",
+    "name": "HEMENDRA LONARE",
+    "veh": "MP04KG0802",
+    "pol": "",
+    "contactName": "HEMENDRA LONARE",
+    "mobile": "98266 63007",
+    "gross": "4670",
+    "net": "3958",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "af012fab-3907-42d7-a648-9e187604ec4d",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "HEMENDRA LONARE_MP04KG0802_2026-27.pdf",
+      "id": "1_YBvqrTA4PvD9EC-6igVLO622T-2VS0L"
+    }
+  },
+  {
+    "sno": "92",
+    "date": "27-08-2026",
+    "name": "KAMAL  KISHORE KUSHWAHA",
+    "veh": "MP04CN4513",
+    "pol": "",
+    "contactName": "Kamal Kishore",
+    "mobile": "75668 85565",
+    "gross": "4473",
+    "net": "3791",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "a0909da0-1dd9-4837-a583-3d440a58ac06",
+    "dbStoragePath": "1QS_QrD4YrRnbPEY-42WJ92Ponu9hofqU",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "KAMAL KISHORE KUSHWAHA_MP04CN4513_2026-27.pdf",
+      "id": "1QS_QrD4YrRnbPEY-42WJ92Ponu9hofqU"
+    }
+  },
+  {
+    "sno": "81",
+    "date": "24-08-2026",
+    "name": "KAMAL  SINGH",
+    "veh": "MP09KD6564",
+    "pol": "",
+    "contactName": "DHARMENDRA RAI",
+    "mobile": "9893112093",
+    "gross": "46502",
+    "net": "44250",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": null
+  },
+  {
+    "sno": "85",
+    "date": "25-08-2026",
+    "name": "KEDAR PANWAR",
+    "veh": "MP07P1734",
+    "pol": "",
+    "contactName": "KEDAR PANWAR",
+    "mobile": "9826834895",
+    "gross": "47333",
+    "net": "40113",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "170d702b-be67-4733-98e6-cb2b373d7195",
+    "dbStoragePath": "1jMf0R1HeWy8lNBomPKiYa3XPoGqQTtVg",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "KEDAR PANWAR_MP07P1734_2026-27.pdf",
+      "id": "1jMf0R1HeWy8lNBomPKiYa3XPoGqQTtVg"
+    }
+  },
+  {
+    "sno": "31",
+    "date": "10-08-2026",
+    "name": "LAXMI ENGINEERING",
+    "veh": "MP04CL5420",
+    "pol": "",
+    "contactName": "Rachna EA LE",
+    "mobile": "9669495111",
+    "gross": "5329",
+    "net": "4516",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "30e53c2a-6588-484b-a496-1a27c5bec88d",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "LAXMI ENGINEERING_MP04CL5420_2026-27.pdf",
+      "id": "1SP4teBj6BhUABHjxcyyJgmKypx2aX95r"
+    }
+  },
+  {
+    "sno": "29",
+    "date": "10-08-2026",
+    "name": "LION ENGINEERING CONSULTANTS PRIVATE LIMITED",
+    "veh": "MP04ZF4664",
+    "pol": "",
+    "contactName": "ARJUN SIR",
+    "mobile": "9111111692",
+    "gross": "687",
+    "net": "583",
+    "company": "IFFCO TOKIO",
+    "inDb": true,
+    "dbRecordId": "daa93b55-b84f-4045-8ded-df17f526f5f7",
+    "dbStoragePath": "1Bium8AgOyOiJKBGjyiirLgUpLjsD7NL2",
+    "dbStorageProvider": "google_drive",
+    "localPdf": {
+      "filename": "LION ENGINEERING CONSULTANTS PRIVATE LIMITED_MP04ZF4664_2026-27 (1).pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage"
+    },
+    "drivePdf": {
+      "name": "LION ENGINEERING CONSULTANTS PRIVATE LIMITED_MP04ZF4664_2026-27.pdf",
+      "id": "1Bium8AgOyOiJKBGjyiirLgUpLjsD7NL2"
+    }
+  },
+  {
+    "sno": "38",
+    "date": "12-08-2026",
+    "name": "LION ENGINEERING CONSULTANTS PRIVATE LIMITED",
+    "veh": "MP04EC5499",
+    "pol": "",
+    "contactName": "ARJUN SIR",
+    "mobile": "9111111692",
+    "gross": "15093",
+    "net": "12791",
+    "company": "TATA AIG",
+    "inDb": true,
+    "dbRecordId": "7b096658-0376-409a-a92f-a2cf06771966",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "Lion Engineering Consultants Pvt L_MP04EC5499_2026-27 POLICY.pdf",
+      "id": "1TeExw-nQzxD_goEH6pdM3p2wcRBt60O-"
+    }
+  },
+  {
+    "sno": "42",
+    "date": "13-08-2026",
+    "name": "LION ENGINEERING CONSULTANTS PRIVATE LIMITED",
+    "veh": "MP07ZC1277",
+    "pol": "",
+    "contactName": "ARJUN SIR",
+    "mobile": "9111111692",
+    "gross": "11472",
+    "net": "9722",
+    "company": "HDFC ERGO",
+    "inDb": true,
+    "dbRecordId": "392df333-3ed9-4c15-84f8-ca61c604480f",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "LION ENGINEERING CONSULTANTS PRIVATE LIMITED_MP07ZC1277_2026-27.pdf",
+      "id": "1pKlTZDE55cQq-2doZuMr3V3ZeEM6mN5d"
+    }
+  },
+  {
+    "sno": "87",
+    "date": "26-08-2026",
+    "name": "M/S ADITYAEVENT",
+    "veh": "MP04ZL4271",
+    "pol": "",
+    "contactName": "YOGESH SIR",
+    "mobile": "831 970 6765",
+    "gross": "18111",
+    "net": "16851",
+    "company": "BAJAJ",
+    "inDb": true,
+    "dbRecordId": "ab5c7f23-1249-4dd5-9871-fec8b218fb2c",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "MS ADITYA EVENT_MP04ZL4271_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "MS ADITYA EVENT_MP04ZL4271_2026-27.pdf",
+      "id": "19E0SC98S_8WIx-SBpM2InjpLx7f2BHQ6"
+    }
+  },
+  {
+    "sno": "57",
+    "date": "18-08-2026",
+    "name": "M/S G SAGENCIES",
+    "veh": "MP04KG2833",
+    "pol": "",
+    "contactName": "G S Agencies",
+    "mobile": "93031 00121",
+    "gross": "5837",
+    "net": "4947",
+    "company": "BAJAJ",
+    "inDb": true,
+    "dbRecordId": "9a7b996b-663b-47f2-8478-06ef6226ae43",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "MS GSAGENCIES_MP04KG2833_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "MS GSAGENCIES_MP04KG2833_2026-27 POLICY.pdf",
+      "id": "1bpeRr9WwcB9wuwIl0AE9HMHRJapRBqAt"
+    }
+  },
+  {
+    "sno": "12",
+    "date": "06-08-2026",
+    "name": "M/S M.P. AGROTONICS LIMITED",
+    "veh": "PB39M9839",
+    "pol": "",
+    "contactName": "SARIKA",
+    "mobile": "9303770252",
+    "gross": "39079",
+    "net": "33119",
+    "company": "BAJAJ",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "MS M.P. AGROTONICS LIMITED_PB39M9839_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "MS M.P. AGROTONICS LIMITED_PB39M9839_2026-27.pdf",
+      "id": "1m8_WTk4DCToCN4SWoKP1jeBBc6eD_aQU"
+    }
+  },
+  {
+    "sno": "74",
+    "date": "21-08-2026",
+    "name": "M/S PRIMEONE WORK FORCE PVT LTD",
+    "veh": "MP04CX5307",
+    "pol": "",
+    "contactName": "AMBIKA PRASAD",
+    "mobile": "97555 56046",
+    "gross": "11191",
+    "net": "9483",
+    "company": "TATA AIG",
+    "inDb": true,
+    "dbRecordId": "51d70c9e-5274-421b-b9f4-e5658b2068b1",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "MS PRIMEONE WORK FORCE PVT LTD_MP04CX5307_202627.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "MS PRIMEONE WORK FORCE PVT LTD_MP04CX5307_202627.pdf",
+      "id": "12fOEtfXuIvvOM0KPATZ6MeigGKiLOtNv"
+    }
+  },
+  {
+    "sno": "97",
+    "date": "31-08-2026",
+    "name": "M/s.RONITFUELPOINT",
+    "veh": "MP48ZH8598",
+    "pol": "",
+    "contactName": "ROHIT MANDAL",
+    "mobile": "7999542254/ 7047832212",
+    "gross": "44325",
+    "net": "41454",
+    "company": "ROYAL SUNDARAM",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "RONIT FUEL POINT MP48ZH8598 2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "RONIT FUEL POINT MP48ZH8598 2026-27.pdf",
+      "id": "1U_3mD_cuwfUswZm4faobqlx-S5Lxqsmg"
+    }
+  },
+  {
+    "sno": "25",
+    "date": "07-08-2026",
+    "name": "M/s.SHREEBAHORACONSTRUCTIONSPRIVATELIMITED",
+    "veh": "UP85CT2063",
+    "pol": "",
+    "contactName": "NOSHAD BHAI",
+    "mobile": "7566257061",
+    "gross": "52238",
+    "net": "49112",
+    "company": "ROYAL SUNDARAM",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "Ms.SHREEBAHORACONSTRUCTIONSPRIVATELIMITED_UP85CT2063_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "Ms.SHREEBAHORACONSTRUCTIONSPRIVATELIMITED_UP85CT2063_2026-27.pdf",
+      "id": "1fqmwR_voUOyWz4zFOyT3eH883uDE9pj2"
+    }
+  },
+  {
+    "sno": "93",
+    "date": "27-08-2026",
+    "name": "M/s.SHUKLA AGRITECH PRIVATE",
+    "veh": "UP70GT4941",
+    "pol": "",
+    "contactName": "SHIVAM SHUKLA",
+    "mobile": "9755100441",
+    "gross": "51453",
+    "net": "48479",
+    "company": "ROYAL SUNDARAM",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SHUKLA AGRITECH PRIVATE UP70GT4941_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SHUKLA AGRITECH PRIVATE UP70GT4941_2026-27.pdf",
+      "id": "1lqv0NvJZ1pZEI7_uEddNb2p4K8FU7vzw"
+    }
+  },
+  {
+    "sno": "43",
+    "date": "14-08-2026",
+    "name": "M/s.SHUKLA AGRITECH PRIVATE LIMITED",
+    "veh": "UP70FT3435",
+    "pol": "",
+    "contactName": "SHIVAM SHUKLA",
+    "mobile": "9755100441",
+    "gross": "50466",
+    "net": "47642",
+    "company": "ROYAL SUNDARAM",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "Ms.SHUKLA AGRITECH PRIVATE LIMITED_UP70FT3435_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "Ms.SHUKLA AGRITECH PRIVATE LIMITED_UP70FT3435_2026-27.pdf",
+      "id": "1JX9Q484Yve96NUar9qhL5FiK9-qi7YsC"
+    }
+  },
+  {
+    "sno": "44",
+    "date": "14-08-2026",
+    "name": "M/s.SHUKLA AGRITECH PRIVATE LIMITED",
+    "veh": "UP70FT3437",
+    "pol": "",
+    "contactName": "SHIVAM SHUKLA",
+    "mobile": "9755100441",
+    "gross": "51174",
+    "net": "48242",
+    "company": "ROYAL SUNDARAM",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "Ms.SHUKLA AGRITECH PRIVATE LIMITED_UP70FT3437_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "Ms.SHUKLA AGRITECH PRIVATE LIMITED_UP70FT3437_2026-27.pdf",
+      "id": "1kazjQMYIc3ekUc9WbjTOzbVxRbXPLrxG"
+    }
+  },
+  {
+    "sno": "13",
+    "date": "06-08-2026",
+    "name": "MAHAKAL TRANSPORT AND CO",
+    "veh": "RJ05GB2635",
+    "pol": "",
+    "contactName": "Bairagi Travels",
+    "mobile": "7999607601",
+    "gross": "46632",
+    "net": "44392",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "b0efa7ee-4ef7-4c15-8e47-dcdc2173be17",
+    "dbStoragePath": "1aaBUQZWNaREzu0cmQjGEoyCSz8JP2GCv",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "MAHAKAL TRANSPORT AND CO._RJ05GB2635_2026-27.pdf",
+      "id": "1aaBUQZWNaREzu0cmQjGEoyCSz8JP2GCv"
+    }
+  },
+  {
+    "sno": "73",
+    "date": "21-08-2026",
+    "name": "MAHENDRA SINGH PARIHAR",
+    "veh": "MP09SU7659",
+    "pol": "",
+    "contactName": "MAHENDRA SINGH PARIHAR",
+    "mobile": "883 912 8835",
+    "gross": "1311",
+    "net": "1111",
+    "company": "GO DIGIT",
+    "inDb": true,
+    "dbRecordId": "ab11933c-6b2a-4dd8-b1b2-a411833f2fbc",
+    "dbStoragePath": "1xODK2VCUPaynR_fWXYmpaLbrlQGUm-Cc",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "MAHENDRA SINGH PARIHAR_MP09SU7659_2026-27 POLICY.pdf",
+      "id": "1xODK2VCUPaynR_fWXYmpaLbrlQGUm-Cc"
+    }
+  },
+  {
+    "sno": "95",
+    "date": "27-08-2026",
+    "name": "Mr Ankita Goswami",
+    "veh": "MP09ZS9904",
+    "pol": "",
+    "contactName": "Ankita Goswami",
+    "mobile": "84619 87827",
+    "gross": "21699",
+    "net": "18389",
+    "company": "TATA AIG",
+    "inDb": true,
+    "dbRecordId": "6e2d7268-03d5-4ba4-bb5b-0348a0fc233a",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "Mr Ankita Goswami_MP09ZS9904_2026-27.pdf",
+      "id": "13yw6ZRWTMT3tbOd8u4o-s3HZrZmU7gc0"
+    }
+  },
+  {
+    "sno": "76",
+    "date": "21-08-2026",
+    "name": "Mr ANRUDH TIWARI",
+    "veh": "MP04CR3198",
+    "pol": "",
+    "contactName": "ABHIMANYU TIWARI SIR ICICI",
+    "mobile": "9522273304",
+    "gross": "11946",
+    "net": "10124",
+    "company": "ROYAL SUNDARAM",
+    "inDb": true,
+    "dbRecordId": "4ef5bef3-e58e-4f5d-b2df-e1d7c22df2ba",
+    "dbStoragePath": "1Aj2O_hh67RFdTcMSlQt86pZnojRY6tvv",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "Mr ANRUDH TIWARI_MP04CR3198_2026-27.pdf",
+      "id": "1Aj2O_hh67RFdTcMSlQt86pZnojRY6tvv"
+    }
+  },
+  {
+    "sno": "20",
+    "date": "06-08-2026",
+    "name": "MR ANUBHAV GUPTA",
+    "veh": "MP04ZA1437",
+    "pol": "",
+    "contactName": "ANAND SIR",
+    "mobile": "8818889660",
+    "gross": "21586",
+    "net": "18293",
+    "company": "HDFC ERGO",
+    "inDb": true,
+    "dbRecordId": "d1953343-6a40-479a-be00-c269b21b73e5",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "MR ANUBHAV GUPTA_MP04ZA1437_2026-27.pdf",
+      "id": "18TCCJIei7DuQsiqwEZAhpjv4Tojp-9wN"
+    }
+  },
+  {
+    "sno": "27",
+    "date": "08-08-2026",
+    "name": "MR DILIP  KHANDELWAL",
+    "veh": "MP04BA4360",
+    "pol": "",
+    "contactName": "DILIP KHANDELWAL",
+    "mobile": "7000338920",
+    "gross": "2913",
+    "net": "2469",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "513dbe02-1472-4c03-8476-57c4064122c2",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "DILIP KHANDELWAL_MP04BA4360_2026-27 POLICY.pdf",
+      "id": "1sdEVEEzlQewta9lXvQ5_bSuOr0j5Y_BH"
+    }
+  },
+  {
+    "sno": "83",
+    "date": "25-08-2026",
+    "name": "MR PARTHO CHAKRABORTY",
+    "veh": "MP04CT2003",
+    "pol": "",
+    "contactName": "AJITESH SIR",
+    "mobile": "99779 92250",
+    "gross": "38423",
+    "net": "32562",
+    "company": "HDFC ERGO",
+    "inDb": true,
+    "dbRecordId": "b705388f-6143-466d-9720-f63ba6aba03e",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "MR PARTHO CHAKRABORTY_MP04CT2003_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage"
+    },
+    "drivePdf": {
+      "name": "MR PARTHO CHAKRABORTY_MP04CT2003_2026-27.pdf",
+      "id": "1kYDfrWYJVtHFOmmARxNz26sQHc1DBlBz"
+    }
+  },
+  {
+    "sno": "30",
+    "date": "10-08-2026",
+    "name": "MR SANJAY SHRIVASTAVA",
+    "veh": "MP04CV2880",
+    "pol": "",
+    "contactName": "Sanjay Shrivastav",
+    "mobile": "9993959782",
+    "gross": "5953",
+    "net": "5045",
+    "company": "HDFC ERGO",
+    "inDb": true,
+    "dbRecordId": "c78e28df-a47c-468b-89ba-5958dc968526",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "MR_SANJAY_SHRIVASTAVA_MP04CV2880_2026-27.PDF",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "MR_SANJAY_SHRIVASTAVA_MP04CV2880_2026-27.PDF",
+      "id": "1ulhY3mm23061ZceCpx7rULptHjWAMqjM"
+    }
+  },
+  {
+    "sno": "48",
+    "date": "14-08-2026",
+    "name": "MR SHUBHAM KUSHWAHA",
+    "veh": "MP04YA8427",
+    "pol": "",
+    "contactName": "SHUBHAM KUSHWAHA",
+    "mobile": "7415203531",
+    "gross": "7656",
+    "net": "6491",
+    "company": "HDFC ERGO",
+    "inDb": true,
+    "dbRecordId": "967ac29c-5d7c-4cf0-8ac7-db2f217dde4e",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "MR SHUBHAM KUSHWAHA_MP04YA8427_2026-27.PDF",
+      "id": "1y5LMCaLK9iegR9_SSxEA7RjYM-gIPkvZ"
+    }
+  },
+  {
+    "sno": "46",
+    "date": "14-08-2026",
+    "name": "Mr Siddharth Nahar",
+    "veh": "NEW",
+    "pol": "",
+    "contactName": "Siddharth Nahar",
+    "mobile": "9826688101",
+    "gross": "113816",
+    "net": "96454",
+    "company": "TATA AIG",
+    "inDb": true,
+    "dbRecordId": "d65f7392-2d81-4cdc-80de-7c5e417da7d9",
+    "dbStoragePath": "1sO4kp3rfmRMAxusQDxm46B8HC976G7QS",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "Mr Siddharth Nahar_ motor no _21BT0613141_2026-27.pdf",
+      "id": "1sO4kp3rfmRMAxusQDxm46B8HC976G7QS"
+    }
+  },
+  {
+    "sno": "28",
+    "date": "10-08-2026",
+    "name": "MR. DHARMENDRA RAI",
+    "veh": "MP09HG5538",
+    "pol": "",
+    "contactName": "DHARMENDRA RAI",
+    "mobile": "9893112093",
+    "gross": "48028",
+    "net": "45544",
+    "company": "ROYAL SUNDARAM",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "Dharmendra Rai_MP09HG5538_Policy.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage"
+    },
+    "drivePdf": {
+      "name": "Dharmendra Rai_MP09HG5538_Policy.pdf",
+      "id": "17TMXURUp-47FzUdTzL9uoOPlceQlgqXv"
+    }
+  },
+  {
+    "sno": "34",
+    "date": "10-08-2026",
+    "name": "MR. JAGENDRA RATHORE",
+    "veh": "MP04UC1162",
+    "pol": "",
+    "contactName": "Jegendra Rathore",
+    "mobile": "95848 08923",
+    "gross": "865",
+    "net": "733",
+    "company": "TATA AIG",
+    "inDb": true,
+    "dbRecordId": "8eff0d31-50f5-4d6d-8805-4311fd2b4c0d",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "MR. JAGENDRA RATHORE_MP04UC1162_2026-27 POLICY.pdf",
+      "id": "1vm-7YDGim7yw1_U0FZ_nD97EfjDOhIUY"
+    }
+  },
+  {
+    "sno": "32",
+    "date": "10-08-2026",
+    "name": "MR. VISHAL AGRAWAL",
+    "veh": "MP04YR9981",
+    "pol": "",
+    "contactName": "Siddharth Sir",
+    "mobile": "9009020200",
+    "gross": "22836",
+    "net": "19437",
+    "company": "HDFC ERGO",
+    "inDb": true,
+    "dbRecordId": "663089af-3f52-4b75-9c70-fccd8f8c9c6b",
+    "dbStoragePath": "1vrlhNXZIE6gk1chwTpvXb2c9Z8RTdpwA",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "MR VISHAL AGRAWAL_MP04YR9981_2026-27 policy.PDF",
+      "id": "1vrlhNXZIE6gk1chwTpvXb2c9Z8RTdpwA"
+    }
+  },
+  {
+    "sno": "77",
+    "date": "22-08-2026",
+    "name": "Mr.DHARMENDRARAI",
+    "veh": "MP09HG2942",
+    "pol": "",
+    "contactName": "DHARMENDRA RAI",
+    "mobile": "9893112093",
+    "gross": "50201",
+    "net": "47386",
+    "company": "ROYAL SUNDARAM",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "Mr.DHARMENDRA RAI_MP09HG2942_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "Mr.DHARMENDRA RAI_MP09HG2942_2026-27.pdf",
+      "id": "1-vWKO01kwRoCXvWitCv_QsUWkt5yIplh"
+    }
+  },
+  {
+    "sno": "35",
+    "date": "10-08-2026",
+    "name": "MRS Pushpa Sharma",
+    "veh": "MP04CX5416",
+    "pol": "",
+    "contactName": "Ritesh Sharma",
+    "mobile": "91654 19999",
+    "gross": "9994",
+    "net": "8469",
+    "company": "GENERALI CENTRAL",
+    "inDb": true,
+    "dbRecordId": "34b18c02-6da9-4b3d-8a82-8c920efd68f6",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "MRS Pushpa Sharma_MP04CX5416_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "MRS Pushpa Sharma_MP04CX5416_2026-27 POLICY.pdf",
+      "id": "1QldR3hnf8oE5jrcHOkgHZdsP2_6VDia_"
+    }
+  },
+  {
+    "sno": "26",
+    "date": "08-08-2026",
+    "name": "MRS. HANDEL PALAK",
+    "veh": "MH12NR9208",
+    "pol": "",
+    "contactName": "NEERAJ",
+    "mobile": "9713912789",
+    "gross": "882",
+    "net": "748",
+    "company": "TATA AIG",
+    "inDb": true,
+    "dbRecordId": "3f0dc99d-1dc0-45bc-916d-7238cd0484e7",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "MRS. HANDEL PALAK_MH12NR9208_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "MRS. HANDEL PALAK_MH12NR9208_2026-27.pdf",
+      "id": "1UT0bhWdu75GSWbTwsDhH_fyNTqq1WT0c"
+    }
+  },
+  {
+    "sno": "14",
+    "date": "06-08-2026",
+    "name": "MS JAI SHRIRAM TRADING CO RAM SEWAK",
+    "veh": "MP36C1257",
+    "pol": "",
+    "contactName": "Ashish Sahu",
+    "mobile": "8839123434",
+    "gross": "4266",
+    "net": "3616",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "1a2289c2-d811-41a0-8a29-4141ce303a44",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "MS JAI SHRIRAM TRADING CO RAM SEWAK_MP36C1257_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "MS JAI SHRIRAM TRADING CO RAM SEWAK_MP36C1257_2026-27.pdf",
+      "id": "19AdxQ-QRzg26oTqcYU7FmK6JHTrAtZGT"
+    }
+  },
+  {
+    "sno": "37",
+    "date": "11-08-2026",
+    "name": "MS YASHI   SHRIVASTAV",
+    "veh": "MP38S1667",
+    "pol": "",
+    "contactName": "Sanjay Shrivastav",
+    "mobile": "99939 59782",
+    "gross": "1314",
+    "net": "1114",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "55249fd7-21b8-46c5-9f81-49214d76eff0",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "MS YASHI SHRIVASTAV_MP38S1667_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "MS YASHI SHRIVASTAV_MP38S1667_2026-27.pdf",
+      "id": "1WmlN-L-3Y-kKBoGo1_FbnWOeJ3y8QM41"
+    }
+  },
+  {
+    "sno": "69",
+    "date": "21-08-2026",
+    "name": "NARENDRA SINGH BAGGA",
+    "veh": "MP04CJ9537",
+    "pol": "",
+    "contactName": "VEER JI",
+    "mobile": "9424411103",
+    "gross": "3495",
+    "net": "2962",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "c9ca5a93-8807-4f1e-b136-a9ccc74bf090",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "NARENDRA SINGH BAGGA_MP04CJ9537_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "NARENDRA SINGH BAGGA_MP04CJ9537_2026-27 POLICY.pdf",
+      "id": "1GRhoNfDIUsmNS6n4zjqXAEi856L4QrAH"
+    }
+  },
+  {
+    "sno": "21",
+    "date": "07-08-2026",
+    "name": "NITIN SINGH RAJPUT",
+    "veh": "MP04YR9052",
+    "pol": "",
+    "contactName": "NITIN THAKUR",
+    "mobile": "7224054735",
+    "gross": "1452",
+    "net": "1230",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "NITIN SINGH RAJPUT_MP04YR9052_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "NITIN SINGH RAJPUT_MP04YR9052_2026-27.pdf",
+      "id": "1TnRDhUfOy9m2alSrDtGOoaRXn6O8FASH"
+    }
+  },
+  {
+    "sno": "36",
+    "date": "11-08-2026",
+    "name": "PANJAB SINGH YADAV",
+    "veh": "MP04CL3716",
+    "pol": "",
+    "contactName": "Surjeet Singh",
+    "mobile": "78791 88306",
+    "gross": "7063",
+    "net": "5986",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "7bd7b7c9-9e23-4155-bf42-df8f091def0c",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "PANJAB SINGH YADAV_MP04CL3716_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "PANJAB SINGH YADAV_MP04CL3716_2026-27 POLICY.pdf",
+      "id": "1M65Wq2X6XSXKGltBuRjzzHmJK2diRJxa"
+    }
+  },
+  {
+    "sno": "45",
+    "date": "14-08-2026",
+    "name": "PIYUSH   SAHU",
+    "veh": "MP04SQ6933",
+    "pol": "",
+    "contactName": "PIYUSH SAHU",
+    "mobile": "9893086191",
+    "gross": "1387",
+    "net": "1175",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "95a30ee4-4437-44a6-9dc1-90886c663b0f",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "PIYUSH SAHU_MP04SQ6933_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "PIYUSH SAHU_MP04SQ6933_2026-27.pdf",
+      "id": "13lSrSZ1eVgRfx5uDbVYH07dqaKPv9Gat"
+    }
+  },
+  {
+    "sno": "89",
+    "date": "26-08-2026",
+    "name": "PRABHJOT SINGH DEVGUN",
+    "veh": "MP04YA5899",
+    "pol": "",
+    "contactName": "PRABHJOT SINGH DEVGUN",
+    "mobile": "73545 88018",
+    "gross": "11840",
+    "net": "10034",
+    "company": "ICICI LOMBARD",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "PRABJOT SINGH DEVGUN_MP04YA5899_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "PRABJOT SINGH DEVGUN_MP04YA5899_2026-27.pdf",
+      "id": "139MffhddwGKNMrLL7MqxSl7Z5pbllu2P"
+    }
+  },
+  {
+    "sno": "47",
+    "date": "14-08-2026",
+    "name": "PRAGATI FOODS",
+    "veh": "NEW",
+    "pol": "",
+    "contactName": "HIMASHU DUDS",
+    "mobile": "9399244484",
+    "gross": "83605",
+    "net": "70851",
+    "company": "TATA AIG",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "PRAGATI FOODS_TZ220XS17CO2605207_2027-26.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "PRAGATI FOODS_TZ220XS17CO2605207_2027-26.pdf",
+      "id": "1rIrfzYUXn8W8RBnXbK43rvm-5jh-R3KL"
+    }
+  },
+  {
+    "sno": "62",
+    "date": "19-08-2026",
+    "name": "PRAKASH KUMAR PANDEY",
+    "veh": "MP05MJ3270",
+    "pol": "",
+    "contactName": "PRAKASH KUMAR PANDEY",
+    "mobile": "94244 83248",
+    "gross": "842",
+    "net": "714",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "PRAKASH KUMAR PANDEY_MP05MJ3270_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "PRAKASH KUMAR PANDEY_MP05MJ3270_2026-27 POLICY.pdf",
+      "id": "1zcRGuSsAC7x9IOTuWURzcFf1SLTaW6zb"
+    }
+  },
+  {
+    "sno": "24",
+    "date": "07-08-2026",
+    "name": "PRAMOD   BHAISARE",
+    "veh": "MP04UF3275",
+    "pol": "",
+    "contactName": "VEER JI",
+    "mobile": "9424411103",
+    "gross": "1425",
+    "net": "1207",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "0915b9fa-d42d-408c-a656-e7137b48422a",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "PRAMOD BHAISARE_MP04UF3275_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "PRAMOD BHAISARE_MP04UF3275_2026-27.pdf",
+      "id": "1GGmWUivfEJsDSzaLXgb4YXj4Qi18B85x"
+    }
+  },
+  {
+    "sno": "50",
+    "date": "14-08-2026",
+    "name": "PRANAV KUMAR SHARMA",
+    "veh": "MP37MR8483",
+    "pol": "",
+    "contactName": "DEVESH SHARMA (MAHADEV WAREHOUSE SEHORE)",
+    "mobile": "9993360263",
+    "gross": "1407",
+    "net": "1193",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "PRANAV KUMAR SHARMA_MP37MR8483_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "PRANAV KUMAR SHARMA_MP37MR8483_2026-27.pdf",
+      "id": "1xLo90KCKONIiIzumqiOrCrkJ8YzkwRuO"
+    }
+  },
+  {
+    "sno": "54",
+    "date": "17-08-2026",
+    "name": "RACHANA PETROLEUM",
+    "veh": "MP04ZH1919",
+    "pol": "",
+    "contactName": "Ritesh Sharma",
+    "mobile": "91654 19999",
+    "gross": "48494",
+    "net": "41097",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "96242cd5-80a7-427c-9abd-7e420352c626",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "RACHANA PETROLEUM_MP04ZH1919_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "RACHANA PETROLEUM_MP04ZH1919_2026-27 POLICY.pdf",
+      "id": "15Y6ihFok-pICDvTC78_3YBpOthtZit6i"
+    }
+  },
+  {
+    "sno": "52",
+    "date": "17-08-2026",
+    "name": "RAJENDRA  GUPTA",
+    "veh": "MP04CL5566",
+    "pol": "",
+    "contactName": "MANU GUPTA",
+    "mobile": "94250 07971",
+    "gross": "10423",
+    "net": "8833",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "83281471-f5de-418c-87d0-2e4b6abca8f4",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "RAJENDRA GUPTA_MP04CL5566_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "RAJENDRA GUPTA_MP04CL5566_2026-27.pdf",
+      "id": "1cvDjMT2G30orVcxl70QEm7w75tMzuWtK"
+    }
+  },
+  {
+    "sno": "41",
+    "date": "13-08-2026",
+    "name": "RAKESH   TIWARI",
+    "veh": "MP04SV5837",
+    "pol": "",
+    "contactName": "Rakesh Tiwari",
+    "mobile": "78982 01866",
+    "gross": "1414",
+    "net": "1198",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "a9f20980-d499-4aa2-bb76-ef1f1d7e2941",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "RAKESH TIWARI_MP04SV5837_2026-27 POLICY.pdf",
+      "id": "1P8hgVMiw1BWUlTVxQnoBgHnunobwY3JR"
+    }
+  },
+  {
+    "sno": "68",
+    "date": "21-08-2026",
+    "name": "RAKESH   TIWARI",
+    "veh": "MP05ZB6573",
+    "pol": "",
+    "contactName": "Rakesh Tiwari",
+    "mobile": "78982 01866",
+    "gross": "2060",
+    "net": "1746",
+    "company": "BAJAJ",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "RAKESHTIWARI_MP05ZB6573_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "RAKESHTIWARI_MP05ZB6573_2026-27.pdf",
+      "id": "1xv4bAdLhc5FlwINmQVumTu0HbK3v50aM"
+    }
+  },
+  {
+    "sno": "99",
+    "date": "31-08-2026",
+    "name": "RAMSWRUP SINGH RAGHUWANSHI",
+    "veh": "MP04ZN4097",
+    "pol": "",
+    "contactName": "R S raghuwanshi",
+    "mobile": "9893248674",
+    "gross": "9005",
+    "net": "7631",
+    "company": "ICICI LOMBARD",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "MR. RAMSWRAP SINGH RAGHUWANSHI_MP04ZN4097_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "MR. RAMSWRAP SINGH RAGHUWANSHI_MP04ZN4097_2026-27.pdf",
+      "id": "1r83tivddfD84NifXzkinFlXMRWzMwuyn"
+    }
+  },
+  {
+    "sno": "2",
+    "date": "01-08-2026",
+    "name": "RAVI SHANKAR IYER",
+    "veh": "MP04CG6654",
+    "pol": "",
+    "contactName": "Mr RAVI SHANKAR IYER",
+    "mobile": "9329665967",
+    "gross": "4415",
+    "net": "3741",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "35db3f25-1047-4761-a0b3-7ef07c9a1bca",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "RAVI SHANKAR IYER_MP04CG6654_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "RAVI SHANKAR IYER_MP04CG6654_2026-27 POLICY.pdf",
+      "id": "1ttP8vEBETsP6duSzRfiifpoTftYfFqjj"
+    }
+  },
+  {
+    "sno": "80",
+    "date": "24-08-2026",
+    "name": "ROUNAK GARG",
+    "veh": "MP47ZE9160",
+    "pol": "",
+    "contactName": "ROUNAK GARG",
+    "mobile": "79873 56311",
+    "gross": "11848",
+    "net": "10041",
+    "company": "IFFCO TOKIO",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "ROUNAK GARG _MP47ZE9160_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "ROUNAK GARG _MP47ZE9160_2026-27.pdf",
+      "id": "1d-FoQv59ixkJfNKBAo7AWBD9FHhZQyKf"
+    }
+  },
+  {
+    "sno": "90",
+    "date": "26-08-2026",
+    "name": "SADHNA RAI",
+    "veh": "MP37C1668",
+    "pol": "",
+    "contactName": "KUNAL RAI",
+    "mobile": "98938 34111",
+    "gross": "14665",
+    "net": "12428",
+    "company": "ICICI LOMBARD",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SADHNA RAI_MP37C1668_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SADHNA RAI_MP37C1668_2026-27.pdf",
+      "id": "19HOqoue_FYvqAY6IhIaNgphzRIwkQb25"
+    }
+  },
+  {
+    "sno": "75",
+    "date": "21-08-2026",
+    "name": "SAMEER KHAN",
+    "veh": "MP04ZL8631",
+    "pol": "",
+    "contactName": "JAMAL UDDIN",
+    "mobile": "93008 04050",
+    "gross": "915",
+    "net": "775",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SAMEER KHAN_MP04ZL8631_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SAMEER KHAN_MP04ZL8631_2026-27.pdf",
+      "id": "1nx5rKN_9GvA9xl4r5PaFqE7DZZJ5MGqY"
+    }
+  },
+  {
+    "sno": "3",
+    "date": "03-08-2026",
+    "name": "SANJAY KUMAR SONI",
+    "veh": "MP04CA2453",
+    "pol": "",
+    "contactName": "ARJUN SONI",
+    "mobile": "9981134802",
+    "gross": "6908",
+    "net": "5854",
+    "company": "ICICI LOMBARD",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SANJAY KUMAR SONI_MP37C5791_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SUNIL CHAUDHARY_MP04CA2453_2026-27.pdf",
+      "id": "1QqGXnhdpAb8BPVzQlRX3v3_dDSOAsJzt"
+    }
+  },
+  {
+    "sno": "101",
+    "date": "31-08-2026",
+    "name": "SANJEEV PRASAD SHUKLA",
+    "veh": "MP17CC6659",
+    "pol": "",
+    "contactName": "",
+    "mobile": "",
+    "gross": "15393",
+    "net": "13045",
+    "company": "IFFCO TOKIO",
+    "inDb": true,
+    "dbRecordId": "00766493-b0d6-4a90-a711-54a62c324967",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SANJEEV PRASAD SHUKLA-MP17CC6659_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SANJEEV PRASAD SHUKLA-MP17CC6659_2026-27.pdf",
+      "id": "14-9PdX5_cjnnyTGyzd5ZhoiLsYnR09et"
+    }
+  },
+  {
+    "sno": "84",
+    "date": "25-08-2026",
+    "name": "SANJEEV SINGHAI",
+    "veh": "MP04YB2437",
+    "pol": "",
+    "contactName": "SANJEEV SINGHAI",
+    "mobile": "9987022416",
+    "gross": "11918",
+    "net": "10100",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "fda77981-e36f-4bb0-b400-56bb79ade638",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SANJEEV SINGHAI_MP04YB2437_2026-27 (1).pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SANJEEV SINGHAI_MP04YB2437_2026-27 (1).pdf",
+      "id": "1cC2Webp6hPKKTku8l_J51m8sgX400KBq"
+    }
+  },
+  {
+    "sno": "15",
+    "date": "06-08-2026",
+    "name": "SANKET AGRAWAL",
+    "veh": "MP20CE9904",
+    "pol": "",
+    "contactName": "Sanket Agrawal",
+    "mobile": "7389156977",
+    "gross": "5921",
+    "net": "5018",
+    "company": "IFFCO TOKIO",
+    "inDb": true,
+    "dbRecordId": "8161b4e9-b3c0-4b20-ba6e-171f7ee06f2e",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SANKET AGRAWAL_MP20CE9904_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SANKET AGRAWAL_MP20CE9904_2026-27.pdf",
+      "id": "1D3qpz5phRfzC1HsDE7xDjwB_xrn6NSR9"
+    }
+  },
+  {
+    "sno": "63",
+    "date": "19-08-2026",
+    "name": "SHAREEF  KHAN",
+    "veh": "MP09HF1612",
+    "pol": "",
+    "contactName": "DHARMENDRA RAI",
+    "mobile": "9893112093",
+    "gross": "46266",
+    "net": "44050",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SHAREEF KHAN_MP09HF1612_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SHAREEF KHAN_MP09HF1612_2026-27.pdf",
+      "id": "1R3DK1dOSCG5t--GrtEhXXcl1YbirUUHU"
+    }
+  },
+  {
+    "sno": "18",
+    "date": "06-08-2026",
+    "name": "SHEETALNATH BUILDERS PVT LTD",
+    "veh": "MP04ZY0123",
+    "pol": "",
+    "contactName": "PRIYANK JAIN",
+    "mobile": "9993071666",
+    "gross": "23745",
+    "net": "20123",
+    "company": "BAJAJ",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SHEETALNATH BUILDERS PVT LTD_MP04ZY0123_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SHEETALNATH BUILDERS PVT LTD_MP04ZY0123_2026-27.pdf",
+      "id": "1faHRjiliwBOzXhoTGhWmBFJY9Jd8qVcH"
+    }
+  },
+  {
+    "sno": "91",
+    "date": "27-08-2026",
+    "name": "SHREENATHJI INFRASTRUCTURE",
+    "veh": "MP04EC1080",
+    "pol": "",
+    "contactName": "MALPANI JI",
+    "mobile": "94251 34320",
+    "gross": "10418",
+    "net": "8829",
+    "company": "GENERALI CENTRAL",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SHREENATHJI INFRASTRUCTURE_MP04EC1080_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SHREENATHJI INFRASTRUCTURE_MP04EC1080_2026-27.pdf",
+      "id": "10jiFFrCoK7NZbfRFBOexEsjbW3PUIZkg"
+    }
+  },
+  {
+    "sno": "94",
+    "date": "27-08-2026",
+    "name": "SHRI SATGURU AGROMILLS PRIVATE LTD",
+    "veh": "MP05MJ3964",
+    "pol": "",
+    "contactName": "AMAN AGRAWAL",
+    "mobile": "62648 53015",
+    "gross": "842",
+    "net": "714",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SHRI SATGURU AGROMILLS PRIVATE LTD_MP05MJ3964_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SHRI SATGURU AGROMILLS PRIVATE LTD_MP05MJ3964_2026-27.pdf",
+      "id": "1qzvALnd-DfcYNIP0kR5yBAJchJRrPJ5c"
+    }
+  },
+  {
+    "sno": "53",
+    "date": "17-08-2026",
+    "name": "SUDEEP  NIMBALKAR",
+    "veh": "HR26CM8372",
+    "pol": "",
+    "contactName": "SUDEEP SIR",
+    "mobile": "96857 17917",
+    "gross": "15960",
+    "net": "13526",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "cfcd88e0-0e29-4371-b2d2-4fd0be271cd1",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SUDEEP  NIMBALKAR_HR26CM8372_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SUDEEP  NIMBALKAR_HR26CM8372_2026-27.pdf",
+      "id": "1HnVeDuwm7VOdj1I3ND-0dTcogoT7dGgQ"
+    }
+  },
+  {
+    "sno": "5",
+    "date": "03-08-2026",
+    "name": "SULAKSHNA TIWARI",
+    "veh": "MP04CS8451",
+    "pol": "",
+    "contactName": "Ashish Sir Ace Infotexis",
+    "mobile": "98260 10002",
+    "gross": "3436",
+    "net": "2912",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "e69f3178-abef-46c1-b562-be9adc81b02d",
+    "dbStoragePath": "1DI3zxk9lcIngjYE9SbCAzFUm09cI1SNs",
+    "dbStorageProvider": "google_drive",
+    "localPdf": null,
+    "drivePdf": {
+      "name": "SULAKSHNA TIWARI_MP04CS8451_2026-27 POLICY.pdf",
+      "id": "1DI3zxk9lcIngjYE9SbCAzFUm09cI1SNs"
+    }
+  },
+  {
+    "sno": "4",
+    "date": "03-08-2026",
+    "name": "SUNIL   CHAUDHARY",
+    "veh": "MP04CA2453",
+    "pol": "",
+    "contactName": "Jitendra Kumar",
+    "mobile": "9910168813",
+    "gross": "2913",
+    "net": "2469",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SUNIL CHAUDHARY_MP04CA2453_2026-27 (1).pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SUNIL CHAUDHARY_MP04CA2453_2026-27.pdf",
+      "id": "1QqGXnhdpAb8BPVzQlRX3v3_dDSOAsJzt"
+    }
+  },
+  {
+    "sno": "19",
+    "date": "06-08-2026",
+    "name": "SUNIL   CHAUDHARY",
+    "veh": "MP04CV3258",
+    "pol": "",
+    "contactName": "SUNIL CHOUDHARY",
+    "mobile": "9977995922",
+    "gross": "13272",
+    "net": "11248",
+    "company": "BAJAJ",
+    "inDb": true,
+    "dbRecordId": "6a4ded2c-1eb9-4dac-9aa1-1e3538dd3e4f",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SUNIL CHAUDHARY_MP04CV3258_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SUNIL CHAUDHARY_MP04CV3258_2026-27.pdf",
+      "id": "1QZyFHsHlqVOfOayPiPJNkd_Ek9ZaQNU0"
+    }
+  },
+  {
+    "sno": "55",
+    "date": "17-08-2026",
+    "name": "SUNIL  MAHESHWARI",
+    "veh": "MP004LD2492",
+    "pol": "",
+    "contactName": "PARIHAR SIR",
+    "mobile": "94256 08094",
+    "gross": "4909",
+    "net": "4655",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "SUNIL MAHESHWARI_MP04LD2492_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "SUNIL MAHESHWARI_MP04LD2492_2026-27 POLICY.pdf",
+      "id": "1UBt3UmWSpcu1Qbt4ZuPCBejHZRCM6RHB"
+    }
+  },
+  {
+    "sno": "58",
+    "date": "18-08-2026",
+    "name": "T U LANJEWAR",
+    "veh": "MP04CH4265",
+    "pol": "",
+    "contactName": "T U Lanjewar",
+    "mobile": "93407 53255",
+    "gross": "4429",
+    "net": "3753",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "d760f84e-0045-48fd-bb40-7b277c4c268e",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "T U LANJEWAR_MP04CH4265_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "T U LANJEWAR_MP04CH4265_2026-27 POLICY.pdf",
+      "id": "1hwWYhEWPSmETZViQ4ta5h44Jxj40hX_o"
+    }
+  },
+  {
+    "sno": "16",
+    "date": "06-08-2026",
+    "name": "VIJAY KUMAR MISHRA CONSTRUCTION PVT. LTD",
+    "veh": "MP17ZD6923",
+    "pol": "",
+    "contactName": "SUDEEP SIR",
+    "mobile": "9685717917",
+    "gross": "71283",
+    "net": "65251",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "4a95575b-ab29-45a1-97a5-0ab8c7811d89",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "VKMCPL_MP17ZD6923_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "VKMCPL_MP17ZD6923_2026-27 POLICY.pdf",
+      "id": "17XUkS0QTKCnYL70t0zgAgsZL_uKJ8XqJ"
+    }
+  },
+  {
+    "sno": "17",
+    "date": "06-08-2026",
+    "name": "VIJAY KUMAR MISHRA CONSTRUCTION PVT. LTD",
+    "veh": "MP17ZD6944",
+    "pol": "",
+    "contactName": "SUDEEP SIR",
+    "mobile": "9685717917",
+    "gross": "71283",
+    "net": "65251",
+    "company": "NEW INDIA",
+    "inDb": true,
+    "dbRecordId": "f10edd68-2a5a-4788-af82-b5f48c190404",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "VKMCPL_MP17ZD6944_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "VKMCPL_MP17ZD6944_2026-27 POLICY.pdf",
+      "id": "10aiO2xYAxxPx36hjIaruH8MPOrxX0SIY"
+    }
+  },
+  {
+    "sno": "78",
+    "date": "24-08-2026",
+    "name": "VIJAY KUMAR MISHRA CONSTRUCTION PVT. LTD",
+    "veh": "MP04YR6085",
+    "pol": "",
+    "contactName": "SUDEEP SIR",
+    "mobile": "9685717917",
+    "gross": "27561",
+    "net": "23357",
+    "company": "IFFCO TOKIO",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "VIJAY KUMAR MISHRA CONSTRUCTION PVT. LTD._MP04YR6085_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "VIJAY KUMAR MISHRA CONSTRUCTION PVT. LTD._MP04YR6085_2026-27.pdf",
+      "id": "11kvDLhXETZB3_SH8LxELKJ0UnQbh57qN"
+    }
+  },
+  {
+    "sno": "79",
+    "date": "24-08-2026",
+    "name": "VIJAY KUMAR MISHRA CONSTRUCTION PVT. LTD",
+    "veh": "MP04YR6027",
+    "pol": "",
+    "contactName": "SUDEEP SIR",
+    "mobile": "9685717917",
+    "gross": "27561",
+    "net": "23357",
+    "company": "IFFCO TOKIO",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "VIJAY KUMAR MISHRA CONSTRUCTION PVT. LTD._MP04YR6027_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "VIJAY KUMAR MISHRA CONSTRUCTION PVT. LTD._MP04YR6027_2026-27.pdf",
+      "id": "1r0_t1yM6FZRRPJ85DKbPQDVa3rTAoXcq"
+    }
+  },
+  {
+    "sno": "8",
+    "date": "04-08-2026",
+    "name": "VIJAY KUMAR MISHRA PVT",
+    "veh": "NEW",
+    "pol": "",
+    "contactName": "SUDEEP SIR",
+    "mobile": "9685717917",
+    "gross": "9556",
+    "net": "8098",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "VKMCPL_CHASSIS-07214_ENGINE-J0035 (1).pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": null
+  },
+  {
+    "sno": "9",
+    "date": "04-08-2026",
+    "name": "VIJAY KUMAR MISHRA PVT",
+    "veh": "NEW",
+    "pol": "",
+    "contactName": "SUDEEP SIR",
+    "mobile": "9685717917",
+    "gross": "9556",
+    "net": "8098",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "VKMCPL_CHASSIS-07341_ENGINE-J0009 (1).pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": null
+  },
+  {
+    "sno": "10",
+    "date": "04-08-2026",
+    "name": "VIJAY KUMAR MISHRA PVT",
+    "veh": "NEW",
+    "pol": "",
+    "contactName": "SUDEEP SIR",
+    "mobile": "9685717917",
+    "gross": "9556",
+    "net": "8098",
+    "company": "NEW INDIA",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "VKMCPL_CHASSIS-07342_ENGINE-J0014 (1).pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": null
+  },
+  {
+    "sno": "11",
+    "date": "05-08-2026",
+    "name": "Vosmi sharma",
+    "veh": "MP04CV2483",
+    "pol": "",
+    "contactName": "Vosmi Sharma",
+    "mobile": "9826770860",
+    "gross": "9852",
+    "net": "8349",
+    "company": "IFFCO TOKIO",
+    "inDb": true,
+    "dbRecordId": "110d150e-ecb2-4bda-af2e-c1dec4b3753a",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "VOSMI SHARMA_MP04CV2483_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "VOSMI SHARMA_MP04CV2483_2026-27.pdf",
+      "id": "196dt335JHPpsLq9_UWULaJ8M5QLOO7aW"
+    }
+  },
+  {
+    "sno": "59",
+    "date": "19-08-2026",
+    "name": "World Way International School",
+    "veh": "MP04YR7672",
+    "pol": "",
+    "contactName": "Ashish Sir",
+    "mobile": "88890 20020",
+    "gross": "58606",
+    "net": "49666",
+    "company": "TATA AIG",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "World Way International School_MP04YR7672_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "World Way International School_MP04YR7672_2026-27 POLICY.pdf",
+      "id": "1PkhK52ke3pdYcqunvCV2MnLQ9dakEH67"
+    }
+  },
+  {
+    "sno": "60",
+    "date": "19-08-2026",
+    "name": "World Way International School",
+    "veh": "MP04YR7640",
+    "pol": "",
+    "contactName": "Ashish Sir",
+    "mobile": "88890 20020",
+    "gross": "58606",
+    "net": "49666",
+    "company": "TATA AIG",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "World Way International School_MP04YR7640_2026-27 POLICY.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "World Way International School_MP04YR7640_2026-27 POLICY.pdf",
+      "id": "1wWuTPAhJUsnRunxhW8a4ljZjfTxIF9UU"
+    }
+  },
+  {
+    "sno": "61",
+    "date": "19-08-2026",
+    "name": "World Way International School",
+    "veh": "MP04YR7606",
+    "pol": "",
+    "contactName": "Ashish Sir",
+    "mobile": "88890 20020",
+    "gross": "58606",
+    "net": "49666",
+    "company": "TATA AIG",
+    "inDb": false,
+    "dbRecordId": null,
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": {
+      "filename": "World Way International School_MP04YR7606_2026-27.pdf",
+      "dir": "C:\\Users\\abhis\\insuredesk-crm\\storage\\aug motor"
+    },
+    "drivePdf": {
+      "name": "World Way International School_MP04YR7606_2026-27.pdf",
+      "id": "117GfAbJFXQ_TcTwvWLwvZzD2ftzB5e2S"
+    }
+  },
+  {
+    "sno": "",
+    "date": "01-08-2026",
+    "name": "YUNUS HUSSIAN",
+    "veh": "MP04CN0553",
+    "pol": "",
+    "contactName": "Yunus Hussain",
+    "mobile": "94254 45308",
+    "gross": "4963",
+    "net": "4206",
+    "company": "ICICI LOMBARD",
+    "inDb": true,
+    "dbRecordId": "b81ef548-0073-4ffa-a1bc-f5f93c2e52a2",
+    "dbStoragePath": null,
+    "dbStorageProvider": null,
+    "localPdf": null,
+    "drivePdf": {
+      "name": "YUNUS HUSSAIN_MP04CN0553_2026-27 POLICY.pdf",
+      "id": "1yNVJt6oT3InBCbtIblQK-zOpi6KdJfiM"
+    }
+  }
+]

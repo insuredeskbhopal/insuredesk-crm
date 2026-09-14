@@ -81,6 +81,7 @@ async function main() {
     console.log('Creating new record for N8294142 in August 2026...');
     const newRecord = await prisma.policyRecord.create({
       data: {
+        id: require('crypto').randomUUID(),
         savedAt: targetDate,
         createdAt: targetDate,
         reviewedData: fullData,

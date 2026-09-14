@@ -50,6 +50,17 @@ export async function GET(_request, { params }) {
 
   const file = record.uploadedFile;
   if (!file || !file.storagePath) {
+    if (record.pdfBytes) {
+      const fileName = sanitizeFileName(record.pdfFileName || "policy.pdf");
+      return new Response(record.pdfBytes, {
+        headers: {
+          ...securityHeaders,
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${fileName}"`,
+          "Content-Length": String(record.pdfBytes.length),
+        },
+      });
+    }
     return Response.json({ error: "PDF file not found for this record." }, { status: 404 });
   }
 
@@ -61,6 +72,17 @@ export async function GET(_request, { params }) {
     try {
       physicalPath = getLocalPhysicalPath(file.storagePath);
     } catch {
+      if (record.pdfBytes) {
+        const fileName = sanitizeFileName(record.pdfFileName || file.sourceFile || "policy.pdf");
+        return new Response(record.pdfBytes, {
+          headers: {
+            ...securityHeaders,
+            "Content-Type": file.mimeType || "application/pdf",
+            "Content-Disposition": `attachment; filename="${fileName}"`,
+            "Content-Length": String(record.pdfBytes.length),
+          },
+        });
+      }
       return Response.json({ error: "Access Denied: Invalid file path" }, { status: 403 });
     }
 
@@ -91,6 +113,17 @@ export async function GET(_request, { params }) {
         },
       });
     } catch {
+      if (record.pdfBytes) {
+        const fileName = sanitizeFileName(record.pdfFileName || file.sourceFile || "policy.pdf");
+        return new Response(record.pdfBytes, {
+          headers: {
+            ...securityHeaders,
+            "Content-Type": file.mimeType || "application/pdf",
+            "Content-Disposition": `attachment; filename="${fileName}"`,
+            "Content-Length": String(record.pdfBytes.length),
+          },
+        });
+      }
       return Response.json({ error: "File not found on disk storage." }, { status: 404 });
     }
   } else if (file.storageProvider === "google_drive") {
@@ -120,6 +153,17 @@ export async function GET(_request, { params }) {
         },
       });
     } catch {
+      if (record.pdfBytes) {
+        const fileName = sanitizeFileName(record.pdfFileName || file.sourceFile || "policy.pdf");
+        return new Response(record.pdfBytes, {
+          headers: {
+            ...securityHeaders,
+            "Content-Type": file.mimeType || "application/pdf",
+            "Content-Disposition": `attachment; filename="${fileName}"`,
+            "Content-Length": String(record.pdfBytes.length),
+          },
+        });
+      }
       return Response.json({ error: "File not found in Google Drive storage." }, { status: 404 });
     }
   } else {
