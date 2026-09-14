@@ -255,8 +255,14 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
 
 
   if (column.key === "contactNumber" || column.key === "contact") {
-    const num = (record.contactNumber || record.mobile || "").trim();
+    const rawNum = (record.contactNumber || record.mobile || "").trim();
     const rawPerson = (record.contactPerson || "").trim();
+    // A valid phone number is short and mostly digits. Anything longer or with company
+    // boilerplate (e.g. New India "E-mail Id/Fax: /", ICICI address blocks) is junk.
+    const isJunkNumber =
+      rawNum.length > 20 ||
+      /e-mail id|fax:|insured.s details|issuing office|details$/i.test(rawNum);
+    const num = isJunkNumber ? "" : rawNum;
     // Filter out junk contact persons: addresses, boilerplate PDF text, or company name
     // concatenated with address (typical of ICICI Lombard / New India fire policies)
     const isJunkPerson =
@@ -274,6 +280,7 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
     }
     return num || (person && !isJunkPerson ? person : "") || "-";
   }
+
 
 
   const value =
