@@ -185,7 +185,7 @@ export default function CustomerProfileDetailPage({ params }) {
         setCurrentAgentId(agentId);
         setWhatsAppSignature(savedSignature || buildDefaultAgentSignature(payload.user));
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -239,8 +239,8 @@ export default function CustomerProfileDetailPage({ params }) {
 
         const itemPolicies = item.policyInterest
           ? String(item.policyInterest)
-              .split(",")
-              .map((t) => t.trim())
+            .split(",")
+            .map((t) => t.trim())
           : [];
         const matchesPolicy = !timelineFilters.policy || itemPolicies.includes(timelineFilters.policy);
 
@@ -1121,32 +1121,32 @@ export default function CustomerProfileDetailPage({ params }) {
                             </button>
                             {openActionMenuId === policy.id && typeof document !== "undefined"
                               ? createPortal(
-                                  <div
-                                    className="lead-detail-action-popover"
-                                    data-lead-detail-action-menu
-                                    style={actionMenuPosition}
+                                <div
+                                  className="lead-detail-action-popover"
+                                  data-lead-detail-action-menu
+                                  style={actionMenuPosition}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenActionMenuId("");
+                                      openRemarkModal(policy);
+                                    }}
                                   >
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionMenuId("");
-                                        openRemarkModal(policy);
-                                      }}
-                                    >
-                                      <CalendarPlus size={15} /> Add Follow-up
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionMenuId("");
-                                    openWhatsAppPreview(policy);
-                                      }}
-                                    >
-                                      <MessageSquare size={15} /> Send WhatsApp
-                                    </button>
-                                  </div>,
-                                  document.body,
-                                )
+                                    <CalendarPlus size={15} /> Add Follow-up
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenActionMenuId("");
+                                      openWhatsAppPreview(policy);
+                                    }}
+                                  >
+                                    <MessageSquare size={15} /> Send WhatsApp
+                                  </button>
+                                </div>,
+                                document.body,
+                              )
                               : null}
                           </div>
                         </td>
@@ -1670,10 +1670,10 @@ function buildProfileView(profile) {
     const premium = numberFrom(details.premium || details.expectedPremium || details.estimatedValue);
     const sumInsured = numberFrom(
       details.sumInsured ||
-        details.sumInsuredNeed ||
-        details.stockValue ||
-        details.propertyValue ||
-        details.assetValue,
+      details.sumInsuredNeed ||
+      details.stockValue ||
+      details.propertyValue ||
+      details.assetValue,
     );
     return {
       id: `${lob}-${index}`,
@@ -1728,35 +1728,35 @@ function buildProfileView(profile) {
     })),
     profile.followUpRemark && !hasLatestFollowUpLog
       ? {
-          id: "latest-followup",
-          title: profile.followUpOutcome || "Latest Follow-up",
-          remark: profile.followUpRemark,
-          createdAt: profile.lastFollowUpDate || profile.updatedAt,
-          createdBy: profile.createdBy || profile.assignedTo || "Agent",
-          outcome: profile.followUpOutcome || "",
-          leadStatus: profile.status || "",
-          policyInterest: profile.sourcePolicyType || profile.selectedLOBs?.join(", ") || "",
-          nextFollowUpDate: profile.nextFollowUpDate,
-          policyLabel: profile.sourcePolicyType
-            ? `POLICY: ${profile.sourcePolicyType}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}`
-            : "",
-          statusBadge: profile.status ? `${profile.status} -> ${profile.status}` : "",
-          tone: getStatusTone(profile.status),
-        }
+        id: "latest-followup",
+        title: profile.followUpOutcome || "Latest Follow-up",
+        remark: profile.followUpRemark,
+        createdAt: profile.lastFollowUpDate || profile.updatedAt,
+        createdBy: profile.createdBy || profile.assignedTo || "Agent",
+        outcome: profile.followUpOutcome || "",
+        leadStatus: profile.status || "",
+        policyInterest: profile.sourcePolicyType || profile.selectedLOBs?.join(", ") || "",
+        nextFollowUpDate: profile.nextFollowUpDate,
+        policyLabel: profile.sourcePolicyType
+          ? `POLICY: ${profile.sourcePolicyType}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}`
+          : "",
+        statusBadge: profile.status ? `${profile.status} -> ${profile.status}` : "",
+        tone: getStatusTone(profile.status),
+      }
       : null,
     profile.remarks
       ? {
-          id: "general-remarks",
-          title: "General Remark",
-          remark: profile.remarks,
-          createdAt: profile.updatedAt,
-          createdBy: profile.createdBy || profile.assignedTo || "Agent",
-          policyInterest: profile.sourcePolicyType || "",
-          policyLabel: profile.sourcePolicyType
-            ? `POLICY: ${profile.sourcePolicyType}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}`
-            : "",
-          tone: "neutral",
-        }
+        id: "general-remarks",
+        title: "General Remark",
+        remark: profile.remarks,
+        createdAt: profile.updatedAt,
+        createdBy: profile.createdBy || profile.assignedTo || "Agent",
+        policyInterest: profile.sourcePolicyType || "",
+        policyLabel: profile.sourcePolicyType
+          ? `POLICY: ${profile.sourcePolicyType}${profile.sourcePolicyNumber ? ` (${profile.sourcePolicyNumber})` : ""}`
+          : "",
+        tone: "neutral",
+      }
       : null,
   ].filter(Boolean);
 

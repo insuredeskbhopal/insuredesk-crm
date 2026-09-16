@@ -112,8 +112,8 @@ export async function POST(request) {
       return NextResponse.json({ error: "Recipient and a message or attachment are required" }, { status: 400 });
     }
 
-    const signedMessage = body.attachBirthdayCard 
-      ? String(message || "").trim() 
+    const signedMessage = body.attachBirthdayCard
+      ? String(message || "").trim()
       : withAgentSignature(message, body.signature || buildDefaultAgentSignature(session));
     console.log(`Sending WhatsApp message to ${String(recipient).endsWith("@g.us") ? "a group" : "an individual"}...`);
 

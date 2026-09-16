@@ -1105,7 +1105,7 @@ export async function sendDueFollowUpEmails({ now = new Date(), limit = 100 } = 
 
     let emailTo = user.email;
     if (!emailTo || emailTo.endsWith("@example.com") || emailTo.endsWith(".local") || emailTo.endsWith(".test") || emailTo.endsWith("@localhost")) {
-      emailTo = "insuredeskbhopal@gmail.com";
+      emailTo = process.env.CONTACT_NOTIFICATION_EMAIL || "info@bimaheadquarter.com";
     }
 
     const dueLabel = task.dueAt ? formatBusinessDate(task.dueAt) : "today";

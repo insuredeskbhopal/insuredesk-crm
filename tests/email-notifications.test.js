@@ -130,14 +130,14 @@ describe("Notification Mailing and Email Flow", () => {
 
       expect(result.sent).toBe(true);
       const callArgs = mockSendMail.mock.calls[0][0];
-      
+
       // Verify HTML content
       expect(callArgs.html).toContain("Client Details");
       expect(callArgs.html).toContain("Ramesh Kumar");
       expect(callArgs.html).toContain("POL1000298");
       expect(callArgs.html).toContain("₹25,000.50");
       expect(callArgs.html).toContain('href="tel:+919876543210"');
-      
+
       // Verify plain text content
       expect(callArgs.text).toContain("Client Name: Ramesh Kumar");
       expect(callArgs.text).toContain("Policy Number: POL1000298");
@@ -207,7 +207,7 @@ describe("Notification Mailing and Email Flow", () => {
       const mockSendMail = nodemailer.createTransport().sendMail;
       expect(mockSendMail).toHaveBeenCalledTimes(1);
       const callArgs = mockSendMail.mock.calls[0][0];
-      expect(callArgs.to).toBe("insuredeskbhopal@gmail.com");
+      expect(callArgs.to).toBe("info@bimaheadquarter.com");
 
       expect(prisma.activityLog.upsert).toHaveBeenCalledTimes(1);
       const activityArgs = prisma.activityLog.upsert.mock.calls[0][0];
@@ -328,7 +328,7 @@ describe("Notification Mailing and Email Flow", () => {
       expect(mockSendMail).toHaveBeenCalled();
 
       const callArgs = mockSendMail.mock.calls[0][0];
-      expect(callArgs.to).toBe("insuredeskbhopal@gmail.com");
+      expect(callArgs.to).toBe("info@bimaheadquarter.com");
       expect(callArgs.subject).toContain("Sanjay Gupta");
       expect(callArgs.html).toContain("Health Insurance");
       expect(callArgs.html).toContain("9826012345");

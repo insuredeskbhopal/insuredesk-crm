@@ -38,12 +38,12 @@ export default function BirthdayManagementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  
+
   // Search and Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(""); // empty means all
   const [activeTab, setActiveTab] = useState("all"); // all, today, upcoming, this_month
-  
+
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
@@ -58,7 +58,7 @@ export default function BirthdayManagementPage() {
   const [recipientType, setRecipientType] = useState("individual"); // "individual" | "group"
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [isSendingGreeting, setIsSendingGreeting] = useState(false);
-  
+
   // Editing inline
   const [editingId, setEditingId] = useState("");
   const [editDate, setEditDate] = useState("");
@@ -109,7 +109,7 @@ export default function BirthdayManagementPage() {
 
     return individualProfiles.map((p) => {
       const stats = calculateAgeAndCountdown(p.dob, today);
-      
+
       let formattedDob = "Not set";
       let birthMonth = null;
       let birthDay = null;
@@ -252,7 +252,7 @@ export default function BirthdayManagementPage() {
   const handleDownloadTemplate = async () => {
     try {
       const XLSX = await import("xlsx");
-      
+
       const templateData = [
         {
           "Client Name": "Rahul Sharma",
@@ -269,7 +269,7 @@ export default function BirthdayManagementPage() {
       ];
 
       const worksheet = XLSX.utils.json_to_sheet(templateData);
-      
+
       worksheet["!cols"] = [
         { wch: 20 }, // Client Name
         { wch: 15 }, // Phone Number
@@ -279,7 +279,7 @@ export default function BirthdayManagementPage() {
 
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Birthday Template");
-      
+
       const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
       const blob = new Blob([excelBuffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -303,10 +303,10 @@ export default function BirthdayManagementPage() {
       showToast("error", "No data to export.");
       return;
     }
-    
+
     try {
       const XLSX = await import("xlsx");
-      
+
       const exportData = filteredProfiles.map((p) => ({
         "Client Name": p.name,
         "Phone Number": p.phone,
@@ -344,7 +344,7 @@ export default function BirthdayManagementPage() {
 
     setImportFile(file);
     setIsParsing(true);
-    
+
     const reader = new window.FileReader();
     reader.onload = async (e) => {
       try {
@@ -365,7 +365,7 @@ export default function BirthdayManagementPage() {
           const name = row[nameKey] ? String(row[nameKey]).trim() : "";
           const phone = row[phoneKey] ? String(row[phoneKey]).trim().replace(/\D/g, "") : "";
           const email = row[emailKey] ? String(row[emailKey]).trim() : "";
-          
+
           let dob = "";
           let rawDob = row[dobKey];
           if (rawDob) {
@@ -395,11 +395,11 @@ export default function BirthdayManagementPage() {
           // Validation
           const errors = [];
           if (!name) errors.push("Name is required");
-          
+
           let cleanPhone = phone;
           if (phone.length === 12 && phone.startsWith("91")) cleanPhone = phone.slice(2);
           if (phone.length === 11 && phone.startsWith("0")) cleanPhone = phone.slice(1);
-          
+
           if (!cleanPhone) {
             errors.push("Phone number is required");
           } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
@@ -467,7 +467,7 @@ export default function BirthdayManagementPage() {
       const results = await res.json();
       setImportResults(results);
       showToast("success", `Successfully imported ${results.createdCount} new, updated ${results.updatedCount} existing clients!`);
-      fetchBirthdays(); 
+      fetchBirthdays();
     } catch (err) {
       showToast("error", err.message || "Failed to import client birthdays");
     } finally {
@@ -560,9 +560,9 @@ export default function BirthdayManagementPage() {
       const res = await fetch("/api/operations/whatsapp/test-message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           recipient: targetRecipient,
-          phone: targetRecipient, 
+          phone: targetRecipient,
           message: customMessage,
           attachBirthdayCard: true,
           recipientName: greetingTarget.name,
@@ -624,7 +624,7 @@ export default function BirthdayManagementPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to trigger birthday wishes.");
-      
+
       if (data.queuedCount > 0) {
         setSuccessMessage(`Successfully queued and started sending ${data.queuedCount} birthday wish(es) in the background!`);
       } else {
@@ -695,7 +695,7 @@ export default function BirthdayManagementPage() {
             <Upload className="w-3.5 h-3.5 text-slate-600" />
             Import Excel
           </button>
-          
+
           <button
             onClick={handleExportData}
             className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-4 py-2.5 rounded-lg border border-slate-300 shadow-sm transition-all duration-200"
@@ -780,7 +780,7 @@ export default function BirthdayManagementPage() {
       <div className="bg-white border border-slate-250 rounded-xl shadow-md overflow-hidden mb-6">
         {/* Workspace Toolbar */}
         <div className="p-4 border-b border-slate-250 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50">
-          
+
           {/* Tabs Segmented Control */}
           <div className="bg-slate-100 p-1 rounded-xl flex flex-wrap gap-1 border border-slate-200/60 w-fit">
             <button onClick={() => setActiveTab("all")} className={getTabClass("all")}>
@@ -789,9 +789,8 @@ export default function BirthdayManagementPage() {
             <button onClick={() => setActiveTab("today")} className={getTabClass("today")}>
               Today
               {metrics.todayCount > 0 && (
-                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold transition-all ${
-                  activeTab === "today" ? "bg-pink-100 text-pink-700" : "bg-slate-200 text-slate-700"
-                }`}>
+                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold transition-all ${activeTab === "today" ? "bg-pink-100 text-pink-700" : "bg-slate-200 text-slate-700"
+                  }`}>
                   {metrics.todayCount}
                 </span>
               )}
@@ -799,9 +798,8 @@ export default function BirthdayManagementPage() {
             <button onClick={() => setActiveTab("upcoming")} className={getTabClass("upcoming")}>
               Upcoming (30d)
               {metrics.upcomingCount > 0 && (
-                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold transition-all ${
-                  activeTab === "upcoming" ? "bg-sky-100 text-[#5b9bd5]" : "bg-slate-200 text-slate-700"
-                }`}>
+                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold transition-all ${activeTab === "upcoming" ? "bg-sky-100 text-[#5b9bd5]" : "bg-slate-200 text-slate-700"
+                  }`}>
                   {metrics.upcomingCount}
                 </span>
               )}
@@ -809,9 +807,8 @@ export default function BirthdayManagementPage() {
             <button onClick={() => setActiveTab("this_month")} className={getTabClass("this_month")}>
               This Month
               {metrics.thisMonthCount > 0 && (
-                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold transition-all ${
-                  activeTab === "this_month" ? "bg-amber-100 text-amber-800" : "bg-slate-200 text-slate-700"
-                }`}>
+                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold transition-all ${activeTab === "this_month" ? "bg-amber-100 text-amber-800" : "bg-slate-200 text-slate-700"
+                  }`}>
                   {metrics.thisMonthCount}
                 </span>
               )}
@@ -900,13 +897,12 @@ export default function BirthdayManagementPage() {
                 {filteredProfiles.map((p) => {
                   const isToday = p.daysToBirthday === 0 || p.daysToBirthday === 365;
                   const isUpcoming = p.daysToBirthday !== null && p.daysToBirthday <= 30 && p.daysToBirthday > 0;
-                  
+
                   return (
                     <tr
                       key={p.id}
-                      className={`hover:bg-slate-50/70 transition-colors ${
-                        isToday ? "bg-pink-500/5" : ""
-                      }`}
+                      className={`hover:bg-slate-50/70 transition-colors ${isToday ? "bg-pink-500/5" : ""
+                        }`}
                     >
                       {/* Name */}
                       <td className="py-3.5 px-4">
@@ -1061,7 +1057,7 @@ export default function BirthdayManagementPage() {
 
       {/* ADD CLIENT BIRTHDAY MODAL */}
       {isAddModalOpen && typeof window !== "undefined" && createPortal(
-        <div 
+        <div
           className="fixed inset-0 z-[10050] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => {
             if (!isSubmittingAdd) {
@@ -1071,7 +1067,7 @@ export default function BirthdayManagementPage() {
             }
           }}
         >
-          <div 
+          <div
             className="bg-white border border-slate-250 rounded-xl shadow-2xl max-w-md w-full flex flex-col overflow-hidden animate-fadeIn text-slate-700"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1126,9 +1122,8 @@ export default function BirthdayManagementPage() {
                       setAddFormData((prev) => ({ ...prev, name: val }));
                       if (addFormErrors.name) setAddFormErrors((prev) => ({ ...prev, name: "" }));
                     }}
-                    className={`w-full pl-9 pr-3 py-2 bg-white border ${
-                      addFormErrors.name ? "border-rose-400 focus:border-rose-500" : "border-slate-300 focus:border-sky-500"
-                    } rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none shadow-sm`}
+                    className={`w-full pl-9 pr-3 py-2 bg-white border ${addFormErrors.name ? "border-rose-400 focus:border-rose-500" : "border-slate-300 focus:border-sky-500"
+                      } rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none shadow-sm`}
                   />
                 </div>
                 {addFormErrors.name && (
@@ -1154,9 +1149,8 @@ export default function BirthdayManagementPage() {
                       setAddFormData((prev) => ({ ...prev, phone: val }));
                       if (addFormErrors.phone) setAddFormErrors((prev) => ({ ...prev, phone: "" }));
                     }}
-                    className={`w-full pl-9 pr-3 py-2 bg-white border ${
-                      addFormErrors.phone ? "border-rose-400 focus:border-rose-500" : "border-slate-300 focus:border-sky-500"
-                    } rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none shadow-sm`}
+                    className={`w-full pl-9 pr-3 py-2 bg-white border ${addFormErrors.phone ? "border-rose-400 focus:border-rose-500" : "border-slate-300 focus:border-sky-500"
+                      } rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none shadow-sm`}
                   />
                 </div>
                 <p className="text-[10px] text-slate-500">Used for WhatsApp birthday greetings</p>
@@ -1182,9 +1176,8 @@ export default function BirthdayManagementPage() {
                       setAddFormData((prev) => ({ ...prev, dob: val }));
                       if (addFormErrors.dob) setAddFormErrors((prev) => ({ ...prev, dob: "" }));
                     }}
-                    className={`w-full pl-9 pr-3 py-2 bg-white border ${
-                      addFormErrors.dob ? "border-rose-400 focus:border-rose-500" : "border-slate-300 focus:border-sky-500"
-                    } rounded-lg text-xs text-slate-800 focus:outline-none shadow-sm`}
+                    className={`w-full pl-9 pr-3 py-2 bg-white border ${addFormErrors.dob ? "border-rose-400 focus:border-rose-500" : "border-slate-300 focus:border-sky-500"
+                      } rounded-lg text-xs text-slate-800 focus:outline-none shadow-sm`}
                   />
                 </div>
                 {addFormErrors.dob && (
@@ -1249,7 +1242,7 @@ export default function BirthdayManagementPage() {
 
       {/* IMPORT EXCEL MODAL */}
       {isImportModalOpen && typeof window !== "undefined" && createPortal(
-        <div 
+        <div
           className="fixed inset-0 z-[10050] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => {
             setIsImportModalOpen(false);
@@ -1258,7 +1251,7 @@ export default function BirthdayManagementPage() {
             setImportResults(null);
           }}
         >
-          <div 
+          <div
             className="bg-white border border-slate-250 rounded-xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-fadeIn text-slate-700"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1306,7 +1299,7 @@ export default function BirthdayManagementPage() {
                       <li>If the phone number doesn't exist, it will create a <strong>new Customer Profile</strong>.</li>
                       <li>All imported phone numbers must be valid 10-digit Indian mobile numbers (starting with 6-9).</li>
                     </ul>
-                    
+
                     <div className="pt-1">
                       <button
                         onClick={handleDownloadTemplate}
@@ -1409,7 +1402,7 @@ export default function BirthdayManagementPage() {
                     >
                       Clear File
                     </button>
-                    
+
                     <button
                       onClick={handleConfirmImport}
                       disabled={isImporting || parsedRows.filter(r => r.isValid).length === 0}
@@ -1484,13 +1477,13 @@ export default function BirthdayManagementPage() {
 
       {/* WHATSAPP GREETINGS MODAL */}
       {isGreetingModalOpen && greetingTarget && typeof window !== "undefined" && createPortal(
-        <div 
+        <div
           className="fixed inset-0 z-[10050] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => {
             if (!isSendingGreeting) setIsGreetingModalOpen(false);
           }}
         >
-          <div 
+          <div
             className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-fadeIn text-slate-800"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1586,11 +1579,10 @@ export default function BirthdayManagementPage() {
                   <button
                     type="button"
                     onClick={() => handleTemplateChange("professional")}
-                    className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all text-left flex flex-col gap-0.5 ${
-                      selectedTemplate === "professional"
+                    className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all text-left flex flex-col gap-0.5 ${selectedTemplate === "professional"
                         ? "bg-pink-50/50 border-pink-500 text-pink-700 shadow-sm ring-1 ring-pink-400"
                         : "bg-white border-slate-250 text-slate-700 hover:bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <span className="font-bold flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-pink-500" />
@@ -1601,11 +1593,10 @@ export default function BirthdayManagementPage() {
                   <button
                     type="button"
                     onClick={() => handleTemplateChange("warm")}
-                    className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all text-left flex flex-col gap-0.5 ${
-                      selectedTemplate === "warm"
+                    className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all text-left flex flex-col gap-0.5 ${selectedTemplate === "warm"
                         ? "bg-pink-50/50 border-pink-500 text-pink-700 shadow-sm ring-1 ring-pink-400"
                         : "bg-white border-slate-250 text-slate-700 hover:bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <span className="font-bold flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-pink-500" />
@@ -1616,11 +1607,10 @@ export default function BirthdayManagementPage() {
                   <button
                     type="button"
                     onClick={() => handleTemplateChange("short")}
-                    className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all text-left flex flex-col gap-0.5 ${
-                      selectedTemplate === "short"
+                    className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all text-left flex flex-col gap-0.5 ${selectedTemplate === "short"
                         ? "bg-pink-50/50 border-pink-500 text-pink-700 shadow-sm ring-1 ring-pink-400"
                         : "bg-white border-slate-250 text-slate-700 hover:bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <span className="font-bold flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-pink-500" />

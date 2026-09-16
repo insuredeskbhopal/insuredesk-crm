@@ -225,11 +225,11 @@ export async function sendFollowUpReminderEmail({ to, name, title, message, acti
   let absoluteActionUrl = actionUrl?.startsWith("http")
     ? actionUrl
     : `${appUrl}${actionUrl || "/work-center"}`;
-  
+
   if (absoluteActionUrl.includes("127.0.0.1") || absoluteActionUrl.includes("localhost")) {
     absoluteActionUrl = absoluteActionUrl.replace(/https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?/, "https://bimaheadquarter.com");
   }
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER || "Bima Headquarter <info@bimaheadquarter.com>";
 
   const html = getHTMLTemplate({ name, title, message, absoluteActionUrl, appUrl, type, priority, module, customerName, customerMobile, policyNumber, amount });
   const logoPath = path.join(process.cwd(), "public/brand/main-logo-wide.webp");
@@ -272,8 +272,8 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
   }
 
   const appUrl = "https://bimaheadquarter.com";
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
-  const to = "insuredeskbhopal@gmail.com";
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER || "Bima Headquarter <info@bimaheadquarter.com>";
+  const to = process.env.CONTACT_NOTIFICATION_EMAIL || "info@bimaheadquarter.com";
   const title = `New Consultation Request: ${name}`;
 
   const html = `
