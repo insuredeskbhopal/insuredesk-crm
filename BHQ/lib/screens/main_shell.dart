@@ -7,6 +7,7 @@ import '../widgets/common_dialogs.dart';
 import '../widgets/desktop_sidebar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/crm_data_provider.dart';
+import '../services/app_update_service.dart';
 import 'claims_screen.dart';
 import 'dashboard_screen.dart';
 import 'documents_screen.dart';
@@ -31,6 +32,11 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        AppUpdateService.checkForUpdate(context, silent: true);
+      }
+    });
   }
 
   @override

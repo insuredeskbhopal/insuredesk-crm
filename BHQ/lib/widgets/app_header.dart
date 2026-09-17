@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../theme/theme_provider.dart';
 import '../theme/auth_provider.dart';
 import '../services/crm_data_provider.dart';
+import '../services/app_update_service.dart';
 import 'common_dialogs.dart';
 
 class AppHeader extends ConsumerWidget {
@@ -231,6 +232,8 @@ class AppHeader extends ConsumerWidget {
                       CommonDialogs.showProfileModal(context, userMap, liveProfile);
                     } else if (value == 'security') {
                       CommonDialogs.showChangeMpinModal(context);
+                    } else if (value == 'update') {
+                      AppUpdateService.checkForUpdate(context, silent: false);
                     }
                   },
                   itemBuilder: (context) => [
@@ -348,6 +351,42 @@ class AppHeader extends ConsumerWidget {
                           const Text(
                             'Security & MPIN',
                             style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Check for Updates Option
+                    PopupMenuItem<String>(
+                      value: 'update',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.system_update_alt_rounded,
+                            size: 18,
+                            color: isDark ? Colors.white70 : AppColors.textSecondary,
+                          ),
+                          const Gap(10),
+                          const Expanded(
+                            child: Text(
+                              'Check for Updates',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2563EB).withAlpha(isDark ? 40 : 20),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'v1.0.1',
+                              style: TextStyle(
+                                color: Color(0xFF2563EB),
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
                           ),
                         ],
                       ),
