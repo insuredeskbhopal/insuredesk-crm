@@ -100,4 +100,7 @@ prisma/schema.current.prisma
 **/BHQ/.flutter-plugins*
 **/BHQ/.idea/
 **/BHQ/*.iml
+*.apk
+public/downloads/*.apk
+
 
