@@ -117,6 +117,22 @@ const STATIC_MARKETING_PAGES = [
     priority: 0.8,
     changeFrequency: "monthly",
   },
+  {
+    path: "/download-app",
+    title: "Download Bima Headquarter Android App | Insurance In Your Pocket",
+    description:
+      "Download the official Bima Headquarter mobile app for Android to track policy portfolios, download insurer PDFs, and file claims directly from your phone.",
+    heading: "Download Bima Headquarter Mobile App",
+    summary:
+      "Official Bima Headquarter Android APK download, verified clean installation package, and step-by-step setup guide.",
+    sections: [
+      "Official Android APK download v1.0.1.",
+      "Instant 1-tap policy PDF schedules and offline access.",
+      "Direct claim assistance and policy portfolio tracking.",
+    ],
+    priority: 0.85,
+    changeFrequency: "weekly",
+  },
 ];
 
 const servicePages = [];

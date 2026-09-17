@@ -36,6 +36,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/brand") ||
     pathname.startsWith("/images") ||
     pathname.startsWith("/docs") ||
+    pathname.startsWith("/downloads") ||
     pathname === "/OFFICE.png" ||
     pathname === "/office.png" ||
     pathname === "/ABOUT.png" ||
@@ -76,10 +77,19 @@ export async function middleware(request: NextRequest) {
   const isSharedAuthApi = pathname === "/api/auth/logout";
   const isCronApi = pathname.startsWith("/api/cron");
   const isBlogPage = pathname.startsWith("/blog");
-  const isPublicPage = PUBLIC_ROUTE_PATHS.includes(pathname) || pathname === "/not-found" || isAuthPage || isBlogPage;
+  const isAppPage = pathname === "/download-app" || pathname === "/app";
+  const isPublicPage =
+    PUBLIC_ROUTE_PATHS.includes(pathname) ||
+    pathname === "/not-found" ||
+    isAuthPage ||
+    isBlogPage ||
+    isAppPage;
   const isStaffOnlyPage = !pathname.startsWith("/api/") && !isPublicPage && !isClientRoute;
 
-  const isPublicApi = pathname === "/api/contact" || pathname.startsWith("/api/blog/");
+  const isPublicApi =
+    pathname === "/api/contact" ||
+    pathname.startsWith("/api/blog/") ||
+    pathname.startsWith("/api/downloads");
   const isClientApi = pathname.startsWith("/api/client/");
 
   // Handle client / staff API access security
