@@ -103,8 +103,11 @@ export async function POST(request) {
         const sanitized = sanitizeCustomerProfilePayload({
           name: row.name || "Unnamed Customer",
           phone: row.phone,
+          alternatePhone: row.alternatePhone || row.alternateMobile || "",
           email: row.email,
           dob: row.dob,
+          referenceSource: row.referenceSource || row.lob || row.lineOfBusiness || "",
+          remarks: row.remarks || row.remark || "",
         });
 
         const normalizedPhone = normalizeIndianPhone(sanitized.phone);
@@ -113,8 +116,8 @@ export async function POST(request) {
           continue;
         }
 
-        // Check if phone number already exists for this organization/user scope
-        const existing = await prisma.customerProfile.findFirst({
+        // Check if phone number matches an existing profile with same/similar name
+        const candidates = await prisma.customerProfile.findMany({
           where: {
             deletedAt: null,
             phone: normalizedPhone,
@@ -122,12 +125,40 @@ export async function POST(request) {
           },
         });
 
+        let existing = null;
+        if (candidates.length > 0) {
+          const nameLower = sanitized.name.toLowerCase().trim();
+          existing = candidates.find(c => c.name.toLowerCase().trim() === nameLower);
+          if (!existing) {
+            existing = candidates.find(c => {
+              const cLower = c.name.toLowerCase().trim();
+              return cLower.includes(nameLower) || nameLower.includes(cLower);
+            });
+          }
+          if (!existing && candidates.length === 1) {
+            const single = candidates[0];
+            const corporateKeywords = /\b(warehouse|pvt|ltd|limited|corp|corporation|co\.|company|inc|associates|enterprises|industries|mpwlc)\b/i;
+            if (corporateKeywords.test(single.name) || single.name === "Unnamed Customer") {
+              existing = single;
+            }
+          }
+        }
+
         if (existing) {
           // Update existing profile's DOB, email, and name (if name was unnamed previously)
           const dataToUpdate = {
             dob: sanitized.dob,
             updatedById: actorId,
           };
+          if (sanitized.alternatePhone && !existing.alternatePhone) {
+            dataToUpdate.alternatePhone = sanitized.alternatePhone;
+          }
+          if (sanitized.referenceSource && !existing.referenceSource) {
+            dataToUpdate.referenceSource = sanitized.referenceSource;
+          }
+          if (sanitized.remarks) {
+            dataToUpdate.remarks = existing.remarks ? `${existing.remarks}; ${sanitized.remarks}` : sanitized.remarks;
+          }
           if (sanitized.email && sanitized.email !== existing.email) {
             dataToUpdate.email = sanitized.email;
           }
@@ -159,14 +190,18 @@ export async function POST(request) {
 
           updatedCount++;
         } else {
-          // Create a new profile
+          // Create a new profile (either new phone or family member on existing phone)
           const record = await prisma.customerProfile.create({
             data: {
               name: sanitized.name,
               phone: normalizedPhone,
+              alternatePhone: sanitized.alternatePhone || "",
               email: sanitized.email,
               dob: sanitized.dob,
-              status: "New Lead",
+              referenceSource: sanitized.referenceSource || "Birthday Import",
+              remarks: sanitized.remarks || (candidates.length > 0 ? `Shared phone with ${candidates[0].name}` : ""),
+              status: "Existing Customer",
+              customerType: "Existing",
               organizationId: session.organizationId,
               createdById: actorId,
               updatedById: actorId,

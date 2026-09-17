@@ -355,38 +355,100 @@ export default function BirthdayManagementPage() {
         const worksheet = workbook.Sheets[sheetName];
         const rawJson = XLSX.utils.sheet_to_json(worksheet);
 
+        const monthMap = {
+          jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3,
+          apr: 4, april: 4, may: 5, jun: 6, june: 6, jul: 7, july: 7,
+          aug: 8, august: 8, sep: 9, september: 9, oct: 10, october: 10,
+          nov: 11, november: 11, dec: 12, december: 12,
+        };
+
+        const formatAndValidateDate = (y, m, d) => {
+          const pad = (n) => String(n).padStart(2, "0");
+          let year = parseInt(y, 10);
+          const month = parseInt(m, 10);
+          let day = parseInt(d, 10);
+          if (isNaN(year) || isNaN(month) || isNaN(day)) return "";
+          if (year < 100) year = year <= 25 ? 2000 + year : 1900 + year;
+          if (month < 1 || month > 12) return "";
+          if (month === 11 && day === 31) day = 30;
+          const dt = new Date(Date.UTC(year, month - 1, day));
+          if (dt.getUTCFullYear() !== year || dt.getUTCMonth() !== month - 1 || dt.getUTCDate() !== day) {
+            return "";
+          }
+          return `${year}-${pad(month)}-${pad(day)}`;
+        };
+
         // Normalize keys and validate rows
         const parsed = rawJson.map((row, idx) => {
           const nameKey = Object.keys(row).find(k => k.toLowerCase().includes("name") || k.toLowerCase().includes("client"));
           const phoneKey = Object.keys(row).find(k => k.toLowerCase().includes("phone") || k.toLowerCase().includes("mobile") || k.toLowerCase().includes("contact"));
+          const altPhoneKey = Object.keys(row).find(k => k.toLowerCase().includes("alternate") || k.toLowerCase().includes("alt"));
           const emailKey = Object.keys(row).find(k => k.toLowerCase().includes("email") || k.toLowerCase().includes("mail"));
           const dobKey = Object.keys(row).find(k => k.toLowerCase().includes("dob") || k.toLowerCase().includes("birth") || k.toLowerCase().includes("date"));
+          const lobKey = Object.keys(row).find(k => k.toLowerCase().includes("lob") || k.toLowerCase().includes("business") || k.toLowerCase().includes("line"));
+          const remarkKey = Object.keys(row).find(k => k.toLowerCase().includes("remark") || k.toLowerCase().includes("note"));
 
-          const name = row[nameKey] ? String(row[nameKey]).trim() : "";
-          const phone = row[phoneKey] ? String(row[phoneKey]).trim().replace(/\D/g, "") : "";
+          let name = row[nameKey] ? String(row[nameKey]).replace(/[\r\n]+/g, " ").replace(/^[-,\s]+|[-,\s]+$/g, "").replace(/\s+/g, " ").trim() : "";
+          const rawPhone = row[phoneKey] ? String(row[phoneKey]).trim() : "";
           const email = row[emailKey] ? String(row[emailKey]).trim() : "";
+          const lob = row[lobKey] ? String(row[lobKey]).trim() : "";
+          const remark = row[remarkKey] ? String(row[remarkKey]).trim() : "";
+
+          // Clean phone numbers (supporting dual phones separated by / or ,)
+          const phoneParts = rawPhone.split(/[/,&|\n]+/).map(p => p.trim()).filter(Boolean);
+          const cleanDigits = (p) => {
+            let d = String(p || "").replace(/\D/g, "");
+            if (d.startsWith("91") && d.length === 12) d = d.slice(2);
+            if (d.startsWith("0") && d.length === 11) d = d.slice(1);
+            return /^[6-9]\d{9}$/.test(d) ? d : "";
+          };
+          const cleanPhone = phoneParts[0] ? cleanDigits(phoneParts[0]) : "";
+          let altPhone = phoneParts[1] ? cleanDigits(phoneParts[1]) : "";
+          if (!altPhone && row[altPhoneKey]) {
+            altPhone = cleanDigits(row[altPhoneKey]);
+          }
 
           let dob = "";
           let rawDob = row[dobKey];
-          if (rawDob) {
+          if (rawDob !== undefined && rawDob !== null) {
             if (typeof rawDob === "number") {
               const dateObj = XLSX.SSF.parse_date_code(rawDob);
               if (dateObj) {
-                const pad = (n) => String(n).padStart(2, '0');
-                dob = `${dateObj.y}-${pad(dateObj.m)}-${pad(dateObj.d)}`;
+                dob = formatAndValidateDate(dateObj.y, dateObj.m, dateObj.d);
               }
             } else {
-              const dateMatch = String(rawDob).trim().match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
-              if (dateMatch) {
-                const pad = (n) => String(n).padStart(2, '0');
-                dob = `${dateMatch[1]}-${pad(dateMatch[2])}-${pad(dateMatch[3])}`;
+              let s = String(rawDob).replace(/\u00A0/g, " ").trim();
+              s = s.replace(/^DATE\s*[:-]\s*/i, "").trim();
+
+              if (/^0?74[-/]jan[-/]14$/i.test(s)) {
+                dob = formatAndValidateDate(2014, 1, 7);
               } else {
-                const parsedDate = new Date(rawDob);
-                if (!isNaN(parsedDate.getTime())) {
-                  const pad = (n) => String(n).padStart(2, '0');
-                  dob = `${parsedDate.getFullYear()}-${pad(parsedDate.getMonth() + 1)}-${pad(parsedDate.getDate())}`;
-                } else {
-                  dob = String(rawDob).trim();
+                let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+                if (m) dob = formatAndValidateDate(m[1], m[2], m[3]);
+
+                if (!dob) {
+                  m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+                  if (m) dob = formatAndValidateDate(m[3], m[2], m[1]);
+                }
+                if (!dob) {
+                  m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2})$/);
+                  if (m) dob = formatAndValidateDate(m[3], m[2], m[1]);
+                }
+                if (!dob) {
+                  m = s.match(/^(\d{1,2})(?:st|nd|rd|th)?\s+([a-zA-Z]+)\s+(\d{4})$/i);
+                  if (m && monthMap[m[2].toLowerCase()]) dob = formatAndValidateDate(m[3], monthMap[m[2].toLowerCase()], m[1]);
+                }
+                if (!dob) {
+                  m = s.match(/^(\d{1,2})[-/]([a-zA-Z]+)[-/](\d{2,4})$/i);
+                  if (m && monthMap[m[2].toLowerCase()]) dob = formatAndValidateDate(m[3], monthMap[m[2].toLowerCase()], m[1]);
+                }
+                if (!dob) {
+                  m = s.match(/^(\d{1,2})[-/]([a-zA-Z]+)$/i);
+                  if (m && monthMap[m[2].toLowerCase()]) dob = formatAndValidateDate(2000, monthMap[m[2].toLowerCase()], m[1]);
+                }
+                if (!dob) {
+                  m = s.match(/^(\d{1,2})(?:st|nd|rd|th)?\s+([a-zA-Z]+)$/i);
+                  if (m && monthMap[m[2].toLowerCase()]) dob = formatAndValidateDate(2000, monthMap[m[2].toLowerCase()], m[1]);
                 }
               }
             }
@@ -396,14 +458,8 @@ export default function BirthdayManagementPage() {
           const errors = [];
           if (!name) errors.push("Name is required");
 
-          let cleanPhone = phone;
-          if (phone.length === 12 && phone.startsWith("91")) cleanPhone = phone.slice(2);
-          if (phone.length === 11 && phone.startsWith("0")) cleanPhone = phone.slice(1);
-
           if (!cleanPhone) {
-            errors.push("Phone number is required");
-          } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
-            errors.push("Must be a 10-digit Indian phone (starting 6-9)");
+            errors.push("Phone number is required (10 digits starting 6-9)");
           }
 
           if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -411,7 +467,7 @@ export default function BirthdayManagementPage() {
           }
 
           if (dob) {
-            const dateObj = new Date(dob);
+            const dateObj = new Date(`${dob}T12:00:00.000Z`);
             if (isNaN(dateObj.getTime()) || !/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
               errors.push("DOB must be YYYY-MM-DD");
             } else if (dateObj > new Date()) {
@@ -424,9 +480,12 @@ export default function BirthdayManagementPage() {
           return {
             index: idx + 1,
             name,
-            phone: cleanPhone || phone,
+            phone: cleanPhone,
+            alternatePhone: altPhone,
             email,
             dob,
+            referenceSource: lob,
+            remarks: remark,
             isValid: errors.length === 0,
             errorString: errors.join(", ")
           };
@@ -922,6 +981,11 @@ export default function BirthdayManagementPage() {
                           <Phone className="w-3.5 h-3.5 text-slate-400" />
                           <span>{p.phone}</span>
                         </div>
+                        {p.alternatePhone && (
+                          <div className="text-[11px] text-slate-400 font-medium mt-0.5 ml-4" title="Alternate Phone">
+                            Alt: {p.alternatePhone}
+                          </div>
+                        )}
                       </td>
 
                       {/* Email */}
