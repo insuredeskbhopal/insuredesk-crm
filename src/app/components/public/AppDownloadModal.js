@@ -13,10 +13,9 @@ import {
   X,
   ArrowRight,
   ShieldCheck,
-  Sparkles,
   MessageCircle,
   CheckCircle2,
-  Zap,
+  Lock,
 } from "lucide-react";
 
 export default function AppDownloadModal({ isOpen, onClose }) {
@@ -87,43 +86,44 @@ export default function AppDownloadModal({ isOpen, onClose }) {
         aria-modal="true"
         aria-labelledby="app-download-title"
       >
-        {/* Soft Frosted Backdrop */}
+        {/* Crisp Cinematic Backdrop */}
         <div
-          className="fixed inset-0 bg-slate-950/50 backdrop-blur-md transition-opacity duration-300"
+          className="fixed inset-0 bg-black/40 backdrop-blur-md transition-opacity duration-300"
           onClick={onClose}
           aria-hidden="true"
         />
 
-        {/* Modal Card - Ultra-Premium All-White Sizing & Architecture */}
-        <div className="relative w-full max-w-[700px] overflow-hidden rounded-[28px] bg-white shadow-[0_25px_70px_-10px_rgba(15,23,42,0.18)] ring-1 ring-black/[0.06] transition-all z-10 my-auto flex flex-col border border-slate-100">
+        {/* Modal Card - Pure All-White Luxury Monochrome (Zero Blue Color) */}
+        <div className="relative w-full max-w-[680px] overflow-hidden rounded-[26px] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] ring-1 ring-black/[0.08] transition-all z-10 my-auto flex flex-col border border-neutral-100">
           
-          {/* Top Bar with Brand & Close Button */}
-          <div className="px-7 pt-6 pb-4 flex items-center justify-between border-b border-slate-100">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/25">
-                <Smartphone className="h-5 w-5 text-white" />
+          {/* Header Bar - Clean Minimalist White */}
+          <div className="px-7 pt-6 pb-4 flex items-center justify-between border-b border-neutral-100 bg-white">
+            <div className="flex items-center gap-3.5">
+              {/* Premium Monochrome App Icon */}
+              <div className="h-11 w-11 rounded-2xl bg-neutral-950 text-white flex items-center justify-center shadow-sm ring-4 ring-neutral-100">
+                <Smartphone className="h-5.5 w-5.5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 id="app-download-title" className="text-lg font-black text-slate-900 tracking-tight">
+                  <h3 id="app-download-title" className="text-xl font-bold text-neutral-950 tracking-tight leading-tight">
                     BimaHeadquarter
                   </h3>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10.5px] font-bold text-emerald-700 border border-emerald-200/80">
-                    <ShieldCheck className="h-3 w-3 text-emerald-600" />
-                    Official Client App
+                  <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-semibold text-neutral-800 border border-neutral-200">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                    Verified App
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 font-medium">
-                  Android Release · v1.0.1 (Latest)
+                <p className="text-xs text-neutral-500 font-normal mt-0.5">
+                  Official Android Release · Version 1.0.1
                 </p>
               </div>
             </div>
 
-            {/* Close Button */}
+            {/* High-Visibility Close Button */}
             <button
               type="button"
               onClick={onClose}
-              className="h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-all cursor-pointer border border-slate-200/50"
+              className="h-9 w-9 rounded-full bg-neutral-100 hover:bg-neutral-200 active:bg-neutral-300 text-neutral-700 hover:text-black flex items-center justify-center transition-colors cursor-pointer border border-neutral-200/60"
               aria-label="Close modal"
             >
               <X className="h-4 w-4 stroke-[2.5]" />
@@ -133,39 +133,39 @@ export default function AppDownloadModal({ isOpen, onClose }) {
           {/* Main 2-Column Showcase */}
           <div className="grid grid-cols-1 md:grid-cols-12 p-7 gap-7 items-center bg-white">
             
-            {/* Left Column: QR Code Stage - Pure White Showcase */}
-            <div className="md:col-span-5 flex flex-col items-center justify-center p-6 rounded-2xl bg-white border border-slate-200/90 text-center shadow-sm">
-              <div className="p-2.5 rounded-2xl bg-white shadow-xs border border-slate-200">
+            {/* Left Column: Pure White QR Code Stage */}
+            <div className="md:col-span-5 flex flex-col items-center justify-center p-5 rounded-2xl bg-white border border-neutral-200/90 text-center shadow-xs">
+              <div className="p-2 rounded-xl bg-white border border-neutral-200 shadow-2xs">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrCodeUrl}
                   alt="Scan QR code to install BimaHeadquarter app"
                   width={140}
                   height={140}
-                  className="rounded-xl"
+                  className="rounded-lg"
                 />
               </div>
 
-              <div className="mt-4 space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/80 shadow-2xs">
-                  <QrCode className="h-3.5 w-3.5 text-blue-600" />
+              <div className="mt-3.5 space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-100 text-neutral-900 text-xs font-semibold border border-neutral-200 shadow-2xs">
+                  <QrCode className="h-3.5 w-3.5 text-neutral-700" />
                   <span>Scan to Install</span>
                 </div>
-                <p className="text-[11px] text-slate-500 max-w-[170px] mx-auto leading-relaxed pt-1">
+                <p className="text-[11px] text-neutral-500 max-w-[170px] mx-auto leading-relaxed pt-1">
                   Point phone camera at code to open live link instantly
                 </p>
               </div>
             </div>
 
-            {/* Right Column: Information, Features & Actions */}
-            <div className="md:col-span-7 flex flex-col justify-between space-y-5">
+            {/* Right Column: Value Props & Download Actions */}
+            <div className="md:col-span-7 flex flex-col justify-between space-y-4.5">
               
-              {/* Feature Points */}
-              <div className="space-y-2.5">
-                <h4 className="text-base font-extrabold text-slate-900 tracking-tight">
+              {/* Feature Highlights */}
+              <div className="space-y-2">
+                <h4 className="text-base font-bold text-neutral-950 tracking-tight">
                   Your Policy Portfolio On The Go
                 </h4>
-                <div className="space-y-2 text-xs text-slate-600 font-medium">
+                <div className="space-y-1.5 text-xs text-neutral-600">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
                     <span>Instant 1-tap download of original insurer PDF schedules</span>
@@ -181,65 +181,64 @@ export default function AppDownloadModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* Primary Download Button - Royal Electric Blue */}
+              {/* Primary Download Button - Luxury Solid Obsidian (No Blue) */}
               <div>
                 <a
                   href={directApkUrl}
                   download="bimaheadquarter.apk"
-                  className="group relative flex w-full items-center justify-between rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 p-4 font-bold text-white shadow-lg shadow-blue-600/25 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                  className="group relative flex w-full items-center justify-between rounded-2xl bg-neutral-950 hover:bg-neutral-900 active:bg-black p-4 font-bold text-white shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-neutral-900"
                 >
-                  <div className="flex items-center gap-3.5">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white group-hover:scale-105 transition-transform">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white group-hover:bg-white/15 transition-colors">
                       <Download className="h-5 w-5 text-white" />
                     </div>
                     <div className="text-left">
-                      <div className="text-sm sm:text-base font-extrabold tracking-tight flex items-center gap-1.5">
-                        <span>Download Android APK</span>
-                        <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                      <div className="text-sm sm:text-base font-bold tracking-tight text-white">
+                        Download Android APK
                       </div>
-                      <div className="text-[11px] text-blue-100 font-medium transition-colors">
-                        ~59 MB · Clean &amp; IRDAI Client Portal Verified
+                      <div className="text-[11px] text-neutral-400 font-normal">
+                        Direct Package · ~59 MB · Clean &amp; Verified
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white group-hover:bg-white/30 group-hover:translate-x-0.5 transition-all">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white group-hover:bg-white/20 group-hover:translate-x-0.5 transition-all">
                     <ArrowRight className="h-4 w-4" />
                   </div>
                 </a>
               </div>
 
-              {/* Share & Copy Bar */}
+              {/* WhatsApp Share & Copy Link Actions */}
               <div className="grid grid-cols-2 gap-2.5">
                 {/* WhatsApp Share */}
                 <a
                   href={whatsappShareUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100 text-emerald-800 px-3 py-2.5 text-xs font-bold transition-all shadow-2xs active:scale-[0.98]"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-800 px-3 py-2.5 text-xs font-semibold transition-all shadow-2xs active:scale-[0.98]"
                 >
                   <MessageCircle className="h-4 w-4 text-emerald-600 fill-emerald-600" />
-                  <span>Share on WhatsApp</span>
+                  <span>WhatsApp</span>
                 </a>
 
                 {/* Copy Link */}
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition-all shadow-2xs active:scale-[0.98] ${
+                  className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all shadow-2xs active:scale-[0.98] ${
                     copied
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:border-slate-300"
+                      ? "border-neutral-900 bg-neutral-950 text-white"
+                      : "border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-800 hover:border-neutral-300"
                   }`}
                 >
                   {copied ? (
                     <>
-                      <Check className="h-4 w-4 text-blue-600" />
-                      <span>Link Copied!</span>
+                      <Check className="h-4 w-4 text-white" />
+                      <span>Copied!</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="h-4 w-4 text-slate-500" />
+                      <Copy className="h-4 w-4 text-neutral-500" />
                       <span>Copy Link</span>
                     </>
                   )}
@@ -251,7 +250,7 @@ export default function AppDownloadModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={handleNativeShare}
-                  className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors pt-1"
+                  className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-800 transition-colors pt-0.5"
                 >
                   <Share2 className="h-3.5 w-3.5" />
                   <span>More sharing options</span>
@@ -262,16 +261,16 @@ export default function AppDownloadModal({ isOpen, onClose }) {
           </div>
 
           {/* Bottom Security / Trust Footer - Pure White */}
-          <div className="px-7 py-3.5 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 font-medium">
+          <div className="px-7 py-3.5 bg-white border-t border-neutral-100 flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-500 font-normal">
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
               <span>100% Secure &amp; Verified APK</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Zap className="h-3.5 w-3.5 text-amber-500" />
-              <span>Android 8.0 &amp; Above Compatible</span>
+              <Lock className="h-3.5 w-3.5 text-neutral-400" />
+              <span>IRDAI Licensed Client Portal</span>
             </div>
-            <div className="text-[11px] text-slate-400 font-mono">
+            <div className="text-[11px] text-neutral-400 font-mono">
               bimaheadquarter.com
             </div>
           </div>
