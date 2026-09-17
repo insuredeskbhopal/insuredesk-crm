@@ -94,23 +94,23 @@ export default function AppDownloadModal({ isOpen, onClose }) {
         {/* Modal Card - Focused, Centered, Gold-Standard Layout (All-White) */}
         <div className="relative w-full max-w-[450px] overflow-hidden rounded-[28px] bg-white shadow-[0_25px_70px_-15px_rgba(0,0,0,0.15)] ring-1 ring-slate-200 transition-all z-10 my-auto flex flex-col p-6 sm:p-7 text-center">
           
-          {/* Close Button Top-Right */}
+          {/* Close Button Top-Right - Bold, High-Contrast & Clearly Sized */}
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-5 top-5 h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer border border-slate-200/60"
+            className="absolute right-5 top-5 h-10 w-10 rounded-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 hover:text-slate-950 flex items-center justify-center transition-colors cursor-pointer border border-slate-200 shadow-2xs"
             aria-label="Close modal"
           >
-            <X className="h-4.5 w-4.5 stroke-[2.5]" />
+            <X size={20} strokeWidth={2.5} className="w-5 h-5 text-slate-700" />
           </button>
 
           {/* Centered App Icon & Identity */}
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-800 border-2 border-slate-200 shadow-sm">
-            <Smartphone className="h-7 w-7 text-slate-800" />
+            <Smartphone size={28} strokeWidth={2} className="w-7 h-7 text-slate-800" />
           </div>
 
           <div className="inline-flex items-center gap-1.5 mx-auto rounded-full bg-emerald-50 px-3 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 mb-2">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+            <ShieldCheck size={16} className="w-4 h-4 text-emerald-600" />
             <span>Official Client App · v1.0.1</span>
           </div>
 
@@ -132,8 +132,8 @@ export default function AppDownloadModal({ isOpen, onClose }) {
               height={180}
               className="rounded-xl mx-auto"
             />
-            <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-slate-800 mt-3">
-              <QrCode className="h-3.5 w-3.5 text-slate-600" />
+            <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-800 mt-3">
+              <QrCode size={18} className="w-4.5 h-4.5 text-slate-700" />
               <span>Point Camera to Install</span>
             </div>
           </div>
@@ -155,22 +155,22 @@ export default function AppDownloadModal({ isOpen, onClose }) {
               download="bimaheadquarter.apk"
               className="flex items-center justify-between w-full p-3.5 rounded-xl bg-white hover:bg-slate-50 active:bg-slate-100 border-2 border-slate-200 hover:border-slate-400 transition-all text-slate-900 font-bold shadow-2xs group cursor-pointer"
             >
-              <div className="flex items-center gap-2.5 text-left">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-800 border border-slate-200/80">
-                  <Download className="h-4.5 w-4.5 text-slate-800" />
+              <div className="flex items-center gap-3 text-left">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-800 border border-slate-200/80">
+                  <Download size={20} strokeWidth={2.2} className="w-5 h-5 text-slate-800" />
                 </div>
                 <div>
-                  <div className="text-xs sm:text-sm font-extrabold text-slate-900 leading-snug">
+                  <div className="text-sm font-extrabold text-slate-900 leading-snug">
                     Download Android APK
                   </div>
-                  <div className="text-[10.5px] text-slate-500 font-normal">
+                  <div className="text-[11px] text-slate-500 font-medium">
                     Latest Release · ~59 MB · Clean &amp; Verified
                   </div>
                 </div>
               </div>
 
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-600 group-hover:bg-slate-200 transition-colors">
-                <ExternalLink className="h-3.5 w-3.5" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-700 border border-slate-200 group-hover:bg-slate-200 transition-colors">
+                <ExternalLink size={16} className="w-4 h-4" />
               </div>
             </a>
 
@@ -183,7 +183,7 @@ export default function AppDownloadModal({ isOpen, onClose }) {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:bg-emerald-50/70 hover:border-emerald-300 text-slate-800 py-2.5 px-3 text-xs font-bold transition-all shadow-2xs active:scale-[0.98]"
               >
-                <MessageCircle className="h-4 w-4 text-emerald-600 fill-emerald-600" />
+                <MessageCircle size={18} className="w-4 h-4 text-emerald-600 fill-emerald-600" />
                 <span>WhatsApp</span>
               </a>
 
@@ -199,12 +199,12 @@ export default function AppDownloadModal({ isOpen, onClose }) {
               >
                 {copied ? (
                   <>
-                    <Check className="h-4 w-4 text-emerald-600" />
+                    <Check size={18} className="w-4 h-4 text-emerald-600" />
                     <span>Copied!</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="h-4 w-4 text-slate-500" />
+                    <Copy size={18} className="w-4 h-4 text-slate-500" />
                     <span>Copy Link</span>
                   </>
                 )}
@@ -218,7 +218,7 @@ export default function AppDownloadModal({ isOpen, onClose }) {
                 onClick={handleNativeShare}
                 className="w-full flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-500 hover:text-slate-800 transition-colors pt-1"
               >
-                <Share2 className="h-3 w-3" />
+                <Share2 size={16} className="w-4 h-4" />
                 <span>More sharing options</span>
               </button>
             )}
@@ -226,7 +226,7 @@ export default function AppDownloadModal({ isOpen, onClose }) {
 
           {/* Footer Verification */}
           <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+            <ShieldCheck size={16} className="w-4 h-4 text-emerald-600" />
             <span>IRDAI Verified Client Portal · bimaheadquarter.com</span>
           </div>
 
