@@ -24,6 +24,7 @@ const moreCoverageLinks = [
 const quickLinks = [
   ["Home", "/"],
   ["Services", "/services"],
+  ["Download App", "/download-app"],
   ["About", "/about"],
   ["Blog", "/blog"],
   ["FAQ", "/faq"],

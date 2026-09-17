@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import BrandLogo from "@/app/components/brand/BrandLogo";
 import Breadcrumbs from "@/app/components/public/Breadcrumbs";
+import AppDownloadModal from "@/app/components/public/AppDownloadModal";
 import { BUSINESS_DETAILS } from "@/lib/seo/site";
 
 const navItems = [
@@ -20,6 +21,7 @@ const navItems = [
 export default function PublicHeader() {
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
   const pathname = usePathname();
   const menuTitleId = useId();
 
@@ -178,6 +180,19 @@ export default function PublicHeader() {
           </div>
 
           <div className="landing-nav-actions" aria-label="Primary actions">
+            <button
+              type="button"
+              onClick={() => setDownloadModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 transition-all shadow-xs"
+              aria-label="Download BimaHeadquarter Mobile App"
+            >
+              <span className="material-symbols-outlined text-[17px] text-blue-600">
+                smartphone
+              </span>
+              <span className="hidden sm:inline">Download App</span>
+              <span className="sm:hidden">App</span>
+            </button>
+
             <a className="landing-nav-phone" href={`tel:${BUSINESS_DETAILS.phoneHref}`} aria-label={`Call ${BUSINESS_DETAILS.phone}`}>
               <span className="material-symbols-outlined" aria-hidden="true">
                 call
@@ -256,6 +271,20 @@ export default function PublicHeader() {
         </div>
 
         <div className="landing-mobile-menu-actions">
+          <button
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setDownloadModalOpen(true);
+            }}
+            className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 font-bold text-sm"
+          >
+            <span className="material-symbols-outlined text-lg text-blue-600">
+              smartphone
+            </span>
+            Download App &amp; Share
+          </button>
+
           <a href={`tel:${BUSINESS_DETAILS.phoneHref}`} className="landing-mobile-menu-call">
             <span className="material-symbols-outlined" aria-hidden="true">
               call
@@ -278,6 +307,11 @@ export default function PublicHeader() {
         </span>
         <span>Get Consultation</span>
       </Link>
+
+      <AppDownloadModal
+        isOpen={downloadModalOpen}
+        onClose={() => setDownloadModalOpen(false)}
+      />
     </>
   );
 }
