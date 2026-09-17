@@ -24,10 +24,7 @@ import {
 export default function DownloadAppPage() {
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/download-app`
-    : "https://www.bimaheadquarter.com/download-app";
-
+  const shareUrl = "https://www.bimaheadquarter.com/download-app";
   const directApkUrl = "/api/downloads/app";
 
   const shareText = "Download the official BimaHeadquarter Insurance App to manage your motor, health & warehouse policies, download verified PDFs, and file claims directly from your phone:";
