@@ -133,9 +133,9 @@ export default function AppDownloadModal({ isOpen, onClose }) {
           {/* Main 2-Column Showcase */}
           <div className="grid grid-cols-1 md:grid-cols-12 p-7 gap-7 items-center bg-white">
             
-            {/* Left Column: QR Code Stage */}
-            <div className="md:col-span-5 flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/60 border border-slate-200/70 text-center shadow-2xs">
-              <div className="p-2.5 rounded-2xl bg-white shadow-sm border border-slate-200">
+            {/* Left Column: QR Code Stage - Pure White Showcase */}
+            <div className="md:col-span-5 flex flex-col items-center justify-center p-6 rounded-2xl bg-white border border-slate-200/90 text-center shadow-sm">
+              <div className="p-2.5 rounded-2xl bg-white shadow-xs border border-slate-200">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrCodeUrl}
@@ -147,7 +147,7 @@ export default function AppDownloadModal({ isOpen, onClose }) {
               </div>
 
               <div className="mt-4 space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-slate-800 text-xs font-bold border border-slate-200 shadow-2xs">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/80 shadow-2xs">
                   <QrCode className="h-3.5 w-3.5 text-blue-600" />
                   <span>Scan to Install</span>
                 </div>
@@ -181,15 +181,15 @@ export default function AppDownloadModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* Primary Download Button */}
+              {/* Primary Download Button - Royal Electric Blue */}
               <div>
                 <a
                   href={directApkUrl}
                   download="bimaheadquarter.apk"
-                  className="group relative flex w-full items-center justify-between rounded-2xl bg-slate-950 hover:bg-blue-600 active:bg-blue-700 p-4 font-bold text-white shadow-md hover:shadow-xl hover:shadow-blue-600/20 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                  className="group relative flex w-full items-center justify-between rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 p-4 font-bold text-white shadow-lg shadow-blue-600/25 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white group-hover:bg-white/20 transition-colors">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white group-hover:scale-105 transition-transform">
                       <Download className="h-5 w-5 text-white" />
                     </div>
                     <div className="text-left">
@@ -197,13 +197,13 @@ export default function AppDownloadModal({ isOpen, onClose }) {
                         <span>Download Android APK</span>
                         <Sparkles className="h-3.5 w-3.5 text-amber-300" />
                       </div>
-                      <div className="text-[11px] text-slate-300 group-hover:text-blue-100 font-medium transition-colors">
+                      <div className="text-[11px] text-blue-100 font-medium transition-colors">
                         ~59 MB · Clean &amp; IRDAI Client Portal Verified
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white group-hover:bg-white/20 group-hover:translate-x-0.5 transition-all">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white group-hover:bg-white/30 group-hover:translate-x-0.5 transition-all">
                     <ArrowRight className="h-4 w-4" />
                   </div>
                 </a>
@@ -261,8 +261,8 @@ export default function AppDownloadModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Bottom Security / Trust Footer */}
-          <div className="px-7 py-3.5 bg-slate-50/80 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 font-medium">
+          {/* Bottom Security / Trust Footer - Pure White */}
+          <div className="px-7 py-3.5 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 font-medium">
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
               <span>100% Secure &amp; Verified APK</span>
