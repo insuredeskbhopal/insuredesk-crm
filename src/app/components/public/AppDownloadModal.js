@@ -86,44 +86,44 @@ export default function AppDownloadModal({ isOpen, onClose }) {
         aria-modal="true"
         aria-labelledby="app-download-title"
       >
-        {/* Crisp Cinematic Backdrop */}
+        {/* Crisp Frosted Backdrop */}
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-md transition-opacity duration-300"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity duration-300"
           onClick={onClose}
           aria-hidden="true"
         />
 
-        {/* Modal Card - Pure All-White Luxury Monochrome (Zero Blue Color) */}
-        <div className="relative w-full max-w-[680px] overflow-hidden rounded-[26px] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] ring-1 ring-black/[0.08] transition-all z-10 my-auto flex flex-col border border-neutral-100">
+        {/* Modal Card - 100% Pure All-White Luxury Theme (Zero Blue, Zero Black) */}
+        <div className="relative w-full max-w-[680px] overflow-hidden rounded-[28px] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] ring-1 ring-slate-200/90 transition-all z-10 my-auto flex flex-col border border-slate-100">
           
-          {/* Header Bar - Clean Minimalist White */}
-          <div className="px-7 pt-6 pb-4 flex items-center justify-between border-b border-neutral-100 bg-white">
+          {/* Header Bar - Pristine Pure White */}
+          <div className="px-7 pt-6 pb-4 flex items-center justify-between border-b border-slate-100 bg-white">
             <div className="flex items-center gap-3.5">
-              {/* Premium Monochrome App Icon */}
-              <div className="h-11 w-11 rounded-2xl bg-neutral-950 text-white flex items-center justify-center shadow-sm ring-4 ring-neutral-100">
-                <Smartphone className="h-5.5 w-5.5 text-white" />
+              {/* Pure White App Icon */}
+              <div className="h-11 w-11 rounded-2xl bg-white text-slate-800 flex items-center justify-center shadow-xs border border-slate-200">
+                <Smartphone className="h-5.5 w-5.5 text-slate-800" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 id="app-download-title" className="text-xl font-bold text-neutral-950 tracking-tight leading-tight">
+                  <h3 id="app-download-title" className="text-xl font-extrabold text-slate-900 tracking-tight leading-tight">
                     BimaHeadquarter
                   </h3>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-semibold text-neutral-800 border border-neutral-200">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200">
                     <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                     Verified App
                   </span>
                 </div>
-                <p className="text-xs text-neutral-500 font-normal mt-0.5">
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
                   Official Android Release · Version 1.0.1
                 </p>
               </div>
             </div>
 
-            {/* High-Visibility Close Button */}
+            {/* High-Visibility Clean Close Button */}
             <button
               type="button"
               onClick={onClose}
-              className="h-9 w-9 rounded-full bg-neutral-100 hover:bg-neutral-200 active:bg-neutral-300 text-neutral-700 hover:text-black flex items-center justify-center transition-colors cursor-pointer border border-neutral-200/60"
+              className="h-9 w-9 rounded-full bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer border border-slate-200"
               aria-label="Close modal"
             >
               <X className="h-4 w-4 stroke-[2.5]" />
@@ -133,9 +133,9 @@ export default function AppDownloadModal({ isOpen, onClose }) {
           {/* Main 2-Column Showcase */}
           <div className="grid grid-cols-1 md:grid-cols-12 p-7 gap-7 items-center bg-white">
             
-            {/* Left Column: Pure White QR Code Stage */}
-            <div className="md:col-span-5 flex flex-col items-center justify-center p-5 rounded-2xl bg-white border border-neutral-200/90 text-center shadow-xs">
-              <div className="p-2 rounded-xl bg-white border border-neutral-200 shadow-2xs">
+            {/* Left Column: Pure White QR Code Plinth */}
+            <div className="md:col-span-5 flex flex-col items-center justify-center p-5 rounded-2xl bg-white border border-slate-200 text-center shadow-xs">
+              <div className="p-2 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrCodeUrl}
@@ -147,25 +147,25 @@ export default function AppDownloadModal({ isOpen, onClose }) {
               </div>
 
               <div className="mt-3.5 space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-100 text-neutral-900 text-xs font-semibold border border-neutral-200 shadow-2xs">
-                  <QrCode className="h-3.5 w-3.5 text-neutral-700" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 text-slate-800 text-xs font-bold border border-slate-200">
+                  <QrCode className="h-3.5 w-3.5 text-slate-700" />
                   <span>Scan to Install</span>
                 </div>
-                <p className="text-[11px] text-neutral-500 max-w-[170px] mx-auto leading-relaxed pt-1">
+                <p className="text-[11px] text-slate-500 max-w-[170px] mx-auto leading-relaxed pt-1">
                   Point phone camera at code to open live link instantly
                 </p>
               </div>
             </div>
 
-            {/* Right Column: Value Props & Download Actions */}
+            {/* Right Column: Value Props & All-White Download Actions */}
             <div className="md:col-span-7 flex flex-col justify-between space-y-4.5">
               
               {/* Feature Highlights */}
               <div className="space-y-2">
-                <h4 className="text-base font-bold text-neutral-950 tracking-tight">
+                <h4 className="text-base font-extrabold text-slate-900 tracking-tight">
                   Your Policy Portfolio On The Go
                 </h4>
-                <div className="space-y-1.5 text-xs text-neutral-600">
+                <div className="space-y-1.5 text-xs text-slate-600">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
                     <span>Instant 1-tap download of original insurer PDF schedules</span>
@@ -181,28 +181,28 @@ export default function AppDownloadModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* Primary Download Button - Luxury Solid Obsidian (No Blue) */}
+              {/* Primary Download Button - 100% All-White Luxury Card Button */}
               <div>
                 <a
                   href={directApkUrl}
                   download="bimaheadquarter.apk"
-                  className="group relative flex w-full items-center justify-between rounded-2xl bg-neutral-950 hover:bg-neutral-900 active:bg-black p-4 font-bold text-white shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-neutral-900"
+                  className="group relative flex w-full items-center justify-between rounded-2xl bg-white hover:bg-slate-50 active:bg-slate-100 p-4 font-bold text-slate-900 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border-2 border-slate-200 hover:border-slate-400"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white group-hover:bg-white/15 transition-colors">
-                      <Download className="h-5 w-5 text-white" />
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-800 border border-slate-200/80 group-hover:scale-105 transition-transform">
+                      <Download className="h-5 w-5 text-slate-800" />
                     </div>
                     <div className="text-left">
-                      <div className="text-sm sm:text-base font-bold tracking-tight text-white">
+                      <div className="text-sm sm:text-base font-extrabold tracking-tight text-slate-900">
                         Download Android APK
                       </div>
-                      <div className="text-[11px] text-neutral-400 font-normal">
+                      <div className="text-[11px] text-slate-500 font-medium">
                         Direct Package · ~59 MB · Clean &amp; Verified
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white group-hover:bg-white/20 group-hover:translate-x-0.5 transition-all">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-700 border border-slate-200 group-hover:bg-slate-200 group-hover:translate-x-0.5 transition-all">
                     <ArrowRight className="h-4 w-4" />
                   </div>
                 </a>
@@ -215,7 +215,7 @@ export default function AppDownloadModal({ isOpen, onClose }) {
                   href={whatsappShareUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-800 px-3 py-2.5 text-xs font-semibold transition-all shadow-2xs active:scale-[0.98]"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:bg-emerald-50/60 hover:border-emerald-300 text-slate-800 px-3 py-2.5 text-xs font-bold transition-all shadow-2xs active:scale-[0.98]"
                 >
                   <MessageCircle className="h-4 w-4 text-emerald-600 fill-emerald-600" />
                   <span>WhatsApp</span>
@@ -225,20 +225,20 @@ export default function AppDownloadModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all shadow-2xs active:scale-[0.98] ${
+                  className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition-all shadow-2xs active:scale-[0.98] ${
                     copied
-                      ? "border-neutral-900 bg-neutral-950 text-white"
-                      : "border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-800 hover:border-neutral-300"
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                      : "border-slate-200 bg-white hover:bg-slate-50 text-slate-800 hover:border-slate-300"
                   }`}
                 >
                   {copied ? (
                     <>
-                      <Check className="h-4 w-4 text-white" />
+                      <Check className="h-4 w-4 text-emerald-600" />
                       <span>Copied!</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="h-4 w-4 text-neutral-500" />
+                      <Copy className="h-4 w-4 text-slate-500" />
                       <span>Copy Link</span>
                     </>
                   )}
@@ -250,7 +250,7 @@ export default function AppDownloadModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={handleNativeShare}
-                  className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-800 transition-colors pt-0.5"
+                  className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors pt-0.5"
                 >
                   <Share2 className="h-3.5 w-3.5" />
                   <span>More sharing options</span>
@@ -261,16 +261,16 @@ export default function AppDownloadModal({ isOpen, onClose }) {
           </div>
 
           {/* Bottom Security / Trust Footer - Pure White */}
-          <div className="px-7 py-3.5 bg-white border-t border-neutral-100 flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-500 font-normal">
+          <div className="px-7 py-3.5 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 font-medium">
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
               <span>100% Secure &amp; Verified APK</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Lock className="h-3.5 w-3.5 text-neutral-400" />
+              <Lock className="h-3.5 w-3.5 text-slate-400" />
               <span>IRDAI Licensed Client Portal</span>
             </div>
-            <div className="text-[11px] text-neutral-400 font-mono">
+            <div className="text-[11px] text-slate-400 font-mono">
               bimaheadquarter.com
             </div>
           </div>
