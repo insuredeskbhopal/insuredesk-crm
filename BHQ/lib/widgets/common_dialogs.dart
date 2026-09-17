@@ -535,12 +535,22 @@ class CommonDialogs {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _detailRow('Insurance Company', policy.subtitle, isDark),
+              if (policy.insuredName.isNotEmpty)
+                _detailRow('Insured Name', policy.insuredName, isDark),
+              _detailRow('Insurance Company', policy.companyName.isNotEmpty ? policy.companyName : policy.subtitle, isDark),
+              _detailRow('Policy Category', policy.policyCategory, isDark),
+              _detailRow('Policy Type', policy.policyType, isDark),
               _detailRow('Total Premium', policy.price, isDark),
+              if (policy.netPremium != null && policy.netPremium!.isNotEmpty)
+                _detailRow('Net Premium', '₹${policy.netPremium}', isDark),
               if (policy.sumInsured != null && policy.sumInsured!.isNotEmpty)
-                _detailRow('Sum Insured', policy.sumInsured!, isDark),
+                _detailRow('Sum Insured / IDV', policy.sumInsured!, isDark),
               if (policy.vehicleNumber != null && policy.vehicleNumber!.isNotEmpty)
                 _detailRow('Vehicle / Asset No', policy.vehicleNumber!, isDark),
+              if (policy.makeModel != null && policy.makeModel!.isNotEmpty)
+                _detailRow('Make / Model', policy.makeModel!, isDark),
+              if (policy.startDate != null && policy.startDate!.isNotEmpty)
+                _detailRow('Start Date', policy.startDate!, isDark),
               if (policy.expiryDate != null && policy.expiryDate!.isNotEmpty)
                 _detailRow('Expiry Date', policy.expiryDate!, isDark),
               _detailRow('Status', policy.status, isDark),

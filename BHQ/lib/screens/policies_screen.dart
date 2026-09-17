@@ -34,18 +34,36 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
 
   List<Policy> _filterPolicies(List<Policy> allPolicies) {
     return allPolicies.where((policy) {
-      final matchesSearch = policy.name
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase()) ||
-          policy.id.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          policy.subtitle.toLowerCase().contains(_searchQuery.toLowerCase());
+      final q = _searchQuery.toLowerCase().trim();
+      if (q.isNotEmpty) {
+        final matchesSearch = policy.name.toLowerCase().contains(q) ||
+            policy.id.toLowerCase().contains(q) ||
+            policy.subtitle.toLowerCase().contains(q) ||
+            policy.insuredName.toLowerCase().contains(q) ||
+            policy.companyName.toLowerCase().contains(q) ||
+            policy.policyType.toLowerCase().contains(q) ||
+            policy.policyCategory.toLowerCase().contains(q) ||
+            (policy.policyNumber?.toLowerCase().contains(q) ?? false) ||
+            (policy.vehicleNumber?.toLowerCase().contains(q) ?? false) ||
+            (policy.makeModel?.toLowerCase().contains(q) ?? false);
 
-      if (!matchesSearch) return false;
+        if (!matchesSearch) return false;
+      }
 
-      if (_selectedTab == 1) return policy.icon == Icons.favorite_rounded;
-      if (_selectedTab == 2) return policy.icon == Icons.directions_car_rounded;
-      if (_selectedTab == 3) return policy.icon == Icons.shield_rounded;
-      if (_selectedTab == 4) return policy.icon == Icons.business_rounded;
+      if (_selectedTab == 1) {
+        return policy.policyCategory.toLowerCase() == 'health' || policy.icon == Icons.favorite_rounded;
+      }
+      if (_selectedTab == 2) {
+        return policy.policyCategory.toLowerCase() == 'motor' || policy.icon == Icons.directions_car_rounded;
+      }
+      if (_selectedTab == 3) {
+        return policy.policyCategory.toLowerCase() == 'life' || policy.icon == Icons.shield_rounded;
+      }
+      if (_selectedTab == 4) {
+        return policy.policyCategory.toLowerCase() == 'warehouse' ||
+            policy.policyCategory.toLowerCase() == 'property' ||
+            policy.icon == Icons.business_rounded;
+      }
 
       return true;
     }).toList();
@@ -144,7 +162,7 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
               onChanged: (val) => setState(() => _searchQuery = val),
               style: const TextStyle(fontSize: 13.5),
               decoration: InputDecoration(
-                hintText: 'Search by policy number or insurer...',
+                hintText: 'Search by policy #, vehicle, insured name, or insurer...',
                 hintStyle: TextStyle(
                   color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
                   fontSize: 13,

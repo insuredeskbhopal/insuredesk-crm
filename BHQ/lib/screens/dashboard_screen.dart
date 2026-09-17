@@ -247,7 +247,7 @@ class DashboardScreen extends ConsumerWidget {
                     return PolicyCard(
                       policy: displayList[index],
                       onTap: () {
-                        CommonDialogs.showDownloadPolicyModal(context);
+                        CommonDialogs.showPolicyDetailsModal(context, displayList[index]);
                       },
                     );
                   },
