@@ -6,6 +6,9 @@ import PublicFooter from "@/app/components/public/PublicFooter";
 import { BUSINESS_DETAILS, MARKETING_PAGES, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
 function findPage(slug) {
+  if (slug === "download-app" || slug === "app") {
+    return null;
+  }
   const path = `/${slug}`;
   return MARKETING_PAGES.find((page) => page.path === path);
 }
@@ -21,6 +24,8 @@ export function generateStaticParams() {
       "/terms-and-conditions",
       "/disclaimer",
       "/faq",
+      "/download-app",
+      "/app",
     ].includes(page.path);
     return !isMultiSegment && !isTopLevelFolderRoute;
   }).map((page) => ({
