@@ -13,7 +13,6 @@ import {
   X,
   ShieldCheck,
   MessageCircle,
-  ExternalLink,
 } from "lucide-react";
 
 export default function AppDownloadModal({ isOpen, onClose }) {
@@ -148,68 +147,75 @@ export default function AppDownloadModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Direct Download Button - Pure White Luxury Card Button */}
-          <div className="mt-3 space-y-2.5">
+          {/* Action List - Unified iOS Grouped Card */}
+          <div className="mt-4 rounded-2xl border border-slate-200/90 bg-white overflow-hidden divide-y divide-slate-100 text-left shadow-xs">
+            {/* Download Row */}
             <a
               href={directApkUrl}
               download="bimaheadquarter.apk"
-              className="flex items-center justify-between w-full p-3.5 rounded-xl bg-white hover:bg-slate-50 active:bg-slate-100 border-2 border-slate-200 hover:border-slate-400 transition-all text-slate-900 font-bold shadow-2xs group cursor-pointer"
+              className="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors group cursor-pointer"
             >
-              <div className="flex items-center gap-3 text-left">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-800 border border-slate-200/80">
-                  <Download size={20} strokeWidth={2.2} className="w-5 h-5 text-slate-800" />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-800 border border-slate-200/60 group-hover:scale-105 transition-transform">
+                  <Download size={18} strokeWidth={2.2} className="w-[18px] h-[18px] text-slate-800" />
                 </div>
-                <div>
-                  <div className="text-sm font-extrabold text-slate-900 leading-snug">
+                <div className="min-w-0">
+                  <div className="text-xs sm:text-sm font-bold text-slate-900 leading-tight truncate">
                     Download Android APK
                   </div>
-                  <div className="text-[11px] text-slate-500 font-medium">
-                    Latest Release · ~59 MB · Clean &amp; Verified
+                  <div className="text-[11px] text-slate-500 mt-0.5">
+                    Direct package · 59 MB
                   </div>
                 </div>
               </div>
-
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-700 border border-slate-200 group-hover:bg-slate-200 transition-colors">
-                <ExternalLink size={16} className="w-4 h-4" />
-              </div>
+              <span className="flex-shrink-0 text-xs font-bold text-slate-700 bg-slate-100 group-hover:bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-200/80 transition-colors">
+                Get APK
+              </span>
             </a>
 
-            {/* WhatsApp Share & Copy Link */}
-            <div className="grid grid-cols-2 gap-2">
-              {/* WhatsApp Share */}
-              <a
-                href={whatsappShareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:bg-emerald-50/70 hover:border-emerald-300 text-slate-800 py-2.5 px-3 text-xs font-bold transition-all shadow-2xs active:scale-[0.98]"
-              >
-                <MessageCircle size={18} className="w-4 h-4 text-emerald-600 fill-emerald-600" />
-                <span>WhatsApp</span>
-              </a>
+            {/* WhatsApp Share Row */}
+            <a
+              href={whatsappShareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 hover:bg-slate-50 active:bg-slate-100 transition-colors group cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200/60">
+                  <MessageCircle size={16} className="w-4 h-4 fill-emerald-600 text-emerald-600" />
+                </div>
+                <span className="text-xs font-semibold text-slate-800">
+                  Share on WhatsApp
+                </span>
+              </div>
+              <span className="text-xs text-slate-400 font-medium group-hover:text-slate-600 transition-colors">
+                Send link →
+              </span>
+            </a>
 
-              {/* Copy Link */}
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className={`flex items-center justify-center gap-2 rounded-xl border py-2.5 px-3 text-xs font-bold transition-all shadow-2xs active:scale-[0.98] ${
-                  copied
-                    ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                    : "border-slate-200 bg-white hover:bg-slate-50 text-slate-800 hover:border-slate-300"
-                }`}
-              >
-                {copied ? (
-                  <>
-                    <Check size={18} className="w-4 h-4 text-emerald-600" />
-                    <span>Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy size={18} className="w-4 h-4 text-slate-500" />
-                    <span>Copy Link</span>
-                  </>
-                )}
-              </button>
-            </div>
+            {/* Copy Link Row */}
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="w-full flex items-center justify-between p-3 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 border border-slate-200/60">
+                  {copied ? (
+                    <Check size={16} strokeWidth={2.5} className="w-4 h-4 text-emerald-600" />
+                  ) : (
+                    <Copy size={16} className="w-4 h-4" />
+                  )}
+                </div>
+                <span className="text-xs font-semibold text-slate-800">
+                  {copied ? "Link Copied to Clipboard!" : "Copy Download Link"}
+                </span>
+              </div>
+              <span className="text-xs text-slate-400 font-medium">
+                {copied ? "Copied ✓" : "Copy"}
+              </span>
+            </button>
+          </div>
 
             {/* Native Share Option */}
             {canShare && (
@@ -222,7 +228,6 @@ export default function AppDownloadModal({ isOpen, onClose }) {
                 <span>More sharing options</span>
               </button>
             )}
-          </div>
 
           {/* Footer Verification */}
           <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium">
