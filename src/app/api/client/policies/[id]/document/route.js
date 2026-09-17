@@ -2,11 +2,26 @@ import { NextResponse } from "next/server";
 import { jsPDF } from "jspdf";
 import { prisma } from "@/lib/db/prisma";
 import { getOwnedPolicy, requireClient } from "@/lib/client-portal/session";
+import { verifyJWT } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
+// Injects ?token= query param as Authorization so the session helper picks it up.
+// This allows url_launcher (browser tab) to download PDFs without custom headers.
+function injectQueryToken(request) {
+  const url = new URL(request.url);
+  const queryToken = url.searchParams.get("token");
+  if (!queryToken) return request;
+  const headers = new Headers(request.headers);
+  if (!headers.has("authorization")) {
+    headers.set("authorization", `Bearer ${queryToken}`);
+  }
+  return new Request(request.url, { method: request.method, headers });
+}
+
 export async function GET(request, { params }) {
   try {
+    request = injectQueryToken(request);
     const auth = await requireClient(request);
     if (auth.error) return auth.error;
 

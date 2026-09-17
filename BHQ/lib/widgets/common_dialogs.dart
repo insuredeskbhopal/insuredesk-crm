@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/crm_data_provider.dart';
 import '../models/policy.dart';
@@ -174,14 +175,33 @@ class CommonDialogs {
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                               ),
-                              onPressed: () {
+                              onPressed: () async {
                                 Navigator.pop(ctx);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Downloading policy document #${policies[i].policyNumber}...'),
-                                    backgroundColor: const Color(0xFF10B981),
-                                  ),
-                                );
+                                try {
+                                  final url = await ApiService.getPolicyDocumentUrl(policies[i].id);
+                                  final uri = Uri.parse(url);
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  } else {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Could not open the document. Please try again.'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Download failed: $e'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
                               },
                               child: const Text('Download'),
                             ),
@@ -564,10 +584,34 @@ class CommonDialogs {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             icon: const Icon(Icons.download_rounded, size: 16),
-            label: const Text('Download Schedule'),
-            onPressed: () {
+            label: const Text('Download Policy PDF'),
+            onPressed: () async {
               Navigator.pop(ctx);
-              showDownloadPolicyModal(context);
+              try {
+                final url = await ApiService.getPolicyDocumentUrl(policy.id);
+                final uri = Uri.parse(url);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No PDF available for this policy yet. Contact your agent.'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Download failed: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
           ),
         ],

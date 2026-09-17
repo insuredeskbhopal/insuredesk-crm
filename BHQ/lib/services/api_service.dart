@@ -394,4 +394,13 @@ class ApiService {
       throw Exception(data['error'] ?? 'Failed to change MPIN.');
     }
   }
+
+  /// Returns an authenticated URL to download the original policy PDF.
+  /// [kind] = "policy" | "certificate" | "receipt"
+  static Future<String> getPolicyDocumentUrl(String policyId, {String kind = 'policy'}) async {
+    final token = await getToken();
+    final base = baseUrl.replaceAll(RegExp(r'/+$'), '');
+    if (token == null) throw Exception('Not authenticated');
+    return '$base/api/client/policies/$policyId/document?kind=$kind&token=${Uri.encodeComponent(token)}';
+  }
 }

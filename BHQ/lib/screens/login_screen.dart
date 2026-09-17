@@ -802,7 +802,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
                 horizontal: 14,
                 vertical: isDesktop ? 14 : 11,
               ),
-              hintText: 'e.g. 9685717917 or Client ID',
+              hintText: 'Client ID or Phone Number',
               hintStyle: TextStyle(
                 color: isDark ? Colors.white38 : AppColors.textMuted,
                 fontWeight: FontWeight.normal,
@@ -1205,7 +1205,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
               horizontal: 12,
               vertical: isDesktop ? 14 : 10,
             ),
-            hintText: 'e.g. 9826012345 or Client ID',
+            hintText: 'Client ID or Phone Number',
             prefixIcon: Icon(Icons.mail_outline_rounded, size: isDesktop ? 20 : 18),
             filled: true,
             fillColor:
