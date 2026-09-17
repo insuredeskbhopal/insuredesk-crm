@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/crm_data_provider.dart';
 import '../models/policy.dart';
 import '../models/claim.dart';
+import '../theme/app_theme.dart';
 
 class CommonDialogs {
   static void showRegisterClaimModal(BuildContext context, {VoidCallback? onClaimFiled}) {
@@ -133,64 +134,312 @@ class CommonDialogs {
   }
 
   static void showDownloadPolicyModal(BuildContext context) {
-    showDialog(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmall = screenWidth < 600;
+
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) => Consumer(
-        builder: (dialogCtx, ref, _) {
+        builder: (bottomSheetCtx, ref, _) {
           final policies = ref.watch(livePoliciesProvider).value ?? [];
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Row(
-              children: [
-                Icon(Icons.file_download_outlined, color: Color(0xFF1D4ED8)),
-                Gap(10),
-                Text('Download Documents', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          return Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+            ),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(isDark ? 100 : 30),
+                  blurRadius: 25,
+                  offset: const Offset(0, -6),
+                ),
               ],
             ),
-            content: SizedBox(
-              width: 440,
-              child: policies.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24),
-                      child: Center(
-                        child: Text(
-                          'No policy documents available for download.',
-                          style: TextStyle(color: Color(0xFF64748B)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag handle
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 8),
+                    width: 44,
+                    height: 4.5,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.black12,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+
+                // Header with badge, title & close button
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 14, 14),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1D4ED8).withAlpha(isDark ? 40 : 18),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFF1D4ED8).withAlpha(isDark ? 80 : 35),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.download_rounded,
+                          color: Color(0xFF2563EB),
+                          size: 22,
                         ),
                       ),
-                    )
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (int i = 0; i < policies.length && i < 4; i++) ...[
-                          if (i > 0) const Divider(),
-                          ListTile(
-                            leading: const Icon(Icons.picture_as_pdf_outlined, color: Colors.red),
-                            title: Text(policies[i].name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                            subtitle: Text('Policy #${policies[i].policyNumber}'),
-                            trailing: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1D4ED8),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
+                      const Gap(14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Download Policy Documents',
+                              style: TextStyle(
+                                fontSize: isSmall ? 16 : 18,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                letterSpacing: -0.3,
                               ),
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                ApiService.downloadDocument(context, policies[i].id, title: policies[i].policyNumber ?? policies[i].name);
-                              },
-                              child: const Text('Download'),
                             ),
+                            const Gap(2),
+                            Text(
+                              'Select a policy to download verified PDF',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.close_rounded,
+                          size: 20,
+                          color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                        ),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                ),
+
+                // Policy items list
+                Flexible(
+                  child: policies.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.folder_open_rounded,
+                                  size: 36,
+                                  color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                                ),
+                              ),
+                              const Gap(14),
+                              Text(
+                                'No Policy Documents Found',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                ),
+                              ),
+                              const Gap(6),
+                              Text(
+                                'Your policies will appear here once issued and synced with CRM.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ],
-                    ),
+                        )
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                          itemCount: policies.length,
+                          separatorBuilder: (_, _) => const Gap(12),
+                          itemBuilder: (context, i) {
+                            final p = policies[i];
+                            final hasVehicle = p.vehicleNumber != null && p.vehicleNumber!.trim().isNotEmpty;
+                            return Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Category / Insurer Icon
+                                      Container(
+                                        padding: const EdgeInsets.all(9),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF1D4ED8).withAlpha(isDark ? 40 : 15),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Icon(
+                                          p.icon,
+                                          size: 20,
+                                          color: const Color(0xFF2563EB),
+                                        ),
+                                      ),
+                                      const Gap(10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              p.companyName.isNotEmpty ? p.companyName : p.name,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w700,
+                                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const Gap(2),
+                                            Text(
+                                              p.insuredName.isNotEmpty ? p.insuredName : 'Policyholder',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      // Category Pill
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF2563EB).withAlpha(isDark ? 35 : 18),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          p.policyCategory.toUpperCase(),
+                                          style: const TextStyle(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF2563EB),
+                                            letterSpacing: 0.4,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const Gap(10),
+
+                                  // Row with Policy #, Vehicle tag, and Download button
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Wrap(
+                                          spacing: 6,
+                                          runSpacing: 4,
+                                          crossAxisAlignment: WrapCrossAlignment.center,
+                                          children: [
+                                            Text(
+                                              '#${p.policyNumber ?? p.id}',
+                                              style: TextStyle(
+                                                fontFamily: 'monospace',
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: isDark ? Colors.white70 : const Color(0xFF475569),
+                                              ),
+                                            ),
+                                            if (hasVehicle)
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFFEF08A),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  border: Border.all(color: const Color(0xFFCA8A04), width: 0.8),
+                                                ),
+                                                child: Text(
+                                                  p.vehicleNumber!,
+                                                  style: const TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Color(0xFF0F172A),
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Gap(8),
+                                      ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF1D4ED8),
+                                          foregroundColor: Colors.white,
+                                          elevation: 0,
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        ),
+                                        icon: const Icon(Icons.download_rounded, size: 15),
+                                        label: const Text(
+                                          'PDF',
+                                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.pop(ctx);
+                                          ApiService.downloadDocument(
+                                            context,
+                                            p.id,
+                                            kind: 'policy',
+                                            title: p.policyNumber ?? p.name,
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Close', style: TextStyle(color: Color(0xFF64748B))),
-              ),
-            ],
           );
         },
       ),

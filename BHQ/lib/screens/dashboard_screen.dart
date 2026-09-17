@@ -7,6 +7,7 @@ import '../widgets/kpi_grid.dart';
 import '../widgets/policy_card.dart';
 import '../widgets/quick_actions.dart';
 import '../services/crm_data_provider.dart';
+import 'policy_details_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   final ValueChanged<int>? onNavigate;
@@ -247,7 +248,12 @@ class DashboardScreen extends ConsumerWidget {
                     return PolicyCard(
                       policy: displayList[index],
                       onTap: () {
-                        CommonDialogs.showPolicyDetailsModal(context, displayList[index]);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PolicyDetailsScreen(policy: displayList[index]),
+                          ),
+                        );
                       },
                     );
                   },

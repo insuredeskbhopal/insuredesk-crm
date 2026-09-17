@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import '../models/policy.dart';
+import '../screens/policy_details_screen.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import 'glass_card.dart';
@@ -90,8 +91,21 @@ class PolicyCard extends StatelessWidget {
             ? (isDark ? Colors.amber.shade300 : Colors.amber.shade800)
             : (isDark ? const Color(0xFF34D399) : const Color(0xFF059669));
 
+    void openDetails() {
+      if (onTap != null) {
+        onTap!();
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PolicyDetailsScreen(policy: policy),
+          ),
+        );
+      }
+    }
+
     return GlassCard(
-      onTap: onTap,
+      onTap: openDetails,
       padding: EdgeInsets.all(isSmall ? 14 : 16),
       borderRadius: isSmall ? 16 : 20,
       child: Column(
@@ -452,7 +466,7 @@ class PolicyCard extends StatelessWidget {
             children: [
               // "View Policy Details" link
               InkWell(
-                onTap: onTap,
+                onTap: openDetails,
                 borderRadius: BorderRadius.circular(6),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),

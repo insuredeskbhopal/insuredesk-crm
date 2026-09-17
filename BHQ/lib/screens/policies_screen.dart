@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import '../models/policy.dart';
+import 'policy_details_screen.dart';
 import '../widgets/policy_card.dart';
-import '../widgets/common_dialogs.dart';
 import '../services/crm_data_provider.dart';
 
 class PoliciesScreen extends ConsumerStatefulWidget {
@@ -301,7 +301,12 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
                     return PolicyCard(
                       policy: policy,
                       onTap: () {
-                        CommonDialogs.showPolicyDetailsModal(context, policy);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PolicyDetailsScreen(policy: policy),
+                          ),
+                        );
                       },
                     );
                   },
