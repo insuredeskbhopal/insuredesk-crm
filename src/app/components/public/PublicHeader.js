@@ -7,6 +7,7 @@ import BrandLogo from "@/app/components/brand/BrandLogo";
 import Breadcrumbs from "@/app/components/public/Breadcrumbs";
 import AppDownloadModal from "@/app/components/public/AppDownloadModal";
 import { BUSINESS_DETAILS } from "@/lib/seo/site";
+import { Smartphone } from "lucide-react";
 
 const navItems = [
   { label: "Home", href: "/", priority: "core" },
@@ -183,12 +184,10 @@ export default function PublicHeader() {
             <button
               type="button"
               onClick={() => setDownloadModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 transition-all shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#031638] bg-blue-50/90 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 transition-all shadow-2xs"
               aria-label="Download BimaHeadquarter Mobile App"
             >
-              <span className="material-symbols-outlined text-[17px] text-blue-600">
-                smartphone
-              </span>
+              <Smartphone className="h-3.5 w-3.5 text-blue-600" />
               <span className="hidden sm:inline">Download App</span>
               <span className="sm:hidden">App</span>
             </button>
@@ -277,11 +276,9 @@ export default function PublicHeader() {
               setMobileMenuOpen(false);
               setDownloadModalOpen(true);
             }}
-            className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 font-bold text-sm"
+            className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-blue-50 border border-blue-200 text-[#031638] font-bold text-sm"
           >
-            <span className="material-symbols-outlined text-lg text-blue-600">
-              smartphone
-            </span>
+            <Smartphone className="h-4 w-4 text-blue-600" />
             Download App &amp; Share
           </button>
 
