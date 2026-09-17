@@ -12,7 +12,7 @@ export async function verifyClientMpin(customer, mpin) {
 
 export async function verifyClientMpinWithVersion(customer, mpin, database = prisma) {
   const cleanMpin = String(mpin || "").replace(/\D/g, "");
-  if (cleanMpin.length !== 4) return { valid: false, credentialVersion: 0 };
+  if (cleanMpin.length < 4 || cleanMpin.length > 6) return { valid: false, credentialVersion: 0 };
 
   return withClientCredentialLock(
     customer.id,
@@ -23,7 +23,7 @@ export async function verifyClientMpinWithVersion(customer, mpin, database = pri
 
 export async function withVerifiedClientMpin(customer, mpin, operation, database = prisma) {
   const cleanMpin = String(mpin || "").replace(/\D/g, "");
-  if (cleanMpin.length !== 4) return { valid: false, credentialVersion: 0, value: null };
+  if (cleanMpin.length < 4 || cleanMpin.length > 6) return { valid: false, credentialVersion: 0, value: null };
 
   return withClientCredentialLock(
     customer.id,
@@ -73,7 +73,7 @@ export async function setClientMpin(customerId, mpin, expectedCredentialVersion)
 }
 
 export function generateTemporaryClientMpin() {
-  return randomInt(0, 10_000).toString().padStart(4, "0");
+  return randomInt(100_000, 1_000_000).toString();
 }
 
 export function provisionClientMpin(customer, mpin, database = prisma) {
@@ -82,7 +82,7 @@ export function provisionClientMpin(customer, mpin, database = prisma) {
 
 async function writeClientMpin(customer, mpin, expectedCredentialVersion, database = prisma) {
   const cleanMpin = String(mpin || "").replace(/\D/g, "");
-  if (cleanMpin.length !== 4) throw new Error("MPIN must be a 4-digit code");
+  if (cleanMpin.length < 4 || cleanMpin.length > 6) throw new Error("MPIN must be a 4 to 6-digit numeric code");
   const mpinHash = await hashPassword(cleanMpin);
 
   return withClientCredentialLock(

@@ -4,8 +4,242 @@ import 'package:gap/gap.dart';
 import '../theme/auth_provider.dart';
 import '../services/crm_data_provider.dart';
 
+import '../services/api_service.dart';
+
 class FamilyAssetsScreen extends ConsumerWidget {
   const FamilyAssetsScreen({super.key});
+
+  void _showAddMemberModal(BuildContext context, WidgetRef ref) {
+    final nameCtrl = TextEditingController();
+    final relationCtrl = TextEditingController(text: 'Spouse');
+    final ageCtrl = TextEditingController();
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.person_add_alt_1_rounded, color: Color(0xFF1D4ED8)),
+              Gap(10),
+              Text('Add Family Member', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Submit a family endorsement request to your CRM advisor to include a member under policy coverage.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                ),
+                const Gap(14),
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Member Full Name *', hintText: 'Priya Sharma'),
+                ),
+                const Gap(10),
+                DropdownButtonFormField<String>(
+                  initialValue: relationCtrl.text,
+                  decoration: const InputDecoration(labelText: 'Relationship *'),
+                  items: const [
+                    DropdownMenuItem(value: 'Spouse', child: Text('Spouse')),
+                    DropdownMenuItem(value: 'Child (Son/Daughter)', child: Text('Child (Son/Daughter)')),
+                    DropdownMenuItem(value: 'Parent (Father/Mother)', child: Text('Parent (Father/Mother)')),
+                    DropdownMenuItem(value: 'Sibling', child: Text('Sibling')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) relationCtrl.text = val;
+                  },
+                ),
+                const Gap(10),
+                TextField(
+                  controller: ageCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Age / Year of Birth *', hintText: '28'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1D4ED8),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      final name = nameCtrl.text.trim();
+                      final age = ageCtrl.text.trim();
+                      final rel = relationCtrl.text.trim();
+                      if (name.isEmpty || age.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please enter member name and age.')),
+                        );
+                        return;
+                      }
+                      setDialogState(() => isSubmitting = true);
+                      try {
+                        await ApiService.submitServiceRequest(
+                          category: 'ADD_FAMILY_MEMBER',
+                          title: 'Add Family Member: $name ($rel)',
+                          description: 'Requested inclusion of family member $name ($rel, Age: $age) to policy coverage.',
+                        );
+                        if (dialogCtx.mounted) Navigator.pop(ctx);
+                        ref.invalidate(liveServiceRequestsProvider);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Member addition endorsement request logged in CRM!'),
+                              backgroundColor: Color(0xFF10B981),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setDialogState(() => isSubmitting = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: ${e.toString().replaceAll("Exception:", "").trim()}')),
+                          );
+                        }
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Submit Request'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddAssetModal(BuildContext context, WidgetRef ref) {
+    final assetTypeCtrl = TextEditingController(text: 'Motor Vehicle');
+    final regNoCtrl = TextEditingController();
+    final modelCtrl = TextEditingController();
+    final valueCtrl = TextEditingController();
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.add_home_work_rounded, color: Color(0xFF1D4ED8)),
+              Gap(10),
+              Text('Register Insured Asset', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: minAxisSize,
+              children: [
+                const Text(
+                  'Register a vehicle or property asset to link with insurance policies in your CRM portfolio.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                ),
+                const Gap(14),
+                DropdownButtonFormField<String>(
+                  initialValue: assetTypeCtrl.text,
+                  decoration: const InputDecoration(labelText: 'Asset Category *'),
+                  items: const [
+                    DropdownMenuItem(value: 'Motor Vehicle', child: Text('Motor Vehicle')),
+                    DropdownMenuItem(value: 'Residential Property', child: Text('Residential Property')),
+                    DropdownMenuItem(value: 'Commercial / Warehouse', child: Text('Commercial / Warehouse')),
+                    DropdownMenuItem(value: 'Industrial Equipment', child: Text('Industrial Equipment')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) assetTypeCtrl.text = val;
+                  },
+                ),
+                const Gap(10),
+                TextField(
+                  controller: regNoCtrl,
+                  decoration: const InputDecoration(labelText: 'Registration / Asset ID *', hintText: 'MP-04-XX-0001'),
+                ),
+                const Gap(10),
+                TextField(
+                  controller: modelCtrl,
+                  decoration: const InputDecoration(labelText: 'Make, Model or Address', hintText: 'Hyundai Creta / Industrial Area'),
+                ),
+                const Gap(10),
+                TextField(
+                  controller: valueCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Estimated Value / Sum Insured', hintText: '₹7,50,000'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1D4ED8),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      final regNo = regNoCtrl.text.trim();
+                      if (regNo.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please enter asset registration/ID.')),
+                        );
+                        return;
+                      }
+                      setDialogState(() => isSubmitting = true);
+                      try {
+                        await ApiService.submitServiceRequest(
+                          category: 'ADD_ASSET',
+                          title: 'Register Asset: ${assetTypeCtrl.text} - $regNo',
+                          description: 'Requested registration of ${assetTypeCtrl.text}: $regNo, Make/Model: ${modelCtrl.text.trim()}, Est Value: ${valueCtrl.text.trim()}',
+                        );
+                        if (dialogCtx.mounted) Navigator.pop(ctx);
+                        ref.invalidate(liveServiceRequestsProvider);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Asset registration request submitted to CRM!'),
+                              backgroundColor: Color(0xFF10B981),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setDialogState(() => isSubmitting = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: ${e.toString().replaceAll("Exception:", "").trim()}')),
+                          );
+                        }
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Register Asset'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static const minAxisSize = MainAxisSize.min;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,11 +289,7 @@ class FamilyAssetsScreen extends ConsumerWidget {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
               TextButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Add Member request sent to Advisor.')),
-                  );
-                },
+                onPressed: () => _showAddMemberModal(context, ref),
                 icon: const Icon(Icons.person_add_alt_1_rounded, size: 14),
                 label: const Text('Add Member', style: TextStyle(fontSize: 12)),
               ),
@@ -149,11 +379,7 @@ class FamilyAssetsScreen extends ConsumerWidget {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
               TextButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Add Asset request sent to Advisor.')),
-                  );
-                },
+                onPressed: () => _showAddAssetModal(context, ref),
                 icon: const Icon(Icons.add_home_work_rounded, size: 14),
                 label: const Text('Add Asset', style: TextStyle(fontSize: 12)),
               ),

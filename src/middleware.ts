@@ -24,7 +24,9 @@ const PROTECTED_ROUTE_PREFIXES = [
 ];
 
 export async function middleware(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
+  const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
+  const bearerToken = authHeader?.replace(/^Bearer\s+/i, "")?.trim();
+  const token = request.cookies.get("token")?.value || bearerToken;
   const { pathname } = request.nextUrl;
 
   if (
@@ -78,9 +80,10 @@ export async function middleware(request: NextRequest) {
   const isStaffOnlyPage = !pathname.startsWith("/api/") && !isPublicPage && !isClientRoute;
 
   const isPublicApi = pathname === "/api/contact" || pathname.startsWith("/api/blog/");
+  const isClientApi = pathname.startsWith("/api/client/");
 
   // Handle client / staff API access security
-  if (pathname.startsWith("/api/") && !isAuthApi && !isCronApi && !isPublicApi && !pathname.startsWith("/api/client/")) {
+  if (pathname.startsWith("/api/") && !isAuthApi && !isCronApi && !isPublicApi && !isClientApi) {
     if (!isAuthenticated) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
@@ -103,7 +106,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (isAuthApi || isCronApi || isPublicApi) {
+  if (isAuthApi || isCronApi || isPublicApi || isClientApi) {
     return NextResponse.next();
   }
 

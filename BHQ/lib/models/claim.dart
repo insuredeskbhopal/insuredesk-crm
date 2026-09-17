@@ -26,7 +26,7 @@ class Claim {
   });
 
   factory Claim.fromJson(Map<String, dynamic> json) {
-    final statusStr = (json['status'] ?? 'REGISTERED').toString().toUpperCase();
+    final statusStr = (json['claimStatus'] ?? json['status'] ?? 'REGISTERED').toString().toUpperCase();
     ClaimStatus claimStatus = ClaimStatus.registered;
 
     if (statusStr.contains('SURVEY') || statusStr.contains('ASSIGNED')) {
@@ -41,24 +41,31 @@ class Claim {
       claimStatus = ClaimStatus.rejected;
     }
 
-    final amount = json['claimAmount'] ?? json['amount'] ?? '0';
-    final date = json['createdAt'] != null
-        ? json['createdAt'].toString().split('T').first
-        : (json['dateFiled'] ?? 'Recent');
+    final rawAmount = json['claimAmount'] ??
+        json['amount'] ??
+        (json['metadata'] is Map ? json['metadata']['claimAmount'] : null) ??
+        '0';
+    final amount = rawAmount.toString();
+    final date = json['claimDate'] != null
+        ? json['claimDate'].toString().split('T').first
+        : (json['createdAt'] != null
+            ? json['createdAt'].toString().split('T').first
+            : (json['dateFiled'] ?? 'Recent'));
+
+    final claimNumber = json['claimNo'] ?? json['claimNumber'] ?? json['id'] ?? 'CLM-NEW';
+    final policyNumber = json['policyNo'] ?? json['policyNumber'] ?? '-';
 
     return Claim(
-      id: json['id'] ?? json['claimNumber'] ?? 'CLM-NEW',
-      policyNo: json['policyNumber'] ?? json['policyNo'] ?? '-',
-      customerName: json['customerName'] ?? json['insuredName'] ?? 'Customer',
-      insurer: json['insuranceCompany'] ?? json['insurer'] ?? 'Bima Headquarter Partner',
-      claimAmount: amount.toString().startsWith('₹') ? amount.toString() : '₹$amount',
-      estimatedPayout: amount.toString().startsWith('₹') ? amount.toString() : '₹$amount',
+      id: claimNumber.toString(),
+      policyNo: policyNumber.toString(),
+      customerName: (json['customerName'] ?? json['insuredName'] ?? 'Customer').toString(),
+      insurer: (json['insuranceCompany'] ?? json['insurer'] ?? 'Bima Headquarter Partner').toString(),
+      claimAmount: amount.startsWith('₹') ? amount : '₹$amount',
+      estimatedPayout: amount.startsWith('₹') ? amount : '₹$amount',
       status: claimStatus,
-      hospitalOrWorkshop: json['garageOrHospital'] ?? json['hospitalOrWorkshop'] ?? json['description'] ?? 'Network Garage / Hospital',
-      dateFiled: date,
-      surveyorName: json['surveyorName'] ?? 'Assigned TPA / Surveyor',
+      hospitalOrWorkshop: (json['garageOrHospital'] ?? json['hospitalOrWorkshop'] ?? json['claimDescription'] ?? json['description'] ?? 'Network Garage / Hospital').toString(),
+      dateFiled: date.toString(),
+      surveyorName: (json['surveyorName'] ?? 'Assigned TPA / Surveyor').toString(),
     );
   }
-
-  static const List<Claim> mockClaims = [];
 }

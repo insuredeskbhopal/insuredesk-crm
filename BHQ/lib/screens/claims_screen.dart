@@ -250,14 +250,7 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Select document to upload for Claim #${claim.id}'),
-                        backgroundColor: const Color(0xFF1D4ED8),
-                      ),
-                    );
-                  },
+                  onPressed: () => CommonDialogs.showClaimDocumentUploadModal(context, claim.id),
                   icon: const Icon(Icons.upload_file_rounded, size: 14),
                   label: const Text('Upload Docs', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
                   style: OutlinedButton.styleFrom(
@@ -274,16 +267,9 @@ class _ClaimsScreenState extends ConsumerState<ClaimsScreen> {
               const Gap(10),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Downloading Claim Summary for #${claim.id}'),
-                        backgroundColor: const Color(0xFF10B981),
-                      ),
-                    );
-                  },
+                  onPressed: () => CommonDialogs.showClaimSummaryModal(context, claim),
                   icon: const Icon(Icons.download_rounded, size: 14),
-                  label: const Text('Download Letter', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                  label: const Text('View Summary', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF10B981),
                     foregroundColor: Colors.white,

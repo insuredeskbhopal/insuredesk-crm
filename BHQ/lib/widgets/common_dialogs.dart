@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import '../services/api_service.dart';
+import '../services/crm_data_provider.dart';
+import '../models/policy.dart';
+import '../models/claim.dart';
 
 class CommonDialogs {
   static void showRegisterClaimModal(BuildContext context, {VoidCallback? onClaimFiled}) {
@@ -131,74 +135,69 @@ class CommonDialogs {
   static void showDownloadPolicyModal(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.file_download_outlined, color: Color(0xFF1D4ED8)),
-            Gap(10),
-            Text('Download Policy', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-          ],
-        ),
-        content: SizedBox(
-          width: 440,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.picture_as_pdf_outlined, color: Colors.red),
-                title: const Text('HDFC Ergo Optima Restore PDF'),
-                subtitle: const Text('Policy #HE-22910 • 1.4 MB'),
-                trailing: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1D4ED8),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                  ),
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Your document has been downloaded.'),
-                        backgroundColor: Color(0xFF10B981),
+      builder: (ctx) => Consumer(
+        builder: (dialogCtx, ref, _) {
+          final policies = ref.watch(livePoliciesProvider).value ?? [];
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Row(
+              children: [
+                Icon(Icons.file_download_outlined, color: Color(0xFF1D4ED8)),
+                Gap(10),
+                Text('Download Documents', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              ],
+            ),
+            content: SizedBox(
+              width: 440,
+              child: policies.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: Text(
+                          'No policy documents available for download.',
+                          style: TextStyle(color: Color(0xFF64748B)),
+                        ),
                       ),
-                    );
-                  },
-                  child: const Text('Download Policy'),
-                ),
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.receipt_long_outlined, color: Colors.green),
-                title: const Text('Section 80D Tax Exemption Certificate'),
-                subtitle: const Text('FY 2025-26 • Eligible for Tax Deduction'),
-                trailing: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                  ),
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Your document has been downloaded.'),
-                        backgroundColor: Color(0xFF10B981),
-                      ),
-                    );
-                  },
-                  child: const Text('Download Certificate'),
-                ),
+                    )
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (int i = 0; i < policies.length && i < 4; i++) ...[
+                          if (i > 0) const Divider(),
+                          ListTile(
+                            leading: const Icon(Icons.picture_as_pdf_outlined, color: Colors.red),
+                            title: Text(policies[i].name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                            subtitle: Text('Policy #${policies[i].policyNumber}'),
+                            trailing: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1D4ED8),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                              ),
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Downloading policy document #${policies[i].policyNumber}...'),
+                                    backgroundColor: const Color(0xFF10B981),
+                                  ),
+                                );
+                              },
+                              child: const Text('Download'),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Close', style: TextStyle(color: Color(0xFF64748B))),
               ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close', style: TextStyle(color: Color(0xFF64748B))),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -211,71 +210,110 @@ class CommonDialogs {
   }
 
   static void showNotificationsDialog(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.notifications_active_rounded, color: Color(0xFF2563EB)),
-            Gap(10),
-            Text('Notifications', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-          ],
-        ),
-        content: SizedBox(
-          width: 440,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _notificationItem(
-                icon: Icons.warning_amber_rounded,
-                color: const Color(0xFFD97706),
-                title: 'Policy Renewal Due in 18 Days',
-                subtitle: 'ICICI Lombard Motor #MOT-9844 • Premium ₹18,420',
-                time: '2 hours ago',
-                isDark: isDark,
+      builder: (ctx) => Consumer(
+        builder: (dialogCtx, ref, _) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final notifsAsync = ref.watch(liveNotificationsProvider);
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Row(
+              children: [
+                Icon(Icons.notifications_active_rounded, color: Color(0xFF2563EB)),
+                Gap(10),
+                Text('Notifications', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              ],
+            ),
+            content: SizedBox(
+              width: 440,
+              child: notifsAsync.when(
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+                error: (err, _) => Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Unable to load notifications: $err',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+                data: (notifs) {
+                  if (notifs.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle_outline, color: Color(0xFF10B981), size: 40),
+                          Gap(12),
+                          Text(
+                            'All caught up!',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
+                          Gap(4),
+                          Text(
+                            'No pending renewals or alerts.',
+                            style: TextStyle(color: Colors.grey, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (int i = 0; i < notifs.length && i < 6; i++) ...[
+                          if (i > 0) const Divider(height: 20),
+                          _notificationItem(
+                            icon: notifs[i]['type'] == 'renewal'
+                                ? Icons.warning_amber_rounded
+                                : (notifs[i]['type'] == 'claim'
+                                    ? Icons.verified_user_rounded
+                                    : Icons.info_outline_rounded),
+                            color: notifs[i]['type'] == 'renewal'
+                                ? const Color(0xFFD97706)
+                                : (notifs[i]['type'] == 'claim'
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFF2563EB)),
+                            title: notifs[i]['title'] ?? 'Notification',
+                            subtitle: notifs[i]['message'] ?? '',
+                            time: notifs[i]['time'] ?? 'Recent',
+                            isDark: isDark,
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                },
               ),
-              const Divider(height: 20),
-              _notificationItem(
-                icon: Icons.check_circle_rounded,
-                color: const Color(0xFF10B981),
-                title: 'Claim #CLM-881 Approved',
-                subtitle: 'HDFC Ergo Health • Settlement ₹1,25,000 released',
-                time: '1 day ago',
-                isDark: isDark,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('All notifications marked as read.'),
+                      backgroundColor: Color(0xFF10B981),
+                    ),
+                  );
+                },
+                child: const Text('Mark All Read', style: TextStyle(fontSize: 12)),
               ),
-              const Divider(height: 20),
-              _notificationItem(
-                icon: Icons.receipt_long_rounded,
-                color: const Color(0xFF2563EB),
-                title: '80D Tax Certificate Available',
-                subtitle: 'Download FY 2025-26 Sec 80D exemption certificate',
-                time: '3 days ago',
-                isDark: isDark,
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Close', style: TextStyle(color: Color(0xFF64748B))),
               ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('All notifications marked as read.'),
-                  backgroundColor: Color(0xFF10B981),
-                ),
-              );
-            },
-            child: const Text('Mark All Read', style: TextStyle(fontSize: 12)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close', style: TextStyle(color: Color(0xFF64748B))),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -331,7 +369,8 @@ class CommonDialogs {
     );
   }
 
-  static void showComparePlansDialog(BuildContext context) {
+  static void showComparePlansDialog(BuildContext context, {Policy? policy}) {
+    final planTitle = policy != null ? '${policy.name} #${policy.policyNumber}' : 'Insurance Renewal Plan';
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -349,9 +388,9 @@ class CommonDialogs {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'ICICI Lombard Motor Insurance #MOT-9844',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              Text(
+                planTitle,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
               ),
               const Gap(12),
               Table(
@@ -366,12 +405,12 @@ class CommonDialogs {
                 },
                 children: [
                   _tableRow('Feature', 'Current Plan', 'Upgraded Plan', isHeader: true),
-                  _tableRow('Premium', '₹18,420', '₹22,800'),
-                  _tableRow('IDV Cover', '₹5.40 Lakh', '₹6.20 Lakh'),
-                  _tableRow('NCB Discount', '35%', '50%'),
-                  _tableRow('Zero Dep', '❌ Not Included', '✅ Included'),
-                  _tableRow('RSA Cover', '✅ Included', '✅ Included'),
-                  _tableRow('Engine Protect', '❌ Not Included', '✅ Included'),
+                  _tableRow('Premium', policy?.price ?? 'Standard', 'Comprehensive'),
+                  _tableRow('Coverage', 'Base Policy', 'Full Multi-Risk Cover'),
+                  _tableRow('Renewal NCB', 'Standard NCB', '50% Max NCB Discount'),
+                  _tableRow('Zero Dep', '❌ Standard', '✅ Included Free'),
+                  _tableRow('24x7 RSA', '✅ Included', '✅ Priority Concierge'),
+                  _tableRow('Engine / Addons', '❌ Standard', '✅ Enhanced Shield'),
                 ],
               ),
               const Gap(14),
@@ -388,7 +427,7 @@ class CommonDialogs {
                     Gap(8),
                     Expanded(
                       child: Text(
-                        'Upgrade saves ₹4,150 with 50% NCB + Free Zero Dep',
+                        'Upgrading provides maximum coverage with exclusive NCB discounts',
                         style: TextStyle(fontSize: 11.5, color: Color(0xFF065F46), fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -444,58 +483,534 @@ class CommonDialogs {
       ],
     );
   }
+
+  static Widget _detailRow(String label, String value, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B))),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void showPolicyDetailsModal(BuildContext context, Policy policy) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1D4ED8).withAlpha(20),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(policy.icon, color: const Color(0xFF1D4ED8), size: 22),
+            ),
+            const Gap(12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(policy.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text('Policy #${policy.policyNumber}', style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: 440,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _detailRow('Insurance Company', policy.subtitle, isDark),
+              _detailRow('Total Premium', policy.price, isDark),
+              if (policy.sumInsured != null && policy.sumInsured!.isNotEmpty)
+                _detailRow('Sum Insured', policy.sumInsured!, isDark),
+              if (policy.vehicleNumber != null && policy.vehicleNumber!.isNotEmpty)
+                _detailRow('Vehicle / Asset No', policy.vehicleNumber!, isDark),
+              if (policy.expiryDate != null && policy.expiryDate!.isNotEmpty)
+                _detailRow('Expiry Date', policy.expiryDate!, isDark),
+              _detailRow('Status', policy.status, isDark),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close', style: TextStyle(color: Color(0xFF64748B))),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1D4ED8),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            icon: const Icon(Icons.download_rounded, size: 16),
+            label: const Text('Download Schedule'),
+            onPressed: () {
+              Navigator.pop(ctx);
+              showDownloadPolicyModal(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void showClaimDocumentUploadModal(BuildContext context, String claimId) {
+    final docNameController = TextEditingController(text: 'Repair Estimate / Hospital Bill');
+    final remarksController = TextEditingController();
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.upload_file_rounded, color: Color(0xFF1D4ED8)),
+              const Gap(10),
+              Text('Upload Docs for Claim #$claimId', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Attach supporting bills, discharge summary, or repair estimates directly to this claim in CRM.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                ),
+                const Gap(14),
+                TextField(
+                  controller: docNameController,
+                  decoration: const InputDecoration(labelText: 'Document Type / Title *'),
+                ),
+                const Gap(10),
+                TextField(
+                  controller: remarksController,
+                  decoration: const InputDecoration(labelText: 'Remarks / Notes', hintText: 'Authorized estimate from workshop...'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1D4ED8),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      setDialogState(() => isSubmitting = true);
+                      try {
+                        await ApiService.submitServiceRequest(
+                          category: 'CLAIM_DOCUMENT_UPLOAD',
+                          title: 'Doc Upload for Claim #$claimId: ${docNameController.text.trim()}',
+                          description: 'Document: ${docNameController.text.trim()} attached for Claim #$claimId. Notes: ${remarksController.text.trim()}',
+                        );
+                        if (dialogCtx.mounted) Navigator.pop(ctx);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Document attachment record logged to CRM claim successfully!'),
+                              backgroundColor: Color(0xFF10B981),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setDialogState(() => isSubmitting = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: ${e.toString().replaceAll("Exception:", "").trim()}')),
+                          );
+                        }
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Submit Document'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static void showClaimSummaryModal(BuildContext context, Claim claim) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            const Icon(Icons.receipt_long_rounded, color: Color(0xFF10B981), size: 24),
+            const Gap(10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Claim Summary #${claim.id}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text('Policy #${claim.policyNo}', style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: 440,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _detailRow('Insurance Company', claim.insurer, isDark),
+              _detailRow('Claim Amount', claim.claimAmount, isDark),
+              _detailRow('Estimated Payout', claim.estimatedPayout, isDark),
+              _detailRow('Claim Status', claim.status.name.toUpperCase(), isDark),
+              _detailRow('Date Filed', claim.dateFiled, isDark),
+              if (claim.hospitalOrWorkshop.isNotEmpty)
+                _detailRow('Workshop / Hospital', claim.hospitalOrWorkshop, isDark),
+              if (claim.surveyorName.isNotEmpty)
+                _detailRow('Surveyor Assigned', claim.surveyorName, isDark),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close', style: TextStyle(color: Color(0xFF64748B))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void showProfileModal(BuildContext context, Map<String, dynamic> user, Map<String, dynamic> profile) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final name = profile['name'] ?? user['name'] ?? 'Account Holder';
+    final phone = profile['phone'] ?? user['phone'] ?? '-';
+    final email = profile['email'] ?? user['email'] ?? '-';
+    final clientId = profile['id'] ?? user['id'] ?? '-';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Row(
+          children: [
+            Icon(Icons.account_circle_outlined, color: Color(0xFF1D4ED8), size: 24),
+            Gap(10),
+            Text('Client Profile', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: SizedBox(
+          width: 440,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _detailRow('Customer Name', name, isDark),
+              _detailRow('Client ID', clientId, isDark),
+              _detailRow('Registered Phone', phone, isDark),
+              _detailRow('Email Address', email, isDark),
+              _detailRow('Portal Access', 'Active (Authenticated)', isDark),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close', style: TextStyle(color: Color(0xFF64748B))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void showChangeMpinModal(BuildContext context) {
+    final currentMpinCtrl = TextEditingController();
+    final newMpinCtrl = TextEditingController();
+    final confirmMpinCtrl = TextEditingController();
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.lock_reset_rounded, color: Color(0xFF1D4ED8)),
+              Gap(10),
+              Text('Change 6-Digit MPIN', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Update your secure 6-digit MPIN for accessing your BimaHeadquarter CRM portal.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                ),
+                const Gap(14),
+                TextField(
+                  controller: currentMpinCtrl,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Current 6-Digit MPIN *', counterText: ''),
+                ),
+                const Gap(10),
+                TextField(
+                  controller: newMpinCtrl,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'New 6-Digit MPIN *', counterText: ''),
+                ),
+                const Gap(10),
+                TextField(
+                  controller: confirmMpinCtrl,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Confirm New MPIN *', counterText: ''),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1D4ED8),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      final curr = currentMpinCtrl.text.trim();
+                      final nw = newMpinCtrl.text.trim();
+                      final conf = confirmMpinCtrl.text.trim();
+                      if (curr.length < 4 || nw.length != 6) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('New MPIN must be exactly 6 numeric digits.')),
+                        );
+                        return;
+                      }
+                      if (nw != conf) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('New MPIN and Confirm MPIN do not match.')),
+                        );
+                        return;
+                      }
+                      setDialogState(() => isSubmitting = true);
+                      try {
+                        await ApiService.changeMpin(currentMpin: curr, newMpin: nw);
+                        if (dialogCtx.mounted) Navigator.pop(ctx);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('6-digit MPIN updated successfully on CRM!'),
+                              backgroundColor: Color(0xFF10B981),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setDialogState(() => isSubmitting = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: ${e.toString().replaceAll("Exception:", "").trim()}')),
+                          );
+                        }
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Update MPIN'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static void showEndorsementRequestModal(BuildContext context, {String? defaultTitle, String? defaultDesc}) {
+    final titleCtrl = TextEditingController(text: defaultTitle ?? 'Policy Add-on Cover Request');
+    final descCtrl = TextEditingController(text: defaultDesc ?? 'Customer requested policy coverage upgrade.');
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.add_moderator_rounded, color: Color(0xFF1D4ED8)),
+              Gap(10),
+              Text('Request Policy Add-on', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Submit an add-on or endorsement request to your insurance advisor. The request is tracked in CRM.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                ),
+                const Gap(14),
+                TextField(
+                  controller: titleCtrl,
+                  decoration: const InputDecoration(labelText: 'Request Title *'),
+                ),
+                const Gap(10),
+                TextField(
+                  controller: descCtrl,
+                  maxLines: 3,
+                  decoration: const InputDecoration(labelText: 'Coverage Details / Remarks *'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1D4ED8),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      setDialogState(() => isSubmitting = true);
+                      try {
+                        await ApiService.submitServiceRequest(
+                          category: 'POLICY_ADD_ON',
+                          title: titleCtrl.text.trim(),
+                          description: descCtrl.text.trim(),
+                        );
+                        if (dialogCtx.mounted) Navigator.pop(ctx);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Add-on request submitted to CRM successfully!'),
+                              backgroundColor: Color(0xFF10B981),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        setDialogState(() => isSubmitting = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: ${e.toString().replaceAll("Exception:", "").trim()}')),
+                          );
+                        }
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Submit Request'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _PayPremiumDialog extends StatefulWidget {
+class _PayPremiumDialog extends ConsumerStatefulWidget {
   const _PayPremiumDialog();
 
   @override
-  State<_PayPremiumDialog> createState() => _PayPremiumDialogState();
+  ConsumerState<_PayPremiumDialog> createState() => _PayPremiumDialogState();
 }
 
-class _PayPremiumDialogState extends State<_PayPremiumDialog> {
-  final List<Map<String, String>> _availablePolicies = [
-    {
-      'id': 'MOT-9844',
-      'name': 'ICICI Lombard Motor Insurance',
-      'cover': 'Maruti Swift VXi (MH-02-CB-9844)',
-      'premium': '₹18,420',
-      'base': '₹15,610',
-      'gst': '₹2,810',
-      'due': 'Due in 18 days',
-    },
-    {
-      'id': 'HE-22910',
-      'name': 'HDFC Ergo Optima Secure Health',
-      'cover': 'Family Floater (₹10 Lakh Sum Insured)',
-      'premium': '₹24,800',
-      'base': '₹21,016',
-      'gst': '₹3,784',
-      'due': 'Due in 42 days',
-    },
-    {
-      'id': 'FIR-55011',
-      'name': 'Tata AIG Property Fire Insurance',
-      'cover': 'Bhiwandi Warehouse (₹85 Lakh Sum Insured)',
-      'premium': '₹85,000',
-      'base': '₹72,033',
-      'gst': '₹12,967',
-      'due': 'Annual Renewal',
-    },
-  ];
-
-  late Map<String, String> _selectedPolicy;
+class _PayPremiumDialogState extends ConsumerState<_PayPremiumDialog> {
+  Map<String, String>? _selectedPolicy;
   String _selectedPaymentMethod = 'UPI';
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedPolicy = _availablePolicies[0];
-  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final livePolicies = ref.watch(livePoliciesProvider).value ?? [];
+
+    final availablePolicies = livePolicies.map((policy) {
+      final priceClean = policy.price.replaceAll('/yr', '').trim();
+      return {
+        'id': policy.policyNumber ?? policy.id,
+        'name': policy.name,
+        'cover': policy.subtitle,
+        'premium': priceClean,
+        'base': priceClean,
+        'gst': '18% GST incl.',
+        'due': policy.status,
+      };
+    }).toList();
+
+    if (availablePolicies.isNotEmpty &&
+        (_selectedPolicy == null ||
+            !availablePolicies.any((p) => p['id'] == _selectedPolicy!['id']))) {
+      _selectedPolicy = availablePolicies[0];
+    }
+
+    if (availablePolicies.isEmpty) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Text('Pay Premium', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        content: const SizedBox(
+          width: 440,
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text('No active policies found for renewal or payment.', style: TextStyle(color: Color(0xFF64748B))),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      );
+    }
+
+    final selPolicy = _selectedPolicy ?? availablePolicies[0];
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -549,7 +1064,7 @@ class _PayPremiumDialogState extends State<_PayPremiumDialog> {
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<Map<String, String>>(
-                    value: _selectedPolicy,
+                    value: selPolicy,
                     isExpanded: true,
                     icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF2563EB)),
                     dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -560,7 +1075,7 @@ class _PayPremiumDialogState extends State<_PayPremiumDialog> {
                         });
                       }
                     },
-                    items: _availablePolicies.map((policy) {
+                    items: availablePolicies.map((policy) {
                       return DropdownMenuItem<Map<String, String>>(
                         value: policy,
                         child: Text(
@@ -598,7 +1113,7 @@ class _PayPremiumDialogState extends State<_PayPremiumDialog> {
                       children: [
                         Expanded(
                           child: Text(
-                            _selectedPolicy['cover']!,
+                            selPolicy['cover']!,
                             style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.bold,
@@ -613,7 +1128,7 @@ class _PayPremiumDialogState extends State<_PayPremiumDialog> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            _selectedPolicy['due']!,
+                            selPolicy['due']!,
                             style: const TextStyle(
                               color: Color(0xFFD97706),
                               fontSize: 10,
@@ -634,7 +1149,7 @@ class _PayPremiumDialogState extends State<_PayPremiumDialog> {
                           style: TextStyle(fontSize: 11.5, color: isDark ? Colors.white60 : const Color(0xFF64748B)),
                         ),
                         Text(
-                          _selectedPolicy['base']!,
+                          selPolicy['base']!,
                           style: TextStyle(fontSize: 11.5, color: isDark ? Colors.white70 : const Color(0xFF334155)),
                         ),
                       ],
@@ -644,11 +1159,11 @@ class _PayPremiumDialogState extends State<_PayPremiumDialog> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'GST (18%):',
+                          'GST:',
                           style: TextStyle(fontSize: 11.5, color: isDark ? Colors.white60 : const Color(0xFF64748B)),
                         ),
                         Text(
-                          _selectedPolicy['gst']!,
+                          selPolicy['gst']!,
                           style: TextStyle(fontSize: 11.5, color: isDark ? Colors.white70 : const Color(0xFF334155)),
                         ),
                       ],
@@ -662,7 +1177,7 @@ class _PayPremiumDialogState extends State<_PayPremiumDialog> {
                           style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          _selectedPolicy['premium']!,
+                          selPolicy['premium']!,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -731,13 +1246,13 @@ class _PayPremiumDialogState extends State<_PayPremiumDialog> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Payment of ${_selectedPolicy['premium']} for ${_selectedPolicy['name']} completed via $_selectedPaymentMethod.',
+                  'Payment of ${selPolicy['premium']} for ${selPolicy['name']} completed via $_selectedPaymentMethod.',
                 ),
                 backgroundColor: const Color(0xFF10B981),
               ),
             );
           },
-          child: Text('Pay ${_selectedPolicy['premium']}'),
+          child: Text('Pay ${selPolicy['premium']}'),
         ),
       ],
     );

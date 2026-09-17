@@ -47,8 +47,8 @@ export async function POST(request) {
     if (!normalizedCustomerId) {
       return NextResponse.json({ success: false, error: "Invalid Client ID or MPIN" }, { status: 401 });
     }
-    if (cleanMpin.length !== 4) {
-      return NextResponse.json({ success: false, error: "MPIN must be a 4-digit code" }, { status: 400 });
+    if (cleanMpin.length < 4 || cleanMpin.length > 6) {
+      return NextResponse.json({ success: false, error: "MPIN must be a 4 to 6-digit numeric code" }, { status: 400 });
     }
 
     const customer = await prisma.clientAccount.findUnique({

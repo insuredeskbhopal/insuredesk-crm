@@ -122,15 +122,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (cleanId.isEmpty) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Please enter your Client ID (e.g., CLI-894210).',
+        errorMessage: 'Please enter your Registered Mobile Number or Client ID.',
       );
       return false;
     }
 
-    if (cleanMpin.length != 4) {
+    if (cleanMpin.length < 4 || cleanMpin.length > 6) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Client MPIN must be a 4-digit numeric code.',
+        errorMessage: 'Client MPIN must be a 6-digit numeric code.',
       );
       return false;
     }
@@ -142,10 +142,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final initials = name.toString().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
 
       final authenticatedUser = AuthUser(
-        clientId: cleanId,
+        clientId: userMap['customerId'] ?? userMap['id'] ?? cleanId,
         name: name,
         email: userMap['email'] ?? '',
-        accountNo: userMap['customerId'] ?? cleanId,
+        accountNo: userMap['customerId'] ?? userMap['id'] ?? cleanId,
         avatarInitials: initials.isEmpty ? 'CL' : initials,
         isGoogleLinked: false,
       );
@@ -166,66 +166,58 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Trigger Google Sign In
-  Future<void> initiateGoogleSignIn(String selectedEmail, String selectedName, bool isAlreadyLinked) async {
-    state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
-
-    await Future.delayed(const Duration(milliseconds: 700));
-
-    if (isAlreadyLinked) {
-      final user = AuthUser(
-        clientId: 'CLI-894210',
-        name: selectedName,
-        email: selectedEmail,
-        accountNo: '99201',
-        avatarInitials: selectedName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase(),
-        isGoogleLinked: true,
-      );
-
-      state = state.copyWith(
-        isLoading: false,
-        isAuthenticated: true,
-        user: user,
-        successMessage: 'Google Account authenticated. Redirecting to workspace...',
-      );
-    } else {
-      state = state.copyWith(
-        isLoading: false,
-        loginMode: 'google',
-        pendingGoogleEmail: selectedEmail,
-        pendingGoogleName: selectedName,
-        clearError: true,
-      );
-    }
+  /// Trigger Google Sign In Flow (requires Client ID + MPIN pairing)
+  Future<void> initiateGoogleSignIn(String selectedEmail, String selectedName) async {
+    state = state.copyWith(
+      isLoading: false,
+      loginMode: 'google',
+      pendingGoogleEmail: selectedEmail,
+      pendingGoogleName: selectedName,
+      clearError: true,
+      clearSuccess: true,
+    );
   }
 
-  /// Link Google Account with Client ID + MPIN
+  /// Link Google Account with Client ID + MPIN via live CRM API
   Future<bool> linkAndAuthenticateGoogle(String clientId, String mpin) async {
     state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
 
     final cleanId = clientId.trim();
     final cleanMpin = mpin.trim();
 
-    if (cleanId.isEmpty || cleanMpin.length != 4) {
+    if (cleanId.isEmpty) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Invalid Client ID or MPIN code for Google account pairing.',
+        errorMessage: 'Please enter your Registered Mobile Number or Client ID.',
+      );
+      return false;
+    }
+
+    if (cleanMpin.length < 4 || cleanMpin.length > 6) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Client MPIN must be a 6-digit numeric code.',
       );
       return false;
     }
 
     try {
-      final response = await ApiService.login(customerId: cleanId, mpin: cleanMpin);
+      final response = await ApiService.loginWithGoogleMpin(
+        customerId: cleanId,
+        mpin: cleanMpin,
+        googleEmail: state.pendingGoogleEmail ?? '',
+        googleName: state.pendingGoogleName ?? '',
+      );
       final userMap = response['user'] as Map<String, dynamic>? ?? {};
-      final name = userMap['name'] ?? state.pendingGoogleName ?? 'Alex Morgan';
+      final name = userMap['name'] ?? state.pendingGoogleName ?? 'Client';
       final initials = name.toString().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
 
       final user = AuthUser(
-        clientId: cleanId,
+        clientId: userMap['customerId'] ?? userMap['id'] ?? cleanId,
         name: name,
-        email: state.pendingGoogleEmail ?? userMap['email'] ?? 'client@bimaheadquarter.com',
-        accountNo: cleanId,
-        avatarInitials: initials.isEmpty ? 'AM' : initials,
+        email: state.pendingGoogleEmail ?? userMap['email'] ?? '',
+        accountNo: userMap['customerId'] ?? userMap['id'] ?? cleanId,
+        avatarInitials: initials.isEmpty ? 'CL' : initials,
         isGoogleLinked: true,
       );
 
@@ -236,23 +228,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
         successMessage: 'Google Account paired successfully! Entering workspace...',
       );
       return true;
-    } catch (_) {
-      final user = AuthUser(
-        clientId: cleanId,
-        name: state.pendingGoogleName ?? 'Alex Morgan',
-        email: state.pendingGoogleEmail ?? 'alex.morgan@gmail.com',
-        accountNo: '99201',
-        avatarInitials: (state.pendingGoogleName ?? 'AM').split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase(),
-        isGoogleLinked: true,
-      );
-
+    } catch (err) {
       state = state.copyWith(
         isLoading: false,
-        isAuthenticated: true,
-        user: user,
-        successMessage: 'Google Account paired successfully! Entering workspace...',
+        errorMessage: err.toString().replaceAll('Exception:', '').trim(),
       );
-      return true;
+      return false;
     }
   }
 

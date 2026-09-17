@@ -61,7 +61,7 @@ class AiAdvisorCard extends StatefulWidget {
       eyebrow: 'EXPRESS MOTOR RENEWAL',
       headline: 'Get 50% NCB Discount + Free Zero Dep Cover',
       description:
-          'Lock in ₹4,150 instant savings before your Maruti Swift cover expires in 12 days.',
+          'Lock in maximum NCB savings before your vehicle cover expires. Instant renewal with zero-dep protection.',
       ctaLabel: 'Claim 50% Discount',
       ctaIcon: Icons.directions_car_rounded,
       gradient: const [
@@ -93,7 +93,7 @@ class AiAdvisorCard extends StatefulWidget {
       eyebrow: 'AI INSIGHTS ADVISOR',
       headline: 'Save up to ₹14,200 on Health Family Floater',
       description:
-          'Our AI scanned 18 top insurers for cashless hospital networks in Mumbai.',
+          'Compare top insurers for comprehensive cashless hospital networks in your city.',
       ctaLabel: 'Analyze Policy Now',
       ctaIcon: Icons.auto_awesome_rounded,
       gradient: const [

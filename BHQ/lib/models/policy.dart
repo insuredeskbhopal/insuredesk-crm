@@ -30,15 +30,49 @@ class Policy {
   });
 
   factory Policy.fromJson(Map<String, dynamic> json) {
-    final company = json['insuranceCompany'] ?? json['selectedCompany'] ?? 'Insurance Policy';
-    final policyNum = json['policyNumber'] ?? json['id'] ?? '-';
-    final policyType = json['policyType'] ?? json['selectedPolicyType'] ?? 'General Insurance';
-    final premium = json['totalPremium'] ?? json['premium'] ?? '0';
-    final expiry = json['expiryDate'] ?? json['policyExpiryDate'] ?? json['renewalDate'] ?? '';
-    final vehicle = json['vehicleNumber'] ?? json['registrationNumber'] ?? json['makeModel'] ?? '';
-    final sumIns = json['sumInsured'] ?? '';
-    final active = json['isActivePolicy'] ?? true;
-    final renewalStatus = json['renewalStatus'] ?? 'ACTIVE';
+    final payload = (json['reviewedData'] is Map<String, dynamic>)
+        ? json['reviewedData'] as Map<String, dynamic>
+        : ((json['data'] is Map<String, dynamic>)
+            ? json['data'] as Map<String, dynamic>
+            : json);
+
+    final company = payload['insuranceCompany'] ??
+        payload['selectedCompany'] ??
+        json['insuranceCompany'] ??
+        json['selectedCompany'] ??
+        'Insurance Policy';
+    final policyNum = payload['policyNumber'] ??
+        json['policyNumber'] ??
+        payload['id'] ??
+        json['id'] ??
+        '-';
+    final policyType = payload['policyType'] ??
+        payload['selectedPolicyType'] ??
+        json['policyType'] ??
+        json['selectedPolicyType'] ??
+        'General Insurance';
+    final premium = payload['totalPremium'] ??
+        payload['premium'] ??
+        json['totalPremium'] ??
+        json['premium'] ??
+        '0';
+    final expiry = payload['expiryDate'] ??
+        payload['policyExpiryDate'] ??
+        payload['renewalDate'] ??
+        json['expiryDate'] ??
+        json['policyExpiryDate'] ??
+        json['renewalDate'] ??
+        '';
+    final vehicle = payload['vehicleNumber'] ??
+        payload['registrationNumber'] ??
+        payload['makeModel'] ??
+        json['vehicleNumber'] ??
+        json['registrationNumber'] ??
+        json['makeModel'] ??
+        '';
+    final sumIns = payload['sumInsured'] ?? json['sumInsured'] ?? '';
+    final active = payload['isActivePolicy'] ?? json['isActivePolicy'] ?? true;
+    final renewalStatus = payload['renewalStatus'] ?? json['renewalStatus'] ?? 'ACTIVE';
 
     IconData iconData = Icons.shield_rounded;
     PolicyTone policyTone = PolicyTone.primary;
@@ -65,26 +99,24 @@ class Policy {
     }
 
     String subtitleText = 'Policy #$policyNum';
-    if (vehicle.isNotEmpty) {
+    if (vehicle.toString().isNotEmpty) {
       subtitleText += ' • $vehicle';
     } else {
       subtitleText += ' • $policyType';
     }
 
     return Policy(
-      id: json['id'] ?? policyNum,
+      id: (json['id'] ?? policyNum).toString(),
       name: '$company $policyType',
       subtitle: subtitleText,
       price: '₹$premium/yr',
       status: statusText,
       icon: iconData,
       tone: policyTone,
-      policyNumber: policyNum,
-      expiryDate: expiry,
-      vehicleNumber: vehicle,
+      policyNumber: policyNum.toString(),
+      expiryDate: expiry.toString(),
+      vehicleNumber: vehicle.toString(),
       sumInsured: sumIns.toString(),
     );
   }
-
-  static const List<Policy> mockPolicies = [];
 }

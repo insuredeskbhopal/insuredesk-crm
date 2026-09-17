@@ -28,5 +28,4 @@ class Lead {
   });
 
   static const List<Lead> emptyList = [];
-  static const List<Lead> mockLeads = [];
 }

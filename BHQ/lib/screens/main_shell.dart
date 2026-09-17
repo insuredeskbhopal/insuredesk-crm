@@ -5,6 +5,8 @@ import '../widgets/bottom_nav_bar.dart';
 import '../widgets/command_palette.dart';
 import '../widgets/common_dialogs.dart';
 import '../widgets/desktop_sidebar.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/crm_data_provider.dart';
 import 'claims_screen.dart';
 import 'dashboard_screen.dart';
 import 'documents_screen.dart';
@@ -14,16 +16,41 @@ import 'policies_screen.dart';
 import 'renewals_screen.dart';
 import 'support_screen.dart';
 
-class MainShell extends StatefulWidget {
+class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserver {
   int _currentIndex = 0;
   bool _showCommandPalette = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // Auto-refresh CRM data whenever mobile app resumes from background
+      ref.invalidate(livePoliciesProvider);
+      ref.invalidate(liveClaimsProvider);
+      ref.invalidate(liveServiceRequestsProvider);
+      ref.invalidate(liveNotificationsProvider);
+      ref.invalidate(liveProfileProvider);
+    }
+  }
 
   Widget _buildBody(int index) {
     switch (index) {

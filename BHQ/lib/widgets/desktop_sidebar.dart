@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_provider.dart';
+import '../services/crm_data_provider.dart';
 
 class SidebarItemData {
   final String label;
@@ -26,20 +27,43 @@ class DesktopSidebar extends ConsumerWidget {
     required this.onSelect,
   });
 
-  static const items = [
-    SidebarItemData(label: 'Home', icon: Icons.home_outlined),
-    SidebarItemData(label: 'My Policies', icon: Icons.shield_outlined, badge: '6'),
-    SidebarItemData(label: 'Renewals', icon: Icons.autorenew_rounded, badge: '2'),
-    SidebarItemData(label: 'My Claims', icon: Icons.verified_user_outlined, badge: '1'),
-    SidebarItemData(label: 'Documents', icon: Icons.folder_outlined),
-    SidebarItemData(label: 'Payments', icon: Icons.credit_card_outlined),
-    SidebarItemData(label: 'Family & Assets', icon: Icons.family_restroom_outlined),
-    SidebarItemData(label: 'Support', icon: Icons.help_outline_rounded),
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final policies = ref.watch(livePoliciesProvider).value ?? [];
+    final claims = ref.watch(liveClaimsProvider).value ?? [];
+
+    final policiesCount = policies.isNotEmpty ? policies.length.toString() : '';
+    final renewalsCount = policies
+        .where((p) =>
+            p.status.toLowerCase().contains('due') ||
+            p.status.toLowerCase().contains('renew') ||
+            p.status.toLowerCase().contains('pending'))
+        .length;
+    final claimsCount = claims.isNotEmpty ? claims.length.toString() : '';
+
+    final items = [
+      const SidebarItemData(label: 'Home', icon: Icons.home_outlined),
+      SidebarItemData(
+        label: 'My Policies',
+        icon: Icons.shield_outlined,
+        badge: policiesCount,
+      ),
+      SidebarItemData(
+        label: 'Renewals',
+        icon: Icons.autorenew_rounded,
+        badge: renewalsCount > 0 ? renewalsCount.toString() : '',
+      ),
+      SidebarItemData(
+        label: 'My Claims',
+        icon: Icons.verified_user_outlined,
+        badge: claimsCount,
+      ),
+      const SidebarItemData(label: 'Documents', icon: Icons.folder_outlined),
+      const SidebarItemData(label: 'Payments', icon: Icons.credit_card_outlined),
+      const SidebarItemData(label: 'Family & Assets', icon: Icons.family_restroom_outlined),
+      const SidebarItemData(label: 'Support', icon: Icons.help_outline_rounded),
+    ];
 
     return Container(
       width: 240,

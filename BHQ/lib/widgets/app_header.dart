@@ -4,6 +4,8 @@ import 'package:gap/gap.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_provider.dart';
 import '../theme/auth_provider.dart';
+import '../services/crm_data_provider.dart';
+import 'common_dialogs.dart';
 
 class AppHeader extends ConsumerWidget {
   final VoidCallback? onSearchTap;
@@ -20,9 +22,9 @@ class AppHeader extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final authState = ref.watch(authProvider);
     final user = authState.user;
-    final userName = user?.name ?? 'Anand Soni';
-    final userInitials = user?.avatarInitials ?? 'AS';
-    final clientId = user?.clientId ?? 'CLI-894210';
+    final userName = (user != null && user.name.isNotEmpty) ? user.name : 'Valued Client';
+    final userInitials = (user != null && user.avatarInitials.isNotEmpty) ? user.avatarInitials : 'CL';
+    final clientId = (user != null && user.clientId.isNotEmpty) ? user.clientId : 'Client Portal';
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isCompact = screenWidth < 480;
@@ -217,17 +219,18 @@ class AppHeader extends ConsumerWidget {
                         ),
                       );
                     } else if (value == 'profile') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Client Profile: $userName ($clientId)'),
-                        ),
-                      );
+                      final liveProfile = ref.read(liveProfileProvider).value ?? {};
+                      final userMap = authState.user != null
+                          ? {
+                              'name': authState.user!.name,
+                              'phone': liveProfile['phone'] ?? authState.user!.accountNo,
+                              'email': authState.user!.email,
+                              'id': authState.user!.clientId,
+                            }
+                          : <String, dynamic>{};
+                      CommonDialogs.showProfileModal(context, userMap, liveProfile);
                     } else if (value == 'security') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Security Settings: MPIN & Device Security active.'),
-                        ),
-                      );
+                      CommonDialogs.showChangeMpinModal(context);
                     }
                   },
                   itemBuilder: (context) => [
@@ -276,7 +279,9 @@ class AppHeader extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
-                                    user?.email ?? 'client@insuredesk.in',
+                                    (user?.email != null && user!.email.isNotEmpty)
+                                        ? user.email
+                                        : 'ID: $clientId',
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: isDark ? Colors.white54 : AppColors.textMuted,

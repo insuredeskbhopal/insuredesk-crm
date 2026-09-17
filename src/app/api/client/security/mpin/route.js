@@ -9,8 +9,8 @@ export async function PATCH(request) {
     const { currentMpin, newMpin } = await request.json();
     const cleanCurrentMpin = String(currentMpin || "").replace(/\D/g, "");
     const cleanNewMpin = String(newMpin || "").replace(/\D/g, "");
-    if (cleanNewMpin.length !== 4) {
-      return NextResponse.json({ success: false, error: "New MPIN must contain exactly four digits" }, { status: 400 });
+    if (cleanNewMpin.length < 4 || cleanNewMpin.length > 6) {
+      return NextResponse.json({ success: false, error: "New MPIN must contain 4 to 6 digits" }, { status: 400 });
     }
     const verification = await verifyClientMpinWithVersion(auth.customer, cleanCurrentMpin);
     if (!verification.valid) {
@@ -32,4 +32,8 @@ export async function PATCH(request) {
     console.error("Client MPIN update error:", error);
     return NextResponse.json({ success: false, error: "MPIN could not be changed" }, { status: 500 });
   }
+}
+
+export async function POST(request) {
+  return PATCH(request);
 }

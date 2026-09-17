@@ -28,5 +28,4 @@ class Customer {
   });
 
   static const List<Customer> emptyList = [];
-  static const List<Customer> mockCustomers = [];
 }

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../widgets/common_dialogs.dart';
+import '../services/api_service.dart';
+import '../services/crm_data_provider.dart';
 
-class SupportScreen extends StatefulWidget {
+class SupportScreen extends ConsumerStatefulWidget {
   const SupportScreen({super.key});
 
   @override
-  State<SupportScreen> createState() => _SupportScreenState();
+  ConsumerState<SupportScreen> createState() => _SupportScreenState();
 }
 
-class _SupportScreenState extends State<SupportScreen> {
+class _SupportScreenState extends ConsumerState<SupportScreen> {
   int? _expandedFaqIndex;
 
   Future<void> _openWhatsAppDirectly(BuildContext context) async {
@@ -70,7 +72,7 @@ class _SupportScreenState extends State<SupportScreen> {
     },
     {
       'q': 'What is No Claim Bonus (NCB) in Motor Insurance?',
-      'a': 'NCB is a discount earned for every claim-free year. Your Maruti Swift policy currently holds 35% NCB, which increases to 50% on your upcoming renewal!',
+      'a': 'NCB is a discount earned on own-damage premium for every claim-free year, ranging from 20% up to 50% discount on policy renewal.',
     },
     {
       'q': 'How to get 24x7 Motor Roadside Assistance (RSA)?',
@@ -333,24 +335,75 @@ class _SupportScreenState extends State<SupportScreen> {
           ),
           const Gap(8),
 
-          _buildTicketTile(
-            context,
-            ticketId: 'SR-8841',
-            title: 'Sec 80D Tax Certificate Request for FY26',
-            status: 'In Progress',
-            statusColor: const Color(0xFFD97706),
-            time: 'Updated 2 hours ago',
-            isDark: isDark,
-          ),
-          const Gap(8),
-          _buildTicketTile(
-            context,
-            ticketId: 'SR-7910',
-            title: 'Address Change Endorsement on Swift Motor RC',
-            status: 'Resolved',
-            statusColor: const Color(0xFF10B981),
-            time: '24 Jul 2026',
-            isDark: isDark,
+          ref.watch(liveServiceRequestsProvider).when(
+            loading: () => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            error: (err, _) => Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.red.withAlpha(15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Unable to load support tickets: $err',
+                style: const TextStyle(fontSize: 12, color: Colors.red),
+              ),
+            ),
+            data: (tickets) {
+              if (tickets.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                    ),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'No support tickets filed yet. Tap "New Ticket" if you need any assistance.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                    ),
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: tickets.length,
+                separatorBuilder: (context, index) => const Gap(8),
+                itemBuilder: (context, idx) {
+                  final t = tickets[idx];
+                  final id = (t['ticketNo'] ?? t['id'] ?? 'SR-${idx + 1}').toString();
+                  final title = (t['title'] ?? t['subject'] ?? t['category'] ?? 'Service Request').toString();
+                  final status = (t['status'] ?? 'Open').toString();
+                  final statusColor = (status.toLowerCase().contains('resolve') || status.toLowerCase().contains('close'))
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFFD97706);
+                  final time = t['createdAt'] != null
+                      ? t['createdAt'].toString().split('T').first
+                      : 'Recent';
+
+                  return _buildTicketTile(
+                    context,
+                    ticketId: id,
+                    title: title,
+                    status: status,
+                    statusColor: statusColor,
+                    time: time,
+                    isDark: isDark,
+                    ticketData: t,
+                  );
+                },
+              );
+            },
           ),
 
           const Gap(24),
@@ -573,12 +626,13 @@ class _SupportScreenState extends State<SupportScreen> {
     required Color statusColor,
     required String time,
     required bool isDark,
+    Map<String, dynamic>? ticketData,
   }) {
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        onTap: () => _showTicketDetailModal(context, ticketId),
+        onTap: () => _showTicketDetailModal(context, ticketId, ticketData),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -668,81 +722,111 @@ class _SupportScreenState extends State<SupportScreen> {
   void _showNewTicketModal() {
     final titleController = TextEditingController();
     final descController = TextEditingController();
+    bool isSubmitting = false;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.confirmation_number_rounded, color: Color(0xFF2563EB)),
-            Gap(10),
-            Text('Raise Support Ticket', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: SizedBox(
-          width: 440,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
             children: [
-              const Text('Request Subject:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-              const Gap(6),
-              TextField(
-                controller: titleController,
-                style: const TextStyle(fontSize: 13),
-                decoration: InputDecoration(
-                  hintText: 'e.g. Tax Certificate, Name correction, Policy copy...',
-                  isDense: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-              const Gap(12),
-              const Text('Details & Description:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-              const Gap(6),
-              TextField(
-                controller: descController,
-                maxLines: 3,
-                style: const TextStyle(fontSize: 13),
-                decoration: InputDecoration(
-                  hintText: 'Describe how we can assist you...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
+              Icon(Icons.confirmation_number_rounded, color: Color(0xFF2563EB)),
+              Gap(10),
+              Text('Raise Support Ticket', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Support ticket #SR-9012 created. Anand Soni will contact you shortly.'),
-                  backgroundColor: Color(0xFF10B981),
+          content: SizedBox(
+            width: 440,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Request Subject:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                const Gap(6),
+                TextField(
+                  controller: titleController,
+                  style: const TextStyle(fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'e.g. Tax Certificate, Name correction, Policy copy...',
+                    isDense: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
                 ),
-              );
-            },
-            child: const Text('Submit Ticket'),
+                const Gap(12),
+                const Text('Details & Description:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                const Gap(6),
+                TextField(
+                  controller: descController,
+                  maxLines: 3,
+                  style: const TextStyle(fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Describe how we can assist you...',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2563EB),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final title = titleController.text.trim();
+                      final desc = descController.text.trim();
+                      if (title.isEmpty) {
+                        messenger.showSnackBar(
+                          const SnackBar(content: Text('Please enter a ticket subject.')),
+                        );
+                        return;
+                      }
+
+                      setDialogState(() => isSubmitting = true);
+                      try {
+                        await ApiService.submitServiceRequest(
+                          category: 'GENERAL_SUPPORT',
+                          title: title,
+                          description: desc,
+                        );
+                        if (dialogCtx.mounted) Navigator.pop(ctx);
+                        ref.invalidate(liveServiceRequestsProvider);
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Support ticket submitted to CRM successfully!'),
+                            backgroundColor: Color(0xFF10B981),
+                          ),
+                        );
+                      } catch (err) {
+                        setDialogState(() => isSubmitting = false);
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to submit ticket: ${err.toString().replaceAll("Exception:", "").trim()}'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Submit Ticket'),
+            ),
+          ],
+        ),
       ),
     );
   }
-
-
-
-
 
   void _showFaqKnowledgeBaseModal() {
     showDialog(
@@ -762,7 +846,7 @@ class _SupportScreenState extends State<SupportScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('14 Verified IRDAI Policy Guides Available', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+              const Text('Verified IRDAI Policy Guides Available', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
               const Gap(12),
               Material(
                 color: Colors.transparent,
@@ -774,7 +858,35 @@ class _SupportScreenState extends State<SupportScreen> {
                   subtitle: const Text('Step-by-step TPA pre-authorization process', style: TextStyle(fontSize: 11)),
                   onTap: () {
                     Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening Health Cashless Admission Guide PDF...')));
+                    showDialog(
+                      context: context,
+                      builder: (guideCtx) => AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        title: const Row(
+                          children: [
+                            Icon(Icons.health_and_safety_rounded, color: Color(0xFF2563EB)),
+                            Gap(10),
+                            Text('Cashless Hospitalization Guide', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        content: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('1. Present your BimaHQ Health Card & Gov ID at the Hospital TPA desk at admission.', style: TextStyle(fontSize: 12.5)),
+                            Gap(8),
+                            Text('2. Hospital initiates cashless pre-authorization with the insurance company.', style: TextStyle(fontSize: 12.5)),
+                            Gap(8),
+                            Text('3. Initial approval is typically received within 2-4 hours.', style: TextStyle(fontSize: 12.5)),
+                            Gap(8),
+                            Text('4. At discharge, final hospital bills are settled directly cashless by insurer.', style: TextStyle(fontSize: 12.5)),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(guideCtx), child: const Text('Got it')),
+                        ],
+                      ),
+                    );
                   },
                 ),
               ),
@@ -785,11 +897,39 @@ class _SupportScreenState extends State<SupportScreen> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: const BorderSide(color: Color(0xFFE2E8F0))),
                   leading: const Icon(Icons.receipt_long_rounded, color: Color(0xFF10B981)),
-                  title: const Text('Sec 80D & 80C Tax Savings FAQ', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                  title: const Text('Sec 80D & 80C Tax Savings Guide', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
                   subtitle: const Text('Exemption limits, receipts & deduction rules', style: TextStyle(fontSize: 11)),
                   onTap: () {
                     Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening Sec 80D Tax Exemption Guide PDF...')));
+                    showDialog(
+                      context: context,
+                      builder: (taxCtx) => AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        title: const Row(
+                          children: [
+                            Icon(Icons.receipt_long_rounded, color: Color(0xFF10B981)),
+                            Gap(10),
+                            Text('Sec 80D Tax Deduction Guide', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        content: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('• Self, Spouse & Dependent Children: Deduction up to ₹25,000/year.', style: TextStyle(fontSize: 12.5)),
+                            Gap(8),
+                            Text('• Parents (Senior Citizens >= 60 yrs): Additional deduction up to ₹50,000/year.', style: TextStyle(fontSize: 12.5)),
+                            Gap(8),
+                            Text('• Preventive Health Checkups: Up to ₹5,000 within the overall 80D limit.', style: TextStyle(fontSize: 12.5)),
+                            Gap(8),
+                            Text('• Tax certificates are automatically generated from your active policies in CRM.', style: TextStyle(fontSize: 12.5, color: Color(0xFF1D4ED8), fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(taxCtx), child: const Text('Close')),
+                        ],
+                      ),
+                    );
                   },
                 ),
               ),
@@ -806,7 +946,12 @@ class _SupportScreenState extends State<SupportScreen> {
     );
   }
 
-  void _showTicketDetailModal(BuildContext context, String ticketId) {
+  void _showTicketDetailModal(BuildContext context, String ticketId, [Map<String, dynamic>? ticketData]) {
+    final title = ticketData?['title'] ?? ticketData?['subject'] ?? 'Support Ticket';
+    final desc = ticketData?['description'] ?? 'Service request recorded in CRM.';
+    final status = (ticketData?['status'] ?? 'Open').toString();
+    final remarks = ticketData?['remarks'] ?? 'Assigned to your relationship manager.';
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -815,7 +960,7 @@ class _SupportScreenState extends State<SupportScreen> {
           children: [
             const Icon(Icons.confirmation_number_rounded, color: Color(0xFF2563EB)),
             const Gap(10),
-            Text('Ticket #$ticketId Details', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            Text('Ticket #$ticketId', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
           ],
         ),
         content: SizedBox(
@@ -824,16 +969,26 @@ class _SupportScreenState extends State<SupportScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Subject: Sec 80D Tax Exemption Certificate Request', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              Text('Subject: $title', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
               const Gap(4),
-              const Text('Assigned Advisor: Anand Soni • Status: In Progress', style: TextStyle(fontSize: 11.5, color: Color(0xFFD97706), fontWeight: FontWeight.w600)),
+              Text('Status: $status', style: const TextStyle(fontSize: 11.5, color: Color(0xFFD97706), fontWeight: FontWeight.w600)),
               const Gap(12),
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE2E8F0))),
-                child: const Text(
-                  'Advisor Note (Anand Soni - 10:30 AM):\n"Your tax receipt for HDFC Ergo Health Policy #HE-22910 is generated and ready for instant download under Documents tab."',
-                  style: TextStyle(fontSize: 11.5, color: Color(0xFF334155), height: 1.4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Description:\n$desc', style: const TextStyle(fontSize: 11.5, color: Color(0xFF334155), height: 1.4)),
+                    if (remarks.toString().isNotEmpty) ...[
+                      const Gap(8),
+                      Text('Advisor Note:\n$remarks', style: const TextStyle(fontSize: 11.5, color: Color(0xFF2563EB), height: 1.4)),
+                    ],
+                  ],
                 ),
               ),
             ],
@@ -843,19 +998,6 @@ class _SupportScreenState extends State<SupportScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Close', style: TextStyle(color: Color(0xFF64748B))),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              CommonDialogs.showDownloadPolicyModal(context);
-            },
-            child: const Text('Download Certificate'),
           ),
         ],
       ),

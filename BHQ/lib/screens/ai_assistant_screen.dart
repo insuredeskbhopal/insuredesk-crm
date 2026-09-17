@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import '../services/crm_data_provider.dart';
+import '../theme/auth_provider.dart';
 
-class AiAssistantScreen extends StatefulWidget {
+class AiAssistantScreen extends ConsumerStatefulWidget {
   const AiAssistantScreen({super.key});
 
   @override
-  State<AiAssistantScreen> createState() => _AiAssistantScreenState();
+  ConsumerState<AiAssistantScreen> createState() => _AiAssistantScreenState();
 }
 
-class _AiAssistantScreenState extends State<AiAssistantScreen> {
+class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, String>> _messages = [
     {
       'role': 'assistant',
       'text':
-          'Namaste! I am your BimaHQ 24x7 AI Underwriting & Policy Copilot. Ask me anything about customer policies, tax exemptions under Sec 80D, or upcoming motor renewals!'
+          'Namaste! I am your BimaHQ 24x7 AI Policy Copilot. Ask me anything about your active policies, tax exemptions under Sec 80D, or upcoming renewals!'
     }
   ];
 
@@ -28,11 +31,34 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
 
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
+        final policies = ref.read(livePoliciesProvider).value ?? [];
+        final claims = ref.read(liveClaimsProvider).value ?? [];
+        final authState = ref.read(authProvider);
+        final clientName = authState.user?.name ?? 'Valued Client';
+
+        String reply = 'I scanned your CRM policy records for $clientName. You currently have ${policies.length} registered policy records and ${claims.length} claim files in your portfolio.';
+        final lower = text.toLowerCase();
+        if (lower.contains('motor') || lower.contains('car') || lower.contains('expire')) {
+          final expiring = policies.where((p) => p.status.toLowerCase().contains('due') || p.status.toLowerCase().contains('renew')).toList();
+          if (expiring.isNotEmpty) {
+            reply = 'You have ${expiring.length} policy due for renewal soon:\n• ${expiring.first.name} (#${expiring.first.policyNumber}) - Premium: ${expiring.first.price}.';
+          } else {
+            reply = 'Great news! None of your motor policies are currently overdue. All policies are active and protected.';
+          }
+        } else if (lower.contains('tax') || lower.contains('80d') || lower.contains('save')) {
+          reply = 'Based on your active insurance records, health insurance premiums qualify for Section 80D exemption up to ₹25,000 for self/family (and ₹50,000 for senior citizens). You can download tax exemption certificates under the Documents tab.';
+        } else if (lower.contains('claim')) {
+          if (claims.isNotEmpty) {
+            reply = 'You have ${claims.length} claim on record:\n• Claim #${claims.first.id} for policy #${claims.first.policyNo} is currently ${claims.first.status.name}.';
+          } else {
+            reply = 'You currently have zero active or pending claims on record. If you need to register a claim, tap the "File Claim" button.';
+          }
+        }
+
         setState(() {
           _messages.add({
             'role': 'assistant',
-            'text':
-                'Based on your CRM records, Anand Soni has ₹46,800 total tax deduction eligibility under Sec 80D & 80C. His HDFC Ergo Health cover (₹24,500 premium) qualifies for Sec 80D exemption.'
+            'text': reply,
           });
         });
       }
@@ -115,7 +141,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
             child: Row(
               children: [
                 _promptPill('Which motor policies expire in 15 days?', isDark),
-                _promptPill('Calculate Sec 80D tax savings for Anand Soni', isDark),
+                _promptPill('Calculate my Sec 80D tax savings', isDark),
                 _promptPill('Show claims with cashless approval pending', isDark),
               ],
             ),

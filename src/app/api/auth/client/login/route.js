@@ -17,8 +17,8 @@ export async function POST(request) {
     const cleanPhone = rawInput.replace(/[^0-9]/g, "").slice(-10);
     const cleanMpin = String(mpin || "").replace(/[^0-9]/g, "");
 
-    if (cleanMpin.length !== 4) {
-      return NextResponse.json({ success: false, error: "Client MPIN must be a 4-digit code" }, { status: 400 });
+    if (cleanMpin.length < 4 || cleanMpin.length > 6) {
+      return NextResponse.json({ success: false, error: "Client MPIN must be a 4 to 6-digit numeric code" }, { status: 400 });
     }
 
     let customer = null;

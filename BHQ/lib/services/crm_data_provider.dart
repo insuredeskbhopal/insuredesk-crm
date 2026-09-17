@@ -32,3 +32,23 @@ final liveProfileProvider = FutureProvider<Map<String, dynamic>>((ref) async {
     return <String, dynamic>{};
   }
 });
+
+/// Provider for live service requests & support tickets from CRM
+final liveServiceRequestsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  try {
+    final requests = await ApiService.getServiceRequests();
+    return requests;
+  } catch (_) {
+    return <Map<String, dynamic>>[];
+  }
+});
+
+/// Provider for live client notifications & alerts from CRM
+final liveNotificationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  try {
+    final notifications = await ApiService.getNotifications();
+    return notifications;
+  } catch (_) {
+    return <Map<String, dynamic>>[];
+  }
+});

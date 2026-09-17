@@ -112,6 +112,7 @@ function serializeClientPolicy(policy) {
   const payload = buildClientPolicyPayload(policy.reviewedData || policy.data || {});
 
   return {
+    ...payload,
     id: policy.id,
     savedAt: policy.savedAt,
     selectedCompany: policy.selectedCompany || payload.insuranceCompany || "",

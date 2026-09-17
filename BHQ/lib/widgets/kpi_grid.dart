@@ -41,6 +41,23 @@ class KpiGrid extends ConsumerWidget {
     final renewalCount = policies.where((p) => p.status.toLowerCase().contains('renewal') || p.status.toLowerCase().contains('due')).length;
     final claimsCount = claims.length;
 
+    double totalSumInsured = 0.0;
+    for (final p in policies) {
+      final clean = (p.sumInsured ?? '').replaceAll(RegExp(r'[^0-9.]'), '');
+      final val = double.tryParse(clean) ?? 0.0;
+      totalSumInsured += val;
+    }
+    String coverageDisplay = '₹0';
+    if (totalSumInsured >= 10000000) {
+      coverageDisplay = '₹${(totalSumInsured / 10000000).toStringAsFixed(1)} Cr';
+    } else if (totalSumInsured >= 100000) {
+      coverageDisplay = '₹${(totalSumInsured / 100000).toStringAsFixed(1)} Lakh';
+    } else if (totalSumInsured > 0) {
+      coverageDisplay = '₹${totalSumInsured.toStringAsFixed(0)}';
+    } else if (policies.isNotEmpty) {
+      coverageDisplay = '${policies.length} Policies';
+    }
+
     final kpis = customKpis ?? [
       KpiMetric(
         label: 'Active Policies',
@@ -63,10 +80,10 @@ class KpiGrid extends ConsumerWidget {
         tone: PolicyTone.primary,
         icon: Icons.verified_user_outlined,
       ),
-      const KpiMetric(
+      KpiMetric(
         label: 'Total Coverage',
-        value: '₹1.2 Cr',
-        note: 'Sum Insured',
+        value: coverageDisplay,
+        note: totalSumInsured > 0 ? 'Sum Insured' : 'Active Portfolios',
         tone: PolicyTone.muted,
         icon: Icons.account_balance_outlined,
       ),

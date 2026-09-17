@@ -55,11 +55,9 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
 
   void _loadSavedCredentials() async {
     final user = await ApiService.getUser();
-    final mpin = await ApiService.getSavedMpin();
     if (user != null && mounted) {
       setState(() {
         _clientIdController.text = user['customerId'] ?? user['id'] ?? '';
-        if (mpin != null) _mpinController.text = mpin;
       });
     }
   }
@@ -112,15 +110,11 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
   void _showGoogleAccountPicker(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => _GoogleAccountPickerDialog(
-        onSelectAccount: (email, name, isLinked) {
+      builder: (ctx) => _GoogleAccountInputDialog(
+        onConfirm: (email, name) {
           Navigator.of(ctx).pop();
           final authNotifier = ref.read(authProvider.notifier);
-          authNotifier.initiateGoogleSignIn(email, name, isLinked);
-
-          if (isLinked) {
-            _triggerRedirect();
-          }
+          authNotifier.initiateGoogleSignIn(email, name);
         },
       ),
     );
@@ -784,9 +778,9 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Client ID Field
+          // 1. Client ID / Mobile Number Field
           Text(
-            'Client ID',
+            'Registered Mobile Number or Client ID',
             style: TextStyle(
               fontWeight: FontWeight.w500,
               fontSize: 12,
@@ -796,6 +790,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
           const Gap(5),
           TextFormField(
             controller: _clientIdController,
+            keyboardType: TextInputType.text,
             style: TextStyle(
               fontWeight: FontWeight.w500,
               fontSize: 13.5,
@@ -807,14 +802,14 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
                 horizontal: 14,
                 vertical: isDesktop ? 14 : 11,
               ),
-              hintText: 'e.g. CLI-894210',
+              hintText: 'e.g. 9685717917 or Client ID',
               hintStyle: TextStyle(
                 color: isDark ? Colors.white38 : AppColors.textMuted,
                 fontWeight: FontWeight.normal,
                 fontSize: 13,
               ),
               prefixIcon: Icon(
-                Icons.mail_outline_rounded,
+                Icons.phone_android_rounded,
                 size: isDesktop ? 19 : 17,
                 color: isDark ? Colors.white54 : const Color(0xFF64748B),
               ),
@@ -879,7 +874,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
             controller: _mpinController,
             obscureText: _obscureMpin,
             keyboardType: TextInputType.number,
-            maxLength: 4,
+            maxLength: 6,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             style: TextStyle(
               fontWeight: FontWeight.w600,
@@ -894,7 +889,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
                 vertical: isDesktop ? 14 : 11,
               ),
               counterText: '',
-              hintText: '••••',
+              hintText: '••••••',
               hintStyle: TextStyle(
                 color: isDark ? Colors.white38 : AppColors.textMuted,
                 fontWeight: FontWeight.normal,
@@ -1210,7 +1205,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
               horizontal: 12,
               vertical: isDesktop ? 14 : 10,
             ),
-            hintText: 'e.g. CLI-894210',
+            hintText: 'e.g. 9826012345 or Client ID',
             prefixIcon: Icon(Icons.mail_outline_rounded, size: isDesktop ? 20 : 18),
             filled: true,
             fillColor:
@@ -1234,7 +1229,8 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
           controller: _googleMpinController,
           obscureText: _obscureGoogleMpin,
           keyboardType: TextInputType.number,
-          maxLength: 4,
+          maxLength: 6,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             letterSpacing: 4,
@@ -1247,7 +1243,7 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
               vertical: isDesktop ? 14 : 10,
             ),
             counterText: '',
-            hintText: '••••',
+            hintText: '••••••',
             prefixIcon: Icon(Icons.key_rounded, size: isDesktop ? 20 : 18),
             suffixIcon: IconButton(
               icon: Icon(
@@ -1489,12 +1485,39 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
 }
 
 // ==========================================
-// GOOGLE ACCOUNT PICKER MODAL DIALOG
+// GOOGLE ACCOUNT INPUT MODAL DIALOG
 // ==========================================
-class _GoogleAccountPickerDialog extends StatelessWidget {
-  final Function(String email, String name, bool isLinked) onSelectAccount;
+class _GoogleAccountInputDialog extends StatefulWidget {
+  final Function(String email, String name) onConfirm;
 
-  const _GoogleAccountPickerDialog({required this.onSelectAccount});
+  const _GoogleAccountInputDialog({required this.onConfirm});
+
+  @override
+  State<_GoogleAccountInputDialog> createState() =>
+      _GoogleAccountInputDialogState();
+}
+
+class _GoogleAccountInputDialogState extends State<_GoogleAccountInputDialog> {
+  final _emailCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  String? _error;
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final email = _emailCtrl.text.trim();
+    final name = _nameCtrl.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() => _error = 'Please enter a valid Google email address.');
+      return;
+    }
+    widget.onConfirm(email, name.isNotEmpty ? name : 'Google User');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1515,60 +1538,55 @@ class _GoogleAccountPickerDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Choose an account to continue to BimaHQ Client Portal:',
+            'Enter your Google account details to link with your BimaHQ Client ID and 6-digit MPIN:',
             style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
-          const Gap(16),
-          // Option 1: Existing Linked Account
-          ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+          const Gap(14),
+          TextField(
+            controller: _emailCtrl,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              labelText: 'Google Email',
+              hintText: 'name@gmail.com',
+              prefixIcon: Icon(Icons.email_outlined),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+              ),
             ),
-            tileColor: AppColors.primaryBlue.withAlpha(15),
-            leading: const CircleAvatar(
-              backgroundColor: AppColors.primaryBlue,
-              child: Text('AP', style: TextStyle(color: Colors.white)),
-            ),
-            title: const Text(
-              'Arun Patel',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-            subtitle: const Text(
-              'arun.patel@gmail.com • (Already Linked)',
-              style: TextStyle(fontSize: 12, color: Color(0xFF059669)),
-            ),
-            trailing: const Icon(Icons.check_circle_rounded,
-                color: Color(0xFF059669)),
-            onTap: () => onSelectAccount('arun.patel@gmail.com', 'Arun Patel', true),
           ),
           const Gap(10),
-
-          // Option 2: First-time Unlinked Account
-          ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+          TextField(
+            controller: _nameCtrl,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              labelText: 'Full Name (Optional)',
+              hintText: 'Your name',
+              prefixIcon: Icon(Icons.person_outline),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+              ),
             ),
-            tileColor: Colors.black.withAlpha(8),
-            leading: const CircleAvatar(
-              backgroundColor: AppColors.accent,
-              child: Text('AM', style: TextStyle(color: Colors.white)),
-            ),
-            title: const Text(
-              'Alex Morgan',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-            subtitle: const Text(
-              'alex.morgan@gmail.com • (First-Time Setup)',
-              style: TextStyle(fontSize: 12, color: AppColors.amber),
-            ),
-            onTap: () => onSelectAccount('alex.morgan@gmail.com', 'Alex Morgan', false),
           ),
+          if (_error != null) ...[
+            const Gap(8),
+            Text(
+              _error!,
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ],
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.primaryBlue,
+          ),
+          child: const Text('Continue'),
         ),
       ],
     );
@@ -1600,7 +1618,7 @@ class _ForgotMpinModalDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Need help accessing your Client Portal? Select a verification method below to reset your 4-digit MPIN:',
+            'Need help resetting your 6-digit MPIN? Select a verification method below:',
             style: TextStyle(fontSize: 13, height: 1.4),
           ),
           const Gap(16),
@@ -1612,18 +1630,18 @@ class _ForgotMpinModalDialog extends StatelessWidget {
             leading: const Icon(Icons.chat_bubble_outline_rounded,
                 color: Color(0xFF10B981)),
             title: const Text(
-              'Reset via WhatsApp OTP',
+              'Request OTP via WhatsApp',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
             ),
             subtitle: const Text(
-              'Receive 6-digit OTP on registered mobile number',
+              'Receive verification OTP on your registered phone',
               style: TextStyle(fontSize: 11),
             ),
             onTap: () {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('OTP sent to registered WhatsApp number +91 98******10'),
+                  content: Text('Verification OTP requested for your registered mobile number.'),
                   backgroundColor: Color(0xFF10B981),
                 ),
               );
@@ -1635,20 +1653,21 @@ class _ForgotMpinModalDialog extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               side: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
-            leading: const Icon(Icons.email_outlined, color: AppColors.primaryBlue),
+            leading: const Icon(Icons.support_agent_rounded,
+                color: AppColors.primaryBlue),
             title: const Text(
-              'Reset Link to Email',
+              'Contact BimaHQ Support',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
             ),
             subtitle: const Text(
-              'Send secure reset magic link to registered email',
+              'Get direct assistance from your dedicated relationship manager',
               style: TextStyle(fontSize: 11),
             ),
             onTap: () {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Reset link sent to abhishek.verma@insuredesk.in'),
+                  content: Text('Support request sent to your relationship manager.'),
                   backgroundColor: AppColors.primaryBlue,
                 ),
               );
