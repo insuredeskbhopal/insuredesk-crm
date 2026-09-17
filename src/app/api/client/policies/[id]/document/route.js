@@ -14,6 +14,56 @@ function sanitizeFileName(name) {
     .replace(/_+/g, "_");
 }
 
+function isHtmlAccepted(request) {
+  return (request.headers.get("accept") || "").includes("text/html");
+}
+
+function htmlErrorResponse(title, message, status = 404) {
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}.card{background:#fff;border-radius:16px;padding:40px;max-width:440px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08)}.icon{font-size:48px;margin-bottom:16px}h1{font-size:20px;color:#0f172a;margin-bottom:8px}p{color:#64748b;font-size:14px;line-height:1.6}a{display:inline-block;margin-top:20px;padding:10px 24px;background:#1d4ed8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px}a:hover{background:#1e40af}</style></head><body><div class="card"><div class="icon">📄</div><h1>${title}</h1><p>${message}</p><a href="/">Go to BimaHeadquarter</a></div></body></html>`;
+  return new Response(html, { status, headers: { "Content-Type": "text/html; charset=utf-8" } });
+}
+
+export async function HEAD(request, { params }) {
+  try {
+    const auth = await requireClient(request);
+    if (auth.error) return new Response(null, { status: 401 });
+
+    const { id } = await params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id || "");
+
+    const owned = await getOwnedPolicy({
+      customerId: auth.customer.id,
+      organizationId: auth.organizationId,
+      customer: auth.customer,
+      policyId: isUuid ? id : undefined,
+      policyNo: !isUuid ? id : undefined,
+    });
+    if (!owned) return new Response(null, { status: 404 });
+
+    const kind = new URL(request.url).searchParams.get("kind") || "policy";
+    if (kind === "receipt") return new Response(null, { status: 200 });
+
+    // Efficient check: query byte lengths without loading actual blobs
+    const [availability] = await prisma.$queryRaw`
+      SELECT
+        COALESCE(length(pr.pdf_bytes), 0) as pr_bytes,
+        COALESCE(length(uf.pdf_bytes), 0) as uf_bytes,
+        uf.storage_path as uf_storage
+      FROM pdf_records pr
+      LEFT JOIN uploaded_files uf ON uf.id = pr.uploaded_file_id
+      WHERE pr.id = ${owned.id}::uuid
+      LIMIT 1
+    `;
+    if (!availability) return new Response(null, { status: 404 });
+
+    const hasDocument = availability.pr_bytes > 0 || availability.uf_bytes > 0 || Boolean(availability.uf_storage);
+    return new Response(null, { status: hasDocument ? 200 : 404 });
+  } catch (error) {
+    console.error("Client policy document HEAD error:", error);
+    return new Response(null, { status: 500 });
+  }
+}
+
 export async function GET(request, { params }) {
   try {
     const auth = await requireClient(request);
@@ -137,9 +187,15 @@ export async function GET(request, { params }) {
       }
     }
 
+    if (isHtmlAccepted(request)) {
+      return htmlErrorResponse("Document Not Available", "The PDF for this policy has not been uploaded yet. Please contact your insurance agent or visit our office for assistance.");
+    }
     return NextResponse.json({ success: false, error: "Policy document is not available yet" }, { status: 404 });
   } catch (error) {
     console.error("Client policy document error:", error);
+    if (isHtmlAccepted(request)) {
+      return htmlErrorResponse("Download Error", "Something went wrong while preparing your document. Please try again later.", 500);
+    }
     return NextResponse.json({ success: false, error: "Document could not be downloaded" }, { status: 500 });
   }
 }

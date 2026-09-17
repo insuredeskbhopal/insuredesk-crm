@@ -125,6 +125,7 @@ class DocumentsScreen extends ConsumerWidget {
                                 context,
                                 policy.id,
                                 title: policy.policyNumber ?? policy.name,
+                                kind: 'policy',
                               );
                             },
                             icon: const Icon(Icons.download_rounded, size: 14),

@@ -406,17 +406,87 @@ class ApiService {
     return '$base/api/client/policies/$policyId/document?kind=$kind&token=${Uri.encodeComponent(token)}';
   }
 
-  /// Downloads or opens a policy PDF, certificate, or receipt in the browser
+  /// Checks if a policy document is available for download (HTTP HEAD).
+  /// Returns true if the server would return a PDF, false otherwise.
+  static Future<bool> isDocumentAvailable(String policyId, {String kind = 'policy'}) async {
+    try {
+      final url = await getPolicyDocumentUrl(policyId, kind: kind);
+      final response = await http.head(Uri.parse(url));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Downloads or opens a policy PDF, certificate, or receipt.
+  /// Pre-checks document availability before launching browser to avoid
+  /// showing raw JSON errors when no PDF is uploaded for the policy.
   static Future<void> downloadDocument(
     BuildContext context,
     String policyId, {
     String kind = 'policy',
     String? title,
   }) async {
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
       final url = await getPolicyDocumentUrl(policyId, kind: kind);
       final uri = Uri.parse(url);
 
+      // Pre-check: verify the document exists before launching browser
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+              SizedBox(width: 12),
+              Text('Checking document availability...'),
+            ],
+          ),
+          duration: Duration(seconds: 10),
+          backgroundColor: Color(0xFF1D4ED8),
+        ),
+      );
+
+      final checkResponse = await http.head(uri);
+      messenger.hideCurrentSnackBar();
+
+      if (checkResponse.statusCode == 404) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              title != null
+                  ? 'No PDF uploaded yet for policy $title. Please contact your agent.'
+                  : 'No PDF document uploaded for this policy yet. Please contact your agent.',
+            ),
+            backgroundColor: const Color(0xFFD97706),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+
+      if (checkResponse.statusCode == 401) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Session expired. Please log in again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (checkResponse.statusCode != 200) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Document is not available right now. Please try again later.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Document exists — launch browser to download
       bool launched = false;
       try {
         launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -429,7 +499,7 @@ class ApiService {
       }
 
       if (!launched && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('Could not open browser to download the document. Please try again.'),
             backgroundColor: Colors.red,
@@ -437,10 +507,12 @@ class ApiService {
         );
       }
     } catch (e) {
+      messenger.hideCurrentSnackBar();
       if (context.mounted) {
+        final msg = e.toString().replaceAll('Exception:', '').trim();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Download failed: $e'),
+            content: Text(msg.contains('authenticated') ? 'Please log in again to download.' : 'Download failed. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );

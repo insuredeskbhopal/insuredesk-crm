@@ -176,7 +176,7 @@ class CommonDialogs {
                               ),
                               onPressed: () {
                                 Navigator.pop(ctx);
-                                ApiService.downloadDocument(context, policies[i].id);
+                                ApiService.downloadDocument(context, policies[i].id, title: policies[i].policyNumber ?? policies[i].name);
                               },
                               child: const Text('Download'),
                             ),
@@ -562,7 +562,7 @@ class CommonDialogs {
             label: const Text('Download Policy PDF'),
             onPressed: () {
               Navigator.pop(ctx);
-              ApiService.downloadDocument(context, policy.id);
+              ApiService.downloadDocument(context, policy.id, title: policy.policyNumber ?? policy.name);
             },
           ),
         ],
