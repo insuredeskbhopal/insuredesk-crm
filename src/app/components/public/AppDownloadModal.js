@@ -94,14 +94,14 @@ export default function AppDownloadModal({ isOpen, onClose }) {
         {/* Modal Card - Focused, Centered, Gold-Standard Layout (All-White) */}
         <div className="relative w-full max-w-[450px] overflow-hidden rounded-[28px] bg-white shadow-[0_25px_70px_-15px_rgba(0,0,0,0.15)] ring-1 ring-slate-200 transition-all z-10 my-auto flex flex-col p-6 sm:p-7 text-center">
           
-          {/* Close Button Top-Right - Bold, High-Contrast & Clearly Sized */}
+          {/* Close Button Top-Right - Bold, High-Contrast & Prominently Sized */}
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-5 top-5 h-10 w-10 rounded-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 hover:text-slate-950 flex items-center justify-center transition-colors cursor-pointer border border-slate-200 shadow-2xs"
+            className="absolute right-4 top-4 sm:right-5 sm:top-5 h-10 w-10 rounded-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 hover:text-slate-950 flex items-center justify-center transition-all cursor-pointer border border-slate-200/80 shadow-2xs"
             aria-label="Close modal"
           >
-            <X size={20} strokeWidth={2.5} className="w-5 h-5 text-slate-700" />
+            <X size={26} strokeWidth={3} className="w-[26px] h-[26px] text-slate-800" />
           </button>
 
           {/* Centered App Icon & Identity */}
