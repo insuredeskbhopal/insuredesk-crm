@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ApiService {
   static const String defaultBaseUrl = String.fromEnvironment(
@@ -402,5 +404,47 @@ class ApiService {
     final base = baseUrl.replaceAll(RegExp(r'/+$'), '');
     if (token == null) throw Exception('Not authenticated');
     return '$base/api/client/policies/$policyId/document?kind=$kind&token=${Uri.encodeComponent(token)}';
+  }
+
+  /// Downloads or opens a policy PDF, certificate, or receipt in the browser
+  static Future<void> downloadDocument(
+    BuildContext context,
+    String policyId, {
+    String kind = 'policy',
+    String? title,
+  }) async {
+    try {
+      final url = await getPolicyDocumentUrl(policyId, kind: kind);
+      final uri = Uri.parse(url);
+
+      bool launched = false;
+      try {
+        launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (_) {}
+
+      if (!launched) {
+        try {
+          launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+        } catch (_) {}
+      }
+
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open browser to download the document. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Download failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

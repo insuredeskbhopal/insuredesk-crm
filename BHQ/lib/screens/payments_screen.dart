@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import '../services/api_service.dart';
 import '../services/crm_data_provider.dart';
 
 class PaymentsScreen extends ConsumerWidget {
@@ -132,11 +133,20 @@ class PaymentsScreen extends ConsumerWidget {
                               const Gap(4),
                               OutlinedButton(
                                 onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(!isDue ? 'Downloading payment receipt for ${policy.policyNumber ?? policy.name}...' : 'Opening payment gateway...'),
-                                    ),
-                                  );
+                                  if (!isDue) {
+                                    ApiService.downloadDocument(
+                                      context,
+                                      policy.id,
+                                      kind: 'receipt',
+                                      title: 'Receipt ${policy.policyNumber ?? policy.name}',
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Opening payment gateway...'),
+                                      ),
+                                    );
+                                  }
                                 },
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

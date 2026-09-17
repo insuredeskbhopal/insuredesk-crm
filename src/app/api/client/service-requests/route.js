@@ -75,6 +75,7 @@ export async function POST(request) {
       const policy = await getOwnedPolicy({
         customerId: auth.customer.id,
         organizationId: auth.organizationId,
+        customer: auth.customer,
         policyNo,
       });
       if (!policy) return NextResponse.json({ success: false, error: "Policy not found for this client" }, { status: 403 });
@@ -134,6 +135,7 @@ export async function POST(request) {
           const currentPolicy = await getOwnedPolicy({
             customerId: auth.customer.id,
             organizationId: auth.organizationId,
+            customer: auth.customer,
             policyId: ownedPolicyId,
             database: policyDatabase,
           });

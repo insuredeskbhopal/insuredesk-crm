@@ -44,6 +44,7 @@ export async function GET(request) {
         savedAt: true,
         pdfFileName: true,
         pdfMimeType: true,
+        uploadedFileId: true,
         reviewedData: true,
         data: true,
         selectedCompany: true,
@@ -111,21 +112,23 @@ const CLIENT_POLICY_FIELDS = [
 function serializeClientPolicy(policy) {
   const payload = buildClientPolicyPayload(policy.reviewedData || policy.data || {});
 
-  return {
-    ...payload,
-    id: policy.id,
-    savedAt: policy.savedAt,
-    selectedCompany: policy.selectedCompany || payload.insuranceCompany || "",
-    selectedPolicyType: policy.selectedPolicyType || payload.policyType || "",
-    isActivePolicy: policy.isActivePolicy,
-    renewalDate: policy.renewalDate,
-    renewalStatus: policy.renewalStatus,
-    documents: {
-      policyPdf: Boolean(policy.pdfFileName),
-      certificate: Boolean(policy.pdfFileName),
-      premiumReceipt: Boolean(payload.receiptNumber || payload.paymentReference),
-      renewedPolicy: Boolean(policy.renewalStatus === "RENEWED" && policy.pdfFileName),
-    },
+    const hasDocument = Boolean(policy.pdfFileName || policy.uploadedFileId);
+
+    return {
+      ...payload,
+      id: policy.id,
+      savedAt: policy.savedAt,
+      selectedCompany: policy.selectedCompany || payload.insuranceCompany || "",
+      selectedPolicyType: policy.selectedPolicyType || payload.policyType || "",
+      isActivePolicy: policy.isActivePolicy,
+      renewalDate: policy.renewalDate,
+      renewalStatus: policy.renewalStatus,
+      documents: {
+        policyPdf: hasDocument,
+        certificate: hasDocument,
+        premiumReceipt: Boolean(payload.receiptNumber || payload.paymentReference),
+        renewedPolicy: Boolean(policy.renewalStatus === "RENEWED" && hasDocument),
+      },
     reviewedData: payload,
     data: payload,
   };

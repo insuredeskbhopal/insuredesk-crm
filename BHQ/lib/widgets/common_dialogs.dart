@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/crm_data_provider.dart';
 import '../models/policy.dart';
@@ -175,33 +174,9 @@ class CommonDialogs {
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                               ),
-                              onPressed: () async {
+                              onPressed: () {
                                 Navigator.pop(ctx);
-                                try {
-                                  final url = await ApiService.getPolicyDocumentUrl(policies[i].id);
-                                  final uri = Uri.parse(url);
-                                  if (await canLaunchUrl(uri)) {
-                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                  } else {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Could not open the document. Please try again.'),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Download failed: $e'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                }
+                                ApiService.downloadDocument(context, policies[i].id);
                               },
                               child: const Text('Download'),
                             ),
@@ -585,33 +560,9 @@ class CommonDialogs {
             ),
             icon: const Icon(Icons.download_rounded, size: 16),
             label: const Text('Download Policy PDF'),
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(ctx);
-              try {
-                final url = await ApiService.getPolicyDocumentUrl(policy.id);
-                final uri = Uri.parse(url);
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                } else {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No PDF available for this policy yet. Contact your agent.'),
-                        backgroundColor: Colors.orange,
-                      ),
-                    );
-                  }
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Download failed: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
+              ApiService.downloadDocument(context, policy.id);
             },
           ),
         ],

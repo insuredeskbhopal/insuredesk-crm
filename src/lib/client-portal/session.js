@@ -6,7 +6,12 @@ import { getClientCredentialVersion } from "@/lib/client-portal/credentials";
 export async function requireClient(request) {
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
   const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7).trim() : null;
-  const token = bearerToken || request.cookies?.get?.("token")?.value;
+  let queryToken = null;
+  try {
+    const url = new URL(request.url);
+    queryToken = url.searchParams.get("token");
+  } catch {}
+  const token = bearerToken || queryToken || request.cookies?.get?.("token")?.value;
   const session = token ? await verifyJWT(token) : null;
 
   if (!session || session.role !== "CLIENT" || !session.customerId || session.organizationId === undefined) {
@@ -47,21 +52,56 @@ export async function getOwnedPolicy({
   organizationId,
   policyId,
   policyNo,
+  customer,
   database = prisma,
 }) {
+  const clientPhone = (customer?.phone || "").replace(/[^0-9]/g, "").slice(-10);
+  const clientName = (customer?.name || "").trim();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(policyId || "");
+
   const rows = policyId
-    ? await database.$queryRaw`
-        SELECT id FROM pdf_records
-        WHERE id = ${policyId}::uuid AND deleted_at IS NULL
-          AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-          AND LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
-        LIMIT 1`
+    ? isUuid
+      ? await database.$queryRaw`
+          SELECT id FROM pdf_records
+          WHERE id = ${policyId}::uuid AND deleted_at IS NULL
+            AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+            AND (
+              LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
+              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', '') LIKE ${'%' + clientPhone + '%'})
+              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', '') LIKE ${'%' + clientPhone + '%'})
+              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', '') LIKE ${'%' + clientPhone + '%'})
+              OR (${clientName} != '' AND LOWER(COALESCE(NULLIF(reviewed_data->>'insuredName', ''), data->>'insuredName', '')) = LOWER(${clientName}))
+            )
+          LIMIT 1`
+      : await database.$queryRaw`
+          SELECT id FROM pdf_records
+          WHERE deleted_at IS NULL
+            AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+            AND (
+              reviewed_data->>'policyNumber' = ${policyId}
+              OR data->>'policyNumber' = ${policyId}
+              OR id::text = ${policyId}
+            )
+            AND (
+              LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
+              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', '') LIKE ${'%' + clientPhone + '%'})
+              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', '') LIKE ${'%' + clientPhone + '%'})
+              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', '') LIKE ${'%' + clientPhone + '%'})
+              OR (${clientName} != '' AND LOWER(COALESCE(NULLIF(reviewed_data->>'insuredName', ''), data->>'insuredName', '')) = LOWER(${clientName}))
+            )
+          LIMIT 1`
     : await database.$queryRaw`
         SELECT id FROM pdf_records
         WHERE deleted_at IS NULL
           AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-          AND LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
           AND (reviewed_data->>'policyNumber' = ${policyNo} OR data->>'policyNumber' = ${policyNo})
+          AND (
+            LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
+            OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', '') LIKE ${'%' + clientPhone + '%'})
+            OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', '') LIKE ${'%' + clientPhone + '%'})
+            OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', '') LIKE ${'%' + clientPhone + '%'})
+            OR (${clientName} != '' AND LOWER(COALESCE(NULLIF(reviewed_data->>'insuredName', ''), data->>'insuredName', '')) = LOWER(${clientName}))
+          )
         LIMIT 1`;
 
   return rows[0] || null;

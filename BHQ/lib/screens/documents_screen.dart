@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import '../services/api_service.dart';
 import '../services/crm_data_provider.dart';
 
 class DocumentsScreen extends ConsumerWidget {
@@ -120,11 +121,10 @@ class DocumentsScreen extends ConsumerWidget {
                           ),
                           OutlinedButton.icon(
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Downloading Policy Schedule for ${policy.policyNumber ?? policy.name}...'),
-                                  backgroundColor: const Color(0xFF10B981),
-                                ),
+                              ApiService.downloadDocument(
+                                context,
+                                policy.id,
+                                title: policy.policyNumber ?? policy.name,
                               );
                             },
                             icon: const Icon(Icons.download_rounded, size: 14),
