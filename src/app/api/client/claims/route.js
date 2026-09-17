@@ -180,6 +180,13 @@ function getClientPolicyRows({ orgId, customerId, policyNo = "", policyId = "", 
         AND deleted_at IS NULL
         AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
         AND (
+          (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
+          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
+          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
+          AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+          AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+        )
+        AND (
           LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
           OR id IN (
             SELECT p2.id FROM pdf_records p2
@@ -205,6 +212,13 @@ function getClientPolicyRows({ orgId, customerId, policyNo = "", policyId = "", 
       WHERE deleted_at IS NULL
         AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
         AND (
+          (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
+          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
+          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
+          AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+          AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+        )
+        AND (
           LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
           OR id IN (
             SELECT p2.id FROM pdf_records p2
@@ -229,6 +243,13 @@ function getClientPolicyRows({ orgId, customerId, policyNo = "", policyId = "", 
     FROM pdf_records
     WHERE deleted_at IS NULL
       AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
+      AND (
+        (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
+        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
+        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
+        AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+        AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+      )
       AND (
         LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
         OR id IN (

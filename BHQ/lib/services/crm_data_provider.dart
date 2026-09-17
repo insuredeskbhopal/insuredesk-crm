@@ -7,7 +7,19 @@ import 'api_service.dart';
 final livePoliciesProvider = FutureProvider<List<Policy>>((ref) async {
   try {
     final rawPolicies = await ApiService.getPolicies();
-    return rawPolicies.map((p) => Policy.fromJson(p)).toList();
+    return rawPolicies
+        .where((p) {
+          final fileName = (p['pdfFileName'] ?? '').toString().toLowerCase();
+          final sourceFile = (p['sourceFile'] ?? '').toString().toLowerCase();
+          final isExcel = fileName.endsWith('.xlsx') ||
+              fileName.endsWith('.xls') ||
+              fileName == 'generic_renewal_template.xlsx' ||
+              sourceFile.endsWith('.xlsx') ||
+              sourceFile.endsWith('.xls');
+          return !isExcel;
+        })
+        .map((p) => Policy.fromJson(p))
+        .toList();
   } catch (err) {
     return <Policy>[];
   }

@@ -12,11 +12,19 @@ export async function GET(request) {
     const clientName = (auth.customer.name || "").trim();
 
     // Fetch matched policy IDs from DB via SQL query (matching clientId, contactNumber, mobileNumber, or insuredName)
+    // Strictly filter for policies with real PDF extraction data (attached PDF file / PDF bytes), excluding Excel imports.
     const matchedRows = await prisma.$queryRaw`
         SELECT id
         FROM pdf_records
         WHERE deleted_at IS NULL
           AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
+          AND (
+            (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
+            AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
+            AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
+            AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+            AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+          )
           AND (
             LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
             OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', '') LIKE ${'%' + clientPhone + '%'})
@@ -111,8 +119,9 @@ const CLIENT_POLICY_FIELDS = [
 
 function serializeClientPolicy(policy) {
   const payload = buildClientPolicyPayload(policy.reviewedData || policy.data || {});
-
-    const hasDocument = Boolean(policy.pdfFileName || policy.uploadedFileId);
+  const pdfName = String(policy.pdfFileName || "").toLowerCase();
+  const isExcelDoc = pdfName.endsWith(".xlsx") || pdfName.endsWith(".xls") || pdfName === "generic_renewal_template.xlsx";
+  const hasDocument = Boolean(policy.uploadedFileId || (policy.pdfFileName && !isExcelDoc));
 
     return {
       ...payload,
