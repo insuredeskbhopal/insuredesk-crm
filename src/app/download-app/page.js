@@ -6,13 +6,10 @@ import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import LandingEffects from "@/app/components/LandingEffects";
 import {
-  Smartphone,
   Download,
-  QrCode,
   Share2,
   Copy,
   Check,
-  ArrowRight,
   ShieldCheck,
   Sparkles,
   MessageCircle,
@@ -22,19 +19,15 @@ import {
   CheckCircle2,
   Lock,
   Shield,
-  Car,
-  HeartPulse,
   HelpCircle,
   ChevronDown,
   RefreshCw,
   FileCheck,
-  Zap,
 } from "lucide-react";
 
 export default function DownloadAppPage() {
   const [copied, setCopied] = useState(false);
   const [activeFaq, setActiveFaq] = useState(null);
-  const [rightCardTab, setRightCardTab] = useState("qr"); // 'qr' | 'preview'
 
   const shareUrl = "https://www.bimaheadquarter.com/download-app";
   const directApkUrl = "/api/downloads/app";
@@ -92,358 +85,211 @@ export default function DownloadAppPage() {
       <LandingEffects />
       <PublicHeader />
 
-      {/* Ambient Top Glow */}
+      {/* Ambient Top Glow (100% White Theme Compliant) */}
       <div
         className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[650px] -z-10 opacity-70"
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(16, 185, 129, 0.12), rgba(3, 22, 56, 0.04) 60%, transparent 100%)",
+            "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(16, 185, 129, 0.12), rgba(3, 22, 56, 0.03) 60%, transparent 100%)",
         }}
         aria-hidden="true"
       />
 
       <main className="flex-1 pt-6 sm:pt-10 pb-24 dl-app-container w-full">
         {/* =========================================================================
-            1. Hero Section (Rock-solid 2-column flex split with high-end animations)
+            1. Hero Section (Rock-solid 2-column flex split)
             ========================================================================= */}
         <section className="mb-20 lg:mb-28">
           <div className="dl-hero-split">
             {/* Left Content Column */}
-            <div className="dl-hero-left space-y-7 text-left">
+            <div className="dl-hero-left space-y-6 text-left">
               {/* Official Release Pill Badge */}
-              <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/90 text-xs font-bold text-slate-800 shadow-xs hover:border-emerald-300 transition-colors">
+              <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-emerald-50/90 border border-emerald-200/90 text-xs font-bold text-emerald-900 shadow-2xs">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
                 </span>
-                <span className="tracking-wide">OFFICIAL ANDROID RELEASE · v1.0.1</span>
-                <span className="text-slate-300">|</span>
-                <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> IRDAI Compliant IMF
+                <span className="tracking-wide">BIMAHEADQUARTER MOBILE APP · ANDROID v1.0.1</span>
+              </div>
+
+              {/* Main Headline */}
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-[52px] font-black tracking-tight text-slate-900 leading-[1.14]">
+                Manage Policies &amp; Download PDFs <br />
+                <span className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 bg-clip-text text-transparent">
+                  Directly From Your Smartphone
                 </span>
-              </div>
+              </h1>
 
-              {/* Main Headline & Subhead */}
-              <div className="space-y-4">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-[54px] font-black tracking-tight text-slate-900 leading-[1.12]">
-                  Insurance Protection <br />
-                  <span className="bg-gradient-to-r from-emerald-600 via-slate-900 to-emerald-800 bg-clip-text text-transparent">
-                    Right In Your Pocket
+              {/* Subtitle */}
+              <p className="text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed max-w-2xl">
+                Experience seamless policy self-service. Access verified policy documents, track renewal dates, view vehicle specifications, and submit claims with instant advocacy.
+              </p>
+
+              {/* High-Impact Primary & Secondary Action Row */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                {/* Download Android APK Button */}
+                <a
+                  href={directApkUrl}
+                  download="bimaheadquarter.apk"
+                  className="dl-shimmer group inline-flex items-center justify-center gap-3 px-7 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-lg shadow-emerald-700/25 hover:shadow-xl hover:shadow-emerald-700/35 transition-all duration-200 active:scale-[0.98] cursor-pointer"
+                  style={{ color: "#ffffff" }}
+                >
+                  <Download className="h-5 w-5 text-white stroke-[2.5] dl-bounce-arrow" />
+                  <span className="text-base font-black">Download Android APK</span>
+                  <span className="px-2 py-0.5 rounded-lg bg-emerald-800/70 text-xs font-bold text-emerald-100">
+                    59 MB
                   </span>
-                </h1>
+                </a>
 
-                <p className="text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed max-w-2xl">
-                  Carry your complete policy fortress across Motor, Health, Fire &amp; Warehouse. Download official insurer PDF schedules offline, verify coverage terms, and trigger immediate claim advocacy directly from your phone.
-                </p>
+                {/* Share on WhatsApp Button */}
+                <a
+                  href={whatsappShareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white border border-slate-200/90 hover:border-emerald-300 hover:bg-emerald-50/70 text-slate-800 text-sm font-extrabold shadow-2xs hover:shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  <MessageCircle className="h-4 w-4 text-emerald-600 fill-emerald-600" />
+                  <span>Share on WhatsApp</span>
+                </a>
+
+                {/* Copy Link Button */}
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className={`inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border text-sm font-extrabold shadow-2xs transition-all active:scale-[0.98] cursor-pointer ${
+                    copied
+                      ? "border-emerald-400 bg-emerald-50 text-emerald-800"
+                      : "border-slate-200/90 bg-white text-slate-800 hover:bg-slate-50 hover:border-slate-300"
+                  }`}
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 text-emerald-600 animate-bounce" strokeWidth={2.5} />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 text-slate-500" />
+                      <span>Copy Link</span>
+                    </>
+                  )}
+                </button>
               </div>
 
-              {/* Primary Action Row: Main Download Button + Quick Share Buttons */}
-              <div className="pt-2 space-y-3">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  {/* Primary Solid Emerald Download CTA Button */}
-                  <a
-                    href={directApkUrl}
-                    download="bimaheadquarter.apk"
-                    className="dl-shimmer group flex-1 inline-flex items-center justify-between sm:justify-start gap-3.5 px-6 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold shadow-lg shadow-emerald-700/20 hover:shadow-xl hover:shadow-emerald-700/30 transition-all duration-200 active:scale-[0.98] cursor-pointer"
-                    style={{ color: "#ffffff" }}
-                  >
-                    <div className="h-11 w-11 rounded-xl bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                      <Download className="h-5 w-5 text-white stroke-[2.5] dl-bounce-arrow" />
-                    </div>
-                    <div className="text-left">
-                      <div className="text-[11px] font-bold text-emerald-100 uppercase tracking-wider flex items-center gap-1.5">
-                        <span>Direct Safe Download</span>
-                        <span className="px-1.5 py-0.2 rounded bg-white/20 text-[9px] font-black">v1.0.1</span>
-                      </div>
-                      <div className="text-base sm:text-lg font-black text-white tracking-tight">
-                        Download Android APK
-                      </div>
-                    </div>
-                    <span className="ml-auto px-2.5 py-1 rounded-lg bg-emerald-800/60 text-xs font-black text-emerald-100 hidden sm:inline-flex">
-                      59 MB
-                    </span>
-                  </a>
-
-                  {/* WhatsApp Quick Share Button */}
-                  <a
-                    href={whatsappShareUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-white border border-slate-200/90 hover:border-emerald-300 hover:bg-emerald-50/70 text-slate-800 text-sm font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
-                    title="Share on WhatsApp"
-                  >
-                    <MessageCircle className="h-4 w-4 text-emerald-600 fill-emerald-600" />
-                    <span>WhatsApp</span>
-                  </a>
-
-                  {/* Copy Link Button */}
+              {/* Subtle Native Share Option */}
+              {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+                <div className="text-left pt-0.5">
                   <button
                     type="button"
-                    onClick={handleCopy}
-                    className={`inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border text-sm font-bold shadow-xs transition-all active:scale-95 cursor-pointer ${
-                      copied
-                        ? "border-emerald-400 bg-emerald-50 text-emerald-800"
-                        : "border-slate-200/90 bg-white text-slate-800 hover:bg-slate-50 hover:border-slate-300"
-                    }`}
-                    title="Copy Link"
+                    onClick={handleNativeShare}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors cursor-pointer"
                   >
-                    {copied ? (
-                      <>
-                        <Check className="h-4 w-4 text-emerald-600 animate-bounce" strokeWidth={2.5} />
-                        <span className="font-extrabold text-xs">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-4 w-4 text-slate-500" />
-                        <span>Copy Link</span>
-                      </>
-                    )}
+                    <Share2 className="h-3.5 w-3.5" />
+                    <span>More share options...</span>
                   </button>
                 </div>
+              )}
 
-                {/* Subtle Native Share Link */}
-                {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
-                  <div className="text-left pt-0.5">
-                    <button
-                      type="button"
-                      onClick={handleNativeShare}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors cursor-pointer"
-                    >
-                      <Share2 className="h-3.5 w-3.5" />
-                      <span>More sharing options (Bluetooth, SMS, Email)...</span>
-                    </button>
+              {/* The 3 Key Core Value Pillars */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs">
+                  <div className="h-7 w-7 rounded-lg bg-emerald-100/70 text-emerald-700 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="h-4 w-4" />
                   </div>
-                )}
+                  <span className="text-xs font-bold text-slate-800">1-Tap PDF Download</span>
+                </div>
+                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs">
+                  <div className="h-7 w-7 rounded-lg bg-emerald-100/70 text-emerald-700 flex items-center justify-center shrink-0">
+                    <RefreshCw className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-800">Real-Time Sync</span>
+                </div>
+                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs">
+                  <div className="h-7 w-7 rounded-lg bg-emerald-100/70 text-emerald-700 flex items-center justify-center shrink-0">
+                    <ShieldAlert className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-800">Emergency Claim Filing</span>
+                </div>
               </div>
 
-              {/* Trust & Spec Badges in Sleek Pill Format */}
-              <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs text-slate-600 font-medium">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-semibold shadow-2xs">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>Verified Clean APK</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-semibold shadow-2xs">
-                  <Smartphone className="h-3.5 w-3.5 text-slate-500" />
-                  <span>Android 8.0 to 15</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-semibold shadow-2xs">
-                  <Lock className="h-3.5 w-3.5 text-slate-400" />
-                  <span>256-Bit SSL Encrypted</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-semibold shadow-2xs">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>Official Direct Build</span>
-                </div>
+              {/* Security & Verification Badges */}
+              <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-slate-500 font-medium">
+                <span className="flex items-center gap-1.5 text-slate-700 font-semibold">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  Verified Clean APK (SHA-256)
+                </span>
+                <span>•</span>
+                <span>Android 8.0 &amp; Above</span>
+                <span>•</span>
+                <span className="flex items-center gap-1 text-slate-700">
+                  <Lock className="h-3.5 w-3.5 text-slate-400" /> 256-Bit SSL Secured
+                </span>
               </div>
             </div>
 
-            {/* Right Column: Interactive Scanner & Smartphone Command Center */}
+            {/* Right Column: High-End QR Scanner Card */}
             <div className="dl-hero-right relative">
-              {/* Floating Badge 1 (Top Left) */}
-              <div className="dl-float-1 absolute -top-4 -left-4 z-20 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-emerald-200/90 text-[11px] font-black text-emerald-900 shadow-md">
+              {/* Floating Badge (Top Left) */}
+              <div className="dl-float-1 absolute -top-4 -left-4 z-20 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-emerald-200 text-[11px] font-black text-emerald-900 shadow-md">
                 <ShieldCheck className="h-4 w-4 text-emerald-600" />
                 <span>IRDAI Registered IMF</span>
               </div>
 
-              {/* Floating Badge 2 (Bottom Right) */}
-              <div className="dl-float-2 absolute -bottom-4 -right-4 z-20 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200 text-[11px] font-black text-slate-800 shadow-md">
-                <Zap className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-                <span>Instant 1-Tap Offline PDF</span>
-              </div>
-
-              {/* Main Card Chassis */}
-              <div className="w-full max-w-[370px] sm:max-w-[400px] rounded-[36px] bg-white p-6 sm:p-7 shadow-2xl shadow-slate-900/8 border border-slate-200/90 text-center relative z-10">
-                {/* View Switcher Tabs (QR Scanner vs Mobile UI Preview) */}
-                <div className="flex items-center justify-center p-1 rounded-2xl bg-slate-100/90 mb-5 text-xs font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setRightCardTab("qr")}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl transition-all cursor-pointer ${
-                      rightCardTab === "qr"
-                        ? "bg-white text-slate-900 shadow-xs"
-                        : "text-slate-500 hover:text-slate-900"
-                    }`}
-                  >
-                    <QrCode className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>Camera QR Scan</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRightCardTab("preview")}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl transition-all cursor-pointer ${
-                      rightCardTab === "preview"
-                        ? "bg-white text-slate-900 shadow-xs"
-                        : "text-slate-500 hover:text-slate-900"
-                    }`}
-                  >
-                    <Smartphone className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>App Preview</span>
-                  </button>
+              {/* Main QR Card Chassis */}
+              <div className="w-full max-w-[360px] sm:max-w-[380px] rounded-[36px] bg-white p-6 sm:p-7 shadow-2xl shadow-slate-900/6 border border-slate-200/90 text-center relative z-10">
+                <div className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                  SCAN TO INSTALL
+                </div>
+                <div className="text-sm font-bold text-slate-900 mb-4">
+                  Point phone camera to install instantly
                 </div>
 
-                {rightCardTab === "qr" ? (
-                  /* TAB 1: Animated Futuristic QR Viewfinder */
-                  <div>
-                    {/* Header Info */}
-                    <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100">
-                      <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
-                          <QrCode className="h-4 w-4" />
-                        </div>
-                        <div className="text-left">
-                          <div className="text-xs font-bold text-slate-900">Point Camera to Install</div>
-                          <div className="text-[10px] text-slate-500">Live fast-download QR</div>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">
-                        Direct
-                      </span>
-                    </div>
+                {/* QR Code Container with Glowing Laser Scanner Animation */}
+                <div className="mx-auto w-56 h-56 p-4 bg-white rounded-3xl border-2 border-slate-100 shadow-inner flex items-center justify-center mb-4 relative overflow-hidden group">
+                  {/* Animated Glowing Laser Scanner Line */}
+                  <div className="dl-scan-beam" />
 
-                    {/* QR Code Container with Animated Laser Beam & Viewfinder Reticles */}
-                    <div className="mx-auto w-56 h-56 sm:w-60 sm:h-60 p-4 bg-white rounded-3xl border-2 border-slate-100 shadow-inner flex items-center justify-center mb-4 relative overflow-hidden group">
-                      {/* Animated Glowing Laser Scanner Line */}
-                      <div className="dl-scan-beam" />
+                  {/* Viewfinder Target Reticles */}
+                  <div className="absolute top-2.5 left-2.5 w-4 h-4 border-t-2 border-l-2 border-emerald-600 rounded-tl-md pointer-events-none" />
+                  <div className="absolute top-2.5 right-2.5 w-4 h-4 border-t-2 border-r-2 border-emerald-600 rounded-tr-md pointer-events-none" />
+                  <div className="absolute bottom-2.5 left-2.5 w-4 h-4 border-b-2 border-l-2 border-emerald-600 rounded-bl-md pointer-events-none" />
+                  <div className="absolute bottom-2.5 right-2.5 w-4 h-4 border-b-2 border-r-2 border-emerald-600 rounded-br-md pointer-events-none" />
 
-                      {/* Viewfinder Target Brackets */}
-                      <div className="absolute top-2.5 left-2.5 w-4 h-4 border-t-2 border-l-2 border-emerald-600 rounded-tl-md pointer-events-none" />
-                      <div className="absolute top-2.5 right-2.5 w-4 h-4 border-t-2 border-r-2 border-emerald-600 rounded-tr-md pointer-events-none" />
-                      <div className="absolute bottom-2.5 left-2.5 w-4 h-4 border-b-2 border-l-2 border-emerald-600 rounded-bl-md pointer-events-none" />
-                      <div className="absolute bottom-2.5 right-2.5 w-4 h-4 border-b-2 border-r-2 border-emerald-600 rounded-br-md pointer-events-none" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={qrCodeUrl}
+                    alt="Scan QR code to install BimaHeadquarter app"
+                    width={216}
+                    height={216}
+                    className="rounded-2xl transition-transform group-hover:scale-102 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareUrl)}&margin=4`;
+                    }}
+                  />
+                </div>
 
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={qrCodeUrl}
-                        alt="Scan QR code to install BimaHeadquarter app"
-                        width={216}
-                        height={216}
-                        className="rounded-2xl transition-transform group-hover:scale-102 object-contain"
-                        onError={(e) => {
-                          e.currentTarget.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareUrl)}&margin=4`;
-                        }}
-                      />
+                {/* Direct Download Button */}
+                <a
+                  href={directApkUrl}
+                  download="bimaheadquarter.apk"
+                  className="dl-shimmer flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 text-xs font-black transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer mb-3"
+                  style={{ color: "#ffffff" }}
+                >
+                  <Download className="h-4 w-4 text-white stroke-[2.5]" />
+                  <span>Direct Download APK (59 MB)</span>
+                </a>
 
-                      {/* Floating Center or Corner Badge */}
-                      <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white border border-slate-200 text-emerald-700 shadow-md ring-4 ring-white">
-                        <QrCode className="h-4 w-4" />
-                      </div>
-                    </div>
-
-                    {/* Secondary Direct Download Button inside Card */}
-                    <a
-                      href={directApkUrl}
-                      download="bimaheadquarter.apk"
-                      className="dl-shimmer group flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 text-xs font-bold transition-all shadow-sm hover:shadow-md cursor-pointer mb-3"
-                      style={{ color: "#ffffff" }}
-                    >
-                      <Download className="h-4 w-4 stroke-[2.5] text-white group-hover:scale-110 transition-transform" />
-                      <span className="text-white font-bold">Direct Download APK (59 MB)</span>
-                      <ArrowRight className="h-3.5 w-3.5 text-emerald-100 group-hover:text-white group-hover:translate-x-0.5 transition-transform" />
-                    </a>
-
-                    {/* Micro Features */}
-                    <div className="pt-3 border-t border-slate-100 text-left">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100 flex items-center gap-2">
-                          <Car className="h-4 w-4 text-emerald-600 shrink-0" />
-                          <div className="min-w-0">
-                            <div className="text-[11px] font-bold text-slate-800 truncate">Motor &amp; Fleet</div>
-                            <div className="text-[9px] text-slate-400">Offline PDF</div>
-                          </div>
-                        </div>
-                        <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100 flex items-center gap-2">
-                          <HeartPulse className="h-4 w-4 text-emerald-600 shrink-0" />
-                          <div className="min-w-0">
-                            <div className="text-[11px] font-bold text-slate-800 truncate">Health Cards</div>
-                            <div className="text-[9px] text-slate-400">Cashless Sync</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  /* TAB 2: Realistic Interactive Smartphone App Interface Mockup */
-                  <div className="text-left space-y-3">
-                    {/* Simulated Phone Status Bar */}
-                    <div className="flex items-center justify-between px-1 text-[11px] font-semibold text-slate-400 pb-1 border-b border-slate-100">
-                      <span>9:41</span>
-                      <div className="h-3.5 w-16 bg-slate-800 rounded-full mx-auto" />
-                      <div className="flex items-center gap-1 text-[10px]">
-                        <span>5G</span>
-                        <span>100%</span>
-                      </div>
-                    </div>
-
-                    {/* App Header Inside Mockup */}
-                    <div className="p-3 rounded-2xl bg-gradient-to-r from-slate-900 to-emerald-950 text-white">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <div className="text-[10px] text-emerald-300 uppercase font-black tracking-wider">
-                            Policy Vault
-                          </div>
-                          <div className="text-xs font-bold">Good Morning, Policyholder</div>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-[9px] font-black text-emerald-300">
-                          Active
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-300">
-                        <span>3 Policies Synced</span>
-                        <span>•</span>
-                        <span>₹25,00,000 Coverage</span>
-                      </div>
-                    </div>
-
-                    {/* Mock Policy Card 1: Motor */}
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/90 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
-                          <Car className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900">Honda City ZX</div>
-                          <div className="text-[10px] text-slate-500">ICICI Lombard · Comprehensive</div>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                        1-Tap PDF
-                      </span>
-                    </div>
-
-                    {/* Mock Policy Card 2: Health */}
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/90 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                          <HeartPulse className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900">Care Supreme ₹10L</div>
-                          <div className="text-[10px] text-slate-500">Star Health · Cashless Network</div>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                        E-Card
-                      </span>
-                    </div>
-
-                    {/* Mock Emergency Button */}
-                    <a
-                      href={directApkUrl}
-                      download="bimaheadquarter.apk"
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors shadow-xs"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      <span>Install App to Access Vault</span>
-                    </a>
-                  </div>
-                )}
+                {/* Specs Footer */}
+                <div className="pt-2 border-t border-slate-100 text-center text-[11px] font-semibold text-slate-500">
+                  APK Size: ~59 MB · Verified Clean Build
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* =========================================================================
-            2. Social Proof & Key Performance Metrics Strip (Wide layout)
+            2. Social Proof & Key Performance Metrics Strip
             ========================================================================= */}
         <section className="mb-20 lg:mb-28">
           <div className="rounded-3xl bg-white border border-slate-200/90 shadow-sm p-6 sm:p-8">
@@ -472,7 +318,7 @@ export default function DownloadAppPage() {
         </section>
 
         {/* =========================================================================
-            3. Feature Bento Grid: Full Container Width (No side void)
+            3. Feature Bento Grid: Full Container Width
             ========================================================================= */}
         <section className="mb-20 lg:mb-28">
           <div className="text-center max-w-2xl mx-auto mb-14">
@@ -636,7 +482,7 @@ export default function DownloadAppPage() {
         </section>
 
         {/* =========================================================================
-            4. Step-by-Step Installation Guide (Full width)
+            4. Step-by-Step Installation Guide
             ========================================================================= */}
         <section className="mb-20 lg:mb-28">
           <div className="rounded-3xl bg-white p-6 sm:p-10 border border-slate-200/90 shadow-sm">
