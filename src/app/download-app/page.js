@@ -137,85 +137,60 @@ export default function DownloadAppPage() {
                 </p>
               </div>
 
-              {/* Animated Master Download Card */}
-              <div className="pt-1">
-                <a
-                  href={directApkUrl}
-                  download="bimaheadquarter.apk"
-                  className="dl-glow-card dl-shimmer group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-white border-2 border-emerald-500/40 hover:border-emerald-600 transition-all duration-300 active:scale-[0.99] text-left cursor-pointer w-full"
-                >
-                  <div className="flex items-center gap-4">
-                    {/* Pulsing Android App Icon */}
-                    <div className="relative">
-                      <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/90 border border-emerald-300/80 flex items-center justify-center text-emerald-800 shadow-sm group-hover:scale-105 group-hover:shadow-emerald-900/10 transition-all shrink-0">
-                        <Smartphone className="h-8 w-8 text-emerald-700" strokeWidth={2.2} />
-                      </div>
-                      <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-600 border-2 border-white" />
-                      </span>
+              {/* Primary Action Row: Main Download Button + Quick Share Buttons */}
+              <div className="pt-2 space-y-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  {/* Primary Solid Emerald Download CTA Button */}
+                  <a
+                    href={directApkUrl}
+                    download="bimaheadquarter.apk"
+                    className="dl-shimmer group flex-1 inline-flex items-center justify-between sm:justify-start gap-3.5 px-6 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold shadow-lg shadow-emerald-700/20 hover:shadow-xl hover:shadow-emerald-700/30 transition-all duration-200 active:scale-[0.98] cursor-pointer"
+                    style={{ color: "#ffffff" }}
+                  >
+                    <div className="h-11 w-11 rounded-xl bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <Download className="h-5 w-5 text-white stroke-[2.5] dl-bounce-arrow" />
                     </div>
-
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-base sm:text-xl font-black text-slate-900 tracking-tight group-hover:text-emerald-900 transition-colors">
-                          Download Android APK
-                        </span>
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-black uppercase tracking-wide text-emerald-800">
-                          <Sparkles className="h-3 w-3 text-emerald-600" />
-                          v1.0.1
-                        </span>
+                    <div className="text-left">
+                      <div className="text-[11px] font-bold text-emerald-100 uppercase tracking-wider flex items-center gap-1.5">
+                        <span>Direct Safe Download</span>
+                        <span className="px-1.5 py-0.2 rounded bg-white/20 text-[9px] font-black">v1.0.1</span>
                       </div>
-                      <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        Direct Safe Download · Free · Android 8.0 &amp; Above
-                      </p>
+                      <div className="text-base sm:text-lg font-black text-white tracking-tight">
+                        Download Android APK
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Right Download CTA Button with Animated Arrow */}
-                  <div className="flex items-center gap-3 pl-3 shrink-0">
-                    <span className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-black text-slate-700">
-                      <Download className="h-3.5 w-3.5 text-slate-600" />
+                    <span className="ml-auto px-2.5 py-1 rounded-lg bg-emerald-800/60 text-xs font-black text-emerald-100 hidden sm:inline-flex">
                       59 MB
                     </span>
-                    <div className="h-12 w-12 rounded-xl bg-emerald-600 text-white group-hover:bg-emerald-700 flex items-center justify-center transition-all shadow-md group-hover:shadow-lg group-hover:scale-105">
-                      <Download className="h-5 w-5 dl-bounce-arrow" strokeWidth={2.5} />
-                    </div>
-                  </div>
-                </a>
-              </div>
+                  </a>
 
-              {/* Symmetrical Twin Share Actions (WhatsApp & Copy Link) */}
-              <div className="pt-1 space-y-2.5">
-                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <Share2 className="h-3.5 w-3.5 text-slate-500" />
-                  Share Download Link with Family or Clients
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
+                  {/* WhatsApp Quick Share Button */}
                   <a
                     href={whatsappShareUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-200/90 text-slate-800 hover:bg-emerald-50/70 hover:border-emerald-300 text-xs font-bold transition-all shadow-2xs hover:-translate-y-0.5 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-white border border-slate-200/90 hover:border-emerald-300 hover:bg-emerald-50/70 text-slate-800 text-sm font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
+                    title="Share on WhatsApp"
                   >
                     <MessageCircle className="h-4 w-4 text-emerald-600 fill-emerald-600" />
                     <span>WhatsApp</span>
                   </a>
 
+                  {/* Copy Link Button */}
                   <button
                     type="button"
                     onClick={handleCopy}
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-xs font-bold transition-all shadow-2xs hover:-translate-y-0.5 cursor-pointer ${
+                    className={`inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border text-sm font-bold shadow-xs transition-all active:scale-95 cursor-pointer ${
                       copied
-                        ? "border-emerald-400 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-400/20"
+                        ? "border-emerald-400 bg-emerald-50 text-emerald-800"
                         : "border-slate-200/90 bg-white text-slate-800 hover:bg-slate-50 hover:border-slate-300"
                     }`}
+                    title="Copy Link"
                   >
                     {copied ? (
                       <>
                         <Check className="h-4 w-4 text-emerald-600 animate-bounce" strokeWidth={2.5} />
-                        <span className="font-extrabold">Link Copied!</span>
+                        <span className="font-extrabold text-xs">Copied!</span>
                       </>
                     ) : (
                       <>
@@ -226,32 +201,39 @@ export default function DownloadAppPage() {
                   </button>
                 </div>
 
+                {/* Subtle Native Share Link */}
                 {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
-                  <button
-                    type="button"
-                    onClick={handleNativeShare}
-                    className="w-full flex items-center justify-center gap-1.5 py-1 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
-                  >
-                    <Share2 className="h-3 w-3" />
-                    <span>More share options...</span>
-                  </button>
+                  <div className="text-left pt-0.5">
+                    <button
+                      type="button"
+                      onClick={handleNativeShare}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors cursor-pointer"
+                    >
+                      <Share2 className="h-3.5 w-3.5" />
+                      <span>More sharing options (Bluetooth, SMS, Email)...</span>
+                    </button>
+                  </div>
                 )}
               </div>
 
-              {/* Trust & Spec Badges */}
-              <div className="flex flex-wrap items-center gap-3 sm:gap-5 pt-1 text-xs text-slate-500 font-medium">
-                <span className="flex items-center gap-1.5 text-slate-800 font-semibold">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                  Verified Clean APK
-                </span>
-                <span>•</span>
-                <span>~59 MB</span>
-                <span>•</span>
-                <span>Android 8.0+</span>
-                <span>•</span>
-                <span className="flex items-center gap-1 text-slate-700">
-                  <Lock className="h-3.5 w-3.5 text-slate-400" /> 256-Bit SSL
-                </span>
+              {/* Trust & Spec Badges in Sleek Pill Format */}
+              <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs text-slate-600 font-medium">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-semibold shadow-2xs">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Verified Clean APK</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-semibold shadow-2xs">
+                  <Smartphone className="h-3.5 w-3.5 text-slate-500" />
+                  <span>Android 8.0 to 15</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-semibold shadow-2xs">
+                  <Lock className="h-3.5 w-3.5 text-slate-400" />
+                  <span>256-Bit SSL Encrypted</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 font-semibold shadow-2xs">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Official Direct Build</span>
+                </div>
               </div>
             </div>
 
