@@ -936,19 +936,19 @@ export default function RootPage() {
                     </Link>
                   </div>
 
-                  {/* 3 Core Value Props in Clean Compact Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3 border-t border-white/10 text-xs text-slate-300">
-                    <div className="flex items-center gap-2">
+                  {/* 3 Core Value Props Side by Side */}
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-3.5 border-t border-white/10 text-xs text-slate-300">
+                    <div className="inline-flex items-center gap-2 whitespace-nowrap">
                       <span className="material-symbols-outlined text-emerald-400 text-base">check_circle</span>
-                      <span className="font-semibold">1-Tap PDF Download</span>
+                      <span className="font-semibold text-slate-200">1-Tap PDF Download</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="inline-flex items-center gap-2 whitespace-nowrap">
                       <span className="material-symbols-outlined text-emerald-400 text-base">check_circle</span>
-                      <span className="font-semibold">Real-Time Sync</span>
+                      <span className="font-semibold text-slate-200">Real-Time Sync</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="inline-flex items-center gap-2 whitespace-nowrap">
                       <span className="material-symbols-outlined text-emerald-400 text-base">check_circle</span>
-                      <span className="font-semibold">Emergency Claim Filing</span>
+                      <span className="font-semibold text-slate-200">Emergency Claim Filing</span>
                     </div>
                   </div>
                 </div>
