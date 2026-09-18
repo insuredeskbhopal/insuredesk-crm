@@ -351,11 +351,12 @@ export default function DownloadAppPage() {
                     <a
                       href={directApkUrl}
                       download="bimaheadquarter.apk"
-                      className="dl-shimmer group flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white px-4 py-3 text-xs font-bold transition-all shadow-sm hover:shadow-md cursor-pointer mb-3"
+                      className="dl-shimmer group flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 text-xs font-bold transition-all shadow-sm hover:shadow-md cursor-pointer mb-3"
+                      style={{ color: "#ffffff" }}
                     >
                       <Download className="h-4 w-4 stroke-[2.5] text-white group-hover:scale-110 transition-transform" />
-                      <span>Direct Download APK (59 MB)</span>
-                      <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-white group-hover:translate-x-0.5 transition-transform" />
+                      <span className="text-white font-bold">Direct Download APK (59 MB)</span>
+                      <ArrowRight className="h-3.5 w-3.5 text-emerald-100 group-hover:text-white group-hover:translate-x-0.5 transition-transform" />
                     </a>
 
                     {/* Micro Features */}
@@ -772,33 +773,44 @@ export default function DownloadAppPage() {
         </section>
 
         {/* =========================================================================
-            6. Bottom Conversion Strip
+            6. Bottom Conversion Strip (100% All-White Theme)
             ========================================================================= */}
-        <section className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 sm:p-12 text-center text-white shadow-xl relative overflow-hidden">
+        <section
+          className="rounded-3xl bg-white border border-slate-200/90 p-8 sm:p-12 text-center text-slate-900 shadow-lg relative overflow-hidden"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 60% at 50% 10%, rgba(16, 185, 129, 0.08), transparent 70%), #ffffff",
+          }}
+        >
           <div className="max-w-2xl mx-auto space-y-4 relative z-10">
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-black uppercase tracking-wider text-emerald-800 mb-1">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+              Direct Android Download
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">
               Ready to Carry Your Policy Fortress?
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xl mx-auto">
               Install the official BimaHeadquarter Android APK today. Free lifetime policy tracking, verified insurer PDF schedules, and expert claim assistance.
             </p>
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3.5">
               <a
                 href={directApkUrl}
                 download="bimaheadquarter.apk"
-                className="dl-shimmer w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-sm shadow-md transition-all active:scale-95 cursor-pointer"
+                className="dl-shimmer w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
+                style={{ color: "#ffffff" }}
               >
-                <Download className="h-4 w-4 text-emerald-700 stroke-[2.5]" />
-                <span>Download APK Now (59 MB)</span>
+                <Download className="h-4 w-4 text-white stroke-[2.5]" />
+                <span className="text-white font-black">Download Android APK (59 MB)</span>
               </a>
               <a
                 href={whatsappShareUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-white/20 transition-all active:scale-95 cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-white hover:bg-emerald-50/80 text-slate-800 hover:text-emerald-950 font-bold text-sm border border-slate-200 hover:border-emerald-300 shadow-2xs transition-all active:scale-95 cursor-pointer"
               >
-                <MessageCircle className="h-4 w-4 fill-emerald-400 text-emerald-400" />
-                <span>Share via WhatsApp</span>
+                <MessageCircle className="h-4 w-4 fill-emerald-600 text-emerald-600" />
+                <span className="text-slate-800 font-bold">Share via WhatsApp</span>
               </a>
             </div>
           </div>
