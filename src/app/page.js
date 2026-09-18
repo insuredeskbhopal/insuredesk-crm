@@ -914,26 +914,22 @@ export default function RootPage() {
                     Experience seamless policy self-service. Access verified policy documents, track renewal dates, view vehicle specifications, and submit claims with instant advocacy.
                   </p>
 
-                  <div className="flex flex-wrap items-center gap-3.5 pt-1.5">
+                  <div className="flex flex-wrap items-center gap-3 pt-1">
                     <a
                       href="/api/downloads/app"
                       download="bimaheadquarter.apk"
-                      className="home-apk-download-btn dl-shimmer group"
+                      className="home-apk-download-btn"
                     >
-                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/20 text-white shadow-inner group-hover:scale-110 transition-transform">
-                        <span className="material-symbols-outlined text-[18px]">download</span>
-                      </span>
+                      <span className="material-symbols-outlined">download</span>
                       <span>Download Android APK</span>
-                      <span className="home-apk-badge">59 MB</span>
+                      <span className="home-apk-size-tag">(59 MB)</span>
                     </a>
 
                     <Link
                       href="/download-app"
-                      className="home-apk-share-btn group"
+                      className="home-apk-share-btn"
                     >
-                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/10 text-white/90 group-hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-[17px]">share</span>
-                      </span>
+                      <span className="material-symbols-outlined">share</span>
                       <span>Share Download Link</span>
                     </Link>
                   </div>
