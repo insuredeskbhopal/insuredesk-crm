@@ -967,5 +967,41 @@ tbody tr:hover {
   }
 }
 
+/* =========================================================================
+   Homepage Mobile App Banner - Rock-Solid Responsive Split
+   ========================================================================= */
+.home-mobile-app-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: center;
+  width: 100%;
+}
+@media (min-width: 860px) {
+  .home-mobile-app-split {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 3rem;
+  }
+}
+
+.home-mobile-app-left {
+  width: 100%;
+  min-width: 0;
+}
+
+.home-mobile-app-right {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+@media (min-width: 860px) {
+  .home-mobile-app-right {
+    width: auto;
+    justify-content: flex-end;
+    margin-right: clamp(2.5rem, 6vw, 6rem);
+  }
+}
+
+
 
 

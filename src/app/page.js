@@ -895,9 +895,9 @@ export default function RootPage() {
               <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl pointer-events-none" />
               <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-emerald-600/15 blur-3xl pointer-events-none" />
 
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 lg:gap-12">
+              <div className="relative z-10 home-mobile-app-split">
                 {/* Left Column: Heading, Value Props & Actions */}
-                <div className="flex-1 min-w-0 space-y-4 sm:space-y-5 text-left">
+                <div className="home-mobile-app-left space-y-4 sm:space-y-5 text-left">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-[11px] font-bold tracking-wide">
                     <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                     BIMAHEADQUARTER MOBILE APP · ANDROID v1.0.1
@@ -954,10 +954,10 @@ export default function RootPage() {
                 </div>
 
                 {/* Right Column: Compact Docked QR Scanner Card */}
-                <div className="w-full md:w-auto shrink-0 flex justify-center md:justify-end">
+                <div className="home-mobile-app-right">
                   <div className="w-full max-w-[270px] sm:max-w-[290px] rounded-2xl bg-white/10 backdrop-blur-md p-4 sm:p-5 border border-white/20 text-center shadow-xl">
                     <div className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-0.5">
-                      Scan To Install
+                      SCAN TO INSTALL
                     </div>
                     <p className="text-[11px] text-slate-300 mb-3">
                       Point phone camera to install instantly
