@@ -73,7 +73,7 @@ export default function AppDownloadModal({ isOpen, onClose }) {
   };
 
   const whatsappShareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n${publicShareUrl}`)}`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(publicShareUrl)}&margin=4`;
+  const qrCodeUrl = "/brand/app-qr.png";
 
   return (
     <ModalPortal>
@@ -129,7 +129,10 @@ export default function AppDownloadModal({ isOpen, onClose }) {
               alt="Scan QR code to install BimaHeadquarter app"
               width={180}
               height={180}
-              className="rounded-xl mx-auto"
+              className="rounded-xl mx-auto object-contain"
+              onError={(e) => {
+                e.currentTarget.src = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(publicShareUrl)}&margin=4`;
+              }}
             />
             <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-800 mt-3">
               <QrCode size={18} className="w-4.5 h-4.5 text-slate-700" />

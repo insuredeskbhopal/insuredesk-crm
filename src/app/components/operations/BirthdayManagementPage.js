@@ -23,7 +23,10 @@ import {
   MessageSquare,
   Gift,
   FileSpreadsheet,
-  ExternalLink
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
 import { calculateAgeAndCountdown } from "@/lib/customer-profiles/birthday-helpers";
@@ -43,6 +46,10 @@ export default function BirthdayManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(""); // empty means all
   const [activeTab, setActiveTab] = useState("all"); // all, today, upcoming, this_month
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -113,16 +120,26 @@ export default function BirthdayManagementPage() {
       let formattedDob = "Not set";
       let birthMonth = null;
       let birthDay = null;
+      let birthYear = null;
 
       if (p.dob) {
+        const parts = String(p.dob).split("T")[0].split("-");
+        if (parts.length === 3) {
+          birthYear = parseInt(parts[0], 10);
+          birthMonth = parseInt(parts[1], 10);
+          birthDay = parseInt(parts[2], 10);
+        }
         const birthDate = new Date(p.dob);
         formattedDob = birthDate.toLocaleDateString("en-IN", {
           day: "2-digit",
           month: "short",
           year: "numeric",
         });
-        birthMonth = birthDate.getMonth() + 1;
-        birthDay = birthDate.getDate();
+        if (!birthMonth) {
+          birthMonth = birthDate.getMonth() + 1;
+          birthDay = birthDate.getDate();
+          birthYear = birthDate.getFullYear();
+        }
       }
 
       return {
@@ -131,6 +148,7 @@ export default function BirthdayManagementPage() {
         formattedDob,
         birthMonth,
         birthDay,
+        birthYear,
       };
     });
   }, [profiles]);
@@ -139,7 +157,7 @@ export default function BirthdayManagementPage() {
   const filteredProfiles = useMemo(() => {
     const currentMonthNum = new Date().getMonth() + 1;
 
-    return processedProfiles.filter((p) => {
+    const filtered = processedProfiles.filter((p) => {
       // 1. Search Query
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
@@ -168,7 +186,44 @@ export default function BirthdayManagementPage() {
 
       return true;
     });
+
+    // Sort so Date of Birth (DOB) is strictly increasing chronologically
+    return filtered.sort((a, b) => {
+      if (activeTab === "upcoming") {
+        const daysDiff = (a.daysToBirthday ?? 999) - (b.daysToBirthday ?? 999);
+        if (daysDiff !== 0) return daysDiff;
+      } else {
+        const calA = (a.birthMonth || 0) * 100 + (a.birthDay || 0);
+        const calB = (b.birthMonth || 0) * 100 + (b.birthDay || 0);
+        if (calA !== calB) return calA - calB;
+      }
+
+      // Secondary tiebreaker: birth year ascending (older to younger on same date)
+      const yearDiff = (a.birthYear || 0) - (b.birthYear || 0);
+      if (yearDiff !== 0) return yearDiff;
+
+      // Final tiebreaker: name ascending
+      return (a.name || "").localeCompare(b.name || "");
+    });
   }, [processedProfiles, searchQuery, selectedMonth, activeTab]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedMonth, activeTab]);
+
+  // Pagination slicing
+  const totalItems = filteredProfiles.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(Math.max(currentPage, 1), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedProfiles = useMemo(() => {
+    return filteredProfiles.slice(startIndex, endIndex);
+  }, [filteredProfiles, startIndex, endIndex]);
+  const paginationPages = useMemo(() => {
+    return getPaginationPages(safeCurrentPage, totalPages);
+  }, [safeCurrentPage, totalPages]);
 
   // Metrics
   const metrics = useMemo(() => {
@@ -707,73 +762,115 @@ export default function BirthdayManagementPage() {
 
   return (
     <div className="w-full text-slate-800 font-sans p-0">
-      <div className="mb-4">
+      <div className="mb-3">
         <OperationsBackLink />
       </div>
-      {/* Page Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-5 border-b border-slate-200">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Cake className="w-6 h-6 text-[#5b9bd5]" />
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-              Client Birthday Management
-            </h1>
+
+      {/* 1. Executive Command Header Card */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        {/* Title & Badge Group */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-pink-700 border border-pink-200 shadow-2xs w-fit">
+              <span className="h-1.5 w-1.5 rounded-full bg-pink-500 animate-pulse" />
+              Live Celebrations & Greetings
+            </span>
           </div>
-          <p className="text-slate-500 text-xs">
-            Monitor upcoming customer birthdays, send greeting messages via WhatsApp and Email, download templates, and import Excel sheets.
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-pink-600 flex items-center justify-center shadow-2xs shrink-0">
+              <Cake className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                Client Birthday Management
+              </h1>
+              <p className="text-xs text-slate-500 font-normal leading-relaxed mt-0.5">
+                Monitor upcoming client birthdays, send greetings via WhatsApp & Email, download templates, and import Excel sheets.
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Action Controls Group */}
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {/* Unified Excel Tools Segmented Bar */}
+          <div className="inline-flex items-center rounded-xl border border-slate-300 bg-white p-0.5 shadow-xs">
+            <button
+              type="button"
+              onClick={handleDownloadTemplate}
+              title="Download Excel import template"
+              className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Template</span>
+            </button>
+            <div className="w-px h-4 bg-slate-300" />
+            <button
+              type="button"
+              onClick={() => setIsImportModalOpen(true)}
+              title="Import clients via Excel"
+              className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+            >
+              <Upload className="w-3.5 h-3.5 text-slate-500" />
+              <span>Import</span>
+            </button>
+            <div className="w-px h-4 bg-slate-300" />
+            <button
+              type="button"
+              onClick={handleExportData}
+              title="Export filtered records to Excel"
+              className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span>Export</span>
+            </button>
+          </div>
+
+          {/* Send Today's Wishes Action */}
           <button
+            type="button"
+            onClick={handleSendAllBirthdays}
+            disabled={isSendingAll || metrics.todayCount === 0}
+            className={`inline-flex items-center gap-2 px-3.5 h-9 rounded-xl text-xs font-bold transition-all shadow-xs border ${
+              metrics.todayCount > 0
+                ? "bg-white hover:bg-emerald-50 text-emerald-700 border-2 border-emerald-500"
+                : "bg-slate-50 text-slate-500 border border-slate-300 cursor-not-allowed"
+            }`}
+            title={
+              metrics.todayCount > 0
+                ? "Send automated birthday wishes to all clients celebrating today"
+                : "No birthdays scheduled for today"
+            }
+          >
+            {isSendingAll ? (
+              <span className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 border-t-slate-600 animate-spin" />
+            ) : (
+              <Send className="w-3.5 h-3.5 text-slate-400" />
+            )}
+            <span>Send Today's Wishes</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold ${
+                metrics.todayCount > 0
+                  ? "bg-emerald-600 text-white"
+                  : "bg-white text-slate-500 border border-slate-300 shadow-2xs"
+              }`}
+            >
+              {metrics.todayCount}
+            </span>
+          </button>
+
+          {/* Primary Add Birthday Button - All White Theme with 2px contrast border */}
+          <button
+            type="button"
             onClick={() => {
               setAddFormData({ name: "", phone: "", email: "", dob: "" });
               setAddFormErrors({});
               setIsAddModalOpen(true);
             }}
-            className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs px-4 py-2.5 rounded-lg border border-transparent shadow-sm transition-all duration-200"
+            className="inline-flex items-center gap-1.5 px-4 h-9 rounded-xl bg-white hover:bg-slate-50 text-slate-900 hover:text-black border-2 border-slate-800 hover:border-black font-extrabold text-xs shadow-xs transition-all"
           >
-            <Plus className="w-3.5 h-3.5" />
-            Add Birthday
-          </button>
-
-          <button
-            onClick={handleDownloadTemplate}
-            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-4 py-2.5 rounded-lg border border-slate-300 shadow-sm transition-all duration-200"
-            title="Download Excel import template"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-            Download Template
-          </button>
-
-          <button
-            onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-4 py-2.5 rounded-lg border border-slate-300 shadow-sm transition-all duration-200"
-          >
-            <Upload className="w-3.5 h-3.5 text-slate-600" />
-            Import Excel
-          </button>
-
-          <button
-            onClick={handleExportData}
-            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-4 py-2.5 rounded-lg border border-slate-300 shadow-sm transition-all duration-200"
-          >
-            <Download className="w-3.5 h-3.5 text-slate-600" />
-            Export Current List
-          </button>
-
-          <button
-            onClick={handleSendAllBirthdays}
-            disabled={isSendingAll || metrics.todayCount === 0}
-            className="flex items-center gap-1.5 bg-[#ba1a1a] hover:bg-[#ba1a1a]/90 disabled:bg-slate-100 disabled:text-slate-400 text-white font-semibold text-xs px-4 py-2.5 rounded-lg border border-transparent shadow-sm transition-all duration-200"
-          >
-            {isSendingAll ? (
-              <span className="w-3.5 h-3.5 rounded-full border border-white/20 border-t-white animate-spin" />
-            ) : (
-              <Send className="w-3.5 h-3.5" />
-            )}
-            Send Today's Birthdays ({metrics.todayCount})
+            <Plus className="w-3.5 h-3.5 stroke-[2.5] text-slate-800" />
+            <span>Add Birthday</span>
           </button>
         </div>
       </div>
@@ -838,7 +935,7 @@ export default function BirthdayManagementPage() {
       {/* Main Filter and Table Workspace */}
       <div className="bg-white border border-slate-250 rounded-xl shadow-md overflow-hidden mb-6">
         {/* Workspace Toolbar */}
-        <div className="p-4 border-b border-slate-250 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50">
+        <div className="p-4 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white">
 
           {/* Tabs Segmented Control */}
           <div className="bg-slate-100 p-1 rounded-xl flex flex-wrap gap-1 border border-slate-200/60 w-fit">
@@ -939,95 +1036,103 @@ export default function BirthdayManagementPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto bg-white">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
-                <tr className="bg-slate-50 text-slate-600 text-xs font-bold uppercase tracking-wider border-b border-slate-250">
-                  <th className="py-4 px-4">Client Name</th>
-                  <th className="py-4 px-4">Contact / Phone</th>
-                  <th className="py-4 px-4">Email Address</th>
-                  <th className="py-4 px-4">Date of Birth</th>
-                  <th className="py-4 px-4 text-center">Age</th>
-                  <th className="py-4 px-4">Next Birthday</th>
-                  <th className="py-4 px-4 text-right">Actions</th>
+                <tr className="bg-white text-slate-500 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
+                  <th className="py-2.5 px-3.5 w-[30%]">Client & Email</th>
+                  <th className="py-2.5 px-3.5 w-[18%]">Contact / Phone</th>
+                  <th className="py-2.5 px-3.5 w-[18%]">Date of Birth</th>
+                  <th className="py-2.5 px-3.5 w-[8%] text-center">Age</th>
+                  <th className="py-2.5 px-3.5 w-[14%]">Next Birthday</th>
+                  <th className="py-2.5 px-3.5 w-[12%] text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 text-slate-700">
-                {filteredProfiles.map((p) => {
+              <tbody className="divide-y divide-slate-100 text-slate-700">
+                {paginatedProfiles.map((p) => {
                   const isToday = p.daysToBirthday === 0 || p.daysToBirthday === 365;
                   const isUpcoming = p.daysToBirthday !== null && p.daysToBirthday <= 30 && p.daysToBirthday > 0;
 
                   return (
                     <tr
                       key={p.id}
-                      className={`hover:bg-slate-50/70 transition-colors ${isToday ? "bg-pink-500/5" : ""
-                        }`}
+                      className={`hover:bg-slate-50/80 transition-colors ${
+                        isToday ? "bg-pink-500/5" : ""
+                      }`}
                     >
-                      {/* Name */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-semibold text-slate-900 flex items-center gap-1.5 text-[13px]">
-                          {p.name}
-                          {isToday && (
-                            <span className="bg-pink-500/10 text-pink-700 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide border border-pink-200">
-                              Today 🎂
-                            </span>
-                          )}
+                      {/* Name & Email */}
+                      <td className="py-2 px-3.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                            {p.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-slate-900 text-xs tracking-tight flex items-center gap-1.5 truncate">
+                              <span className="truncate">{p.name}</span>
+                              {isToday && (
+                                <span className="bg-pink-100 text-pink-700 text-[10px] px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wide border border-pink-200 shrink-0">
+                                  Today 🎂
+                                </span>
+                              )}
+                            </div>
+                            {p.email ? (
+                              <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 truncate hover:text-sky-600 transition-colors">
+                                <Mail className="w-2.5 h-2.5 shrink-0 text-slate-400" />
+                                <a href={`mailto:${p.email}?subject=Happy Birthday!`} className="truncate">
+                                  {p.email}
+                                </a>
+                              </div>
+                            ) : null}
+                          </div>
                         </div>
                       </td>
 
                       {/* Phone */}
-                      <td className="py-3.5 px-4">
-                        <div className="text-slate-600 text-[13px] flex items-center gap-1">
-                          <Phone className="w-3.5 h-3.5 text-slate-400" />
+                      <td className="py-2 px-3.5">
+                        <div className="text-slate-700 text-xs font-mono font-medium flex items-center gap-1.5">
+                          <Phone className="w-3 h-3 text-slate-400 shrink-0" />
                           <span>{p.phone}</span>
                         </div>
                         {p.alternatePhone && (
-                          <div className="text-[11px] text-slate-400 font-medium mt-0.5 ml-4" title="Alternate Phone">
+                          <div className="text-[10px] text-slate-400 font-mono mt-0.5 ml-4.5 truncate" title="Alternate Phone">
                             Alt: {p.alternatePhone}
                           </div>
                         )}
                       </td>
 
-                      {/* Email */}
-                      <td className="py-3.5 px-4">
-                        {p.email ? (
-                          <div className="text-slate-655 text-[13px] flex items-center gap-1 hover:text-sky-600 transition-colors">
-                            <Mail className="w-3.5 h-3.5 text-slate-400" />
-                            <a href={`mailto:${p.email}?subject=Happy Birthday!`}>{p.email}</a>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 text-xs italic">N/A</span>
-                        )}
-                      </td>
-
                       {/* Date of Birth / Edit Inline */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-2 px-3.5">
                         {editingId === p.id ? (
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1">
                             <input
                               type="date"
                               value={editDate}
                               onChange={(e) => setEditDate(e.target.value)}
-                              className="bg-white border border-slate-300 rounded text-[13px] text-slate-800 px-2 py-1 focus:outline-none focus:border-sky-500"
+                              className="bg-white border border-slate-300 rounded text-xs text-slate-800 px-1.5 py-0.5 focus:outline-none focus:border-sky-500 shadow-xs"
                             />
                             <button
                               onClick={() => handleSaveInlineDob(p.id)}
-                              className="p-1 bg-white hover:bg-slate-50 text-emerald-750 rounded border border-slate-350 shadow-sm transition-colors"
+                              className="p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded border border-emerald-200 shadow-xs transition-colors"
                               title="Save DOB"
                             >
                               <Check className="w-3 h-3" />
                             </button>
                             <button
                               onClick={() => setEditingId("")}
-                              className="p-1 bg-white hover:bg-slate-50 text-slate-500 rounded border border-slate-300 shadow-sm transition-colors"
+                              className="p-1 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded border border-slate-200 shadow-xs transition-colors"
                               title="Cancel"
                             >
                               <X className="w-3 h-3" />
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1.5 group/dob text-[13px]">
-                            <span className={p.dob ? "text-slate-700 font-semibold" : "text-amber-700 font-semibold italic text-xs"}>
+                          <div className="inline-flex items-center gap-1.5 group/dob">
+                            <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md border ${
+                              p.dob
+                                ? "bg-white text-slate-800 border-slate-200 font-semibold shadow-2xs"
+                                : "bg-amber-50 text-amber-700 border-amber-200/80 italic"
+                            }`}>
+                              <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
                               {p.formattedDob}
                             </span>
                             <button
@@ -1035,37 +1140,39 @@ export default function BirthdayManagementPage() {
                                 setEditingId(p.id);
                                 setEditDate(p.dob || "");
                               }}
-                              className="opacity-0 group-hover/dob:opacity-100 p-0.5 text-slate-400 hover:text-sky-600 transition-all rounded border border-slate-200 bg-white shadow-sm"
+                              className="opacity-0 group-hover/dob:opacity-100 p-0.5 text-slate-400 hover:text-sky-600 transition-all rounded border border-slate-200 bg-white shadow-xs"
                               title="Edit date of birth"
                             >
-                              <Edit2 className="w-3 h-3" />
+                              <Edit2 className="w-2.5 h-2.5" />
                             </button>
                           </div>
                         )}
                       </td>
 
                       {/* Age */}
-                      <td className="py-3.5 px-4 text-center">
+                      <td className="py-2 px-3.5 text-center">
                         {p.age !== null ? (
-                          <span className="text-slate-800 font-bold text-[13px]">{p.age}</span>
+                          <span className="inline-flex items-center justify-center min-w-[28px] px-1.5 py-0.5 rounded-md text-xs font-bold bg-white text-slate-800 border border-slate-200 shadow-2xs">
+                            {p.age}
+                          </span>
                         ) : (
-                          <span className="text-slate-400">-</span>
+                          <span className="text-slate-300 text-xs">—</span>
                         )}
                       </td>
 
                       {/* Next Birthday countdown */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-2 px-3.5">
                         {p.daysToBirthday !== null ? (
                           isToday ? (
-                            <span className="inline-flex items-center bg-pink-500/10 text-pink-700 text-xs font-bold px-2 py-0.5 rounded border border-pink-200 shadow-sm">
-                              Today! 🥳
+                            <span className="inline-flex items-center gap-1 bg-pink-100 text-pink-700 text-xs font-bold px-2 py-0.5 rounded-full border border-pink-200 shadow-xs animate-pulse">
+                              🎂 Today!
                             </span>
                           ) : isUpcoming ? (
-                            <span className="inline-flex items-center bg-sky-500/10 text-sky-700 text-xs font-bold px-2 py-0.5 rounded border border-sky-200 shadow-sm">
-                              In {p.daysToBirthday} days 🎈
+                            <span className="inline-flex items-center gap-1 bg-sky-50 text-sky-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-sky-200">
+                              🎈 In {p.daysToBirthday} {p.daysToBirthday === 1 ? "day" : "days"}
                             </span>
                           ) : (
-                            <span className="text-slate-500 text-[13px] font-semibold">
+                            <span className="text-slate-500 text-xs font-medium">
                               In {p.daysToBirthday} days
                             </span>
                           )
@@ -1075,7 +1182,7 @@ export default function BirthdayManagementPage() {
                               setEditingId(p.id);
                               setEditDate("");
                             }}
-                            className="inline-flex items-center gap-0.5 text-[11px] bg-white text-amber-700 hover:bg-slate-50 px-2.5 py-1.5 rounded border border-slate-300 shadow-sm transition-all font-bold"
+                            className="inline-flex items-center gap-0.5 text-[11px] bg-white text-amber-700 hover:bg-slate-50 px-2 py-1 rounded border border-slate-300 shadow-xs transition-all font-bold"
                           >
                             <Plus className="w-2.5 h-2.5 text-amber-600" /> Add DOB
                           </button>
@@ -1083,23 +1190,24 @@ export default function BirthdayManagementPage() {
                       </td>
 
                       {/* Action buttons */}
-                      <td className="py-3.5 px-4 text-right">
+                      <td className="py-2 px-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleOpenGreeting(p)}
                             disabled={!p.phone}
-                            className="p-1.5 bg-white hover:bg-slate-50 text-pink-650 hover:text-pink-750 rounded-lg border border-slate-300 shadow-sm transition-all disabled:opacity-40"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-all shadow-xs disabled:opacity-40"
                             title="Send Birthday Greeting via WhatsApp"
                           >
-                            <MessageSquare className="w-3.5 h-3.5 text-pink-600" />
+                            <MessageSquare className="w-3 h-3 text-emerald-600" />
+                            <span>Wish</span>
                           </button>
                           {p.email && (
                             <a
-                              href={`mailto:${p.email}?subject=Happy%20Birthday!&body=Dear%20${p.name},%20Insuredesk%20wishes%20you%20a%20very%20Happy%2520Birthday!`}
-                              className="p-1.5 bg-white hover:bg-slate-50 text-slate-655 hover:text-slate-800 rounded-lg border border-slate-300 shadow-sm transition-all"
+                              href={`mailto:${p.email}?subject=Happy%20Birthday!&body=Dear%20${p.name},%20Insuredesk%20wishes%20you%20a%20very%20Happy%20Birthday!`}
+                              className="p-1 rounded-lg text-slate-500 hover:text-sky-600 hover:bg-sky-50 border border-slate-200 bg-white shadow-xs transition-all"
                               title="Send Email"
                             >
-                              <Mail className="w-3.5 h-3.5 text-slate-600" />
+                              <Mail className="w-3 h-3" />
                             </a>
                           )}
                         </div>
@@ -1112,10 +1220,85 @@ export default function BirthdayManagementPage() {
           </div>
         )}
 
-        {/* Footer info */}
-        <div className="p-3 bg-slate-50 border-t border-slate-250 flex justify-between items-center text-xs text-slate-500 font-semibold">
-          <span>Showing {filteredProfiles.length} clients</span>
-          <span>Click the pencil icon next to DOB to update birthdates inline.</span>
+        {/* Footer info & Pagination */}
+        <div className="px-4 py-3 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+          <div className="flex items-center gap-5 text-xs">
+            <span className="text-slate-500 whitespace-nowrap font-medium">
+              Showing <strong className="text-slate-900 font-bold">{totalItems === 0 ? 0 : startIndex + 1}–{endIndex}</strong> of{" "}
+              <strong className="text-slate-900 font-bold">{totalItems}</strong> clients
+            </span>
+
+            <div className="flex items-center gap-2 whitespace-nowrap text-slate-500 font-medium">
+              <span>Rows per page:</span>
+              <div className="relative inline-flex items-center">
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  style={{
+                    backgroundImage: "none",
+                    paddingRight: "26px",
+                    paddingLeft: "10px",
+                    height: "28px",
+                  }}
+                  className="w-[62px] bg-white border border-slate-200 hover:border-slate-300 rounded-md text-xs font-semibold text-slate-700 shadow-2xs focus:outline-none focus:ring-1 focus:ring-slate-300 appearance-none cursor-pointer transition-colors"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" />
+              </div>
+            </div>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safeCurrentPage === 1}
+                className="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-35 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed shadow-xs transition-colors"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                <span>Prev</span>
+              </button>
+
+              <div className="flex items-center gap-1">
+                {paginationPages.map((pageNumber) => {
+                  const isActive = pageNumber === safeCurrentPage;
+                  return (
+                    <button
+                      key={pageNumber}
+                      type="button"
+                      onClick={() => setCurrentPage(pageNumber)}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`h-7 min-w-[28px] px-2 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center justify-center ${
+                        isActive
+                          ? "bg-white text-slate-900 border-2 border-slate-900 font-extrabold shadow-xs ring-1 ring-slate-900/10"
+                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900"
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safeCurrentPage === totalPages}
+                className="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-35 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed shadow-xs transition-colors"
+              >
+                <span>Next</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1768,4 +1951,10 @@ export default function BirthdayManagementPage() {
 
     </div>
   );
+}
+
+function getPaginationPages(currentPage, totalPages) {
+  if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
+  const start = Math.min(Math.max(currentPage - 2, 1), totalPages - 4);
+  return Array.from({ length: 5 }, (_, index) => start + index);
 }

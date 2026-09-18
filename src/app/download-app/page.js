@@ -4,6 +4,7 @@
 import { useState } from "react";
 import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
+import LandingEffects from "@/app/components/LandingEffects";
 import {
   Smartphone,
   Download,
@@ -55,16 +56,17 @@ export default function DownloadAppPage() {
   };
 
   const whatsappShareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareUrl)}&margin=6`;
+  const qrCodeUrl = "/brand/app-qr.png";
 
   return (
-    <div className="min-h-screen bg-slate-50/40 text-slate-900 flex flex-col font-sans selection:bg-slate-200 selection:text-slate-900">
+    <div className="landing-shell bg-white text-slate-900 font-sans overflow-x-hidden min-h-screen flex flex-col selection:bg-emerald-100 selection:text-emerald-900">
+      <LandingEffects />
       <PublicHeader />
 
-      <main className="flex-1 py-12 md:py-18 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
+      <main className="flex-1 pt-6 sm:pt-10 pb-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
         {/* Top Announcement Pill */}
         <div className="flex justify-center mb-8">
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs text-xs font-bold text-slate-700">
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-slate-200/90 shadow-xs text-xs font-bold text-slate-700">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
@@ -94,10 +96,10 @@ export default function DownloadAppPage() {
               <a
                 href={directApkUrl}
                 download="bimaheadquarter.apk"
-                className="group flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:border-slate-300 hover:shadow-md transition-all active:scale-[0.99] text-left max-w-lg cursor-pointer"
+                className="group flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-xs hover:border-emerald-300 hover:shadow-md transition-all active:scale-[0.99] text-left max-w-lg cursor-pointer"
               >
                 <div className="flex items-center gap-4">
-                  <div className="h-13 w-13 sm:h-14 sm:w-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shadow-2xs group-hover:scale-105 transition-transform">
+                  <div className="h-13 w-13 sm:h-14 sm:w-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shadow-2xs group-hover:scale-105 group-hover:border-emerald-200 transition-all">
                     <Smartphone className="h-7 w-7 text-slate-800" strokeWidth={2.2} />
                   </div>
                   <div>
@@ -117,12 +119,12 @@ export default function DownloadAppPage() {
                 </div>
 
                 <div className="flex items-center gap-2 pl-3">
-                  <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/90 border border-slate-200 text-xs font-bold text-slate-700">
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-bold text-slate-700">
                     <Download className="h-3.5 w-3.5 text-slate-600" />
                     59 MB
                   </span>
-                  <div className="h-10 w-10 rounded-xl bg-slate-100 group-hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors">
-                    <ArrowRight className="h-5 w-5 text-slate-800 group-hover:translate-x-0.5 transition-transform" />
+                  <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200/80 group-hover:bg-emerald-600 group-hover:border-emerald-600 group-hover:text-white text-slate-700 flex items-center justify-center transition-all">
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>
               </a>
@@ -221,9 +223,12 @@ export default function DownloadAppPage() {
                   alt="Scan QR code to install BimaHeadquarter app"
                   width={204}
                   height={204}
-                  className="rounded-xl transition-transform group-hover:scale-102"
+                  className="rounded-xl transition-transform group-hover:scale-102 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareUrl)}&margin=4`;
+                  }}
                 />
-                <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 text-white shadow-md ring-4 ring-white">
+                <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-800 shadow-md ring-4 ring-white">
                   <QrCode className="h-4 w-4" />
                 </div>
               </div>
@@ -231,11 +236,11 @@ export default function DownloadAppPage() {
               <a
                 href={directApkUrl}
                 download="bimaheadquarter.apk"
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3.5 text-xs font-extrabold text-white hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
+                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-white hover:bg-emerald-50/70 text-slate-900 border border-slate-200 hover:border-emerald-300 px-4 py-3.5 text-xs font-black transition-all shadow-xs hover:shadow-sm cursor-pointer"
               >
-                <Download className="h-4 w-4 text-slate-300 group-hover:scale-110 transition-transform" />
+                <Download className="h-4 w-4 stroke-[2.5] text-emerald-600 group-hover:scale-110 transition-transform" />
                 <span>Direct Download APK (59 MB)</span>
-                <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-emerald-700 group-hover:translate-x-0.5 transition-transform" />
               </a>
             </div>
           </div>
@@ -253,7 +258,7 @@ export default function DownloadAppPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3.5 hover:shadow-md transition-shadow">
+            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-3.5 hover:shadow-sm hover:border-slate-300 transition-all">
               <div className="h-12 w-12 rounded-xl bg-slate-50 text-slate-800 flex items-center justify-center border border-slate-100">
                 <FileText className="h-6 w-6 text-slate-700" strokeWidth={2} />
               </div>
@@ -263,7 +268,7 @@ export default function DownloadAppPage() {
               </p>
             </div>
 
-            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3.5 hover:shadow-md transition-shadow">
+            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-3.5 hover:shadow-sm hover:border-slate-300 transition-all">
               <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center border border-emerald-100">
                 <LayoutDashboard className="h-6 w-6 text-emerald-700" strokeWidth={2} />
               </div>
@@ -273,7 +278,7 @@ export default function DownloadAppPage() {
               </p>
             </div>
 
-            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3.5 hover:shadow-md transition-shadow">
+            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-3.5 hover:shadow-sm hover:border-slate-300 transition-all">
               <div className="h-12 w-12 rounded-xl bg-slate-50 text-slate-800 flex items-center justify-center border border-slate-100">
                 <ShieldAlert className="h-6 w-6 text-slate-700" strokeWidth={2} />
               </div>
@@ -286,7 +291,7 @@ export default function DownloadAppPage() {
         </div>
 
         {/* 3-Step Installation Guide - Pristine White Cards (Zero Black Background) */}
-        <div className="rounded-3xl bg-white p-8 sm:p-10 border border-slate-200/90 shadow-sm mb-12">
+        <div className="rounded-3xl bg-white p-8 sm:p-10 border border-slate-200/90 shadow-xs mb-12">
           <div className="max-w-2xl mb-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-50 border border-emerald-200/80 text-[11px] font-black uppercase tracking-wider text-emerald-800 mb-2">
               <Sparkles className="h-3 w-3 text-emerald-600" />
@@ -301,10 +306,10 @@ export default function DownloadAppPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-slate-50/60 rounded-2xl p-6 border border-slate-200/80 hover:bg-slate-50 transition-colors space-y-3">
+            <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-2xs hover:border-slate-300 transition-all space-y-3">
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-black text-slate-400">01</div>
-                <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-2xs">
+                <div className="text-2xl font-black text-slate-300">01</div>
+                <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-2xs">
                   <Download className="h-5 w-5 text-slate-700" />
                 </div>
               </div>
@@ -314,10 +319,10 @@ export default function DownloadAppPage() {
               </p>
             </div>
 
-            <div className="bg-slate-50/60 rounded-2xl p-6 border border-slate-200/80 hover:bg-slate-50 transition-colors space-y-3">
+            <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-2xs hover:border-slate-300 transition-all space-y-3">
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-black text-slate-400">02</div>
-                <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-2xs">
+                <div className="text-2xl font-black text-slate-300">02</div>
+                <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-2xs">
                   <ShieldCheck className="h-5 w-5 text-emerald-600" />
                 </div>
               </div>
@@ -327,10 +332,10 @@ export default function DownloadAppPage() {
               </p>
             </div>
 
-            <div className="bg-slate-50/60 rounded-2xl p-6 border border-slate-200/80 hover:bg-slate-50 transition-colors space-y-3">
+            <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-2xs hover:border-slate-300 transition-all space-y-3">
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-black text-slate-400">03</div>
-                <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-2xs">
+                <div className="text-2xl font-black text-slate-300">03</div>
+                <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-2xs">
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                 </div>
               </div>

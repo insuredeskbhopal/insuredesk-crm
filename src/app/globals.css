@@ -74,6 +74,25 @@ video {
   height: auto;
 }
 
+.brand-logo-image {
+  max-height: 96px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.landing-mobile-menu {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  z-index: 1000 !important;
+  transform: translateX(105%) !important;
+}
+
+.landing-mobile-menu.open {
+  transform: translateX(0) !important;
+}
+
 main,
 section,
 article,
