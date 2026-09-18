@@ -21,11 +21,9 @@ import {
   ShieldAlert,
   CheckCircle2,
   Lock,
-  Star,
   Shield,
   Car,
   HeartPulse,
-  Building2,
   HelpCircle,
   ChevronDown,
   RefreshCw,
@@ -102,48 +100,47 @@ export default function DownloadAppPage() {
         aria-hidden="true"
       />
 
-      <main className="flex-1 pt-4 sm:pt-8 pb-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
+      <main className="flex-1 pt-6 sm:pt-10 pb-24 dl-app-container w-full">
         {/* =========================================================================
-            1. Hero Section
+            1. Hero Section (Rock-solid 2-column flex split)
             ========================================================================= */}
-        <section className="mb-16 lg:mb-20">
-          {/* Official Release Pill Badge */}
-          <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-slate-200/90 shadow-xs text-xs font-bold text-slate-700 hover:border-emerald-300 transition-colors">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
-              </span>
-              <span className="tracking-wide">OFFICIAL ANDROID RELEASE · v1.0.1</span>
-              <span className="text-slate-300">|</span>
-              <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Verified Clean Build
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
+        <section className="mb-16 lg:mb-24">
+          <div className="dl-hero-split">
             {/* Left Content Column */}
-            <div className="md:col-span-7 space-y-6 text-left">
-              <div className="space-y-3">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-[1.15]">
+            <div className="dl-hero-left space-y-6 text-left">
+              {/* Official Release Pill Badge */}
+              <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200/90 text-xs font-bold text-slate-700 shadow-2xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
+                </span>
+                <span className="tracking-wide">OFFICIAL ANDROID RELEASE · v1.0.1</span>
+                <span className="text-slate-300">|</span>
+                <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Verified Clean Build
+                </span>
+              </div>
+
+              {/* Main Headline & Subhead */}
+              <div className="space-y-3.5">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-[54px] font-black tracking-tight text-slate-900 leading-[1.12]">
                   Insurance Protection <br />
                   <span className="bg-gradient-to-r from-emerald-700 via-slate-900 to-emerald-800 bg-clip-text text-transparent">
                     Right In Your Pocket
                   </span>
                 </h1>
 
-                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                  Track your complete policy portfolio across Motor, Health, Fire &amp; Warehouse. Download official insurer PDF schedules offline, verify coverage terms, and trigger immediate claim advocacy directly from your Android phone.
+                <p className="text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed max-w-2xl">
+                  Track your complete policy portfolio across Motor, Health, Fire &amp; Warehouse. Download official insurer PDF schedules offline, verify coverage terms, and trigger immediate claim advocacy directly from your phone.
                 </p>
               </div>
 
-              {/* Main Prominent Store Card Button */}
+              {/* Prominent APK Download Button Card */}
               <div className="pt-1">
                 <a
                   href={directApkUrl}
                   download="bimaheadquarter.apk"
-                  className="group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-white border-2 border-emerald-600/30 hover:border-emerald-600 shadow-xs hover:shadow-lg hover:shadow-emerald-900/5 transition-all duration-300 active:scale-[0.99] text-left cursor-pointer w-full"
+                  className="group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-white border-2 border-emerald-600/30 hover:border-emerald-600 shadow-xs hover:shadow-xl hover:shadow-emerald-900/5 transition-all duration-300 active:scale-[0.99] text-left cursor-pointer w-full"
                 >
                   <div className="flex items-center gap-4">
                     <div className="h-13 w-13 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/70 border border-emerald-200/80 flex items-center justify-center text-emerald-800 shadow-2xs group-hover:scale-105 group-hover:border-emerald-300 transition-all shrink-0">
@@ -170,7 +167,7 @@ export default function DownloadAppPage() {
                       <Download className="h-3.5 w-3.5 text-slate-600" />
                       59 MB
                     </span>
-                    <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200/90 group-hover:bg-emerald-600 group-hover:border-emerald-600 group-hover:text-white text-slate-800 flex items-center justify-center transition-all shadow-2xs">
+                    <div className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-200/90 group-hover:bg-emerald-600 group-hover:border-emerald-600 group-hover:text-white text-slate-800 flex items-center justify-center transition-all shadow-2xs">
                       <ArrowRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </div>
@@ -247,13 +244,13 @@ export default function DownloadAppPage() {
               </div>
             </div>
 
-            {/* Right Column: QR Scanner Dock */}
-            <div className="md:col-span-5 flex justify-center md:justify-end">
-              <div className="w-full max-w-[340px] sm:max-w-[360px] rounded-[32px] bg-white p-6 shadow-lg border border-slate-200/90 text-center relative">
+            {/* Right Column: QR Scanner & Interactive Preview Card */}
+            <div className="dl-hero-right">
+              <div className="w-full max-w-[360px] sm:max-w-[380px] rounded-[32px] bg-white p-6 sm:p-7 shadow-xl shadow-slate-900/5 border border-slate-200/90 text-center relative">
                 {/* Header of Preview Box */}
                 <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100">
                   <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
+                    <div className="h-8 w-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
                       <QrCode className="h-4 w-4" />
                     </div>
                     <div className="text-left">
@@ -261,19 +258,19 @@ export default function DownloadAppPage() {
                       <div className="text-[10px] text-slate-500">Point phone camera to install</div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 border border-emerald-100 text-emerald-800">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800">
                     Direct
                   </span>
                 </div>
 
                 {/* QR Code Container */}
-                <div className="mx-auto w-48 h-48 sm:w-52 sm:h-52 p-3 bg-white rounded-2xl border-2 border-slate-100 shadow-2xs flex items-center justify-center mb-4 relative group">
+                <div className="mx-auto w-52 h-52 sm:w-56 sm:h-56 p-3.5 bg-white rounded-2xl border-2 border-slate-100 shadow-2xs flex items-center justify-center mb-4 relative group">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={qrCodeUrl}
                     alt="Scan QR code to install BimaHeadquarter app"
-                    width={192}
-                    height={192}
+                    width={208}
+                    height={208}
                     className="rounded-xl transition-transform group-hover:scale-102 object-contain"
                     onError={(e) => {
                       e.currentTarget.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareUrl)}&margin=4`;
@@ -288,29 +285,27 @@ export default function DownloadAppPage() {
                 <a
                   href={directApkUrl}
                   download="bimaheadquarter.apk"
-                  className="group flex w-full items-center justify-center gap-2 rounded-xl bg-white hover:bg-emerald-50/70 text-slate-900 border border-slate-200 hover:border-emerald-300 px-4 py-2.5 text-xs font-black transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                  className="group flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white px-4 py-3 text-xs font-bold transition-all shadow-sm hover:shadow-md cursor-pointer mb-3"
                 >
-                  <Download className="h-4 w-4 stroke-[2.5] text-emerald-600 group-hover:scale-110 transition-transform" />
+                  <Download className="h-4 w-4 stroke-[2.5] text-white group-hover:scale-110 transition-transform" />
                   <span>Direct Download APK (59 MB)</span>
-                  <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-emerald-700 group-hover:translate-x-0.5 transition-transform" />
+                  <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-white group-hover:translate-x-0.5 transition-transform" />
                 </a>
 
-                {/* Live Mobile Vault Highlights */}
-                <div className="mt-4 pt-3 border-t border-slate-100 text-left space-y-1.5">
+                {/* Feature Tags Preview */}
+                <div className="pt-3 border-t border-slate-100 text-left space-y-2">
                   <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                    Live Mobile Features
+                    Live Mobile Vault Highlights
                   </div>
-                  <div className="rounded-xl bg-slate-50/80 p-2.5 border border-slate-200/70 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <Car className="h-4 w-4 text-emerald-600" />
-                      <div>
-                        <div className="font-bold text-slate-800 text-[11px]">Motor &amp; Fleet Vault</div>
-                        <div className="text-[10px] text-slate-500">1-Tap PDF Schedules</div>
-                      </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-lg bg-slate-50 p-2 border border-slate-100 flex items-center gap-1.5">
+                      <Car className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      <span className="text-[11px] font-semibold text-slate-700 truncate">Motor PDF</span>
                     </div>
-                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                      Offline
-                    </span>
+                    <div className="rounded-lg bg-slate-50 p-2 border border-slate-100 flex items-center gap-1.5">
+                      <HeartPulse className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      <span className="text-[11px] font-semibold text-slate-700 truncate">Health Cards</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -319,9 +314,9 @@ export default function DownloadAppPage() {
         </section>
 
         {/* =========================================================================
-            2. Social Proof & Performance Metrics Bar
+            2. Social Proof & Key Performance Metrics Strip (Wide layout)
             ========================================================================= */}
-        <section className="mb-16 lg:mb-20">
+        <section className="mb-16 lg:mb-24">
           <div className="rounded-3xl bg-white border border-slate-200/90 shadow-sm p-6 sm:p-8">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
               <div className="text-center pt-3 lg:pt-0">
@@ -348,10 +343,10 @@ export default function DownloadAppPage() {
         </section>
 
         {/* =========================================================================
-            3. Feature Bento Grid: Why Install BimaHeadquarter
+            3. Feature Bento Grid: Full Container Width (No side void)
             ========================================================================= */}
-        <section className="mb-16 lg:mb-20">
-          <div className="text-center max-w-2xl mx-auto mb-10">
+        <section className="mb-16 lg:mb-24">
+          <div className="text-center max-w-2xl mx-auto mb-12">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-50 border border-emerald-200/80 text-[11px] font-black uppercase tracking-wider text-emerald-800 mb-2">
               <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
               Engineered For Policyholders
@@ -364,17 +359,19 @@ export default function DownloadAppPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="dl-bento-grid">
             {/* Bento Card 1: 1-Tap Policy PDF Vault */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all space-y-3.5 text-left">
-              <div className="h-11 w-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 shadow-2xs">
-                <FileText className="h-5 w-5" />
+            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-md transition-all space-y-3.5 text-left flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="h-11 w-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 shadow-2xs">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <h3 className="font-bold text-base text-slate-900">1-Tap Offline Policy Vault</h3>
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  Download verified insurer policy schedules directly to your phone. Access official digital certificates instantly during traffic checks or hospital admissions without internet.
+                </p>
               </div>
-              <h3 className="font-bold text-base text-slate-900">1-Tap Offline Policy Vault</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Download verified insurer policy schedules directly to your phone. Access official digital certificates instantly during traffic checks or hospital admissions without internet.
-              </p>
-              <div className="flex flex-wrap gap-1.5 pt-1">
+              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-100">
                 <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-[10px] font-bold text-slate-700">
                   Motor Schedules
                 </span>
@@ -388,15 +385,17 @@ export default function DownloadAppPage() {
             </div>
 
             {/* Bento Card 2: All Policies in One Dashboard */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all space-y-3.5 text-left">
-              <div className="h-11 w-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 shadow-2xs">
-                <LayoutDashboard className="h-5 w-5" />
+            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-md transition-all space-y-3.5 text-left flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="h-11 w-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 shadow-2xs">
+                  <LayoutDashboard className="h-5 w-5" />
+                </div>
+                <h3 className="font-bold text-base text-slate-900">Unified Portfolio Dashboard</h3>
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  Track personal, family, and commercial fleet coverage in one consolidated view. Tagged with vehicle registration numbers, insured declared value (IDV), and live policy status.
+                </p>
               </div>
-              <h3 className="font-bold text-base text-slate-900">Unified Portfolio Dashboard</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Track personal, family, and commercial fleet coverage in one consolidated view. Tagged with vehicle registration numbers, insured declared value (IDV), and live policy status.
-              </p>
-              <div className="flex flex-wrap gap-1.5 pt-1">
+              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-100">
                 <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-[10px] font-bold text-slate-700">
                   Multi-Vehicle
                 </span>
@@ -410,15 +409,17 @@ export default function DownloadAppPage() {
             </div>
 
             {/* Bento Card 3: Fast Claim Filing & Advocacy */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all space-y-3.5 text-left">
-              <div className="h-11 w-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700 shadow-2xs">
-                <ShieldAlert className="h-5 w-5" />
+            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-md transition-all space-y-3.5 text-left flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="h-11 w-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700 shadow-2xs">
+                  <ShieldAlert className="h-5 w-5" />
+                </div>
+                <h3 className="font-bold text-base text-slate-900">Emergency Claim Advocacy</h3>
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  Had an accident or sudden hospitalization? Trigger immediate claim support directly from the app. Upload garage estimates or discharge bills for expert review.
+                </p>
               </div>
-              <h3 className="font-bold text-base text-slate-900">Emergency Claim Advocacy</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Had an accident or sudden hospitalization? Trigger immediate claim support directly from the app. Upload garage estimates or discharge bills for expert review.
-              </p>
-              <div className="flex flex-wrap gap-1.5 pt-1">
+              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-100">
                 <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-[10px] font-bold text-slate-700">
                   Surveyor Assistance
                 </span>
@@ -429,44 +430,74 @@ export default function DownloadAppPage() {
             </div>
 
             {/* Bento Card 4: Renewal Reminders */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all space-y-3.5 text-left">
-              <div className="h-11 w-11 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-700 shadow-2xs">
-                <RefreshCw className="h-5 w-5" />
+            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-md transition-all space-y-3.5 text-left flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="h-11 w-11 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-700 shadow-2xs">
+                  <RefreshCw className="h-5 w-5" />
+                </div>
+                <h3 className="font-bold text-base text-slate-900">Timely Renewal Alerts</h3>
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  Never let your insurance lapse or lose your No Claim Bonus (NCB). Get automated notifications 30 days prior to expiration with transparent quote comparisons from 25+ insurers.
+                </p>
               </div>
-              <h3 className="font-bold text-base text-slate-900">Timely Renewal Alerts</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Never let your insurance lapse or lose your No Claim Bonus (NCB). Get automated notifications 30 days prior to expiration with transparent quote comparisons from 25+ insurers.
-              </p>
+              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-100">
+                <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-[10px] font-bold text-slate-700">
+                  NCB Protection
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-[10px] font-bold text-slate-700">
+                  Multi-Insurer Quotes
+                </span>
+              </div>
             </div>
 
             {/* Bento Card 5: Fine Print Audits */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all space-y-3.5 text-left">
-              <div className="h-11 w-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 shadow-2xs">
-                <FileCheck className="h-5 w-5" />
+            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-md transition-all space-y-3.5 text-left flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="h-11 w-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 shadow-2xs">
+                  <FileCheck className="h-5 w-5" />
+                </div>
+                <h3 className="font-bold text-base text-slate-900">Verified Insurer Direct Sync</h3>
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  Direct policy matching across ICICI Lombard, HDFC ERGO, Tata AIG, Star Health, Go Digit, Bajaj Allianz, and New India Assurance without manual data entry.
+                </p>
               </div>
-              <h3 className="font-bold text-base text-slate-900">Verified Insurer Direct Sync</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Direct policy matching across ICICI Lombard, HDFC ERGO, Tata AIG, Star Health, Go Digit, Bajaj Allianz, and New India Assurance without manual data entry.
-              </p>
+              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-100">
+                <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-[10px] font-bold text-slate-700">
+                  Zero Manual Entry
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-[10px] font-bold text-slate-700">
+                  Instant Verification
+                </span>
+              </div>
             </div>
 
-            {/* Bento Card 6: Direct Advisory Desk */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-xs transition-all space-y-3.5 text-left">
-              <div className="h-11 w-11 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-700 shadow-2xs">
-                <Shield className="h-5 w-5" />
+            {/* Bento Card 6: Institutional Governance */}
+            <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 hover:shadow-md transition-all space-y-3.5 text-left flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="h-11 w-11 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-700 shadow-2xs">
+                  <Shield className="h-5 w-5" />
+                </div>
+                <h3 className="font-bold text-base text-slate-900">Institutional Governance</h3>
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  Backed by InsureDesk IMF Pvt. Ltd. (IRDAI Regd. IMF182444280220190240). Unbiased fiduciary guidance dedicated entirely to the policyholder&apos;s legal interests.
+                </p>
               </div>
-              <h3 className="font-bold text-base text-slate-900">Institutional Governance</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Backed by InsureDesk IMF Pvt. Ltd. (IRDAI Regd. IMF182444280220190240). Unbiased fiduciary guidance dedicated entirely to the policyholder&apos;s legal interests.
-              </p>
+              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-100">
+                <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-[10px] font-bold text-slate-700">
+                  IRDAI Compliant
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/70 text-[10px] font-bold text-slate-700">
+                  Fiduciary Guidance
+                </span>
+              </div>
             </div>
           </div>
         </section>
 
         {/* =========================================================================
-            4. Step-by-Step Installation Guide
+            4. Step-by-Step Installation Guide (Full width)
             ========================================================================= */}
-        <section className="mb-16 lg:mb-20">
+        <section className="mb-16 lg:mb-24">
           <div className="rounded-3xl bg-white p-6 sm:p-10 border border-slate-200/90 shadow-sm">
             <div className="max-w-2xl mb-8 text-left">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-50 border border-emerald-200/80 text-[11px] font-black uppercase tracking-wider text-emerald-800 mb-2">
@@ -538,9 +569,9 @@ export default function DownloadAppPage() {
         {/* =========================================================================
             5. Frequently Asked Questions
             ========================================================================= */}
-        <section className="mb-12">
-          <div className="max-w-3xl mx-auto text-left">
-            <div className="text-center mb-8">
+        <section className="mb-16">
+          <div className="max-w-4xl mx-auto text-left">
+            <div className="text-center mb-10">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-100 text-[11px] font-black uppercase tracking-wider text-slate-700 mb-2">
                 <HelpCircle className="h-3.5 w-3.5" />
                 Got Questions?
@@ -550,7 +581,7 @@ export default function DownloadAppPage() {
               </h2>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {faqs.map((faq, index) => {
                 const isOpen = activeFaq === index;
                 return (
@@ -578,6 +609,39 @@ export default function DownloadAppPage() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            6. Bottom Conversion Strip
+            ========================================================================= */}
+        <section className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-8 sm:p-12 text-center text-white shadow-xl">
+          <div className="max-w-2xl mx-auto space-y-4">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              Ready to Carry Your Policy Fortress?
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Install the official BimaHeadquarter Android APK today. Free lifetime policy tracking, verified insurer PDF schedules, and expert claim assistance.
+            </p>
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a
+                href={directApkUrl}
+                download="bimaheadquarter.apk"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-sm shadow-md transition-all active:scale-95"
+              >
+                <Download className="h-4 w-4 text-emerald-700 stroke-[2.5]" />
+                <span>Download APK Now (59 MB)</span>
+              </a>
+              <a
+                href={whatsappShareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-white/20 transition-all active:scale-95"
+              >
+                <MessageCircle className="h-4 w-4 fill-emerald-400 text-emerald-400" />
+                <span>Share via WhatsApp</span>
+              </a>
             </div>
           </div>
         </section>
