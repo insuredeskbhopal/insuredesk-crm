@@ -885,89 +885,101 @@ export default function RootPage() {
             </div>
           </section>
 
-          {/* Mobile App Download & Share Section */}
+          {/* Mobile App Download & Share Section (Compact Side-by-Side Layout) */}
           <section
-            className="home-section-container py-14"
+            className="home-section-container py-6 sm:py-10"
             id="mobile-app"
             aria-labelledby="mobile-app-heading"
           >
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-8 sm:p-12 text-white shadow-2xl border border-white/10">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-6 sm:p-8 lg:p-10 text-white shadow-2xl border border-white/10">
               <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl pointer-events-none" />
               <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-emerald-600/15 blur-3xl pointer-events-none" />
 
-              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-                <div className="lg:col-span-7 space-y-6 text-left">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold tracking-wide">
+              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 lg:gap-12">
+                {/* Left Column: Heading, Value Props & Actions */}
+                <div className="flex-1 min-w-0 space-y-4 sm:space-y-5 text-left">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-[11px] font-bold tracking-wide">
                     <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                     BIMAHEADQUARTER MOBILE APP · ANDROID v1.0.1
                   </div>
 
-                  <h2 id="mobile-app-heading" className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                    Manage Policies &amp; Download PDFs <br />
+                  <h2 id="mobile-app-heading" className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                    Manage Policies &amp; Download PDFs <br className="hidden sm:inline" />
                     <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-teal-300 bg-clip-text text-transparent">
                       Directly From Your Smartphone
                     </span>
                   </h2>
 
-                  <p className="text-slate-300 text-base sm:text-lg leading-relaxed max-w-xl">
+                  <p className="text-slate-300 text-xs sm:text-sm lg:text-base leading-relaxed max-w-xl">
                     Experience seamless policy self-service. Access verified policy documents, track renewal dates, view vehicle specifications, and submit claims with instant advocacy.
                   </p>
 
-                  <div className="flex flex-wrap gap-4 pt-2">
+                  <div className="flex flex-wrap items-center gap-3 pt-1">
                     <a
                       href="/api/downloads/app"
                       download="bimaheadquarter.apk"
-                      className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30 hover:-translate-y-0.5 transition-all"
+                      className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-600/30 hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
                     >
-                      <span className="material-symbols-outlined text-xl">download</span>
+                      <span className="material-symbols-outlined text-lg">download</span>
                       <span>Download Android APK</span>
+                      <span className="px-1.5 py-0.5 rounded bg-blue-800/80 text-[10px] font-bold text-blue-200">
+                        59 MB
+                      </span>
                     </a>
 
                     <Link
                       href="/download-app"
-                      className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-sm transition-all"
+                      className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
                     >
-                      <span className="material-symbols-outlined text-lg">share</span>
+                      <span className="material-symbols-outlined text-base">share</span>
                       <span>Share Download Link</span>
                     </Link>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-white/10 text-xs text-slate-300">
+                  {/* 3 Core Value Props in Clean Compact Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3 border-t border-white/10 text-xs text-slate-300">
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-emerald-400 text-base">check_circle</span>
-                      <span>1-Tap PDF Download</span>
+                      <span className="font-semibold">1-Tap PDF Download</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-emerald-400 text-base">check_circle</span>
-                      <span>Real-Time Sync</span>
+                      <span className="font-semibold">Real-Time Sync</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-emerald-400 text-base">check_circle</span>
-                      <span>Emergency Claim Filing</span>
+                      <span className="font-semibold">Emergency Claim Filing</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="lg:col-span-5 flex justify-center">
-                  <div className="w-full max-w-xs rounded-2xl bg-white/10 backdrop-blur-md p-6 border border-white/20 text-center shadow-2xl">
-                    <div className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-1">
+                {/* Right Column: Compact Docked QR Scanner Card */}
+                <div className="w-full md:w-auto shrink-0 flex justify-center md:justify-end">
+                  <div className="w-full max-w-[270px] sm:max-w-[290px] rounded-2xl bg-white/10 backdrop-blur-md p-4 sm:p-5 border border-white/20 text-center shadow-xl">
+                    <div className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-0.5">
                       Scan To Install
                     </div>
-                    <p className="text-[11px] text-slate-300 mb-4">
+                    <p className="text-[11px] text-slate-300 mb-3">
                       Point phone camera to install instantly
                     </p>
-                    <div className="mx-auto w-44 h-44 bg-white p-2.5 rounded-xl shadow-inner flex items-center justify-center mb-4">
+                    <div className="mx-auto w-36 h-36 sm:w-40 sm:h-40 bg-white p-2.5 rounded-xl shadow-inner flex items-center justify-center mb-3 relative overflow-hidden group">
+                      {/* Animated Laser Scan Beam */}
+                      <div className="dl-scan-beam" />
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https%3A%2F%2Fwww.bimaheadquarter.com%2Fdownload-app&margin=6"
+                        src="/brand/app-qr.png"
                         alt="Scan QR code to install BimaHeadquarter mobile app"
-                        width={160}
-                        height={160}
-                        className="rounded-lg"
+                        width={140}
+                        height={140}
+                        className="rounded-lg object-contain"
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https%3A%2F%2Fwww.bimaheadquarter.com%2Fdownload-app&margin=6";
+                        }}
                       />
                     </div>
-                    <div className="text-[11px] text-slate-300">
-                      APK Size: <strong>~28 MB</strong> • Verified Clean Build
+                    <div className="text-[10px] text-slate-300 font-medium">
+                      APK Size: <strong className="text-white">~59 MB</strong> • Verified Clean Build
                     </div>
                   </div>
                 </div>
