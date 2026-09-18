@@ -914,24 +914,26 @@ export default function RootPage() {
                     Experience seamless policy self-service. Access verified policy documents, track renewal dates, view vehicle specifications, and submit claims with instant advocacy.
                   </p>
 
-                  <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <div className="flex flex-wrap items-center gap-3.5 pt-1.5">
                     <a
                       href="/api/downloads/app"
                       download="bimaheadquarter.apk"
-                      className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-600/30 hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
+                      className="home-apk-download-btn dl-shimmer group"
                     >
-                      <span className="material-symbols-outlined text-lg">download</span>
-                      <span>Download Android APK</span>
-                      <span className="px-1.5 py-0.5 rounded bg-blue-800/80 text-[10px] font-bold text-blue-200">
-                        59 MB
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/20 text-white shadow-inner group-hover:scale-110 transition-transform">
+                        <span className="material-symbols-outlined text-[18px]">download</span>
                       </span>
+                      <span>Download Android APK</span>
+                      <span className="home-apk-badge">59 MB</span>
                     </a>
 
                     <Link
                       href="/download-app"
-                      className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
+                      className="home-apk-share-btn group"
                     >
-                      <span className="material-symbols-outlined text-base">share</span>
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/10 text-white/90 group-hover:text-white transition-colors">
+                        <span className="material-symbols-outlined text-[17px]">share</span>
+                      </span>
                       <span>Share Download Link</span>
                     </Link>
                   </div>

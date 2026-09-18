@@ -1002,6 +1002,84 @@ tbody tr:hover {
   }
 }
 
+/* =========================================================================
+   Premium CTA Buttons for Mobile App Banner
+   ========================================================================= */
+.home-apk-download-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: 0.875rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+  border: 1px solid rgba(147, 197, 253, 0.4);
+  box-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.home-apk-download-btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  box-shadow: 0 8px 28px -2px rgba(37, 99, 235, 0.65), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+  border-color: rgba(191, 219, 254, 0.6);
+  color: #ffffff !important;
+}
+
+.home-apk-download-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.home-apk-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  color: #eff6ff;
+  backdrop-filter: blur(4px);
+}
+
+.home-apk-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.85rem 1.35rem;
+  border-radius: 0.875rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #f1f5f9 !important;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.home-apk-share-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+}
+
+.home-apk-share-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
 
 
 
