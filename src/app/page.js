@@ -972,10 +972,6 @@ export default function RootPage() {
                         width={140}
                         height={140}
                         className="rounded-lg object-contain"
-                        onError={(e) => {
-                          e.currentTarget.src =
-                            "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https%3A%2F%2Fwww.bimaheadquarter.com%2Fdownload-app&margin=6";
-                        }}
                       />
                     </div>
                     <div className="text-[10px] text-slate-300 font-medium">
