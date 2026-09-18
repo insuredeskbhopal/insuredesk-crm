@@ -225,7 +225,7 @@ export default function RootPage() {
         /* Crystal-Clear Hardware-Accelerated Reveal */
         .reveal {
             opacity: 0;
-            transform: translateY(24px);
+            transform: translateY(28px);
             transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
             transition-delay: var(--reveal-delay, 0ms);
             will-change: opacity, transform;
@@ -236,14 +236,144 @@ export default function RootPage() {
             transform: translateY(0);
         }
 
-        .entry-anim {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: entry 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        /* Hero Entrance Staggered Keyframes */
+        @keyframes hero-fade-up {
+            0% {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        @keyframes entry {
-            to { opacity: 1; transform: translateY(0); }
+        .hero-animate-badge {
+            animation: hero-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+        }
+        .hero-animate-title {
+            animation: hero-fade-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+        }
+        .hero-animate-sub {
+            animation: hero-fade-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both;
+        }
+        .hero-animate-desc {
+            animation: hero-fade-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.38s both;
+        }
+        .hero-animate-actions {
+            animation: hero-fade-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.48s both;
+        }
+        .hero-animate-stats {
+            animation: hero-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.58s both;
+        }
+
+        /* Micro-interactions and hover transitions */
+        .hero-btn-primary {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+        }
+        .hero-btn-primary:hover {
+            transform: translateY(-3px) scale(1.01) !important;
+            box-shadow: 0 14px 28px -4px rgba(3, 22, 56, 0.25) !important;
+        }
+        .hero-btn-secondary {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease !important;
+        }
+        .hero-btn-secondary:hover {
+            transform: translateY(-2px) !important;
+            background-color: rgba(3, 22, 56, 0.05) !important;
+        }
+        .hero-stat-col {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hero-stat-col:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Partner Logos Hover Transition */
+        .partner-logo-item {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+        }
+        .partner-logo-item:hover {
+            transform: scale(1.08);
+            opacity: 1;
+        }
+
+        /* Company Overview Items Hover Transitions */
+        .company-overview-item {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.25s ease !important;
+        }
+        .company-overview-item:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 16px 36px -8px rgba(3, 22, 56, 0.1) !important;
+        }
+        .company-overview-icon {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+        }
+        .company-overview-item:hover .company-overview-icon {
+            transform: scale(1.15);
+            color: #2563eb !important;
+        }
+
+        /* Claims Process Timeline Transitions */
+        .claims-process-step {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease, box-shadow 0.25s ease !important;
+            border-radius: 16px;
+        }
+        .claims-process-step:hover {
+            transform: translateX(6px) !important;
+            background-color: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 8px 24px -4px rgba(3, 22, 56, 0.06);
+        }
+        .claims-process-number {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease, color 0.25s ease;
+        }
+        .claims-process-step:hover .claims-process-number {
+            transform: scale(1.1);
+            background-color: #2563eb !important;
+            color: #ffffff !important;
+        }
+        .claims-process-media img {
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .claims-process-media:hover img {
+            transform: scale(1.025);
+        }
+
+        /* FAQ Card Transitions & Accordion Animation */
+        .home-faq-card {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease !important;
+        }
+        .home-faq-card:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 12px 28px -6px rgba(3, 22, 56, 0.08) !important;
+        }
+        .home-faq-icon-bubble {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease !important;
+        }
+        details[open] .home-faq-icon-bubble {
+            transform: rotate(90deg);
+        }
+        details[open] .home-faq-answer-wrap {
+            animation: faq-reveal-down 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes faq-reveal-down {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* CTA Banner Hover Effects */
+        .home-cta-action-card {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
+        }
+        .home-cta-action-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 24px 50px -10px rgba(3, 22, 56, 0.15) !important;
         }
 
         .landing-shell #hero .hero-inner-container {
@@ -430,7 +560,7 @@ export default function RootPage() {
             <div className="hero-inner-container max-w-container-max w-full mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
               <div className="hero-content flex flex-col items-start text-left justify-center max-w-[680px]">
                 {/* Live Status Pill Badge */}
-                <div className="hero-badge-pill mb-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/15 bg-white/90 backdrop-blur-md shadow-xs">
+                <div className="hero-badge-pill hero-animate-badge mb-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/15 bg-white/90 backdrop-blur-md shadow-xs">
                   <span className="hero-badge-dot" aria-hidden="true" />
                   <span className="text-[11px] md:text-[12px] font-bold tracking-wide uppercase text-primary">
                     IRDAI Licensed IMF Advisory • Bhopal
@@ -438,18 +568,18 @@ export default function RootPage() {
                 </div>
 
                 {/* Main Headline with Shimmering Gradient Accent */}
-                <h1 className="hero-headline typing-headline font-display-lg text-display-lg text-primary mb-3 leading-tight text-[40px] md:text-[48px] font-bold text-left">
+                <h1 className="hero-headline typing-headline hero-animate-title font-display-lg text-display-lg text-primary mb-3 leading-tight text-[40px] md:text-[48px] font-bold text-left">
                   Insurance Guidance for Your{" "}
                   <span className="hero-shimmer-text">Life &amp; Business</span>
                 </h1>
 
-                <p className="hero-subheading text-secondary text-[20px] md:text-[24px] font-bold mb-5">
+                <p className="hero-subheading hero-animate-sub text-secondary text-[20px] md:text-[24px] font-bold mb-5">
                   {HOMEPAGE_CONTENT.hero.subheading}
                 </p>
-                <p className="hero-description font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-left">
+                <p className="hero-description hero-animate-desc font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl text-[18px] text-left">
                   {HOMEPAGE_CONTENT.hero.description}
                 </p>
-                <div className="hero-actions flex flex-wrap gap-4 justify-start">
+                <div className="hero-actions hero-animate-actions flex flex-wrap gap-4 justify-start">
                   <a
                     href="#solutions"
                     className="hero-btn-primary px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-xl hover:translate-y-[-2px] transition-all border-0 min-h-0 text-[14px] inline-flex items-center justify-center relative overflow-hidden"
@@ -470,7 +600,7 @@ export default function RootPage() {
                     </span>
                   </a>
                 </div>
-                <div className="hero-stats-container">
+                <div className="hero-stats-container hero-animate-stats">
                   {HOMEPAGE_CONTENT.hero.stats.map((stat, idx) => (
                     <div className="hero-stat-col" key={idx}>
                       <span
@@ -722,7 +852,7 @@ export default function RootPage() {
           <section className="company-overview" aria-labelledby="company-overview-heading">
             <div className="home-section-container">
               <div className="company-overview-layout">
-                <div className="company-overview-intro">
+                <div className="company-overview-intro reveal">
                   <BrandLogo className="company-overview-brand" />
                   <div>
                     <h2 id="company-overview-heading">
@@ -737,7 +867,7 @@ export default function RootPage() {
                 </div>
                 <div className="company-overview-details">
                   {HOMEPAGE_CONTENT.whyChooseUs.cards.map((card) => (
-                    <article className="company-overview-item" key={card.title}>
+                    <article className="company-overview-item reveal" key={card.title}>
                       <span className="company-overview-icon material-symbols-outlined" aria-hidden="true">
                         {card.icon}
                       </span>
@@ -758,7 +888,7 @@ export default function RootPage() {
             id="process"
             aria-labelledby="claims-process-heading"
           >
-            <div className="claims-process-header">
+            <div className="claims-process-header reveal">
               <div>
                 <span className="claims-process-kicker">{HOMEPAGE_CONTENT.processSection.kicker}</span>
                 <h2 id="claims-process-heading">{HOMEPAGE_CONTENT.processSection.heading}</h2>
@@ -769,7 +899,7 @@ export default function RootPage() {
               </a>
             </div>
             <div className="claims-process-layout">
-              <div className="claims-process-media">
+              <div className="claims-process-media reveal">
                 <Image
                   alt="Bima Headquarter insurance claim assistance consultation"
                   src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=80"
@@ -780,7 +910,7 @@ export default function RootPage() {
               </div>
               <ol className="claims-process-timeline" role="list">
                 {HOMEPAGE_CONTENT.processSection.steps.map((step) => (
-                  <li className="claims-process-step" key={step.number}>
+                  <li className="claims-process-step reveal" key={step.number}>
                     <span className="claims-process-number" aria-hidden="true">{step.number}</span>
                     <div>
                       <h3>{step.title}</h3>
@@ -800,7 +930,7 @@ export default function RootPage() {
           >
             <div className="home-faq-layout">
               {/* Left Column: Context & Direct Advisor Card */}
-              <div className="home-faq-sidebar">
+              <div className="home-faq-sidebar reveal">
                 <div className="home-faq-badge">
                   <span className="home-faq-pulse-dot" aria-hidden="true" />
                   <span>Clear Answers • No Jargon</span>
@@ -861,7 +991,7 @@ export default function RootPage() {
                   <details
                     key={faq.question}
                     name="homepage-faq"
-                    className="home-faq-card"
+                    className="home-faq-card reveal"
                     {...(idx === 0 ? { open: true } : {})}
                   >
                     <summary className="home-faq-summary">
@@ -891,7 +1021,7 @@ export default function RootPage() {
             id="mobile-app"
             aria-labelledby="mobile-app-heading"
           >
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-6 sm:p-8 lg:p-10 text-white shadow-2xl border border-white/10">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-6 sm:p-8 lg:p-10 text-white shadow-2xl border border-white/10 reveal">
               <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl pointer-events-none" />
               <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-emerald-600/15 blur-3xl pointer-events-none" />
 
@@ -987,7 +1117,7 @@ export default function RootPage() {
             id="cta-banner"
             aria-labelledby="cta-banner-heading"
           >
-            <div className="home-cta-card">
+            <div className="home-cta-card reveal">
               <div className="home-cta-mesh-bg" aria-hidden="true">
                 <div className="home-cta-glow-blue-1" />
                 <div className="home-cta-glow-blue-2" />

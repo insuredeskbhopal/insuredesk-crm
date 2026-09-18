@@ -47,7 +47,7 @@ export default function LandingEffects() {
 
     // Add staggered cascade delays to sibling cards
     const gridContainers = document.querySelectorAll(
-      ".services-grid, .sh-services-grid, .hero-stats-container, .company-overview-details, .claims-process-timeline, .contact-bottom-grid, .blog-grid"
+      ".services-grid, .sh-services-grid, .hero-stats-container, .company-overview-details, .claims-process-timeline, .home-faq-accordion-group, .contact-bottom-grid, .blog-grid"
     );
     gridContainers.forEach((container) => {
       const children = container.querySelectorAll(".reveal, .landing-auto-reveal");
