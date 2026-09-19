@@ -825,9 +825,34 @@ tbody tr:hover {
   .dl-hero-right {
     width: auto;
     max-width: 480px;
-    justify-content: flex-end;
+    justify-content: center;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
   }
 }
+
+/* Phone Mockup Frame */
+.dl-phone-frame {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .dl-phone-frame {
+    display: block;
+  }
+}
+
+/* Floating QR Card */
+.dl-qr-float {
+  animation: dl-float-slow 4s ease-in-out 1s infinite;
+}
+
+/* Hero Staggered Entrance Animations */
+.dl-hero-anim-1 { animation: hero-silky-reveal 650ms var(--ease-soft, cubic-bezier(0.16,1,0.3,1)) 180ms both; }
+.dl-hero-anim-2 { animation: hero-silky-reveal 700ms var(--ease-soft, cubic-bezier(0.16,1,0.3,1)) 300ms both; }
+.dl-hero-anim-3 { animation: hero-silky-reveal 650ms var(--ease-soft, cubic-bezier(0.16,1,0.3,1)) 440ms both; }
+.dl-hero-anim-4 { animation: hero-silky-reveal 650ms var(--ease-soft, cubic-bezier(0.16,1,0.3,1)) 560ms both; }
+.dl-hero-anim-5 { animation: hero-silky-reveal 650ms var(--ease-soft, cubic-bezier(0.16,1,0.3,1)) 680ms both; }
+.dl-hero-anim-6 { animation: hero-silky-reveal 650ms var(--ease-soft, cubic-bezier(0.16,1,0.3,1)) 780ms both; }
 
 .dl-bento-grid {
   display: grid;
@@ -1081,6 +1106,290 @@ tbody tr:hover {
 .home-apk-share-btn .material-symbols-outlined {
   font-size: 1.125rem;
   color: #f1f5f9;
+}
+
+/* =========================================================================
+   Global Motion System Tokens & Coordinated Transitions
+   ========================================================================= */
+:root {
+  --motion-fast: 180ms;
+  --motion-normal: 350ms;
+  --motion-reveal: 650ms;
+  --motion-slow: 900ms;
+  --ease-primary: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Reusable Reveal Variants */
+.reveal,
+.reveal-fade-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity var(--motion-reveal) var(--ease-primary),
+              transform var(--motion-reveal) var(--ease-primary);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal-fade-left {
+  opacity: 0;
+  transform: translateX(-24px);
+  transition: opacity var(--motion-reveal) var(--ease-primary),
+              transform var(--motion-reveal) var(--ease-primary);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal-fade-right {
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity var(--motion-reveal) var(--ease-primary),
+              transform var(--motion-reveal) var(--ease-primary);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.97);
+  transition: opacity var(--motion-reveal) var(--ease-soft),
+              transform var(--motion-reveal) var(--ease-soft);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal-mask {
+  clip-path: inset(0 0 35px 0);
+  opacity: 0;
+  transform: translateY(18px);
+  transition: clip-path var(--motion-reveal) var(--ease-primary),
+              opacity var(--motion-reveal) var(--ease-primary),
+              transform var(--motion-reveal) var(--ease-primary);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: clip-path, opacity, transform;
+}
+
+/* Active State Triggered by IntersectionObserver */
+.reveal.active,
+.reveal-fade-up.active,
+.reveal-fade-left.active,
+.reveal-fade-right.active,
+.reveal-scale.active {
+  opacity: 1 !important;
+  transform: translate(0, 0) scale(1) !important;
+}
+
+.reveal-mask.active {
+  clip-path: inset(0 0 0 0) !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Page Route Transition Wrapper */
+.page-transition-wrapper {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 280ms var(--ease-soft), transform 280ms var(--ease-soft);
+  will-change: opacity, transform;
+}
+
+.page-transition-wrapper.page-transition-exit {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.page-transition-wrapper.page-transition-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+/* Scroll Progress Bar */
+#scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #1c6c39 0%, #2563eb 50%, #102b5f 100%);
+  transform-origin: 0% 50%;
+  transform: scaleX(0);
+  z-index: 99999;
+  pointer-events: none;
+  transition: transform 60ms linear;
+}
+
+/* Hero Staggered Entrance Animations */
+.landing-shell .hero-animate-badge {
+  animation: hero-silky-reveal 700ms var(--ease-soft) 200ms both;
+}
+
+.landing-shell .hero-animate-title {
+  animation: hero-silky-reveal 750ms var(--ease-soft) 350ms both;
+}
+
+.landing-shell .hero-animate-sub {
+  animation: hero-silky-reveal 700ms var(--ease-soft) 500ms both;
+}
+
+.landing-shell .hero-animate-desc {
+  animation: hero-silky-reveal 700ms var(--ease-soft) 620ms both;
+}
+
+.landing-shell .hero-animate-actions {
+  animation: hero-silky-reveal 700ms var(--ease-soft) 740ms both;
+}
+
+.landing-shell .hero-animate-stats {
+  animation: hero-silky-reveal 700ms var(--ease-soft) 880ms both;
+}
+
+/* Navigation Polish */
+.landing-shell nav#mainNav {
+  transition: padding var(--motion-normal) var(--ease-soft),
+              background-color var(--motion-normal) var(--ease-soft),
+              box-shadow var(--motion-normal) var(--ease-soft),
+              backdrop-filter var(--motion-normal) var(--ease-soft);
+}
+
+.landing-shell nav#mainNav.scrolled {
+  box-shadow: 0 4px 20px -2px rgba(3, 22, 56, 0.08) !important;
+}
+
+.landing-shell .landing-nav-link {
+  position: relative;
+  transition: color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-soft);
+}
+
+.landing-shell .landing-nav-link:hover {
+  transform: translateY(-1px);
+}
+
+/* Universal Button Microinteractions (Section 16) */
+.hero-btn-primary,
+.hero-btn-secondary,
+.service-card-btn,
+.company-overview-cta,
+.claims-process-cta,
+.home-faq-advisor-btn-call,
+.home-faq-advisor-btn-contact,
+.home-cta-btn-call,
+.home-cta-btn-schedule,
+.service-advisor-btn-call,
+.service-advisor-btn-whatsapp,
+.service-advisor-btn-callback,
+.service-bottom-btn-primary,
+.service-bottom-btn-secondary {
+  transition: transform var(--motion-fast) var(--ease-soft),
+              box-shadow var(--motion-fast) ease,
+              background-color var(--motion-fast) ease !important;
+}
+
+.hero-btn-primary:active,
+.hero-btn-secondary:active,
+.home-cta-btn-call:active,
+.home-cta-btn-schedule:active,
+.service-bottom-btn-primary:active,
+.service-bottom-btn-secondary:active {
+  transform: scale(0.97) !important;
+}
+
+/* Arrow shift microinteraction on buttons with arrows */
+.hero-btn-secondary:hover .material-symbols-outlined,
+.service-card:hover .service-card-btn .material-symbols-outlined,
+.company-overview-cta:hover .material-symbols-outlined,
+.claims-process-cta:hover .material-symbols-outlined,
+.home-cta-btn-schedule:hover .material-symbols-outlined,
+.service-bottom-btn-primary:hover .material-symbols-outlined {
+  transform: translateX(4px);
+  transition: transform var(--motion-fast) var(--ease-soft);
+}
+
+/* Service Card Image Clip Scale */
+.service-card-visual-frame {
+  overflow: hidden !important;
+  border-radius: inherit;
+}
+
+.service-card-photo {
+  transition: transform 500ms var(--ease-soft) !important;
+}
+
+.service-card:hover .service-card-photo {
+  transform: scale(1.03) !important;
+}
+
+/* FAQ Accordion Smooth Expansion */
+details.home-faq-card {
+  transition: border-color var(--motion-normal) ease,
+              box-shadow var(--motion-normal) ease,
+              transform var(--motion-fast) var(--ease-soft) !important;
+}
+
+details.home-faq-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(3, 22, 56, 0.18) !important;
+}
+
+.home-faq-icon-bubble {
+  transition: transform var(--motion-normal) var(--ease-soft),
+              background-color var(--motion-fast) ease !important;
+}
+
+details[open] .home-faq-icon-bubble {
+  transform: rotate(90deg) !important;
+}
+
+.home-faq-answer-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--motion-normal) var(--ease-soft),
+              opacity var(--motion-normal) ease;
+  opacity: 0;
+}
+
+details[open] .home-faq-answer-wrap {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.home-faq-answer-wrap > p,
+.home-faq-answer-wrap > div {
+  overflow: hidden;
+}
+
+/* Footer link micro-slide */
+.landing-shell footer a:hover {
+  transform: translateX(3px);
+  transition: transform var(--motion-fast) var(--ease-soft), color var(--motion-fast) ease;
+}
+
+/* Accessibility: Full Respect for Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal,
+  .reveal-fade-up,
+  .reveal-fade-left,
+  .reveal-fade-right,
+  .reveal-scale,
+  .reveal-mask {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    transition: none !important;
+  }
+  #scroll-progress-bar {
+    display: none !important;
+  }
+  .partner-slider {
+    animation: none !important;
+  }
 }
 
 

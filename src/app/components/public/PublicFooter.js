@@ -36,7 +36,7 @@ export default function PublicFooter() {
     <footer className="public-footer">
       <div className="public-footer-inner">
         <div className="public-footer-top">
-          <div className="public-footer-brand-block">
+          <div className="public-footer-brand-block reveal-fade-up">
             <div className="footer-brand">
               <BrandLogo href="/" variant="white" />
             </div>
@@ -66,7 +66,7 @@ export default function PublicFooter() {
             </div>
           </div>
 
-          <div className="public-footer-actions" aria-label="Contact actions">
+          <div className="public-footer-actions reveal-fade-up" aria-label="Contact actions">
             <a href={`tel:${BUSINESS_DETAILS.phoneHref}`} className="footer-action-call">
               <span className="material-symbols-outlined" aria-hidden="true">call</span>
               <span className="footer-action-desktop">Call {BUSINESS_DETAILS.phone}</span>
@@ -86,7 +86,7 @@ export default function PublicFooter() {
         </div>
 
         <div className="public-footer-main">
-          <section className="public-footer-contact" aria-labelledby="footer-contact-heading">
+          <section className="public-footer-contact reveal-fade-up" aria-labelledby="footer-contact-heading">
             <span className="public-footer-eyebrow">Corporate Office</span>
             <h5 id="footer-contact-heading">{BUSINESS_DETAILS.legalName}</h5>
             <a
@@ -114,7 +114,7 @@ export default function PublicFooter() {
           </section>
 
           <nav className="public-footer-nav" aria-label="Footer navigation">
-            <div>
+            <div className="reveal-fade-up">
               <h5>Company</h5>
               <ul>
                 {quickLinks.map(([label, href]) => (
@@ -125,7 +125,7 @@ export default function PublicFooter() {
               </ul>
             </div>
 
-            <div>
+            <div className="reveal-fade-up">
               <h5>Services</h5>
               <ul>
                 {serviceLinks.map(([label, href]) => (
@@ -136,7 +136,7 @@ export default function PublicFooter() {
               </ul>
             </div>
 
-            <div>
+            <div className="reveal-fade-up">
               <h5>More Coverage</h5>
               <ul>
                 {moreCoverageLinks.map(([label, href]) => (
@@ -149,7 +149,7 @@ export default function PublicFooter() {
           </nav>
         </div>
 
-        <div className="public-footer-bottom">
+        <div className="public-footer-bottom reveal-fade-up">
           <p>© {new Date().getFullYear()} {SITE_NAME}. All rights reserved. Bima Headquarter is a brand owned and operated by InsureDesk IMF Pvt. Ltd. (IRDAI Regd. IMF License No. IMF182444280220190240 · CIN: U66000MP2018PTC046788). Regulated Intermediary under IRDAI guidelines. Insurance is the subject matter of solicitation. Policy issuance, terms, rates, and claim settlements are subject to insurer underwriting decisions.</p>
           <div>
             <Link href="/privacy-policy">Privacy</Link>

@@ -79,12 +79,48 @@ export default function PublicHeader() {
                 margin-left: -50px !important;
             }
         }
-        @keyframes floatingPulse {
-            0%, 100% {
-                box-shadow: 0 12px 28px rgba(3, 22, 56, 0.28), 0 0 0 0 rgba(28, 108, 57, 0.4);
+        @keyframes navEntrance {
+            0% {
+                opacity: 0;
+                transform: translateY(-12px);
             }
-            50% {
-                box-shadow: 0 16px 36px rgba(3, 22, 56, 0.35), 0 0 0 10px rgba(28, 108, 57, 0);
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .landing-shell .landing-premium-nav {
+            animation: navEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .landing-nav-link {
+            transition: color 180ms ease, transform 180ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .landing-nav-link:hover {
+            transform: translateY(-1.5px) !important;
+        }
+        .landing-nav-link.active {
+            transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .landing-nav-phone,
+        .landing-nav-cta {
+            transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms ease !important;
+        }
+        .landing-nav-phone:hover,
+        .landing-nav-cta:hover {
+            transform: scale(1.025) !important;
+        }
+        .landing-nav-phone:active,
+        .landing-nav-cta:active {
+            transform: scale(0.98) !important;
+        }
+        @keyframes floatEntrance {
+            0% {
+                opacity: 0;
+                transform: translateY(16px) scale(0.92);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
             }
         }
         @keyframes floatShimmer {
@@ -109,31 +145,20 @@ export default function PublicHeader() {
             text-decoration: none !important;
             border: 1px solid rgba(255, 255, 255, 0.18) !important;
             overflow: hidden !important;
-            animation: floatingPulse 3.5s ease-in-out infinite !important;
+            box-shadow: 0 12px 28px rgba(3, 22, 56, 0.28) !important;
+            animation: floatEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both !important;
             transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 260ms ease !important;
         }
-        .landing-floating-consultation::before {
-            content: "" !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 50% !important;
-            height: 100% !important;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent) !important;
-            transform: translateX(-150%) skewX(-20deg) !important;
-            pointer-events: none !important;
-            animation: floatShimmer 4s ease-in-out infinite !important;
-        }
         .landing-floating-consultation:hover {
-            transform: translateY(-4px) scale(1.04) !important;
-            box-shadow: 0 20px 42px rgba(3, 22, 56, 0.42), 0 0 20px rgba(28, 108, 57, 0.3) !important;
+            transform: translateY(-3px) scale(1.03) !important;
+            box-shadow: 0 18px 36px rgba(3, 22, 56, 0.35) !important;
         }
         .landing-floating-consultation .material-symbols-outlined {
             font-size: 20px !important;
             transition: transform 260ms ease !important;
         }
         .landing-floating-consultation:hover .material-symbols-outlined {
-            transform: rotate(-12deg) scale(1.15) !important;
+            transform: scale(1.1) !important;
         }
         @media (max-width: 640px) {
             .landing-floating-consultation {

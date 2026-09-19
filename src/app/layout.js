@@ -2,6 +2,8 @@ import { Plus_Jakarta_Sans, Manrope, Be_Vietnam_Pro } from "next/font/google";
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/seo/site";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import SmoothScroll from "@/app/components/SmoothScroll";
+import ScrollProgress from "@/app/components/public/ScrollProgress";
+import PageTransition from "@/app/components/public/PageTransition";
 import "lenis/dist/lenis.css";
 import "./globals.css";
 import "./landing.css";
@@ -127,7 +129,8 @@ export default function RootLayout({ children }) {
           </>
         )}
         <SmoothScroll />
-        {children}
+        <ScrollProgress />
+        <PageTransition>{children}</PageTransition>
         <SpeedInsights />
       </body>
     </html>

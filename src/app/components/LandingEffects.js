@@ -19,6 +19,19 @@ export default function LandingEffects() {
     window.addEventListener("scroll", handleNavScroll, { passive: true });
     handleNavScroll();
 
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) {
+      document
+        .querySelectorAll(
+          ".reveal, .reveal-fade-up, .reveal-fade-left, .reveal-fade-right, .reveal-scale, .reveal-mask, .landing-auto-reveal"
+        )
+        .forEach((el) => el.classList.add("active"));
+      return undefined;
+    }
+
     // 2. Select elements that participate in scroll reveal
     const autoRevealSelectors = [
       ".landing-shell main > header:not(#hero)",
@@ -40,25 +53,37 @@ export default function LandingEffects() {
 
     const autoRevealElements = document.querySelectorAll(autoRevealSelectors.join(", "));
     autoRevealElements.forEach((element) => {
-      if (!element.classList.contains("reveal") && !element.classList.contains("entry-anim")) {
+      if (
+        !element.classList.contains("reveal") &&
+        !element.classList.contains("reveal-fade-up") &&
+        !element.classList.contains("reveal-fade-left") &&
+        !element.classList.contains("reveal-fade-right") &&
+        !element.classList.contains("reveal-scale") &&
+        !element.classList.contains("reveal-mask") &&
+        !element.classList.contains("entry-anim")
+      ) {
         element.classList.add("landing-auto-reveal");
       }
     });
 
     // Add staggered cascade delays to sibling cards
     const gridContainers = document.querySelectorAll(
-      ".services-grid, .sh-services-grid, .hero-stats-container, .company-overview-details, .claims-process-timeline, .home-faq-accordion-group, .contact-bottom-grid, .blog-grid"
+      ".services-grid, .sh-services-grid, .hero-stats-container, .company-overview-details, .claims-process-timeline, .home-faq-accordion-group, .contact-bottom-grid, .blog-grid, .landing-footer-grid, .home-cta-trust-list"
     );
     gridContainers.forEach((container) => {
-      const children = container.querySelectorAll(".reveal, .landing-auto-reveal");
+      const children = container.querySelectorAll(
+        ".reveal, .reveal-fade-up, .reveal-fade-left, .reveal-fade-right, .reveal-scale, .reveal-mask, .landing-auto-reveal, .claims-process-step, .company-overview-item, .home-faq-card"
+      );
       children.forEach((child, index) => {
-        const delay = Math.min((index % 6) * 70, 350);
+        const delay = Math.min((index % 8) * 80, 480);
         child.style.setProperty("--reveal-delay", `${delay}ms`);
       });
     });
 
     // 3. Scroll Reveal via IntersectionObserver with instant activation for visible items
-    const revealElements = document.querySelectorAll(".reveal, .landing-auto-reveal");
+    const revealElements = document.querySelectorAll(
+      ".reveal, .reveal-fade-up, .reveal-fade-left, .reveal-fade-right, .reveal-scale, .reveal-mask, .landing-auto-reveal"
+    );
     const windowHeight = window.innerHeight || document.documentElement.clientHeight;
 
     const revealObserver = new window.IntersectionObserver(
@@ -71,7 +96,7 @@ export default function LandingEffects() {
         });
       },
       {
-        threshold: 0.08,
+        threshold: 0.12,
         rootMargin: "0px 0px -40px 0px",
       }
     );
