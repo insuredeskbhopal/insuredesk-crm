@@ -17,7 +17,6 @@ import {
   Edit3,
   UserPlus,
   FileText,
-  Eye,
   Copy,
   AlertCircle,
   Building2,
@@ -955,14 +954,24 @@ export default function RenewalActionDrawer({
                   </>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Close"
-                className="rad-close-btn"
-              >
-                <X size={18} />
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={handleOpenProfile}
+                  className="rad-profile-btn"
+                  title="View full customer profile"
+                >
+                  <ExternalLink size={13} /> View Profile
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close"
+                  className="rad-close-btn"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             {/* Main Header Card: Customer Info + Contact & Quick Actions */}
@@ -973,7 +982,12 @@ export default function RenewalActionDrawer({
                   {initials}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <h2 className="rad-customer-name">
+                  <h2
+                    className="rad-customer-name"
+                    onClick={handleOpenProfile}
+                    style={{ cursor: "pointer" }}
+                    title="Click to view customer profile"
+                  >
                     {activePolicy.insuredName || "Unnamed Customer"}
                   </h2>
                   <div className="rad-meta-chips">
@@ -1029,14 +1043,6 @@ export default function RenewalActionDrawer({
                     className="rad-btn-whatsapp"
                   >
                     <MessageCircle size={13} /> WhatsApp
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleOpenProfile}
-                    className="rad-profile-btn"
-                    title="View full customer profile"
-                  >
-                    <Eye size={13} /> Profile
                   </button>
                 </div>
               </div>
