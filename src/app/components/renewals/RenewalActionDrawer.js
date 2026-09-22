@@ -65,6 +65,62 @@ export default function RenewalActionDrawer({
   const allPolicies = relatedPolicies.length > 0 ? relatedPolicies : initialPolicy ? [initialPolicy] : [];
   const [interactionScope, setInteractionScope] = useState("all"); // "single" | "all"
 
+  // Resizable Drawer state
+  const drawerRef = useRef(null);
+  const [drawerWidth, setDrawerWidth] = useState(600);
+  const [isResizing, setIsResizing] = useState(false);
+  const isResizingRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = window.localStorage.getItem("rn-drawer-width");
+      if (saved) {
+        const num = Number(saved);
+        if (num >= 380 && num <= window.innerWidth * 0.92) {
+          setDrawerWidth(num);
+          return;
+        }
+      }
+      setDrawerWidth(Math.min(650, Math.max(480, Math.round(window.innerWidth * 0.45))));
+    }
+  }, []);
+
+  const startResizing = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isResizingRef.current = true;
+    setIsResizing(true);
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "ew-resize";
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isResizingRef.current) return;
+      const newWidth = window.innerWidth - moveEvent.clientX;
+      const minW = 400;
+      const maxW = Math.round(window.innerWidth * 0.92);
+      const clamped = Math.max(minW, Math.min(newWidth, maxW));
+      setDrawerWidth(clamped);
+    };
+
+    const handleMouseUp = () => {
+      isResizingRef.current = false;
+      setIsResizing(false);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      setDrawerWidth((curr) => {
+        try {
+          window.localStorage.setItem("rn-drawer-width", String(curr));
+        } catch {}
+        return curr;
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
 
   // Remark Form
   const [selectedChip, setSelectedChip] = useState("Interested (Send Quote)");
@@ -845,17 +901,28 @@ export default function RenewalActionDrawer({
         ref={drawerRef}
         className="rn-drawer-content"
         style={{
-          width: "min(600px, 48vw)",
-          minWidth: "420px",
+          width: `${drawerWidth}px`,
+          minWidth: "380px",
+          maxWidth: "92vw",
           height: "100%", // Full height right drawer
           backgroundColor: "#ffffff",
           boxShadow: "-8px 0 28px rgba(0, 0, 0, 0.18)",
           display: "flex",
           flexDirection: "column",
           overflowY: "auto",
+          position: "relative",
+          transition: isResizing ? "none" : "width 0.1s ease-out",
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Left Edge Resize Handle */}
+        <div
+          className={`rn-drawer-resize-handle ${isResizing ? "resizing" : ""}`}
+          onMouseDown={startResizing}
+          title="Drag to resize drawer"
+        >
+          <div className="rn-drawer-resize-handle__bar" />
+        </div>
         {/* Top Header */}
         <div className="rad-header">
           {/* Category Tag & Insurer + Close */}

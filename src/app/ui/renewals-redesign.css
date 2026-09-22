@@ -452,6 +452,43 @@
   border-color: #e2e8f0;
 }
 
+/* Drawer Left Resize Handle */
+.rn-drawer-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 12px;
+  cursor: ew-resize;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: none;
+  transition: background-color 0.15s ease;
+}
+
+.rn-drawer-resize-handle:hover,
+.rn-drawer-resize-handle.resizing {
+  background-color: rgba(37, 99, 235, 0.08);
+}
+
+.rn-drawer-resize-handle__bar {
+  width: 3px;
+  height: 48px;
+  border-radius: 3px;
+  background-color: #cbd5e1;
+  transition: all 0.15s ease;
+}
+
+.rn-drawer-resize-handle:hover .rn-drawer-resize-handle__bar,
+.rn-drawer-resize-handle.resizing .rn-drawer-resize-handle__bar {
+  background-color: #2563eb;
+  height: 64px;
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
+}
+
 .rn-policy-register__table-shell {
   width: 100%;
   max-width: 100%;
