@@ -32,6 +32,7 @@ const headerMap = {
   "lob": "policyType",
 
   "premium": "premium",
+  "gross premium": "premium",
   "expiring policy premium": "premium",
   "total premium": "totalPremium",
   "net premium": "netPremium",
@@ -60,6 +61,8 @@ const headerMap = {
   "vehiclenumber": "vehicleNumber",
   "registration number": "registrationNumber",
   "registrationnumber": "registrationNumber",
+  "registration no": "registrationNumber",
+  "reg no": "registrationNumber",
 
   "make / model": "makeModel",
   "make": "vehicleMake",
@@ -80,6 +83,8 @@ const headerMap = {
   "mob": "contactNumber",
   "mob no": "contactNumber",
   "mobile": "contactNumber",
+  "moblie no": "contactNumber",
+  "moblie": "contactNumber",
   "contact person": "contactPerson",
   "whatsapp group name": "whatsappGroupName",
   "remark": "remark",

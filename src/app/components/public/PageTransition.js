@@ -16,10 +16,10 @@ export default function PageTransition({ children }) {
     setTransitionStage("enter");
     const rafId = window.requestAnimationFrame(() => {
       // Allow the DOM to apply the enter state before transitioning to entered
-      const timer = setTimeout(() => {
+      const timer = window.setTimeout(() => {
         setTransitionStage("entered");
       }, 40);
-      return () => clearTimeout(timer);
+      return () => window.clearTimeout(timer);
     });
 
     return () => window.cancelAnimationFrame(rafId);

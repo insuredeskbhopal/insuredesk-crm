@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Phone, MessageSquare, AlertCircle } from "lucide-react";
 import { formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
 import ModalPortal from "@/app/components/shared/ModalPortal";
+import { showToast, confirmModal } from "@/app/components/shared/ToastProvider";
 
 const PAGE_SIZE = 25;
 
@@ -110,7 +111,7 @@ export default function FollowUpsPage() {
     if (phone) {
       window.open(`tel:${phone}`);
     } else {
-      window.alert("No contact number available.");
+      showToast("No contact number available.", "warning");
     }
   };
 
@@ -119,33 +120,39 @@ export default function FollowUpsPage() {
     if (phone) {
       const whatsappPhone = formatPhoneForWhatsapp(phone);
       if (!whatsappPhone) {
-        window.alert("Invalid mobile number format.");
+        showToast("Invalid mobile number format.", "error");
         return;
       }
       const message = `Hello ${policy.insuredName}, following up regarding your policy ${policy.policyNumber} renewal. Let us know if you need assistance.`;
       try {
-        const res = await fetch("/api/operations/whatsapp/test-message", {
+        const res = await fetch("/api/operations/whatsapp/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone: whatsappPhone, message }),
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          window.alert(`WhatsApp message sent successfully to ${policy.insuredName}!`);
+          showToast(`WhatsApp message sent successfully to ${policy.insuredName}!`, "success");
         } else {
-          window.alert(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`);
+          showToast(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`, "error");
         }
       } catch {
-        window.alert("Failed to connect to the CRM WhatsApp API.");
+        showToast("Failed to connect to the CRM WhatsApp API.", "error");
       }
     } else {
-      window.alert("No contact number available.");
+      showToast("No contact number available.", "warning");
     }
   };
 
   // Complete Follow-up (Set status to Completed)
   const handleCompleteFollowUp = async (policy) => {
-    if (!window.confirm("Are you sure you want to complete this follow-up task?")) return;
+    const confirmed = await confirmModal({
+      title: "Complete Follow-up Task",
+      message: `Are you sure you want to complete the follow-up task for ${policy.insuredName || "this policy"}?`,
+      confirmText: "Complete Task",
+      isDanger: false,
+    });
+    if (!confirmed) return;
 
     try {
       setLoading(true);
@@ -163,13 +170,14 @@ export default function FollowUpsPage() {
         }),
       });
       if (res.ok) {
+        showToast("Follow-up task completed successfully!", "success");
         await fetchFollowUps();
       } else {
-        const err = await res.json();
-        window.alert(err.error || "Failed to update follow-up.");
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || "Failed to update follow-up.", "error");
       }
     } catch {
-      window.alert("Failed to update follow-up.");
+      showToast("Failed to update follow-up.", "error");
     } finally {
       setLoading(false);
     }
@@ -178,7 +186,7 @@ export default function FollowUpsPage() {
   const submitReschedule = async (e) => {
     e.preventDefault();
     if (!remarkForm.text.trim() || !remarkForm.nextFollowUpDate) {
-      window.alert("Remarks and next follow-up date are required to reschedule.");
+      showToast("Remarks and next follow-up date are required to reschedule.", "warning");
       return;
     }
 
@@ -207,13 +215,14 @@ export default function FollowUpsPage() {
           priority: "Normal",
           nextAction: "",
         });
+        showToast("Follow-up rescheduled successfully!", "success");
         await fetchFollowUps();
       } else {
-        const err = await res.json();
-        window.alert(err.error || "Failed to reschedule follow-up.");
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || "Failed to reschedule follow-up.", "error");
       }
     } catch {
-      window.alert("Failed to reschedule follow-up.");
+      showToast("Failed to reschedule follow-up.", "error");
     } finally {
       setActionLoading(false);
     }

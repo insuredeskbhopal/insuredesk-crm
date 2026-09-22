@@ -1,12 +1,13 @@
 import { SURVEYOR_FIELDS } from "./config";
 import { formatDate, getClaimSpecificFields } from "./utils";
+import { showToast } from "@/app/components/shared/ToastProvider";
 
 export function printClaim(record) {
   if (!record) return;
 
   const printWindow = window.open("", "_blank");
   if (!printWindow) {
-    window.alert("Please allow popups to print claim details.");
+    showToast("Please allow popups in your browser to print claim details.", "warning");
     return;
   }
 

@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import ModalPortal from "@/app/components/shared/ModalPortal";
+import { showToast } from "@/app/components/shared/ToastProvider";
 
 const PAGE_SIZE = 25;
 
@@ -32,7 +33,7 @@ export default function DailyWorkPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [lobCounts, setLobCounts] = useState({ all: 0, motor: 0, warehouse: 0, other: 0 });
   const [loadError, setLoadError] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey, _setRefreshKey] = useState(0);
   const countsKeyRef = useRef("");
 
   // Counters
@@ -68,6 +69,7 @@ export default function DailyWorkPage() {
     premium: "",
     remark: "",
   });
+  const [renewPdfFile, setRenewPdfFile] = useState(null);
   const [lostForm, setLostForm] = useState({ lostReason: "Premium High", remarks: "" });
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -150,7 +152,7 @@ export default function DailyWorkPage() {
   const handleViewProfile = (policy) => {
     const portfolioKey = policy.customerPortfolioId || policy.contactNumber || "";
     if (!portfolioKey) {
-      window.alert("No customer portfolio associated with this policy.");
+      showToast("No customer portfolio associated with this policy.", "error");
       return;
     }
     router.push(`/dashboard/renewals/customers/${encodeURIComponent(portfolioKey)}`);
@@ -178,6 +180,22 @@ export default function DailyWorkPage() {
       });
       if (res.ok) {
         setRemarkModalOpen(false);
+        // Optimistically update policy in-place without table unmounting or scroll reset
+        setPolicies((prev) =>
+          prev.map((p) =>
+            p.id === selectedPolicy.id
+              ? {
+                  ...p,
+                  lastRemark: remarkForm.text,
+                  lastContactDate: new Date().toISOString(),
+                  nextFollowUpDate: remarkForm.nextFollowUpDate || p.nextFollowUpDate,
+                  followUpStatus: remarkForm.status,
+                  _recentlyUpdated: true,
+                }
+              : p
+          )
+        );
+        showToast("Remark logged successfully!", "success");
         setRemarkForm({
           text: "",
           nextFollowUpDate: "",
@@ -186,44 +204,87 @@ export default function DailyWorkPage() {
           priority: "Normal",
           nextAction: "",
         });
-        setRefreshKey((current) => current + 1);
       } else {
-        const err = await res.json();
-        window.alert(err.error || "Failed to submit remark.");
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || "Failed to submit remark.", "error");
       }
     } catch {
-      window.alert("Failed to submit remark.");
+      showToast("Failed to submit remark.", "error");
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Mark policy as renewed
-  const submitRenew = async (e) => {
-    e.preventDefault();
+  // Mark policy as renewed with in-place document upload
+  const submitRenew = async (e, shouldUpload = false) => {
+    if (e) e.preventDefault();
 
     try {
       setActionLoading(true);
-      const res = await fetch("/api/renewals/renew", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          previousPolicyId: selectedPolicy.id,
-          renewedData: {
-            remark: renewForm.remark,
-          },
-        }),
-      });
+
+      const renewalPayload = {
+        remark: renewForm.remark,
+        policyNumber: renewForm.policyNumber || undefined,
+        startDate: renewForm.startDate || undefined,
+        expiryDate: renewForm.expiryDate || undefined,
+        premium: renewForm.premium || undefined,
+        expectedUpdatedAt: selectedPolicy.updatedAt,
+      };
+
+      const idempotencyKey = `${selectedPolicy.id}-${Date.now()}`;
+      let res;
+
+      // If policy copy is provided, upload & renew in one unified atomic request
+      if (shouldUpload && renewPdfFile) {
+        const formData = new FormData();
+        formData.append("previousPolicyId", selectedPolicy.id);
+        formData.append("idempotencyKey", idempotencyKey);
+        formData.append("file", renewPdfFile);
+        formData.append("renewedData", JSON.stringify(renewalPayload));
+
+        res = await fetch("/api/renewals/renew", {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        res = await fetch("/api/renewals/renew", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            previousPolicyId: selectedPolicy.id,
+            idempotencyKey,
+            renewedData: renewalPayload,
+          }),
+        });
+      }
       if (res.ok) {
         setRenewModalOpen(false);
+        setRenewPdfFile(null);
+        setPolicies((prev) =>
+          prev.map((p) =>
+            p.id === selectedPolicy.id
+              ? {
+                  ...p,
+                  renewalStatus: "Renewed",
+                  lastRemark: renewForm.remark || "Policy marked as renewed",
+                  _recentlyUpdated: true,
+                }
+              : p
+          )
+        );
+        showToast(
+          shouldUpload && renewPdfFile
+            ? `Policy ${selectedPolicy.policyNumber || ""} renewed & copy uploaded!`
+            : `Policy ${selectedPolicy.policyNumber || ""} marked as Renewed!`,
+          "success"
+        );
         setRenewForm({ policyNumber: "", startDate: "", expiryDate: "", premium: "", remark: "" });
-        router.push("/bulk-upload");
       } else {
-        const err = await res.json();
-        window.alert(err.error || "Failed to renew policy.");
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || "Failed to renew policy.", "error");
       }
     } catch {
-      window.alert("Failed to renew policy.");
+      showToast("Failed to renew policy.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -246,14 +307,27 @@ export default function DailyWorkPage() {
       });
       if (res.ok) {
         setLostModalOpen(false);
+        setPolicies((prev) =>
+          prev.map((p) =>
+            p.id === selectedPolicy.id
+              ? {
+                  ...p,
+                  renewalStatus: "Lost",
+                  lostReason: lostForm.lostReason,
+                  lastRemark: lostForm.remarks || `Lost: ${lostForm.lostReason}`,
+                  _recentlyUpdated: true,
+                }
+              : p
+          )
+        );
+        showToast("Policy marked as lost", "info");
         setLostForm({ lostReason: "Premium High", remarks: "" });
-        setRefreshKey((current) => current + 1);
       } else {
-        const err = await res.json();
-        window.alert(err.error || "Failed to mark policy as lost.");
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || "Failed to mark policy as lost.", "error");
       }
     } catch {
-      window.alert("Failed to mark policy as lost.");
+      showToast("Failed to mark policy as lost.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -623,13 +697,54 @@ export default function DailyWorkPage() {
                   {selectedPolicy.policyNumber})
                 </div>
                 <div className="customer-meta-item">
-                  <label className="customer-meta-label">Remark Text *</label>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                    <label className="customer-meta-label" style={{ margin: 0 }}>Remark Text *</label>
+                    <span style={{ fontSize: "11px", color: "var(--rn-text-secondary)" }}>Quick outcome chips:</span>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
+                    {[
+                      { label: "Interested (Send Quote)", text: "Customer interested, requested quote on WhatsApp.", status: "Interested", days: 1 },
+                      { label: "Call Back Tomorrow", text: "Customer requested a call back tomorrow.", status: "Follow-Up", days: 1 },
+                      { label: "Call Back (3 Days)", text: "Customer requested a call back after 3 days.", status: "Follow-Up", days: 3 },
+                      { label: "Ringing / No Answer", text: "Call attempted, phone ringing, no answer.", status: "Called", days: 1 },
+                      { label: "Not Reachable", text: "Phone switched off / out of coverage area.", status: "Called", days: 2 },
+                      { label: "Not Interested", text: "Customer stated they do not want to renew.", status: "Called", days: 0 },
+                    ].map((chip) => (
+                      <button
+                        key={chip.label}
+                        type="button"
+                        onClick={() => {
+                          const d = new Date();
+                          if (chip.days > 0) d.setDate(d.getDate() + chip.days);
+                          const isoDate = chip.days > 0 ? d.toISOString().slice(0, 16) : "";
+                          setRemarkForm((prev) => ({
+                            ...prev,
+                            text: chip.text,
+                            status: chip.status,
+                            nextFollowUpDate: isoDate || prev.nextFollowUpDate,
+                          }));
+                        }}
+                        style={{
+                          padding: "4px 8px",
+                          borderRadius: "12px",
+                          fontSize: "11px",
+                          fontWeight: 500,
+                          background: "rgba(37, 99, 235, 0.08)",
+                          color: "#2563eb",
+                          border: "1px solid rgba(37, 99, 235, 0.2)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        + {chip.label}
+                      </button>
+                    ))}
+                  </div>
                   <textarea
                     className="rn-input"
                     style={{ minHeight: "80px", width: "100%" }}
                     value={remarkForm.text}
                     onChange={(e) => setRemarkForm({ ...remarkForm, text: e.target.value })}
-                    placeholder="Enter remark notes..."
+                    placeholder="Enter remark notes or select a quick outcome above..."
                     required
                   />
                 </div>
@@ -735,7 +850,7 @@ export default function DailyWorkPage() {
                 style={{ display: "flex", flexDirection: "column", gap: "16px" }}
               >
                 <div style={{ fontSize: "13px", color: "var(--rn-text-secondary)" }}>
-                  Mark <strong>{selectedPolicy.insuredName}</strong> as renewed, then upload the renewed policy PDF.
+                  Mark <strong>{selectedPolicy.insuredName}</strong> as renewed. You can optionally attach and upload the renewed policy copy PDF directly here.
                 </div>
                 <div className="customer-meta-item">
                   <label className="customer-meta-label">Renewal Remark / Note</label>
@@ -748,16 +863,51 @@ export default function DailyWorkPage() {
                     placeholder="e.g. Customer confirmed renewal"
                   />
                 </div>
+                <div className="customer-meta-item">
+                  <label className="customer-meta-label">Upload Renewed Policy PDF (Optional)</label>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="rn-input"
+                    style={{ width: "100%", padding: "6px" }}
+                    onChange={(e) => setRenewPdfFile(e.target.files?.[0] || null)}
+                  />
+                  {renewPdfFile && (
+                    <div style={{ fontSize: "12px", color: "#166534", marginTop: "4px", fontWeight: 600 }}>
+                      Selected: {renewPdfFile.name} ({(renewPdfFile.size / 1024).toFixed(1)} KB)
+                    </div>
+                  )}
+                </div>
               </div>
               <div
                 className="tb-modal-footer"
-                style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end", gap: "12px" }}
+                style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end", gap: "10px", flexWrap: "wrap" }}
               >
-                <button type="button" className="rn-btn" onClick={() => setRenewModalOpen(false)}>
+                <button
+                  type="button"
+                  className="rn-btn"
+                  onClick={() => {
+                    setRenewModalOpen(false);
+                    setRenewPdfFile(null);
+                  }}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="rn-btn rn-btn-primary" disabled={actionLoading}>
-                  {actionLoading ? "Processing..." : "Mark Renewed & Upload PDF"}
+                <button
+                  type="button"
+                  className="rn-btn"
+                  disabled={actionLoading}
+                  onClick={(e) => submitRenew(e, false)}
+                >
+                  {actionLoading && !renewPdfFile ? "Processing..." : "Mark Renewed"}
+                </button>
+                <button
+                  type="button"
+                  className="rn-btn rn-btn-primary"
+                  disabled={actionLoading || !renewPdfFile}
+                  onClick={(e) => submitRenew(e, true)}
+                >
+                  {actionLoading && renewPdfFile ? "Uploading..." : "Upload Policy Copy Now"}
                 </button>
               </div>
             </form>

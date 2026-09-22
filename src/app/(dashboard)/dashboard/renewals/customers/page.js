@@ -23,6 +23,7 @@ import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 import BrandLogo from "@/app/components/brand/BrandLogo";
 import WhatsAppContactCard from "@/app/components/renewals/WhatsAppContactCard";
 import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
+import { showToast } from "@/app/components/shared/ToastProvider";
 
 const COL_HEADERS = [
   "Contact Person Name",
@@ -457,12 +458,12 @@ export default function CustomerRenewalsPage() {
           setSelectedPolicy(policy);
           callback(policy);
         } else {
-          window.alert("No policy found in this portfolio.");
+          showToast("No policy found in this portfolio.", "error");
         }
       }
     } catch (err) {
       console.error("Failed to fetch policy details:", err);
-      window.alert("Failed to load policy details.");
+      showToast("Failed to load policy details.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -541,10 +542,10 @@ export default function CustomerRenewalsPage() {
         await fetchCustomers(true);
       } else {
         const err = await res.json();
-        window.alert(err.error || "Failed to submit remark.");
+        showToast(err.error || "Failed to submit remark.", "error");
       }
     } catch {
-      window.alert("Failed to submit remark.");
+      showToast("Failed to submit remark.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -607,19 +608,19 @@ export default function CustomerRenewalsPage() {
       !editForm.policyType.trim() ||
       !editForm.expiryDate
     ) {
-      window.alert("Please fill in all required fields.");
+      showToast("Please fill in all required fields.", "error");
       return;
     }
     if (editForm.contactNumber) {
       const normalized = normalizeIndianPhone(editForm.contactNumber);
       if (!normalized) {
-        window.alert("Please enter a valid 10-digit Indian mobile number (starting with 6-9).");
+        showToast("Please enter a valid 10-digit Indian mobile number (starting with 6-9).", "error");
         return;
       }
       editForm.contactNumber = normalized;
     }
     if (editForm.premium && (isNaN(parseFloat(editForm.premium)) || parseFloat(editForm.premium) < 0)) {
-      window.alert("Premium must be a positive number.");
+      showToast("Premium must be a positive number.", "error");
       return;
     }
 
@@ -638,10 +639,10 @@ export default function CustomerRenewalsPage() {
         await fetchCustomers(true, true);
       } else {
         const err = await res.json();
-        window.alert(err.error || "Failed to update renewal policy.");
+        showToast(err.error || "Failed to update renewal policy.", "error");
       }
     } catch {
-      window.alert("Failed to update renewal policy.");
+      showToast("Failed to update renewal policy.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -679,13 +680,27 @@ export default function CustomerRenewalsPage() {
       });
       if (res.ok) {
         setRenewModalOpen(false);
-        router.push("/bulk-upload");
+        showToast("Policy marked as Renewed successfully!", "success");
+        if (selectedCustomer) {
+          setCustomers((prev) =>
+            prev.map((c) =>
+              c.customerKey === selectedCustomer.customerKey
+                ? {
+                    ...c,
+                    renewalStatus: "Renewed",
+                    lastRemark: renewForm.remark || "Policy marked as renewed",
+                    _recentlyUpdated: true,
+                  }
+                : c
+            )
+          );
+        }
       } else {
-        const err = await res.json();
-        window.alert(err.error || "Failed to renew policy.");
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || "Failed to renew policy.", "error");
       }
     } catch {
-      window.alert("Failed to renew policy.");
+      showToast("Failed to renew policy.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -718,10 +733,10 @@ export default function CustomerRenewalsPage() {
         await fetchCustomers(true, true);
       } else {
         const err = await res.json();
-        window.alert(err.error || "Failed to mark policy as lost.");
+        showToast(err.error || "Failed to mark policy as lost.", "error");
       }
     } catch {
-      window.alert("Failed to mark policy as lost.");
+      showToast("Failed to mark policy as lost.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -756,10 +771,10 @@ export default function CustomerRenewalsPage() {
         setReassignModalOpen(false);
         await fetchCustomers(true);
       } else {
-        window.alert(data.error || "Failed to reassign portfolio.");
+        showToast(data.error || "Failed to reassign portfolio.", "error");
       }
     } catch {
-      window.alert("Failed to reassign portfolio.");
+      showToast("Failed to reassign portfolio.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -801,11 +816,11 @@ export default function CustomerRenewalsPage() {
         setWhatsAppContactDetails(data.contactDetails || null);
         setWhatsAppPreviewOpen(true);
       } else {
-        window.alert(data.error || "Failed to load WhatsApp template.");
+        showToast(data.error || "Failed to load WhatsApp template.", "error");
       }
     } catch (err) {
       console.error(err);
-      window.alert("Failed to load WhatsApp template.");
+      showToast("Failed to load WhatsApp template.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -815,9 +830,9 @@ export default function CustomerRenewalsPage() {
     if (!editedWhatsAppMessage) return;
     if (typeof window !== "undefined" && window.navigator && window.navigator.clipboard) {
       window.navigator.clipboard.writeText(editedWhatsAppMessage);
-      window.alert("Message copied to clipboard!");
+      showToast("Message copied to clipboard!", "success");
     } else {
-      window.alert("Clipboard action not supported in this browser.");
+      showToast("Clipboard action not supported in this browser.", "error");
     }
   };
 
@@ -828,7 +843,7 @@ export default function CustomerRenewalsPage() {
       ? Boolean(whatsappGroupId)
       : whatsappRecipientGroups.length > 0 || String(whatsappPhone || "").replace(/\D/g, "").length >= 10;
     if (!hasRecipient) {
-      window.alert(isGroupRecipient ? "Select a WhatsApp group before sending." : "Add a valid renewal recipient mobile number before sending.");
+      showToast(isGroupRecipient ? "Select a WhatsApp group before sending." : "Add a valid renewal recipient mobile number before sending.", "error");
       return;
     }
 
@@ -841,7 +856,7 @@ export default function CustomerRenewalsPage() {
         : [{ phone: whatsappPhone, message: editedWhatsAppMessage, policyIds: whatsappRecipientGroups[0]?.policyIds || [] }];
       let sentCount = 0;
       for (const send of sends) {
-        const res = await fetch("/api/operations/whatsapp/test-message", {
+        const res = await fetch("/api/operations/whatsapp/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone: send.phone, message: send.message }),
@@ -859,9 +874,9 @@ export default function CustomerRenewalsPage() {
         }
         sentCount++;
       }
-      window.alert(`WhatsApp message sent successfully to ${sentCount} recipient${sentCount === 1 ? "" : "s"}.`);
+      showToast(`WhatsApp message sent successfully to ${sentCount} recipient${sentCount === 1 ? "" : "s"}.`, "success");
     } catch (error) {
-      window.alert(`Failed to send WhatsApp message: ${error.message || "Unknown error"}`);
+      showToast(`Failed to send WhatsApp message: ${error.message || "Unknown error"}`, "error");
     }
 
     setWhatsAppPreviewOpen(false);
@@ -873,7 +888,7 @@ export default function CustomerRenewalsPage() {
     if (renewalMobile && !renewalMobile.startsWith("NO-MOBILE-")) {
       window.open(`tel:${renewalMobile}`);
     } else {
-      window.alert("No phone number associated with this customer portfolio.");
+      showToast("No phone number associated with this customer portfolio.", "error");
     }
   };
 

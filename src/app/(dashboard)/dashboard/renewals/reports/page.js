@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Printer, Download, ShieldAlert, TrendingUp, Award, AlertTriangle } from "lucide-react";
+import { showToast } from "@/app/components/shared/ToastProvider";
 
 export default function ReportsPage() {
   const [reportData, setReportData] = useState(null);
@@ -27,10 +28,10 @@ export default function ReportsPage() {
       if (res.ok) {
         setReportData(data);
       } else {
-        setError(data.error || "Failed to load reports.");
+        setError(data.error || "Failed to load reports");
       }
     } catch {
-      setError("Failed to generate report statistics.");
+      setError("Network error: Could not fetch report data");
     } finally {
       setLoading(false);
     }
@@ -46,7 +47,7 @@ export default function ReportsPage() {
   // Print function
   const handlePrint = () => {
     if (!canExport) {
-      window.alert("You do not have permission to print this report.");
+      showToast("You do not have permission to print this report.", "error");
       return;
     }
     window.print();
@@ -55,7 +56,7 @@ export default function ReportsPage() {
   // CSV Export helper
   const handleExport = () => {
     if (!canExport) {
-      window.alert("You do not have permission to export this report.");
+      showToast("You do not have permission to export this report.", "error");
       return;
     }
     if (!reportData) return;

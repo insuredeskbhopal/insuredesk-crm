@@ -5,8 +5,8 @@ import { createPortal } from "react-dom";
 import { Download, Pencil, Eye, Trash2, CheckSquare, Square, MinusSquare } from "lucide-react";
 import PolicyDetailCard from "@/app/components/shared/PolicyDetailCard";
 import { inferUploadSchema } from "@/app/lib/dashboard-helpers";
+import { showToast } from "@/app/components/shared/ToastProvider";
 
-const PAGE_SIZE = 10;
 const DEFAULT_RECORD_COLUMNS = [
   { key: "customerId", label: "Customer ID", className: "col-customer" },
   { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
@@ -428,6 +428,13 @@ export default function RecordsTable({
   paginate = true,
 }) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = window.localStorage.getItem("bhq_records_page_size");
+      if (saved && [15, 25, 50, 100].includes(Number(saved))) return Number(saved);
+    }
+    return 25;
+  });
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [expandedCell, setExpandedCell] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -462,7 +469,7 @@ export default function RecordsTable({
       inferUploadSchema({ sourceFile: record.sourceFile || "", extractedData: record })?.groupId === "health";
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
-      window.alert("Please allow popups to print policy details.");
+      showToast("Please allow popups in your browser to print policy details.", "warning");
       return;
     }
 
@@ -746,11 +753,11 @@ export default function RecordsTable({
     printWindow.document.close();
   };
 
-  const pageCount = paginate ? Math.max(1, Math.ceil(records.length / PAGE_SIZE)) : 1;
-  const startIndex = paginate ? (currentPage - 1) * PAGE_SIZE : 0;
+  const pageCount = paginate ? Math.max(1, Math.ceil(records.length / pageSize)) : 1;
+  const startIndex = paginate ? (currentPage - 1) * pageSize : 0;
   const visibleRecords = useMemo(
-    () => (paginate ? records.slice(startIndex, startIndex + PAGE_SIZE) : records),
-    [paginate, records, startIndex],
+    () => (paginate ? records.slice(startIndex, startIndex + pageSize) : records),
+    [paginate, records, startIndex, pageSize],
   );
   const visiblePageNumbers = useMemo(() => {
     const pages = [];
@@ -981,11 +988,42 @@ export default function RecordsTable({
         </table>
       </div>
 
-      {paginate && records.length > PAGE_SIZE ? (
-        <div className="table-pagination" aria-label="Table pagination">
-          <span>
-            Showing {startIndex + 1}-{Math.min(startIndex + PAGE_SIZE, records.length)} of {records.length}
-          </span>
+      {paginate && (records.length > pageSize || records.length > 15) ? (
+        <div className="table-pagination" aria-label="Table pagination" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span>
+              Showing {startIndex + 1}-{Math.min(startIndex + pageSize, records.length)} of {records.length}
+            </span>
+            <span style={{ color: "#cbd5e1" }}>·</span>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#64748b" }}>
+              Per page:
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setPageSize(val);
+                  setCurrentPage(1);
+                  if (typeof window !== "undefined") {
+                    window.localStorage.setItem("bhq_records_page_size", String(val));
+                  }
+                }}
+                style={{
+                  padding: "3px 8px",
+                  borderRadius: "6px",
+                  border: "1px solid #cbd5e1",
+                  background: "#ffffff",
+                  fontSize: "12px",
+                  color: "#1e293b",
+                  cursor: "pointer",
+                }}
+              >
+                <option value={15}>15</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </label>
+          </div>
           <div className="table-page-list">
             <button type="button" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
               Prev

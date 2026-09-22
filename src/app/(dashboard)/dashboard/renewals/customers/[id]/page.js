@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import BrandLogo from "@/app/components/brand/BrandLogo";
 import WhatsAppContactCard from "@/app/components/renewals/WhatsAppContactCard";
+import { showToast } from "@/app/components/shared/ToastProvider";
 import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
 
 const COL_HEADERS = [
@@ -471,7 +472,7 @@ export default function CustomerProfilePage(props) {
     if (mobile && !mobile.startsWith("NO-MOBILE-")) {
       window.open(`tel:${mobile}`);
     } else {
-      window.alert("No contact number available.");
+      showToast("No contact number available.", "error");
     }
   };
 
@@ -531,6 +532,7 @@ export default function CustomerProfilePage(props) {
           followUpMode: remarkForm.mode,
           priority: remarkForm.priority,
           nextAction: remarkForm.nextAction,
+          expectedUpdatedAt: selectedPolicy?.updatedAt,
         }),
       });
       if (res.ok) {
@@ -538,10 +540,10 @@ export default function CustomerProfilePage(props) {
         await fetchCustomerProfile();
       } else {
         const err = await res.json();
-        window.alert(err.error || "Failed to submit remark.");
+        showToast(err.error || "Failed to submit remark.", "error");
       }
     } catch {
-      window.alert("Failed to submit remark.");
+      showToast("Failed to submit remark.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -605,7 +607,7 @@ export default function CustomerProfilePage(props) {
       !editForm.policyType.trim() ||
       !editForm.expiryDate
     ) {
-      window.alert("Please fill in all required fields.");
+      showToast("Please fill in all required fields.", "error");
       return;
     }
 
@@ -616,6 +618,7 @@ export default function CustomerProfilePage(props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           policyId: selectedPolicy.id,
+          expectedUpdatedAt: selectedPolicy.updatedAt,
           ...editForm,
         }),
       });
@@ -624,10 +627,10 @@ export default function CustomerProfilePage(props) {
         await fetchCustomerProfile();
       } else {
         const err = await res.json();
-        window.alert(err.error || "Failed to update policy.");
+        showToast(err.error || "Failed to update policy.", "error");
       }
     } catch {
-      window.alert("Failed to update policy.");
+      showToast("Failed to update policy.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -656,20 +659,36 @@ export default function CustomerProfilePage(props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           previousPolicyId: selectedPolicy.id,
+          idempotencyKey: `${selectedPolicy.id}-${Date.now()}`,
           renewedData: {
             remark: renewForm.remark,
+            expectedUpdatedAt: selectedPolicy.updatedAt,
           },
         }),
       });
       if (res.ok) {
         setRenewModalOpen(false);
-        router.push("/bulk-upload");
+        showToast("Policy marked as Renewed successfully!", "success");
+        if (selectedPolicy) {
+          setPolicies((prev) =>
+            prev.map((p) =>
+              p.id === selectedPolicy.id
+                ? {
+                    ...p,
+                    renewalStatus: "Renewed",
+                    lastRemark: renewForm.remark || "Policy marked as renewed",
+                    _recentlyUpdated: true,
+                  }
+                : p
+            )
+          );
+        }
       } else {
-        const err = await res.json();
-        window.alert(err.error || "Failed to renew policy.");
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || "Failed to renew policy.", "error");
       }
     } catch {
-      window.alert("Failed to renew policy.");
+      showToast("Failed to renew policy.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -693,6 +712,7 @@ export default function CustomerProfilePage(props) {
           policyId: selectedPolicy.id,
           lostReason: lostForm.lostReason,
           remarks: lostForm.remarks,
+          expectedUpdatedAt: selectedPolicy.updatedAt,
         }),
       });
       if (res.ok) {
@@ -700,10 +720,10 @@ export default function CustomerProfilePage(props) {
         await fetchCustomerProfile();
       } else {
         const err = await res.json();
-        window.alert(err.error || "Failed to mark policy as lost.");
+        showToast(err.error || "Failed to mark policy as lost.", "error");
       }
     } catch {
-      window.alert("Failed to mark policy as lost.");
+      showToast("Failed to mark policy as lost.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -730,6 +750,7 @@ export default function CustomerProfilePage(props) {
           policyId: selectedPolicy.id,
           assignedToUserId: reassignForm.assignedToUserId,
           note: reassignForm.note,
+          expectedUpdatedAt: selectedPolicy.updatedAt,
         }),
       });
       const data = await res.json();
@@ -737,10 +758,10 @@ export default function CustomerProfilePage(props) {
         setReassignModalOpen(false);
         await fetchCustomerProfile();
       } else {
-        window.alert(data.error || "Failed to reassign agent.");
+        showToast(data.error || "Failed to reassign agent.", "error");
       }
     } catch {
-      window.alert("Failed to reassign agent.");
+      showToast("Failed to reassign agent.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -772,7 +793,7 @@ export default function CustomerProfilePage(props) {
   const handleWhatsApp = async (policy = null) => {
     const cleanPhone = profile?.phone ? String(profile.phone).replace(/[^0-9]/g, "") : "";
     if (!policy && !profile?.id && (!cleanPhone || cleanPhone.length < 10)) {
-      window.alert("No valid phone number available for this customer.");
+      showToast("No valid phone number available for this customer.", "error");
       return;
     }
 
@@ -812,11 +833,11 @@ export default function CustomerProfilePage(props) {
         await fetchRenewalQuotes(policy || null);
         setWhatsAppPreviewOpen(true);
       } else {
-        window.alert(data.error || "Failed to load WhatsApp template.");
+        showToast(data.error || "Failed to load WhatsApp template.", "error");
       }
     } catch (err) {
       console.error(err);
-      window.alert("Failed to load WhatsApp template.");
+      showToast("Failed to load WhatsApp template.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -826,9 +847,9 @@ export default function CustomerProfilePage(props) {
     if (!editedWhatsAppMessage) return;
     if (typeof window !== "undefined" && window.navigator && window.navigator.clipboard) {
       window.navigator.clipboard.writeText(editedWhatsAppMessage);
-      window.alert("Message copied to clipboard!");
+      showToast("Message copied to clipboard!", "success");
     } else {
-      window.alert("Clipboard action not supported in this browser.");
+      showToast("Clipboard action not supported in this browser.", "error");
     }
   };
 
@@ -897,11 +918,11 @@ export default function CustomerProfilePage(props) {
           setSelectedRenewalQuoteIds((prev) => [...prev, payload.quote.id]);
         }
       } else {
-        window.alert(payload.error || "Failed to save quote");
+        showToast(payload.error || "Failed to save quote", "error");
       }
     } catch (err) {
       console.error(err);
-      window.alert("Failed to save quote");
+      showToast("Failed to save quote", "error");
     } finally {
       setSavingManualQuote(false);
     }
@@ -942,7 +963,7 @@ export default function CustomerProfilePage(props) {
       ? Boolean(whatsappGroupId)
       : whatsappRecipientGroups.length > 0 || String(whatsappPhone || "").replace(/\D/g, "").length >= 10;
     if (!hasRecipient) {
-      window.alert(isGroupRecipient ? "Select a WhatsApp group before sending." : "Add a valid renewal recipient mobile number before sending.");
+      showToast(isGroupRecipient ? "Select a WhatsApp group before sending." : "Add a valid renewal recipient mobile number before sending.", "error");
       return;
     }
 
@@ -992,7 +1013,7 @@ export default function CustomerProfilePage(props) {
           }];
       let sentCount = 0;
       for (const send of sends) {
-        const res = await fetch("/api/operations/whatsapp/test-message", {
+        const res = await fetch("/api/operations/whatsapp/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone: send.phone, message: send.message, attachments: quoteAttachments }),
@@ -1019,9 +1040,9 @@ export default function CustomerProfilePage(props) {
         }
         sentCount++;
       }
-      window.alert(`WhatsApp message sent successfully to ${sentCount} recipient${sentCount === 1 ? "" : "s"}.`);
+      showToast(`WhatsApp message sent successfully to ${sentCount} recipient${sentCount === 1 ? "" : "s"}.`, "success");
     } catch (error) {
-      window.alert(`Failed to send WhatsApp message: ${error.message || "Unknown error"}`);
+      showToast(`Failed to send WhatsApp message: ${error.message || "Unknown error"}`, "error");
     }
 
     setWhatsAppPreviewOpen(false);
@@ -1036,7 +1057,7 @@ export default function CustomerProfilePage(props) {
     const policy = requestedPolicyId ? policies.find((item) => item.id === requestedPolicyId) : policies[0];
     if (!policy) {
       openedRequestedAction.current = actionKey;
-      window.alert("The selected renewal policy could not be loaded.");
+      showToast("The selected renewal policy could not be loaded.", "error");
       return;
     }
     openedRequestedAction.current = actionKey;

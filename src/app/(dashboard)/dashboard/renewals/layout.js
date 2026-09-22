@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import { showToast } from "@/app/components/shared/ToastProvider";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -22,6 +23,7 @@ import {
 import "@/app/ui/renewals-redesign.css";
 
 export default function RenewalsLayout({ children }) {
+  const router = useRouter();
   const pathname = usePathname();
   const [showImportModal, setShowImportModal] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -106,11 +108,15 @@ export default function RenewalsLayout({ children }) {
 
       setUploadSuccess(result.message);
       setSelectedFile(null);
+      showToast(result.message || "Renewals imported successfully!", "success");
+      if (typeof window !== "undefined" && typeof window.CustomEvent === "function") {
+        window.dispatchEvent(new window.CustomEvent("renewal-data-updated"));
+      }
       setTimeout(() => {
         setShowImportModal(false);
         setUploadSuccess("");
-        window.location.reload();
-      }, 1500);
+        router.refresh();
+      }, 800);
     } catch (err) {
       setUploadError(err.message);
     } finally {

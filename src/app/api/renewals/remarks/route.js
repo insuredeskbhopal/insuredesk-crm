@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { logActivity } from "@/lib/activities/activity-service";
 
 export const runtime = "nodejs";
 
@@ -36,11 +37,22 @@ export async function POST(request) {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { policyId, remark, nextFollowUpDate, followUpStatus, followUpMode, priority, nextAction } =
-      await request.json();
+    const {
+      policyId,
+      policyIds,
+      remark,
+      nextFollowUpDate,
+      followUpStatus,
+      followUpMode,
+      priority,
+      nextAction,
+      expectedUpdatedAt,
+      expectedUpdatedAts,
+    } = await request.json();
     const text = String(remark || "").trim();
-    if (!policyId) {
-      return Response.json({ error: "Missing policyId parameter" }, { status: 400 });
+    const targetPolicyIds = Array.isArray(policyIds) && policyIds.length > 0 ? policyIds : policyId ? [policyId] : [];
+    if (!targetPolicyIds.length) {
+      return Response.json({ error: "Missing policyId or policyIds parameter" }, { status: 400 });
     }
     if (!text) {
       return Response.json({ error: "Remark is required." }, { status: 400 });
@@ -51,53 +63,143 @@ export async function POST(request) {
 
     const tenantFilter = getTenantFilter(user, "write");
     const actorId = user.userId || user.id || null;
-    const policy = await prisma.policyRecord.findFirst({
+
+    // Verify all target policy IDs belong to user's authorized scope
+    const policies = await prisma.policyRecord.findMany({
       where: {
-        id: policyId,
+        id: { in: targetPolicyIds },
         ...tenantFilter,
       },
     });
 
-    if (!policy) {
-      return Response.json({ error: "Policy not found or access denied" }, { status: 404 });
+    if (policies.length !== targetPolicyIds.length) {
+      return Response.json(
+        { error: "One or more policies not found or access denied." },
+        { status: 403 }
+      );
+    }
+
+    // Safe Concurrency Check: Verify independent version per policy
+    if (expectedUpdatedAts && typeof expectedUpdatedAts === "object") {
+      const hasConflict = policies.some((p) => {
+        const expStr = expectedUpdatedAts[p.id];
+        if (!expStr || !p.updatedAt) return false;
+        return new Date(p.updatedAt).getTime() > new Date(expStr).getTime();
+      });
+      if (hasConflict) {
+        return Response.json(
+          {
+            error: "Conflict: One or more policies have been modified by another session. Please refresh to view latest changes.",
+            conflict: true,
+          },
+          { status: 409 }
+        );
+      }
+    } else if (expectedUpdatedAt) {
+      const primaryPolicyToCheck = policies.find((p) => p.id === policyId) || policies[0];
+      const expectedTime = new Date(expectedUpdatedAt).getTime();
+      if (primaryPolicyToCheck?.updatedAt && new Date(primaryPolicyToCheck.updatedAt).getTime() > expectedTime) {
+        return Response.json(
+          {
+            error: "Conflict: This record has been updated by another user or session. Please refresh to view latest changes.",
+            conflict: true,
+          },
+          { status: 409 }
+        );
+      }
     }
 
     const actorName = user.name || user.email || "User";
-    const currentStatus = policy.renewalStatus || "ACTIVE";
-    const renewalRemark = {
-      id: randomUUID(),
-      text,
-      createdAt: new Date().toISOString(),
-      createdBy: actorName,
-      createdById: actorId,
-      type: "FOLLOW_UP",
-      oldStatus: currentStatus,
-      newStatus: currentStatus,
-      nextFollowUpDate: String(nextFollowUpDate || "").trim(),
-      followUpStatus: String(followUpStatus || "Follow-up Scheduled").trim(),
-      followUpMode: String(followUpMode || "Phone Call").trim(),
-      priority: String(priority || "Normal").trim(),
-      nextAction: String(nextAction || "").trim(),
-    };
+    const primaryPolicy = policies.find((p) => p.id === policyId) || policies[0];
 
-    const reviewedData = appendRenewalRemark(policy.reviewedData || {}, renewalRemark);
-    const data = appendRenewalRemark(policy.data || {}, renewalRemark);
+    // Atomic transaction: Update all policies conditionally & log activity together
+    const { primaryReviewedData, primaryRemark } = await prisma.$transaction(async (tx) => {
+      let firstReviewedData = null;
+      let firstRemark = null;
 
-    await prisma.policyRecord.update({
-      where: { id: policyId },
-      data: {
-        reviewedData,
-        data,
-        renewalStatus: followUpStatus || undefined,
-        updatedById: actorId,
-      },
+      for (const pol of policies) {
+        const currentStatus = pol.renewalStatus || "ACTIVE";
+        const renewalRemark = {
+          id: randomUUID(),
+          text,
+          createdAt: new Date().toISOString(),
+          createdBy: actorName,
+          createdById: actorId,
+          type: "FOLLOW_UP",
+          oldStatus: currentStatus,
+          newStatus: currentStatus,
+          nextFollowUpDate: String(nextFollowUpDate || "").trim(),
+          followUpStatus: String(followUpStatus || "Follow-up Scheduled").trim(),
+          followUpMode: String(followUpMode || "Phone Call").trim(),
+          priority: String(priority || "Normal").trim(),
+          nextAction: String(nextAction || "").trim(),
+        };
+
+        const reviewedData = appendRenewalRemark(pol.reviewedData || {}, renewalRemark);
+        const data = appendRenewalRemark(pol.data || {}, renewalRemark);
+
+        const expTimeStr =
+          (expectedUpdatedAts && expectedUpdatedAts[pol.id]) ||
+          (pol.id === policyId ? expectedUpdatedAt : null);
+        const expTime = expTimeStr ? new Date(expTimeStr).getTime() : null;
+
+        const updateResult = await tx.policyRecord.updateMany({
+          where: {
+            id: pol.id,
+            ...tenantFilter,
+            ...(expTimeStr ? { updatedAt: new Date(expTimeStr) } : {}),
+          },
+          data: {
+            reviewedData,
+            data,
+            renewalStatus: followUpStatus || undefined,
+            updatedById: actorId,
+          },
+        });
+
+        if (updateResult.count === 0) {
+          const conflictErr = new Error("OCC_CONFLICT");
+          conflictErr.code = "OCC_CONFLICT";
+          conflictErr.policyId = pol.id;
+          throw conflictErr;
+        }
+
+        if (pol.id === primaryPolicy.id) {
+          firstReviewedData = reviewedData;
+          firstRemark = renewalRemark;
+        }
+      }
+
+      // Log unified activity across all target policies inside the transaction
+      await logActivity({
+        tx,
+        organizationId: user.organizationId,
+        userId: actorId,
+        userRole: user.role,
+        module: "RENEWAL",
+        customerId: primaryPolicy.customerPortfolioId || null,
+        customerName: primaryPolicy.insuredName || primaryPolicy.data?.insuredName,
+        policyIds: targetPolicyIds,
+        activityType: followUpMode === "WhatsApp" ? "WHATSAPP" : "CALL",
+        outcome: followUpStatus || "Follow-up Scheduled",
+        remark: text,
+        followUpAt: nextFollowUpDate,
+        assignedTo: primaryPolicy.assignedTo,
+        metadata: { priority, nextAction, followUpMode },
+        ipAddress: getAuditMetadata(request).ipAddress,
+      });
+
+      return {
+        primaryReviewedData: firstReviewedData || appendRenewalRemark(primaryPolicy.reviewedData || {}, {}),
+        primaryRemark: firstRemark,
+      };
     });
 
     const { ipAddress, userAgent } = getAuditMetadata(request);
     await logAudit({
       action: "RENEWAL_REMARK_ADDED",
       entityType: "PolicyRecord",
-      entityId: policyId,
+      entityId: primaryPolicy.id,
       severity: "INFO",
       source: "API",
       ipAddress,
@@ -105,7 +207,8 @@ export async function POST(request) {
       userId: actorId,
       organizationId: user.organizationId,
       metadata: {
-        remarkId: renewalRemark.id,
+        remarkId: primaryRemark?.id,
+        targetPolicyCount: targetPolicyIds.length,
         nextFollowUpDate,
         followUpStatus,
         followUpMode,
@@ -114,8 +217,22 @@ export async function POST(request) {
       },
     });
 
-    return Response.json({ success: true, remark: renewalRemark, followUp: reviewedData.renewalFollowUp });
+    return Response.json({
+      success: true,
+      remark: primaryRemark,
+      followUp: primaryReviewedData?.renewalFollowUp,
+    });
   } catch (error) {
+    if (error.code === "OCC_CONFLICT") {
+      return Response.json(
+        {
+          error: "Conflict: This record has been updated by another user or session. Please refresh to view latest changes.",
+          conflict: true,
+          policyId: error.policyId,
+        },
+        { status: 409 }
+      );
+    }
     console.error("Add renewal remark failed:", error);
     return Response.json({ error: "Failed to save renewal remark." }, { status: 500 });
   }

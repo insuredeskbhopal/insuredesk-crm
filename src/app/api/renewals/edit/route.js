@@ -45,6 +45,7 @@ export async function POST(request) {
       renewalStatus,
       remark,
       nextFollowUpDate,
+      expectedUpdatedAt,
     } = body;
 
     const tenantFilter = getTenantFilter(user, "write");
@@ -400,8 +401,13 @@ export async function POST(request) {
         customerPortfolioId = createdPortfolio.id;
       }
 
-      await tx.policyRecord.update({
-        where: { id: policyId },
+      const expectedTime = expectedUpdatedAt ? new Date(expectedUpdatedAt).getTime() : null;
+      const updateResult = await tx.policyRecord.updateMany({
+        where: {
+          id: policyId,
+          ...tenantFilter,
+          ...(expectedTime ? { updatedAt: new Date(expectedUpdatedAt) } : {}),
+        },
         data: {
         customerPortfolioId,
         contactPersonName: finalContactPersonName || null,
@@ -427,6 +433,12 @@ export async function POST(request) {
           : undefined,
         },
       });
+
+      if (updateResult.count === 0) {
+        const conflictErr = new Error("OCC_CONFLICT");
+        conflictErr.code = "OCC_CONFLICT";
+        throw conflictErr;
+      }
       return customerPortfolioId;
     });
 
@@ -498,6 +510,15 @@ export async function POST(request) {
     return Response.json({ success: true, customerPortfolioId });
   } catch (error) {
     console.error("Failed to edit renewal:", error);
+    if (error.code === "OCC_CONFLICT") {
+      return Response.json(
+        {
+          error: "Conflict: This record was modified by another session. Please refresh to view the latest state.",
+          conflict: true,
+        },
+        { status: 409 }
+      );
+    }
     if (error.message === "TARGET_PORTFOLIO_NOT_FOUND") {
       return Response.json({ error: "Selected customer portfolio was not found." }, { status: 404 });
     }

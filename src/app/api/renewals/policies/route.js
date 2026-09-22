@@ -79,7 +79,9 @@ export async function GET(request) {
     const orgId = user.organizationId || null;
     const actorId = user.userId || user.id || null;
 
-    await ensureOverdueRenewalSync({ organizationId: isSuperAdmin ? undefined : orgId, referenceDate: today });
+    ensureOverdueRenewalSync({ organizationId: isSuperAdmin ? undefined : orgId, referenceDate: today }).catch((err) =>
+      console.error("Overdue renewal sync error:", err),
+    );
 
     const queryParams = [
       isSuperAdmin,
@@ -98,60 +100,62 @@ export async function GET(request) {
     const baseCTE = `
       WITH normalized_policies AS (
         SELECT 
-          id,
-          saved_at,
-          updated_at,
-          is_active_policy,
-          COALESCE(renewal_status, 'ACTIVE') AS renewal_status,
-          created_by_id,
-          updated_by_id,
-          selected_company,
-          selected_policy_type,
-          extraction_method,
-          LOWER(COALESCE(reviewed_data->>'manualRenewalSource', data->>'manualRenewalSource', '')) = 'true' AS manual_renewal_source,
-          COALESCE(reviewed_data->>'assignedTo', data->>'assignedTo', '') AS assigned_to,
-          COALESCE(reviewed_data->'renewalFollowUp'->>'nextFollowUpDate', data->'renewalFollowUp'->>'nextFollowUpDate', '') AS raw_follow_up,
-          COALESCE(reviewed_data->'renewalFollowUp'->>'priority', data->'renewalFollowUp'->>'priority', '') AS priority,
-          COALESCE(reviewed_data->'renewalFollowUp'->>'lastRemarkBy', data->'renewalFollowUp'->>'lastRemarkBy', '') AS last_remark_by,
-          COALESCE(reviewed_data->'renewalRemarks'->0->>'text', data->'renewalRemarks'->0->>'text', reviewed_data->>'remark', data->>'remark', '') AS latest_remark,
-          COALESCE(reviewed_data->>'insuranceCompany', reviewed_data->>'Insurance Company', data->>'insuranceCompany', data->>'Insurance Company', '') AS company,
-          COALESCE(reviewed_data->>'policyType', reviewed_data->>'Policy Type', data->>'policyType', data->>'Policy Type', '') AS policy_type,
-          COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry,
+          p.id,
+          p.saved_at,
+          p.updated_at,
+          p.is_active_policy,
+          COALESCE(p.renewal_status, 'ACTIVE') AS renewal_status,
+          p.created_by_id,
+          p.updated_by_id,
+          p.selected_company,
+          p.selected_policy_type,
+          p.extraction_method,
+          LOWER(COALESCE(p.reviewed_data->>'manualRenewalSource', p.data->>'manualRenewalSource', '')) = 'true' AS manual_renewal_source,
+          COALESCE(p.reviewed_data->>'assignedTo', p.data->>'assignedTo', '') AS assigned_to,
+          COALESCE(p.reviewed_data->'renewalFollowUp'->>'nextFollowUpDate', p.data->'renewalFollowUp'->>'nextFollowUpDate', '') AS raw_follow_up,
+          COALESCE(p.reviewed_data->'renewalFollowUp'->>'priority', p.data->'renewalFollowUp'->>'priority', '') AS priority,
+          COALESCE(p.reviewed_data->'renewalFollowUp'->>'lastRemarkBy', p.data->'renewalFollowUp'->>'lastRemarkBy', '') AS last_remark_by,
+          COALESCE(p.reviewed_data->'renewalRemarks'->0->>'text', p.data->'renewalRemarks'->0->>'text', p.reviewed_data->>'remark', p.data->>'remark', '') AS latest_remark,
+          COALESCE(p.reviewed_data->>'insuranceCompany', p.reviewed_data->>'Insurance Company', p.data->>'insuranceCompany', p.data->>'Insurance Company', '') AS company,
+          COALESCE(p.reviewed_data->>'policyType', p.reviewed_data->>'Policy Type', p.data->>'policyType', p.data->>'Policy Type', '') AS policy_type,
+          COALESCE(p.reviewed_data->>'expiryDate', p.reviewed_data->>'policyEndDate', p.data->>'expiryDate', p.data->>'policyEndDate') AS raw_expiry,
           LOWER(
-            COALESCE(selected_policy_type, '') || ' ' ||
-            COALESCE(reviewed_data->>'policyType', reviewed_data->>'Policy Type', data->>'policyType', data->>'Policy Type', '') || ' ' ||
-            COALESCE(reviewed_data->>'documentCategory', data->>'documentCategory', '') || ' ' ||
-            COALESCE(reviewed_data->>'policyCoverType', data->>'policyCoverType', '') || ' ' ||
-            COALESCE(reviewed_data->>'insuranceCompany', reviewed_data->>'Insurance Company', data->>'insuranceCompany', data->>'Insurance Company', '') || ' ' ||
-            COALESCE(reviewed_data->>'insuredName', data->>'insuredName', '') || ' ' ||
-            COALESCE(reviewed_data->>'sourceFile', data->>'sourceFile', pdf_file_name, '') || ' ' ||
-            COALESCE(reviewed_data->>'description', data->>'description', '') || ' ' ||
-            COALESCE(reviewed_data->>'vehicleNumber', data->>'vehicleNumber', '') || ' ' ||
-            COALESCE(reviewed_data->>'registrationNumber', data->>'registrationNumber', '') || ' ' ||
-            COALESCE(reviewed_data->>'engineNumber', data->>'engineNumber', '') || ' ' ||
-            COALESCE(reviewed_data->>'chassisNumber', data->>'chassisNumber', '')
+            COALESCE(p.selected_policy_type, '') || ' ' ||
+            COALESCE(p.reviewed_data->>'policyType', p.reviewed_data->>'Policy Type', p.data->>'policyType', p.data->>'Policy Type', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'documentCategory', p.data->>'documentCategory', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'policyCoverType', p.data->>'policyCoverType', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'insuranceCompany', p.reviewed_data->>'Insurance Company', p.data->>'insuranceCompany', p.data->>'Insurance Company', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'insuredName', p.data->>'insuredName', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'sourceFile', p.data->>'sourceFile', p.pdf_file_name, '') || ' ' ||
+            COALESCE(p.reviewed_data->>'description', p.data->>'description', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'vehicleNumber', p.data->>'vehicleNumber', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'registrationNumber', p.data->>'registrationNumber', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'engineNumber', p.data->>'engineNumber', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'chassisNumber', p.data->>'chassisNumber', '')
           ) AS policy_haystack,
-          LOWER(
-            COALESCE(reviewed_data->>'insuredName', data->>'insuredName', '') || ' ' ||
-            COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') || ' ' ||
-            COALESCE(contact_person_name, reviewed_data->>'contactPerson', data->>'contactPerson', '') || ' ' ||
-            COALESCE(contact_person_mobile, reviewed_data->>'contactNumber', data->>'contactNumber', '') || ' ' ||
-            COALESCE(renewal_recipient_name, reviewed_data->>'renewalRecipientName', data->>'renewalRecipientName', '') || ' ' ||
-            COALESCE(renewal_recipient_mobile, reviewed_data->>'renewalRecipientMobile', data->>'renewalRecipientMobile', '') || ' ' ||
-            COALESCE(reviewed_data->>'vehicleNumber', data->>'vehicleNumber', '') || ' ' ||
-            COALESCE(reviewed_data->>'registrationNumber', data->>'registrationNumber', '') || ' ' ||
-            COALESCE(reviewed_data->'renewalRemarks'->0->>'text', data->'renewalRemarks'->0->>'text', reviewed_data->>'remark', data->>'remark', '') || ' ' ||
-            COALESCE(reviewed_data->>'assignedTo', data->>'assignedTo', '') || ' ' ||
-            COALESCE(selected_company, '') || ' ' ||
-            COALESCE(selected_policy_type, '') || ' ' ||
-            COALESCE((SELECT name FROM users WHERE users.id = created_by_id), '') || ' ' ||
-            COALESCE((SELECT email FROM users WHERE users.id = created_by_id), '') || ' ' ||
-            COALESCE((SELECT name FROM users WHERE users.id = updated_by_id), '') || ' ' ||
-            COALESCE((SELECT email FROM users WHERE users.id = updated_by_id), '')
-          ) AS search_text
-        FROM pdf_records
-        WHERE deleted_at IS NULL
-          AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
+          (CASE WHEN $8 = '' THEN '' ELSE LOWER(
+            COALESCE(p.reviewed_data->>'insuredName', p.data->>'insuredName', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'policyNumber', p.data->>'policyNumber', '') || ' ' ||
+            COALESCE(p.contact_person_name, p.reviewed_data->>'contactPerson', p.data->>'contactPerson', '') || ' ' ||
+            COALESCE(p.contact_person_mobile, p.reviewed_data->>'contactNumber', p.data->>'contactNumber', '') || ' ' ||
+            COALESCE(p.renewal_recipient_name, p.reviewed_data->>'renewalRecipientName', p.data->>'renewalRecipientName', '') || ' ' ||
+            COALESCE(p.renewal_recipient_mobile, p.reviewed_data->>'renewalRecipientMobile', p.data->>'renewalRecipientMobile', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'vehicleNumber', p.data->>'vehicleNumber', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'registrationNumber', p.data->>'registrationNumber', '') || ' ' ||
+            COALESCE(p.reviewed_data->'renewalRemarks'->0->>'text', p.data->'renewalRemarks'->0->>'text', p.reviewed_data->>'remark', p.data->>'remark', '') || ' ' ||
+            COALESCE(p.reviewed_data->>'assignedTo', p.data->>'assignedTo', '') || ' ' ||
+            COALESCE(p.selected_company, '') || ' ' ||
+            COALESCE(p.selected_policy_type, '') || ' ' ||
+            COALESCE(uc.name, '') || ' ' ||
+            COALESCE(uc.email, '') || ' ' ||
+            COALESCE(uu.name, '') || ' ' ||
+            COALESCE(uu.email, '')
+          ) END) AS search_text
+        FROM pdf_records p
+        LEFT JOIN users uc ON uc.id = p.created_by_id
+        LEFT JOIN users uu ON uu.id = p.updated_by_id
+        WHERE p.deleted_at IS NULL
+          AND ($1::boolean OR p.organization_id IS NOT DISTINCT FROM $2::uuid)
       ),
       parsed_policies AS (
         SELECT 
@@ -211,10 +215,12 @@ export async function GET(request) {
         FROM parsed_policies
         WHERE 
           ($4 = 'register' AND (extraction_method = 'renewal_excel_import' OR manual_renewal_source = true))
-          OR (expiry_date IS NOT NULL AND (expiry_date - $3::date) >= -30 AND (expiry_date - $3::date) <= 30)
-          OR (is_active_policy = true AND expiry_date IS NOT NULL AND (expiry_date - $3::date) < -30 AND LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval'))
-          OR ($4 IN ('renewed', 'lost', 'not_interested', 'wrong_number', 'renewed_elsewhere') AND renewal_status IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE'))
-          OR (expiry_state IN ('missing', 'invalid'))
+          OR ($4 != 'register' AND (
+            (expiry_date IS NOT NULL AND (expiry_date - $3::date) >= -30 AND (expiry_date - $3::date) <= 30)
+            OR (is_active_policy = true AND expiry_date IS NOT NULL AND (expiry_date - $3::date) < -30 AND LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval'))
+            OR ($4 IN ('renewed', 'lost', 'not_interested', 'wrong_number', 'renewed_elsewhere') AND renewal_status IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE'))
+            OR (expiry_state IN ('missing', 'invalid'))
+          ))
       ),
       filtered_policies AS (
         SELECT 
@@ -416,15 +422,23 @@ export async function GET(request) {
     }
 
     const isRegisterTab = tab === "register";
+    const runCountQuery = !isRegisterTab || q.trim() !== "";
 
     const [countResult, dataResult, summaryResult, categoryResult] = await Promise.all([
-      prisma.$queryRawUnsafe(countQuery, ...queryParams),
+      runCountQuery ? prisma.$queryRawUnsafe(countQuery, ...queryParams) : Promise.resolve([{ count: 0 }]),
       prisma.$queryRawUnsafe(dataQuery, ...queryParams, limit, offset),
       isRegisterTab ? Promise.resolve([{}]) : prisma.$queryRawUnsafe(summaryQuery, ...queryParams),
       prisma.$queryRawUnsafe(categoryQuery, ...queryParams),
     ]);
 
-    const totalCount = countResult[0]?.count || 0;
+    let totalCount = countResult[0]?.count || 0;
+    if (!runCountQuery && categoryResult[0]) {
+      const cat = categoryResult[0];
+      if (policyType === "All") totalCount = cat.all_count || 0;
+      else if (policyType.toLowerCase() === "motor") totalCount = cat.motor_count || 0;
+      else if (policyType.toLowerCase() === "warehouse" || policyType.toLowerCase() === "fire") totalCount = cat.warehouse_count || 0;
+      else totalCount = cat.other_count || 0;
+    }
     const ids = dataResult.map((r) => r.id);
     const daysRemainingMap = {};
     dataResult.forEach((r) => {

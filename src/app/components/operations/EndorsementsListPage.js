@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Download, Edit, Eye, FilePlus2, Search, Trash2, Upload, XCircle } from "lucide-react";
+import { confirmModal, showToast } from "@/app/components/shared/ToastProvider";
 
 const STATUSES = [
   "All",
@@ -151,7 +152,12 @@ export default function EndorsementsListPage() {
 
   async function deleteDraft(record) {
     if (record.status !== "Draft") return;
-    const confirmed = window.confirm(`Delete draft endorsement ${record.endorsementNo}?`);
+    const confirmed = await confirmModal({
+      title: "Delete Draft Endorsement",
+      message: `Are you sure you want to delete draft endorsement ${record.endorsementNo}?`,
+      confirmText: "Delete Draft",
+      isDanger: true,
+    });
     if (!confirmed) return;
     setSavingId(record.id);
     setError("");
@@ -159,8 +165,10 @@ export default function EndorsementsListPage() {
       const response = await fetch(`/api/endorsements/${record.id}`, { method: "DELETE" });
       if (!response.ok) await readJsonResponse(response);
       setRecords((current) => current.filter((item) => item.id !== record.id));
+      showToast("Draft endorsement deleted.", "success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Draft could not be deleted.");
+      showToast(err instanceof Error ? err.message : "Draft could not be deleted.", "error");
     } finally {
       setSavingId("");
     }

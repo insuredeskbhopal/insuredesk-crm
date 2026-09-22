@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
+import { showToast } from "@/app/components/shared/ToastProvider";
 import {
   CLAIM_WIZARD_STEPS,
   CLIENT_DETAIL_FIELDS,
@@ -758,12 +759,12 @@ export default function ClaimsManagementPage() {
                     });
                     const data = await res.json();
                     if (res.ok && data.success) {
-                      window.alert(`WhatsApp message sent successfully to ${selectedClaim.insuredName || "Customer"}!`);
+                      showToast(`WhatsApp message sent successfully to ${selectedClaim.insuredName || "Customer"}!`, "success");
                     } else {
-                      window.alert(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`);
+                      showToast(`Failed to send WhatsApp message: ${data.error || "Unknown error"}`, "error");
                     }
                   } catch {
-                    window.alert("Failed to connect to the CRM WhatsApp API.");
+                    showToast("Failed to connect to the CRM WhatsApp API.", "error");
                   }
                 }} style={{ background: "#ffffff", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
                   <MessageSquare size={16} /> WhatsApp

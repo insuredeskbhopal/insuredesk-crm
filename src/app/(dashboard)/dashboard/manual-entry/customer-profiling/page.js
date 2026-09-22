@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, BarChart3, CheckCircle, ChevronDown, Eye, MoreVertical, Search, Trash2, UserPlus, X } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 import { normalizeIndianPhone, formatPhoneForWhatsapp } from "@/lib/customer-profiles/utils";
+import { confirmModal, showToast } from "@/app/components/shared/ToastProvider";
 
 const EMPTY_FORM = {
   customerProfileId: "",
@@ -1265,11 +1266,14 @@ export default function CustomerProfilingPage() {
     });
   }
 
-  function deleteProfile(profile) {
+  async function deleteProfile(profile) {
     if (!profile?.id) return;
-    const confirmed = window.confirm(
-      `Delete lead generation record for ${profile.name || profile.phone || "this customer"}?`,
-    );
+    const confirmed = await confirmModal({
+      title: "Delete Lead Generation Record",
+      message: `Are you sure you want to delete lead generation record for ${profile.name || profile.phone || "this customer"}?`,
+      confirmText: "Delete Record",
+      isDanger: true,
+    });
     if (!confirmed) return;
 
     startTransition(async () => {
@@ -1367,7 +1371,7 @@ export default function CustomerProfilingPage() {
     if (!profile) return;
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
-      window.alert("Please allow popups to print lead details.");
+      showToast("Please allow popups in your browser to print lead details.", "warning");
       return;
     }
 
@@ -2483,10 +2487,11 @@ export default function CustomerProfilingPage() {
                             window.navigator.clipboard
                           ) {
                             window.navigator.clipboard.writeText(text);
-                            alert("Message summary copied to clipboard!");
+                            showToast("Message summary copied to clipboard!", "success");
                           } else {
-                            alert(
+                            showToast(
                               "Clipboard copy not supported in this browser. Please copy the preview manually.",
+                              "error"
                             );
                           }
                         }}

@@ -230,7 +230,7 @@ export default function SideNav({
                     window.location.href = "/";
                   } catch (err) {
                     console.error("Failed to log out:", err);
-                    window.location.reload();
+                    window.location.href = "/";
                   }
                 }}
                 className="tb-modal-done-btn"

@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
   AlertCircle,
   CheckCircle,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Clipboard,
   Edit3,
   Eye,
@@ -21,45 +23,26 @@ import {
   UserPlus,
   XCircle,
 } from "lucide-react";
+import RenewalActionDrawer from "@/app/components/renewals/RenewalActionDrawer";
+import { showToast } from "@/app/components/shared/ToastProvider";
 import {
   RENEWAL_REGISTER_CATEGORY_TABS,
   RENEWAL_REGISTER_MONTHS,
   RENEWAL_REGISTER_POLICY_TYPES,
   formatRenewalRegisterAmount,
   formatRenewalRegisterDate,
-  formatRenewalRegisterDueIn,
   getRenewalRegisterMonthLabel,
   getRenewalRegisterStatusTone,
   normalizeRenewalRegisterMonth,
 } from "@/lib/renewals/register";
 
-const PAGE_SIZE = 25;
 const CONTEXT_TABS = new Set(["register", "all", "due_today", "due_7", "due_30"]);
 
 function getPolicyCustomerKey(policy) {
-  const digits = String(policy.contactNumber || "").replace(/\D/g, "");
-  return policy.customerPortfolioId || (digits.length >= 10 ? digits.slice(-10) : `NO-MOBILE-${policy.id}`);
-}
-
-function formatHoverStatus(value) {
-  return String(value || "Active")
-    .replaceAll("_", " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-function getHoverCardPosition(clientX, clientY) {
-  const cardWidth = 340;
-  const cardHeight = 520;
-  const gap = 14;
-  return {
-    left: clientX + cardWidth + gap > window.innerWidth
-      ? Math.max(12, clientX - cardWidth - gap)
-      : clientX + gap,
-    top: clientY + cardHeight + gap > window.innerHeight
-      ? Math.max(12, clientY - cardHeight - gap)
-      : clientY + gap,
-  };
+  if (policy.customerPortfolioId) return String(policy.customerPortfolioId);
+  const rawContact = policy.contactNumber || policy.renewalRecipientMobile || policy.contactPersonMobile || "";
+  const digits = String(rawContact).replace(/\D/g, "");
+  return digits.length >= 10 ? digits.slice(-10) : `NO-MOBILE-${policy.id}`;
 }
 
 export default function RenewalPoliciesPage() {
@@ -76,28 +59,17 @@ export default function RenewalPoliciesPage() {
   const [renewalMonth, setRenewalMonth] = useState("All");
   const [contextTab, setContextTab] = useState("register");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [categoryCounts, setCategoryCounts] = useState({ all: 0, motor: 0, warehouse: 0, other: 0 });
   const [activeActionPolicyId, setActiveActionPolicyId] = useState("");
   const [actionMenuPosition, setActionMenuPosition] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [hoverCard, setHoverCard] = useState(null);
-  const hoverRequestRef = useRef(0);
-  const hoverCacheRef = useRef(new Map());
-  const infoCardOpen = hoverCard !== null;
-
-  useEffect(() => {
-    if (!infoCardOpen) return undefined;
-
-    const closeOnOutsideClick = (event) => {
-      if (event.target.closest?.(".rn-policy-register__table tbody tr")) return;
-      hoverRequestRef.current += 1;
-      setHoverCard(null);
-    };
-    document.addEventListener("pointerdown", closeOnOutsideClick);
-    return () => document.removeEventListener("pointerdown", closeOnOutsideClick);
-  }, [infoCardOpen]);
+  const [activeDrawerPolicy, setActiveDrawerPolicy] = useState(null);
+  const [drawerTab, setDrawerTab] = useState("remark");
+  const [viewMode, setViewMode] = useState("customer"); // "customer" | "policy"
+  const [expandedCustomerKeys, setExpandedCustomerKeys] = useState(new Set());
 
   useEffect(() => {
     const params = new window.URLSearchParams(window.location.search);
@@ -110,8 +82,26 @@ export default function RenewalPoliciesPage() {
     const requestedTab = params.get("tab") || "register";
     setContextTab(CONTEXT_TABS.has(requestedTab) ? requestedTab : "register");
     setPage(Math.max(1, Number(params.get("page")) || 1));
+    const requestedView = params.get("view");
+    if (requestedView === "policy" || requestedView === "customer") {
+      setViewMode(requestedView);
+    }
+    const requestedPageSize = Number(params.get("pageSize"));
+    if ([15, 25, 50, 100].includes(requestedPageSize)) {
+      setPageSize(requestedPageSize);
+    }
     setInitialized(true);
   }, []);
+
+  useEffect(() => {
+    if (!loading && initialized && typeof window !== "undefined") {
+      const savedY = window.sessionStorage.getItem("rn-customer-scroll-y");
+      if (savedY) {
+        window.sessionStorage.removeItem("rn-customer-scroll-y");
+        window.scrollTo({ top: Number(savedY), behavior: "instant" });
+      }
+    }
+  }, [loading, initialized]);
 
   useEffect(() => {
     if (!initialized) return;
@@ -143,7 +133,7 @@ export default function RenewalPoliciesPage() {
       setLoading(true);
       setError("");
       try {
-        const params = new window.URLSearchParams({ tab: contextTab, page: String(page), limit: String(PAGE_SIZE) });
+        const params = new window.URLSearchParams({ tab: contextTab, page: String(page), limit: String(pageSize) });
         if (query) params.set("q", query);
         if (policyType !== "All") params.set("policyType", policyType);
         if (company !== "All") params.set("company", company);
@@ -164,16 +154,18 @@ export default function RenewalPoliciesPage() {
 
     loadPolicies();
     return () => controller.abort();
-  }, [company, contextTab, initialized, page, policyType, query, refreshKey, renewalMonth]);
+  }, [company, contextTab, initialized, page, pageSize, policyType, query, refreshKey, renewalMonth]);
 
   const syncUrl = (updates = {}) => {
-    const next = { query, policyType, company, renewalMonth, page, ...updates };
+    const next = { query, policyType, company, renewalMonth, page, viewMode, pageSize, ...updates };
     const params = new window.URLSearchParams();
     if (contextTab !== "register") params.set("tab", contextTab);
     if (next.query) params.set("q", next.query);
     if (next.policyType !== "All") params.set("policyType", next.policyType);
     if (next.company !== "All") params.set("company", next.company);
     if (next.renewalMonth !== "All") params.set("month", next.renewalMonth);
+    if (next.viewMode && next.viewMode !== "policy") params.set("view", next.viewMode);
+    if (next.pageSize && next.pageSize !== 25) params.set("pageSize", String(next.pageSize));
     if (next.page > 1) params.set("page", String(next.page));
     router.replace(params.size ? `?${params}` : "/dashboard/renewals/policies", { scroll: false });
   };
@@ -215,6 +207,26 @@ export default function RenewalPoliciesPage() {
     syncUrl({ page: nextPage });
   };
 
+  const changeViewMode = (mode) => {
+    setViewMode(mode);
+    syncUrl({ viewMode: mode });
+  };
+
+  const changePageSize = (newPageSize) => {
+    setPageSize(newPageSize);
+    setPage(1);
+    syncUrl({ pageSize: newPageSize, page: 1 });
+  };
+
+  const toggleExpandCustomer = (key) => {
+    setExpandedCustomerKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
   const clearFilters = () => {
     setQueryDraft("");
     setQuery("");
@@ -228,7 +240,6 @@ export default function RenewalPoliciesPage() {
 
   const openActionMenu = (policyId, event) => {
     event.stopPropagation();
-    setHoverCard(null);
     if (activeActionPolicyId === policyId) {
       closeActionMenu();
       return;
@@ -252,72 +263,107 @@ export default function RenewalPoliciesPage() {
     setActionMenuPosition(null);
   }
 
-  const showPolicyInfoCard = async (policy, event) => {
-    if (activeActionPolicyId) return;
-    if (hoverCard?.policy.id === policy.id) {
-      hoverRequestRef.current += 1;
-      setHoverCard(null);
+  const openCustomerAction = (policy, action = "remark") => {
+    closeActionMenu();
+    if (action === "profile") {
+      const customerKey = getPolicyCustomerKey(policy);
+      const returnTo = `${window.location.pathname}${window.location.search}`;
+      const params = new window.URLSearchParams({ returnTo, policyId: policy.id });
+      window.sessionStorage.setItem("rn-customer-return-url", returnTo);
+      window.sessionStorage.setItem("rn-customer-scroll-y", String(window.scrollY || 0));
+      router.push(`/dashboard/renewals/customers/${encodeURIComponent(customerKey)}?${params}`);
       return;
     }
 
-    const requestId = ++hoverRequestRef.current;
-    const { top, left } = getHoverCardPosition(event.clientX, event.clientY);
-    const customerKey = getPolicyCustomerKey(policy);
-    const cached = hoverCacheRef.current.get(customerKey);
-
-    setHoverCard({ policy, top, left, details: cached || null, loading: !cached });
-    if (cached) return;
-
-    try {
-      const response = await fetch(`/api/renewals/customers/${encodeURIComponent(customerKey)}?policyId=${encodeURIComponent(policy.id)}`, {
-        cache: "no-store",
-      });
-      const payload = await response.json();
-      if (!response.ok || !payload.success) return;
-
-      const nearestPolicy = (payload.policies || [])
-        .filter((item) => item.expiryDate)
-        .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))[0];
-      const profilePhone = String(payload.profile?.phone || "");
-      const details = {
-        name: payload.profile?.contactPerson || payload.profile?.name || policy.insuredName || "Contact Details",
-        phone: profilePhone.replace(/\D/g, "").length >= 10
-          ? profilePhone
-          : policy.renewalRecipientMobile || policy.contactNumber || "N/A",
-        status: payload.profile?.customerStatus || policy.renewalStatus,
-        totalCompanies: payload.stats?.totalCompanies ?? "—",
-        totalPolicies: payload.stats?.totalPolicies ?? "—",
-        policiesDue: payload.stats?.policiesDue ?? "—",
-        nearestExpiry: nearestPolicy?.expiryDate || policy.expiryDate,
-        assignee: payload.profile?.assignedTo || policy.assignedTo || "Unassigned",
-      };
-      hoverCacheRef.current.set(customerKey, details);
-      if (hoverRequestRef.current === requestId) {
-        setHoverCard((current) => current ? { ...current, details, loading: false } : null);
-      }
-    } catch {
-      if (hoverRequestRef.current === requestId) {
-        setHoverCard((current) => current ? { ...current, loading: false } : null);
-      }
-    }
+    setDrawerTab(action);
+    setActiveDrawerPolicy(policy);
   };
 
-  const openCustomerAction = (policy, action = "") => {
-    const customerKey = getPolicyCustomerKey(policy);
-    const returnTo = `${window.location.pathname}${window.location.search}`;
-    const params = new window.URLSearchParams({ returnTo, policyId: policy.id });
-    if (action) params.set("action", action);
-    window.sessionStorage.setItem("rn-customer-return-url", returnTo);
-    window.sessionStorage.setItem("rn-customer-scroll-y", String(window.scrollY || 0));
-    closeActionMenu();
-    router.push(`/dashboard/renewals/customers/${encodeURIComponent(customerKey)}?${params}`);
+  const handlePolicyUpdated = (updatedPolicy, targetPolicyIds = []) => {
+    const ids = targetPolicyIds.length ? new Set(targetPolicyIds) : new Set([updatedPolicy.id]);
+    setPolicies((prev) =>
+      prev.map((p) =>
+        ids.has(p.id)
+          ? {
+              ...p,
+              renewalStatus: updatedPolicy.renewalStatus || p.renewalStatus,
+              lastRemark: updatedPolicy.lastRemark || p.lastRemark,
+              nextFollowUpDate: updatedPolicy.nextFollowUpDate || p.nextFollowUpDate,
+              _recentlyUpdated: true,
+            }
+          : p
+      )
+    );
+  };
+
+  const customerGroups = useMemo(() => {
+    const groups = new Map();
+    const now = new Date();
+    const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    policies.forEach((policy) => {
+      const key = getPolicyCustomerKey(policy);
+      if (!groups.has(key)) {
+        groups.set(key, {
+          customerKey: key,
+          insuredName: policy.insuredName || "Unknown Customer",
+          contactNumber: policy.renewalRecipientMobile || policy.contactNumber || policy.contactPersonMobile || "",
+          contactPerson: policy.contactPerson || policy.contactPersonName || policy.renewalRecipientName || "",
+          policies: [],
+          totalPremium: 0,
+          dueThisWeekCount: 0,
+          earliestExpiry: null,
+          latestContact: policy.lastRemarkDate || policy.updatedAt || null,
+        });
+      }
+      const group = groups.get(key);
+      group.policies.push(policy);
+
+      const prem = Number(policy.totalPremium || policy.premium || 0) || 0;
+      group.totalPremium += prem;
+
+      if (policy.expiryDate) {
+        const exp = new Date(policy.expiryDate);
+        if (exp >= now && exp <= sevenDaysLater) {
+          group.dueThisWeekCount += 1;
+        }
+        if (!group.earliestExpiry || exp < new Date(group.earliestExpiry)) {
+          group.earliestExpiry = policy.expiryDate;
+        }
+      }
+    });
+
+    return Array.from(groups.values());
+  }, [policies]);
+
+  const handleSaveAndNext = (currentPolicy) => {
+    if (viewMode === "customer") {
+      const currentCustomerKey = getPolicyCustomerKey(currentPolicy);
+      const groupIndex = customerGroups.findIndex((g) => g.customerKey === currentCustomerKey);
+      if (groupIndex !== -1 && groupIndex + 1 < customerGroups.length) {
+        const nextCustomer = customerGroups[groupIndex + 1];
+        setActiveDrawerPolicy(nextCustomer.policies[0]);
+        showToast(`Switched to next customer: ${nextCustomer.insuredName}`, "info");
+      } else {
+        setActiveDrawerPolicy(null);
+        showToast("Reached the end of customers on this page.", "info");
+      }
+    } else {
+      const currentIndex = policies.findIndex((p) => p.id === currentPolicy.id);
+      if (currentIndex !== -1 && currentIndex + 1 < policies.length) {
+        setActiveDrawerPolicy(policies[currentIndex + 1]);
+      } else {
+        setActiveDrawerPolicy(null);
+        showToast("Reached the end of policies on this page.", "info");
+      }
+    }
   };
 
   const callCustomer = (policy) => {
     const digits = String(policy.renewalRecipientMobile || policy.contactNumber || "").replace(/\D/g, "");
     closeActionMenu();
     if (digits.length >= 10) window.open(`tel:${digits.slice(-10)}`);
-    else window.alert("No contact number available for this policy.");
+    else showToast("No contact number available for this policy.", "error");
   };
 
   const selectedMonthLabel = renewalMonth === "All" ? "" : getRenewalRegisterMonthLabel(renewalMonth);
@@ -338,9 +384,66 @@ export default function RenewalPoliciesPage() {
         <div>
           <p>Policy-wise register</p>
           <h2>{contextTitle || (selectedMonthLabel ? `${selectedMonthLabel} Renewals` : "All Renewals")}</h2>
-          <span>Every renewal is shown as its own policy row. No customer grouping is applied.</span>
+          <span>
+            {viewMode === "customer"
+              ? "Renewals grouped by customer for unified outreach and multi-policy action."
+              : "Every renewal is shown as its own policy row. No customer grouping is applied."}
+          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--rn-text-secondary, #64748b)" }}>View:</span>
+            <div style={{ display: "inline-flex", background: "#f1f5f9", padding: "3px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+              <button
+                type="button"
+                onClick={() => changeViewMode("customer")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "5px 12px",
+                  borderRadius: "6px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                  background: viewMode === "customer" ? "#ffffff" : "transparent",
+                  color: viewMode === "customer" ? "#0284c7" : "#64748b",
+                  boxShadow: viewMode === "customer" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: viewMode === "customer" ? "#0284c7" : "#cbd5e1" }} />
+                Customer View
+              </button>
+              <button
+                type="button"
+                onClick={() => changeViewMode("policy")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "5px 12px",
+                  borderRadius: "6px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                  background: viewMode === "policy" ? "#ffffff" : "transparent",
+                  color: viewMode === "policy" ? "#0284c7" : "#64748b",
+                  boxShadow: viewMode === "policy" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: viewMode === "policy" ? "#0284c7" : "#cbd5e1" }} />
+                Individual Policies
+              </button>
+            </div>
+          </div>
         </div>
-        <strong>{totalCount.toLocaleString("en-IN")} policies</strong>
+        <strong>
+          {viewMode === "customer"
+            ? `${customerGroups.length} customers · ${totalCount.toLocaleString("en-IN")} policies`
+            : `${totalCount.toLocaleString("en-IN")} policies`}
+        </strong>
       </div>
 
       <form className="rn-policy-register__filters" onSubmit={applySearch}>
@@ -389,9 +492,194 @@ export default function RenewalPoliciesPage() {
             <button type="button" className="rn-btn" onClick={() => setRefreshKey((current) => current + 1)}>Retry</button>
           </div>
         ) : loading ? (
-          <div className="rn-policy-register__state"><span className="rn-policy-register__spinner" /> Loading policy-wise renewals...</div>
+          <div className="rn-policy-register__state"><span className="rn-policy-register__spinner" /> Loading renewals...</div>
         ) : policies.length === 0 ? (
           <div className="rn-policy-register__state"><AlertCircle size={22} /> No renewal policies match these filters.</div>
+        ) : viewMode === "customer" ? (
+          <div className="rn-customer-groups" style={{ display: "grid", gap: "14px", padding: "16px" }}>
+            {customerGroups.map((group) => {
+              const isExpanded = expandedCustomerKeys.has(group.customerKey);
+              return (
+                <div
+                  key={group.customerKey}
+                  style={{
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "12px",
+                    background: "#ffffff",
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                    overflow: "hidden",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "16px 20px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      background: isExpanded ? "#f8fafc" : "#ffffff",
+                      borderBottom: isExpanded ? "1px solid #e2e8f0" : "none",
+                      gap: "16px",
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                        <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
+                          {group.insuredName}
+                        </h3>
+                        <span
+                          style={{
+                            padding: "2px 8px",
+                            background: "#eff6ff",
+                            color: "#1d4ed8",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            borderRadius: "6px",
+                            border: "1px solid #bfdbfe",
+                          }}
+                        >
+                          {group.policies.length} Renewal{group.policies.length === 1 ? "" : "s"}
+                        </span>
+                        {group.dueThisWeekCount > 0 && (
+                          <span
+                            style={{
+                              padding: "2px 8px",
+                              background: "#fef3c7",
+                              color: "#b45309",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              borderRadius: "6px",
+                              border: "1px solid #fde68a",
+                            }}
+                          >
+                            {group.dueThisWeekCount} Due This Week
+                          </span>
+                        )}
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "16px",
+                          marginTop: "6px",
+                          fontSize: "13px",
+                          color: "#64748b",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span>
+                          Renewal Premium: <strong style={{ color: "#0f172a" }}>{formatRenewalRegisterAmount(group.totalPremium)}</strong>
+                        </span>
+                        {group.contactNumber && (
+                          <span>
+                            Mobile: <strong style={{ color: "#0f172a" }}>{group.contactNumber}</strong>
+                          </span>
+                        )}
+                        {group.earliestExpiry && (
+                          <span>
+                            Earliest Expiry: <strong style={{ color: "#0f172a" }}>{formatRenewalRegisterDate(group.earliestExpiry)}</strong>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                      {group.contactNumber && (
+                        <button
+                          type="button"
+                          className="rn-btn"
+                          onClick={() => {
+                            const digits = String(group.contactNumber).replace(/\D/g, "");
+                            if (digits.length >= 10) window.open(`tel:${digits.slice(-10)}`);
+                            else showToast("Invalid phone number", "error");
+                          }}
+                          style={{ height: "34px", padding: "0 12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                        >
+                          <Phone size={14} /> Call
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="rn-btn"
+                        onClick={() => {
+                          setDrawerTab("whatsapp");
+                          setActiveDrawerPolicy(group.policies[0]);
+                        }}
+                        style={{ height: "34px", padding: "0 12px", display: "inline-flex", alignItems: "center", gap: "6px", color: "#16a34a" }}
+                      >
+                        <Send size={14} /> WhatsApp
+                      </button>
+                      <button
+                        type="button"
+                        className="rn-btn rn-btn-primary"
+                        onClick={() => {
+                          setDrawerTab("remark");
+                          setActiveDrawerPolicy(group.policies[0]);
+                        }}
+                        style={{ height: "34px", padding: "0 14px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                      >
+                        <MessageSquare size={14} /> Open
+                      </button>
+                      <button
+                        type="button"
+                        className="rn-btn"
+                        onClick={() => toggleExpandCustomer(group.customerKey)}
+                        style={{ height: "34px", padding: "0 10px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        title={isExpanded ? "Collapse policies" : "Expand policies"}
+                      >
+                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div style={{ padding: "12px 16px 16px", background: "#f8fafc" }}>
+                      <table className="rn-table" style={{ background: "#ffffff", borderRadius: "8px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
+                        <thead>
+                          <tr>
+                            <th style={{ width: "20%" }}>Vehicle / Asset</th>
+                            <th style={{ width: "22%" }}>Policy Number</th>
+                            <th style={{ width: "18%" }}>Insurer</th>
+                            <th style={{ width: "14%" }}>Policy Type</th>
+                            <th style={{ width: "12%" }}>Expiry Date</th>
+                            <th style={{ width: "10%" }}>Premium</th>
+                            <th style={{ width: "4%" }}>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {group.policies.map((p) => {
+                            const asset = p.vehicleNumber || p.registrationNumber || p.riskLocation || "—";
+                            const cleanNo = String(p.policyNumber || "—").replace(/:+$/, "").trim();
+                            return (
+                              <tr key={p.id} onClick={() => openCustomerAction(p, "remark")} style={{ cursor: "pointer" }}>
+                                <td><span className="rn-policy-register__mono">{asset}</span></td>
+                                <td><span className="rn-policy-register__mono">{cleanNo}</span></td>
+                                <td>{p.insuranceCompany || p.companyName || "—"}</td>
+                                <td>{p.displayPolicyType || p.policyType || "—"}</td>
+                                <td><strong>{formatRenewalRegisterDate(p.expiryDate)}</strong></td>
+                                <td><strong>{formatRenewalRegisterAmount(p.totalPremium || p.premium)}</strong></td>
+                                <td onClick={(e) => e.stopPropagation()}>
+                                  <button
+                                    type="button"
+                                    className="rn-btn"
+                                    style={{ padding: "4px 8px", fontSize: "11px" }}
+                                    onClick={() => openCustomerAction(p, "remark")}
+                                  >
+                                    Action
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <table className="rn-table rn-policy-register__table">
             <thead>
@@ -442,7 +730,7 @@ export default function RenewalPoliciesPage() {
                     onCloseMenu={closeActionMenu}
                     onCustomerAction={openCustomerAction}
                     onCall={callCustomer}
-                    onRowClick={showPolicyInfoCard}
+                    onRowClick={(pol) => openCustomerAction(pol, "remark")}
                   />
                 );
               })}
@@ -450,46 +738,51 @@ export default function RenewalPoliciesPage() {
           </table>
         )}
 
-        <footer className="rn-pagination rn-policy-register__pagination">
-          <span>Page {page} of {totalPages} · {totalCount.toLocaleString("en-IN")} policy rows</span>
+        <footer className="rn-pagination rn-policy-register__pagination" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span>Page {page} of {totalPages} · {totalCount.toLocaleString("en-IN")} policy rows</span>
+            <span style={{ color: "#cbd5e1" }}>|</span>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#64748b" }}>
+              Per page:
+              <select
+                value={pageSize}
+                onChange={(e) => changePageSize(Number(e.target.value))}
+                style={{
+                  padding: "3px 8px",
+                  borderRadius: "6px",
+                  border: "1px solid #cbd5e1",
+                  background: "#ffffff",
+                  fontSize: "12px",
+                  color: "#1e293b",
+                  cursor: "pointer",
+                }}
+              >
+                <option value={15}>15</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </label>
+          </div>
           <div>
             <button type="button" className="rn-btn" disabled={page <= 1 || loading} onClick={() => changePage(page - 1)}><ChevronLeft size={15} /> Previous</button>
             <button type="button" className="rn-btn" disabled={page >= totalPages || loading} onClick={() => changePage(page + 1)}>Next <ChevronRight size={15} /></button>
           </div>
         </footer>
-      </div>
-      {hoverCard && typeof document !== "undefined" ? createPortal(
-        <div
-          className="rn-hover-card rn-policy-register__hover-card"
-          style={{ position: "fixed", top: `${hoverCard.top}px`, left: `${hoverCard.left}px` }}
-          role="note"
-          aria-label="Customer and policy information"
-        >
-          <h4 className="rn-hover-title">
-            {hoverCard.details?.name || hoverCard.policy.contactPersonName || hoverCard.policy.insuredName || "Contact Details"}
-          </h4>
-          <div className="rn-hover-grid rn-policy-register__customer-grid">
-            <HoverInfo label="Phone" value={hoverCard.details?.phone || hoverCard.policy.renewalRecipientMobile || hoverCard.policy.contactNumber || "N/A"} />
-            <HoverInfo label="Status" value={formatHoverStatus(hoverCard.details?.status || hoverCard.policy.renewalStatus)} />
-            <HoverInfo label="Companies" value={hoverCard.details?.totalCompanies ?? (hoverCard.loading ? "Loading…" : "—")} />
-            <HoverInfo label="Total Policies" value={hoverCard.details?.totalPolicies ?? (hoverCard.loading ? "Loading…" : "—")} />
-            <HoverInfo label="Policies Due" value={hoverCard.details?.policiesDue ?? (hoverCard.loading ? "Loading…" : "—")} />
-            <HoverInfo label="Nearest Expiry" value={formatRenewalRegisterDate(hoverCard.details?.nearestExpiry || hoverCard.policy.expiryDate)} />
-            <HoverInfo full label="Assignee" value={hoverCard.details?.assignee || hoverCard.policy.assignedTo || "Unassigned"} />
-          </div>
-          <div className="rn-policy-register__hover-section-title">Policy Details</div>
-          <div className="rn-hover-grid rn-policy-register__hover-policy-grid">
-            <HoverInfo full label="Policyholder" value={hoverCard.policy.insuredName || "Name not available"} />
-            <HoverInfo label="Policy Number" value={hoverCard.policy.policyNumber || "—"} />
-            <HoverInfo label="Policy Type" value={hoverCard.policy.displayPolicyType || hoverCard.policy.policyType || "—"} />
-            <HoverInfo label="Insurance Company" value={hoverCard.policy.insuranceCompany || "—"} />
-            <HoverInfo label="Vehicle / Risk" value={hoverCard.policy.vehicleNumber || hoverCard.policy.registrationNumber || hoverCard.policy.riskLocation || "—"} />
-            <HoverInfo label="Expiry Date" value={formatRenewalRegisterDate(hoverCard.policy.expiryDate)} />
-            <HoverInfo label="Due In" value={formatRenewalRegisterDueIn(hoverCard.policy.daysRemaining)} />
-          </div>
-        </div>,
-        document.body,
-      ) : null}
+      </div>   {activeDrawerPolicy && (
+        <RenewalActionDrawer
+          policy={activeDrawerPolicy}
+          relatedPolicies={
+            policies.filter(
+              (p) => getPolicyCustomerKey(p) === getPolicyCustomerKey(activeDrawerPolicy)
+            )
+          }
+          initialTab={drawerTab}
+          onClose={() => setActiveDrawerPolicy(null)}
+          onPolicyUpdated={handlePolicyUpdated}
+          onSaveAndNext={handleSaveAndNext}
+        />
+      )}
     </section>
   );
 }
@@ -589,14 +882,6 @@ function PolicyRegisterRow({
   );
 }
 
-function HoverInfo({ label, value, full = false }) {
-  return (
-    <div className={`rn-hover-item${full ? " rn-hover-item-full" : ""}`}>
-      <span className="rn-hover-label">{label}</span>
-      <span className="rn-hover-value">{value}</span>
-    </div>
-  );
-}
 
 function ActionItem({ icon, label, onClick, danger = false }) {
   return <button type="button" role="menuitem" className={`rn-dropdown-item${danger ? " rn-dropdown-item-danger" : ""}`} onClick={onClick}>{icon}{label}</button>;

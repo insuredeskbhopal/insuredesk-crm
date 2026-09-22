@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import AppShell from "@/app/components/layout/AppShell";
 import SideNav from "@/app/components/layout/SideNav";
 import TopBar from "@/app/components/layout/TopBar";
+import ToastProvider from "@/app/components/shared/ToastProvider";
 import { NAV_ITEMS } from "@/app/ui/dashboard/constants";
 import "@/app/ui/dashboard.css";
 
@@ -53,7 +54,10 @@ export default function DashboardLayout({ children }) {
 
       const queryString = params.toString();
       const targetPath =
-        SEARCHABLE_CURRENT_PATHS.has(pathname) || pathname.startsWith("/dashboard/reports")
+        SEARCHABLE_CURRENT_PATHS.has(pathname) ||
+        pathname.startsWith("/dashboard/reports") ||
+        pathname.startsWith("/dashboard/renewals") ||
+        pathname.startsWith("/operations")
           ? pathname
           : "/policy-records";
       router.replace(queryString ? `${targetPath}?${queryString}` : targetPath);
@@ -113,7 +117,9 @@ export default function DashboardLayout({ children }) {
       )}
 
       <section className="content-canvas">
-        <div className="page-inner">{children}</div>
+        <ToastProvider>
+          <div className="page-inner">{children}</div>
+        </ToastProvider>
       </section>
     </AppShell>
   );

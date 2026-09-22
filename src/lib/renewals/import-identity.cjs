@@ -100,7 +100,15 @@ function excelDateToString(value) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
 
   const numericDmy = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-  if (numericDmy) return formatDateParts(numericDmy[3], numericDmy[2], numericDmy[1]);
+  if (numericDmy) {
+    const p1 = Number(numericDmy[1]);
+    const p2 = Number(numericDmy[2]);
+    const year = numericDmy[3];
+    if (p2 > 12 && p1 <= 12) {
+      return formatDateParts(year, p1, p2);
+    }
+    return formatDateParts(year, p2, p1);
+  }
 
   const namedDmy = text.match(/^(\d{1,2})[\s/-]([a-z]{3,9})[\s/-](\d{4})$/i);
   const namedMonth = namedDmy ? MONTH_INDEX[namedDmy[2].slice(0, 3).toLowerCase()] : null;

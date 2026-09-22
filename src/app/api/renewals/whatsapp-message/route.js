@@ -140,6 +140,12 @@ export async function POST(request) {
     if (Array.isArray(policyIds) && policyIds.length > 0) {
       const requestedIds = new Set(policyIds.map(String));
       targetList = targetList.filter((policy) => requestedIds.has(String(policy.id)));
+      if (targetList.length !== policyIds.length) {
+        return Response.json(
+          { error: "One or more requested policies not found or access denied." },
+          { status: 403 }
+        );
+      }
     }
 
     if (targetList.length === 0) {

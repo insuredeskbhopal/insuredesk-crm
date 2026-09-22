@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { logActivity } from "@/lib/activities/activity-service";
 
 export const runtime = "nodejs";
 
@@ -30,9 +31,20 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { policyId, portfolioId, phone, assignedToUserId, note } = body;
+    const {
+      policyId,
+      policyIds,
+      portfolioId,
+      phone,
+      assignedToUserId,
+      note,
+      expectedUpdatedAt,
+      expectedUpdatedAts,
+    } = body;
 
-    if (!policyId && !portfolioId && !phone) {
+    const targetPolicyIds = Array.isArray(policyIds) && policyIds.length > 0 ? policyIds : policyId ? [policyId] : [];
+
+    if (!targetPolicyIds.length && !portfolioId && !phone) {
       return Response.json({ error: "Missing policy, portfolio, or phone parameter" }, { status: 400 });
     }
     if (!assignedToUserId) {
@@ -44,14 +56,28 @@ export async function POST(request) {
     const isSuperAdmin = user.role === "SUPER_ADMIN";
     const orgId = user.organizationId || null;
 
-    // 1. Fetch matching policies (either single policy or customer policies by phone)
+    // 1. Fetch matching policies with strict tenant isolation
     let targetPolicies = [];
-    if (portfolioId) {
+    if (targetPolicyIds.length > 0) {
+      targetPolicies = await prisma.policyRecord.findMany({
+        where: {
+          id: { in: targetPolicyIds },
+          ...tenantFilter,
+        },
+      });
+
+      if (targetPolicies.length !== targetPolicyIds.length) {
+        return Response.json(
+          { error: "One or more requested policies not found or access denied." },
+          { status: 403 }
+        );
+      }
+    } else if (portfolioId) {
       targetPolicies = await prisma.policyRecord.findMany({
         where: {
           customerPortfolioId: portfolioId,
           deletedAt: null,
-          ...(isSuperAdmin ? {} : { organizationId: orgId }),
+          ...tenantFilter,
         },
       });
     } else if (phone) {
@@ -88,27 +114,47 @@ export async function POST(request) {
       targetPolicies = await prisma.policyRecord.findMany({
         where: {
           deletedAt: null,
-          ...(isSuperAdmin ? {} : { organizationId: orgId }),
+          ...tenantFilter,
           id: { in: matchedPolicyIds },
         },
       });
-    } else {
-      const singlePolicy = await prisma.policyRecord.findFirst({
-        where: {
-          id: policyId,
-          ...tenantFilter,
-        },
-      });
-      if (singlePolicy) {
-        targetPolicies = [singlePolicy];
-      }
     }
 
     if (targetPolicies.length === 0) {
       return Response.json({ error: "No policies found or access denied" }, { status: 404 });
     }
 
-    // 2. Fetch the target assignee user
+    // 2. Safe Concurrency Check
+    if (expectedUpdatedAts && typeof expectedUpdatedAts === "object") {
+      const hasConflict = targetPolicies.some((p) => {
+        const expStr = expectedUpdatedAts[p.id];
+        if (!expStr || !p.updatedAt) return false;
+        return new Date(p.updatedAt).getTime() > new Date(expStr).getTime();
+      });
+      if (hasConflict) {
+        return Response.json(
+          {
+            error: "Conflict: One or more policies have been modified by another session. Please refresh to view latest changes.",
+            conflict: true,
+          },
+          { status: 409 }
+        );
+      }
+    } else if (expectedUpdatedAt) {
+      const primaryPolicy = targetPolicies.find((p) => p.id === policyId) || targetPolicies[0];
+      const expectedTime = new Date(expectedUpdatedAt).getTime();
+      if (primaryPolicy?.updatedAt && new Date(primaryPolicy.updatedAt).getTime() > expectedTime) {
+        return Response.json(
+          {
+            error: "Conflict: This record was modified by another session. Please refresh to view latest changes.",
+            conflict: true,
+          },
+          { status: 409 }
+        );
+      }
+    }
+
+    // 3. Fetch the target assignee user within permitted tenant scope
     const assignee = await prisma.user.findFirst({
       where: isSuperAdmin
         ? { id: assignedToUserId, role: { not: "VIEWER" } }
@@ -125,65 +171,103 @@ export async function POST(request) {
     const actorName = user.name || user.email || "User";
     const noteText = String(note || "").trim();
 
-    // 3. Process reassignments
-    const updates = targetPolicies.map(async (policy) => {
-      const previousPayload = policy.reviewedData || policy.data || {};
-      const previousAssignee = previousPayload.assignedTo || "";
+    // 4. Process reassignments atomically with conditional OCC version checking
+    await prisma.$transaction(async (tx) => {
+      for (const policy of targetPolicies) {
+        const previousPayload = policy.reviewedData || policy.data || {};
+        const previousAssignee = previousPayload.assignedTo || "";
 
-      let remarkText = previousAssignee
-        ? `Reassigned from ${previousAssignee} to ${assigneeLabel}.`
-        : `Assigned to ${assigneeLabel}.`;
-      if (noteText) {
-        remarkText = `${remarkText} ${noteText}`;
+        let remarkText = previousAssignee
+          ? `Reassigned from ${previousAssignee} to ${assigneeLabel}.`
+          : `Assigned to ${assigneeLabel}.`;
+        if (noteText) {
+          remarkText = `${remarkText} ${noteText}`;
+        }
+
+        const assignmentRemark = {
+          id: randomUUID(),
+          text: remarkText,
+          createdAt: assignedDate,
+          createdBy: actorName,
+          createdById: actorId,
+          type: "REASSIGNED",
+          oldStatus: policy.renewalStatus || "ACTIVE",
+          newStatus: policy.renewalStatus || "ACTIVE",
+          assignedTo: assigneeLabel,
+          assignedToId: assignee.id,
+        };
+
+        const reviewedData = appendAssignmentRemark(policy.reviewedData || {}, {
+          ...assignmentRemark,
+          assignedDate,
+        });
+        const data = appendAssignmentRemark(policy.data || {}, {
+          ...assignmentRemark,
+          assignedDate,
+        });
+
+        const expTimeStr =
+          (expectedUpdatedAts && expectedUpdatedAts[policy.id]) ||
+          (policy.id === policyId ? expectedUpdatedAt : null);
+        const expTime = expTimeStr ? new Date(expTimeStr).getTime() : null;
+
+        const updateResult = await tx.policyRecord.updateMany({
+          where: {
+            id: policy.id,
+            ...tenantFilter,
+            ...(expTimeStr ? { updatedAt: new Date(expTimeStr) } : {}),
+          },
+          data: {
+            reviewedData,
+            data,
+            updatedById: actorId,
+          },
+        });
+
+        if (updateResult.count === 0) {
+          const conflictErr = new Error("OCC_CONFLICT");
+          conflictErr.code = "OCC_CONFLICT";
+          conflictErr.policyId = policy.id;
+          throw conflictErr;
+        }
       }
 
-      const assignmentRemark = {
-        id: randomUUID(),
-        text: remarkText,
-        createdAt: assignedDate,
-        createdBy: actorName,
-        createdById: actorId,
-        type: "REASSIGNED",
-        oldStatus: policy.renewalStatus || "ACTIVE",
-        newStatus: policy.renewalStatus || "ACTIVE",
-        assignedTo: assigneeLabel,
-        assignedToId: assignee.id,
-      };
-
-      const reviewedData = appendAssignmentRemark(policy.reviewedData || {}, {
-        ...assignmentRemark,
-        assignedDate,
-      });
-      const data = appendAssignmentRemark(policy.data || {}, {
-        ...assignmentRemark,
-        assignedDate,
-      });
-
-      await prisma.policyRecord.update({
-        where: { id: policy.id },
-        data: {
-          reviewedData,
-          data,
-          updatedById: actorId,
-        },
-      });
-
-      const { ipAddress, userAgent } = getAuditMetadata(request);
-      await logAudit({
-        action: "RENEWAL_REASSIGNED",
-        entityType: "PolicyRecord",
-        entityId: policy.id,
-        severity: "INFO",
-        source: "API",
-        ipAddress,
-        userAgent,
-        userId: actorId,
+      // Log unified activity across all assigned policies inside transaction
+      await logActivity({
+        tx,
         organizationId: user.organizationId,
-        metadata: { assignedToUserId: assignee.id, assignedTo: assigneeLabel },
+        userId: actorId,
+        userRole: user.role,
+        module: "RENEWAL",
+        customerId: targetPolicies[0].customerPortfolioId || null,
+        customerName: targetPolicies[0].insuredName || targetPolicies[0].data?.insuredName,
+        policyIds: targetPolicies.map((p) => p.id),
+        activityType: "ASSIGNMENT",
+        outcome: `Assigned to ${assigneeLabel}`,
+        remark: noteText || `Assigned to ${assigneeLabel}`,
+        assignedTo: assigneeLabel,
+        metadata: { assignedToUserId: assignee.id, assignedTo: assigneeLabel, note: noteText },
+        ipAddress: getAuditMetadata(request).ipAddress,
       });
     });
 
-    await Promise.all(updates);
+    const { ipAddress, userAgent } = getAuditMetadata(request);
+    await logAudit({
+      action: "RENEWAL_REASSIGNED",
+      entityType: "PolicyRecord",
+      entityId: targetPolicies[0]?.id,
+      severity: "INFO",
+      source: "API",
+      ipAddress,
+      userAgent,
+      userId: actorId,
+      organizationId: user.organizationId,
+      metadata: {
+        assignedToUserId: assignee.id,
+        assignedTo: assigneeLabel,
+        targetPolicyCount: targetPolicies.length,
+      },
+    });
 
     return Response.json({
       success: true,
@@ -192,6 +276,16 @@ export async function POST(request) {
       assignedDate,
     });
   } catch (error) {
+    if (error.code === "OCC_CONFLICT") {
+      return Response.json(
+        {
+          error: "Conflict: This record was modified by another session. Please refresh to view latest changes.",
+          conflict: true,
+          policyId: error.policyId,
+        },
+        { status: 409 }
+      );
+    }
     console.error("Renewal assign failed:", error);
     return Response.json({ error: "Failed to reassign." }, { status: 500 });
   }
