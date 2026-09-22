@@ -27,9 +27,24 @@ import {
   Zap,
   Ban,
   Car,
+  Warehouse,
+  Flame,
+  HeartPulse,
+  Shield,
   ArrowRight,
 } from "lucide-react";
 import { showToast } from "@/app/components/shared/ToastProvider";
+
+function getCategoryIcon(cat, size = 13, style = { color: "#475569" }) {
+  const c = String(cat || "").toUpperCase();
+  if (c.includes("WAREHOUSE")) return <Warehouse size={size} style={style} />;
+  if (c.includes("MOTOR") || c.includes("VEHICLE") || c.includes("CAR") || c.includes("BIKE")) return <Car size={size} style={style} />;
+  if (c.includes("FIRE")) return <Flame size={size} style={style} />;
+  if (c.includes("HEALTH") || c.includes("MEDICLAIM")) return <HeartPulse size={size} style={style} />;
+  if (c.includes("LIFE")) return <Shield size={size} style={style} />;
+  if (c.includes("BUILDING") || c.includes("PROPERTY") || c.includes("OFFICE")) return <Building2 size={size} style={style} />;
+  return <Shield size={size} style={style} />;
+}
 
 function getCustomerInitials(name) {
   if (!name || typeof name !== "string") return "CU";
@@ -931,7 +946,7 @@ export default function RenewalActionDrawer({
             <div className="rad-badge-row">
               <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                 <span className="rad-category-pill">
-                  <Car size={13} style={{ color: "#475569" }} /> {policyCategory}
+                  {getCategoryIcon(policyCategory)} {policyCategory}
                 </span>
                 <span style={{ width: "1px", height: "14px", backgroundColor: "#cbd5e1" }} />
                 <span className="rad-insurer-name">
