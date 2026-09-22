@@ -946,96 +946,99 @@ export default function RenewalActionDrawer({
             </button>
           </div>
 
-          {/* Customer Identity Row */}
-          <div className="rad-customer-row">
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0, flex: 1 }}>
-              <div className="rad-avatar">
-                {initials}
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <h2 className="rad-customer-name">
-                  {activePolicy.insuredName || "Unnamed Customer"}
-                </h2>
-                {/* Meta row with vertical dividers */}
-                <div className="rad-meta-columns">
-                  <div className="rad-meta-item">
-                    <span className="rad-meta-label">Policy No.</span>
-                    <strong className="rad-meta-val" style={{ fontFamily: "monospace" }}>
-                      {String(activePolicy.policyNumber || "—").replace(/:+$/, "")}
-                    </strong>
-                  </div>
-                  <span className="rad-meta-divider" />
-                  <div className="rad-meta-item">
-                    <span className="rad-meta-label">Expiry Date</span>
-                    <strong className="rad-meta-val">
-                      {activePolicy.expiryDate ? new Date(activePolicy.expiryDate).toLocaleDateString("en-IN") : "—"}
-                    </strong>
-                  </div>
-                  <span className="rad-meta-divider" />
-                  <div className="rad-meta-item">
-                    <span className="rad-meta-label">Vehicle No.</span>
-                    <strong className="rad-meta-val" style={{ fontFamily: "monospace" }}>
-                      {vehicleNumber}
-                    </strong>
+          {/* Customer & Contact Row (side-by-side in wide mode) */}
+          <div className="rad-header-middle">
+            {/* Customer Identity Row */}
+            <div className="rad-customer-row">
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0, flex: 1 }}>
+                <div className="rad-avatar">
+                  {initials}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <h2 className="rad-customer-name">
+                    {activePolicy.insuredName || "Unnamed Customer"}
+                  </h2>
+                  {/* Meta row with vertical dividers */}
+                  <div className="rad-meta-columns">
+                    <div className="rad-meta-item">
+                      <span className="rad-meta-label">Policy No.</span>
+                      <strong className="rad-meta-val" style={{ fontFamily: "monospace" }}>
+                        {String(activePolicy.policyNumber || "—").replace(/:+$/, "")}
+                      </strong>
+                    </div>
+                    <span className="rad-meta-divider" />
+                    <div className="rad-meta-item">
+                      <span className="rad-meta-label">Expiry Date</span>
+                      <strong className="rad-meta-val">
+                        {activePolicy.expiryDate ? new Date(activePolicy.expiryDate).toLocaleDateString("en-IN") : "—"}
+                      </strong>
+                    </div>
+                    <span className="rad-meta-divider" />
+                    <div className="rad-meta-item">
+                      <span className="rad-meta-label">Vehicle No.</span>
+                      <strong className="rad-meta-val" style={{ fontFamily: "monospace" }}>
+                        {vehicleNumber}
+                      </strong>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <button
-              type="button"
-              onClick={handleOpenProfile}
-              className="rad-profile-btn"
-              title="View full customer profile"
-            >
-              <Eye size={13} /> View Profile
-            </button>
-          </div>
-
-          {/* Contact Strip */}
-          <div className="rad-contact-card">
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-              <div className="rad-contact-avatar">
-                <User size={15} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  Contact:{" "}
-                  <strong style={{ color: "#0f172a", fontWeight: 600 }}>
-                    {contactPerson && contactPerson !== activePolicy.insuredName
-                      ? contactPerson
-                      : cleanPhone
-                      ? "Direct / Insured"
-                      : "Not Provided"}
-                  </strong>
-                </div>
-                <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a", fontFamily: "monospace", letterSpacing: "0.02em" }}>
-                  {cleanPhone ? `+91 ${cleanPhone}` : "No number recorded"}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
               <button
                 type="button"
-                onClick={handleCall}
-                disabled={!cleanPhone}
-                title="Call Customer"
-                className="rad-btn-call"
-                style={{ opacity: cleanPhone ? 1 : 0.5, cursor: cleanPhone ? "pointer" : "not-allowed" }}
+                onClick={handleOpenProfile}
+                className="rad-profile-btn"
+                title="View full customer profile"
               >
-                <Phone size={13} /> Call
+                <Eye size={13} /> View Profile
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("whatsapp")}
-                disabled={!cleanPhone}
-                title="Send WhatsApp message"
-                className="rad-btn-whatsapp"
-                style={{ opacity: cleanPhone ? 1 : 0.5, cursor: cleanPhone ? "pointer" : "not-allowed" }}
-              >
-                <MessageCircle size={13} /> WhatsApp
-              </button>
+            </div>
+
+            {/* Contact Strip */}
+            <div className="rad-contact-card">
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                <div className="rad-contact-avatar">
+                  <User size={15} />
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    Contact:{" "}
+                    <strong style={{ color: "#0f172a", fontWeight: 600 }}>
+                      {contactPerson && contactPerson !== activePolicy.insuredName
+                        ? contactPerson
+                        : cleanPhone
+                        ? "Direct / Insured"
+                        : "Not Provided"}
+                    </strong>
+                  </div>
+                  <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a", fontFamily: "monospace", letterSpacing: "0.02em" }}>
+                    {cleanPhone ? `+91 ${cleanPhone}` : "No number recorded"}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                <button
+                  type="button"
+                  onClick={handleCall}
+                  disabled={!cleanPhone}
+                  title="Call Customer"
+                  className="rad-btn-call"
+                  style={{ opacity: cleanPhone ? 1 : 0.5, cursor: cleanPhone ? "pointer" : "not-allowed" }}
+                >
+                  <Phone size={13} /> Call
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("whatsapp")}
+                  disabled={!cleanPhone}
+                  title="Send WhatsApp message"
+                  className="rad-btn-whatsapp"
+                  style={{ opacity: cleanPhone ? 1 : 0.5, cursor: cleanPhone ? "pointer" : "not-allowed" }}
+                >
+                  <MessageCircle size={13} /> WhatsApp
+                </button>
+              </div>
             </div>
           </div>
           </div>
@@ -1070,279 +1073,322 @@ export default function RenewalActionDrawer({
           <div className="rn-drawer-body-inner">
           {/* TAB 1: Log Call / Note */}
           {activeTab === "remark" && (
-            <form onSubmit={handleSaveRemark} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              {allPolicies.length > 1 && (
-                <div style={{ padding: "8px 12px", background: "#ffffff", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "12px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 600, color: "#0f172a", marginBottom: "4px" }}>
-                    <Layers size={13} /> Multi-Policy Client ({allPolicies.length} expiring policies)
-                  </div>
-                  <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
-                    <button
-                      type="button"
-                      onClick={() => setInteractionScope("all")}
-                      style={{
-                        padding: "5px 10px",
-                        borderRadius: "6px",
-                        border: interactionScope === "all" ? "1px solid #94a3b8" : "1px solid #e2e8f0",
-                        background: interactionScope === "all" ? "#f1f5f9" : "#ffffff",
-                        color: interactionScope === "all" ? "#0f172a" : "#64748b",
-                        fontSize: "11.5px",
-                        fontWeight: interactionScope === "all" ? 600 : 500,
-                        boxShadow: interactionScope === "all" ? "0 1px 2px rgba(0, 0, 0, 0.04)" : "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Apply to all {allPolicies.length} policies
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setInteractionScope("single")}
-                      style={{
-                        padding: "5px 10px",
-                        borderRadius: "6px",
-                        border: interactionScope === "single" ? "1px solid #94a3b8" : "1px solid #e2e8f0",
-                        background: interactionScope === "single" ? "#f1f5f9" : "#ffffff",
-                        color: interactionScope === "single" ? "#0f172a" : "#64748b",
-                        fontSize: "11.5px",
-                        fontWeight: interactionScope === "single" ? 600 : 500,
-                        boxShadow: interactionScope === "single" ? "0 1px 2px rgba(0, 0, 0, 0.04)" : "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      This policy only
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Quick Outcome Section */}
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", marginBottom: "2px" }}>
-                  Quick Outcome
-                </div>
-                <div style={{ fontSize: "11.5px", color: "#64748b", marginBottom: "8px" }}>
-                  Select the outcome of this interaction
-                </div>
-                <div className="rad-quick-outcomes-grid">
-                  {QUICK_OUTCOMES.map((chip) => {
-                    const ChipIcon = chip.icon;
-                    const isSelected = selectedChip === chip.label;
-                    return (
+            <form onSubmit={handleSaveRemark} className="rad-remark-layout">
+              {/* Main Form Column */}
+              <div className="rad-remark-main-col">
+                {allPolicies.length > 1 && (
+                  <div style={{ padding: "8px 12px", background: "#ffffff", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 600, color: "#0f172a", marginBottom: "4px" }}>
+                      <Layers size={13} /> Multi-Policy Client ({allPolicies.length} expiring policies)
+                    </div>
+                    <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
                       <button
-                        key={chip.label}
                         type="button"
-                        onClick={() => {
-                          setSelectedChip(chip.label);
-                          const d = new Date();
-                          if (chip.days > 0) d.setDate(d.getDate() + chip.days);
-                          const isoStr = chip.days > 0 ? d.toISOString().slice(0, 16) : "";
-                          setRemarkText(chip.text);
-                          setRenewalStatus(chip.status);
-                          if (isoStr) setFollowUpDate(isoStr);
-                        }}
+                        onClick={() => setInteractionScope("all")}
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "6px",
-                          padding: "8px 10px",
-                          borderRadius: "8px",
+                          padding: "5px 10px",
+                          borderRadius: "6px",
+                          border: interactionScope === "all" ? "1px solid #94a3b8" : "1px solid #e2e8f0",
+                          background: interactionScope === "all" ? "#f1f5f9" : "#ffffff",
+                          color: interactionScope === "all" ? "#0f172a" : "#64748b",
                           fontSize: "11.5px",
-                          fontWeight: isSelected ? 600 : 500,
-                          background: isSelected ? "#f1f5f9" : "#ffffff",
-                          color: isSelected ? "#0f172a" : "#475569",
-                          border: isSelected ? "1px solid #94a3b8" : "1px solid #e2e8f0",
-                          boxShadow: isSelected ? "0 1px 3px rgba(0, 0, 0, 0.05)" : "none",
+                          fontWeight: interactionScope === "all" ? 600 : 500,
+                          boxShadow: interactionScope === "all" ? "0 1px 2px rgba(0, 0, 0, 0.04)" : "none",
                           cursor: "pointer",
-                          transition: "all 0.15s ease",
                         }}
                       >
-                        <ChipIcon size={13} style={{ color: isSelected ? "#0f172a" : "#64748b", flexShrink: 0 }} />
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {chip.label}
-                        </span>
+                        Apply to all {allPolicies.length} policies
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
+                      <button
+                        type="button"
+                        onClick={() => setInteractionScope("single")}
+                        style={{
+                          padding: "5px 10px",
+                          borderRadius: "6px",
+                          border: interactionScope === "single" ? "1px solid #94a3b8" : "1px solid #e2e8f0",
+                          background: interactionScope === "single" ? "#f1f5f9" : "#ffffff",
+                          color: interactionScope === "single" ? "#0f172a" : "#64748b",
+                          fontSize: "11.5px",
+                          fontWeight: interactionScope === "single" ? 600 : 500,
+                          boxShadow: interactionScope === "single" ? "0 1px 2px rgba(0, 0, 0, 0.04)" : "none",
+                          cursor: "pointer",
+                        }}
+                      >
+                        This policy only
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-              {/* Remark Notes */}
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: "3px" }}>
-                    Remark Notes <span style={{ color: "#ef4444" }}>*</span>
-                  </label>
-                  <span style={{ fontSize: "11px", color: "#94a3b8" }}>{remarkText.length}/1000</span>
-                </div>
-                <textarea
-                  value={remarkText}
-                  onChange={(e) => setRemarkText(e.target.value)}
-                  placeholder="Enter details of your call or interaction..."
-                  rows={4}
-                  style={{
-                    width: "100%",
-                    padding: "9px 12px",
-                    borderRadius: "8px",
-                    border: "1px solid #cbd5e1",
-                    fontSize: "12.5px",
-                    fontFamily: "inherit",
-                    resize: "vertical",
-                    background: "#ffffff",
-                    color: "#0f172a",
-                    outline: "none",
-                  }}
-                  required
-                />
-              </div>
-
-              {/* 2x2 Grid: Status Outcome + Next Follow-Up Date */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                {/* Remark Notes */}
                 <div>
-                  <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
-                    Status Outcome
-                  </label>
-                  <select
-                    value={renewalStatus}
-                    onChange={(e) => setRenewalStatus(e.target.value)}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                      Remark Notes <span style={{ color: "#ef4444" }}>*</span>
+                    </label>
+                    <span style={{ fontSize: "11px", color: "#94a3b8" }}>{remarkText.length}/1000</span>
+                  </div>
+                  <textarea
+                    value={remarkText}
+                    onChange={(e) => setRemarkText(e.target.value)}
+                    placeholder="Enter details of your call or interaction..."
+                    rows={4}
                     style={{
                       width: "100%",
-                      padding: "8px 10px",
+                      padding: "9px 12px",
                       borderRadius: "8px",
                       border: "1px solid #cbd5e1",
                       fontSize: "12.5px",
+                      fontFamily: "inherit",
+                      resize: "vertical",
                       background: "#ffffff",
                       color: "#0f172a",
-                      cursor: "pointer",
+                      outline: "none",
                     }}
-                  >
-                    <option value="Called">Called</option>
-                    <option value="Follow-Up">Follow-Up</option>
-                    <option value="Quote Sent">Quote Sent</option>
-                    <option value="Interested">Interested</option>
-                    <option value="Negotiation">Negotiation</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
-                    Next Follow-Up Date
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={followUpDate}
-                    onChange={(e) => setFollowUpDate(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "7px 10px",
-                      borderRadius: "8px",
-                      border: "1px solid #cbd5e1",
-                      fontSize: "12px",
-                      background: "#ffffff",
-                      color: "#0f172a",
-                    }}
+                    required
                   />
                 </div>
-              </div>
 
-              {/* 2x2 Grid: Follow-Up Mode + Priority */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
-                    Follow-Up Mode
-                  </label>
-                  <select
-                    value={followUpMode}
-                    onChange={(e) => setFollowUpMode(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "8px 10px",
-                      borderRadius: "8px",
-                      border: "1px solid #cbd5e1",
-                      fontSize: "12.5px",
-                      background: "#ffffff",
-                      color: "#0f172a",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <option value="Call">Phone Call</option>
-                    <option value="WhatsApp">WhatsApp</option>
-                    <option value="Email">Email</option>
-                    <option value="Office Visit">Office Visit</option>
-                  </select>
+                {/* 2x2 Grid: Status Outcome + Next Follow-Up Date */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
+                      Status Outcome
+                    </label>
+                    <select
+                      value={renewalStatus}
+                      onChange={(e) => setRenewalStatus(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 10px",
+                        borderRadius: "8px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "12.5px",
+                        background: "#ffffff",
+                        color: "#0f172a",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <option value="Called">Called</option>
+                      <option value="Follow-Up">Follow-Up</option>
+                      <option value="Quote Sent">Quote Sent</option>
+                      <option value="Interested">Interested</option>
+                      <option value="Negotiation">Negotiation</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
+                      Next Follow-Up Date
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={followUpDate}
+                      onChange={(e) => setFollowUpDate(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "7px 10px",
+                        borderRadius: "8px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "12px",
+                        background: "#ffffff",
+                        color: "#0f172a",
+                      }}
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
-                    Priority
-                  </label>
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
+                {/* 2x2 Grid: Follow-Up Mode + Priority */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
+                      Follow-Up Mode
+                    </label>
+                    <select
+                      value={followUpMode}
+                      onChange={(e) => setFollowUpMode(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 10px",
+                        borderRadius: "8px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "12.5px",
+                        background: "#ffffff",
+                        color: "#0f172a",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <option value="Call">Phone Call</option>
+                      <option value="WhatsApp">WhatsApp</option>
+                      <option value="Email">Email</option>
+                      <option value="Office Visit">Office Visit</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
+                      Priority
+                    </label>
+                    <select
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 10px",
+                        borderRadius: "8px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "12.5px",
+                        background: "#ffffff",
+                        color: "#0f172a",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <option value="Normal">Normal</option>
+                      <option value="High">High</option>
+                      <option value="Urgent">Urgent</option>
+                      <option value="Low">Low</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
                     style={{
-                      width: "100%",
-                      padding: "8px 10px",
+                      flex: 1,
+                      padding: "10px 14px",
                       borderRadius: "8px",
-                      border: "1px solid #cbd5e1",
-                      fontSize: "12.5px",
                       background: "#ffffff",
-                      color: "#0f172a",
-                      cursor: "pointer",
+                      color: "#475569",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      border: "1px solid #cbd5e1",
+                      cursor: isSubmitting ? "not-allowed" : "pointer",
                     }}
                   >
-                    <option value="Normal">Normal</option>
-                    <option value="High">High</option>
-                    <option value="Urgent">Urgent</option>
-                    <option value="Low">Low</option>
-                  </select>
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={() => handleSave(true)}
+                    style={{
+                      flex: 1.4,
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      background: "#f1f5f9",
+                      color: "#0f172a",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      border: "1px solid #94a3b8",
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      cursor: isSubmitting ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    Save & Next Customer <ArrowRight size={14} />
+                  </button>
+                </div>
+                <div style={{ fontSize: "11px", color: "#64748b", textAlign: "center" }}>
+                  Tip: Press <strong style={{ color: "#0f172a" }}>Ctrl + Enter</strong> to Save & Next
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  style={{
-                    flex: 1,
-                    padding: "10px 14px",
-                    borderRadius: "8px",
-                    background: "#ffffff",
-                    color: "#475569",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    border: "1px solid #cbd5e1",
-                    cursor: isSubmitting ? "not-allowed" : "pointer",
-                  }}
-                >
-                  Save
-                </button>
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() => handleSave(true)}
-                  style={{
-                    flex: 1.4,
-                    padding: "10px 14px",
-                    borderRadius: "8px",
-                    background: "#f1f5f9",
-                    color: "#0f172a",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    border: "1px solid #94a3b8",
-                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "6px",
-                    cursor: isSubmitting ? "not-allowed" : "pointer",
-                  }}
-                >
-                  Save & Next Customer <ArrowRight size={14} />
-                </button>
-              </div>
-              <div style={{ fontSize: "11px", color: "#64748b", textAlign: "center" }}>
-                Tip: Press <strong style={{ color: "#0f172a" }}>Ctrl + Enter</strong> to Save & Next
+              {/* Side Column: Quick Outcomes & Recent Activity */}
+              <div className="rad-remark-side-col">
+                {/* Quick Outcome Section */}
+                <div className="rad-quick-outcomes-card">
+                  <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a", marginBottom: "2px" }}>
+                    Quick Outcome
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "8px" }}>
+                    Select the outcome of this interaction
+                  </div>
+                  <div className="rad-quick-outcomes-grid">
+                    {QUICK_OUTCOMES.map((chip) => {
+                      const ChipIcon = chip.icon;
+                      const isSelected = selectedChip === chip.label;
+                      return (
+                        <button
+                          key={chip.label}
+                          type="button"
+                          onClick={() => {
+                            setSelectedChip(chip.label);
+                            const d = new Date();
+                            if (chip.days > 0) d.setDate(d.getDate() + chip.days);
+                            const isoStr = chip.days > 0 ? d.toISOString().slice(0, 16) : "";
+                            setRemarkText(chip.text);
+                            setRenewalStatus(chip.status);
+                            if (isoStr) setFollowUpDate(isoStr);
+                          }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
+                            padding: "8px 10px",
+                            borderRadius: "8px",
+                            fontSize: "11.5px",
+                            fontWeight: isSelected ? 600 : 500,
+                            background: isSelected ? "#f1f5f9" : "#ffffff",
+                            color: isSelected ? "#0f172a" : "#475569",
+                            border: isSelected ? "1px solid #94a3b8" : "1px solid #e2e8f0",
+                            boxShadow: isSelected ? "0 1px 3px rgba(0, 0, 0, 0.05)" : "none",
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <ChipIcon size={13} style={{ color: isSelected ? "#0f172a" : "#64748b", flexShrink: 0 }} />
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {chip.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Recent Activity / Timeline Mini-Feed (in wide mode) */}
+                <div className="rad-timeline-side-feed">
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f172a", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Clock size={13} style={{ color: "#64748b" }} /> Past Activity & Remarks
+                  </div>
+                  {timelineLoading ? (
+                    <div style={{ fontSize: "11.5px", color: "#64748b", padding: "8px 0" }}>Loading history...</div>
+                  ) : timeline.length === 0 ? (
+                    <div style={{ fontSize: "11.5px", color: "#94a3b8", padding: "8px 0" }}>
+                      No prior interaction history recorded.
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "280px", overflowY: "auto" }}>
+                      {timeline.slice(0, 5).map((item, idx) => (
+                        <div
+                          key={item.id || idx}
+                          style={{
+                            padding: "8px 10px",
+                            borderRadius: "6px",
+                            background: "#ffffff",
+                            border: "1px solid #e2e8f0",
+                            fontSize: "11.5px",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}>
+                            <span style={{ fontWeight: 600, color: "#0f172a" }}>{item.author || item.userName || "Agent"}</span>
+                            <span style={{ fontSize: "10.5px", color: "#94a3b8" }}>
+                              {item.createdAt ? new Date(item.createdAt).toLocaleDateString("en-IN") : "Recent"}
+                            </span>
+                          </div>
+                          <div style={{ color: "#334155", whiteSpace: "pre-wrap" }}>{item.remark || item.text}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </form>
           )}
