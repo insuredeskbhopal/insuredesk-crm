@@ -66,7 +66,6 @@ export default function RenewalActionDrawer({
   const [interactionScope, setInteractionScope] = useState("all"); // "single" | "all"
 
   // Resizable Drawer state
-  const drawerRef = useRef(null);
   const [drawerWidth, setDrawerWidth] = useState(600);
   const [isResizing, setIsResizing] = useState(false);
   const isResizingRef = useRef(false);
