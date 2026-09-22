@@ -118,6 +118,7 @@ export async function GET(request) {
           COALESCE(p.reviewed_data->'renewalRemarks'->0->>'text', p.data->'renewalRemarks'->0->>'text', p.reviewed_data->>'remark', p.data->>'remark', '') AS latest_remark,
           COALESCE(p.reviewed_data->>'insuranceCompany', p.reviewed_data->>'Insurance Company', p.data->>'insuranceCompany', p.data->>'Insurance Company', '') AS company,
           COALESCE(p.reviewed_data->>'policyType', p.reviewed_data->>'Policy Type', p.data->>'policyType', p.data->>'Policy Type', '') AS policy_type,
+          COALESCE(p.reviewed_data->>'policyCategory', p.data->>'policyCategory', '') AS policy_category,
           COALESCE(p.reviewed_data->>'expiryDate', p.reviewed_data->>'policyEndDate', p.data->>'expiryDate', p.data->>'policyEndDate') AS raw_expiry,
           LOWER(
             COALESCE(p.selected_policy_type, '') || ' ' ||
@@ -179,6 +180,9 @@ export async function GET(request) {
           manual_renewal_source,
           search_text,
           (CASE
+            WHEN LOWER(policy_category) = 'non-motor policy' THEN 'Commercial Policy'
+            WHEN LOWER(policy_category) = 'warehouse policy' THEN 'Warehouse Policy'
+            WHEN LOWER(policy_category) = 'motor policy' THEN 'Motor Policy'
             WHEN policy_haystack ~ '\\m(motor|vehicle|private\\s+car|two\\s+wheeler|commercial\\s+vehicle|goods\\s+carrying|auto\\s+secure|registration|chassis|engine)\\M'
               OR policy_haystack ~ '\\m[a-z]{2}[-\\s]?\\d{1,2}[-\\s]?[a-z]{1,3}[-\\s]?\\d{4}\\M' THEN 'Motor Policy'
             WHEN policy_haystack ~ '\\m(warehouse|mpwlc|godown|warehousing)\\M' THEN 'Warehouse Policy'

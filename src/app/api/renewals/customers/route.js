@@ -113,6 +113,7 @@ export async function GET(request) {
           COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry,
           COALESCE(reviewed_data->>'insuranceCompany', reviewed_data->>'Insurance Company', data->>'insuranceCompany', data->>'Insurance Company', '') AS raw_company,
           COALESCE(reviewed_data->>'policyType', reviewed_data->>'Policy Type', data->>'policyType', data->>'Policy Type', '') AS raw_policy_type,
+          COALESCE(reviewed_data->>'policyCategory', data->>'policyCategory', '') AS policy_category,
           COALESCE(selected_company, '') AS selected_company,
           COALESCE(selected_policy_type, '') AS selected_policy_type,
           LOWER(
@@ -146,6 +147,9 @@ export async function GET(request) {
           selected_company,
           selected_policy_type,
           (CASE
+            WHEN LOWER(policy_category) = 'non-motor policy' THEN 'Commercial'
+            WHEN LOWER(policy_category) = 'warehouse policy' THEN 'Fire'
+            WHEN LOWER(policy_category) = 'motor policy' THEN 'Motor'
             WHEN policy_haystack ~ '\\m(motor|vehicle|private\\s+car|two\\s+wheeler|commercial\\s+vehicle|goods\\s+carrying|auto\\s+secure|registration|chassis|engine)\\M'
               OR policy_haystack ~ '\\m[a-z]{2}[-\\s]?\\d{1,2}[-\\s]?[a-z]{1,3}[-\\s]?\\d{4}\\M' THEN 'Motor'
             WHEN policy_haystack ~ '\\m(fire|sfsp|standard\\s+fire|msme\\s+suraksha|burglary|warehouse|stock|contents|property|industrial\\s+all\\s+risk)\\M' THEN 'Fire'

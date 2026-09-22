@@ -521,7 +521,8 @@ export default function RenewalPoliciesPage() {
                 return (
                   <Fragment key={group.customerKey}>
                     <tr
-                      style={{ cursor: "pointer", background: "#ffffff" }}
+                      className={`rn-customer-parent-row ${isExpanded ? "rn-customer-parent-row--expanded" : ""}`}
+                      style={{ cursor: "pointer" }}
                       onClick={() => toggleExpandCustomer(group.customerKey)}
                     >
                       <td style={{ textAlign: "center", color: isExpanded ? "#0f172a" : "#64748b" }}>
@@ -619,40 +620,81 @@ export default function RenewalPoliciesPage() {
                     </tr>
                     {isExpanded &&
                       group.policies.map((p) => {
-                        const asset = p.vehicleNumber || p.registrationNumber || p.riskLocation || "—";
+                        const contactNo = p.contactNumber || p.customerMobile || p.contactPersonMobile || p.renewalRecipientMobile || "";
+                        const asset = p.vehicleNumber || p.registrationNumber || p.riskLocation || "";
                         const cleanNo = String(p.policyNumber || "—").replace(/:+$/, "").trim();
                         const insurer = p.insuranceCompany || p.companyName || "—";
                         const pType = p.displayPolicyType || p.policyType || "—";
+                        const hasContactPerson = p.contactPerson && p.contactPerson.toLowerCase().trim() !== (p.insuredName || "").toLowerCase().trim();
 
                         return (
                           <tr
                             key={p.id}
-                            style={{ background: "#ffffff", cursor: "pointer", borderBottom: "1px solid #f1f5f9" }}
+                            className="rn-customer-subrow"
+                            style={{ cursor: "pointer" }}
                             onClick={() => openCustomerAction(p, "remark")}
                           >
-                            <td style={{ textAlign: "center", color: "#64748b" }}>
-                              <span style={{ fontSize: "13px" }}>↳</span>
+                            <td style={{ textAlign: "center" }}>
+                              <span className="rn-customer-subrow__icon">↳</span>
                             </td>
                             <td>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", paddingLeft: 4 }}>
-                                <span className="rn-policy-register__mono" style={{ fontWeight: 600, color: "#0f172a" }}>
-                                  {cleanNo}
-                                </span>
-                                <span style={{ fontSize: "11.5px", color: "#64748b" }}>· {insurer}</span>
+                              <div style={{ paddingLeft: 4 }}>
+                                <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a", lineHeight: 1.3 }}>
+                                  {p.insuredName || "Name not available"}
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2, fontSize: "11.5px", color: "#64748b", flexWrap: "wrap" }}>
+                                  <span className="rn-policy-register__mono" style={{ fontWeight: 600, color: "#334155" }}>
+                                    {cleanNo}
+                                  </span>
+                                  <span style={{ color: "#cbd5e1" }}>·</span>
+                                  <span>{insurer}</span>
+                                  {hasContactPerson ? (
+                                    <>
+                                      <span style={{ color: "#cbd5e1" }}>·</span>
+                                      <span>{p.contactPerson}</span>
+                                    </>
+                                  ) : null}
+                                </div>
                               </div>
                             </td>
                             <td>
-                              <span className="rn-policy-register__mono" style={{ fontSize: "12px", color: "#475569" }}>
-                                {asset}
-                              </span>
+                              <div>
+                                {contactNo ? (
+                                  <span className="rn-policy-register__mono" style={{ fontSize: "12px", color: "#0f172a", fontWeight: 500, display: "block" }}>
+                                    {contactNo}
+                                  </span>
+                                ) : null}
+                                {asset ? (
+                                  <span className="rn-policy-register__mono" style={{ fontSize: "11.5px", color: "#64748b", display: "block" }}>
+                                    {asset}
+                                  </span>
+                                ) : null}
+                                {!contactNo && !asset ? (
+                                  <span style={{ color: "#94a3b8" }}>—</span>
+                                ) : null}
+                              </div>
                             </td>
                             <td>
-                              <span style={{ fontSize: "12.5px", color: "#334155" }}>{pType}</span>
+                              <div>
+                                <span style={{ fontSize: "12.5px", color: "#334155", fontWeight: 500, display: "block" }}>{pType}</span>
+                                {p.sumInsured ? (
+                                  <span style={{ fontSize: "11px", color: "#64748b", display: "block" }}>
+                                    SI: {p.sumInsured}
+                                  </span>
+                                ) : null}
+                              </div>
                             </td>
                             <td>
-                              <span style={{ fontSize: "12.5px", color: "#334155" }}>
-                                {formatRenewalRegisterDate(p.expiryDate)}
-                              </span>
+                              <div>
+                                <strong style={{ fontSize: "12.5px", color: "#0f172a", display: "block" }}>
+                                  {formatRenewalRegisterDate(p.expiryDate)}
+                                </strong>
+                                {p.daysStatus ? (
+                                  <small style={{ fontSize: "11px", color: "#64748b", display: "block" }}>
+                                    {p.daysStatus}
+                                  </small>
+                                ) : null}
+                              </div>
                             </td>
                             <td>
                               <span style={{ fontSize: "12.5px", fontWeight: 600, color: "#0f172a" }}>
@@ -735,24 +777,22 @@ export default function RenewalPoliciesPage() {
           </table>
         )}
 
-        <footer className="rn-pagination rn-policy-register__pagination" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span>Page {page} of {totalPages} · {totalCount.toLocaleString("en-IN")} policy rows</span>
-            <span style={{ color: "#cbd5e1" }}>|</span>
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#64748b" }}>
-              Per page:
+        <footer className="rn-pagination rn-policy-register__pagination">
+          <div className="rn-pagination__info">
+            <span>
+              Page <strong>{page}</strong> of <strong>{totalPages}</strong>
+            </span>
+            <span className="rn-pagination__divider" />
+            <span className="rn-pagination__badge">
+              {totalCount.toLocaleString("en-IN")} policy rows
+            </span>
+            <span className="rn-pagination__divider" />
+            <label className="rn-pagination__per-page">
+              <span>Rows per page:</span>
               <select
+                className="rn-pagination__select"
                 value={pageSize}
                 onChange={(e) => changePageSize(Number(e.target.value))}
-                style={{
-                  padding: "3px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid #cbd5e1",
-                  background: "#ffffff",
-                  fontSize: "12px",
-                  color: "#1e293b",
-                  cursor: "pointer",
-                }}
               >
                 <option value={15}>15</option>
                 <option value={25}>25</option>
@@ -761,9 +801,23 @@ export default function RenewalPoliciesPage() {
               </select>
             </label>
           </div>
-          <div>
-            <button type="button" className="rn-btn" disabled={page <= 1 || loading} onClick={() => changePage(page - 1)}><ChevronLeft size={15} /> Previous</button>
-            <button type="button" className="rn-btn" disabled={page >= totalPages || loading} onClick={() => changePage(page + 1)}>Next <ChevronRight size={15} /></button>
+          <div className="rn-pagination__nav">
+            <button
+              type="button"
+              className="rn-pagination__btn"
+              disabled={page <= 1 || loading}
+              onClick={() => changePage(page - 1)}
+            >
+              <ChevronLeft size={14} /> Previous
+            </button>
+            <button
+              type="button"
+              className="rn-pagination__btn"
+              disabled={page >= totalPages || loading}
+              onClick={() => changePage(page + 1)}
+            >
+              Next <ChevronRight size={14} />
+            </button>
           </div>
         </footer>
       </div>   {activeDrawerPolicy && (
