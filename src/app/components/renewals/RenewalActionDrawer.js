@@ -1038,6 +1038,7 @@ export default function RenewalActionDrawer({
               </button>
             </div>
           </div>
+          </div>
         </div>
 
         {/* Tab Navigation Grid (4x2) */}
