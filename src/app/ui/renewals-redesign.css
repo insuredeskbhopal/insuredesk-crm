@@ -2734,17 +2734,34 @@
   border-color: #bfdbfe;
 }
 
+/* Container query setup on the drawer itself */
+.rn-drawer-content {
+  container-type: inline-size;
+  container-name: drawer;
+}
+
 /* 4x2 Button Grid for Action Drawer */
+.rn-drawer-tabs-wrapper {
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
 .rn-drawer-tabs-grid {
+  max-width: 760px;
+  width: 100%;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
-  padding: 10px 16px;
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 20px;
+  background: transparent;
+  box-sizing: border-box;
 }
 
-@media (max-width: 540px) {
+@container drawer (max-width: 580px) {
   .rn-drawer-tabs-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -2808,14 +2825,52 @@
    RENEWAL ACTION DRAWER (RAD) HEADER & CONTROLS
    ========================================================================== */
 .rad-header {
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex !important;
+  justify-content: center !important;
+  box-sizing: border-box;
+  padding: 0 !important;
+}
+
+.rad-header-inner {
+  max-width: 760px;
+  width: 100%;
   display: flex !important;
   flex-direction: column !important;
   gap: 12px;
   padding: 16px 20px 14px 20px;
-  border-bottom: 1px solid #f1f5f9;
-  background: #ffffff;
+  box-sizing: border-box;
+}
+
+/* Scrollable Content Body */
+.rn-drawer-body-scroll {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
   width: 100%;
   box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+}
+
+.rn-drawer-body-inner {
+  max-width: 760px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rad-quick-outcomes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+@container drawer (max-width: 580px) {
+  .rad-quick-outcomes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .rad-badge-row {

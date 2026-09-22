@@ -924,7 +924,8 @@ export default function RenewalActionDrawer({
         </div>
         {/* Top Header */}
         <div className="rad-header">
-          {/* Category Tag & Insurer + Close */}
+          <div className="rad-header-inner">
+            {/* Category Tag & Insurer + Close */}
           <div className="rad-badge-row">
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span className="rad-category-pill">
@@ -1040,7 +1041,8 @@ export default function RenewalActionDrawer({
         </div>
 
         {/* Tab Navigation Grid (4x2) */}
-        <div className="rn-drawer-tabs-grid">
+        <div className="rn-drawer-tabs-wrapper">
+          <div className="rn-drawer-tabs-grid">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -1059,10 +1061,12 @@ export default function RenewalActionDrawer({
               </button>
             );
           })}
+          </div>
         </div>
 
         {/* Scrollable Content Area */}
-        <div style={{ padding: "16px 20px", overflowY: "auto", flex: 1 }}>
+        <div className="rn-drawer-body-scroll">
+          <div className="rn-drawer-body-inner">
           {/* TAB 1: Log Call / Note */}
           {activeTab === "remark" && (
             <form onSubmit={handleSaveRemark} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -1118,7 +1122,7 @@ export default function RenewalActionDrawer({
                 <div style={{ fontSize: "11.5px", color: "#64748b", marginBottom: "8px" }}>
                   Select the outcome of this interaction
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                <div className="rad-quick-outcomes-grid">
                   {QUICK_OUTCOMES.map((chip) => {
                     const ChipIcon = chip.icon;
                     const isSelected = selectedChip === chip.label;
@@ -2448,6 +2452,7 @@ export default function RenewalActionDrawer({
               )}
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>,
