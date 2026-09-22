@@ -74,13 +74,16 @@ export default function RenewalActionDrawer({
     if (typeof window !== "undefined") {
       const saved = window.localStorage.getItem("rn-drawer-width");
       if (saved) {
-        const num = Number(saved);
-        if (num >= 380 && num <= window.innerWidth * 0.92) {
-          setDrawerWidth(num);
+        const parsed = parseInt(saved, 10);
+        if (parsed >= 480 && parsed <= 1180) {
+          setDrawerWidth(parsed);
+          return;
+        } else if (parsed > 1180) {
+          setDrawerWidth(1150);
           return;
         }
       }
-      setDrawerWidth(Math.min(650, Math.max(480, Math.round(window.innerWidth * 0.45))));
+      setDrawerWidth(Math.min(1050, Math.max(540, Math.round(window.innerWidth * 0.58))));
     }
   }, []);
 
@@ -95,8 +98,8 @@ export default function RenewalActionDrawer({
     const handleMouseMove = (moveEvent) => {
       if (!isResizingRef.current) return;
       const newWidth = window.innerWidth - moveEvent.clientX;
-      const minW = 400;
-      const maxW = Math.round(window.innerWidth * 0.92);
+      const minW = 480;
+      const maxW = Math.min(1180, Math.round(window.innerWidth * 0.85));
       const clamped = Math.max(minW, Math.min(newWidth, maxW));
       setDrawerWidth(clamped);
     };
@@ -902,7 +905,7 @@ export default function RenewalActionDrawer({
         style={{
           width: `${drawerWidth}px`,
           minWidth: "380px",
-          maxWidth: "92vw",
+          maxWidth: "min(1180px, 90vw)",
           height: "100%", // Full height right drawer
           backgroundColor: "#ffffff",
           boxShadow: "-8px 0 28px rgba(0, 0, 0, 0.18)",
@@ -925,32 +928,47 @@ export default function RenewalActionDrawer({
         {/* Top Header */}
         <div className="rad-header">
           <div className="rad-header-inner">
-            {/* Category Tag & Insurer + Close */}
-          <div className="rad-badge-row">
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span className="rad-category-pill">
-                <Car size={13} style={{ color: "#64748b" }} /> {policyCategory}
-              </span>
-              <span style={{ width: "1px", height: "14px", backgroundColor: "#cbd5e1" }} />
-              <span className="rad-insurer-name">
-                {insuranceCompany}
-              </span>
+            {/* Top utility row: Badges + Close button */}
+            <div className="rad-badge-row">
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                <span className="rad-category-pill">
+                  <Car size={13} style={{ color: "#475569" }} /> {policyCategory}
+                </span>
+                <span style={{ width: "1px", height: "14px", backgroundColor: "#cbd5e1" }} />
+                <span className="rad-insurer-name">
+                  {insuranceCompany}
+                </span>
+                {activePolicy.renewalStatus && (
+                  <>
+                    <span style={{ width: "1px", height: "14px", backgroundColor: "#cbd5e1" }} />
+                    <span style={{
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      padding: "2px 8px",
+                      borderRadius: "6px",
+                      background: "#f1f5f9",
+                      color: "#334155",
+                      border: "1px solid #e2e8f0"
+                    }}>
+                      {activePolicy.renewalStatus}
+                    </span>
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="rad-close-btn"
+              >
+                <X size={18} />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="rad-close-btn"
-            >
-              <X size={18} />
-            </button>
-          </div>
 
-          {/* Customer & Contact Row (side-by-side in wide mode) */}
-          <div className="rad-header-middle">
-            {/* Customer Identity Row */}
-            <div className="rad-customer-row">
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0, flex: 1 }}>
+            {/* Main Header Card: Customer Info + Contact & Quick Actions */}
+            <div className="rad-hero-card">
+              {/* Left: Avatar + Name + Meta Chips */}
+              <div className="rad-hero-left">
                 <div className="rad-avatar">
                   {initials}
                 </div>
@@ -958,113 +976,95 @@ export default function RenewalActionDrawer({
                   <h2 className="rad-customer-name">
                     {activePolicy.insuredName || "Unnamed Customer"}
                   </h2>
-                  {/* Meta row with vertical dividers */}
-                  <div className="rad-meta-columns">
-                    <div className="rad-meta-item">
-                      <span className="rad-meta-label">Policy No.</span>
-                      <strong className="rad-meta-val" style={{ fontFamily: "monospace" }}>
+                  <div className="rad-meta-chips">
+                    <span className="rad-meta-chip">
+                      <span className="rad-meta-chip-label">Policy:</span>
+                      <strong style={{ fontFamily: "monospace" }}>
                         {String(activePolicy.policyNumber || "—").replace(/:+$/, "")}
                       </strong>
-                    </div>
-                    <span className="rad-meta-divider" />
-                    <div className="rad-meta-item">
-                      <span className="rad-meta-label">Expiry Date</span>
-                      <strong className="rad-meta-val">
+                    </span>
+                    <span className="rad-meta-chip">
+                      <span className="rad-meta-chip-label">Expiry:</span>
+                      <strong>
                         {activePolicy.expiryDate ? new Date(activePolicy.expiryDate).toLocaleDateString("en-IN") : "—"}
                       </strong>
-                    </div>
-                    <span className="rad-meta-divider" />
-                    <div className="rad-meta-item">
-                      <span className="rad-meta-label">Vehicle No.</span>
-                      <strong className="rad-meta-val" style={{ fontFamily: "monospace" }}>
-                        {vehicleNumber}
-                      </strong>
-                    </div>
+                    </span>
+                    {vehicleNumber && vehicleNumber !== "—" && (
+                      <span className="rad-meta-chip">
+                        <span className="rad-meta-chip-label">Vehicle:</span>
+                        <strong style={{ fontFamily: "monospace" }}>{vehicleNumber}</strong>
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleOpenProfile}
-                className="rad-profile-btn"
-                title="View full customer profile"
-              >
-                <Eye size={13} /> View Profile
-              </button>
-            </div>
-
-            {/* Contact Strip */}
-            <div className="rad-contact-card">
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-                <div className="rad-contact-avatar">
-                  <User size={15} />
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    Contact:{" "}
-                    <strong style={{ color: "#0f172a", fontWeight: 600 }}>
-                      {contactPerson && contactPerson !== activePolicy.insuredName
-                        ? contactPerson
-                        : cleanPhone
-                        ? "Direct / Insured"
-                        : "Not Provided"}
-                    </strong>
+              {/* Right: Contact Person & Action Buttons */}
+              <div className="rad-hero-right">
+                <div className="rad-contact-info-block">
+                  <div className="rad-contact-name-label">
+                    <User size={12} style={{ color: "#64748b" }} />
+                    <span>{contactPerson && contactPerson !== activePolicy.insuredName ? contactPerson : "Primary Contact"}</span>
                   </div>
-                  <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a", fontFamily: "monospace", letterSpacing: "0.02em" }}>
-                    {cleanPhone ? `+91 ${cleanPhone}` : "No number recorded"}
+                  <div className="rad-contact-phone-val">
+                    {cleanPhone ? `+91 ${cleanPhone}` : "No phone recorded"}
                   </div>
                 </div>
-              </div>
 
-              <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                <button
-                  type="button"
-                  onClick={handleCall}
-                  disabled={!cleanPhone}
-                  title="Call Customer"
-                  className="rad-btn-call"
-                  style={{ opacity: cleanPhone ? 1 : 0.5, cursor: cleanPhone ? "pointer" : "not-allowed" }}
-                >
-                  <Phone size={13} /> Call
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("whatsapp")}
-                  disabled={!cleanPhone}
-                  title="Send WhatsApp message"
-                  className="rad-btn-whatsapp"
-                  style={{ opacity: cleanPhone ? 1 : 0.5, cursor: cleanPhone ? "pointer" : "not-allowed" }}
-                >
-                  <MessageCircle size={13} /> WhatsApp
-                </button>
+                <div className="rad-hero-action-buttons">
+                  <button
+                    type="button"
+                    onClick={handleCall}
+                    disabled={!cleanPhone}
+                    title="Call Customer"
+                    className="rad-btn-call"
+                  >
+                    <Phone size={13} /> Call
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("whatsapp")}
+                    disabled={!cleanPhone}
+                    title="Send WhatsApp message"
+                    className="rad-btn-whatsapp"
+                  >
+                    <MessageCircle size={13} /> WhatsApp
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleOpenProfile}
+                    className="rad-profile-btn"
+                    title="View full customer profile"
+                  >
+                    <Eye size={13} /> Profile
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
           </div>
         </div>
 
-        {/* Tab Navigation Grid (4x2) */}
+        {/* Tab Navigation Segmented Bar */}
         <div className="rn-drawer-tabs-wrapper">
-          <div className="rn-drawer-tabs-grid">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`rn-drawer-grid-btn ${isActive ? "active" : ""}`}
-              >
-                <Icon size={13} style={{ flexShrink: 0, color: isActive ? "#0f172a" : "#64748b" }} />
-                <span>{tab.label}</span>
-                {tab.count !== undefined && (
-                  <span className="rn-drawer-grid-badge">{tab.count}</span>
-                )}
-              </button>
-            );
-          })}
+          <div className="rn-drawer-tabs-segmented">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`rn-drawer-seg-btn ${isActive ? "active" : ""}`}
+                >
+                  <Icon size={13} style={{ flexShrink: 0 }} />
+                  <span>{tab.label}</span>
+                  {tab.count !== undefined && (
+                    <span className="rn-drawer-seg-badge">{tab.count}</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1073,321 +1073,235 @@ export default function RenewalActionDrawer({
           <div className="rn-drawer-body-inner">
           {/* TAB 1: Log Call / Note */}
           {activeTab === "remark" && (
-            <form onSubmit={handleSaveRemark} className="rad-remark-layout">
-              {/* Main Form Column */}
-              <div className="rad-remark-main-col">
-                {allPolicies.length > 1 && (
-                  <div style={{ padding: "8px 12px", background: "#ffffff", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 600, color: "#0f172a", marginBottom: "4px" }}>
-                      <Layers size={13} /> Multi-Policy Client ({allPolicies.length} expiring policies)
-                    </div>
-                    <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
+            <form onSubmit={handleSaveRemark} className="rad-workspace">
+              {/* Top: Quick Outcome Bar */}
+              <div className="rad-card rad-quick-outcome-banner">
+                <div className="rad-card-header-row">
+                  <div>
+                    <span className="rad-card-title">⚡ Quick Outcome</span>
+                    <span className="rad-card-subtitle">Click an outcome to auto-populate notes & next follow-up</span>
+                  </div>
+                  {selectedChip && (
+                    <span className="rad-selected-pill">Active: {selectedChip}</span>
+                  )}
+                </div>
+                <div className="rad-quick-chips-grid">
+                  {QUICK_OUTCOMES.map((chip) => {
+                    const ChipIcon = chip.icon;
+                    const isSelected = selectedChip === chip.label;
+                    return (
                       <button
+                        key={chip.label}
                         type="button"
-                        onClick={() => setInteractionScope("all")}
-                        style={{
-                          padding: "5px 10px",
-                          borderRadius: "6px",
-                          border: interactionScope === "all" ? "1px solid #94a3b8" : "1px solid #e2e8f0",
-                          background: interactionScope === "all" ? "#f1f5f9" : "#ffffff",
-                          color: interactionScope === "all" ? "#0f172a" : "#64748b",
-                          fontSize: "11.5px",
-                          fontWeight: interactionScope === "all" ? 600 : 500,
-                          boxShadow: interactionScope === "all" ? "0 1px 2px rgba(0, 0, 0, 0.04)" : "none",
-                          cursor: "pointer",
+                        onClick={() => {
+                          setSelectedChip(chip.label);
+                          const d = new Date();
+                          if (chip.days > 0) d.setDate(d.getDate() + chip.days);
+                          const isoStr = chip.days > 0 ? d.toISOString().slice(0, 16) : "";
+                          setRemarkText(chip.text);
+                          setRenewalStatus(chip.status);
+                          if (isoStr) setFollowUpDate(isoStr);
                         }}
+                        className={`rad-chip-btn ${isSelected ? "selected" : ""}`}
                       >
-                        Apply to all {allPolicies.length} policies
+                        <ChipIcon size={14} className="rad-chip-icon" />
+                        <span className="rad-chip-text">{chip.label}</span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setInteractionScope("single")}
-                        style={{
-                          padding: "5px 10px",
-                          borderRadius: "6px",
-                          border: interactionScope === "single" ? "1px solid #94a3b8" : "1px solid #e2e8f0",
-                          background: interactionScope === "single" ? "#f1f5f9" : "#ffffff",
-                          color: interactionScope === "single" ? "#0f172a" : "#64748b",
-                          fontSize: "11.5px",
-                          fontWeight: interactionScope === "single" ? 600 : 500,
-                          boxShadow: interactionScope === "single" ? "0 1px 2px rgba(0, 0, 0, 0.04)" : "none",
-                          cursor: "pointer",
-                        }}
-                      >
-                        This policy only
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Remark Notes */}
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
-                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#0f172a", display: "inline-flex", alignItems: "center", gap: "3px" }}>
-                      Remark Notes <span style={{ color: "#ef4444" }}>*</span>
-                    </label>
-                    <span style={{ fontSize: "11px", color: "#94a3b8" }}>{remarkText.length}/1000</span>
-                  </div>
-                  <textarea
-                    value={remarkText}
-                    onChange={(e) => setRemarkText(e.target.value)}
-                    placeholder="Enter details of your call or interaction..."
-                    rows={4}
-                    style={{
-                      width: "100%",
-                      padding: "9px 12px",
-                      borderRadius: "8px",
-                      border: "1px solid #cbd5e1",
-                      fontSize: "12.5px",
-                      fontFamily: "inherit",
-                      resize: "vertical",
-                      background: "#ffffff",
-                      color: "#0f172a",
-                      outline: "none",
-                    }}
-                    required
-                  />
-                </div>
-
-                {/* 2x2 Grid: Status Outcome + Next Follow-Up Date */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
-                      Status Outcome
-                    </label>
-                    <select
-                      value={renewalStatus}
-                      onChange={(e) => setRenewalStatus(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "8px 10px",
-                        borderRadius: "8px",
-                        border: "1px solid #cbd5e1",
-                        fontSize: "12.5px",
-                        background: "#ffffff",
-                        color: "#0f172a",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <option value="Called">Called</option>
-                      <option value="Follow-Up">Follow-Up</option>
-                      <option value="Quote Sent">Quote Sent</option>
-                      <option value="Interested">Interested</option>
-                      <option value="Negotiation">Negotiation</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
-                      Next Follow-Up Date
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={followUpDate}
-                      onChange={(e) => setFollowUpDate(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "7px 10px",
-                        borderRadius: "8px",
-                        border: "1px solid #cbd5e1",
-                        fontSize: "12px",
-                        background: "#ffffff",
-                        color: "#0f172a",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* 2x2 Grid: Follow-Up Mode + Priority */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
-                      Follow-Up Mode
-                    </label>
-                    <select
-                      value={followUpMode}
-                      onChange={(e) => setFollowUpMode(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "8px 10px",
-                        borderRadius: "8px",
-                        border: "1px solid #cbd5e1",
-                        fontSize: "12.5px",
-                        background: "#ffffff",
-                        color: "#0f172a",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <option value="Call">Phone Call</option>
-                      <option value="WhatsApp">WhatsApp</option>
-                      <option value="Email">Email</option>
-                      <option value="Office Visit">Office Visit</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#0f172a", marginBottom: "5px" }}>
-                      Priority
-                    </label>
-                    <select
-                      value={priority}
-                      onChange={(e) => setPriority(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "8px 10px",
-                        borderRadius: "8px",
-                        border: "1px solid #cbd5e1",
-                        fontSize: "12.5px",
-                        background: "#ffffff",
-                        color: "#0f172a",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <option value="Normal">Normal</option>
-                      <option value="High">High</option>
-                      <option value="Urgent">Urgent</option>
-                      <option value="Low">Low</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    style={{
-                      flex: 1,
-                      padding: "10px 14px",
-                      borderRadius: "8px",
-                      background: "#ffffff",
-                      color: "#475569",
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      border: "1px solid #cbd5e1",
-                      cursor: isSubmitting ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isSubmitting}
-                    onClick={() => handleSave(true)}
-                    style={{
-                      flex: 1.4,
-                      padding: "10px 14px",
-                      borderRadius: "8px",
-                      background: "#f1f5f9",
-                      color: "#0f172a",
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      border: "1px solid #94a3b8",
-                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "6px",
-                      cursor: isSubmitting ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    Save & Next Customer <ArrowRight size={14} />
-                  </button>
-                </div>
-                <div style={{ fontSize: "11px", color: "#64748b", textAlign: "center" }}>
-                  Tip: Press <strong style={{ color: "#0f172a" }}>Ctrl + Enter</strong> to Save & Next
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Side Column: Quick Outcomes & Recent Activity */}
-              <div className="rad-remark-side-col">
-                {/* Quick Outcome Section */}
-                <div className="rad-quick-outcomes-card">
-                  <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a", marginBottom: "2px" }}>
-                    Quick Outcome
-                  </div>
-                  <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "8px" }}>
-                    Select the outcome of this interaction
-                  </div>
-                  <div className="rad-quick-outcomes-grid">
-                    {QUICK_OUTCOMES.map((chip) => {
-                      const ChipIcon = chip.icon;
-                      const isSelected = selectedChip === chip.label;
-                      return (
+              {/* Main 2-Column Split Workspace */}
+              <div className="rad-workspace-cols">
+                {/* Left Column: Call Notes & Follow-up Settings */}
+                <div className="rad-card rad-form-card">
+                  {allPolicies.length > 1 && (
+                    <div className="rad-multi-policy-notice">
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 600, color: "#0f172a", marginBottom: "4px" }}>
+                        <Layers size={13} /> Multi-Policy Client ({allPolicies.length} expiring policies)
+                      </div>
+                      <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
                         <button
-                          key={chip.label}
                           type="button"
-                          onClick={() => {
-                            setSelectedChip(chip.label);
-                            const d = new Date();
-                            if (chip.days > 0) d.setDate(d.getDate() + chip.days);
-                            const isoStr = chip.days > 0 ? d.toISOString().slice(0, 16) : "";
-                            setRemarkText(chip.text);
-                            setRenewalStatus(chip.status);
-                            if (isoStr) setFollowUpDate(isoStr);
-                          }}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: "6px",
-                            padding: "8px 10px",
-                            borderRadius: "8px",
-                            fontSize: "11.5px",
-                            fontWeight: isSelected ? 600 : 500,
-                            background: isSelected ? "#f1f5f9" : "#ffffff",
-                            color: isSelected ? "#0f172a" : "#475569",
-                            border: isSelected ? "1px solid #94a3b8" : "1px solid #e2e8f0",
-                            boxShadow: isSelected ? "0 1px 3px rgba(0, 0, 0, 0.05)" : "none",
-                            cursor: "pointer",
-                            transition: "all 0.15s ease",
-                          }}
+                          onClick={() => setInteractionScope("all")}
+                          className={`rad-scope-btn ${interactionScope === "all" ? "active" : ""}`}
                         >
-                          <ChipIcon size={13} style={{ color: isSelected ? "#0f172a" : "#64748b", flexShrink: 0 }} />
-                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {chip.label}
-                          </span>
+                          Apply to all {allPolicies.length} policies
                         </button>
-                      );
-                    })}
+                        <button
+                          type="button"
+                          onClick={() => setInteractionScope("single")}
+                          className={`rad-scope-btn ${interactionScope === "single" ? "active" : ""}`}
+                        >
+                          This policy only
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Remark Notes */}
+                  <div className="rad-field-group">
+                    <div className="rad-field-header">
+                      <label className="rad-field-label">
+                        Remark Notes <span style={{ color: "#ef4444" }}>*</span>
+                      </label>
+                      <span className="rad-char-count">{remarkText.length}/1000</span>
+                    </div>
+                    <textarea
+                      value={remarkText}
+                      onChange={(e) => setRemarkText(e.target.value)}
+                      placeholder="Enter details of your call or interaction..."
+                      rows={4}
+                      className="rad-textarea"
+                      required
+                    />
+                  </div>
+
+                  {/* 2x2 Grid: Follow-up & Priority */}
+                  <div className="rad-fields-2x2">
+                    <div className="rad-field-group">
+                      <label className="rad-field-label">Status Outcome</label>
+                      <select
+                        value={renewalStatus}
+                        onChange={(e) => setRenewalStatus(e.target.value)}
+                        className="rad-select"
+                      >
+                        <option value="Called">Called</option>
+                        <option value="Follow-Up">Follow-Up</option>
+                        <option value="Quote Sent">Quote Sent</option>
+                        <option value="Interested">Interested</option>
+                        <option value="Negotiation">Negotiation</option>
+                      </select>
+                    </div>
+
+                    <div className="rad-field-group">
+                      <label className="rad-field-label">Next Follow-Up Date</label>
+                      <input
+                        type="datetime-local"
+                        value={followUpDate}
+                        onChange={(e) => setFollowUpDate(e.target.value)}
+                        className="rad-input"
+                      />
+                    </div>
+
+                    <div className="rad-field-group">
+                      <label className="rad-field-label">Follow-Up Mode</label>
+                      <select
+                        value={followUpMode}
+                        onChange={(e) => setFollowUpMode(e.target.value)}
+                        className="rad-select"
+                      >
+                        <option value="Call">Phone Call</option>
+                        <option value="WhatsApp">WhatsApp</option>
+                        <option value="Email">Email</option>
+                        <option value="Office Visit">Office Visit</option>
+                      </select>
+                    </div>
+
+                    <div className="rad-field-group">
+                      <label className="rad-field-label">Priority</label>
+                      <select
+                        value={priority}
+                        onChange={(e) => setPriority(e.target.value)}
+                        className="rad-select"
+                      >
+                        <option value="Normal">Normal</option>
+                        <option value="High">High</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="Low">Low</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="rad-form-actions">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="rad-btn-save-secondary"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={() => handleSave(true)}
+                      className="rad-btn-save-primary"
+                    >
+                      <span>Save & Next Customer</span> <ArrowRight size={14} />
+                    </button>
+                  </div>
+                  <div className="rad-shortcut-tip">
+                    Tip: Press <strong style={{ color: "#0f172a" }}>Ctrl + Enter</strong> to Save & Next
                   </div>
                 </div>
 
-                {/* Recent Activity / Timeline Mini-Feed (in wide mode) */}
-                <div className="rad-timeline-side-feed">
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f172a", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <Clock size={13} style={{ color: "#64748b" }} /> Past Activity & Remarks
-                  </div>
-                  {timelineLoading ? (
-                    <div style={{ fontSize: "11.5px", color: "#64748b", padding: "8px 0" }}>Loading history...</div>
-                  ) : timeline.length === 0 ? (
-                    <div style={{ fontSize: "11.5px", color: "#94a3b8", padding: "8px 0" }}>
-                      No prior interaction history recorded.
+                {/* Right Column: Customer Details & Recent Interaction History */}
+                <div className="rad-card rad-context-card">
+                  {/* Mini Policy Details Box */}
+                  <div className="rad-context-policy-box">
+                    <div className="rad-context-policy-title">
+                      <FileText size={13} style={{ color: "#475569" }} /> Current Policy Details
                     </div>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "280px", overflowY: "auto" }}>
-                      {timeline.slice(0, 5).map((item, idx) => (
-                        <div
-                          key={item.id || idx}
-                          style={{
-                            padding: "8px 10px",
-                            borderRadius: "6px",
-                            background: "#ffffff",
-                            border: "1px solid #e2e8f0",
-                            fontSize: "11.5px",
-                          }}
-                        >
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}>
-                            <span style={{ fontWeight: 600, color: "#0f172a" }}>{item.author || item.userName || "Agent"}</span>
-                            <span style={{ fontSize: "10.5px", color: "#94a3b8" }}>
-                              {item.createdAt ? new Date(item.createdAt).toLocaleDateString("en-IN") : "Recent"}
-                            </span>
-                          </div>
-                          <div style={{ color: "#334155", whiteSpace: "pre-wrap" }}>{item.remark || item.text}</div>
+                    <div className="rad-context-policy-grid">
+                      <div>
+                        <div className="rad-c-label">Insurer</div>
+                        <div className="rad-c-val">{insuranceCompany || "—"}</div>
+                      </div>
+                      <div>
+                        <div className="rad-c-label">Category</div>
+                        <div className="rad-c-val">{policyCategory || "—"}</div>
+                      </div>
+                      <div>
+                        <div className="rad-c-label">Total Premium</div>
+                        <div className="rad-c-val">
+                          {activePolicy.totalPremium || activePolicy.premium ? `₹${Number(activePolicy.totalPremium || activePolicy.premium).toLocaleString("en-IN")}` : "—"}
                         </div>
-                      ))}
+                      </div>
+                      <div>
+                        <div className="rad-c-label">Expiry Date</div>
+                        <div className="rad-c-val" style={{ color: "#b91c1c", fontWeight: 700 }}>
+                          {activePolicy.expiryDate ? new Date(activePolicy.expiryDate).toLocaleDateString("en-IN") : "—"}
+                        </div>
+                      </div>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Timeline History Feed */}
+                  <div className="rad-context-timeline-box">
+                    <div className="rad-card-title" style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                      <Clock size={13} style={{ color: "#475569" }} /> Interaction History ({timeline.length})
+                    </div>
+                    {timelineLoading ? (
+                      <div style={{ fontSize: "12px", color: "#64748b", padding: "12px 0" }}>Loading activity history...</div>
+                    ) : timeline.length === 0 ? (
+                      <div className="rad-timeline-empty">
+                        <MessageCircle size={20} style={{ color: "#94a3b8", marginBottom: "4px" }} />
+                        <div>No previous remarks recorded for this customer yet.</div>
+                        <div style={{ fontSize: "11px", color: "#94a3b8" }}>Your note logged here will appear in this timeline.</div>
+                      </div>
+                    ) : (
+                      <div className="rad-timeline-feed">
+                        {timeline.slice(0, 6).map((item, idx) => (
+                          <div key={item.id || idx} className="rad-timeline-bubble">
+                            <div className="rad-timeline-bubble-head">
+                              <span className="rad-timeline-author">{item.author || item.userName || "Agent"}</span>
+                              <span className="rad-timeline-time">
+                                {item.createdAt ? new Date(item.createdAt).toLocaleString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recent"}
+                              </span>
+                            </div>
+                            <div className="rad-timeline-text">{item.remark || item.text}</div>
+                            {item.nextFollowUpDate && (
+                              <div className="rad-timeline-badge">
+                                📅 Next: {new Date(item.nextFollowUpDate).toLocaleString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </form>
