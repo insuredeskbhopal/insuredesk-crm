@@ -274,6 +274,17 @@ export default function RenewalPoliciesPage() {
     setActionMenuPosition(null);
   }
 
+  const callCustomer = (policy) => {
+    closeActionMenu();
+    const rawContact = policy?.renewalRecipientMobile || policy?.contactNumber || policy?.contactPersonMobile || "";
+    const digits = String(rawContact).replace(/\D/g, "");
+    if (digits.length >= 10) {
+      window.open(`tel:${digits.slice(-10)}`);
+    } else {
+      showToast("No valid phone number recorded for this customer.", "error");
+    }
+  };
+
   const openCustomerAction = (policy, action = "remark") => {
     closeActionMenu();
     if (action === "profile") {
@@ -368,13 +379,6 @@ export default function RenewalPoliciesPage() {
         showToast("Reached the end of policies on this page.", "info");
       }
     }
-  };
-
-  const callCustomer = (policy) => {
-    const digits = String(policy.renewalRecipientMobile || policy.contactNumber || "").replace(/\D/g, "");
-    closeActionMenu();
-    if (digits.length >= 10) window.open(`tel:${digits.slice(-10)}`);
-    else showToast("No contact number available for this policy.", "error");
   };
 
   const selectedMonthLabel = renewalMonth === "All" ? "" : getRenewalRegisterMonthLabel(renewalMonth);
@@ -595,13 +599,13 @@ export default function RenewalPoliciesPage() {
                                     overflowY: "auto",
                                   }}
                                 >
-                                  <ActionItem icon={<Eye />} label="View Profile" onClick={() => openCustomerAction(group.policies[0])} />
+                                  <ActionItem icon={<Eye />} label="View Profile" onClick={() => openCustomerAction(group.policies[0], "profile")} />
                                   <ActionItem icon={<Phone />} label="Call Customer" onClick={() => callCustomer(group.policies[0])} />
                                   <ActionItem icon={<Send />} label="Send WhatsApp" onClick={() => openCustomerAction(group.policies[0], "whatsapp")} />
                                   <ActionItem icon={<Edit3 />} label="Edit Contact" onClick={() => openCustomerAction(group.policies[0], "edit")} />
                                   <ActionItem icon={<MessageSquare />} label="Add Remark" onClick={() => openCustomerAction(group.policies[0], "remark")} />
                                   <ActionItem icon={<UserPlus />} label="Assign Agent" onClick={() => openCustomerAction(group.policies[0], "assign")} />
-                                  <ActionItem icon={<FileText />} label="View Policies" onClick={() => openCustomerAction(group.policies[0])} />
+                                  <ActionItem icon={<FileText />} label="View Policies" onClick={() => openCustomerAction(group.policies[0], "policies")} />
                                   <ActionItem icon={<Clipboard />} label="View Renewal Timeline" onClick={() => openCustomerAction(group.policies[0], "timeline")} />
                                   <ActionItem icon={<CheckCircle />} label="Mark Renewed" onClick={() => openCustomerAction(group.policies[0], "renew")} />
                                   <ActionItem danger icon={<XCircle />} label="Mark Lost" onClick={() => openCustomerAction(group.policies[0], "lost")} />
@@ -818,13 +822,13 @@ function PolicyRegisterRow({
               overflowY: "auto",
             }}
           >
-            <ActionItem icon={<Eye />} label="View Profile" onClick={() => onCustomerAction(policy)} />
+            <ActionItem icon={<Eye />} label="View Profile" onClick={() => onCustomerAction(policy, "profile")} />
             <ActionItem icon={<Phone />} label="Call Customer" onClick={() => onCall(policy)} />
             <ActionItem icon={<Send style={{ color: "#25d366" }} />} label="Send WhatsApp" onClick={() => onCustomerAction(policy, "whatsapp")} />
             <ActionItem icon={<Edit3 />} label="Edit Contact" onClick={() => onCustomerAction(policy, "edit")} />
             <ActionItem icon={<MessageSquare />} label="Add Remark" onClick={() => onCustomerAction(policy, "remark")} />
             <ActionItem icon={<UserPlus />} label="Assign Agent" onClick={() => onCustomerAction(policy, "assign")} />
-            <ActionItem icon={<FileText />} label="View Policies" onClick={() => onCustomerAction(policy)} />
+            <ActionItem icon={<FileText />} label="View Policies" onClick={() => onCustomerAction(policy, "policies")} />
             <ActionItem icon={<Clipboard />} label="View Renewal Timeline" onClick={() => onCustomerAction(policy, "timeline")} />
             <ActionItem icon={<CheckCircle style={{ color: "var(--rn-success)" }} />} label="Mark Renewed" onClick={() => onCustomerAction(policy, "renew")} />
             <ActionItem danger icon={<XCircle />} label="Mark Lost" onClick={() => onCustomerAction(policy, "lost")} />
