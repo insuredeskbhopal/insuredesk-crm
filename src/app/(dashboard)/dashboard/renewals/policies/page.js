@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
   AlertCircle,
+  Calendar,
   CheckCircle,
   ChevronDown,
   ChevronLeft,
@@ -14,13 +15,16 @@ import {
   Edit3,
   Eye,
   FileText,
+  IndianRupee,
   MessageSquare,
   MoreVertical,
   Phone,
   RefreshCw,
   Search,
   Send,
+  Shield,
   UserPlus,
+  Users,
   XCircle,
 } from "lucide-react";
 import RenewalActionDrawer from "@/app/components/renewals/RenewalActionDrawer";
@@ -43,6 +47,13 @@ function getPolicyCustomerKey(policy) {
   const rawContact = policy.contactNumber || policy.renewalRecipientMobile || policy.contactPersonMobile || "";
   const digits = String(rawContact).replace(/\D/g, "");
   return digits.length >= 10 ? digits.slice(-10) : `NO-MOBILE-${policy.id}`;
+}
+
+function getCustomerInitials(name) {
+  if (!name || typeof name !== "string") return "CU";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 export default function RenewalPoliciesPage() {
@@ -381,69 +392,51 @@ export default function RenewalPoliciesPage() {
   return (
     <section className="rn-policy-register">
       <div className="rn-policy-register__intro">
-        <div>
-          <p>Policy-wise register</p>
-          <h2>{contextTitle || (selectedMonthLabel ? `${selectedMonthLabel} Renewals` : "All Renewals")}</h2>
-          <span>
+        <div className="rn-policy-register__intro-main">
+          <h2 className="rn-policy-register__title">
+            {contextTitle || (selectedMonthLabel ? `${selectedMonthLabel} Renewals` : "All Renewals")}
+          </h2>
+          <p className="rn-policy-register__subtitle">
             {viewMode === "customer"
               ? "Renewals grouped by customer for unified outreach and multi-policy action."
               : "Every renewal is shown as its own policy row. No customer grouping is applied."}
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--rn-text-secondary, #64748b)" }}>View:</span>
-            <div style={{ display: "inline-flex", background: "#f1f5f9", padding: "3px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-              <button
-                type="button"
-                onClick={() => changeViewMode("customer")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "5px 12px",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  border: "none",
-                  cursor: "pointer",
-                  background: viewMode === "customer" ? "#ffffff" : "transparent",
-                  color: viewMode === "customer" ? "#0284c7" : "#64748b",
-                  boxShadow: viewMode === "customer" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: viewMode === "customer" ? "#0284c7" : "#cbd5e1" }} />
-                Customer View
-              </button>
-              <button
-                type="button"
-                onClick={() => changeViewMode("policy")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "5px 12px",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  border: "none",
-                  cursor: "pointer",
-                  background: viewMode === "policy" ? "#ffffff" : "transparent",
-                  color: viewMode === "policy" ? "#0284c7" : "#64748b",
-                  boxShadow: viewMode === "policy" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: viewMode === "policy" ? "#0284c7" : "#cbd5e1" }} />
-                Individual Policies
-              </button>
-            </div>
+          </p>
+        </div>
+
+        <div className="rn-policy-register__intro-controls">
+          <div className="rn-view-switcher" role="group" aria-label="View mode">
+            <button
+              type="button"
+              className={`rn-view-switcher__btn ${viewMode === "customer" ? "active" : ""}`}
+              onClick={() => changeViewMode("customer")}
+            >
+              <Users size={14} />
+              <span>Customer View</span>
+            </button>
+            <button
+              type="button"
+              className={`rn-view-switcher__btn ${viewMode === "policy" ? "active" : ""}`}
+              onClick={() => changeViewMode("policy")}
+            >
+              <FileText size={14} />
+              <span>Individual Policies</span>
+            </button>
+          </div>
+
+          <div className="rn-policy-register__stat-badge">
+            {viewMode === "customer" ? (
+              <>
+                <Users size={14} />
+                <span><strong>{customerGroups.length}</strong> customers · <strong>{totalCount.toLocaleString("en-IN")}</strong> policies</span>
+              </>
+            ) : (
+              <>
+                <FileText size={14} />
+                <span><strong>{totalCount.toLocaleString("en-IN")}</strong> policies</span>
+              </>
+            )}
           </div>
         </div>
-        <strong>
-          {viewMode === "customer"
-            ? `${customerGroups.length} customers · ${totalCount.toLocaleString("en-IN")} policies`
-            : `${totalCount.toLocaleString("en-IN")} policies`}
-        </strong>
       </div>
 
       <form className="rn-policy-register__filters" onSubmit={applySearch}>
@@ -471,20 +464,21 @@ export default function RenewalPoliciesPage() {
         ) : null}
       </form>
 
+      <div className="rn-lob-tabs" aria-label="Renewal policy categories" style={{ marginBottom: 12, borderRadius: 10, border: "1px solid #e2e8f0" }}>
+        {RENEWAL_REGISTER_CATEGORY_TABS.map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            className={policyType === tab.value ? "active" : ""}
+            onClick={() => changePolicyType(tab.value)}
+          >
+            {tab.label}
+            <span>{categoryCounts[tab.countKey] || 0}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="rn-table-container rn-policy-register__table-shell">
-        <div className="rn-lob-tabs" aria-label="Renewal policy categories">
-          {RENEWAL_REGISTER_CATEGORY_TABS.map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              className={policyType === tab.value ? "active" : ""}
-              onClick={() => changePolicyType(tab.value)}
-            >
-              {tab.label}
-              <span>{categoryCounts[tab.countKey] || 0}</span>
-            </button>
-          ))}
-        </div>
         {error ? (
           <div className="rn-policy-register__state rn-policy-register__state--error">
             <AlertCircle size={22} />
@@ -496,190 +490,189 @@ export default function RenewalPoliciesPage() {
         ) : policies.length === 0 ? (
           <div className="rn-policy-register__state"><AlertCircle size={22} /> No renewal policies match these filters.</div>
         ) : viewMode === "customer" ? (
-          <div className="rn-customer-groups" style={{ display: "grid", gap: "14px", padding: "16px" }}>
-            {customerGroups.map((group) => {
-              const isExpanded = expandedCustomerKeys.has(group.customerKey);
-              return (
-                <div
-                  key={group.customerKey}
-                  style={{
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "12px",
-                    background: "#ffffff",
-                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-                    overflow: "hidden",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: "16px 20px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      background: isExpanded ? "#f8fafc" : "#ffffff",
-                      borderBottom: isExpanded ? "1px solid #e2e8f0" : "none",
-                      gap: "16px",
-                    }}
-                  >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                        <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
+          <table className="rn-table rn-policy-register__table">
+            <thead>
+              <tr>
+                <th style={{ width: "3.5%", textAlign: "center" }}></th>
+                <th style={{ width: "30%" }}>Customer / Policy Number</th>
+                <th style={{ width: "15%" }}>Mobile / Asset</th>
+                <th style={{ width: "15%" }}>Policy Type</th>
+                <th style={{ width: "13%" }}>Expiry Date</th>
+                <th style={{ width: "13%" }}>Renewal Premium</th>
+                <th style={{ width: "10.5%", textAlign: "right" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customerGroups.map((group) => {
+                const isExpanded = expandedCustomerKeys.has(group.customerKey);
+                const distinctTypes = Array.from(
+                  new Set(
+                    group.policies
+                      .map((p) => p.displayPolicyType || p.policyType)
+                      .filter(Boolean)
+                  )
+                );
+                const hasContactPerson = group.contactPerson && group.contactPerson.toLowerCase().trim() !== group.insuredName.toLowerCase().trim();
+
+                return (
+                  <Fragment key={group.customerKey}>
+                    <tr
+                      style={{ cursor: "pointer", background: "#ffffff" }}
+                      onClick={() => toggleExpandCustomer(group.customerKey)}
+                    >
+                      <td style={{ textAlign: "center", color: isExpanded ? "#0f172a" : "#64748b" }}>
+                        {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                      </td>
+                      <td>
+                        <div style={{ fontSize: "13.5px", fontWeight: 600, color: "#0f172a", lineHeight: 1.35 }}>
                           {group.insuredName}
-                        </h3>
-                        <span
-                          style={{
-                            padding: "2px 8px",
-                            background: "#eff6ff",
-                            color: "#1d4ed8",
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            borderRadius: "6px",
-                            border: "1px solid #bfdbfe",
-                          }}
-                        >
-                          {group.policies.length} Renewal{group.policies.length === 1 ? "" : "s"}
-                        </span>
-                        {group.dueThisWeekCount > 0 && (
-                          <span
-                            style={{
-                              padding: "2px 8px",
-                              background: "#fef3c7",
-                              color: "#b45309",
-                              fontSize: "11px",
-                              fontWeight: 700,
-                              borderRadius: "6px",
-                              border: "1px solid #fde68a",
-                            }}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "3px", fontSize: "12px", color: "#64748b", flexWrap: "wrap" }}>
+                          {hasContactPerson ? (
+                            <span>{group.contactPerson}</span>
+                          ) : (
+                            <span>Customer Account</span>
+                          )}
+                          <span style={{ color: "#cbd5e1" }}>·</span>
+                          <span>{group.policies.length} {group.policies.length === 1 ? "policy" : "policies"}</span>
+                          {group.dueThisWeekCount > 0 && (
+                            <>
+                              <span style={{ color: "#cbd5e1" }}>·</span>
+                              <span style={{ color: "#b45309", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#f59e0b", display: "inline-block" }} />
+                                Due this week
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="rn-policy-register__mono">{group.contactNumber || "—"}</span>
+                      </td>
+                      <td>
+                        <span>{distinctTypes.join(", ") || "—"}</span>
+                      </td>
+                      <td>
+                        <strong>{group.earliestExpiry ? formatRenewalRegisterDate(group.earliestExpiry) : "—"}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatRenewalRegisterAmount(group.totalPremium)}</strong>
+                      </td>
+                      <td style={{ textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "flex-end", gap: "6px" }}>
+                          <button
+                            type="button"
+                            className="rn-btn"
+                            style={{ padding: "4px 10px", fontSize: "12px", background: "#ffffff" }}
+                            onClick={() => openCustomerAction(group.policies[0], "remark")}
                           >
-                            {group.dueThisWeekCount} Due This Week
-                          </span>
-                        )}
-                      </div>
+                            Open
+                          </button>
+                          <div className="rn-dropdown">
+                            <button
+                              type="button"
+                              className="rn-dropdown-btn"
+                              aria-label={`Actions for ${group.insuredName}`}
+                              aria-expanded={activeActionPolicyId === group.policies[0].id}
+                              onClick={(e) => openActionMenu(group.policies[0].id, e)}
+                            >
+                              <MoreVertical size={15} />
+                            </button>
+                            {activeActionPolicyId === group.policies[0].id && typeof document !== "undefined" ? createPortal(
+                              <>
+                                <div className="rn-policy-register__menu-backdrop" onClick={closeActionMenu} />
+                                <div
+                                  className="rn-dropdown-menu"
+                                  role="menu"
+                                  style={{
+                                    position: "fixed",
+                                    zIndex: 10000,
+                                    top: `${actionMenuPosition?.top || 0}px`,
+                                    left: `${actionMenuPosition?.left || 0}px`,
+                                    right: "auto",
+                                    width: `${actionMenuPosition?.width || 230}px`,
+                                    maxHeight: "calc(100vh - 24px)",
+                                    overflowY: "auto",
+                                  }}
+                                >
+                                  <ActionItem icon={<Eye />} label="View Profile" onClick={() => openCustomerAction(group.policies[0])} />
+                                  <ActionItem icon={<Phone />} label="Call Customer" onClick={() => callCustomer(group.policies[0])} />
+                                  <ActionItem icon={<Send />} label="Send WhatsApp" onClick={() => openCustomerAction(group.policies[0], "whatsapp")} />
+                                  <ActionItem icon={<Edit3 />} label="Edit Contact" onClick={() => openCustomerAction(group.policies[0], "edit")} />
+                                  <ActionItem icon={<MessageSquare />} label="Add Remark" onClick={() => openCustomerAction(group.policies[0], "remark")} />
+                                  <ActionItem icon={<UserPlus />} label="Assign Agent" onClick={() => openCustomerAction(group.policies[0], "assign")} />
+                                  <ActionItem icon={<FileText />} label="View Policies" onClick={() => openCustomerAction(group.policies[0])} />
+                                  <ActionItem icon={<Clipboard />} label="View Renewal Timeline" onClick={() => openCustomerAction(group.policies[0], "timeline")} />
+                                  <ActionItem icon={<CheckCircle />} label="Mark Renewed" onClick={() => openCustomerAction(group.policies[0], "renew")} />
+                                  <ActionItem danger icon={<XCircle />} label="Mark Lost" onClick={() => openCustomerAction(group.policies[0], "lost")} />
+                                </div>
+                              </>,
+                              document.body,
+                            ) : null}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded &&
+                      group.policies.map((p) => {
+                        const asset = p.vehicleNumber || p.registrationNumber || p.riskLocation || "—";
+                        const cleanNo = String(p.policyNumber || "—").replace(/:+$/, "").trim();
+                        const insurer = p.insuranceCompany || p.companyName || "—";
+                        const pType = p.displayPolicyType || p.policyType || "—";
 
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "16px",
-                          marginTop: "6px",
-                          fontSize: "13px",
-                          color: "#64748b",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <span>
-                          Renewal Premium: <strong style={{ color: "#0f172a" }}>{formatRenewalRegisterAmount(group.totalPremium)}</strong>
-                        </span>
-                        {group.contactNumber && (
-                          <span>
-                            Mobile: <strong style={{ color: "#0f172a" }}>{group.contactNumber}</strong>
-                          </span>
-                        )}
-                        {group.earliestExpiry && (
-                          <span>
-                            Earliest Expiry: <strong style={{ color: "#0f172a" }}>{formatRenewalRegisterDate(group.earliestExpiry)}</strong>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                      {group.contactNumber && (
-                        <button
-                          type="button"
-                          className="rn-btn"
-                          onClick={() => {
-                            const digits = String(group.contactNumber).replace(/\D/g, "");
-                            if (digits.length >= 10) window.open(`tel:${digits.slice(-10)}`);
-                            else showToast("Invalid phone number", "error");
-                          }}
-                          style={{ height: "34px", padding: "0 12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
-                        >
-                          <Phone size={14} /> Call
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className="rn-btn"
-                        onClick={() => {
-                          setDrawerTab("whatsapp");
-                          setActiveDrawerPolicy(group.policies[0]);
-                        }}
-                        style={{ height: "34px", padding: "0 12px", display: "inline-flex", alignItems: "center", gap: "6px", color: "#16a34a" }}
-                      >
-                        <Send size={14} /> WhatsApp
-                      </button>
-                      <button
-                        type="button"
-                        className="rn-btn rn-btn-primary"
-                        onClick={() => {
-                          setDrawerTab("remark");
-                          setActiveDrawerPolicy(group.policies[0]);
-                        }}
-                        style={{ height: "34px", padding: "0 14px", display: "inline-flex", alignItems: "center", gap: "6px" }}
-                      >
-                        <MessageSquare size={14} /> Open
-                      </button>
-                      <button
-                        type="button"
-                        className="rn-btn"
-                        onClick={() => toggleExpandCustomer(group.customerKey)}
-                        style={{ height: "34px", padding: "0 10px", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                        title={isExpanded ? "Collapse policies" : "Expand policies"}
-                      >
-                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {isExpanded && (
-                    <div style={{ padding: "12px 16px 16px", background: "#f8fafc" }}>
-                      <table className="rn-table" style={{ background: "#ffffff", borderRadius: "8px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
-                        <thead>
-                          <tr>
-                            <th style={{ width: "20%" }}>Vehicle / Asset</th>
-                            <th style={{ width: "22%" }}>Policy Number</th>
-                            <th style={{ width: "18%" }}>Insurer</th>
-                            <th style={{ width: "14%" }}>Policy Type</th>
-                            <th style={{ width: "12%" }}>Expiry Date</th>
-                            <th style={{ width: "10%" }}>Premium</th>
-                            <th style={{ width: "4%" }}>Action</th>
+                        return (
+                          <tr
+                            key={p.id}
+                            style={{ background: "#ffffff", cursor: "pointer", borderBottom: "1px solid #f1f5f9" }}
+                            onClick={() => openCustomerAction(p, "remark")}
+                          >
+                            <td style={{ textAlign: "center", color: "#64748b" }}>
+                              <span style={{ fontSize: "13px" }}>↳</span>
+                            </td>
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", paddingLeft: 4 }}>
+                                <span className="rn-policy-register__mono" style={{ fontWeight: 600, color: "#0f172a" }}>
+                                  {cleanNo}
+                                </span>
+                                <span style={{ fontSize: "11.5px", color: "#64748b" }}>· {insurer}</span>
+                              </div>
+                            </td>
+                            <td>
+                              <span className="rn-policy-register__mono" style={{ fontSize: "12px", color: "#475569" }}>
+                                {asset}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: "12.5px", color: "#334155" }}>{pType}</span>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: "12.5px", color: "#334155" }}>
+                                {formatRenewalRegisterDate(p.expiryDate)}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: "12.5px", fontWeight: 600, color: "#0f172a" }}>
+                                {formatRenewalRegisterAmount(p.totalPremium || p.premium)}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                className="rn-btn"
+                                style={{ padding: "3px 8px", fontSize: "11.5px", background: "#ffffff" }}
+                                onClick={() => openCustomerAction(p, "remark")}
+                              >
+                                Action
+                              </button>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {group.policies.map((p) => {
-                            const asset = p.vehicleNumber || p.registrationNumber || p.riskLocation || "—";
-                            const cleanNo = String(p.policyNumber || "—").replace(/:+$/, "").trim();
-                            return (
-                              <tr key={p.id} onClick={() => openCustomerAction(p, "remark")} style={{ cursor: "pointer" }}>
-                                <td><span className="rn-policy-register__mono">{asset}</span></td>
-                                <td><span className="rn-policy-register__mono">{cleanNo}</span></td>
-                                <td>{p.insuranceCompany || p.companyName || "—"}</td>
-                                <td>{p.displayPolicyType || p.policyType || "—"}</td>
-                                <td><strong>{formatRenewalRegisterDate(p.expiryDate)}</strong></td>
-                                <td><strong>{formatRenewalRegisterAmount(p.totalPremium || p.premium)}</strong></td>
-                                <td onClick={(e) => e.stopPropagation()}>
-                                  <button
-                                    type="button"
-                                    className="rn-btn"
-                                    style={{ padding: "4px 8px", fontSize: "11px" }}
-                                    onClick={() => openCustomerAction(p, "remark")}
-                                  >
-                                    Action
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                        );
+                      })}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         ) : (
           <table className="rn-table rn-policy-register__table">
             <thead>
