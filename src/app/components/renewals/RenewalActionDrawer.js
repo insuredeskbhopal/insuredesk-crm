@@ -27,6 +27,7 @@ import {
   Zap,
   Ban,
   Car,
+  Users,
   Warehouse,
   Flame,
   HeartPulse,
@@ -34,6 +35,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { showToast } from "@/app/components/shared/ToastProvider";
+import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
 
 function getCategoryIcon(cat, size = 13, style = { color: "#475569" }) {
   const c = String(cat || "").toUpperCase();
@@ -193,6 +195,8 @@ export default function RenewalActionDrawer({
   const [whatsappContactDetails, setWhatsappContactDetails] = useState(null);
   const [whatsappLoading, setWhatsappLoading] = useState(false);
   const [sendingViaApi, setSendingViaApi] = useState(false);
+  const [whatsappRecipientType, setWhatsAppRecipientType] = useState("individual");
+  const [whatsappGroupId, setWhatsAppGroupId] = useState("");
 
   // Timeline
   const [timeline, setTimeline] = useState([]);
@@ -210,6 +214,8 @@ export default function RenewalActionDrawer({
 
   useEffect(() => {
     if (!activePolicy) return;
+    setWhatsAppRecipientType("individual");
+    setWhatsAppGroupId("");
     setRenewalStatus(activePolicy.renewalStatus || "Follow-Up");
     setNewInsurer(activePolicy.insuranceCompany || "");
     setRenewedPremium(activePolicy.totalPremium || activePolicy.premium || "");
@@ -439,6 +445,15 @@ export default function RenewalActionDrawer({
   };
 
   const handleOpenWhatsAppWeb = () => {
+    if (whatsappRecipientType === "group") {
+      if (customWhatsAppMessage) {
+        window.navigator.clipboard.writeText(customWhatsAppMessage);
+      }
+      window.open("https://web.whatsapp.com", "_blank");
+      showToast("Message copied! Opening WhatsApp Web to paste into group.", "info");
+      return;
+    }
+
     if (cleanPhone.length < 10) {
       showToast("No valid phone number for WhatsApp.", "error");
       return;
@@ -449,10 +464,21 @@ export default function RenewalActionDrawer({
   };
 
   const handleSendViaApi = async () => {
-    if (cleanPhone.length < 10) {
-      showToast("Add a valid 10-digit mobile number before sending.", "error");
-      return;
+    const isGroup = whatsappRecipientType === "group";
+    const targetRecipient = isGroup ? whatsappGroupId : cleanPhone;
+
+    if (isGroup) {
+      if (!whatsappGroupId) {
+        showToast("Please select a WhatsApp group before sending.", "error");
+        return;
+      }
+    } else {
+      if (cleanPhone.length < 10) {
+        showToast("Add a valid 10-digit mobile number before sending.", "error");
+        return;
+      }
     }
+
     if (!customWhatsAppMessage.trim()) {
       showToast("Message cannot be empty.", "error");
       return;
@@ -464,7 +490,8 @@ export default function RenewalActionDrawer({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: cleanPhone,
+          recipient: targetRecipient,
+          phone: targetRecipient,
           message: customWhatsAppMessage,
         }),
       });
@@ -480,18 +507,24 @@ export default function RenewalActionDrawer({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             policyId: activePolicy.id,
-            recipient: cleanPhone,
-            phone: cleanPhone,
+            recipient: targetRecipient,
+            phone: targetRecipient,
             message: customWhatsAppMessage,
             messageId: data.messageId || undefined,
             logAudit: true,
+            isGroup,
           }),
         });
       } catch (auditErr) {
         console.error("Failed to log WhatsApp audit:", auditErr);
       }
 
-      showToast("WhatsApp message sent successfully!", "success");
+      showToast(
+        isGroup
+          ? "WhatsApp message sent to group successfully!"
+          : "WhatsApp message sent successfully!",
+        "success"
+      );
     } catch (err) {
       showToast(`Gateway note: ${err.message}. You can send via WhatsApp Web below.`, "error");
     } finally {
@@ -2150,6 +2183,21 @@ export default function RenewalActionDrawer({
           {/* TAB 7: WhatsApp Message */}
           {activeTab === "whatsapp" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {/* WhatsApp Recipient Destination Picker (Individual vs Group with Auto-Match) */}
+              <WhatsAppRecipientPicker
+                type={whatsappRecipientType}
+                onTypeChange={(val) => {
+                  setWhatsAppRecipientType(val);
+                  if (val === "individual") {
+                    setWhatsAppGroupId("");
+                  }
+                }}
+                groupId={whatsappGroupId}
+                onGroupChange={setWhatsAppGroupId}
+                contactPhone={cleanPhone}
+                disabled={sendingViaApi}
+              />
+
               {/* WhatsApp Contact Details Card */}
               <div
                 style={{
@@ -2346,7 +2394,7 @@ export default function RenewalActionDrawer({
                 <button
                   type="button"
                   onClick={handleOpenWhatsAppWeb}
-                  disabled={!cleanPhone}
+                  disabled={whatsappRecipientType === "individual" && !cleanPhone}
                   style={{
                     flex: 1,
                     padding: "9px 14px",
@@ -2360,32 +2408,38 @@ export default function RenewalActionDrawer({
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "6px",
-                    cursor: cleanPhone ? "pointer" : "not-allowed",
-                    opacity: cleanPhone ? 1 : 0.5,
+                    cursor: (whatsappRecipientType === "group" || cleanPhone) ? "pointer" : "not-allowed",
+                    opacity: (whatsappRecipientType === "group" || cleanPhone) ? 1 : 0.5,
                   }}
                 >
-                  <ExternalLink size={13} /> Open in WhatsApp Web
+                  <ExternalLink size={13} /> {whatsappRecipientType === "group" ? "Open Web & Paste" : "Open in WhatsApp Web"}
                 </button>
                 <button
                   type="button"
                   onClick={handleSendViaApi}
-                  disabled={!cleanPhone || sendingViaApi}
+                  disabled={(whatsappRecipientType === "group" ? !whatsappGroupId : !cleanPhone) || sendingViaApi}
                   style={{
-                    padding: "9px 14px",
+                    padding: "9px 16px",
                     borderRadius: "8px",
-                    background: "#f1f5f9",
+                    background: "#ffffff",
                     color: "#0f172a",
                     fontSize: "12.5px",
                     fontWeight: 600,
-                    border: "1px solid #94a3b8",
+                    border: "1.5px solid #0f172a",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "6px",
-                    cursor: cleanPhone && !sendingViaApi ? "pointer" : "not-allowed",
-                    opacity: cleanPhone ? 1 : 0.5,
+                    cursor: (whatsappRecipientType === "group" ? Boolean(whatsappGroupId) : Boolean(cleanPhone)) && !sendingViaApi ? "pointer" : "not-allowed",
+                    opacity: (whatsappRecipientType === "group" ? Boolean(whatsappGroupId) : Boolean(cleanPhone)) ? 1 : 0.5,
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                   }}
                 >
-                  <Send size={13} /> {sendingViaApi ? "Sending..." : "Send via API"}
+                  {whatsappRecipientType === "group" ? <Users size={13} /> : <Send size={13} />}
+                  {sendingViaApi
+                    ? "Sending..."
+                    : whatsappRecipientType === "group"
+                    ? "Send to Group via API"
+                    : "Send via API"}
                 </button>
               </div>
             </div>

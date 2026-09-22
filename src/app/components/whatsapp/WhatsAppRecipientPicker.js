@@ -90,11 +90,23 @@ export default function WhatsAppRecipientPicker({
   };
 
   useEffect(() => {
-    if (type === "group") void findMatches();
+    const phone = normalizePhone(contactPhone);
+    if (phone.length >= 10) {
+      void findMatches();
+    } else {
+      setMatches([]);
+      setMatchedPhone("");
+    }
     return () => {
       matchRequestRef.current += 1;
     };
-  }, [type, contactPhone]);
+  }, [contactPhone]);
+
+  useEffect(() => {
+    if (type === "group" && matches.length === 0 && normalizePhone(contactPhone).length >= 10) {
+      void findMatches();
+    }
+  }, [type]);
 
   useEffect(() => {
     const query = searchQuery.trim();
@@ -152,7 +164,7 @@ export default function WhatsAppRecipientPicker({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg shadow-slate-200/70">
+    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Destination</p>
@@ -177,6 +189,11 @@ export default function WhatsAppRecipientPicker({
               } disabled:cursor-not-allowed disabled:opacity-50`}
             >
               <Icon size={14} /> {label}
+              {value === "group" && matches.length > 0 && (
+                <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                  {matches.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
