@@ -191,13 +191,13 @@ export default function RenewalActionDrawer({
   const [netPremium, setNetPremium] = useState("");
   const [newPolicyNo, setNewPolicyNo] = useState("");
   const [newInsurer, setNewInsurer] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState("Collected");
-  const [paymentMode, setPaymentMode] = useState("Online / UPI");
+  const [startDate, _setStartDate] = useState("");
+  const [expiryDate, _setExpiryDate] = useState("");
+  const [paymentStatus, _setPaymentStatus] = useState("Collected");
+  const [paymentMode, _setPaymentMode] = useState("Online / UPI");
   const [renewRemark, setRenewRemark] = useState("");
-  const [uploadPolicyNow, setUploadPolicyNow] = useState(false);
-  const [policyCopyFile, setPolicyCopyFile] = useState(null);
+  const [uploadPolicyNow, _setUploadPolicyNow] = useState(false);
+  const [policyCopyFile, _setPolicyCopyFile] = useState(null);
 
   // Lost Form
   const [lostReason, setLostReason] = useState("Premium High");
@@ -208,7 +208,7 @@ export default function RenewalActionDrawer({
   const [whatsappTemplates, setWhatsappTemplates] = useState({});
   const [selectedTemplateKey, setSelectedTemplateKey] = useState("renewal_msg");
   const [whatsappContactDetails, setWhatsappContactDetails] = useState(null);
-  const [whatsappLoading, setWhatsappLoading] = useState(false);
+  const [_whatsappLoading, setWhatsappLoading] = useState(false);
   const [sendingViaApi, setSendingViaApi] = useState(false);
   const [whatsappRecipientType, setWhatsAppRecipientType] = useState("individual");
   const [whatsappGroupId, setWhatsAppGroupId] = useState("");
@@ -479,14 +479,16 @@ export default function RenewalActionDrawer({
         try {
           const errData = await res.json();
           if (errData?.error) errMsg = errData.error;
-        } catch (_) {}
+        } catch {
+          // ignore parsing error
+        }
         throw new Error(errMsg);
       }
       const blob = await res.blob();
       if (!blob || blob.size === 0) {
         throw new Error("Policy document is empty.");
       }
-      const reader = new FileReader();
+      const reader = new (window.FileReader || FileReader)();
       reader.onloadend = () => {
         const base64Data = reader.result;
         const cleanBase64 = typeof base64Data === "string" && base64Data.includes(",")
@@ -525,7 +527,7 @@ export default function RenewalActionDrawer({
       showToast("File size exceeds 16MB limit.", "error");
       return;
     }
-    const reader = new FileReader();
+    const reader = new (window.FileReader || FileReader)();
     reader.onloadend = () => {
       const base64Data = reader.result;
       const cleanBase64 = typeof base64Data === "string" && base64Data.includes(",")
