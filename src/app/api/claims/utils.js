@@ -201,3 +201,15 @@ function formatDateInput(value) {
   if (Number.isNaN(date.getTime())) return "";
   return date.toISOString().slice(0, 10);
 }
+
+export const claimsCountsCache = new Map();
+export const CLAIMS_COUNTS_TTL_MS = 20_000;
+
+export function invalidateClaimsCountsCache(orgId = null) {
+  if (orgId) {
+    claimsCountsCache.delete(orgId);
+  } else {
+    claimsCountsCache.clear();
+  }
+}
+

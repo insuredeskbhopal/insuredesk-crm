@@ -10,10 +10,8 @@ export const POLICY_RECORD_SELECT = {
   sourceFile: true,
   data: true,
   reviewedData: true,
-  extractedData: true,
   extractionMethod: true,
   extractionQuality: true,
-  extractionLog: true,
   confidenceScore: true,
   pdfFileName: true,
   pdfMimeType: true,
@@ -29,17 +27,6 @@ export const POLICY_RECORD_SELECT = {
     select: {
       name: true,
       email: true,
-    },
-  },
-  uploadedFile: {
-    select: {
-      createdAt: true,
-      createdBy: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
     },
   },
 };

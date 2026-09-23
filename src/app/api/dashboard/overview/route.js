@@ -7,6 +7,10 @@ import { loadLeadAgentReport } from "@/lib/reports/lead-generation";
 
 export const dynamic = "force-dynamic";
 
+const DASHBOARD_OVERVIEW_TTL_MS = 30 * 1000; // 30 seconds
+const dashboardOverviewCache = globalThis.__dashboardOverviewCache || new Map();
+globalThis.__dashboardOverviewCache = dashboardOverviewCache;
+
 function tenantSql(session) {
   return [session.role === "SUPER_ADMIN", session.organizationId ?? null];
 }
@@ -109,6 +113,13 @@ export async function GET(request) {
     const monthParam = url.searchParams.get("month") || null;
     const categoryParam = (url.searchParams.get("category") || url.searchParams.get("policyType") || "").toUpperCase().trim();
     const categoryFilterVal = categoryParam && categoryParam !== "ALL" ? categoryParam : null;
+
+    const cacheKey = `${session.role}-${session.organizationId || "all"}-${periodParam}-${yearParam || "none"}-${monthParam || "none"}-${categoryFilterVal || "none"}`;
+    const cached = dashboardOverviewCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && now - cached.timestamp < DASHBOARD_OVERVIEW_TTL_MS) {
+      return Response.json(cached.data);
+    }
 
     const { startIso, endIso, label: dateRangeLabel } = getPeriodBounds(periodParam, yearParam, monthParam);
 
@@ -513,7 +524,7 @@ export async function GET(request) {
       finalTrends = timeline;
     }
 
-    return Response.json({
+    const responsePayload = {
       success: true,
       viewerRole: session.role,
       periodBounds: {
@@ -565,7 +576,9 @@ export async function GET(request) {
       })),
       recentLeads,
       leadAgentReport,
-    });
+    };
+    dashboardOverviewCache.set(cacheKey, { data: responsePayload, timestamp: Date.now() });
+    return Response.json(responsePayload);
   } catch (error) {
     console.error("Dashboard overview failed:", error instanceof Error ? error.message : error);
     return Response.json(

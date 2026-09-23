@@ -117,7 +117,10 @@ export default function CustomerProfilePage(props) {
   const phone = params.id;
   const requestedPolicyId = searchParams.get("policyId") || "";
   const requestedAction = searchParams.get("action") || "";
-  const returnTo = searchParams.get("returnTo") || "/dashboard/renewals/customers";
+  const returnTo =
+    searchParams.get("returnTo") ||
+    (typeof window !== "undefined" ? window.sessionStorage.getItem("rn-customer-return-url") : null) ||
+    "/dashboard/renewals/customers";
   const goBackToPortfolios = () => router.push(returnTo);
 
   // Data state
@@ -1414,7 +1417,7 @@ export default function CustomerProfilePage(props) {
             boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
           }}
         >
-          <ArrowLeft size={14} /> Back to Portfolios
+          <ArrowLeft size={14} /> {returnTo.includes("/renewals/policies") ? "Back to Renewals" : "Back to Portfolios"}
         </button>
       </div>
 

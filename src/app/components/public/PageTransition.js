@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { usePathname } from "next/navigation";
 
+import { isCrmPath } from "@/app/lib/route-utils";
+
 export default function PageTransition({ children }) {
   const pathname = usePathname();
   const [transitionStage, setTransitionStage] = useState("entered");
@@ -25,13 +27,7 @@ export default function PageTransition({ children }) {
     return () => window.cancelAnimationFrame(rafId);
   }, [pathname]);
 
-  const isCrmRoute =
-    pathname?.startsWith("/crm") ||
-    pathname?.startsWith("/admin") ||
-    pathname?.startsWith("/operations") ||
-    pathname?.startsWith("/dashboard");
-
-  if (isCrmRoute) {
+  if (isCrmPath(pathname)) {
     return <>{children}</>;
   }
 

@@ -167,6 +167,22 @@ export const OPERATIONS_MODULES = [
       "Update profile phone/email",
     ],
   },
+  {
+    id: "presence",
+    name: "Staff Presence & Attendance",
+    description: "Monitor live staff CRM presence, tab status, break exceptions, and WhatsApp attendance warnings.",
+    route: "/operations/presence",
+    buttonLabel: "Open Presence Center",
+    accent: "teal",
+    functions: [
+      "Live tab tracking",
+      "Multi-tab session sync",
+      "3-tier WhatsApp warnings",
+      "Break & fieldwork approval",
+      "Absence escalation review",
+      "Daily duty hours audit",
+    ],
+  },
 ];
 
 export const FUTURE_OPERATIONS_MODULES = [

@@ -7,6 +7,7 @@ import AppShell from "@/app/components/layout/AppShell";
 import SideNav from "@/app/components/layout/SideNav";
 import TopBar from "@/app/components/layout/TopBar";
 import ToastProvider from "@/app/components/shared/ToastProvider";
+import PresenceTracker from "@/app/components/presence/PresenceTracker";
 import { NAV_ITEMS } from "@/app/ui/dashboard/constants";
 import "@/app/ui/dashboard.css";
 
@@ -84,6 +85,7 @@ export default function DashboardLayout({ children }) {
 
   return (
     <AppShell className={isSidebarCollapsed ? "sidebar-collapsed" : ""}>
+      <PresenceTracker />
       <TopBar
         query={query}
         onQueryChange={handleQueryChange}

@@ -5,6 +5,10 @@ import { consolidateRenewalCompanyStats } from "@/lib/renewals/companies";
 
 export const dynamic = "force-dynamic";
 
+const COMPANY_CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+const companyStatsCache = globalThis.__renewalCompanyStatsCache || new Map();
+globalThis.__renewalCompanyStatsCache = companyStatsCache;
+
 export async function GET(request) {
   try {
     const token = request.cookies.get("token")?.value;
@@ -22,6 +26,13 @@ export async function GET(request) {
 
     const isSuperAdmin = user.role === "SUPER_ADMIN";
     const orgId = user.organizationId || null;
+
+    const cacheKey = `${isSuperAdmin}-${orgId || "all"}-${todayStr}`;
+    const cached = companyStatsCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && now - cached.timestamp < COMPANY_CACHE_TTL_MS) {
+      return Response.json({ companyStats: cached.data });
+    }
 
     const queryParams = [isSuperAdmin, orgId, todayStr];
 
@@ -70,6 +81,7 @@ export async function GET(request) {
 
     const result = await prisma.$queryRawUnsafe(sql, ...queryParams);
     const companyStats = consolidateRenewalCompanyStats(result).sort((a, b) => b.total - a.total);
+    companyStatsCache.set(cacheKey, { data: companyStats, timestamp: Date.now() });
     return Response.json({ companyStats });
   } catch (error) {
     console.error("Renewals companies fetch failed:", error);

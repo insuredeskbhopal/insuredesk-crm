@@ -3,7 +3,7 @@ import { verifyJWT } from "@/lib/auth";
 import { normalizeRecord } from "@/lib/records";
 import { withRenewalPolicyDisplay } from "@/lib/policies/type-display";
 import { normalizeRenewalRegisterMonth } from "@/lib/renewals/register";
-import { moveOverdueRenewalsToLost } from "@/lib/renewals/auto-lost";
+
 import {
   getRenewalCompanyFilterTerms,
   normalizeRenewalInsuranceCompany,
@@ -19,29 +19,9 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const AUTO_LOST_SYNC_INTERVAL_MS = 5 * 60 * 1000;
-const autoLostSyncState = globalThis.__renewalAutoLostSyncState || new Map();
-globalThis.__renewalAutoLostSyncState = autoLostSyncState;
-
-async function ensureOverdueRenewalSync({ organizationId, referenceDate }) {
-  const key = organizationId === undefined ? "all-organizations" : organizationId || "null-organization";
-  const now = Date.now();
-  const current = autoLostSyncState.get(key);
-  if (current?.promise) return current.promise;
-  if (now - (current?.completedAt || 0) < AUTO_LOST_SYNC_INTERVAL_MS) return 0;
-
-  const promise = moveOverdueRenewalsToLost({ organizationId, referenceDate })
-    .then((count) => {
-      autoLostSyncState.set(key, { completedAt: Date.now(), promise: null });
-      return count;
-    })
-    .catch((error) => {
-      autoLostSyncState.delete(key);
-      throw error;
-    });
-  autoLostSyncState.set(key, { completedAt: current?.completedAt || 0, promise });
-  return promise;
-}
+const renewalsCountsCache = globalThis.__renewalsCountsCache || new Map();
+globalThis.__renewalsCountsCache = renewalsCountsCache;
+const RENEWALS_COUNTS_TTL_MS = 20_000;
 
 export async function GET(request) {
   try {
@@ -79,9 +59,7 @@ export async function GET(request) {
     const orgId = user.organizationId || null;
     const actorId = user.userId || user.id || null;
 
-    ensureOverdueRenewalSync({ organizationId: isSuperAdmin ? undefined : orgId, referenceDate: today }).catch((err) =>
-      console.error("Overdue renewal sync error:", err),
-    );
+
 
     const queryParams = [
       isSuperAdmin,
@@ -320,49 +298,17 @@ export async function GET(request) {
     `;
 
     const countQuery = `${baseCTE} SELECT COUNT(*)::integer as count FROM filtered_policies`;
-    const summaryQuery = `
+    const consolidatedCountsQuery = `
       ${baseCTE}
       SELECT
-        COUNT(*)::integer AS total,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date = $3::date THEN 1 END)::integer AS due_today,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 7 THEN 1 END)::integer AS due7,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 15 THEN 1 END)::integer AS due15,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 30 THEN 1 END)::integer AS due30,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date < $3::date AND (((expiry_date - $3::date) >= -30) OR LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval')) THEN 1 END)::integer AS overdue,
-        COUNT(CASE WHEN follow_up_date = $3::date THEN 1 END)::integer AS follow_up_today,
-        COUNT(CASE WHEN follow_up_date IS NOT NULL AND follow_up_date < $3::date AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END)::integer AS missed_followups,
-        COUNT(CASE WHEN renewal_status = 'RENEWED' THEN 1 END)::integer AS renewed,
-        COUNT(CASE WHEN renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') THEN 1 END)::integer AS lost,
-        COUNT(CASE WHEN is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND (expiry_date - $3::date) BETWEEN -30 AND 30 THEN 1 END)::integer AS pending,
-        COUNT(CASE WHEN expiry_state = 'missing' THEN 1 END)::integer AS missing_expiry,
-        COUNT(CASE WHEN expiry_state = 'invalid' THEN 1 END)::integer AS invalid_expiry,
-        COUNT(DISTINCT CASE
-          WHEN (
-            (updated_by_id = $10::uuid AND updated_at >= $3::date::timestamp AND updated_at < ($3::date + INTERVAL '1 day'))
-            OR id::text IN (
-              SELECT entity_id
-              FROM audit_logs
-              WHERE user_id = $10::uuid
-                AND entity_type = 'PolicyRecord'
-                AND action IN ('RENEWAL_REMARK_ADDED', 'POLICY_RENEWED', 'POLICY_MARK_LOST', 'RENEWAL_REASSIGNED', 'WHATSAPP_REMINDER_SENT')
-                AND created_at >= $3::date::timestamp
-                AND created_at < ($3::date + INTERVAL '1 day')
-                AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
-            )
-          ) THEN id
-        END)::integer AS today_work
-      FROM active_policies
-      WHERE
-        (
-          $6 = ''
-          OR EXISTS (
-            SELECT 1
-            FROM unnest(string_to_array($6, '|||')) AS filter_company(value)
-            WHERE LOWER(TRIM(company)) LIKE '%' || LOWER(TRIM(filter_company.value)) || '%'
-              OR LOWER(TRIM(selected_company)) LIKE '%' || LOWER(TRIM(filter_company.value)) || '%'
-          )
-        )
-        AND (
+        -- Category counts
+        COUNT(*)::integer AS all_count,
+        COUNT(*) FILTER (WHERE policy_family = 'Motor Policy')::integer AS motor_count,
+        COUNT(*) FILTER (WHERE policy_family = 'Warehouse Policy')::integer AS warehouse_count,
+        COUNT(*) FILTER (WHERE policy_family NOT IN ('Motor Policy', 'Warehouse Policy'))::integer AS other_count,
+
+        -- Summary counts (filtered by policyType $7)
+        COUNT(*) FILTER (WHERE (
           $7 = 'All'
           OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy'))
           OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy')
@@ -371,23 +317,86 @@ export async function GET(request) {
           OR LOWER(selected_policy_type) = LOWER($7)
           OR LOWER(policy_family) = LOWER($7)
           OR LOWER(policy_family) = LOWER($7 || ' Policy')
-        )
-        AND (
-          $11::integer = 0
-          OR EXTRACT(MONTH FROM expiry_date)::integer = $11::integer
-        )
-        AND (
-          $8 = ''
-          OR search_text LIKE $9
-        )
-    `;
-    const categoryQuery = `
-      ${baseCTE}
-      SELECT
-        COUNT(*)::integer AS all_count,
-        COUNT(*) FILTER (WHERE policy_family = 'Motor Policy')::integer AS motor_count,
-        COUNT(*) FILTER (WHERE policy_family = 'Warehouse Policy')::integer AS warehouse_count,
-        COUNT(*) FILTER (WHERE policy_family NOT IN ('Motor Policy', 'Warehouse Policy'))::integer AS other_count
+        ))::integer AS total,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date = $3::date
+        ))::integer AS due_today,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 7
+        ))::integer AS due7,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 15
+        ))::integer AS due15,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date >= $3::date AND (expiry_date - $3::date) <= 30
+        ))::integer AS due30,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND expiry_date < $3::date AND (((expiry_date - $3::date) >= -30) OR LOWER(renewal_status) IN ('follow-up', 'follow_up', 'interested', 'quote sent', 'quote_sent', 'negotiation', 'pending approval', 'pending_approval'))
+        ))::integer AS overdue,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND follow_up_date = $3::date
+        ))::integer AS follow_up_today,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND follow_up_date IS NOT NULL AND follow_up_date < $3::date AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE')
+        ))::integer AS missed_followups,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND renewal_status = 'RENEWED'
+        ))::integer AS renewed,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND renewal_status IN ('LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE')
+        ))::integer AS lost,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND is_active_policy = true AND renewal_status NOT IN ('RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE') AND expiry_date IS NOT NULL AND (expiry_date - $3::date) BETWEEN -30 AND 30
+        ))::integer AS pending,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND expiry_state = 'missing'
+        ))::integer AS missing_expiry,
+
+        COUNT(*) FILTER (WHERE (
+          ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+          AND expiry_state = 'invalid'
+        ))::integer AS invalid_expiry,
+
+        COUNT(DISTINCT CASE
+          WHEN (
+            ($7 = 'All' OR (LOWER($7) IN ('other', 'non-motor', 'nonmotor') AND policy_family NOT IN ('Motor Policy', 'Warehouse Policy')) OR (LOWER($7) IN ('warehouse', 'fire') AND policy_family = 'Warehouse Policy') OR (LOWER($7) = 'motor' AND policy_family = 'Motor Policy') OR LOWER(policy_type) = LOWER($7) OR LOWER(selected_policy_type) = LOWER($7) OR LOWER(policy_family) = LOWER($7) OR LOWER(policy_family) = LOWER($7 || ' Policy'))
+            AND (
+              (updated_by_id = $10::uuid AND updated_at >= $3::date::timestamp AND updated_at < ($3::date + INTERVAL '1 day'))
+              OR id::text IN (
+                SELECT entity_id
+                FROM audit_logs
+                WHERE user_id = $10::uuid
+                  AND entity_type = 'PolicyRecord'
+                  AND action IN ('RENEWAL_REMARK_ADDED', 'POLICY_RENEWED', 'POLICY_MARK_LOST', 'RENEWAL_REASSIGNED', 'WHATSAPP_REMINDER_SENT')
+                  AND created_at >= $3::date::timestamp
+                  AND created_at < ($3::date + INTERVAL '1 day')
+                  AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
+              )
+            )
+          ) THEN id
+        END)::integer AS today_work
       FROM active_policies
       WHERE
         (
@@ -410,7 +419,7 @@ export async function GET(request) {
     `;
     const dataQuery = `
       ${baseCTE} 
-      SELECT id, days_remaining FROM filtered_policies
+      SELECT id, days_remaining, COUNT(*) OVER()::integer AS full_count FROM filtered_policies
       ORDER BY 
         CASE WHEN days_remaining IS NOT NULL THEN 0 ELSE 1 END,
         days_remaining ASC,
@@ -418,30 +427,45 @@ export async function GET(request) {
       LIMIT $12::integer OFFSET $13::integer
     `;
 
+    async function getConsolidatedCounts() {
+      const cacheKey = `${user.organizationId || "ALL"}-${companyFilterTerms}-${policyType}-${q.trim()}-${renewalMonth}-${todayStr}`;
+      const cached = renewalsCountsCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < RENEWALS_COUNTS_TTL_MS) {
+        return cached.data;
+      }
+      const rawRes = await prisma.$queryRawUnsafe(consolidatedCountsQuery, ...queryParams);
+      const data = rawRes[0] || {};
+      renewalsCountsCache.set(cacheKey, { data, timestamp: Date.now() });
+      return data;
+    }
+
     if (summaryOnly) {
-      const summaryResult = await prisma.$queryRawUnsafe(summaryQuery, ...queryParams);
+      const counts = await getConsolidatedCounts();
       return Response.json({
-        summaryCounts: normalizeSummaryCounts(summaryResult[0] || {}),
+        summaryCounts: normalizeSummaryCounts(counts),
       });
     }
 
     const isRegisterTab = tab === "register";
-    const runCountQuery = !isRegisterTab || q.trim() !== "";
 
-    const [countResult, dataResult, summaryResult, categoryResult] = await Promise.all([
-      runCountQuery ? prisma.$queryRawUnsafe(countQuery, ...queryParams) : Promise.resolve([{ count: 0 }]),
+    const [dataResult, countsResult] = await Promise.all([
       prisma.$queryRawUnsafe(dataQuery, ...queryParams, limit, offset),
-      isRegisterTab ? Promise.resolve([{}]) : prisma.$queryRawUnsafe(summaryQuery, ...queryParams),
-      prisma.$queryRawUnsafe(categoryQuery, ...queryParams),
+      isRegisterTab ? Promise.resolve({}) : getConsolidatedCounts(),
     ]);
 
-    let totalCount = countResult[0]?.count || 0;
-    if (!runCountQuery && categoryResult[0]) {
+    const summaryResult = [countsResult];
+    const categoryResult = [countsResult];
+
+    let totalCount = dataResult[0]?.full_count || 0;
+    if (totalCount === 0 && offset > 0) {
+      const fallbackCount = await prisma.$queryRawUnsafe(countQuery, ...queryParams);
+      totalCount = fallbackCount[0]?.count || 0;
+    } else if (totalCount === 0 && categoryResult[0]) {
       const cat = categoryResult[0];
       if (policyType === "All") totalCount = cat.all_count || 0;
       else if (policyType.toLowerCase() === "motor") totalCount = cat.motor_count || 0;
       else if (policyType.toLowerCase() === "warehouse" || policyType.toLowerCase() === "fire") totalCount = cat.warehouse_count || 0;
-      else totalCount = cat.other_count || 0;
+      else if (policyType.toLowerCase() === "other") totalCount = cat.other_count || 0;
     }
     const ids = dataResult.map((r) => r.id);
     const daysRemainingMap = {};

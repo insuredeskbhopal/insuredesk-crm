@@ -67,6 +67,8 @@ const EMPTY_FORM = {
   password: "",
   role: "AGENT",
   assignedLOBs: [],
+  whatsappPhone: "",
+  presenceMonitored: true,
 };
 
 function formatDate(value) {
@@ -250,6 +252,8 @@ export default function UserManagement() {
       password: "",
       role: user.role || "AGENT",
       assignedLOBs: Array.isArray(user.assignedLOBs) ? user.assignedLOBs : [],
+      whatsappPhone: user.whatsappPhone || "",
+      presenceMonitored: user.presenceMonitored !== false,
     });
     setEditingUserId(user.id);
     setIsFormOpen(true);
@@ -294,6 +298,8 @@ export default function UserManagement() {
       email: form.email.trim(),
       role: form.role,
       assignedLOBs: form.assignedLOBs || [],
+      whatsappPhone: form.whatsappPhone ? form.whatsappPhone.trim() : null,
+      presenceMonitored: Boolean(form.presenceMonitored),
     };
 
     if (!editingUserId || form.password.trim()) {
@@ -507,6 +513,30 @@ export default function UserManagement() {
                     </select>
                     {formErrors.role ? <em>{formErrors.role}</em> : null}
                   </label>
+                  <label>
+                    <span>WhatsApp Mobile Number</span>
+                    <small>Used for CRM shift attendance tracking and automated absence warnings.</small>
+                    <input
+                      type="tel"
+                      value={form.whatsappPhone || ""}
+                      onChange={(event) => setForm({ ...form, whatsappPhone: event.target.value })}
+                      placeholder="e.g. 9876543210 (10 digits)"
+                    />
+                  </label>
+                  <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", margin: "10px 0" }}>
+                    <input
+                      type="checkbox"
+                      style={{ marginTop: 3 }}
+                      checked={form.presenceMonitored !== false}
+                      onChange={(event) => setForm({ ...form, presenceMonitored: event.target.checked })}
+                    />
+                    <div>
+                      <span style={{ fontSize: 13, fontWeight: 700, display: "block" }}>Monitor CRM Duty Hours & Tab Presence</span>
+                      <small style={{ display: "block", color: "#64748b", marginTop: 2 }}>
+                        Enables live tab tracking and automated WhatsApp warnings during 10:00 AM – 6:30 PM IST (Mon–Sat).
+                      </small>
+                    </div>
+                  </label>
                   <div className="user-lob-section">
                     <div className="user-lob-header">
                       <div>
@@ -656,7 +686,10 @@ export default function UserManagement() {
                           <div className="user-avatar">{getInitials(user)}</div>
                           <div>
                             <strong>{user.name || "Unnamed user"}</strong>
-                            <small>{user.email}</small>
+                            <small>
+                              {user.email}
+                              {user.whatsappPhone ? ` • 📱 ${user.whatsappPhone}` : ""}
+                            </small>
                           </div>
                         </div>
                         {Array.isArray(user.assignedLOBs) && user.assignedLOBs.length > 0 ? (

@@ -21,6 +21,8 @@ const createUserSchema = z.object({
   role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "AGENT", "VIEWER"]).optional(),
   organizationId: z.string().uuid().optional(),
   assignedLOBs: z.array(z.string()).optional(),
+  whatsappPhone: z.string().optional().nullable(),
+  presenceMonitored: z.boolean().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -51,6 +53,8 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         updatedAt: true,
         assignedLOBs: true,
+        whatsappPhone: true,
+        presenceMonitored: true,
       },
     }),
   ]);
@@ -83,7 +87,7 @@ export async function POST(request: NextRequest) {
       { status: 422 },
     );
   }
-  const { email, name, password, role, organizationId, assignedLOBs } = parseResult.data;
+  const { email, name, password, role, organizationId, assignedLOBs, whatsappPhone, presenceMonitored } = parseResult.data;
   const requestedRole = role ?? "AGENT";
 
   if (!canManageRole(requester.role, requestedRole)) {
@@ -103,6 +107,8 @@ export async function POST(request: NextRequest) {
             ? (organizationId ?? requester.organizationId ?? undefined)
             : requester.organizationId,
         assignedLOBs: assignedLOBs ?? [],
+        whatsappPhone: whatsappPhone ?? null,
+        presenceMonitored: presenceMonitored ?? (requestedRole !== "SUPER_ADMIN"),
       },
       select: {
         id: true,
@@ -113,6 +119,8 @@ export async function POST(request: NextRequest) {
         createdAt: true,
         updatedAt: true,
         assignedLOBs: true,
+        whatsappPhone: true,
+        presenceMonitored: true,
       },
     });
 

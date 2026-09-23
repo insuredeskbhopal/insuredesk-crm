@@ -3,9 +3,12 @@ import { prisma } from "@/lib/db/prisma";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 import {
+  claimsCountsCache,
+  CLAIMS_COUNTS_TTL_MS,
   claimInclude,
   claimListSelect,
   getClaimWhere,
+  invalidateClaimsCountsCache,
   requireClaimSession,
   sanitizeClaimDocuments,
   sanitizeClaimPayload,
@@ -14,6 +17,54 @@ import {
 } from "./utils";
 
 export const runtime = "nodejs";
+
+async function getClaimsFilterCounts(session) {
+  const cacheKey = session.role === "SUPER_ADMIN" ? "SUPER_ADMIN" : String(session.organizationId || "NONE");
+  const cached = claimsCountsCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CLAIMS_COUNTS_TTL_MS) {
+    return cached.data;
+  }
+
+  const rawRows = session.role === "SUPER_ADMIN"
+    ? await prisma.$queryRaw`
+        SELECT 
+          COUNT(*)::int AS "all",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) NOT IN ('settled', 'rejected'))::int AS "pending",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) = 'open')::int AS "open",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) = 'follow up' OR follow_up_date IS NOT NULL)::int AS "followUp",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) = 'documents pending')::int AS "documents",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) = 'settled')::int AS "settled",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) = 'rejected')::int AS "rejected"
+        FROM claims
+        WHERE deleted_at IS NULL
+      `
+    : await prisma.$queryRaw`
+        SELECT 
+          COUNT(*)::int AS "all",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) NOT IN ('settled', 'rejected'))::int AS "pending",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) = 'open')::int AS "open",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) = 'follow up' OR follow_up_date IS NOT NULL)::int AS "followUp",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) = 'documents pending')::int AS "documents",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) = 'settled')::int AS "settled",
+          COUNT(*) FILTER (WHERE LOWER(COALESCE(claim_status, '')) = 'rejected')::int AS "rejected"
+        FROM claims
+        WHERE organization_id = ${session.organizationId}::uuid AND deleted_at IS NULL
+      `;
+
+  const raw = rawRows[0] || {};
+  const filterCounts = {
+    all: raw.all || 0,
+    pending: raw.pending || 0,
+    open: raw.open || 0,
+    "follow-up": raw.followUp || 0,
+    documents: raw.documents || 0,
+    settled: raw.settled || 0,
+    rejected: raw.rejected || 0,
+  };
+
+  claimsCountsCache.set(cacheKey, { data: filterCounts, timestamp: Date.now() });
+  return filterCounts;
+}
 
 export async function GET(request) {
   try {
@@ -71,8 +122,7 @@ export async function GET(request) {
       andFilters.push({ claimStatus: { equals: "Rejected", mode: "insensitive" } });
     }
     if (andFilters.length) where.AND = andFilters;
-
-    const [claims, total, statusCounts, followUpCount] = await Promise.all([
+    const [claims, total, filterCounts] = await Promise.all([
       summaryOnly
         ? Promise.resolve([])
         : prisma.claim.findMany({
@@ -83,29 +133,8 @@ export async function GET(request) {
             take: limit,
           }),
       summaryOnly ? Promise.resolve(0) : prisma.claim.count({ where }),
-      prisma.claim.groupBy({
-        by: ["claimStatus"],
-        where: baseWhere,
-        _count: { id: true },
-      }),
-      prisma.claim.count({
-        where: {
-          ...baseWhere,
-          OR: [
-            { claimStatus: { equals: "Follow Up", mode: "insensitive" } },
-            { followUpDate: { not: null } },
-          ],
-        },
-      }),
+      getClaimsFilterCounts(session),
     ]);
-
-    const countStatus = (status) =>
-      statusCounts.reduce(
-        (sum, item) =>
-          String(item.claimStatus || "").toLowerCase() === status ? sum + (item._count?.id || 0) : sum,
-        0,
-      );
-    const allCount = statusCounts.reduce((sum, item) => sum + (item._count?.id || 0), 0);
 
     return NextResponse.json({
       claims: claims.map(serializeClaimSummary),
@@ -113,15 +142,7 @@ export async function GET(request) {
       page,
       limit,
       totalPages: Math.ceil(total / limit) || 1,
-      filterCounts: {
-        all: allCount,
-        pending: allCount - countStatus("settled") - countStatus("rejected"),
-        open: countStatus("open"),
-        "follow-up": followUpCount,
-        documents: countStatus("documents pending"),
-        settled: countStatus("settled"),
-        rejected: countStatus("rejected"),
-      },
+      filterCounts,
     });
   } catch (error) {
     return NextResponse.json(
@@ -174,6 +195,7 @@ export async function POST(request) {
       metadata: { claimNo: claim.claimNo, insuredName: claim.insuredName },
     });
 
+    invalidateClaimsCountsCache(session.organizationId);
     return NextResponse.json(serializeClaim(claim), { status: 201 });
   } catch (error) {
     return NextResponse.json(

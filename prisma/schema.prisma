@@ -127,6 +127,7 @@ model Organization {
   endorsements  Endorsement[]
   whatsAppTemplates WhatsAppTemplate[]
   whatsAppMessageQueues WhatsAppMessageQueue[]
+  dailyPresences DailyPresence[]
 
   @@map("organizations")
 }
@@ -794,6 +795,9 @@ model User {
   deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz(6)
   assignedLOBs   Json           @default("[]") @map("assigned_lobs")
   whatsappSignature String?      @map("whatsapp_signature")
+  whatsappPhone     String?      @map("whatsapp_phone")
+  presenceMonitored Boolean      @default(true) @map("presence_monitored")
+  presenceSettings  Json?        @map("presence_settings")
   
   createdPolicies PolicyRecord[] @relation("PolicyCreatedBy")
   updatedPolicies PolicyRecord[] @relation("PolicyUpdatedBy")
@@ -819,6 +823,9 @@ model User {
   updatedEndorsements Endorsement[] @relation("EndorsementUpdatedBy")
   deletedEndorsements Endorsement[] @relation("EndorsementDeletedBy")
   endorsementDocuments EndorsementDocument[] @relation("EndorsementDocumentUploadedBy")
+  dailyPresences       DailyPresence[]
+  presenceSessions     PresenceSession[]
+  presenceIncidents    PresenceIncident[]
 
   @@index([organizationId])
   @@index([role])
@@ -1093,3 +1100,118 @@ model WhatsAppMessageQueue {
   @@index([status, scheduledAt])
   @@map("whatsapp_message_queue")
 }
+
+enum PresenceStatus {
+  ONLINE
+  AWAY
+  ON_BREAK
+  FIELD_WORK
+  ON_LEAVE
+  OFFLINE
+}
+
+enum IncidentStatus {
+  OPEN
+  RESOLVED
+  ESCALATED_PENDING_REVIEW
+  EXCUSED
+}
+
+model DailyPresence {
+  id                    String            @id @default(uuid()) @db.Uuid
+  userId                String            @map("user_id") @db.Uuid
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId        String?           @map("organization_id") @db.Uuid
+  organization          Organization?     @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  workDate              String            @map("work_date")
+  shiftStart            DateTime?         @map("shift_start") @db.Timestamptz(6)
+  shiftEnd              DateTime?         @map("shift_end") @db.Timestamptz(6)
+  firstLoginAt          DateTime?         @map("first_login_at") @db.Timestamptz(6)
+  lastSeenAt            DateTime?         @map("last_seen_at") @db.Timestamptz(6)
+  currentStatus         PresenceStatus    @default(OFFLINE) @map("current_status")
+  totalConnectedSeconds Int               @default(0) @map("total_connected_seconds")
+  totalBreakSeconds     Int               @default(0) @map("total_break_seconds")
+  totalOfflineSeconds   Int               @default(0) @map("total_offline_seconds")
+  warningCount          Int               @default(0) @map("warning_count")
+  approvedExceptionType String?           @map("approved_exception_type")
+  exceptionReason       String?           @map("exception_reason") @db.Text
+  exceptionUntil        DateTime?         @map("exception_until") @db.Timestamptz(6)
+  metadata              Json              @default("{}")
+  createdAt             DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sessions              PresenceSession[]
+  incidents             PresenceIncident[]
+  events                PresenceEvent[]
+
+  @@unique([userId, workDate])
+  @@index([workDate, currentStatus])
+  @@index([organizationId, workDate])
+  @@map("daily_presences")
+}
+
+model PresenceSession {
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String         @map("user_id") @db.Uuid
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyPresenceId String?        @map("daily_presence_id") @db.Uuid
+  dailyPresence   DailyPresence? @relation(fields: [dailyPresenceId], references: [id], onDelete: Cascade)
+  tabId           String         @map("tab_id")
+  ipAddress       String?        @map("ip_address")
+  userAgent       String?        @map("user_agent")
+  visibilityState String         @default("visible") @map("visibility_state")
+  startedAt       DateTime       @default(now()) @map("started_at") @db.Timestamptz(6)
+  lastHeartbeatAt DateTime       @default(now()) @map("last_heartbeat_at") @db.Timestamptz(6)
+  endedAt         DateTime?      @map("ended_at") @db.Timestamptz(6)
+
+  @@index([userId, endedAt])
+  @@index([tabId])
+  @@index([lastHeartbeatAt])
+  @@map("presence_sessions")
+}
+
+model PresenceIncident {
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String         @map("user_id") @db.Uuid
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyPresenceId String?        @map("daily_presence_id") @db.Uuid
+  dailyPresence   DailyPresence? @relation(fields: [dailyPresenceId], references: [id], onDelete: Cascade)
+  startedAt       DateTime       @default(now()) @map("started_at") @db.Timestamptz(6)
+  endedAt         DateTime?      @map("ended_at") @db.Timestamptz(6)
+  durationSeconds Int            @default(0) @map("duration_seconds")
+  status          IncidentStatus @default(OPEN)
+  warning1SentAt  DateTime?      @map("warning1_sent_at") @db.Timestamptz(6)
+  warning2SentAt  DateTime?      @map("warning2_sent_at") @db.Timestamptz(6)
+  warning3SentAt  DateTime?      @map("warning3_sent_at") @db.Timestamptz(6)
+  escalatedAt     DateTime?      @map("escalated_at") @db.Timestamptz(6)
+  resolution      String?        @db.Text
+  reviewedBy      String?        @map("reviewed_by")
+  reviewedAt      DateTime?      @map("reviewed_at") @db.Timestamptz(6)
+  metadata        Json           @default("{}")
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  events          PresenceEvent[]
+
+  @@index([userId, status])
+  @@index([startedAt])
+  @@map("presence_incidents")
+}
+
+model PresenceEvent {
+  id              String            @id @default(uuid()) @db.Uuid
+  userId          String            @map("user_id") @db.Uuid
+  dailyPresenceId String?           @map("daily_presence_id") @db.Uuid
+  dailyPresence   DailyPresence?    @relation(fields: [dailyPresenceId], references: [id], onDelete: Cascade)
+  incidentId      String?           @map("incident_id") @db.Uuid
+  incident        PresenceIncident? @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+  eventType       String            @map("event_type")
+  description     String?           @db.Text
+  metadata        Json              @default("{}")
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([userId, createdAt])
+  @@index([dailyPresenceId])
+  @@map("presence_events")
+}
+

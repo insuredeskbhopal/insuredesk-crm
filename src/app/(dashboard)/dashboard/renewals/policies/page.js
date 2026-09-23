@@ -41,6 +41,7 @@ import {
 } from "@/lib/renewals/register";
 
 const CONTEXT_TABS = new Set(["register", "all", "due_today", "due_7", "due_30"]);
+const VIEW_MODE_STORAGE_KEY = "rn_renewal_view_mode";
 
 function getPolicyCustomerKey(policy) {
   if (policy.customerPortfolioId) return String(policy.customerPortfolioId);
@@ -94,8 +95,27 @@ export default function RenewalPoliciesPage() {
     setContextTab(CONTEXT_TABS.has(requestedTab) ? requestedTab : "register");
     setPage(Math.max(1, Number(params.get("page")) || 1));
     const requestedView = params.get("view");
+    let activeView = null;
     if (requestedView === "policy" || requestedView === "customer") {
-      setViewMode(requestedView);
+      activeView = requestedView;
+      try {
+        window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, requestedView);
+      } catch {}
+    } else {
+      try {
+        const storedView = window.localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+        if (storedView === "policy" || storedView === "customer") {
+          activeView = storedView;
+        }
+      } catch {}
+    }
+    if (activeView) {
+      setViewMode(activeView);
+      if (activeView !== requestedView) {
+        params.set("view", activeView);
+        const nextQuery = params.toString();
+        window.history.replaceState(null, "", nextQuery ? `?${nextQuery}` : window.location.pathname);
+      }
     }
     const requestedPageSize = Number(params.get("pageSize"));
     if ([15, 25, 50, 100].includes(requestedPageSize)) {
@@ -175,7 +195,7 @@ export default function RenewalPoliciesPage() {
     if (next.policyType !== "All") params.set("policyType", next.policyType);
     if (next.company !== "All") params.set("company", next.company);
     if (next.renewalMonth !== "All") params.set("month", next.renewalMonth);
-    if (next.viewMode && next.viewMode !== "policy") params.set("view", next.viewMode);
+    if (next.viewMode) params.set("view", next.viewMode);
     if (next.pageSize && next.pageSize !== 25) params.set("pageSize", String(next.pageSize));
     if (next.page > 1) params.set("page", String(next.page));
     router.replace(params.size ? `?${params}` : "/dashboard/renewals/policies", { scroll: false });
@@ -220,6 +240,9 @@ export default function RenewalPoliciesPage() {
 
   const changeViewMode = (mode) => {
     setViewMode(mode);
+    try {
+      window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+    } catch {}
     syncUrl({ viewMode: mode });
   };
 
@@ -246,7 +269,7 @@ export default function RenewalPoliciesPage() {
     setRenewalMonth("All");
     setPage(1);
     closeActionMenu();
-    router.replace(contextTab === "register" ? "/dashboard/renewals/policies" : `/dashboard/renewals/policies?tab=${contextTab}`, { scroll: false });
+    syncUrl({ query: "", policyType: "All", company: "All", renewalMonth: "All", page: 1, viewMode });
   };
 
   const openActionMenu = (policyId, event) => {
@@ -289,7 +312,12 @@ export default function RenewalPoliciesPage() {
     closeActionMenu();
     if (action === "profile") {
       const customerKey = getPolicyCustomerKey(policy);
-      const returnTo = `${window.location.pathname}${window.location.search}`;
+      const currentSearchParams = new window.URLSearchParams(window.location.search);
+      if (viewMode && !currentSearchParams.has("view")) {
+        currentSearchParams.set("view", viewMode);
+      }
+      const returnSearch = currentSearchParams.toString();
+      const returnTo = `${window.location.pathname}${returnSearch ? `?${returnSearch}` : ""}`;
       const params = new window.URLSearchParams({ returnTo, policyId: policy.id });
       window.sessionStorage.setItem("rn-customer-return-url", returnTo);
       window.sessionStorage.setItem("rn-customer-scroll-y", String(window.scrollY || 0));

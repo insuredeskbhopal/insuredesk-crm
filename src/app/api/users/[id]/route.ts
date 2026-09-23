@@ -16,6 +16,8 @@ const updateUserSchema = z.object({
   role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "AGENT", "VIEWER"]).optional(),
   organizationId: z.string().uuid().optional(),
   assignedLOBs: z.array(z.string()).optional(),
+  whatsappPhone: z.string().optional().nullable(),
+  presenceMonitored: z.boolean().optional(),
 });
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -38,6 +40,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       createdAt: true,
       updatedAt: true,
       assignedLOBs: true,
+      whatsappPhone: true,
+      presenceMonitored: true,
     },
   });
   if (!user) {
@@ -101,6 +105,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         createdAt: true,
         updatedAt: true,
         assignedLOBs: true,
+        whatsappPhone: true,
+        presenceMonitored: true,
       },
     });
     return NextResponse.json(updated);

@@ -7,6 +7,7 @@ import {
   canWriteClaim,
   claimInclude,
   getClaimWhere,
+  invalidateClaimsCountsCache,
   requireClaimSession,
   sanitizeClaimDocuments,
   sanitizeClaimPayload,
@@ -98,6 +99,7 @@ export async function PUT(request, { params }) {
       metadata: { claimNo: claim.claimNo, insuredName: claim.insuredName },
     });
 
+    invalidateClaimsCountsCache(session.organizationId);
     return NextResponse.json(serializeClaim(claim));
   } catch (error) {
     return NextResponse.json(
@@ -144,6 +146,7 @@ export async function DELETE(request, { params }) {
       metadata: { claimNo: existing.claimNo, insuredName: existing.insuredName },
     });
 
+    invalidateClaimsCountsCache(session.organizationId);
     return new Response(null, { status: 204 });
   } catch (error) {
     return NextResponse.json(

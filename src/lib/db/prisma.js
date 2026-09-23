@@ -1,7 +1,12 @@
+import dns from "dns";
 import { PrismaClient } from "@prisma/client";
 
+if (typeof dns?.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first");
+}
+
 const globalForPrisma = globalThis;
-const DEFAULT_CONNECTION_LIMIT = "5";
+const DEFAULT_CONNECTION_LIMIT = "10";
 const DEFAULT_POOL_TIMEOUT = "60";
 const DEFAULT_CONNECT_TIMEOUT = "30";
 
@@ -38,14 +43,15 @@ function getDatasourceUrl() {
 }
 
 export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    log: [
-      { level: "error", emit: "stdout" },
-      { level: "warn", emit: "stdout" },
-    ],
-    datasourceUrl: getDatasourceUrl(),
-  });
+  (globalForPrisma.prisma && globalForPrisma.prisma.dailyPresence)
+    ? globalForPrisma.prisma
+    : new PrismaClient({
+        log: [
+          { level: "error", emit: "stdout" },
+          { level: "warn", emit: "stdout" },
+        ],
+        datasourceUrl: getDatasourceUrl(),
+      });
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

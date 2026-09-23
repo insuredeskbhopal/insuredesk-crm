@@ -3,11 +3,16 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "lenis";
+import { isCrmPath } from "@/app/lib/route-utils";
 
 export default function SmoothScroll() {
   const pathname = usePathname();
 
   useEffect(() => {
+    if (isCrmPath(pathname)) {
+      return undefined;
+    }
+
     const prefersReducedMotion =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;

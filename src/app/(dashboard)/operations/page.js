@@ -19,6 +19,7 @@ import {
   Users,
   Cake,
   Smartphone,
+  UserCheck,
 } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 import { OPERATIONS_MODULES, FUTURE_OPERATIONS_MODULES } from "@/app/lib/operations-modules";
@@ -35,6 +36,7 @@ const ICONS = {
   "birthday-management": Cake,
   "whatsapp-setup": Smartphone,
   "client-management": BadgeCheck,
+  presence: UserCheck,
 };
 
 const DEFAULT_METRICS = {
@@ -258,10 +260,14 @@ function getModuleCount(id, metrics) {
   if (id === "lead-generation" || id === "lead-management") return metrics.customerProfiles || 0;
   if (id === "birthday-management") return metrics.birthdayProfiles || 0;
   if (id === "manual-policy-entry") return metrics.policyRecords || 0;
+  if (id === "presence") return metrics.onlineStaff || 0;
   return 0;
 }
 
 function getLastActivityText(id, count, metrics) {
+  if (id === "presence") {
+    return "10:00 AM - 6:30 PM Shift";
+  }
   if (id === "lead-generation" || id === "lead-management") {
     return count > 0 && metrics.latestProfileActivity
       ? `Last activity ${metrics.latestProfileActivity}`

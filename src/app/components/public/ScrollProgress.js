@@ -3,15 +3,13 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
+import { isCrmPath } from "@/app/lib/route-utils";
+
 export default function ScrollProgress() {
   const barRef = useRef(null);
   const pathname = usePathname();
 
-  const isCrmRoute =
-    pathname?.startsWith("/crm") ||
-    pathname?.startsWith("/admin") ||
-    pathname?.startsWith("/operations") ||
-    pathname?.startsWith("/dashboard");
+  const isCrmRoute = isCrmPath(pathname);
 
   useEffect(() => {
     if (isCrmRoute) return undefined;

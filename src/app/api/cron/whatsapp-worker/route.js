@@ -5,6 +5,7 @@ import {
   triggerUpcomingRenewals,
 } from "@/lib/whatsapp/automations";
 import { processQueueBatch } from "@/lib/whatsapp/queue-manager";
+import { evaluateStaffPresence } from "@/lib/presence/presence-monitor";
 
 export const runtime = "nodejs";
 
@@ -53,7 +54,15 @@ async function handleWorker(request) {
       };
     }
 
-    // 2. Process a batch of messages from the queue
+    // 2. Evaluate staff presence and queue absence warnings (active 10:00 AM - 6:30 PM IST)
+    let presenceResult = null;
+    try {
+      presenceResult = await evaluateStaffPresence();
+    } catch (presenceErr) {
+      console.error("Presence evaluation failed in cron worker:", presenceErr);
+    }
+
+    // 3. Process a batch of messages from the queue
     console.log("Processing WhatsApp message queue batch...");
     const batchResult = await processQueueBatch(5);
 
@@ -61,6 +70,7 @@ async function handleWorker(request) {
       success: true,
       scansExecuted: runScans,
       scansResult,
+      presenceResult,
       batchResult,
       timestamp: new Date(),
     });

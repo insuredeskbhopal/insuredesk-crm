@@ -362,10 +362,8 @@ export async function GET(request) {
       createdAt: true,
       data: true,
       reviewedData: true,
-      extractedData: true,
       extractionMethod: true,
       extractionQuality: true,
-      extractionLog: true,
       confidenceScore: true,
       pdfFileName: true,
       pdfMimeType: true,
@@ -378,17 +376,6 @@ export async function GET(request) {
         select: {
           name: true,
           email: true,
-        },
-      },
-      uploadedFile: {
-        select: {
-          createdAt: true,
-          createdBy: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
         },
       },
     };

@@ -6,6 +6,10 @@ import { withoutManualRenewalSources } from "@/lib/records/manual-renewal-source
 
 export const runtime = "nodejs";
 
+const OPERATIONS_SUMMARY_TTL_MS = 30 * 1000; // 30 seconds
+const operationsSummaryCache = globalThis.__operationsSummaryCache || new Map();
+globalThis.__operationsSummaryCache = operationsSummaryCache;
+
 export async function GET(request) {
   try {
     const token = request.cookies.get("token")?.value;
@@ -13,6 +17,13 @@ export async function GET(request) {
 
     const session = await verifyJWT(token);
     if (!session) return Response.json({ error: "Invalid or expired session" }, { status: 401 });
+
+    const cacheKey = `${session.role}-${session.organizationId || "all"}`;
+    const cached = operationsSummaryCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && now - cached.timestamp < OPERATIONS_SUMMARY_TTL_MS) {
+      return Response.json(cached.data);
+    }
 
     const profileWhere = { ...getCustomerProfileScopedFilter(session), deletedAt: null };
     const policyWhere = withoutManualRenewalSources({ ...getTenantFilter(session, "read"), deletedAt: null });
@@ -55,7 +66,7 @@ export async function GET(request) {
       profileCounts.find((item) => item.status === status)?._count?.id || 0;
     const latestPolicy = latestPolicyRaw ? normalizeRecord(latestPolicyRaw) : null;
 
-    return Response.json({
+    const responsePayload = {
       success: true,
       summary: {
         customerProfiles: profileTotal,
@@ -84,7 +95,9 @@ export async function GET(request) {
             }
           : null,
       },
-    });
+    };
+    operationsSummaryCache.set(cacheKey, { data: responsePayload, timestamp: Date.now() });
+    return Response.json(responsePayload);
   } catch (error) {
     console.error("Operations summary failed:", error instanceof Error ? error.message : error);
     return Response.json({ error: "Operations summary could not be loaded." }, { status: 500 });

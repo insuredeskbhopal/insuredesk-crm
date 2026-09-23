@@ -11,6 +11,10 @@ import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
 
 export const dynamic = "force-dynamic";
 
+const HEADER_DATA_TTL_MS = 30 * 1000; // 30 seconds
+const headerDataCache = globalThis.__headerDataCache || new Map();
+globalThis.__headerDataCache = headerDataCache;
+
 const REPORT_TIME_ZONE = "Asia/Kolkata";
 const INDIA_TIME_OFFSET = "+05:30";
 
@@ -54,6 +58,13 @@ export async function GET(request) {
     const session = await verifyJWT(token);
     if (!session) {
       return Response.json({ error: "Invalid or expired session", success: false }, { status: 401 });
+    }
+
+    const cacheKey = `${session.role}-${session.organizationId || "all"}-${summaryOnly}`;
+    const cached = headerDataCache.get(cacheKey);
+    const currentTime = Date.now();
+    if (cached && currentTime - cached.timestamp < HEADER_DATA_TTL_MS) {
+      return Response.json(cached.data);
     }
 
     if (session.role === "VIEWER") {
@@ -497,13 +508,15 @@ export async function GET(request) {
       };
     });
 
-    return Response.json({
+    const responsePayload = {
       renewals,
       notifications,
       agentWise,
       renewalCounts,
       success: true,
-    });
+    };
+    headerDataCache.set(cacheKey, { data: responsePayload, timestamp: Date.now() });
+    return Response.json(responsePayload);
   } catch (error) {
     console.error("Failed to load header data:", error);
     return Response.json({ error: "Failed to load header dashboard data", success: false }, { status: 500 });
