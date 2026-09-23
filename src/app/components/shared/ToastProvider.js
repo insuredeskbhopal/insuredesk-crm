@@ -120,19 +120,33 @@ export default function ToastProvider({ children }) {
                 {toasts.map((item) => {
                   const isSuccess = item.type === "success";
                   const isError = item.type === "error";
+                  const isWarning = item.type === "warning";
                   const bg = isSuccess
-                    ? "#065f46"
+                    ? "linear-gradient(135deg, #064e3b 0%, #065f46 100%)"
                     : isError
-                    ? "#991b1b"
-                    : "#0f172a";
+                    ? "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
+                    : isWarning
+                    ? "linear-gradient(135deg, #78350f 0%, #92400e 100%)"
+                    : "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)";
                   const border = isSuccess
-                    ? "#059669"
+                    ? "#10b981"
                     : isError
-                    ? "#dc2626"
-                    : "#334155";
+                    ? "#f43f5e"
+                    : isWarning
+                    ? "#f59e0b"
+                    : "#475569";
+                  const shadow = isSuccess
+                    ? "0 12px 28px -4px rgba(6, 78, 59, 0.45), 0 6px 14px rgba(0, 0, 0, 0.25)"
+                    : isError
+                    ? "0 12px 28px -4px rgba(127, 29, 29, 0.45), 0 6px 14px rgba(0, 0, 0, 0.25)"
+                    : isWarning
+                    ? "0 12px 28px -4px rgba(120, 53, 15, 0.45), 0 6px 14px rgba(0, 0, 0, 0.25)"
+                    : "0 12px 28px -4px rgba(15, 23, 42, 0.5), 0 6px 14px rgba(0, 0, 0, 0.25)";
                   const Icon = isSuccess
                     ? CheckCircle2
                     : isError
+                    ? AlertTriangle
+                    : isWarning
                     ? AlertTriangle
                     : Info;
 
@@ -146,37 +160,58 @@ export default function ToastProvider({ children }) {
                         justifyContent: "space-between",
                         gap: 12,
                         padding: "12px 16px",
-                        borderRadius: 10,
+                        borderRadius: 12,
                         background: bg,
                         border: `1px solid ${border}`,
                         color: "#ffffff",
-                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.25)",
+                        boxShadow: shadow,
                         fontSize: 13.5,
                         fontWeight: 500,
-                        lineHeight: 1.4,
+                        lineHeight: 1.45,
                         pointerEvents: "auto",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <Icon size={18} style={{ flexShrink: 0, opacity: 0.95 }} />
-                        <span>{item.message}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
+                        <div
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: "50%",
+                            background: "rgba(255, 255, 255, 0.18)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Icon size={16} strokeWidth={2.5} style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                        </div>
+                        <div style={{ minWidth: 0, flex: 1, wordBreak: "break-word", overflowWrap: "anywhere" }}>
+                          <span style={{ color: "#ffffff", fontWeight: 600 }}>{item.message}</span>
+                        </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeToast(item.id)}
                         aria-label="Close notification"
+                        className="crm-toast-close-btn"
                         style={{
-                          background: "none",
+                          background: "rgba(255, 255, 255, 0.14)",
                           border: "none",
                           color: "#ffffff",
-                          opacity: 0.75,
+                          width: 24,
+                          height: 24,
+                          borderRadius: 6,
                           cursor: "pointer",
-                          padding: 2,
+                          padding: 0,
                           display: "flex",
                           alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          transition: "all 0.15s ease",
                         }}
                       >
-                        <X size={15} />
+                        <X size={14} strokeWidth={2.5} style={{ color: "#ffffff", stroke: "#ffffff" }} />
                       </button>
                     </div>
                   );

@@ -194,6 +194,30 @@ svg,
   color: #000000 !important;
 }
 
+/* Toast Notification Overrides - preserve crisp white text and icons on dark toast pills */
+.crm-toast-pill,
+.crm-toast-pill *,
+.crm-toast-pill span,
+.crm-toast-pill div,
+.crm-toast-pill button {
+  color: #ffffff !important;
+}
+
+.crm-toast-pill svg,
+.crm-toast-pill svg path,
+.crm-toast-pill svg circle,
+.crm-toast-pill svg line,
+.crm-toast-pill [class*="icon"] {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.crm-toast-pill button:hover,
+.crm-toast-pill .crm-toast-close-btn:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+
 .browse-button,
 .secondary-action {
   color: #000000 !important;
