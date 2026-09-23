@@ -47,6 +47,8 @@ function clearClientSession() {
   return response;
 }
 
+import { normalizeCanonicalPhone, isClientPhoneUniqueInOrg } from "@/lib/client-portal/policies";
+
 export async function getOwnedPolicy({
   customerId,
   organizationId,
@@ -55,7 +57,7 @@ export async function getOwnedPolicy({
   customer,
   database = prisma,
 }) {
-  const clientPhone = (customer?.phone || "").replace(/[^0-9]/g, "").slice(-10);
+  const clientPhone = normalizeCanonicalPhone(customer?.phone || "");
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(policyId || "");
 
   const rows = policyId
@@ -72,13 +74,27 @@ export async function getOwnedPolicy({
               AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
             )
             AND (
-              LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
+              LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
               OR (
-                ${clientPhone} != '' AND length(${clientPhone}) = 10 AND (
-                  RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-                  OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-                  OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-                  OR RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                NULLIF(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId'), '') IS NULL
+                AND ${clientPhone} != ''
+                AND (
+                  SELECT COUNT(*)::int
+                  FROM client_accounts ca_check
+                  WHERE ca_check.deleted_at IS NULL
+                    AND ca_check.organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+                    AND length(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g')) >= 10
+                    AND RIGHT(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                ) = 1
+                AND (
+                  (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                 )
               )
             )
@@ -100,13 +116,27 @@ export async function getOwnedPolicy({
               OR id::text = ${policyId}
             )
             AND (
-              LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
+              LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
               OR (
-                ${clientPhone} != '' AND length(${clientPhone}) = 10 AND (
-                  RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-                  OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-                  OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-                  OR RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                NULLIF(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId'), '') IS NULL
+                AND ${clientPhone} != ''
+                AND (
+                  SELECT COUNT(*)::int
+                  FROM client_accounts ca_check
+                  WHERE ca_check.deleted_at IS NULL
+                    AND ca_check.organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+                    AND length(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g')) >= 10
+                    AND RIGHT(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                ) = 1
+                AND (
+                  (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                 )
               )
             )
@@ -124,13 +154,27 @@ export async function getOwnedPolicy({
           )
           AND (reviewed_data->>'policyNumber' = ${policyNo} OR data->>'policyNumber' = ${policyNo})
           AND (
-            LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
+            LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
             OR (
-              ${clientPhone} != '' AND length(${clientPhone}) = 10 AND (
-                RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-                OR RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+              NULLIF(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId'), '') IS NULL
+              AND ${clientPhone} != ''
+              AND (
+                SELECT COUNT(*)::int
+                FROM client_accounts ca_check
+                WHERE ca_check.deleted_at IS NULL
+                  AND ca_check.organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+                  AND length(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g')) >= 10
+                  AND RIGHT(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g'), 10) = ${clientPhone}
+              ) = 1
+              AND (
+                (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
               )
             )
           )
@@ -139,9 +183,237 @@ export async function getOwnedPolicy({
   return rows[0] || null;
 }
 
+export async function getClientOwnedPolicyIds({
+  customerId,
+  organizationId,
+  customer,
+  database = prisma,
+}) {
+  const clientPhone = normalizeCanonicalPhone(customer?.phone || "");
+  const rows = await database.$queryRaw`
+    SELECT id
+    FROM pdf_records
+    WHERE deleted_at IS NULL
+      AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+      AND (
+        (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
+        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
+        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
+        AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+        AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+      )
+      AND (
+        LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
+        OR (
+          NULLIF(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId'), '') IS NULL
+          AND ${clientPhone} != ''
+          AND (
+            SELECT COUNT(*)::int
+            FROM client_accounts ca_check
+            WHERE ca_check.deleted_at IS NULL
+              AND ca_check.organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+              AND length(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g')) >= 10
+              AND RIGHT(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g'), 10) = ${clientPhone}
+          ) = 1
+          AND (
+            (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g')) >= 10
+             AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+            OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g')) >= 10
+             AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+            OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
+             AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+            OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
+             AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+          )
+        )
+      )
+  `;
+  return rows.map((r) => r.id);
+}
+
+export async function getClientOwnedPolicyRows({
+  customerId,
+  organizationId,
+  customer,
+  policyNo = "",
+  policyId = "",
+  database = prisma,
+}) {
+  const clientPhone = normalizeCanonicalPhone(customer?.phone || "");
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(policyId || "");
+
+  if (policyId && isUuid) {
+    if (policyNo) {
+      return database.$queryRaw`
+        SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
+        FROM pdf_records
+        WHERE id = ${policyId}::uuid
+          AND deleted_at IS NULL
+          AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+          AND (
+            (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
+            AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
+            AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
+            AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+            AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+          )
+          AND (
+            LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
+            OR (
+              NULLIF(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId'), '') IS NULL
+              AND ${clientPhone} != ''
+              AND (
+                SELECT COUNT(*)::int
+                FROM client_accounts ca_check
+                WHERE ca_check.deleted_at IS NULL
+                  AND ca_check.organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+                  AND length(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g')) >= 10
+                  AND RIGHT(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g'), 10) = ${clientPhone}
+              ) = 1
+              AND (
+                (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+              )
+            )
+          )
+          AND (reviewed_data->>'policyNumber' = ${policyNo} OR data->>'policyNumber' = ${policyNo})
+        LIMIT 1
+      `;
+    }
+    return database.$queryRaw`
+      SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
+      FROM pdf_records
+      WHERE id = ${policyId}::uuid
+        AND deleted_at IS NULL
+        AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+        AND (
+          (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
+          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
+          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
+          AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+          AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+        )
+        AND (
+          LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
+          OR (
+            NULLIF(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId'), '') IS NULL
+            AND ${clientPhone} != ''
+            AND (
+              SELECT COUNT(*)::int
+              FROM client_accounts ca_check
+              WHERE ca_check.deleted_at IS NULL
+                AND ca_check.organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+                AND length(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g')) >= 10
+                AND RIGHT(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g'), 10) = ${clientPhone}
+            ) = 1
+            AND (
+              (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+              OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+              OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+              OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+            )
+          )
+        )
+      LIMIT 1
+    `;
+  }
+
+  if (policyNo) {
+    return database.$queryRaw`
+      SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
+      FROM pdf_records
+      WHERE deleted_at IS NULL
+        AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+        AND (
+          (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
+          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
+          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
+          AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+          AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+        )
+        AND (
+          LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
+          OR (
+            NULLIF(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId'), '') IS NULL
+            AND ${clientPhone} != ''
+            AND (
+              SELECT COUNT(*)::int
+              FROM client_accounts ca_check
+              WHERE ca_check.deleted_at IS NULL
+                AND ca_check.organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+                AND length(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g')) >= 10
+                AND RIGHT(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g'), 10) = ${clientPhone}
+            ) = 1
+            AND (
+              (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+              OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+              OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+              OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+            )
+          )
+        )
+        AND (reviewed_data->>'policyNumber' = ${policyNo} OR data->>'policyNumber' = ${policyNo})
+      LIMIT 1
+    `;
+  }
+
+  return database.$queryRaw`
+    SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
+    FROM pdf_records
+    WHERE deleted_at IS NULL
+      AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+      AND (
+        (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
+        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
+        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
+        AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+        AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+      )
+      AND (
+        LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
+        OR (
+          NULLIF(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId'), '') IS NULL
+          AND ${clientPhone} != ''
+          AND (
+            SELECT COUNT(*)::int
+            FROM client_accounts ca_check
+            WHERE ca_check.deleted_at IS NULL
+              AND ca_check.organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
+              AND length(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g')) >= 10
+              AND RIGHT(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g'), 10) = ${clientPhone}
+          ) = 1
+          AND (
+            (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g')) >= 10
+             AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+            OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g')) >= 10
+             AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+            OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
+             AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+            OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
+             AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+          )
+        )
+      )
+  `;
+}
+
 export async function getOwnedClaim({ customer, organizationId, claimId, database = prisma }) {
   if (!customer?.id || !claimId) return null;
-  const cleanPhone = String(customer.phone || "").replace(/\D/g, "").slice(-10);
+  const cleanPhone = normalizeCanonicalPhone(customer.phone || "");
 
   const claim = await database.claim.findFirst({
     where: {
@@ -164,7 +436,11 @@ export async function getOwnedClaim({ customer, organizationId, claimId, databas
   }
 
   // Legacy fallback: verify claim's policy is owned by this customer AND claim mobile matches client's phone
-  if (cleanPhone && cleanPhone.length === 10 && claim.policyNo) {
+  // AND client phone is unique in this organization
+  if (cleanPhone && claim.policyNo) {
+    const isUnique = await isClientPhoneUniqueInOrg({ organizationId, phone: cleanPhone, database });
+    if (!isUnique) return null;
+
     const ownedPolicy = await getOwnedPolicy({
       customerId: customer.id,
       organizationId,
@@ -172,7 +448,7 @@ export async function getOwnedClaim({ customer, organizationId, claimId, databas
       customer,
       database,
     });
-    const claimMobile = String(claim.mobileNo || "").replace(/\D/g, "").slice(-10);
+    const claimMobile = normalizeCanonicalPhone(claim.mobileNo || "");
     if (ownedPolicy && claimMobile === cleanPhone) {
       return claim;
     }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { requireClient } from "@/lib/client-portal/session";
+import { getClientOwnedPolicyRows, requireClient } from "@/lib/client-portal/session";
+import { normalizeCanonicalPhone } from "@/lib/client-portal/policies";
 
 export async function GET(request) {
   try {
@@ -9,7 +10,7 @@ export async function GET(request) {
 
     const customerId = auth.customer.id;
     const orgId = auth.organizationId;
-    const clientPhone = (auth.customer.phone || "").replace(/[^0-9]/g, "").slice(-10);
+    const clientPhone = normalizeCanonicalPhone(auth.customer.phone || "");
 
     // Fetch persisted read notification IDs
     const readTask = await prisma.task.findUnique({
@@ -29,13 +30,27 @@ export async function GET(request) {
         AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
         AND is_active_policy = true
         AND (
-          LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
+          LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
           OR (
-            ${clientPhone} != '' AND length(${clientPhone}) = 10 AND (
-              RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-              OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-              OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
-              OR RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+            NULLIF(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId'), '') IS NULL
+            AND ${clientPhone} != ''
+            AND (
+              SELECT COUNT(*)::int
+              FROM client_accounts ca_check
+              WHERE ca_check.deleted_at IS NULL
+                AND ca_check.organization_id IS NOT DISTINCT FROM ${orgId}::uuid
+                AND length(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g')) >= 10
+                AND RIGHT(REGEXP_REPLACE(ca_check.phone, '[^0-9]', '', 'g'), 10) = ${clientPhone}
+            ) = 1
+            AND (
+              (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+              OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+              OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+              OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
+               AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
             )
           )
         )
@@ -65,15 +80,29 @@ export async function GET(request) {
     }
 
     // 2. Fetch recent claims
-    const cleanPhone = String(auth.customer.phone || "").replace(/[^0-9]/g, "");
-    const phoneSuffix = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : "";
+    const ownedPolicyRows = await getClientOwnedPolicyRows({
+      customerId,
+      organizationId: orgId,
+      customer: auth.customer,
+      database: prisma,
+    });
+    const safePolicyRows = Array.isArray(ownedPolicyRows) ? ownedPolicyRows : [];
+    const ownedPolicyNumbers = new Set(
+      safePolicyRows.map((r) => r.policy_number).filter(Boolean)
+    );
+
     const claims = await prisma.claim.findMany({
       where: {
         deletedAt: null,
         organizationId: orgId,
         OR: [
           { metadata: { path: ["customerId"], equals: customerId } },
-          ...(phoneSuffix ? [{ mobileNo: { endsWith: phoneSuffix } }] : []),
+          ...(clientPhone && ownedPolicyNumbers.size > 0
+            ? [{
+                policyNo: { in: Array.from(ownedPolicyNumbers) },
+                mobileNo: { endsWith: clientPhone },
+              }]
+            : []),
         ],
       },
       orderBy: { updatedAt: "desc" },

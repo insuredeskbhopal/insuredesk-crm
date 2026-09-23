@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { requireClient } from "@/lib/client-portal/session";
+import { getClientOwnedPolicyRows, requireClient } from "@/lib/client-portal/session";
+import { normalizeCanonicalPhone } from "@/lib/client-portal/policies";
 import {
   findActiveClientAccount,
   withClientIdLock,
@@ -15,17 +16,22 @@ export async function GET(request) {
     const orgId = auth.organizationId;
     const customer = auth.customer;
 
-    const cleanPhone = String(customer.phone || "").replace(/[^0-9]/g, "");
-    const phoneSuffix = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : "";
+    const cleanPhone = normalizeCanonicalPhone(customer.phone || "");
 
-    const policyRows = await getClientPolicyRows({ orgId, customerId });
-    const policyNumbers = policyRows
+    const policyRows = await getClientOwnedPolicyRows({
+      customerId,
+      organizationId: orgId,
+      customer,
+      database: prisma,
+    });
+    const safeRows = Array.isArray(policyRows) ? policyRows : [];
+    const policyNumbers = safeRows
       .map((row) => row.policy_number)
       .filter(Boolean);
 
     const legacyOwnership =
-      phoneSuffix && policyNumbers.length
-        ? { policyNo: { in: policyNumbers }, mobileNo: { endsWith: phoneSuffix } }
+      cleanPhone && policyNumbers.length
+        ? { policyNo: { in: policyNumbers }, mobileNo: { endsWith: cleanPhone } }
         : null;
     const claims = await prisma.claim.findMany({
       where: {
@@ -69,7 +75,7 @@ export async function GET(request) {
         return Boolean(
           legacyOwnership &&
             policyNumbers.includes(claim.policyNo) &&
-            String(claim.mobileNo || "").replace(/\D/g, "").endsWith(phoneSuffix),
+            normalizeCanonicalPhone(claim.mobileNo || "") === cleanPhone,
         );
       })
       .map((claim) => {
@@ -100,7 +106,13 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Policy number and claim type are required." }, { status: 400 });
     }
 
-    const policy = await getClientPolicyRows({ orgId, customerId, policyNo });
+    const policy = await getClientOwnedPolicyRows({
+      customerId,
+      organizationId: orgId,
+      customer: auth.customer,
+      policyNo,
+      database: prisma,
+    });
 
     if (!policy.length) {
       return NextResponse.json({ success: false, error: "Policy not found for this client." }, { status: 403 });
@@ -112,9 +124,10 @@ export async function POST(request) {
     const claimNo = `CLM-CLI-${datePrefix}-${rand}`;
 
     const claimResult = await withPolicyRecordLock(policy[0].id, async (policyDatabase) => {
-      const currentPolicy = await getClientPolicyRows({
-        orgId,
+      const currentPolicy = await getClientOwnedPolicyRows({
         customerId,
+        organizationId: orgId,
+        customer: auth.customer,
         policyNo,
         policyId: policy[0].id,
         database: policyDatabase,
@@ -169,107 +182,4 @@ export async function POST(request) {
     console.error("Client Initiate Claim Error:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
-}
-
-function getClientPolicyRows({ orgId, customerId, policyNo = "", policyId = "", database = prisma }) {
-  if (policyId) {
-    return database.$queryRaw`
-      SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
-      FROM pdf_records
-      WHERE id = ${policyId}::uuid
-        AND deleted_at IS NULL
-        AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
-        AND (
-          (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
-          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
-          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
-          AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
-          AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
-        )
-        AND (
-          LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
-          OR id IN (
-            SELECT p2.id FROM pdf_records p2
-            JOIN client_accounts ca ON ca.id = ${customerId}::uuid
-            WHERE p2.deleted_at IS NULL
-              AND length(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g')) >= 10
-              AND (
-                RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'contactNumber', ''), p2.data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'mobileNumber', ''), p2.data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'phone', ''), p2.data->>'phone', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-                OR RIGHT(REGEXP_REPLACE(COALESCE(p2.contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-              )
-          )
-        )
-        AND (
-          reviewed_data->>'policyNumber' = ${policyNo} OR
-          data->>'policyNumber' = ${policyNo}
-        )
-      LIMIT 1
-    `;
-  }
-  if (policyNo) {
-    return database.$queryRaw`
-      SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
-      FROM pdf_records
-      WHERE deleted_at IS NULL
-        AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
-        AND (
-          (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
-          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
-          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
-          AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
-          AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
-        )
-        AND (
-          LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
-          OR id IN (
-            SELECT p2.id FROM pdf_records p2
-            JOIN client_accounts ca ON ca.id = ${customerId}::uuid
-            WHERE p2.deleted_at IS NULL
-              AND length(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g')) >= 10
-              AND (
-                RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'contactNumber', ''), p2.data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'mobileNumber', ''), p2.data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'phone', ''), p2.data->>'phone', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-                OR RIGHT(REGEXP_REPLACE(COALESCE(p2.contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-              )
-          )
-        )
-        AND (
-          reviewed_data->>'policyNumber' = ${policyNo} OR
-          data->>'policyNumber' = ${policyNo}
-        )
-      LIMIT 1
-    `;
-  }
-
-  return database.$queryRaw`
-    SELECT id, COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
-    FROM pdf_records
-    WHERE deleted_at IS NULL
-      AND organization_id IS NOT DISTINCT FROM ${orgId}::uuid
-      AND (
-        (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
-        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
-        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
-        AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
-        AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
-      )
-      AND (
-        LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
-        OR id IN (
-          SELECT p2.id FROM pdf_records p2
-          JOIN client_accounts ca ON ca.id = ${customerId}::uuid
-          WHERE p2.deleted_at IS NULL
-            AND length(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g')) >= 10
-            AND (
-              RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'contactNumber', ''), p2.data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-              OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'mobileNumber', ''), p2.data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-              OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'phone', ''), p2.data->>'phone', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-              OR RIGHT(REGEXP_REPLACE(COALESCE(p2.contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
-            )
-        )
-      )
-  `;
 }
