@@ -38,7 +38,9 @@ export async function requireUserManager(request: NextRequest) {
 }
 
 async function getAuthenticatedUser(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
+  const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
+  const bearerToken = authHeader?.replace(/^Bearer\s+/i, "")?.trim();
+  const token = request.cookies.get("token")?.value || bearerToken;
   if (!token) {
     return { response: NextResponse.json({ error: "Unauthenticated" }, { status: 401 }) };
   }
@@ -48,7 +50,15 @@ async function getAuthenticatedUser(request: NextRequest) {
     return { response: NextResponse.json({ error: "Invalid token" }, { status: 401 }) };
   }
 
-  const userId = payload.userId as string;
+  if (payload.role === "CLIENT") {
+    return { response: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  }
+
+  const userId = (payload.userId as string) || (payload.id as string);
+  if (!userId) {
+    return { response: NextResponse.json({ error: "Invalid token claims" }, { status: 401 }) };
+  }
+
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user || user.deletedAt) {
     return { response: NextResponse.json({ error: "User not found" }, { status: 404 }) };

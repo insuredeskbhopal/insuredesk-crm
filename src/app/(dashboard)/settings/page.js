@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { redirect } from "next/navigation";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/db/prisma";
 import { withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
@@ -7,6 +8,9 @@ import { getCurrentSessionFromCookies } from "@/lib/records/scoped-data";
 
 export default async function SettingsPage() {
   const session = await getCurrentSessionFromCookies();
+  if (!session || !["SUPER_ADMIN", "ADMIN"].includes(session.role)) {
+    redirect("/dashboard");
+  }
   const visiblePolicyCount = session
     ? await prisma.policyRecord.count({
         where: withoutManualRenewalSources({

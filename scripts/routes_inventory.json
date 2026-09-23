@@ -1,0 +1,710 @@
+{
+  "pages": [
+    {
+      "route": "/",
+      "file": "src/app/page.js"
+    },
+    {
+      "route": "/[slug]",
+      "file": "src/app/[slug]/page.js"
+    },
+    {
+      "route": "/about",
+      "file": "src/app/about/page.js"
+    },
+    {
+      "route": "/admin/users",
+      "file": "src/app/(dashboard)/admin/users/page.js"
+    },
+    {
+      "route": "/analytics-reports",
+      "file": "src/app/(dashboard)/analytics-reports/page.js"
+    },
+    {
+      "route": "/analytics-reports/[reportId]",
+      "file": "src/app/(dashboard)/analytics-reports/[reportId]/page.js"
+    },
+    {
+      "route": "/app",
+      "file": "src/app/app/page.js"
+    },
+    {
+      "route": "/blog",
+      "file": "src/app/blog/page.js"
+    },
+    {
+      "route": "/blog/[slug]",
+      "file": "src/app/blog/[slug]/page.js"
+    },
+    {
+      "route": "/bulk-upload",
+      "file": "src/app/(dashboard)/bulk-upload/page.js"
+    },
+    {
+      "route": "/client/portal",
+      "file": "src/app/client/portal/page.js"
+    },
+    {
+      "route": "/contact",
+      "file": "src/app/contact/page.js"
+    },
+    {
+      "route": "/crm/admin/login",
+      "file": "src/app/(auth)/crm/admin/login/page.js"
+    },
+    {
+      "route": "/customer-management",
+      "file": "src/app/(dashboard)/customer-management/page.js"
+    },
+    {
+      "route": "/customer-management/[customerId]",
+      "file": "src/app/(dashboard)/customer-management/[customerId]/page.js"
+    },
+    {
+      "route": "/customer-management/[customerId]/policy/[policyId]",
+      "file": "src/app/(dashboard)/customer-management/[customerId]/policy/[policyId]/page.js"
+    },
+    {
+      "route": "/dashboard",
+      "file": "src/app/(dashboard)/dashboard/page.js"
+    },
+    {
+      "route": "/dashboard/endorsements",
+      "file": "src/app/(dashboard)/dashboard/endorsements/page.js"
+    },
+    {
+      "route": "/dashboard/endorsements/[id]",
+      "file": "src/app/(dashboard)/dashboard/endorsements/[id]/page.js"
+    },
+    {
+      "route": "/dashboard/endorsements/create",
+      "file": "src/app/(dashboard)/dashboard/endorsements/create/page.js"
+    },
+    {
+      "route": "/dashboard/endorsements/work-queue",
+      "file": "src/app/(dashboard)/dashboard/endorsements/work-queue/page.js"
+    },
+    {
+      "route": "/dashboard/manual-entry/customer-profiling",
+      "file": "src/app/(dashboard)/dashboard/manual-entry/customer-profiling/page.js"
+    },
+    {
+      "route": "/dashboard/manual-entry/customer-profiling/[id]",
+      "file": "src/app/(dashboard)/dashboard/manual-entry/customer-profiling/[id]/page.js"
+    },
+    {
+      "route": "/dashboard/manual-entry/lead-generation",
+      "file": "src/app/(dashboard)/dashboard/manual-entry/lead-generation/page.js"
+    },
+    {
+      "route": "/dashboard/manual-entry/lead-generation/[id]",
+      "file": "src/app/(dashboard)/dashboard/manual-entry/lead-generation/[id]/page.js"
+    },
+    {
+      "route": "/dashboard/renewals",
+      "file": "src/app/(dashboard)/dashboard/renewals/page.js"
+    },
+    {
+      "route": "/dashboard/renewals/companies",
+      "file": "src/app/(dashboard)/dashboard/renewals/companies/page.js"
+    },
+    {
+      "route": "/dashboard/renewals/customers",
+      "file": "src/app/(dashboard)/dashboard/renewals/customers/page.js"
+    },
+    {
+      "route": "/dashboard/renewals/customers/[id]",
+      "file": "src/app/(dashboard)/dashboard/renewals/customers/[id]/page.js"
+    },
+    {
+      "route": "/dashboard/renewals/daily-work",
+      "file": "src/app/(dashboard)/dashboard/renewals/daily-work/page.js"
+    },
+    {
+      "route": "/dashboard/renewals/follow-ups",
+      "file": "src/app/(dashboard)/dashboard/renewals/follow-ups/page.js"
+    },
+    {
+      "route": "/dashboard/renewals/lost",
+      "file": "src/app/(dashboard)/dashboard/renewals/lost/page.js"
+    },
+    {
+      "route": "/dashboard/renewals/policies",
+      "file": "src/app/(dashboard)/dashboard/renewals/policies/page.js"
+    },
+    {
+      "route": "/dashboard/renewals/policy-types",
+      "file": "src/app/(dashboard)/dashboard/renewals/policy-types/page.js"
+    },
+    {
+      "route": "/dashboard/renewals/renewed",
+      "file": "src/app/(dashboard)/dashboard/renewals/renewed/page.js"
+    },
+    {
+      "route": "/dashboard/renewals/reports",
+      "file": "src/app/(dashboard)/dashboard/renewals/reports/page.js"
+    },
+    {
+      "route": "/dashboard/reports",
+      "file": "src/app/(dashboard)/dashboard/reports/page.js"
+    },
+    {
+      "route": "/dashboard/reports/[category]",
+      "file": "src/app/(dashboard)/dashboard/reports/[category]/page.js"
+    },
+    {
+      "route": "/dashboard/reports/lead-generation",
+      "file": "src/app/(dashboard)/dashboard/reports/lead-generation/page.js"
+    },
+    {
+      "route": "/disclaimer",
+      "file": "src/app/disclaimer/page.js"
+    },
+    {
+      "route": "/download-app",
+      "file": "src/app/download-app/page.js"
+    },
+    {
+      "route": "/faq",
+      "file": "src/app/faq/page.js"
+    },
+    {
+      "route": "/faq/[category]",
+      "file": "src/app/faq/[category]/page.js"
+    },
+    {
+      "route": "/login",
+      "file": "src/app/login/page.js"
+    },
+    {
+      "route": "/manual-policy-entry",
+      "file": "src/app/(dashboard)/manual-policy-entry/page.js"
+    },
+    {
+      "route": "/not-found",
+      "file": "src/app/not-found/page.js"
+    },
+    {
+      "route": "/operations",
+      "file": "src/app/(dashboard)/operations/page.js"
+    },
+    {
+      "route": "/operations/[module]",
+      "file": "src/app/(dashboard)/operations/[module]/page.js"
+    },
+    {
+      "route": "/operations/birthday-management",
+      "file": "src/app/(dashboard)/operations/birthday-management/page.js"
+    },
+    {
+      "route": "/operations/claims-management",
+      "file": "src/app/(dashboard)/operations/claims-management/page.js"
+    },
+    {
+      "route": "/operations/client-management",
+      "file": "src/app/(dashboard)/operations/client-management/page.js"
+    },
+    {
+      "route": "/operations/customer-profiling",
+      "file": "src/app/(dashboard)/operations/customer-profiling/page.js"
+    },
+    {
+      "route": "/operations/endorsements",
+      "file": "src/app/(dashboard)/operations/endorsements/page.js"
+    },
+    {
+      "route": "/operations/lead-generation",
+      "file": "src/app/(dashboard)/operations/lead-generation/page.js"
+    },
+    {
+      "route": "/operations/manual-policy-entry",
+      "file": "src/app/(dashboard)/operations/manual-policy-entry/page.js"
+    },
+    {
+      "route": "/operations/presence",
+      "file": "src/app/(dashboard)/operations/presence/page.js"
+    },
+    {
+      "route": "/operations/whatsapp-setup",
+      "file": "src/app/(dashboard)/operations/whatsapp-setup/page.js"
+    },
+    {
+      "route": "/policy-records",
+      "file": "src/app/(dashboard)/policy-records/page.js"
+    },
+    {
+      "route": "/premium-reports/[period]",
+      "file": "src/app/(dashboard)/premium-reports/[period]/page.js"
+    },
+    {
+      "route": "/privacy-policy",
+      "file": "src/app/privacy-policy/page.js"
+    },
+    {
+      "route": "/services",
+      "file": "src/app/services/page.js"
+    },
+    {
+      "route": "/services/claims-assistance",
+      "file": "src/app/services/claims-assistance/page.js"
+    },
+    {
+      "route": "/services/commercial-insurance",
+      "file": "src/app/services/commercial-insurance/page.js"
+    },
+    {
+      "route": "/services/fire-insurance",
+      "file": "src/app/services/fire-insurance/page.js"
+    },
+    {
+      "route": "/services/general-insurance",
+      "file": "src/app/services/general-insurance/page.js"
+    },
+    {
+      "route": "/services/health-insurance",
+      "file": "src/app/services/health-insurance/page.js"
+    },
+    {
+      "route": "/services/life-insurance",
+      "file": "src/app/services/life-insurance/page.js"
+    },
+    {
+      "route": "/services/marine-insurance",
+      "file": "src/app/services/marine-insurance/page.js"
+    },
+    {
+      "route": "/services/motor-insurance",
+      "file": "src/app/services/motor-insurance/page.js"
+    },
+    {
+      "route": "/services/policy-renewals",
+      "file": "src/app/services/policy-renewals/page.js"
+    },
+    {
+      "route": "/services/risk-advisory",
+      "file": "src/app/services/risk-advisory/page.js"
+    },
+    {
+      "route": "/services/warehouse-insurance",
+      "file": "src/app/services/warehouse-insurance/page.js"
+    },
+    {
+      "route": "/settings",
+      "file": "src/app/(dashboard)/settings/page.js"
+    },
+    {
+      "route": "/signup",
+      "file": "src/app/(auth)/signup/page.js"
+    },
+    {
+      "route": "/terms-and-conditions",
+      "file": "src/app/terms-and-conditions/page.js"
+    },
+    {
+      "route": "/upload-history",
+      "file": "src/app/(dashboard)/upload-history/page.js"
+    },
+    {
+      "route": "/work-center",
+      "file": "src/app/(dashboard)/work-center/page.js"
+    }
+  ],
+  "apis": [
+    {
+      "route": "/api/app/version",
+      "file": "src/app/api/app/version/route.js"
+    },
+    {
+      "route": "/api/auth/client/google-mpin-login",
+      "file": "src/app/api/auth/client/google-mpin-login/route.js"
+    },
+    {
+      "route": "/api/auth/client/login",
+      "file": "src/app/api/auth/client/login/route.js"
+    },
+    {
+      "route": "/api/auth/client/logout",
+      "file": "src/app/api/auth/client/logout/route.js"
+    },
+    {
+      "route": "/api/auth/client/verify-mpin",
+      "file": "src/app/api/auth/client/verify-mpin/route.js"
+    },
+    {
+      "route": "/api/auth/google/callback",
+      "file": "src/app/api/auth/google/callback/route.js"
+    },
+    {
+      "route": "/api/auth/google/url",
+      "file": "src/app/api/auth/google/url/route.js"
+    },
+    {
+      "route": "/api/auth/login",
+      "file": "src/app/api/auth/login/route.js"
+    },
+    {
+      "route": "/api/auth/logout",
+      "file": "src/app/api/auth/logout/route.js"
+    },
+    {
+      "route": "/api/auth/me",
+      "file": "src/app/api/auth/me/route.js"
+    },
+    {
+      "route": "/api/auth/signup",
+      "file": "src/app/api/auth/signup/route.js"
+    },
+    {
+      "route": "/api/blog/rating",
+      "file": "src/app/api/blog/rating/route.js"
+    },
+    {
+      "route": "/api/claims",
+      "file": "src/app/api/claims/route.js"
+    },
+    {
+      "route": "/api/claims/[id]",
+      "file": "src/app/api/claims/[id]/route.js"
+    },
+    {
+      "route": "/api/claims/[id]/remarks",
+      "file": "src/app/api/claims/[id]/remarks/route.js"
+    },
+    {
+      "route": "/api/classify-policy",
+      "file": "src/app/api/classify-policy/route.js"
+    },
+    {
+      "route": "/api/client-accounts",
+      "file": "src/app/api/client-accounts/route.js"
+    },
+    {
+      "route": "/api/client-accounts/[id]",
+      "file": "src/app/api/client-accounts/[id]/route.js"
+    },
+    {
+      "route": "/api/client-id-requests",
+      "file": "src/app/api/client-id-requests/route.js"
+    },
+    {
+      "route": "/api/client/app-version",
+      "file": "src/app/api/client/app-version/route.js"
+    },
+    {
+      "route": "/api/client/claims",
+      "file": "src/app/api/client/claims/route.js"
+    },
+    {
+      "route": "/api/client/claims/[id]/documents",
+      "file": "src/app/api/client/claims/[id]/documents/route.js"
+    },
+    {
+      "route": "/api/client/notifications",
+      "file": "src/app/api/client/notifications/route.js"
+    },
+    {
+      "route": "/api/client/policies",
+      "file": "src/app/api/client/policies/route.js"
+    },
+    {
+      "route": "/api/client/policies/[id]",
+      "file": "src/app/api/client/policies/[id]/route.js"
+    },
+    {
+      "route": "/api/client/policies/[id]/document",
+      "file": "src/app/api/client/policies/[id]/document/route.js"
+    },
+    {
+      "route": "/api/client/profile",
+      "file": "src/app/api/client/profile/route.js"
+    },
+    {
+      "route": "/api/client/security/mpin",
+      "file": "src/app/api/client/security/mpin/route.js"
+    },
+    {
+      "route": "/api/client/service-requests",
+      "file": "src/app/api/client/service-requests/route.js"
+    },
+    {
+      "route": "/api/client/support",
+      "file": "src/app/api/client/support/route.js"
+    },
+    {
+      "route": "/api/contact",
+      "file": "src/app/api/contact/route.js"
+    },
+    {
+      "route": "/api/cron/followup-notifications",
+      "file": "src/app/api/cron/followup-notifications/route.js"
+    },
+    {
+      "route": "/api/cron/whatsapp-worker",
+      "file": "src/app/api/cron/whatsapp-worker/route.js"
+    },
+    {
+      "route": "/api/customer-profiles",
+      "file": "src/app/api/customer-profiles/route.js"
+    },
+    {
+      "route": "/api/customer-profiles/[id]",
+      "file": "src/app/api/customer-profiles/[id]/route.js"
+    },
+    {
+      "route": "/api/customer-profiles/[id]/convert",
+      "file": "src/app/api/customer-profiles/[id]/convert/route.js"
+    },
+    {
+      "route": "/api/dashboard/header-data",
+      "file": "src/app/api/dashboard/header-data/route.js"
+    },
+    {
+      "route": "/api/dashboard/overview",
+      "file": "src/app/api/dashboard/overview/route.js"
+    },
+    {
+      "route": "/api/detect-policy",
+      "file": "src/app/api/detect-policy/route.js"
+    },
+    {
+      "route": "/api/diagnostics",
+      "file": "src/app/api/diagnostics/route.js"
+    },
+    {
+      "route": "/api/downloads/app",
+      "file": "src/app/api/downloads/app/route.js"
+    },
+    {
+      "route": "/api/endorsements",
+      "file": "src/app/api/endorsements/route.js"
+    },
+    {
+      "route": "/api/endorsements/[id]",
+      "file": "src/app/api/endorsements/[id]/route.js"
+    },
+    {
+      "route": "/api/endorsements/extract-policy",
+      "file": "src/app/api/endorsements/extract-policy/route.js"
+    },
+    {
+      "route": "/api/extract",
+      "file": "src/app/api/extract/route.js"
+    },
+    {
+      "route": "/api/extract-policy",
+      "file": "src/app/api/extract-policy/route.js"
+    },
+    {
+      "route": "/api/notifications",
+      "file": "src/app/api/notifications/route.js"
+    },
+    {
+      "route": "/api/operations/birthday-management",
+      "file": "src/app/api/operations/birthday-management/route.js"
+    },
+    {
+      "route": "/api/operations/birthday-management/send-all",
+      "file": "src/app/api/operations/birthday-management/send-all/route.js"
+    },
+    {
+      "route": "/api/operations/presence",
+      "file": "src/app/api/operations/presence/route.js"
+    },
+    {
+      "route": "/api/operations/presence/escalations",
+      "file": "src/app/api/operations/presence/escalations/route.js"
+    },
+    {
+      "route": "/api/operations/presence/exceptions",
+      "file": "src/app/api/operations/presence/exceptions/route.js"
+    },
+    {
+      "route": "/api/operations/presence/monthly",
+      "file": "src/app/api/operations/presence/monthly/route.js"
+    },
+    {
+      "route": "/api/operations/summary",
+      "file": "src/app/api/operations/summary/route.js"
+    },
+    {
+      "route": "/api/operations/whatsapp/groups",
+      "file": "src/app/api/operations/whatsapp/groups/route.js"
+    },
+    {
+      "route": "/api/operations/whatsapp/logout",
+      "file": "src/app/api/operations/whatsapp/logout/route.js"
+    },
+    {
+      "route": "/api/operations/whatsapp/queue",
+      "file": "src/app/api/operations/whatsapp/queue/route.js"
+    },
+    {
+      "route": "/api/operations/whatsapp/quotes",
+      "file": "src/app/api/operations/whatsapp/quotes/route.js"
+    },
+    {
+      "route": "/api/operations/whatsapp/run-automations",
+      "file": "src/app/api/operations/whatsapp/run-automations/route.js"
+    },
+    {
+      "route": "/api/operations/whatsapp/send",
+      "file": "src/app/api/operations/whatsapp/send/route.js"
+    },
+    {
+      "route": "/api/operations/whatsapp/status",
+      "file": "src/app/api/operations/whatsapp/status/route.js"
+    },
+    {
+      "route": "/api/operations/whatsapp/templates",
+      "file": "src/app/api/operations/whatsapp/templates/route.js"
+    },
+    {
+      "route": "/api/operations/whatsapp/test-message",
+      "file": "src/app/api/operations/whatsapp/test-message/route.js"
+    },
+    {
+      "route": "/api/operations/whatsapp/webhook",
+      "file": "src/app/api/operations/whatsapp/webhook/route.js"
+    },
+    {
+      "route": "/api/policy-records",
+      "file": "src/app/api/policy-records/route.js"
+    },
+    {
+      "route": "/api/policy-records/[id]",
+      "file": "src/app/api/policy-records/[id]/route.js"
+    },
+    {
+      "route": "/api/records",
+      "file": "src/app/api/records/route.js"
+    },
+    {
+      "route": "/api/records/[id]/pdf",
+      "file": "src/app/api/records/[id]/pdf/route.js"
+    },
+    {
+      "route": "/api/records/upload",
+      "file": "src/app/api/records/upload/route.js"
+    },
+    {
+      "route": "/api/renewals/assign",
+      "file": "src/app/api/renewals/assign/route.js"
+    },
+    {
+      "route": "/api/renewals/audit",
+      "file": "src/app/api/renewals/audit/route.js"
+    },
+    {
+      "route": "/api/renewals/companies",
+      "file": "src/app/api/renewals/companies/route.js"
+    },
+    {
+      "route": "/api/renewals/customers",
+      "file": "src/app/api/renewals/customers/route.js"
+    },
+    {
+      "route": "/api/renewals/customers/[phone]",
+      "file": "src/app/api/renewals/customers/[phone]/route.js"
+    },
+    {
+      "route": "/api/renewals/daily-work",
+      "file": "src/app/api/renewals/daily-work/route.js"
+    },
+    {
+      "route": "/api/renewals/edit",
+      "file": "src/app/api/renewals/edit/route.js"
+    },
+    {
+      "route": "/api/renewals/extract-pdf",
+      "file": "src/app/api/renewals/extract-pdf/route.js"
+    },
+    {
+      "route": "/api/renewals/follow-ups",
+      "file": "src/app/api/renewals/follow-ups/route.js"
+    },
+    {
+      "route": "/api/renewals/import",
+      "file": "src/app/api/renewals/import/route.js"
+    },
+    {
+      "route": "/api/renewals/lost",
+      "file": "src/app/api/renewals/lost/route.js"
+    },
+    {
+      "route": "/api/renewals/policies",
+      "file": "src/app/api/renewals/policies/route.js"
+    },
+    {
+      "route": "/api/renewals/policy-types",
+      "file": "src/app/api/renewals/policy-types/route.js"
+    },
+    {
+      "route": "/api/renewals/portfolios",
+      "file": "src/app/api/renewals/portfolios/route.js"
+    },
+    {
+      "route": "/api/renewals/remarks",
+      "file": "src/app/api/renewals/remarks/route.js"
+    },
+    {
+      "route": "/api/renewals/renew",
+      "file": "src/app/api/renewals/renew/route.js"
+    },
+    {
+      "route": "/api/renewals/reports",
+      "file": "src/app/api/renewals/reports/route.js"
+    },
+    {
+      "route": "/api/renewals/team",
+      "file": "src/app/api/renewals/team/route.js"
+    },
+    {
+      "route": "/api/renewals/today-work",
+      "file": "src/app/api/renewals/today-work/route.js"
+    },
+    {
+      "route": "/api/renewals/whatsapp-message",
+      "file": "src/app/api/renewals/whatsapp-message/route.js"
+    },
+    {
+      "route": "/api/reports/lead-generation/agents",
+      "file": "src/app/api/reports/lead-generation/agents/route.js"
+    },
+    {
+      "route": "/api/storage/download",
+      "file": "src/app/api/storage/download/route.js"
+    },
+    {
+      "route": "/api/tasks/[id]",
+      "file": "src/app/api/tasks/[id]/route.js"
+    },
+    {
+      "route": "/api/upload-policy",
+      "file": "src/app/api/upload-policy/route.js"
+    },
+    {
+      "route": "/api/uploads",
+      "file": "src/app/api/uploads/route.js"
+    },
+    {
+      "route": "/api/user/presence",
+      "file": "src/app/api/user/presence/route.js"
+    },
+    {
+      "route": "/api/users",
+      "file": "src/app/api/users/route.ts"
+    },
+    {
+      "route": "/api/users/[id]",
+      "file": "src/app/api/users/[id]/route.ts"
+    },
+    {
+      "route": "/api/work-center",
+      "file": "src/app/api/work-center/route.js"
+    },
+    {
+      "route": "/d/[code]",
+      "file": "src/app/d/[code]/route.js"
+    }
+  ]
+}
