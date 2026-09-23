@@ -6,15 +6,24 @@
  * so queue-manager.js and API routes only need to update import paths.
  */
 
-const BASE_URL =
-  process.env.WHATSAPP_GATEWAY_URL ||
-  process.env.OPENWA_BASE_URL ||
-  "https://gateway-production-3747.up.railway.app";
+function getGatewayConfig() {
+  const rawBaseUrl = process.env.WHATSAPP_GATEWAY_URL || process.env.OPENWA_BASE_URL || "";
+  const rawApiKey = process.env.WHATSAPP_GATEWAY_API_KEY || process.env.OPENWA_API_KEY || "";
 
-const API_KEY =
-  process.env.WHATSAPP_GATEWAY_API_KEY ||
-  process.env.OPENWA_API_KEY ||
-  "bimaheadquarter-openwa-3mP4sV8qL2nR5aT1w";
+  const baseUrl = rawBaseUrl.trim().replace(/\/$/, "");
+  const apiKey = rawApiKey.trim().replace(/^["']|["']$/g, "");
+
+  if (!baseUrl) {
+    throw new Error("WHATSAPP_GATEWAY_URL is not configured in environment variables.");
+  }
+
+  if (!apiKey) {
+    throw new Error("WHATSAPP_GATEWAY_API_KEY is not configured in environment variables.");
+  }
+
+  const normalizedBase = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+  return { baseUrl: normalizedBase, apiKey };
+}
 
 // ── Internal helpers ────────────────────────────────────────────────
 
@@ -35,17 +44,12 @@ function formatRecipient(recipient) {
 }
 
 export async function callGateway(method, endpoint, payload = null) {
-  let normalizedBase = (BASE_URL || "").trim().replace(/\/$/, "");
-  if (!/^https?:\/\//i.test(normalizedBase)) {
-    normalizedBase = `https://${normalizedBase}`;
-  }
-  const url = `${normalizedBase}/${endpoint.replace(/^\//, "")}`;
+  const { baseUrl, apiKey } = getGatewayConfig();
+  const url = `${baseUrl}/${endpoint.replace(/^\//, "")}`;
   const headers = {
     "Content-Type": "application/json",
+    "x-api-key": apiKey,
   };
-  if (API_KEY) {
-    headers["x-api-key"] = API_KEY;
-  }
 
   const options = {
     method,
