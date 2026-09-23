@@ -40,6 +40,7 @@ import {
   UploadCloud,
   Download,
   AlertTriangle,
+  Trash2,
 } from "lucide-react";
 import { showToast } from "@/app/components/shared/ToastProvider";
 import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
@@ -2712,35 +2713,36 @@ export default function RenewalActionDrawer({
                   <div
                     style={{
                       borderRadius: "12px",
-                      border: "1.5px solid #6ee7b7",
+                      border: "1.5px solid #a7f3d0",
                       background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
-                      padding: "12px 14px",
+                      padding: "10px 14px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      boxShadow: "0 4px 14px -2px rgba(16, 185, 129, 0.12)",
+                      gap: "12px",
+                      boxShadow: "0 2px 10px -2px rgba(16, 185, 129, 0.12)",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0, flex: 1 }}>
                       <div
                         style={{
-                          width: "40px",
-                          height: "40px",
+                          width: "38px",
+                          height: "38px",
                           borderRadius: "10px",
                           background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
                           color: "#ffffff",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          boxShadow: "0 2px 6px rgba(5, 150, 105, 0.25)",
+                          boxShadow: "0 2px 6px rgba(5, 150, 105, 0.22)",
                           flexShrink: 0,
                         }}
                       >
-                        <FileText size={20} />
+                        <FileText size={19} strokeWidth={2} style={{ display: "block" }} />
                       </div>
 
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "nowrap" }}>
                           <span
                             style={{
                               fontSize: "13px",
@@ -2749,7 +2751,7 @@ export default function RenewalActionDrawer({
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
-                              maxWidth: "260px",
+                              maxWidth: "280px",
                             }}
                             title={attachedFile.name}
                           >
@@ -2759,19 +2761,23 @@ export default function RenewalActionDrawer({
                             style={{
                               fontSize: "10px",
                               fontWeight: 700,
-                              background: attachedFile.isPolicyDoc ? "#065f46" : "#0f172a",
-                              color: "#ffffff",
-                              padding: "1px 6px",
-                              borderRadius: "4px",
+                              background: attachedFile.isPolicyDoc ? "#dcfce7" : "#f1f5f9",
+                              color: attachedFile.isPolicyDoc ? "#166534" : "#334155",
+                              border: attachedFile.isPolicyDoc ? "1px solid #bbf7d0" : "1px solid #cbd5e1",
+                              padding: "2px 7px",
+                              borderRadius: "5px",
                               textTransform: "uppercase",
-                              letterSpacing: "0.03em",
+                              letterSpacing: "0.04em",
+                              flexShrink: 0,
+                              lineHeight: "1.2",
+                              display: "inline-block",
                             }}
                           >
                             {attachedFile.isPolicyDoc ? "Official Policy" : "Custom File"}
                           </span>
                         </div>
-                        <div style={{ fontSize: "11px", color: "#047857", marginTop: "2px", display: "flex", alignItems: "center", gap: "6px" }}>
-                          <span>{formatFileSize(attachedFile.size)}</span>
+                        <div style={{ fontSize: "11px", color: "#047857", marginTop: "3px", display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span style={{ fontWeight: 600 }}>{formatFileSize(attachedFile.size)}</span>
                           <span>•</span>
                           <span style={{ color: "#059669", fontWeight: 600 }}>Ready to transmit via WhatsApp</span>
                         </div>
@@ -2787,18 +2793,26 @@ export default function RenewalActionDrawer({
                             display: "inline-flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            width: "30px",
-                            height: "30px",
+                            width: "32px",
+                            height: "32px",
+                            minWidth: "32px",
+                            minHeight: "32px",
+                            maxWidth: "32px",
+                            maxHeight: "32px",
+                            padding: 0,
+                            boxSizing: "border-box",
                             borderRadius: "8px",
                             background: "#ffffff",
                             border: "1px solid #a7f3d0",
                             color: "#065f46",
                             cursor: "pointer",
                             textDecoration: "none",
+                            flexShrink: 0,
+                            transition: "all 0.15s ease",
                           }}
                           title="Download copy"
                         >
-                          <Download size={14} />
+                          <Download size={15} strokeWidth={2} style={{ display: "block" }} />
                         </a>
                       )}
                       <button
@@ -2808,18 +2822,25 @@ export default function RenewalActionDrawer({
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          width: "30px",
-                          height: "30px",
+                          width: "32px",
+                          height: "32px",
+                          minWidth: "32px",
+                          minHeight: "32px",
+                          maxWidth: "32px",
+                          maxHeight: "32px",
+                          padding: 0,
+                          boxSizing: "border-box",
                           borderRadius: "8px",
                           background: "#fee2e2",
                           border: "1px solid #fecdd3",
                           color: "#dc2626",
                           cursor: "pointer",
+                          flexShrink: 0,
                           transition: "all 0.15s ease",
                         }}
                         title="Remove attachment"
                       >
-                        <X size={14} />
+                        <Trash2 size={15} strokeWidth={2} style={{ display: "block" }} />
                       </button>
                     </div>
                   </div>
