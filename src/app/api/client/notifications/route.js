@@ -10,7 +10,6 @@ export async function GET(request) {
     const customerId = auth.customer.id;
     const orgId = auth.organizationId;
     const clientPhone = (auth.customer.phone || "").replace(/[^0-9]/g, "").slice(-10);
-    const clientName = (auth.customer.name || "").trim();
 
     // Fetch persisted read notification IDs
     const readTask = await prisma.task.findUnique({
@@ -31,10 +30,14 @@ export async function GET(request) {
         AND is_active_policy = true
         AND (
           LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
-          OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', '') LIKE ${'%' + clientPhone + '%'})
-          OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', '') LIKE ${'%' + clientPhone + '%'})
-          OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', '') LIKE ${'%' + clientPhone + '%'})
-          OR (${clientName} != '' AND LOWER(COALESCE(NULLIF(reviewed_data->>'insuredName', ''), data->>'insuredName', '')) = LOWER(${clientName}))
+          OR (
+            ${clientPhone} != '' AND length(${clientPhone}) = 10 AND (
+              RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+              OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+              OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+              OR RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+            )
+          )
         )
       LIMIT 10
     `;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireClient } from "@/lib/client-portal/session";
+import { serializeClientPolicy } from "@/lib/client-portal/policies";
 
 export async function GET(request) {
   try {
@@ -9,9 +10,8 @@ export async function GET(request) {
     const orgId = auth.organizationId;
     const customerId = auth.customer.id;
     const clientPhone = (auth.customer.phone || "").replace(/[^0-9]/g, "").slice(-10);
-    const clientName = (auth.customer.name || "").trim();
 
-    // Fetch matched policy IDs from DB via SQL query (matching clientId, contactNumber, mobileNumber, or insuredName)
+    // Fetch matched policy IDs from DB via SQL query (strictly matching clientId or verified contact phone)
     // Strictly filter for policies with real PDF extraction data (attached PDF file / PDF bytes), excluding Excel imports.
     const matchedRows = await prisma.$queryRaw`
         SELECT id
@@ -27,10 +27,14 @@ export async function GET(request) {
           )
           AND (
             LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
-            OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', '') LIKE ${'%' + clientPhone + '%'})
-            OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', '') LIKE ${'%' + clientPhone + '%'})
-            OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', '') LIKE ${'%' + clientPhone + '%'})
-            OR (${clientName} != '' AND LOWER(COALESCE(NULLIF(reviewed_data->>'insuredName', ''), data->>'insuredName', '')) = LOWER(${clientName}))
+            OR (
+              ${clientPhone} != '' AND length(${clientPhone}) = 10 AND (
+                RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                OR RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+              )
+            )
           )
       `;
 
@@ -68,84 +72,4 @@ export async function GET(request) {
     console.error("Client Policies Error:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
-}
-
-const CLIENT_POLICY_FIELDS = [
-  "policyNumber",
-  "policyType",
-  "insuranceCompany",
-  "premium",
-  "totalPremium",
-  "sumInsured",
-  "startDate",
-  "expiryDate",
-  "policyExpiryDate",
-  "vehicleNumber",
-  "registrationNumber",
-  "makeModel",
-  "idv",
-  "insuredName",
-  "contactPerson",
-  "contactNumber",
-  "coverType",
-  "duration",
-  "make",
-  "model",
-  "variant",
-  "engineNumber",
-  "chassisNumber",
-  "rtoLocation",
-  "fuelType",
-  "ncb",
-  "nomineeName",
-  "nomineeRelationship",
-  "receiptNumber",
-  "receiptDate",
-  "paymentReference",
-  "paymentLink",
-  "netPremium",
-  "gstAmount",
-  "ownDamagePremium",
-  "thirdPartyPremium",
-  "personalAccidentCover",
-  "deductible",
-  "voluntaryDeductible",
-  "geographicalArea",
-  "addOns",
-  "addons",
-  "coverageDetails",
-  "policyTerms",
-];
-
-function serializeClientPolicy(policy) {
-  const payload = buildClientPolicyPayload(policy.reviewedData || policy.data || {});
-  const pdfName = String(policy.pdfFileName || "").toLowerCase();
-  const isExcelDoc = pdfName.endsWith(".xlsx") || pdfName.endsWith(".xls") || pdfName === "generic_renewal_template.xlsx";
-  const hasDocument = Boolean(policy.uploadedFileId || (policy.pdfFileName && !isExcelDoc));
-
-    return {
-      ...payload,
-      id: policy.id,
-      savedAt: policy.savedAt,
-      selectedCompany: policy.selectedCompany || payload.insuranceCompany || "",
-      selectedPolicyType: policy.selectedPolicyType || payload.policyType || "",
-      isActivePolicy: policy.isActivePolicy,
-      renewalDate: policy.renewalDate,
-      renewalStatus: policy.renewalStatus,
-      documents: {
-        policyPdf: hasDocument,
-        certificate: hasDocument,
-        premiumReceipt: Boolean(payload.receiptNumber || payload.paymentReference),
-        renewedPolicy: Boolean(policy.renewalStatus === "RENEWED" && hasDocument),
-      },
-    reviewedData: payload,
-    data: payload,
-  };
-}
-
-function buildClientPolicyPayload(source = {}) {
-  return CLIENT_POLICY_FIELDS.reduce((payload, key) => {
-    payload[key] = source?.[key] || "";
-    return payload;
-  }, {});
 }

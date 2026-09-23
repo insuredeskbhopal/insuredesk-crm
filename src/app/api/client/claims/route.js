@@ -192,9 +192,12 @@ function getClientPolicyRows({ orgId, customerId, policyNo = "", policyId = "", 
             SELECT p2.id FROM pdf_records p2
             JOIN client_accounts ca ON ca.id = ${customerId}::uuid
             WHERE p2.deleted_at IS NULL
+              AND length(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g')) >= 10
               AND (
-                COALESCE(NULLIF(p2.reviewed_data->>'contactNumber', ''), p2.data->>'contactNumber', '') LIKE ('%' || RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10) || '%')
-                OR LOWER(COALESCE(NULLIF(p2.reviewed_data->>'insuredName', ''), p2.data->>'insuredName', '')) = LOWER(ca.name)
+                RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'contactNumber', ''), p2.data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
+                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'mobileNumber', ''), p2.data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
+                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'phone', ''), p2.data->>'phone', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
+                OR RIGHT(REGEXP_REPLACE(COALESCE(p2.contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
               )
           )
         )
@@ -224,9 +227,12 @@ function getClientPolicyRows({ orgId, customerId, policyNo = "", policyId = "", 
             SELECT p2.id FROM pdf_records p2
             JOIN client_accounts ca ON ca.id = ${customerId}::uuid
             WHERE p2.deleted_at IS NULL
+              AND length(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g')) >= 10
               AND (
-                COALESCE(NULLIF(p2.reviewed_data->>'contactNumber', ''), p2.data->>'contactNumber', '') LIKE ('%' || RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10) || '%')
-                OR LOWER(COALESCE(NULLIF(p2.reviewed_data->>'insuredName', ''), p2.data->>'insuredName', '')) = LOWER(ca.name)
+                RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'contactNumber', ''), p2.data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
+                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'mobileNumber', ''), p2.data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
+                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'phone', ''), p2.data->>'phone', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
+                OR RIGHT(REGEXP_REPLACE(COALESCE(p2.contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
               )
           )
         )
@@ -256,9 +262,12 @@ function getClientPolicyRows({ orgId, customerId, policyNo = "", policyId = "", 
           SELECT p2.id FROM pdf_records p2
           JOIN client_accounts ca ON ca.id = ${customerId}::uuid
           WHERE p2.deleted_at IS NULL
+            AND length(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g')) >= 10
             AND (
-              COALESCE(NULLIF(p2.reviewed_data->>'contactNumber', ''), p2.data->>'contactNumber', '') LIKE ('%' || RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10) || '%')
-              OR LOWER(COALESCE(NULLIF(p2.reviewed_data->>'insuredName', ''), p2.data->>'insuredName', '')) = LOWER(ca.name)
+              RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'contactNumber', ''), p2.data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
+              OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'mobileNumber', ''), p2.data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
+              OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(p2.reviewed_data->>'phone', ''), p2.data->>'phone', ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
+              OR RIGHT(REGEXP_REPLACE(COALESCE(p2.contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = RIGHT(REGEXP_REPLACE(ca.phone, '[^0-9]', '', 'g'), 10)
             )
         )
       )

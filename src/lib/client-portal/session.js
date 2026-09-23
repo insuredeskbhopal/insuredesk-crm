@@ -56,7 +56,6 @@ export async function getOwnedPolicy({
   database = prisma,
 }) {
   const clientPhone = (customer?.phone || "").replace(/[^0-9]/g, "").slice(-10);
-  const clientName = (customer?.name || "").trim();
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(policyId || "");
 
   const rows = policyId
@@ -74,10 +73,14 @@ export async function getOwnedPolicy({
             )
             AND (
               LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
-              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', '') LIKE ${'%' + clientPhone + '%'})
-              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', '') LIKE ${'%' + clientPhone + '%'})
-              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', '') LIKE ${'%' + clientPhone + '%'})
-              OR (${clientName} != '' AND LOWER(COALESCE(NULLIF(reviewed_data->>'insuredName', ''), data->>'insuredName', '')) = LOWER(${clientName}))
+              OR (
+                ${clientPhone} != '' AND length(${clientPhone}) = 10 AND (
+                  RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                  OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                  OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                  OR RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                )
+              )
             )
           LIMIT 1`
       : await database.$queryRaw`
@@ -98,10 +101,14 @@ export async function getOwnedPolicy({
             )
             AND (
               LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
-              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', '') LIKE ${'%' + clientPhone + '%'})
-              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', '') LIKE ${'%' + clientPhone + '%'})
-              OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', '') LIKE ${'%' + clientPhone + '%'})
-              OR (${clientName} != '' AND LOWER(COALESCE(NULLIF(reviewed_data->>'insuredName', ''), data->>'insuredName', '')) = LOWER(${clientName}))
+              OR (
+                ${clientPhone} != '' AND length(${clientPhone}) = 10 AND (
+                  RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                  OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                  OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                  OR RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                )
+              )
             )
           LIMIT 1`
     : await database.$queryRaw`
@@ -118,27 +125,58 @@ export async function getOwnedPolicy({
           AND (reviewed_data->>'policyNumber' = ${policyNo} OR data->>'policyNumber' = ${policyNo})
           AND (
             LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) = LOWER(${customerId})
-            OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', '') LIKE ${'%' + clientPhone + '%'})
-            OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', '') LIKE ${'%' + clientPhone + '%'})
-            OR (${clientPhone} != '' AND COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', '') LIKE ${'%' + clientPhone + '%'})
-            OR (${clientName} != '' AND LOWER(COALESCE(NULLIF(reviewed_data->>'insuredName', ''), data->>'insuredName', '')) = LOWER(${clientName}))
+            OR (
+              ${clientPhone} != '' AND length(${clientPhone}) = 10 AND (
+                RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                OR RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+                OR RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone}
+              )
+            )
           )
         LIMIT 1`;
 
   return rows[0] || null;
 }
 
-export async function getOwnedClaim({ customer, organizationId, claimId }) {
+export async function getOwnedClaim({ customer, organizationId, claimId, database = prisma }) {
+  if (!customer?.id || !claimId) return null;
   const cleanPhone = String(customer.phone || "").replace(/\D/g, "").slice(-10);
-  if (!cleanPhone) return null;
 
-  return prisma.claim.findFirst({
+  const claim = await database.claim.findFirst({
     where: {
       id: claimId,
       organizationId,
       deletedAt: null,
-      mobileNo: { endsWith: cleanPhone },
-      metadata: { path: ["customerId"], equals: customer.id },
+    },
+    include: {
+      documents: {
+        orderBy: { uploadedAt: "desc" },
+        select: { id: true, name: true, fileName: true, fileType: true, size: true, uploadedAt: true },
+      },
     },
   });
+  if (!claim) return null;
+
+  const storedCustomerId = String(claim.metadata?.customerId || "");
+  if (storedCustomerId) {
+    return storedCustomerId === customer.id ? claim : null;
+  }
+
+  // Legacy fallback: verify claim's policy is owned by this customer AND claim mobile matches client's phone
+  if (cleanPhone && cleanPhone.length === 10 && claim.policyNo) {
+    const ownedPolicy = await getOwnedPolicy({
+      customerId: customer.id,
+      organizationId,
+      policyNo: claim.policyNo,
+      customer,
+      database,
+    });
+    const claimMobile = String(claim.mobileNo || "").replace(/\D/g, "").slice(-10);
+    if (ownedPolicy && claimMobile === cleanPhone) {
+      return claim;
+    }
+  }
+
+  return null;
 }

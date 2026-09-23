@@ -1,41 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { requireClient } from "@/lib/client-portal/session";
+import { getOwnedClaim, requireClient } from "@/lib/client-portal/session";
 
 export const runtime = "nodejs";
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
-
-async function findOwnedClaim({ id, customer, organizationId }) {
-  const claim = await prisma.claim.findFirst({
-    where: { id, organizationId, deletedAt: null },
-  });
-  if (!claim) return null;
-
-  const storedCustomerId = String(claim.metadata?.customerId || "");
-  if (storedCustomerId) return storedCustomerId === customer.id ? claim : null;
-
-  const phone = String(customer.phone || "").replace(/\D/g, "").slice(-10);
-  if (!phone) return null;
-
-  const policies = await prisma.$queryRaw`
-    SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber') AS policy_number
-    FROM pdf_records
-    WHERE deleted_at IS NULL AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-      AND LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customer.id})`;
-
-  const policyNumbers = policies.map((item) => item.policy_number).filter(Boolean);
-  return policyNumbers.includes(claim.policyNo) &&
-    String(claim.mobileNo || "").replace(/\D/g, "").endsWith(phone)
-    ? claim
-    : null;
-}
 
 export async function POST(request, { params }) {
   try {
     const auth = await requireClient(request);
     if (auth.error) return auth.error;
     const { id } = await params;
-    const claim = await findOwnedClaim({ id, customer: auth.customer, organizationId: auth.organizationId });
+    const claim = await getOwnedClaim({ claimId: id, customer: auth.customer, organizationId: auth.organizationId });
     if (!claim) return NextResponse.json({ success: false, error: "Claim not found" }, { status: 404 });
 
     const form = await request.formData();
@@ -76,7 +51,7 @@ export async function GET(request, { params }) {
     const auth = await requireClient(request);
     if (auth.error) return auth.error;
     const { id } = await params;
-    const claim = await findOwnedClaim({ id, customer: auth.customer, organizationId: auth.organizationId });
+    const claim = await getOwnedClaim({ claimId: id, customer: auth.customer, organizationId: auth.organizationId });
     if (!claim) return NextResponse.json({ success: false, error: "Claim not found" }, { status: 404 });
 
     const documentId = new URL(request.url).searchParams.get("documentId");
