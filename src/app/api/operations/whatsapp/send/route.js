@@ -73,6 +73,39 @@ async function resolveAttachmentPayload(attachment = {}) {
     };
   }
 
+  if (attachment.policyId || attachment.recordId) {
+    try {
+      const { prisma } = await import("@/lib/db/prisma");
+      const record = await prisma.policyRecord.findUnique({
+        where: { id: attachment.policyId || attachment.recordId },
+        include: { uploadedFile: true },
+      });
+      if (record) {
+        let pdfBuffer = null;
+        if (record.pdfBytes) {
+          pdfBuffer = Buffer.from(record.pdfBytes);
+        } else if (record.uploadedFile?.storagePath) {
+          const { getLocalPhysicalPath } = await import("@/lib/storage");
+          const fs = await import("fs/promises");
+          const localPath = getLocalPhysicalPath(record.uploadedFile.storagePath);
+          pdfBuffer = await fs.readFile(localPath);
+        }
+        if (pdfBuffer) {
+          const cleanNum = String(record.data?.policyNumber || record.selectedPolicyType || "Policy").replace(/[^a-zA-Z0-9_-]/g, "_");
+          const policyFileName = rawFilename || record.pdfFileName || `${cleanNum}.pdf`;
+          return {
+            mediaBase64: pdfBuffer.toString("base64"),
+            mediaType: "document",
+            filename: policyFileName.toLowerCase().endsWith(".pdf") ? policyFileName : `${policyFileName}.pdf`,
+            caption,
+          };
+        }
+      }
+    } catch (err) {
+      console.error("Failed to resolve policy attachment from DB:", err);
+    }
+  }
+
   if (!attachmentUrl) return null;
 
   try {
@@ -106,7 +139,13 @@ export async function POST(request) {
     const body = await request.json();
     const recipient = body.recipient || body.phone;
     const { message } = body;
-    const attachments = Array.isArray(body.attachments) ? body.attachments : [];
+    let attachments = Array.isArray(body.attachments) ? [...body.attachments] : [];
+    if (attachments.length === 0 && (body.attachPolicyDocument || body.attachedPolicy) && body.policyId) {
+      attachments.push({
+        policyId: body.policyId,
+        filename: body.attachmentFilename || undefined,
+      });
+    }
 
     if (!recipient || (!message && attachments.length === 0 && !body.attachBirthdayCard)) {
       return NextResponse.json({ error: "Recipient and a message or attachment are required" }, { status: 400 });

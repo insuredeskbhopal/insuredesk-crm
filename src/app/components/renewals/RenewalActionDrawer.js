@@ -33,6 +33,13 @@ import {
   HeartPulse,
   Shield,
   ArrowRight,
+  Paperclip,
+  Loader2,
+  Check,
+  Sparkles,
+  UploadCloud,
+  Download,
+  AlertTriangle,
 } from "lucide-react";
 import { showToast } from "@/app/components/shared/ToastProvider";
 import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
@@ -61,6 +68,14 @@ function getCustomerKey(p) {
   const rawContact = p.contactNumber || p.renewalRecipientMobile || p.contactPersonMobile || "";
   const digits = String(rawContact).replace(/\D/g, "");
   return digits.length >= 10 ? digits.slice(-10) : `NO-MOBILE-${p.id}`;
+}
+
+function formatFileSize(bytes) {
+  if (!bytes || isNaN(bytes)) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
 export default function RenewalActionDrawer({
@@ -198,6 +213,11 @@ export default function RenewalActionDrawer({
   const [whatsappRecipientType, setWhatsAppRecipientType] = useState("individual");
   const [whatsappGroupId, setWhatsAppGroupId] = useState("");
 
+  // WhatsApp Attachments
+  const [attachedFile, setAttachedFile] = useState(null); // { name, size, type, base64, dataUrl, isPolicyDoc }
+  const [loadingAttachment, setLoadingAttachment] = useState(false);
+  const fileInputRef = useRef(null);
+
   // Timeline
   const [timeline, setTimeline] = useState([]);
   const [timelineLoading, setTimelineLoading] = useState(false);
@@ -214,6 +234,8 @@ export default function RenewalActionDrawer({
 
   useEffect(() => {
     if (!activePolicy) return;
+    setAttachedFile(null);
+    setLoadingAttachment(false);
     setWhatsAppRecipientType("individual");
     setWhatsAppGroupId("");
     setRenewalStatus(activePolicy.renewalStatus || "Follow-Up");
@@ -444,13 +466,112 @@ export default function RenewalActionDrawer({
     }
   };
 
+  const handleAttachPolicyPdf = async () => {
+    if (!activePolicy?.id) {
+      showToast("No policy record found.", "error");
+      return;
+    }
+    setLoadingAttachment(true);
+    try {
+      const res = await fetch(`/api/records/${activePolicy.id}/pdf`);
+      if (!res.ok) {
+        let errMsg = "Policy PDF document not available for this record.";
+        try {
+          const errData = await res.json();
+          if (errData?.error) errMsg = errData.error;
+        } catch (_) {}
+        throw new Error(errMsg);
+      }
+      const blob = await res.blob();
+      if (!blob || blob.size === 0) {
+        throw new Error("Policy document is empty.");
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Data = reader.result;
+        const cleanBase64 = typeof base64Data === "string" && base64Data.includes(",")
+          ? base64Data.split(",")[1]
+          : base64Data;
+
+        const cleanNumber = String(activePolicy.policyNumber || "Policy").replace(/[^a-zA-Z0-9_-]/g, "_");
+        const fileName = `${cleanNumber}.pdf`;
+        setAttachedFile({
+          name: fileName,
+          size: blob.size,
+          type: "application/pdf",
+          base64: cleanBase64,
+          dataUrl: base64Data,
+          isPolicyDoc: true,
+        });
+        showToast("Policy document attached!", "success");
+        setLoadingAttachment(false);
+      };
+      reader.onerror = () => {
+        showToast("Failed to process policy PDF file.", "error");
+        setLoadingAttachment(false);
+      };
+      reader.readAsDataURL(blob);
+    } catch (err) {
+      console.error("Error attaching policy PDF:", err);
+      showToast(err.message || "Failed to attach policy document.", "error");
+      setLoadingAttachment(false);
+    }
+  };
+
+  const handleCustomFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 16 * 1024 * 1024) {
+      showToast("File size exceeds 16MB limit.", "error");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Data = reader.result;
+      const cleanBase64 = typeof base64Data === "string" && base64Data.includes(",")
+        ? base64Data.split(",")[1]
+        : base64Data;
+      setAttachedFile({
+        name: file.name,
+        size: file.size,
+        type: file.type || "application/octet-stream",
+        base64: cleanBase64,
+        dataUrl: base64Data,
+        isPolicyDoc: false,
+      });
+      showToast(`Attached ${file.name}`, "success");
+    };
+    reader.readAsDataURL(file);
+    if (e.target) e.target.value = "";
+  };
+
+  const handleRemoveAttachment = () => {
+    setAttachedFile(null);
+  };
+
   const handleOpenWhatsAppWeb = () => {
+    if (attachedFile) {
+      try {
+        const link = document.createElement("a");
+        link.href = attachedFile.dataUrl || `data:${attachedFile.type || "application/pdf"};base64,${attachedFile.base64}`;
+        link.download = attachedFile.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast(`Document "${attachedFile.name}" downloaded! Opening WhatsApp Web — attach it to the chat.`, "info");
+      } catch (err) {
+        console.error("Auto-download failed:", err);
+      }
+    }
+
     if (whatsappRecipientType === "group") {
       if (customWhatsAppMessage) {
         window.navigator.clipboard.writeText(customWhatsAppMessage);
       }
       window.open("https://web.whatsapp.com", "_blank");
-      showToast("Message copied! Opening WhatsApp Web to paste into group.", "info");
+      if (!attachedFile) {
+        showToast("Message copied! Opening WhatsApp Web to paste into group.", "info");
+      }
       return;
     }
 
@@ -486,14 +607,31 @@ export default function RenewalActionDrawer({
 
     setSendingViaApi(true);
     try {
+      const payload = {
+        recipient: targetRecipient,
+        phone: targetRecipient,
+        message: customWhatsAppMessage,
+        policyId: activePolicy?.id,
+      };
+
+      if (attachedFile) {
+        payload.attachments = [
+          {
+            filename: attachedFile.name,
+            mediaBase64: attachedFile.base64,
+            mediaType: attachedFile.type?.includes("pdf") || attachedFile.name?.toLowerCase().endsWith(".pdf")
+              ? "document"
+              : attachedFile.type?.startsWith("image/")
+              ? "image"
+              : "document",
+          },
+        ];
+      }
+
       const res = await fetch("/api/operations/whatsapp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipient: targetRecipient,
-          phone: targetRecipient,
-          message: customWhatsAppMessage,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -513,6 +651,8 @@ export default function RenewalActionDrawer({
             messageId: data.messageId || undefined,
             logAudit: true,
             isGroup,
+            hasAttachment: Boolean(attachedFile),
+            attachmentName: attachedFile?.name || null,
           }),
         });
       } catch (auditErr) {
@@ -521,8 +661,8 @@ export default function RenewalActionDrawer({
 
       showToast(
         isGroup
-          ? "WhatsApp message sent to group successfully!"
-          : "WhatsApp message sent successfully!",
+          ? (attachedFile ? "WhatsApp message and attachment sent to group!" : "WhatsApp message sent to group successfully!")
+          : (attachedFile ? "WhatsApp message and attachment sent successfully!" : "WhatsApp message sent successfully!"),
         "success"
       );
     } catch (err) {
@@ -2198,35 +2338,82 @@ export default function RenewalActionDrawer({
                 disabled={sendingViaApi}
               />
 
-              {/* WhatsApp Contact Details Card */}
+              {/* Executive Recipient Card */}
               <div
                 style={{
+                  borderRadius: "12px",
                   border: "1px solid #e2e8f0",
-                  borderRadius: "8px",
-                  background: "#ffffff",
-                  padding: "12px 14px",
+                  background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                  padding: "14px 16px",
+                  boxShadow: "0 2px 8px -2px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02)",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <div>
-                    <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#0f172a" }}>Recipient Contact Details</div>
-                    <div style={{ fontSize: "11px", color: "#64748b" }}>This recipient will receive the WhatsApp reminder.</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div
+                      style={{
+                        width: "38px",
+                        height: "38px",
+                        borderRadius: "10px",
+                        background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                        color: "#ffffff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        letterSpacing: "0.5px",
+                        boxShadow: "0 2px 8px rgba(5, 150, 105, 0.25)",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {getCustomerInitials(whatsappContactDetails?.name || activePolicy.insuredName)}
+                    </div>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a" }}>
+                          {whatsappContactDetails?.name || activePolicy.insuredName || "Valued Customer"}
+                        </span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "3px",
+                            padding: "2px 7px",
+                            borderRadius: "999px",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            background: "#dcfce7",
+                            color: "#15803d",
+                            letterSpacing: "0.02em",
+                          }}
+                        >
+                          <Check size={10} strokeWidth={3} /> Verified Contact
+                        </span>
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#64748b", marginTop: "1px" }}>
+                        {activePolicy.displayPolicyType || activePolicy.policyType || "Policy"} • {activePolicy.policyNumber ? `#${activePolicy.policyNumber}` : "No Policy #"}
+                      </div>
+                    </div>
                   </div>
+
                   <button
                     type="button"
                     onClick={() => setActiveTab("edit")}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "4px",
-                      padding: "4px 9px",
-                      borderRadius: "6px",
+                      gap: "5px",
+                      padding: "5px 10px",
+                      borderRadius: "7px",
                       border: "1px solid #cbd5e1",
                       background: "#ffffff",
-                      color: "#0f172a",
+                      color: "#334155",
                       fontSize: "11.5px",
                       fontWeight: 600,
                       cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
                     }}
                   >
                     <Edit3 size={12} /> Edit
@@ -2238,67 +2425,114 @@ export default function RenewalActionDrawer({
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
-                      padding: "6px 10px",
-                      background: "#fff7ed",
-                      border: "1px solid #ffedd5",
-                      borderRadius: "6px",
+                      gap: "8px",
+                      padding: "8px 12px",
+                      background: "#fff1f2",
+                      border: "1px solid #fecdd3",
+                      borderRadius: "8px",
                       fontSize: "11.5px",
-                      color: "#c2410c",
-                      marginBottom: "8px",
+                      color: "#be123c",
+                      marginBottom: "10px",
+                      fontWeight: 500,
                     }}
                   >
-                    <AlertCircle size={14} />
-                    <span>A valid WhatsApp mobile is missing. Add it before sending.</span>
+                    <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                    <span>A valid 10-digit mobile is required to dispatch WhatsApp reminders.</span>
                   </div>
                 )}
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px", fontSize: "12px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#334155" }}>
-                    <User size={13} style={{ color: "#64748b" }} />
-                    <span>{whatsappContactDetails?.name || activePolicy.insuredName || "Not available"}</span>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "8px 14px",
+                    padding: "10px 12px",
+                    borderRadius: "9px",
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    fontSize: "12px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px", color: missingMobile ? "#dc2626" : "#0f172a" }}>
+                    <div style={{ width: "22px", height: "22px", borderRadius: "6px", background: missingMobile ? "#fee2e2" : "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <MessageCircle size={12} style={{ color: missingMobile ? "#dc2626" : "#16a34a" }} />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "10px", color: "#64748b", display: "block", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.04em" }}>WhatsApp</span>
+                      <span style={{ fontWeight: 600, fontFamily: "monospace", fontSize: "12px" }}>
+                        {cleanPhone ? `+91 ${cleanPhone.slice(0, 5)} ${cleanPhone.slice(5)}` : "Missing mobile"}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: missingMobile ? "#dc2626" : "#334155", fontFamily: "monospace" }}>
-                    <Phone size={13} style={{ color: missingMobile ? "#dc2626" : "#64748b" }} />
-                    <span>{cleanPhone ? `+91 ${cleanPhone.slice(0, 5)} ${cleanPhone.slice(5)}` : "Missing mobile"}</span>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px", color: "#0f172a" }}>
+                    <div style={{ width: "22px", height: "22px", borderRadius: "6px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Building2 size={12} style={{ color: "#475569" }} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <span style={{ fontSize: "10px", color: "#64748b", display: "block", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.04em" }}>Insurer</span>
+                      <span style={{ fontWeight: 600, fontSize: "12px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                        {activePolicy.insuranceCompany || "Not specified"}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: missingMobile ? "#dc2626" : "#334155", fontFamily: "monospace" }}>
-                    <MessageCircle size={13} style={{ color: missingMobile ? "#dc2626" : "#16a34a" }} />
-                    <span>{cleanPhone ? `+91 ${cleanPhone.slice(0, 5)} ${cleanPhone.slice(5)}` : "Missing WhatsApp"}</span>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px", color: "#0f172a" }}>
+                    <div style={{ width: "22px", height: "22px", borderRadius: "6px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Mail size={12} style={{ color: "#475569" }} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <span style={{ fontSize: "10px", color: "#64748b", display: "block", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.04em" }}>Email</span>
+                      <span style={{ fontWeight: 500, fontSize: "11.5px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", color: whatsappContactDetails?.email || activePolicy.email ? "#0f172a" : "#94a3b8" }}>
+                        {whatsappContactDetails?.email || activePolicy.email || "Not available"}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#334155" }}>
-                    <Mail size={13} style={{ color: "#64748b" }} />
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {whatsappContactDetails?.email || activePolicy.email || "Not available"}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#334155" }}>
-                    <Building2 size={13} style={{ color: "#64748b" }} />
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {activePolicy.insuranceCompany || "Insurer"}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#334155" }}>
-                    <User size={13} style={{ color: "#64748b" }} />
-                    <span>{whatsappContactDetails?.role || "Primary Contact"}</span>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px", color: "#0f172a" }}>
+                    <div style={{ width: "22px", height: "22px", borderRadius: "6px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <User size={12} style={{ color: "#475569" }} />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "10px", color: "#64748b", display: "block", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.04em" }}>Role</span>
+                      <span style={{ fontWeight: 600, fontSize: "12px" }}>
+                        {whatsappContactDetails?.role || "Primary Policyholder"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Template Context */}
               <div>
-                <label style={{ display: "block", fontSize: "11.5px", fontWeight: 600, color: "#64748b", marginBottom: "6px" }}>
-                  Template Context
-                </label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "7px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", gap: "5px" }}>
+                    <Sparkles size={12} style={{ color: "#059669" }} />
+                    Notice Scenario
+                  </label>
+                  <span style={{ fontSize: "11px", color: "#94a3b8" }}>One-click scenario prefill</span>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "6px",
+                    background: "#f8fafc",
+                    padding: "5px",
+                    borderRadius: "10px",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
                   {[
-                    { key: "renewal_msg", label: "Official Notice" },
-                    { key: "due_soon", label: "Due Soon" },
-                    { key: "today", label: "Due Today" },
-                    { key: "expired", label: "Overdue" },
-                    { key: "follow_up", label: "Follow-Up" },
+                    { key: "renewal_msg", label: "Official Notice", icon: Zap, color: "#16a34a", activeBg: "#f0fdf4", activeBorder: "#86efac", textColor: "#166534" },
+                    { key: "due_soon", label: "Due Soon", icon: Clock, color: "#2563eb", activeBg: "#eff6ff", activeBorder: "#93c5fd", textColor: "#1e40af" },
+                    { key: "today", label: "Due Today", icon: Calendar, color: "#ea580c", activeBg: "#fff7ed", activeBorder: "#fdba74", textColor: "#9a3412" },
+                    { key: "expired", label: "Overdue", icon: AlertTriangle, color: "#dc2626", activeBg: "#fef2f2", activeBorder: "#fca5a5", textColor: "#991b1b" },
+                    { key: "follow_up", label: "Follow-Up", icon: MessageSquare, color: "#7c3aed", activeBg: "#faf5ff", activeBorder: "#d8b4fe", textColor: "#6b21a8" },
                   ].map((t) => {
                     const isSelected = selectedTemplateKey === t.key;
+                    const Icon = t.icon;
                     return (
                       <button
                         key={t.key}
@@ -2310,30 +2544,88 @@ export default function RenewalActionDrawer({
                           }
                         }}
                         style={{
-                          padding: "5px 12px",
-                          borderRadius: "6px",
+                          flex: "1 1 auto",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "6px",
+                          padding: "7px 12px",
+                          borderRadius: "8px",
                           fontSize: "12px",
-                          fontWeight: isSelected ? 600 : 500,
-                          background: isSelected ? "#f1f5f9" : "#ffffff",
-                          color: isSelected ? "#0f172a" : "#64748b",
-                          border: isSelected ? "1px solid #94a3b8" : "1px solid #e2e8f0",
-                          boxShadow: isSelected ? "0 1px 2px rgba(0, 0, 0, 0.04)" : "none",
+                          fontWeight: isSelected ? 700 : 500,
+                          background: isSelected ? t.activeBg : "#ffffff",
+                          color: isSelected ? t.textColor : "#64748b",
+                          border: isSelected ? `1px solid ${t.activeBorder}` : "1px solid #e2e8f0",
+                          boxShadow: isSelected ? "0 1px 3px rgba(0, 0, 0, 0.05)" : "0 1px 2px rgba(0, 0, 0, 0.02)",
                           cursor: "pointer",
+                          transition: "all 0.15s ease",
                         }}
                       >
-                        {t.label}
+                        <Icon
+                          size={13}
+                          style={{
+                            color: isSelected ? t.color : "#94a3b8",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span
+                          style={{
+                            color: isSelected ? t.textColor : "#64748b",
+                            fontWeight: isSelected ? 700 : 500,
+                            fontSize: "12px",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {t.label}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Message Preview & Edit */}
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#0f172a" }}>
-                    Message Preview & Edit
-                  </label>
+              {/* Message Studio Composer */}
+              <div
+                style={{
+                  borderRadius: "12px",
+                  border: "1px solid #cbd5e1",
+                  background: "#ffffff",
+                  overflow: "hidden",
+                  boxShadow: "0 3px 12px -2px rgba(15, 23, 42, 0.05)",
+                }}
+              >
+                {/* Studio Topbar */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 12px",
+                    background: "linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%)",
+                    borderBottom: "1px solid #e2e8f0",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                    <div
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "50%",
+                        background: "#25D366",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#ffffff",
+                      }}
+                    >
+                      <MessageCircle size={12} />
+                    </div>
+                    <span style={{ fontSize: "11.5px", fontWeight: 700, color: "#0f172a" }}>WhatsApp Message Studio</span>
+                    <span style={{ fontSize: "10.5px", color: "#64748b", background: "#ffffff", padding: "1px 6px", borderRadius: "4px", border: "1px solid #e2e8f0" }}>
+                      Auto-Signed
+                    </span>
+                  </div>
+
                   <button
                     type="button"
                     onClick={handleCopyMessage}
@@ -2341,45 +2633,316 @@ export default function RenewalActionDrawer({
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "4px",
-                      background: "none",
-                      border: "none",
-                      color: "#64748b",
-                      fontSize: "11.5px",
+                      background: "#ffffff",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "6px",
+                      padding: "3px 8px",
+                      color: "#475569",
+                      fontSize: "11px",
+                      fontWeight: 600,
                       cursor: "pointer",
+                      transition: "all 0.15s ease",
                     }}
+                    title="Copy message to clipboard"
                   >
-                    <Copy size={12} /> Copy text
+                    <Copy size={11} /> Copy
                   </button>
                 </div>
-                <textarea
-                  value={customWhatsAppMessage}
-                  onChange={(e) => setCustomWhatsAppMessage(e.target.value)}
-                  rows={7}
+
+                {/* Studio Textarea */}
+                <div style={{ position: "relative", background: "#fafafa" }}>
+                  <textarea
+                    value={customWhatsAppMessage}
+                    onChange={(e) => setCustomWhatsAppMessage(e.target.value)}
+                    rows={8}
+                    placeholder="Type your WhatsApp message..."
+                    style={{
+                      width: "100%",
+                      padding: "12px 14px",
+                      border: "none",
+                      outline: "none",
+                      fontSize: "12.5px",
+                      fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif",
+                      lineHeight: "1.55",
+                      background: "transparent",
+                      color: "#0f172a",
+                      whiteSpace: "pre-wrap",
+                      resize: "vertical",
+                      minHeight: "140px",
+                    }}
+                  />
+                </div>
+
+                {/* Studio Footer bar */}
+                <div
                   style={{
-                    width: "100%",
-                    padding: "9px 12px",
-                    borderRadius: "8px",
-                    border: "1px solid #cbd5e1",
-                    fontSize: "12.5px",
-                    fontFamily: "monospace",
-                    whiteSpace: "pre-wrap",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "6px 12px",
                     background: "#ffffff",
-                    color: "#0f172a",
-                    lineHeight: "1.4",
+                    borderTop: "1px solid #f1f5f9",
+                    fontSize: "11px",
+                    color: "#94a3b8",
                   }}
-                />
+                >
+                  <span>Supports standard WhatsApp markup (*bold*, _italic_)</span>
+                  <span>{customWhatsAppMessage.length} characters</span>
+                </div>
               </div>
 
-              {/* Actions */}
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {/* Luxury Attachment Dock */}
+              <div style={{ marginTop: "2px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", gap: "5px" }}>
+                    <Paperclip size={12} style={{ color: "#059669" }} />
+                    Attached Documents & Media
+                  </label>
+                  {attachedFile && (
+                    <span style={{ fontSize: "11px", fontWeight: 600, color: "#059669", display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                      <CheckCircle2 size={12} /> 1 file queued for delivery
+                    </span>
+                  )}
+                </div>
+
+                {attachedFile ? (
+                  /* Attached State - Premium Frosted Emerald Card */
+                  <div
+                    style={{
+                      borderRadius: "12px",
+                      border: "1.5px solid #6ee7b7",
+                      background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
+                      padding: "12px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      boxShadow: "0 4px 14px -2px rgba(16, 185, 129, 0.12)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+                      <div
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "10px",
+                          background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                          color: "#ffffff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: "0 2px 6px rgba(5, 150, 105, 0.25)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <FileText size={20} />
+                      </div>
+
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: 700,
+                              color: "#064e3b",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              maxWidth: "260px",
+                            }}
+                            title={attachedFile.name}
+                          >
+                            {attachedFile.name}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              background: attachedFile.isPolicyDoc ? "#065f46" : "#0f172a",
+                              color: "#ffffff",
+                              padding: "1px 6px",
+                              borderRadius: "4px",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.03em",
+                            }}
+                          >
+                            {attachedFile.isPolicyDoc ? "Official Policy" : "Custom File"}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#047857", marginTop: "2px", display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span>{formatFileSize(attachedFile.size)}</span>
+                          <span>•</span>
+                          <span style={{ color: "#059669", fontWeight: 600 }}>Ready to transmit via WhatsApp</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                      {attachedFile.dataUrl && (
+                        <a
+                          href={attachedFile.dataUrl}
+                          download={attachedFile.name}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "30px",
+                            height: "30px",
+                            borderRadius: "8px",
+                            background: "#ffffff",
+                            border: "1px solid #a7f3d0",
+                            color: "#065f46",
+                            cursor: "pointer",
+                            textDecoration: "none",
+                          }}
+                          title="Download copy"
+                        >
+                          <Download size={14} />
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleRemoveAttachment}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "30px",
+                          height: "30px",
+                          borderRadius: "8px",
+                          background: "#fee2e2",
+                          border: "1px solid #fecdd3",
+                          color: "#dc2626",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                        }}
+                        title="Remove attachment"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Empty State - Dual Luxury Cards */
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    {/* Option 1: Attach Official Policy PDF */}
+                    <button
+                      type="button"
+                      onClick={handleAttachPolicyPdf}
+                      disabled={loadingAttachment}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "11px 13px",
+                        borderRadius: "10px",
+                        border: "1.5px dashed #cbd5e1",
+                        background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                        color: "#0f172a",
+                        textAlign: "left",
+                        cursor: loadingAttachment ? "wait" : "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "34px",
+                          height: "34px",
+                          borderRadius: "8px",
+                          background: "#eff6ff",
+                          border: "1px solid #bfdbfe",
+                          color: "#2563eb",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {loadingAttachment ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {loadingAttachment ? "Fetching Document..." : "Attach Policy PDF"}
+                        </div>
+                        <div style={{ fontSize: "10.5px", color: "#64748b", marginTop: "1px" }}>
+                          {activePolicy.policyNumber ? `Auto-link #${activePolicy.policyNumber}` : "From records storage"}
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Option 2: Upload Custom Media */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "11px 13px",
+                        borderRadius: "10px",
+                        border: "1.5px dashed #cbd5e1",
+                        background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+                        color: "#0f172a",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "34px",
+                          height: "34px",
+                          borderRadius: "8px",
+                          background: "#f1f5f9",
+                          border: "1px solid #cbd5e1",
+                          color: "#475569",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <UploadCloud size={16} />
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f172a" }}>
+                          Upload Custom File
+                        </div>
+                        <div style={{ fontSize: "10.5px", color: "#64748b", marginTop: "1px" }}>
+                          PDF, Image, Quote (max 16MB)
+                        </div>
+                      </div>
+                    </button>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={handleCustomFileUpload}
+                      accept=".pdf,image/*,.doc,.docx"
+                      style={{ display: "none" }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Executive Dispatch Command Bar */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  alignItems: "center",
+                  paddingTop: "6px",
+                  borderTop: "1px solid #f1f5f9",
+                }}
+              >
+                {/* Utility Button: Copy Text */}
                 <button
                   type="button"
                   onClick={handleCopyMessage}
                   style={{
-                    padding: "9px 12px",
-                    borderRadius: "8px",
+                    padding: "11px 14px",
+                    borderRadius: "10px",
                     background: "#ffffff",
-                    color: "#0f172a",
+                    color: "#475569",
                     fontSize: "12.5px",
                     fontWeight: 600,
                     border: "1px solid #cbd5e1",
@@ -2387,59 +2950,85 @@ export default function RenewalActionDrawer({
                     alignItems: "center",
                     gap: "6px",
                     cursor: "pointer",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
+                    transition: "all 0.15s ease",
+                    flexShrink: 0,
                   }}
+                  title="Copy text to clipboard"
                 >
-                  <Copy size={13} /> Copy text
+                  <Copy size={13} /> Copy
                 </button>
+
+                {/* WhatsApp Web Action */}
                 <button
                   type="button"
                   onClick={handleOpenWhatsAppWeb}
                   disabled={whatsappRecipientType === "individual" && !cleanPhone}
                   style={{
                     flex: 1,
-                    padding: "9px 14px",
-                    borderRadius: "8px",
+                    padding: "11px 16px",
+                    borderRadius: "10px",
                     background: "#ffffff",
                     color: "#0f172a",
-                    fontSize: "12.5px",
+                    fontSize: "13px",
                     fontWeight: 600,
-                    border: "1px solid #cbd5e1",
+                    border: "1.5px solid #0f172a",
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "6px",
+                    gap: "7px",
                     cursor: (whatsappRecipientType === "group" || cleanPhone) ? "pointer" : "not-allowed",
                     opacity: (whatsappRecipientType === "group" || cleanPhone) ? 1 : 0.5,
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
+                    transition: "all 0.15s ease",
                   }}
                 >
-                  <ExternalLink size={13} /> {whatsappRecipientType === "group" ? "Open Web & Paste" : "Open in WhatsApp Web"}
+                  <ExternalLink size={14} />
+                  <span>{whatsappRecipientType === "group" ? "Open Web & Paste" : "Open in WhatsApp Web"}</span>
                 </button>
+
+                {/* Primary Action: Direct WhatsApp API Gateway */}
                 <button
                   type="button"
                   onClick={handleSendViaApi}
                   disabled={(whatsappRecipientType === "group" ? !whatsappGroupId : !cleanPhone) || sendingViaApi}
                   style={{
-                    padding: "9px 16px",
-                    borderRadius: "8px",
-                    background: "#ffffff",
-                    color: "#0f172a",
-                    fontSize: "12.5px",
-                    fontWeight: 600,
-                    border: "1.5px solid #0f172a",
+                    flex: 1.25,
+                    padding: "11px 18px",
+                    borderRadius: "10px",
+                    background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                    color: "#ffffff",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    border: "none",
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "6px",
+                    justifyContent: "center",
+                    gap: "8px",
                     cursor: (whatsappRecipientType === "group" ? Boolean(whatsappGroupId) : Boolean(cleanPhone)) && !sendingViaApi ? "pointer" : "not-allowed",
                     opacity: (whatsappRecipientType === "group" ? Boolean(whatsappGroupId) : Boolean(cleanPhone)) ? 1 : 0.5,
-                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
+                    boxShadow: "0 4px 14px -1px rgba(5, 150, 105, 0.4)",
+                    transition: "all 0.15s ease",
                   }}
                 >
-                  {whatsappRecipientType === "group" ? <Users size={13} /> : <Send size={13} />}
-                  {sendingViaApi
-                    ? "Sending..."
-                    : whatsappRecipientType === "group"
-                    ? "Send to Group via API"
-                    : "Send via API"}
+                  {sendingViaApi ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : attachedFile ? (
+                    <Paperclip size={15} />
+                  ) : whatsappRecipientType === "group" ? (
+                    <Users size={15} />
+                  ) : (
+                    <Send size={15} />
+                  )}
+                  <span>
+                    {sendingViaApi
+                      ? "Transmitting..."
+                      : attachedFile
+                      ? "Send with Attachment"
+                      : whatsappRecipientType === "group"
+                      ? "Send to Group"
+                      : "Send via WhatsApp"}
+                  </span>
                 </button>
               </div>
             </div>

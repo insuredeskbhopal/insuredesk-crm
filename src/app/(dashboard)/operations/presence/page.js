@@ -15,12 +15,15 @@ import {
   Laptop,
   ArrowRight,
   ShieldAlert,
+  Activity,
 } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 import EmployeePresenceDrawer from "@/app/components/presence/EmployeePresenceDrawer";
+import MonthlyAttendanceView from "@/app/components/presence/MonthlyAttendanceView";
 import "@/app/ui/dashboard/presence.css";
 
 export default function PresenceCenterPage() {
+  const [viewMode, setViewMode] = useState("live"); // 'live' | 'monthly'
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -120,26 +123,50 @@ export default function PresenceCenterPage() {
     <div className="presence-page">
       <PageHeader
         title="Staff Presence & Attendance"
-        subtitle="Real-time CRM tab monitoring, multi-tab sync, duty hours tracking (10:00 AM – 6:30 PM IST), and automated WhatsApp attendance warnings."
+        subtitle={
+          viewMode === "live"
+            ? "Real-time CRM tab monitoring, multi-tab sync, duty hours tracking (10:00 AM – 6:30 PM IST), and automated WhatsApp attendance warnings."
+            : "Monthly staff attendance register, duty shifts, full day/half day classification, leave logs, and payroll-ready exports."
+        }
+        actions={
+          <div className="presence-view-switch">
+            <button
+              className={`presence-view-btn ${viewMode === "live" ? "active" : ""}`}
+              onClick={() => setViewMode("live")}
+            >
+              <Activity size={15} /> Live Shift Monitor
+            </button>
+            <button
+              className={`presence-view-btn ${viewMode === "monthly" ? "active" : ""}`}
+              onClick={() => setViewMode("monthly")}
+            >
+              <Calendar size={15} /> Monthly Attendance
+            </button>
+          </div>
+        }
       />
 
-      {/* Duty Hours & Live Status Banner */}
-      <section className="presence-shift-banner">
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <span className="presence-shift-indicator">
+      {viewMode === "monthly" ? (
+        <MonthlyAttendanceView />
+      ) : (
+        <>
+          {/* Duty Hours & Live Status Banner */}
+          <section className="presence-shift-banner">
+        <div className="presence-shift-banner-meta">
+          <span className={`presence-shift-indicator ${ist.isShiftHours ? "" : "inactive"}`}>
             <span className={`presence-pulse-dot ${ist.isShiftHours ? "" : "off"}`} />
             {ist.isShiftHours ? "Official Duty Shift ACTIVE" : "Duty Shift INACTIVE"}
           </span>
-          <span style={{ color: "#64748b" }}>
+          <span className="presence-shift-banner-text">
             {ist.weekday} • Current Time: <strong>{ist.formattedTime}</strong>
           </span>
-          <span style={{ color: "#94a3b8" }}>|</span>
-          <span style={{ color: "#475569" }}>
+          <span className="presence-shift-banner-divider">|</span>
+          <span className="presence-shift-banner-text">
             Scheduled Window: <strong>10:00 AM – 6:30 PM IST</strong> (Mon – Sat)
           </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="presence-shift-banner-actions">
           <button
             className="presence-btn presence-btn-outline"
             onClick={fetchPresenceData}
@@ -337,7 +364,7 @@ export default function PresenceCenterPage() {
 
                       {/* Role */}
                       <td>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>
+                        <span className="presence-role-badge">
                           {staff.role}
                         </span>
                       </td>
@@ -363,14 +390,14 @@ export default function PresenceCenterPage() {
 
                       {/* Activity */}
                       <td>
-                        <div style={{ fontSize: 12 }}>
+                        <div className="presence-activity-cell">
                           {staff.firstLoginAt ? (
                             <span>In: {new Date(staff.firstLoginAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
                           ) : (
                             <span style={{ color: "#94a3b8" }}>No login today</span>
                           )}
                           {staff.lastSeenAt && (
-                            <div style={{ fontSize: 11, color: "#64748b" }}>
+                            <div className="presence-activity-seen">
                               Last seen: {new Date(staff.lastSeenAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                             </div>
                           )}
@@ -388,15 +415,14 @@ export default function PresenceCenterPage() {
                             Warning {staff.warningCount}
                           </span>
                         ) : (
-                          <span style={{ fontSize: 12, color: "#94a3b8" }}>Clean</span>
+                          <span className="presence-warning-badge badge-clean">Clean</span>
                         )}
                       </td>
 
                       {/* Action */}
                       <td>
                         <button
-                          className="presence-btn presence-btn-outline"
-                          style={{ fontSize: 12, padding: "5px 10px" }}
+                          className="presence-action-btn"
                           onClick={() => setSelectedUserId(staff.id)}
                         >
                           Details <ArrowRight size={13} />
@@ -410,6 +436,9 @@ export default function PresenceCenterPage() {
           </table>
         </div>
       </section>
+
+        </>
+      )}
 
       {/* Slide-over Drawer for employee details */}
       {selectedUserId && (

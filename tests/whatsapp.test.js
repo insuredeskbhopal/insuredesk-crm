@@ -6,6 +6,7 @@ import {
   matchWhatsAppGroups,
   refreshWhatsAppGroups,
   sendWhatsAppText,
+  sendWhatsAppFile,
 } from "../src/lib/whatsapp/whatsapp-client.js";
 import { extractVehicleNumber, isRenewalQuoteGroup, buildRenewalQuoteEntry, prepareRenewalQuotePayload } from "../src/lib/whatsapp/renewal-quote-capture.js";
 
@@ -176,6 +177,39 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
 
     await expect(getWhatsAppGroups()).rejects.toThrow(
       "WhatsApp group discovery is not active on the gateway. Deploy and restart the latest gateway version.",
+    );
+  });
+
+  it("sends attached policy document via sendWhatsAppFile", async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ success: true, id: "file-message-123", timestamp: 1727083000 }),
+    });
+
+    const res = await sendWhatsAppFile(
+      "9876543210",
+      "JVBERi0xLjQKJ...",
+      "POLICY_MP04CL3716.pdf",
+      "Dear Customer, please find attached policy copy."
+    );
+
+    expect(res).toEqual({
+      id: "file-message-123",
+      success: true,
+      timestamp: 1727083000,
+    });
+
+    expect(fetch).toHaveBeenLastCalledWith(
+      expect.stringContaining("/send-media"),
+      expect.objectContaining({
+        body: JSON.stringify({
+          to: "919876543210",
+          mediaBase64: "JVBERi0xLjQKJ...",
+          filename: "POLICY_MP04CL3716.pdf",
+          caption: "Dear Customer, please find attached policy copy.",
+          type: "document",
+        }),
+      }),
     );
   });
 });

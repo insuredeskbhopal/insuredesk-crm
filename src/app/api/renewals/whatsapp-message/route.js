@@ -42,6 +42,30 @@ export async function POST(request) {
 
     const body = await request.json();
     const { policyId, policyIds, portfolioId, phone, recipient, logAudit: shouldLog, message, messageId } = body;
+
+    if (shouldLog && policyId) {
+      try {
+        await logAudit({
+          userId: user.id,
+          action: "RENEWAL_WHATSAPP_SENT",
+          entityType: "PolicyRecord",
+          entityId: policyId,
+          details: {
+            recipient: recipient || phone,
+            messageId: messageId || null,
+            isGroup: Boolean(body.isGroup),
+            hasAttachment: Boolean(body.hasAttachment),
+            attachmentName: body.attachmentName || null,
+            sentAt: new Date().toISOString(),
+          },
+          ...getAuditMetadata(request),
+        });
+      } catch (logErr) {
+        console.error("Failed to write WhatsApp audit log:", logErr);
+      }
+      return Response.json({ success: true, logged: true });
+    }
+
     if (!policyId && !portfolioId && !phone) {
       return Response.json({ error: "Missing policy, portfolio, or phone parameter" }, { status: 400 });
     }

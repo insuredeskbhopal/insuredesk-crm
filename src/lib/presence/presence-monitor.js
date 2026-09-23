@@ -84,7 +84,7 @@ export async function recordHeartbeat({
     },
   });
 
-  if (!user || user.role === "SUPER_ADMIN" || user.presenceMonitored === false) {
+  if (!user || user.presenceMonitored === false) {
     return { success: true, monitored: false };
   }
 
@@ -109,6 +109,15 @@ export async function recordHeartbeat({
         currentStatus: "ONLINE",
       },
     });
+  } else if (!daily.firstLoginAt && action !== "close") {
+    daily = await prisma.dailyPresence.update({
+      where: { id: daily.id },
+      data: {
+        firstLoginAt: now,
+        lastSeenAt: now,
+      },
+    });
+    daily.firstLoginAt = now;
   }
 
   // 2. Handle tab close vs heartbeat
@@ -225,12 +234,16 @@ export async function recordHeartbeat({
   }
 
   // Update DailyPresence lastSeenAt and status
+  const updateData = {
+    lastSeenAt: now,
+    currentStatus: newStatus,
+  };
+  if (!daily.firstLoginAt && action !== "close") {
+    updateData.firstLoginAt = now;
+  }
   await prisma.dailyPresence.update({
     where: { id: daily.id },
-    data: {
-      lastSeenAt: now,
-      currentStatus: newStatus,
-    },
+    data: updateData,
   });
 
   return {
