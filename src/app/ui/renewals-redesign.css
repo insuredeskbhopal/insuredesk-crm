@@ -324,6 +324,22 @@
   background-color: #e2e8f0 !important;
 }
 
+.rn-table tbody tr.rn-row-whatsapp-sent td,
+.rn-customer-subrow.rn-row-whatsapp-sent td,
+tr.rn-row-whatsapp-sent td {
+  background-color: #f0fdf4 !important;
+}
+
+.rn-table tbody tr.rn-row-whatsapp-sent:hover td,
+.rn-customer-subrow.rn-row-whatsapp-sent:hover td,
+tr.rn-row-whatsapp-sent:hover td {
+  background-color: #dcfce7 !important;
+}
+
+.rn-customer-subrow.rn-row-whatsapp-sent td:first-child {
+  border-left: 3px solid #10b981 !important;
+}
+
 .rn-customer-subrow:hover td:first-child {
   border-left-color: #1d4ed8 !important;
 }

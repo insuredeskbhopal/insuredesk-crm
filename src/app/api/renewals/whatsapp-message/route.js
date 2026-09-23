@@ -47,7 +47,7 @@ export async function POST(request) {
       try {
         await logAudit({
           userId: user.id,
-          action: "RENEWAL_WHATSAPP_SENT",
+          action: "WHATSAPP_REMINDER_SENT",
           entityType: "PolicyRecord",
           entityId: policyId,
           details: {

@@ -558,7 +558,7 @@ export async function GET(request) {
 
       const whatsappLogs = await prisma.auditLog.findMany({
         where: {
-          action: "WHATSAPP_REMINDER_SENT",
+          action: { in: ["WHATSAPP_REMINDER_SENT", "RENEWAL_WHATSAPP_SENT"] },
           entityType: "PolicyRecord",
           entityId: { in: ids },
           ...(isSuperAdmin ? {} : { organizationId: orgId }),

@@ -553,6 +553,9 @@ export default function RenewalActionDrawer({
   };
 
   const handleOpenWhatsAppWeb = () => {
+    const isGroup = whatsappRecipientType === "group";
+    const targetRecipient = isGroup ? whatsappGroupId : cleanPhone;
+
     if (attachedFile) {
       try {
         const link = document.createElement("a");
@@ -567,7 +570,7 @@ export default function RenewalActionDrawer({
       }
     }
 
-    if (whatsappRecipientType === "group") {
+    if (isGroup) {
       if (customWhatsAppMessage) {
         window.navigator.clipboard.writeText(customWhatsAppMessage);
       }
@@ -575,16 +578,41 @@ export default function RenewalActionDrawer({
       if (!attachedFile) {
         showToast("Message copied! Opening WhatsApp Web to paste into group.", "info");
       }
-      return;
+    } else {
+      if (cleanPhone.length < 10) {
+        showToast("No valid phone number for WhatsApp.", "error");
+        return;
+      }
+      const phoneWithCountry = `91${cleanPhone}`;
+      const url = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(customWhatsAppMessage)}`;
+      window.open(url, "_blank");
     }
 
-    if (cleanPhone.length < 10) {
-      showToast("No valid phone number for WhatsApp.", "error");
-      return;
+    // Record audit and trigger row highlight
+    if (activePolicy?.id) {
+      const sentTimestamp = new Date().toISOString();
+      activePolicy.whatsappMessageSentAt = sentTimestamp;
+      onPolicyUpdated?.({
+        ...activePolicy,
+        whatsappMessageSentAt: sentTimestamp,
+      });
+      fetch("/api/renewals/whatsapp-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          policyId: activePolicy.id,
+          recipient: targetRecipient,
+          phone: targetRecipient,
+          message: customWhatsAppMessage,
+          logAudit: true,
+          isGroup,
+          hasAttachment: Boolean(attachedFile),
+          attachmentName: attachedFile?.name || null,
+        }),
+      }).catch((auditErr) => {
+        console.error("Failed to log WhatsApp web audit:", auditErr);
+      });
     }
-    const phoneWithCountry = `91${cleanPhone}`;
-    const url = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(customWhatsAppMessage)}`;
-    window.open(url, "_blank");
   };
 
   const handleSendViaApi = async () => {
@@ -642,6 +670,7 @@ export default function RenewalActionDrawer({
       }
 
       // Log audit
+      const sentTimestamp = new Date().toISOString();
       try {
         await fetch("/api/renewals/whatsapp-message", {
           method: "POST",
@@ -661,6 +690,15 @@ export default function RenewalActionDrawer({
       } catch (auditErr) {
         console.error("Failed to log WhatsApp audit:", auditErr);
       }
+
+      // Update parent list to turn row green immediately
+      if (activePolicy) {
+        activePolicy.whatsappMessageSentAt = sentTimestamp;
+      }
+      onPolicyUpdated?.({
+        ...activePolicy,
+        whatsappMessageSentAt: sentTimestamp,
+      });
 
       showToast(
         isGroup

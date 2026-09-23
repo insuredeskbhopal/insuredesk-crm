@@ -339,6 +339,7 @@ export default function RenewalPoliciesPage() {
               renewalStatus: updatedPolicy.renewalStatus || p.renewalStatus,
               lastRemark: updatedPolicy.lastRemark || p.lastRemark,
               nextFollowUpDate: updatedPolicy.nextFollowUpDate || p.nextFollowUpDate,
+              whatsappMessageSentAt: updatedPolicy.whatsappMessageSentAt || p.whatsappMessageSentAt,
               _recentlyUpdated: true,
             }
           : p
@@ -658,7 +659,7 @@ export default function RenewalPoliciesPage() {
                         return (
                           <tr
                             key={p.id}
-                            className="rn-customer-subrow"
+                            className={`rn-customer-subrow${p.whatsappMessageSentAt ? " rn-row-whatsapp-sent" : ""}`}
                             style={{ cursor: "pointer" }}
                             onClick={() => openCustomerAction(p, "remark")}
                           >
