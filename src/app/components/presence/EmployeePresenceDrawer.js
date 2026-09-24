@@ -186,6 +186,71 @@ export default function EmployeePresenceDrawer({ userId, onClose, onRefreshParen
                   </span>
                 </div>
 
+                {/* Official Attendance Record */}
+                <div
+                  style={{
+                    padding: "14px 16px",
+                    borderRadius: 10,
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    display: "grid",
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>
+                      Today&apos;s Attendance Record ({daily?.workDate || "Today"})
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: "2px 8px",
+                        borderRadius: 6,
+                        background: daily?.shiftEnd ? "#ecfdf5" : daily?.firstLoginAt ? "#eff6ff" : "#f1f5f9",
+                        color: daily?.shiftEnd ? "#065f46" : daily?.firstLoginAt ? "#1d4ed8" : "#64748b",
+                        border: `1px solid ${daily?.shiftEnd ? "#a7f3d0" : daily?.firstLoginAt ? "#bfdbfe" : "#e2e8f0"}`,
+                      }}
+                    >
+                      {daily?.shiftEnd ? "Locked (Final)" : daily?.firstLoginAt ? "IN Progress" : "No Attendance"}
+                    </span>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div style={{ padding: "8px 12px", background: "#f8fafc", borderRadius: 8, border: "1px solid #f1f5f9" }}>
+                      <div style={{ fontSize: 11, color: "#64748b", fontWeight: 600 }}>IN TIME</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a", marginTop: 2 }}>
+                        {daily?.firstLoginAt
+                          ? new Date(daily.firstLoginAt).toLocaleTimeString("en-IN", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              timeZone: "Asia/Kolkata",
+                            })
+                          : "--:--"}
+                      </div>
+                      <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>
+                        {daily?.firstLoginAt ? "First login >= 08:30 AM" : "Not logged in >= 08:30 AM"}
+                      </div>
+                    </div>
+
+                    <div style={{ padding: "8px 12px", background: "#f8fafc", borderRadius: 8, border: "1px solid #f1f5f9" }}>
+                      <div style={{ fontSize: 11, color: "#64748b", fontWeight: 600 }}>OUT TIME</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a", marginTop: 2 }}>
+                        {daily?.shiftEnd
+                          ? new Date(daily.shiftEnd).toLocaleTimeString("en-IN", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              timeZone: "Asia/Kolkata",
+                            })
+                          : "--:--"}
+                      </div>
+                      <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>
+                        {daily?.shiftEnd ? "First logout" : (daily?.firstLoginAt ? "Awaiting logout" : "No session")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Active Incident / Escalation Banner */}
                 {activeIncident && (
                   <div

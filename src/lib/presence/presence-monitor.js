@@ -104,20 +104,10 @@ export async function recordHeartbeat({
         userId: user.id,
         organizationId: user.organizationId,
         workDate: ist.workDate,
-        firstLoginAt: now,
         lastSeenAt: now,
         currentStatus: "ONLINE",
       },
     });
-  } else if (!daily.firstLoginAt && action !== "close") {
-    daily = await prisma.dailyPresence.update({
-      where: { id: daily.id },
-      data: {
-        firstLoginAt: now,
-        lastSeenAt: now,
-      },
-    });
-    daily.firstLoginAt = now;
   }
 
   // 2. Handle tab close vs heartbeat

@@ -24,32 +24,67 @@ export async function calculateMonthlyAttendance({
 } = {}) {
   const istNow = getISTDateInfo(new Date());
   
-  // Format YYYY-MM
-  const currentMonthStr = istNow.workDate.slice(0, 7);
-  const targetMonth = monthStr && /^\d{4}-\d{2}$/.test(monthStr) ? monthStr : currentMonthStr;
+  // Office Payroll cycle: 11th of start month to 10th of next month (e.g. 11-09-2026 to 10-10-2026)
+  const [todayYear, todayMonth, todayDay] = istNow.workDate.split("-").map(Number);
+  
+  let startYear;
+  let startMonth;
+  
+  if (monthStr && /^\d{4}-\d{2}$/.test(monthStr)) {
+    const [y, m] = monthStr.split("-").map(Number);
+    startYear = y;
+    startMonth = m;
+  } else {
+    // Current payroll cycle based on IST today
+    if (todayDay >= 11) {
+      startYear = todayYear;
+      startMonth = todayMonth;
+    } else {
+      startMonth = todayMonth - 1;
+      if (startMonth === 0) {
+        startMonth = 12;
+        startYear = todayYear - 1;
+      } else {
+        startYear = todayYear;
+      }
+    }
+  }
 
-  const [yearStr, mStr] = targetMonth.split("-");
-  const year = parseInt(yearStr, 10);
-  const month = parseInt(mStr, 10);
+  const targetMonthKey = `${startYear}-${String(startMonth).padStart(2, "0")}`;
+  const startDateStr = `${startYear}-${String(startMonth).padStart(2, "0")}-11`;
+  
+  let endYear = startYear;
+  let endMonth = startMonth + 1;
+  if (endMonth === 13) {
+    endMonth = 1;
+    endYear = startYear + 1;
+  }
+  const endDateStr = `${endYear}-${String(endMonth).padStart(2, "0")}-10`;
 
-  // Total days in target month
-  const totalDays = new Date(year, month, 0).getDate();
-
-  // Build calendar days array for the month
+  // Build calendar days array for the payroll cycle (11th of startMonth to 10th of endMonth)
   const days = [];
   let totalWorkingDaysInMonth = 0;
   let elapsedWorkingDays = 0;
 
-  for (let d = 1; d <= totalDays; d++) {
-    const dayStr = String(d).padStart(2, "0");
-    const dateStr = `${targetMonth}-${dayStr}`;
-    const dateObj = new Date(`${dateStr}T12:00:00+05:30`);
-    const weekdayShort = new Intl.DateTimeFormat("en-IN", {
-      timeZone: "Asia/Kolkata",
-      weekday: "short",
-    }).format(dateObj);
+  // Hoist formatters outside the loop — creating Intl objects is expensive
+  const weekdayFmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", weekday: "short" });
+  const monthFmt = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", month: "short" });
 
-    const isSunday = weekdayShort === "Sun";
+  let currDate = new Date(`${startDateStr}T12:00:00+05:30`);
+  const stopDate = new Date(`${endDateStr}T12:00:00+05:30`);
+
+  while (currDate <= stopDate) {
+    const y = currDate.getFullYear();
+    const m = String(currDate.getMonth() + 1).padStart(2, "0");
+    const d = String(currDate.getDate()).padStart(2, "0");
+    const dateStr = `${y}-${m}-${d}`;
+    const dayNumber = currDate.getDate();
+
+    // getDay() === 0 is Sunday — avoids Intl call entirely for Sunday check
+    const isSunday = currDate.getDay() === 0;
+    const weekdayShort = weekdayFmt.format(currDate);
+    const monthShort = monthFmt.format(currDate);
+
     const isFuture = dateStr > istNow.workDate;
     const isToday = dateStr === istNow.workDate;
 
@@ -61,14 +96,20 @@ export async function calculateMonthlyAttendance({
     }
 
     days.push({
-      dayNumber: d,
+      dayNumber,
       dateStr,
       weekdayShort,
+      monthShort,
       isSunday,
       isFuture,
       isToday,
     });
+
+    // Advance 1 day
+    currDate.setDate(currDate.getDate() + 1);
   }
+
+  const totalDays = days.length;
 
   // Determine staff (includes SUPER_ADMIN, MANAGERS, AGENTS)
   const userWhere = {
@@ -93,13 +134,13 @@ export async function calculateMonthlyAttendance({
 
   const userIds = users.map((u) => u.id);
 
-  // Fetch all DailyPresence records for these users in this month
+  // Fetch all DailyPresence records for these users in this payroll cycle
   const dailyRecords = await prisma.dailyPresence.findMany({
     where: {
       userId: { in: userIds },
       workDate: {
-        gte: `${targetMonth}-01`,
-        lte: `${targetMonth}-${String(totalDays).padStart(2, "0")}`,
+        gte: startDateStr,
+        lte: endDateStr,
       },
     },
     include: {
@@ -113,6 +154,14 @@ export async function calculateMonthlyAttendance({
   for (const r of dailyRecords) {
     dailyMap.set(`${r.userId}_${r.workDate}`, r);
   }
+
+  // Reusable time formatter for punch-in / punch-out display (avoids per-call Intl creation)
+  const timeFmt = new Intl.DateTimeFormat("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Kolkata",
+  });
+  const fmtTime = (dt) => timeFmt.format(new Date(dt));
 
   // Aggregate monthly stats for each staff member
   let officeTotalPresent = 0;
@@ -196,20 +245,8 @@ export async function calculateMonthlyAttendance({
           badge: "F",
           label: "Field Work",
           hours: 8,
-          punchIn: daily.firstLoginAt
-            ? new Date(daily.firstLoginAt).toLocaleTimeString("en-IN", {
-                hour: "2-digit",
-                minute: "2-digit",
-                timeZone: "Asia/Kolkata",
-              })
-            : null,
-          punchOut: daily.lastSeenAt
-            ? new Date(daily.lastSeenAt).toLocaleTimeString("en-IN", {
-                hour: "2-digit",
-                minute: "2-digit",
-                timeZone: "Asia/Kolkata",
-              })
-            : null,
+          punchIn: daily.firstLoginAt ? fmtTime(daily.firstLoginAt) : null,
+          punchOut: daily.lastSeenAt ? fmtTime(daily.lastSeenAt) : null,
           reason: daily.exceptionReason || "Client Visit",
           warnings,
         };
@@ -219,27 +256,25 @@ export async function calculateMonthlyAttendance({
       let punchIn = null;
       let punchOut = null;
 
-      const firstLogin = daily?.firstLoginAt || (daily?.totalConnectedSeconds > 0 ? daily.lastSeenAt : null);
+      const firstLogin = daily?.firstLoginAt;
 
       if (firstLogin) {
-        punchIn = new Date(firstLogin).toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          timeZone: "Asia/Kolkata",
-        });
+        punchIn = fmtTime(firstLogin);
 
-        const lastSeen = daily.lastSeenAt ? new Date(daily.lastSeenAt) : new Date(firstLogin);
-        punchOut = new Date(lastSeen).toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          timeZone: "Asia/Kolkata",
-        });
+        // Official attendance OUT time recorded upon logout
+        const officialOut = daily.shiftEnd;
+        if (officialOut) {
+          punchOut = fmtTime(officialOut);
 
-        if (daily.totalConnectedSeconds > 0) {
-          hours = Math.round((daily.totalConnectedSeconds / 3600) * 10) / 10;
-          totalSeconds += daily.totalConnectedSeconds;
-        } else {
-          const diffMs = Math.max(0, lastSeen.getTime() - new Date(firstLogin).getTime());
+          const diffMs = Math.max(0, new Date(officialOut).getTime() - new Date(firstLogin).getTime());
+          const calculatedSec = Math.round(diffMs / 1000);
+          hours = Math.round((calculatedSec / 3600) * 10) / 10;
+          totalSeconds += calculatedSec;
+        } else if (day.isToday) {
+          // Currently active today (logged in, not yet logged out)
+          const nowMs = new Date().getTime();
+          const inMs = new Date(firstLogin).getTime();
+          const diffMs = Math.max(0, nowMs - inMs);
           const calculatedSec = Math.round(diffMs / 1000);
           hours = Math.round((calculatedSec / 3600) * 10) / 10;
           totalSeconds += calculatedSec;
@@ -280,8 +315,24 @@ export async function calculateMonthlyAttendance({
         };
       }
 
-      // If 0 hours on today's date
+      // If on today's date
       if (day.isToday) {
+        if (firstLogin) {
+          pCount++;
+          return {
+            date: day.dateStr,
+            day: day.dayNumber,
+            weekday: day.weekdayShort,
+            status: "PRESENT",
+            badge: "P",
+            label: "Present Today",
+            hours,
+            punchIn,
+            punchOut,
+            warnings,
+          };
+        }
+
         return {
           date: day.dateStr,
           day: day.dayNumber,
@@ -348,7 +399,12 @@ export async function calculateMonthlyAttendance({
         todayPunchIn: dayRecords.find((d) => d.date === istNow.workDate)?.punchIn || null,
         todayPunchOut: dayRecords.find((d) => d.date === istNow.workDate)?.punchOut || null,
       },
-      days: dayRecords,
+      days: dayRecords.map((r, i) => ({
+        ...r,
+        isToday: Boolean(days[i]?.isToday),
+        isFuture: Boolean(days[i]?.isFuture),
+        isSunday: Boolean(days[i]?.isSunday),
+      })),
     };
   });
 
@@ -362,16 +418,29 @@ export async function calculateMonthlyAttendance({
       : 100;
 
   // Month metadata
-  const monthName = new Intl.DateTimeFormat("en-IN", {
-    month: "long",
+  // Payroll cycle metadata (e.g. 11 Sep 2026 – 10 Oct 2026)
+  const startFmt = new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
     year: "numeric",
     timeZone: "Asia/Kolkata",
-  }).format(new Date(`${targetMonth}-15T12:00:00+05:30`));
+  }).format(new Date(`${startDateStr}T12:00:00+05:30`));
+
+  const endFmt = new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Kolkata",
+  }).format(new Date(`${endDateStr}T12:00:00+05:30`));
+
+  const monthName = `${startFmt} – ${endFmt}`;
 
   return {
     success: true,
-    month: targetMonth,
+    month: targetMonthKey,
     monthName,
+    startDate: startDateStr,
+    endDate: endDateStr,
     currentDate: istNow.workDate,
     totalDays,
     totalWorkingDays: totalWorkingDaysInMonth,
@@ -380,6 +449,7 @@ export async function calculateMonthlyAttendance({
       dayNumber: d.dayNumber,
       dateStr: d.dateStr,
       weekday: d.weekdayShort,
+      monthShort: d.monthShort,
       isSunday: d.isSunday,
       isToday: d.isToday,
       isFuture: d.isFuture,

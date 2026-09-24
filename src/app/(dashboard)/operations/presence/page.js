@@ -23,13 +23,57 @@ import MonthlyAttendanceView from "@/app/components/presence/MonthlyAttendanceVi
 import "@/app/ui/dashboard/presence.css";
 
 export default function PresenceCenterPage() {
-  const [viewMode, setViewMode] = useState("live"); // 'live' | 'monthly'
+  const [viewMode, setViewMode] = useState("live");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [evaluating, setEvaluating] = useState(false);
+
+  // Restore view mode from URL search param or localStorage so reload stays on current view
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlView = params.get("view");
+      let targetView = null;
+      if (urlView && ["live", "daily", "monthly"].includes(urlView)) {
+        targetView = urlView;
+        window.localStorage.setItem("presence_view_mode", urlView);
+      } else {
+        const stored = window.localStorage.getItem("presence_view_mode");
+        if (stored && ["live", "daily", "monthly"].includes(stored)) {
+          targetView = stored;
+        }
+      }
+      if (targetView) {
+        setViewMode(targetView);
+        if (urlView !== targetView) {
+          params.set("view", targetView);
+          const nextUrl = `${window.location.pathname}?${params.toString()}`;
+          window.history.replaceState(null, "", nextUrl);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to restore presence view mode:", e);
+    }
+  }, []);
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("presence_view_mode", mode);
+        const params = new URLSearchParams(window.location.search);
+        params.set("view", mode);
+        const nextUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState(null, "", nextUrl);
+      } catch (e) {
+        console.error("Failed to persist view mode:", e);
+      }
+    }
+  };
 
   const fetchPresenceData = async () => {
     try {
@@ -126,19 +170,27 @@ export default function PresenceCenterPage() {
         subtitle={
           viewMode === "live"
             ? "Real-time CRM tab monitoring, multi-tab sync, duty hours tracking (10:00 AM – 6:30 PM IST), and automated WhatsApp attendance warnings."
+            : viewMode === "daily"
+            ? "Daily staff attendance register, punch-in/out records, active hours, and shift compliance."
             : "Monthly staff attendance register, duty shifts, full day/half day classification, leave logs, and payroll-ready exports."
         }
         actions={
           <div className="presence-view-switch">
             <button
               className={`presence-view-btn ${viewMode === "live" ? "active" : ""}`}
-              onClick={() => setViewMode("live")}
+              onClick={() => handleViewModeChange("live")}
             >
               <Activity size={15} /> Live Shift Monitor
             </button>
             <button
+              className={`presence-view-btn ${viewMode === "daily" ? "active" : ""}`}
+              onClick={() => handleViewModeChange("daily")}
+            >
+              <Clock size={15} /> Daily Attendance
+            </button>
+            <button
               className={`presence-view-btn ${viewMode === "monthly" ? "active" : ""}`}
-              onClick={() => setViewMode("monthly")}
+              onClick={() => handleViewModeChange("monthly")}
             >
               <Calendar size={15} /> Monthly Attendance
             </button>
@@ -146,8 +198,12 @@ export default function PresenceCenterPage() {
         }
       />
 
-      {viewMode === "monthly" ? (
-        <MonthlyAttendanceView />
+      {viewMode === "monthly" || viewMode === "daily" ? (
+        <MonthlyAttendanceView
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          onSwitchToLive={() => handleViewModeChange("live")}
+        />
       ) : (
         <>
           {/* Duty Hours & Live Status Banner */}

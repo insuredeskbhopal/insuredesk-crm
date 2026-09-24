@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { comparePassword, signJWT } from "@/lib/auth";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
+import { recordLoginAttendance } from "@/lib/attendance/attendance-service";
 
 export async function POST(request) {
   try {
@@ -75,6 +76,16 @@ export async function POST(request) {
       organizationId: user.organizationId,
       metadata: { email: user.email, role: user.role },
     });
+
+    // Record attendance IN time if >= 08:30 AM IST and not already registered today
+    try {
+      await recordLoginAttendance({
+        userId: user.id,
+        organizationId: user.organizationId,
+      });
+    } catch (attendanceErr) {
+      console.error("Failed to record attendance on login:", attendanceErr);
+    }
 
     // Set secure HTTP-only cookie
     const response = NextResponse.json({
