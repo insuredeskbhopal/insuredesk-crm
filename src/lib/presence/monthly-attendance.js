@@ -2,6 +2,7 @@ import { prisma as defaultPrisma } from "@/lib/db/prisma";
 import { PrismaClient } from "@prisma/client";
 import { getISTDateInfo } from "@/lib/presence/presence-monitor";
 import { finalizeCompletedAttendance } from "@/lib/attendance/attendance-service";
+import { resolveEffectivePunchOut } from "@/lib/presence/punch-out-resolver";
 
 const prisma = defaultPrisma?.dailyPresence ? defaultPrisma : new PrismaClient();
 
@@ -151,6 +152,9 @@ export async function calculateMonthlyAttendance({
       incidents: {
         select: { id: true, status: true, durationSeconds: true },
       },
+      sessions: {
+        orderBy: { lastHeartbeatAt: "desc" },
+      },
     },
   });
 
@@ -268,76 +272,22 @@ export async function calculateMonthlyAttendance({
       const firstLogin = daily?.firstLoginAt;
 
       if (firstLogin) {
-        punchIn = fmtTime(firstLogin);
-        const inDate = new Date(firstLogin);
-        const inMs = inDate.getTime();
-        const nowMs = Date.now();
+        const resolved = resolveEffectivePunchOut({
+          daily,
+          sessions: daily.sessions || [],
+          isToday: day.isToday,
+          now: new Date(),
+        });
 
-        // 1. Confirmed / Final punch-out in database
-        const officialOut = daily.shiftEnd;
-        if (officialOut) {
-          effectiveOut = officialOut;
-          punchOut = fmtTime(officialOut);
-          isCompleted = true;
-          isActive = false;
-          outSource = daily.metadata?.outSource || (daily.metadata?.attendanceLocked ? "MANUAL_LOGOUT" : "CONFIRMED");
-
-          const diffMs = Math.max(0, new Date(officialOut).getTime() - inMs);
-          workedMinutes = Math.round(diffMs / 60000);
-          hours = Math.round((diffMs / 3600000) * 10) / 10;
-          totalSeconds += Math.round(diffMs / 1000);
-        } else if (day.isToday) {
-          // Check if employee is actively online right now
-          const lastSeenMs = daily.lastSeenAt ? new Date(daily.lastSeenAt).getTime() : 0;
-          const timeSinceHeartbeatMs = lastSeenMs > 0 ? (nowMs - lastSeenMs) : Infinity;
-
-          // Tab heartbeat is every 50s. Online if status is ONLINE and heartbeat within 3 minutes (180s)
-          const isActivelyOnline = daily.currentStatus === "ONLINE" && timeSinceHeartbeatMs <= 180000;
-
-          if (isActivelyOnline) {
-            // Heartbeat recent -> Active Now, OUT blank. Employee is currently working.
-            isActive = true;
-            isCompleted = false;
-            punchOut = null;
-            effectiveOut = null;
-            outSource = null;
-
-            const diffMs = Math.max(0, nowMs - inMs);
-            workedMinutes = Math.round(diffMs / 60000);
-            hours = Math.round((diffMs / 3600000) * 10) / 10;
-            totalSeconds += Math.round(diffMs / 1000);
-          } else {
-            // Heartbeat stale or user went offline / shut down
-            // Use latest valid lastSeenAt as provisional effective OUT time
-            // (Does NOT permanently write shiftEnd while day is active so employee can reconnect)
-            const fallbackOut = daily.lastSeenAt || firstLogin;
-            effectiveOut = fallbackOut;
-            punchOut = fmtTime(fallbackOut);
-            isActive = false;
-            isCompleted = true;
-            outSource = "AUTO_LAST_SEEN";
-
-            const diffMs = Math.max(0, new Date(fallbackOut).getTime() - inMs);
-            workedMinutes = Math.round(diffMs / 60000);
-            hours = Math.round((diffMs / 3600000) * 10) / 10;
-            totalSeconds += Math.round(diffMs / 1000);
-          }
-        } else {
-          // COMPLETED / PAST DAYS:
-          // If shiftEnd was null, derive final OUT from the last valid attendance/presence timestamp
-          // Never mark the employee ABSENT simply because they forgot to click Logout!
-          const fallbackOut = daily.lastSeenAt || firstLogin;
-          effectiveOut = fallbackOut;
-          punchOut = fmtTime(fallbackOut);
-          isCompleted = true;
-          isActive = false;
-          outSource = daily.metadata?.outSource || "AUTO_LAST_SEEN";
-
-          const diffMs = Math.max(0, new Date(fallbackOut).getTime() - inMs);
-          workedMinutes = Math.round(diffMs / 60000);
-          hours = Math.round((diffMs / 3600000) * 10) / 10;
-          totalSeconds += Math.round(diffMs / 1000);
-        }
+        punchIn = resolved.punchIn;
+        punchOut = resolved.punchOut;
+        effectiveOut = resolved.effectiveOut;
+        isActive = resolved.isActive;
+        isCompleted = resolved.isCompleted;
+        outSource = resolved.outSource;
+        workedMinutes = resolved.workedMinutes;
+        hours = resolved.hours;
+        totalSeconds += workedMinutes * 60;
       }
 
       // If hours >= 4.5 => Full Day Present
@@ -354,7 +304,7 @@ export async function calculateMonthlyAttendance({
           workedMinutes,
           punchIn,
           punchOut,
-          effectiveOut: effectiveOut ? fmtTime(effectiveOut) : null,
+          effectiveOut,
           isActive,
           isCompleted,
           outSource,
@@ -376,7 +326,7 @@ export async function calculateMonthlyAttendance({
           workedMinutes,
           punchIn,
           punchOut,
-          effectiveOut: effectiveOut ? fmtTime(effectiveOut) : null,
+          effectiveOut,
           isActive,
           isCompleted,
           outSource,
@@ -399,7 +349,7 @@ export async function calculateMonthlyAttendance({
             workedMinutes,
             punchIn,
             punchOut,
-            effectiveOut: effectiveOut ? fmtTime(effectiveOut) : null,
+            effectiveOut,
             isActive,
             isCompleted,
             outSource,

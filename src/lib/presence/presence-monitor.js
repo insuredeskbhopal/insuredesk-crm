@@ -224,11 +224,15 @@ export async function recordHeartbeat({
   }
 
   // Update DailyPresence lastSeenAt and status
+  // Guard (Rule 8): If attendance is already locked/finalized for today, do NOT mutate lastSeenAt or firstLoginAt!
+  const isLocked = Boolean(daily.shiftEnd || daily.metadata?.attendanceLocked);
   const updateData = {
-    lastSeenAt: now,
     currentStatus: newStatus,
   };
-  if (!daily.firstLoginAt && action !== "close") {
+  if (!isLocked) {
+    updateData.lastSeenAt = now;
+  }
+  if (!daily.firstLoginAt && action !== "close" && !isLocked) {
     updateData.firstLoginAt = now;
   }
   await prisma.dailyPresence.update({

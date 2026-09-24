@@ -1,6 +1,7 @@
 import { prisma as defaultPrisma } from "@/lib/db/prisma";
 import { PrismaClient } from "@prisma/client";
 import { getISTDateInfo } from "@/lib/presence/presence-monitor";
+import { resolveEffectivePunchOut } from "@/lib/presence/punch-out-resolver";
 
 const prisma = defaultPrisma?.dailyPresence ? defaultPrisma : new PrismaClient();
 
@@ -226,19 +227,23 @@ export async function finalizeCompletedAttendance({ workDate = null } = {}) {
 
     const pendingRecords = await prisma.dailyPresence.findMany({
       where: whereClause,
-      select: {
-        id: true,
-        userId: true,
-        workDate: true,
-        firstLoginAt: true,
-        lastSeenAt: true,
-        metadata: true,
+      include: {
+        sessions: {
+          orderBy: { lastHeartbeatAt: "desc" },
+        },
       },
     });
 
     let finalizedCount = 0;
     for (const record of pendingRecords) {
-      const finalOutTime = record.lastSeenAt || record.firstLoginAt;
+      const resolved = resolveEffectivePunchOut({
+        daily: record,
+        sessions: record.sessions || [],
+        isToday: false,
+        now,
+      });
+
+      const finalOutTime = resolved.punchOutDate || record.lastSeenAt || record.firstLoginAt;
       const inDate = new Date(record.firstLoginAt);
       const outDate = new Date(finalOutTime);
       const durationSeconds = Math.max(0, Math.round((outDate.getTime() - inDate.getTime()) / 1000));
@@ -253,7 +258,7 @@ export async function finalizeCompletedAttendance({ workDate = null } = {}) {
           metadata: {
             ...existingMeta,
             outTime: outDate.toISOString(),
-            outSource: "AUTO_LAST_SEEN",
+            outSource: resolved.outSource || "AUTO_LAST_SEEN",
             attendanceLocked: true,
             durationSeconds,
             finalizedAt: now.toISOString(),

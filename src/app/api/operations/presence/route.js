@@ -2,6 +2,7 @@ import { verifyJWT } from "@/lib/auth";
 import { PrismaClient } from "@prisma/client";
 import { prisma as defaultPrisma } from "@/lib/db/prisma";
 import { getISTDateInfo, evaluateStaffPresence } from "@/lib/presence/presence-monitor";
+import { resolveEffectivePunchOut } from "@/lib/presence/punch-out-resolver";
 
 const prisma = defaultPrisma?.dailyPresence ? defaultPrisma : new PrismaClient();
 
@@ -51,7 +52,6 @@ export async function GET(request) {
         },
         include: {
           sessions: {
-            where: { endedAt: null },
             orderBy: { lastHeartbeatAt: "desc" },
           },
           incidents: {
@@ -64,10 +64,26 @@ export async function GET(request) {
         },
       });
 
+      const resolved = resolveEffectivePunchOut({
+        daily,
+        sessions: daily?.sessions || [],
+        isToday: true,
+        now,
+      });
+
       return Response.json({
         success: true,
         user,
-        daily,
+        daily: daily
+          ? {
+              ...daily,
+              effectiveOut: resolved.punchOutDate,
+              effectiveOutFormatted: resolved.effectiveOut,
+              resolvedOutSource: resolved.outSource,
+              resolvedStatus: resolved.status,
+              isActive: resolved.isActive,
+            }
+          : null,
         ist,
       });
     }
@@ -109,6 +125,9 @@ export async function GET(request) {
           where: { status: { in: ["OPEN", "ESCALATED_PENDING_REVIEW"] } },
           orderBy: { startedAt: "desc" },
           take: 1,
+        },
+        sessions: {
+          orderBy: { lastHeartbeatAt: "desc" },
         },
       },
     });
@@ -173,6 +192,13 @@ export async function GET(request) {
       const userWarnings = daily?.warningCount || 0;
       warningsToday += userWarnings;
 
+      const resolved = resolveEffectivePunchOut({
+        daily,
+        sessions: daily?.sessions || [],
+        isToday: true,
+        now,
+      });
+
       return {
         id: user.id,
         name: user.name || user.email.split("@")[0],
@@ -184,8 +210,11 @@ export async function GET(request) {
         firstLoginAt: daily?.firstLoginAt || null,
         lastSeenAt: daily?.lastSeenAt || null,
         shiftEnd: daily?.shiftEnd || null,
-        effectiveOut: daily?.shiftEnd || (status === "OFFLINE" ? daily?.lastSeenAt : null),
-        outSource: daily?.metadata?.outSource || (daily?.shiftEnd ? "MANUAL_LOGOUT" : null),
+        effectiveOut: resolved.punchOutDate,
+        effectiveOutFormatted: resolved.effectiveOut,
+        outSource: resolved.outSource,
+        workedMinutes: resolved.workedMinutes,
+        hours: resolved.hours,
         warningCount: userWarnings,
         approvedExceptionType: daily?.approvedExceptionType || null,
         exceptionReason: daily?.exceptionReason || null,
