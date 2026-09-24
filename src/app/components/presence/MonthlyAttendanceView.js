@@ -17,6 +17,7 @@ import {
   ArrowRight,
   X,
   Activity,
+  FileSpreadsheet,
 } from "lucide-react";
 import ModalPortal from "@/app/components/shared/ModalPortal";
 
@@ -81,6 +82,7 @@ export default function MonthlyAttendanceView({
   };
 
   const [selectedStaff, setSelectedStaff] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
   // Attendance Mode ('monthly' | 'daily')
   const [attendanceMode, setAttendanceMode] = useState(
@@ -547,6 +549,35 @@ export default function MonthlyAttendanceView({
     document.body.removeChild(link);
   };
 
+  // Export Excel (.xlsx) via server-side generation
+  const handleExportXlsx = async () => {
+    if (exporting) return;
+    try {
+      setExporting(true);
+      const res = await fetch(`/api/operations/presence/monthly/export?month=${currentMonth}`);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      // Extract filename from Content-Disposition or use default
+      const cd = res.headers.get("content-disposition");
+      const match = cd?.match(/filename="?([^"]+)"?/);
+      a.download = match?.[1] || `Bima_Headquarter_Attendance_${currentMonth}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("XLSX export error:", err);
+      if (typeof window !== "undefined") {
+        window.alert("Unable to generate attendance report. Please try again.");
+      }
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const summary = data?.officeSummary || {
     totalStaff: 0,
     totalWorkingDays: 0,
@@ -948,10 +979,19 @@ export default function MonthlyAttendanceView({
               </button>
               <button
                 className="presence-btn presence-btn-primary"
+                onClick={handleExportXlsx}
+                disabled={exporting}
+                title="Export Monthly Attendance to Excel (.xlsx)"
+              >
+                <FileSpreadsheet size={14} className={exporting ? "animate-spin" : ""} />
+                {exporting ? "Preparing..." : "Export Excel"}
+              </button>
+              <button
+                className="presence-btn presence-btn-outline"
                 onClick={handleExportCSV}
                 title="Export Monthly Attendance to CSV"
               >
-                <Download size={14} /> Export CSV
+                <Download size={14} /> CSV
               </button>
             </div>
           </section>

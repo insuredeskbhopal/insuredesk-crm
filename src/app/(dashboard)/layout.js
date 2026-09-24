@@ -1,6 +1,5 @@
 "use client";
 
-/* global URLSearchParams */
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import AppShell from "@/app/components/layout/AppShell";

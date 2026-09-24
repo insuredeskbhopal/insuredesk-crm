@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-/* global URLSearchParams */
 import PageHeader from "@/app/components/layout/PageHeader";
 import { loadScopedUploads } from "@/lib/records/scoped-data";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";

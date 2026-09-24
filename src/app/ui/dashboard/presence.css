@@ -1101,6 +1101,29 @@
 }
 
 /* Summary Columns Styling */
+.monthly-matrix-table :is(.summary-th, .summary-td) {
+  position: sticky;
+  right: 0;
+  z-index: 20;
+  box-sizing: border-box;
+}
+
+.monthly-matrix-table thead .summary-th {
+  z-index: 35;
+}
+
+/* Offsets match the fixed widths of the columns to the right. */
+.monthly-matrix-table :is(.summary-th, .summary-td):nth-last-child(2) { right: 110px; }
+.monthly-matrix-table :is(.summary-th, .summary-td):nth-last-child(3) { right: 180px; }
+.monthly-matrix-table :is(.summary-th, .summary-td):nth-last-child(4) { right: 252px; }
+.monthly-matrix-table :is(.summary-th, .summary-td):nth-last-child(5) { right: 296px; }
+.monthly-matrix-table :is(.summary-th, .summary-td):nth-last-child(6) { right: 340px; }
+.monthly-matrix-table :is(.summary-th, .summary-td):nth-last-child(7) { right: 384px; }
+.monthly-matrix-table :is(.summary-th, .summary-td):nth-last-child(8) {
+  right: 428px;
+  box-shadow: -3px 0 8px rgba(0, 0, 0, 0.06);
+}
+
 .summary-th {
   white-space: nowrap !important;
   font-size: 11px !important;
@@ -1113,24 +1136,28 @@
   user-select: none;
 }
 
-.summary-th.col-stat {
-  min-width: 40px !important;
+.monthly-matrix-table :is(.summary-th, .summary-td).col-stat {
+  min-width: 44px !important;
   width: 44px !important;
+  max-width: 44px !important;
 }
 
-.summary-th.col-att {
-  min-width: 68px !important;
+.monthly-matrix-table :is(.summary-th, .summary-td).col-att {
+  min-width: 72px !important;
   width: 72px !important;
+  max-width: 72px !important;
 }
 
-.summary-th.col-hours {
-  min-width: 66px !important;
+.monthly-matrix-table :is(.summary-th, .summary-td).col-hours {
+  min-width: 70px !important;
   width: 70px !important;
+  max-width: 70px !important;
 }
 
-.summary-th.col-actions {
-  min-width: 104px !important;
+.monthly-matrix-table :is(.summary-th, .summary-td).col-actions {
+  min-width: 110px !important;
   width: 110px !important;
+  max-width: 110px !important;
 }
 
 .summary-td {
@@ -1647,4 +1674,3 @@
   color: #a16207;
   border: 1px solid #fde68a;
 }
-

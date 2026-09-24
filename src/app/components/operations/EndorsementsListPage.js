@@ -1,7 +1,5 @@
 "use client";
 
-/* global URLSearchParams */
-
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";

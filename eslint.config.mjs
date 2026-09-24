@@ -34,6 +34,7 @@ export default [
         FileReader: "readonly",
         FormData: "readonly",
         URL: "readonly",
+        URLSearchParams: "readonly",
         React: "readonly",
         Request: "readonly",
         Response: "readonly",
