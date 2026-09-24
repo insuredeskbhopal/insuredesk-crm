@@ -183,3 +183,89 @@ export async function recordLogoutAttendance({ userId }) {
     return { recorded: false, error: error.message };
   }
 }
+
+/**
+ * Idempotently finalizes attendance for completed days or departed staff after duty hours (>= 18:30 IST).
+ *
+ * Rules:
+ * 1. Explicit manual logout remains highest priority (has outSource: "MANUAL_LOGOUT").
+ * 2. Only processes records where firstLoginAt is NOT null and shiftEnd IS null.
+ * 3. Only finalizes past days (workDate < today) OR today after duty hours (>= 18:30 IST) when staff is OFFLINE.
+ * 4. Never overwrites lastSeenAt.
+ * 5. Uses latest trustworthy presence timestamp (lastSeenAt || firstLoginAt).
+ * 6. Sets metadata.outSource = "AUTO_LAST_SEEN".
+ * 7. Completely idempotent — records with existing shiftEnd are ignored.
+ */
+export async function finalizeCompletedAttendance({ workDate = null } = {}) {
+  try {
+    const now = new Date();
+    const ist = getISTDateInfo(now);
+    const totalMinutes = ist.hour * 60 + ist.minute;
+    const isPastShiftHours = totalMinutes >= (18 * 60 + 30); // 6:30 PM IST
+
+    const whereClause = {
+      firstLoginAt: { not: null },
+      shiftEnd: null,
+    };
+
+    if (workDate) {
+      if (workDate === ist.workDate && !isPastShiftHours) {
+        // Today before 6:30 PM: provisional only; do not permanently lock active day
+        return { finalized: 0, skipped: "TODAY_BEFORE_SHIFT_END" };
+      }
+      whereClause.workDate = workDate;
+    } else {
+      // General batch: all past days, plus today if after 6:30 PM and offline
+      if (isPastShiftHours) {
+        whereClause.workDate = { lte: ist.workDate };
+        whereClause.currentStatus = "OFFLINE";
+      } else {
+        whereClause.workDate = { lt: ist.workDate };
+      }
+    }
+
+    const pendingRecords = await prisma.dailyPresence.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        userId: true,
+        workDate: true,
+        firstLoginAt: true,
+        lastSeenAt: true,
+        metadata: true,
+      },
+    });
+
+    let finalizedCount = 0;
+    for (const record of pendingRecords) {
+      const finalOutTime = record.lastSeenAt || record.firstLoginAt;
+      const inDate = new Date(record.firstLoginAt);
+      const outDate = new Date(finalOutTime);
+      const durationSeconds = Math.max(0, Math.round((outDate.getTime() - inDate.getTime()) / 1000));
+      const existingMeta = typeof record.metadata === "object" && record.metadata ? record.metadata : {};
+
+      await prisma.dailyPresence.update({
+        where: { id: record.id },
+        data: {
+          shiftEnd: finalOutTime,
+          totalConnectedSeconds: durationSeconds,
+          currentStatus: "OFFLINE",
+          metadata: {
+            ...existingMeta,
+            outTime: outDate.toISOString(),
+            outSource: "AUTO_LAST_SEEN",
+            attendanceLocked: true,
+            durationSeconds,
+            finalizedAt: now.toISOString(),
+          },
+        },
+      });
+      finalizedCount++;
+    }
+
+    return { finalized: finalizedCount };
+  } catch (error) {
+    console.error("Error finalizing completed attendance:", error);
+    return { finalized: 0, error: error.message };
+  }
+}

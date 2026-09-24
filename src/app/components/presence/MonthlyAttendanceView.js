@@ -16,13 +16,12 @@ import {
   RefreshCw,
   ArrowRight,
   X,
-  Activity,
   FileSpreadsheet,
 } from "lucide-react";
 import ModalPortal from "@/app/components/shared/ModalPortal";
 
 export default function MonthlyAttendanceView({
-  onSwitchToLive,
+  _onSwitchToLive,
   viewMode,
   onViewModeChange,
   initialMode = "monthly",
@@ -72,7 +71,7 @@ export default function MonthlyAttendanceView({
     return "all";
   });
 
-  const handleRoleFilterChange = (role) => {
+  const _handleRoleFilterChange = (role) => {
     setRoleFilter(role);
     if (typeof window !== "undefined") {
       try {
@@ -127,7 +126,7 @@ export default function MonthlyAttendanceView({
     return "all";
   });
 
-  const handleDailyStatusFilterChange = (status) => {
+  const _handleDailyStatusFilterChange = (status) => {
     setDailyStatusFilter(status);
     if (typeof window !== "undefined") {
       try {
@@ -231,7 +230,7 @@ export default function MonthlyAttendanceView({
     fetchMonthlyData(currentMonth);
   }, [currentMonth]);
 
-  const handleMatrixScroll = (e) => {
+  const _handleMatrixScroll = (e) => {
     if (typeof window !== "undefined") {
       try {
         window.sessionStorage.setItem("presence_matrix_scroll_x", String(e.currentTarget.scrollLeft));
@@ -347,12 +346,17 @@ export default function MonthlyAttendanceView({
       const isSunday = Boolean(dayRecord?.isSunday || dayRecord?.status === "WO");
       const isLeave = Boolean(dayRecord?.status === "LEAVE");
       const isField = Boolean(dayRecord?.status === "FIELD_WORK");
-      const isActive = Boolean(punchIn && !punchOut && isToday);
-      const isCompleted = Boolean(punchIn && punchOut);
+      // Authoritative fields from backend
+      const isActive = typeof dayRecord?.isActive === "boolean"
+        ? dayRecord.isActive
+        : Boolean(isToday && !punchOut && s.summary?.todayIsActive);
+      const isCompleted = typeof dayRecord?.isCompleted === "boolean"
+        ? dayRecord.isCompleted
+        : Boolean(punchIn && punchOut);
       const isPending = Boolean(!punchIn && !isSunday && !isLeave && !isField);
 
-      let statusLabel = "Absent";
-      let statusType = "absent";
+      let statusLabel = dayRecord?.label || "Absent";
+      let statusType = dayRecord?.status ? dayRecord.status.toLowerCase() : "absent";
       if (isSunday) {
         statusLabel = "Weekly Off";
         statusType = "wo";
@@ -366,7 +370,7 @@ export default function MonthlyAttendanceView({
         statusLabel = "Active Now";
         statusType = "active";
       } else if (isCompleted) {
-        statusLabel = (dayRecord?.hours || 0) >= 4.5 ? "Present" : "Half Day";
+        statusLabel = dayRecord?.label || ((dayRecord?.hours || 0) >= 4.5 ? "Present" : "Half Day");
         statusType = (dayRecord?.hours || 0) >= 4.5 ? "present" : "half_day";
       } else if (punchIn) {
         statusLabel = "Present";
@@ -1255,7 +1259,7 @@ export default function MonthlyAttendanceView({
                                     OUT
                                   </span>
                                   <span className={`punch-time ${!d.punchOut ? "punch-time-active" : "punch-time-out"}`}>
-                                    {d.punchOut || (d.date === data?.currentDate ? "Active" : "--:--")}
+                                    {d.punchOut || (d.isActive ? "Active" : "--:--")}
                                   </span>
                                 </div>
                               </div>

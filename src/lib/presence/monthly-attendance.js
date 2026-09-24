@@ -1,6 +1,7 @@
 import { prisma as defaultPrisma } from "@/lib/db/prisma";
 import { PrismaClient } from "@prisma/client";
 import { getISTDateInfo } from "@/lib/presence/presence-monitor";
+import { finalizeCompletedAttendance } from "@/lib/attendance/attendance-service";
 
 const prisma = defaultPrisma?.dailyPresence ? defaultPrisma : new PrismaClient();
 
@@ -22,6 +23,9 @@ export async function calculateMonthlyAttendance({
   userId = null,
   isRestrictedAgent = false,
 } = {}) {
+  // Idempotently finalize completed/past days where staff shut down without clicking logout
+  await finalizeCompletedAttendance().catch(() => {});
+
   const istNow = getISTDateInfo(new Date());
   
   // Office Payroll cycle: 11th of start month to 10th of next month (e.g. 11-09-2026 to 10-10-2026)
@@ -255,29 +259,84 @@ export async function calculateMonthlyAttendance({
       let hours = 0;
       let punchIn = null;
       let punchOut = null;
+      let effectiveOut = null;
+      let isActive = false;
+      let isCompleted = false;
+      let outSource = null;
+      let workedMinutes = 0;
 
       const firstLogin = daily?.firstLoginAt;
 
       if (firstLogin) {
         punchIn = fmtTime(firstLogin);
+        const inDate = new Date(firstLogin);
+        const inMs = inDate.getTime();
+        const nowMs = Date.now();
 
-        // Official attendance OUT time recorded upon logout
+        // 1. Confirmed / Final punch-out in database
         const officialOut = daily.shiftEnd;
         if (officialOut) {
+          effectiveOut = officialOut;
           punchOut = fmtTime(officialOut);
+          isCompleted = true;
+          isActive = false;
+          outSource = daily.metadata?.outSource || (daily.metadata?.attendanceLocked ? "MANUAL_LOGOUT" : "CONFIRMED");
 
-          const diffMs = Math.max(0, new Date(officialOut).getTime() - new Date(firstLogin).getTime());
-          const calculatedSec = Math.round(diffMs / 1000);
-          hours = Math.round((calculatedSec / 3600) * 10) / 10;
-          totalSeconds += calculatedSec;
+          const diffMs = Math.max(0, new Date(officialOut).getTime() - inMs);
+          workedMinutes = Math.round(diffMs / 60000);
+          hours = Math.round((diffMs / 3600000) * 10) / 10;
+          totalSeconds += Math.round(diffMs / 1000);
         } else if (day.isToday) {
-          // Currently active today (logged in, not yet logged out)
-          const nowMs = new Date().getTime();
-          const inMs = new Date(firstLogin).getTime();
-          const diffMs = Math.max(0, nowMs - inMs);
-          const calculatedSec = Math.round(diffMs / 1000);
-          hours = Math.round((calculatedSec / 3600) * 10) / 10;
-          totalSeconds += calculatedSec;
+          // Check if employee is actively online right now
+          const lastSeenMs = daily.lastSeenAt ? new Date(daily.lastSeenAt).getTime() : 0;
+          const timeSinceHeartbeatMs = lastSeenMs > 0 ? (nowMs - lastSeenMs) : Infinity;
+
+          // Tab heartbeat is every 50s. Online if status is ONLINE and heartbeat within 3 minutes (180s)
+          const isActivelyOnline = daily.currentStatus === "ONLINE" && timeSinceHeartbeatMs <= 180000;
+
+          if (isActivelyOnline) {
+            // Heartbeat recent -> Active Now, OUT blank. Employee is currently working.
+            isActive = true;
+            isCompleted = false;
+            punchOut = null;
+            effectiveOut = null;
+            outSource = null;
+
+            const diffMs = Math.max(0, nowMs - inMs);
+            workedMinutes = Math.round(diffMs / 60000);
+            hours = Math.round((diffMs / 3600000) * 10) / 10;
+            totalSeconds += Math.round(diffMs / 1000);
+          } else {
+            // Heartbeat stale or user went offline / shut down
+            // Use latest valid lastSeenAt as provisional effective OUT time
+            // (Does NOT permanently write shiftEnd while day is active so employee can reconnect)
+            const fallbackOut = daily.lastSeenAt || firstLogin;
+            effectiveOut = fallbackOut;
+            punchOut = fmtTime(fallbackOut);
+            isActive = false;
+            isCompleted = true;
+            outSource = "AUTO_LAST_SEEN";
+
+            const diffMs = Math.max(0, new Date(fallbackOut).getTime() - inMs);
+            workedMinutes = Math.round(diffMs / 60000);
+            hours = Math.round((diffMs / 3600000) * 10) / 10;
+            totalSeconds += Math.round(diffMs / 1000);
+          }
+        } else {
+          // COMPLETED / PAST DAYS:
+          // If shiftEnd was null, derive final OUT from the last valid attendance/presence timestamp
+          // Never mark the employee ABSENT simply because they forgot to click Logout!
+          const fallbackOut = daily.lastSeenAt || firstLogin;
+          effectiveOut = fallbackOut;
+          punchOut = fmtTime(fallbackOut);
+          isCompleted = true;
+          isActive = false;
+          outSource = daily.metadata?.outSource || "AUTO_LAST_SEEN";
+
+          const diffMs = Math.max(0, new Date(fallbackOut).getTime() - inMs);
+          workedMinutes = Math.round(diffMs / 60000);
+          hours = Math.round((diffMs / 3600000) * 10) / 10;
+          totalSeconds += Math.round(diffMs / 1000);
         }
       }
 
@@ -290,10 +349,15 @@ export async function calculateMonthlyAttendance({
           weekday: day.weekdayShort,
           status: "PRESENT",
           badge: "P",
-          label: "Present",
+          label: isActive ? "Active Now" : "Present",
           hours,
+          workedMinutes,
           punchIn,
           punchOut,
+          effectiveOut: effectiveOut ? fmtTime(effectiveOut) : null,
+          isActive,
+          isCompleted,
+          outSource,
           warnings,
         };
       }
@@ -307,10 +371,15 @@ export async function calculateMonthlyAttendance({
           weekday: day.weekdayShort,
           status: "HALF_DAY",
           badge: "HD",
-          label: "Half Day",
+          label: isActive ? "Active Now" : "Half Day",
           hours,
+          workedMinutes,
           punchIn,
           punchOut,
+          effectiveOut: effectiveOut ? fmtTime(effectiveOut) : null,
+          isActive,
+          isCompleted,
+          outSource,
           warnings,
         };
       }
@@ -325,10 +394,15 @@ export async function calculateMonthlyAttendance({
             weekday: day.weekdayShort,
             status: "PRESENT",
             badge: "P",
-            label: "Present Today",
+            label: isActive ? "Active Now" : "Present Today",
             hours,
+            workedMinutes,
             punchIn,
             punchOut,
+            effectiveOut: effectiveOut ? fmtTime(effectiveOut) : null,
+            isActive,
+            isCompleted,
+            outSource,
             warnings,
           };
         }
@@ -341,8 +415,13 @@ export async function calculateMonthlyAttendance({
           badge: "A",
           label: "Pending Login",
           hours: 0,
+          workedMinutes: 0,
           punchIn: null,
           punchOut: null,
+          effectiveOut: null,
+          isActive: false,
+          isCompleted: false,
+          outSource: null,
           warnings,
         };
       }
@@ -357,8 +436,13 @@ export async function calculateMonthlyAttendance({
         badge: "A",
         label: "Absent",
         hours: 0,
+        workedMinutes: 0,
         punchIn: null,
         punchOut: null,
+        effectiveOut: null,
+        isActive: false,
+        isCompleted: true,
+        outSource: null,
         warnings,
       };
     });
@@ -379,6 +463,8 @@ export async function calculateMonthlyAttendance({
     officeTotalHours += totalHoursWorked;
     officeTotalWarnings += warningsCount;
 
+    const todayRec = dayRecords.find((d) => d.date === istNow.workDate);
+
     return {
       user: {
         id: user.id,
@@ -396,8 +482,12 @@ export async function calculateMonthlyAttendance({
         totalHours: totalHoursWorked,
         attendancePercentage,
         warningsCount,
-        todayPunchIn: dayRecords.find((d) => d.date === istNow.workDate)?.punchIn || null,
-        todayPunchOut: dayRecords.find((d) => d.date === istNow.workDate)?.punchOut || null,
+        todayPunchIn: todayRec?.punchIn || null,
+        todayPunchOut: todayRec?.punchOut || null,
+        todayIsActive: Boolean(todayRec?.isActive),
+        todayIsCompleted: Boolean(todayRec?.isCompleted),
+        todayStatus: todayRec?.status || null,
+        todayHours: todayRec?.hours || 0,
       },
       days: dayRecords.map((r, i) => ({
         ...r,
@@ -406,6 +496,7 @@ export async function calculateMonthlyAttendance({
         isSunday: Boolean(days[i]?.isSunday),
       })),
     };
+
   });
 
   const totalStaffCount = staffAttendance.length;

@@ -236,8 +236,8 @@ export default function EmployeePresenceDrawer({ userId, onClose, onRefreshParen
                     <div style={{ padding: "8px 12px", background: "#f8fafc", borderRadius: 8, border: "1px solid #f1f5f9" }}>
                       <div style={{ fontSize: 11, color: "#64748b", fontWeight: 600 }}>OUT TIME</div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a", marginTop: 2 }}>
-                        {daily?.shiftEnd
-                          ? new Date(daily.shiftEnd).toLocaleTimeString("en-IN", {
+                        {(daily?.shiftEnd || (daily?.currentStatus === "OFFLINE" ? daily?.lastSeenAt : null))
+                          ? new Date(daily?.shiftEnd || daily?.lastSeenAt).toLocaleTimeString("en-IN", {
                               hour: "2-digit",
                               minute: "2-digit",
                               timeZone: "Asia/Kolkata",
@@ -245,7 +245,9 @@ export default function EmployeePresenceDrawer({ userId, onClose, onRefreshParen
                           : "--:--"}
                       </div>
                       <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>
-                        {daily?.shiftEnd ? "First logout" : (daily?.firstLoginAt ? "Awaiting logout" : "No session")}
+                        {daily?.shiftEnd
+                          ? (daily?.metadata?.outSource === "AUTO_LAST_SEEN" ? "Auto-detected logout" : "Confirmed logout")
+                          : (daily?.currentStatus === "OFFLINE" && daily?.lastSeenAt ? "Provisional (System offline)" : (daily?.firstLoginAt ? "Awaiting logout" : "No session"))}
                       </div>
                     </div>
                   </div>
