@@ -2632,11 +2632,11 @@ tr.rn-row-whatsapp-sent:hover td {
 }
 
 .rn-lob-tabs button.active {
-  background: #ffffff !important;
-  border: 1.5px solid #0f172a !important;
-  color: #0f172a !important;
+  background: #eff6ff !important;
+  border: 1.5px solid #3b82f6 !important;
+  color: #1d4ed8 !important;
   font-weight: 600 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1) !important;
 }
 
 .rn-lob-tabs span {
@@ -2655,9 +2655,9 @@ tr.rn-row-whatsapp-sent:hover td {
 }
 
 .rn-lob-tabs button.active span {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
-  border: 1px solid #cbd5e1 !important;
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #93c5fd !important;
 }
 
 /* ==========================================================================

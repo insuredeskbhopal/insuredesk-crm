@@ -450,7 +450,7 @@ export async function GET(request) {
 
     const [dataResult, countsResult] = await Promise.all([
       prisma.$queryRawUnsafe(dataQuery, ...queryParams, limit, offset),
-      isRegisterTab ? Promise.resolve({}) : getConsolidatedCounts(),
+      getConsolidatedCounts(),
     ]);
 
     const summaryResult = [countsResult];
