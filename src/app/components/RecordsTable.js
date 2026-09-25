@@ -438,6 +438,7 @@ export default function RecordsTable({
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [expandedCell, setExpandedCell] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [isBulkDownloading, setIsBulkDownloading] = useState(false);
 
   const getStickyStyle = (colIndex) => {
     if (colIndex >= 3) return {};
@@ -843,6 +844,39 @@ export default function RecordsTable({
     onDelete(selectedRecords);
   };
 
+  const handleBulkDownload = async () => {
+    if (!selectedIds.size || isBulkDownloading) return;
+    setIsBulkDownloading(true);
+    try {
+      showToast("Preparing ZIP archive with policy PDFs and audit report...", "info");
+      const response = await fetch("/api/records/bulk-download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to download bulk PDFs.");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `policies_bulk_download_${Date.now()}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(blobUrl);
+      showToast("ZIP archive downloaded successfully!", "success");
+    } catch (err) {
+      showToast(err.message || "Failed to download PDFs.", "error");
+    } finally {
+      setIsBulkDownloading(false);
+    }
+  };
+
   return (
     <div className="records-table-shell">
       <div className="table-wrap records-table-wrap">
@@ -931,22 +965,97 @@ export default function RecordsTable({
                         )}
                       </td>
                     ))}
-                    <td className="col-pdf-cell" style={{ textAlign: "center" }}>
+                    <td className="col-pdf-cell" style={{ textAlign: "center", whiteSpace: "nowrap" }}>
                       {record.hasPdf ? (
-                        <a
-                          className="pdf-icon-link"
-                          href={`/api/records/${record.id}/pdf`}
-                          title="Download PDF"
-                          aria-label="Download PDF"
+                        <div style={{ display: "inline-flex", gap: "6px", alignItems: "center", justifyContent: "center" }}>
+                          <a
+                            className="pdf-icon-link"
+                            href={`/api/records/${record.id}/pdf?view=true`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="View PDF"
+                            aria-label="View PDF"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: "28px",
+                              height: "28px",
+                              borderRadius: "6px",
+                              backgroundColor: "#f1f5f9",
+                              color: "#0f172a",
+                              textDecoration: "none",
+                            }}
+                          >
+                            <Eye size={14} />
+                          </a>
+                          <a
+                            className="pdf-icon-link"
+                            href={`/api/records/${record.id}/pdf`}
+                            download
+                            title="Download PDF"
+                            aria-label="Download PDF"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: "28px",
+                              height: "28px",
+                              borderRadius: "6px",
+                              backgroundColor: "#0f172a",
+                              color: "#ffffff",
+                              textDecoration: "none",
+                            }}
+                          >
+                            <Download size={14} />
+                          </a>
+                        </div>
+                      ) : record.isExcelImport ? (
+                        <span
+                          className="badge-excel-import"
+                          title="No PDF - Excel Import"
+                          style={{
+                            display: "inline-block",
+                            padding: "3px 8px",
+                            borderRadius: "4px",
+                            backgroundColor: "#f1f5f9",
+                            color: "#64748b",
+                            fontSize: "11px",
+                            fontWeight: "600",
+                          }}
                         >
-                          <Download size={14} />
-                        </a>
+                          No PDF - Excel Import
+                        </span>
+                      ) : record.pdfStatus === "PDF Match Review Required" ? (
+                        <span
+                          className="badge-review-required"
+                          title="PDF Match Review Required"
+                          style={{
+                            display: "inline-block",
+                            padding: "3px 8px",
+                            borderRadius: "4px",
+                            backgroundColor: "#fef3c7",
+                            color: "#b45309",
+                            fontSize: "11px",
+                            fontWeight: "600",
+                          }}
+                        >
+                          PDF Match Review Required
+                        </span>
                       ) : (
                         <span
                           className="missing-pdf compact"
-                          style={{ color: "#d93025", fontWeight: "700", fontSize: "11px" }}
+                          style={{
+                            display: "inline-block",
+                            padding: "3px 8px",
+                            borderRadius: "4px",
+                            backgroundColor: "#fee2e2",
+                            color: "#dc2626",
+                            fontWeight: "700",
+                            fontSize: "11px",
+                          }}
                         >
-                          Missing
+                          PDF Missing
                         </span>
                       )}
                     </td>
@@ -1092,6 +1201,28 @@ export default function RecordsTable({
                 </span>
               </div>
               <div className="mark-action-buttons">
+                <button
+                  className="mark-action-download"
+                  type="button"
+                  disabled={isBulkDownloading}
+                  onClick={handleBulkDownload}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "8px 14px",
+                    borderRadius: "8px",
+                    border: "none",
+                    backgroundColor: "#0f172a",
+                    color: "#ffffff",
+                    cursor: isBulkDownloading ? "not-allowed" : "pointer",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                  }}
+                >
+                  <Download size={16} strokeWidth={2.2} />
+                  {isBulkDownloading ? "Preparing ZIP..." : "Download All PDFs (ZIP)"}
+                </button>
                 <button className="mark-action-clear" type="button" onClick={() => setSelectedIds(new Set())}>
                   Clear
                 </button>

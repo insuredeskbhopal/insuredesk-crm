@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { AlertTriangle, X, Printer, Pencil, LoaderCircle, CheckCircle, FileText } from "lucide-react";
+import { AlertTriangle, X, Printer, Pencil, LoaderCircle, CheckCircle, FileText, Eye, Download } from "lucide-react";
 import EndorsementManagementDrawer from "@/app/components/shared/EndorsementManagementDrawer";
 import {
   FIELD_GROUPS,
@@ -433,6 +433,10 @@ export default function PolicyDetailCard({
                   value={record.savedAt ? formatDateTime(record.savedAt) : ""}
                 />
                 <DetailField label="Renewal Status" value={record.renewalStatus} />
+                <DetailField
+                  label="PDF Status"
+                  value={record.hasPdf ? "Matched" : (record.isExcelImport ? "No PDF - Excel Import" : (record.pdfStatus || "PDF Missing"))}
+                />
               </DetailSection>
             </>
           ) : (
@@ -528,6 +532,79 @@ export default function PolicyDetailCard({
         >
           {mode === "view" ? (
             <>
+              {record.hasPdf ? (
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <a
+                    href={`/api/records/${record.id}/pdf?view=true`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      border: "1px solid #cbd5e1",
+                      backgroundColor: "#ffffff",
+                      color: "#0f172a",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      textDecoration: "none",
+                      transition: "background-color 0.2s, border-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f8fafc";
+                      e.currentTarget.style.borderColor = "#94a3b8";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#ffffff";
+                      e.currentTarget.style.borderColor = "#cbd5e1";
+                    }}
+                  >
+                    <Eye size={16} />
+                    View PDF
+                  </a>
+                  <a
+                    href={`/api/records/${record.id}/pdf`}
+                    download
+                    style={{
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      border: "none",
+                      backgroundColor: "#0f172a",
+                      color: "#ffffff",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      textDecoration: "none",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#1e293b";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#0f172a";
+                    }}
+                  >
+                    <Download size={16} />
+                    Download PDF
+                  </a>
+                </div>
+              ) : (
+                <div style={{ display: "inline-flex", alignItems: "center", padding: "6px 14px", borderRadius: "10px", background: "#f8fafc" }}>
+                  <span style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color: record.isExcelImport ? "#64748b" : (record.pdfStatus === "PDF Match Review Required" ? "#b45309" : "#dc2626")
+                  }}>
+                    {record.isExcelImport
+                      ? "No PDF - Excel Import"
+                      : (record.pdfStatus === "PDF Match Review Required" ? "PDF Match Review Required" : "PDF Missing")}
+                  </span>
+                </div>
+              )}
               <button
                 onClick={() => onPrint && onPrint(record)}
                 style={{

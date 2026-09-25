@@ -406,6 +406,8 @@ export async function GET(request) {
       confidenceScore: true,
       pdfFileName: true,
       pdfMimeType: true,
+      sourceFile: true,
+      uploadedFileId: true,
       organizationId: true,
       createdById: true,
       clientIdRequestId: true,

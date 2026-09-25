@@ -146,6 +146,36 @@ export async function deleteGoogleDriveFile(fileId) {
   }
 }
 
+export async function listGoogleDriveFiles(folderId) {
+  const targetFolderId = folderId || getDriveConfig().folderId;
+  const accessToken = await getAccessToken();
+  let files = [];
+  let pageToken = null;
+
+  do {
+    const url = new URL(`${DRIVE_API_BASE}/files`);
+    url.searchParams.set("q", `'${targetFolderId}' in parents and trashed = false`);
+    url.searchParams.set("pageSize", "1000");
+    url.searchParams.set("fields", "nextPageToken, files(id, name, mimeType, size, md5Checksum, createdTime)");
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => "");
+      throw new Error(`Google Drive file list failed: ${errorText || res.statusText}`);
+    }
+    const data = await res.json().catch(() => ({}));
+    if (data.files) {
+      files = files.concat(data.files);
+    }
+    pageToken = data.nextPageToken;
+  } while (pageToken);
+
+  return files;
+}
+
 async function getDriveFileMetadata(fileId, accessToken) {
   const fields = "id,name,mimeType,size,webViewLink,webContentLink,parents";
   const response = await fetch(

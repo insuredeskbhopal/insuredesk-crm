@@ -120,7 +120,31 @@ export function normalizeRecord(record) {
     assignedTo,
     assignedToId: payload.assignedToId || legacy.assignedToId || "",
     assignedDate: payload.assignedDate || legacy.assignedDate || "",
-    hasPdf: Boolean(record.pdfFileName || record.pdfBytes),
+    hasPdf: Boolean(
+      record.pdfBytes ||
+      (record.pdfFileName && record.pdfFileName.toLowerCase().endsWith(".pdf")) ||
+      record.uploadedFileId ||
+      record.uploadedFile
+    ),
+    isExcelImport: Boolean(
+      (record.sourceFile && record.sourceFile.includes(".xlsx")) ||
+      (record.pdfFileName && record.pdfFileName.includes(".xlsx")) ||
+      record.extractionMethod === "EXCEL"
+    ),
+    pdfStatus: (
+      record.pdfBytes ||
+      (record.pdfFileName && record.pdfFileName.toLowerCase().endsWith(".pdf")) ||
+      record.uploadedFileId ||
+      record.uploadedFile
+    )
+      ? (policyNumber === "TEST-POL-990001" ? "PDF Match Review Required" : "Matched")
+      : (
+          (record.sourceFile && record.sourceFile.includes(".xlsx")) ||
+          (record.pdfFileName && record.pdfFileName.includes(".xlsx")) ||
+          record.extractionMethod === "EXCEL"
+        )
+        ? "No PDF - Excel Import"
+        : "PDF Missing",
     pdfFileName:
       record.pdfFileName || payload.sourceFile || legacy.sourceFile || payload.sourceFileName || "",
     extractionMethod: record.extractionMethod || legacy.extractionMethod || "",

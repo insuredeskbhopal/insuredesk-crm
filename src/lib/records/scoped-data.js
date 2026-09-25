@@ -15,6 +15,7 @@ export const POLICY_RECORD_SELECT = {
   confidenceScore: true,
   pdfFileName: true,
   pdfMimeType: true,
+  uploadedFileId: true,
   organizationId: true,
   createdById: true,
   renewalStatus: true,

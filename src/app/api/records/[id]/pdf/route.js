@@ -48,16 +48,27 @@ export async function GET(_request, { params }) {
     );
   }
 
+  const url = new URL(_request.url);
+  const isView = url.searchParams.get("view") === "true" || url.searchParams.get("disposition") === "inline";
+  const dispositionType = isView ? "inline" : "attachment";
+
+  const polNum = record.reviewedData?.policyNumber || record.data?.policyNumber || "";
+  const insName = record.reviewedData?.insuredName || record.data?.insuredName || "";
+  const standardName = polNum && insName
+    ? `${sanitizeFileName(polNum)}_${sanitizeFileName(insName)}.pdf`
+    : sanitizeFileName(record.pdfFileName || record.uploadedFile?.sourceFile || "policy.pdf");
+
   const file = record.uploadedFile;
+  const memoryBytes = record.pdfBytes || file?.pdfBytes;
+
   if (!file || !file.storagePath) {
-    if (record.pdfBytes) {
-      const fileName = sanitizeFileName(record.pdfFileName || "policy.pdf");
-      return new Response(record.pdfBytes, {
+    if (memoryBytes && memoryBytes.length > 0) {
+      return new Response(memoryBytes, {
         headers: {
           ...securityHeaders,
           "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="${fileName}"`,
-          "Content-Length": String(record.pdfBytes.length),
+          "Content-Disposition": `${dispositionType}; filename="${standardName}"`,
+          "Content-Length": String(memoryBytes.length),
         },
       });
     }
@@ -72,14 +83,13 @@ export async function GET(_request, { params }) {
     try {
       physicalPath = getLocalPhysicalPath(file.storagePath);
     } catch {
-      if (record.pdfBytes) {
-        const fileName = sanitizeFileName(record.pdfFileName || file.sourceFile || "policy.pdf");
-        return new Response(record.pdfBytes, {
+      if (memoryBytes && memoryBytes.length > 0) {
+        return new Response(memoryBytes, {
           headers: {
             ...securityHeaders,
             "Content-Type": file.mimeType || "application/pdf",
-            "Content-Disposition": `attachment; filename="${fileName}"`,
-            "Content-Length": String(record.pdfBytes.length),
+            "Content-Disposition": `${dispositionType}; filename="${standardName}"`,
+            "Content-Length": String(memoryBytes.length),
           },
         });
       }
@@ -88,11 +98,10 @@ export async function GET(_request, { params }) {
 
     try {
       const fileBuffer = await fs.readFile(physicalPath);
-      const fileName = sanitizeFileName(record.pdfFileName || file.sourceFile || "policy.pdf");
 
       // Audit download event
       await logAudit({
-        action: "RECORD_PDF_DOWNLOAD",
+        action: isView ? "RECORD_PDF_VIEW" : "RECORD_PDF_DOWNLOAD",
         entityType: "PolicyRecord",
         entityId: record.id,
         severity: "INFO",
@@ -101,26 +110,25 @@ export async function GET(_request, { params }) {
         userAgent,
         userId: session.userId,
         organizationId: session.organizationId,
-        metadata: { filename: fileName },
+        metadata: { filename: standardName, view: isView },
       });
 
       return new Response(fileBuffer, {
         headers: {
           ...securityHeaders,
           "Content-Type": file.mimeType || "application/pdf",
-          "Content-Disposition": `attachment; filename="${fileName}"`,
+          "Content-Disposition": `${dispositionType}; filename="${standardName}"`,
           "Content-Length": String(fileBuffer.length),
         },
       });
     } catch {
-      if (record.pdfBytes) {
-        const fileName = sanitizeFileName(record.pdfFileName || file.sourceFile || "policy.pdf");
-        return new Response(record.pdfBytes, {
+      if (memoryBytes && memoryBytes.length > 0) {
+        return new Response(memoryBytes, {
           headers: {
             ...securityHeaders,
             "Content-Type": file.mimeType || "application/pdf",
-            "Content-Disposition": `attachment; filename="${fileName}"`,
-            "Content-Length": String(record.pdfBytes.length),
+            "Content-Disposition": `${dispositionType}; filename="${standardName}"`,
+            "Content-Length": String(memoryBytes.length),
           },
         });
       }
@@ -129,10 +137,9 @@ export async function GET(_request, { params }) {
   } else if (file.storageProvider === "google_drive") {
     try {
       const fileBuffer = await downloadGoogleDriveFile(file.storagePath);
-      const fileName = sanitizeFileName(record.pdfFileName || file.sourceFile || "policy.pdf");
 
       await logAudit({
-        action: "RECORD_PDF_DOWNLOAD",
+        action: isView ? "RECORD_PDF_VIEW" : "RECORD_PDF_DOWNLOAD",
         entityType: "PolicyRecord",
         entityId: record.id,
         severity: "INFO",
@@ -141,26 +148,25 @@ export async function GET(_request, { params }) {
         userAgent,
         userId: session.userId,
         organizationId: session.organizationId,
-        metadata: { filename: fileName, storageProvider: file.storageProvider },
+        metadata: { filename: standardName, storageProvider: file.storageProvider, view: isView },
       });
 
       return new Response(fileBuffer, {
         headers: {
           ...securityHeaders,
           "Content-Type": file.mimeType || "application/pdf",
-          "Content-Disposition": `attachment; filename="${fileName}"`,
+          "Content-Disposition": `${dispositionType}; filename="${standardName}"`,
           "Content-Length": String(fileBuffer.length),
         },
       });
     } catch {
-      if (record.pdfBytes) {
-        const fileName = sanitizeFileName(record.pdfFileName || file.sourceFile || "policy.pdf");
-        return new Response(record.pdfBytes, {
+      if (memoryBytes && memoryBytes.length > 0) {
+        return new Response(memoryBytes, {
           headers: {
             ...securityHeaders,
             "Content-Type": file.mimeType || "application/pdf",
-            "Content-Disposition": `attachment; filename="${fileName}"`,
-            "Content-Length": String(record.pdfBytes.length),
+            "Content-Disposition": `${dispositionType}; filename="${standardName}"`,
+            "Content-Length": String(memoryBytes.length),
           },
         });
       }
