@@ -95,6 +95,8 @@ export function isMotorPolicy(policy = {}) {
   ).toLowerCase();
 
   if (
+    cat.includes("non-motor") ||
+    cat.includes("non motor") ||
     cat.includes("health") ||
     cat.includes("mediclaim") ||
     cat.includes("life") ||

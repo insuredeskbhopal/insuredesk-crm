@@ -9,6 +9,7 @@ import { withRenewalCompanyDisplay } from "@/lib/renewals/companies";
 import {
   buildRenewalWhatsAppMessage,
   groupRenewalPoliciesByRecipient,
+  isMotorPolicy,
   normalizeRenewalContactName,
   RENEWAL_WHATSAPP_CUSTOM_FIELDS,
   selectRenewalWhatsAppPolicies,
@@ -382,12 +383,15 @@ ${orgName} Team`;
           .replace(/\{\{agentName\}\}/g, user.name || "Agent");
       };
 
+      const motor = isMotorPolicy(p);
+      const dueSoonKey = motor ? "due_soon" : "due_soon_non_motor";
+      const renewalKey = motor ? "renewal_reminder" : "renewal_reminder_non_motor";
       templates = {
-        due_soon: compileCustomTemplate("due_soon", dueSoonText),
+        due_soon: compileCustomTemplate(dueSoonKey, dueSoonText),
         today: compileCustomTemplate("today", expiringTodayText),
         expired: compileCustomTemplate("expired", alreadyExpiredText),
         follow_up: compileCustomTemplate("follow_up", followUpText),
-        renewal_msg: compileCustomTemplate("renewal_reminder", renewalMessage),
+        renewal_msg: compileCustomTemplate(renewalKey, renewalMessage),
       };
 
     }
