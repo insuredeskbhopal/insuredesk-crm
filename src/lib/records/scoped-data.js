@@ -360,51 +360,81 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
         { pdfFileName: { contains: "health", mode: "insensitive" } },
       ];
       andFilters.push({ OR: ors });
-    } else if (group === "warehouse" || group === "fire") {
+    } else if (group === "warehouse") {
+      const strictWarehouseTerms = ["warehouse", "warehousing", "mpwlc"];
       const ors = [
-        ...warehouseTerms.flatMap((term) => [
+        ...strictWarehouseTerms.flatMap((term) => [
           { selectedPolicyType: { contains: term, mode: "insensitive" } },
           { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
           { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
         ]),
-        { selectedServiceCategory: { contains: "fire", mode: "insensitive" } },
-        { detectedServiceCategory: { contains: "fire", mode: "insensitive" } },
         { selectedServiceCategory: { contains: "warehouse", mode: "insensitive" } },
         { detectedServiceCategory: { contains: "warehouse", mode: "insensitive" } },
-        { selectedServiceCategory: { contains: "burglary", mode: "insensitive" } },
-        { detectedServiceCategory: { contains: "burglary", mode: "insensitive" } },
+        { reviewedData: { path: ["policyCategory"], string_contains: "warehouse", mode: "insensitive" } },
+        { data: { path: ["policyCategory"], string_contains: "warehouse", mode: "insensitive" } },
       ];
-      andFilters.push({ OR: ors });
-    } else if (group === "other") {
       andFilters.push({
         AND: [
-          ...motorTerms.map((term) => ({
-            NOT: [
-              { selectedPolicyType: { contains: term, mode: "insensitive" } },
-              { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
-              { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+          { OR: ors },
+          { NOT: { sourceFile: { contains: "rachna fuels", mode: "insensitive" } } },
+          { NOT: { pdfFileName: { contains: "rachna fuels", mode: "insensitive" } } },
+        ],
+      });
+    } else if (group === "other" || group === "non-motor") {
+      const strictWarehouseTerms = ["warehouse", "warehousing", "mpwlc"];
+      andFilters.push({
+        OR: [
+          { reviewedData: { path: ["policyCategory"], equals: "Non-Motor" } },
+          { data: { path: ["policyCategory"], equals: "Non-Motor" } },
+          {
+            selectedServiceCategory: {
+              in: [
+                "Fire Insurance",
+                "Burglary Insurance",
+                "Fidelity Insurance",
+                "Commercial Insurance",
+                "Marine Insurance",
+                "Non-Motor Insurance",
+                "Contractors Plant & Machinery",
+                "Engineering Insurance",
+                "Workmen's Compensation",
+                "Public Liability Insurance",
+              ],
+            },
+          },
+          {
+            detectedServiceCategory: {
+              in: [
+                "Fire Insurance",
+                "Burglary Insurance",
+                "Fidelity Insurance",
+                "Commercial Insurance",
+                "Marine Insurance",
+                "Non-Motor Insurance",
+                "Contractors Plant & Machinery",
+                "Engineering Insurance",
+                "Workmen's Compensation",
+                "Public Liability Insurance",
+              ],
+            },
+          },
+          {
+            AND: [
+              ...strictWarehouseTerms.map((term) => ({
+                NOT: [
+                  { selectedPolicyType: { contains: term, mode: "insensitive" } },
+                  { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+                  { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
+                ],
+              })),
+              { NOT: { selectedServiceCategory: { contains: "warehouse", mode: "insensitive" } } },
+              { NOT: { detectedServiceCategory: { contains: "warehouse", mode: "insensitive" } } },
+              { NOT: { selectedServiceCategory: { contains: "motor", mode: "insensitive" } } },
+              { NOT: { detectedServiceCategory: { contains: "motor", mode: "insensitive" } } },
+              { NOT: { selectedServiceCategory: { contains: "health", mode: "insensitive" } } },
+              { NOT: { detectedServiceCategory: { contains: "health", mode: "insensitive" } } },
             ],
-          })),
-          ...warehouseTerms.map((term) => ({
-            NOT: [
-              { selectedPolicyType: { contains: term, mode: "insensitive" } },
-              { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
-              { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
-            ],
-          })),
-          ...healthTerms.map((term) => ({
-            NOT: [
-              { selectedPolicyType: { contains: term, mode: "insensitive" } },
-              { reviewedData: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
-              { data: { path: ["policyType"], string_contains: term, mode: "insensitive" } },
-            ],
-          })),
-          { selectedServiceCategory: { not: "Motor Insurance" } },
-          { detectedServiceCategory: { not: "Motor Insurance" } },
-          { selectedServiceCategory: { not: "Fire Insurance" } },
-          { detectedServiceCategory: { not: "Fire Insurance" } },
-          { selectedServiceCategory: { not: "Health Insurance" } },
-          { detectedServiceCategory: { not: "Health Insurance" } },
+          },
         ],
       });
     } else {

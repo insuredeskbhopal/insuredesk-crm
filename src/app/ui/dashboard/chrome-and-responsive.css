@@ -85,30 +85,52 @@
 .tb-out-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  background-color: #ffffff;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 6px 14px;
-  font-size: 13px;
+  height: 32px;
+  padding: 0 13px;
+  background-color: #fff5f5;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+  border-radius: 999px;
+  font-size: 12px;
   font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   line-height: 1;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 2px rgba(225, 29, 72, 0.05);
+  flex-shrink: 0;
+}
+
+.tb-out-btn svg {
+  color: #e11d48;
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+.tb-out-btn span {
+  color: #e11d48;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .tb-out-btn:hover {
-  background-color: #fef2f2;
-  color: #b91c1c;
-  border-color: #f87171;
-  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.1);
+  background-color: #ffe4e6;
+  color: #be123c;
+  border-color: #fda4af;
+  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.12);
   transform: translateY(-1px);
+}
+
+.tb-out-btn:hover svg,
+.tb-out-btn:hover span {
+  color: #be123c;
 }
 
 .tb-out-btn:active {
   transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(225, 29, 72, 0.04);
 }
 
 .tb-action-wrapper {

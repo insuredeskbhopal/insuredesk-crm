@@ -864,7 +864,7 @@ export default function Dashboard({
     if (recordViewCategory === "health") {
       return HEALTH_RECORD_COLUMNS;
     }
-    if (recordViewCategory === "other") {
+    if (recordViewCategory === "other" || recordViewCategory === "non-motor") {
       return NON_MOTOR_RECORD_COLUMNS;
     }
     return NON_MOTOR_RECORD_COLUMNS;

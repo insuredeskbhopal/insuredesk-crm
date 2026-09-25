@@ -391,7 +391,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
           title="Punch OUT: Record exact attendance OUT time and log out"
           onClick={() => setShowLogoutModal(true)}
         >
-          <LogOut size={15} />
+          <LogOut size={14} />
           <span>OUT</span>
         </button>
 

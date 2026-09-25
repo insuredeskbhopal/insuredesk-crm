@@ -56,7 +56,12 @@ async function loadPolicyRecordTabCounts({ isSuperAdmin, orgId, session, datePre
           )
         ) THEN 1 END)::integer as motor_count,
         COUNT(CASE WHEN (
-          COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', selected_service_category, detected_service_category, '') ~* 'warehouse|fire|burglary|msme|sfsp|stock|property|business guard|laghu|sookshma|fidelity|guarantee|house breaking|udyam suraksha|griha raksha'
+          (
+            COALESCE(selected_service_category, detected_service_category, '') ILIKE '%warehouse%'
+            OR COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', '') ~* 'warehouse|warehousing|mpwlc'
+            OR COALESCE(reviewed_data->>'policyCategory', data->>'policyCategory', '') ILIKE '%warehouse%'
+          )
+          AND COALESCE(source_file, pdf_file_name, '') !~* 'rachna fuels'
         ) THEN 1 END)::integer as warehouse_count,
         COUNT(CASE WHEN (
           COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', '') ~* 'floater|health|mediclaim|hospital|optima|individual|gmc|gpa'
@@ -119,7 +124,7 @@ async function loadPolicyRecordTabCounts({ isSuperAdmin, orgId, session, datePre
       categories.push({ key: "health", label: "Health Policy", count: healthCount });
     }
     if (otherCount > 0) {
-      categories.push({ key: "other", label: "Other Policy", count: otherCount });
+      categories.push({ key: "other", label: "Non-Motor Policy", count: otherCount });
     }
 
     return {
