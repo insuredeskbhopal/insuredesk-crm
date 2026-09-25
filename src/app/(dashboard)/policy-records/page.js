@@ -47,11 +47,11 @@ async function loadPolicyRecordTabCounts({ isSuperAdmin, orgId, session, datePre
             (COALESCE(reviewed_data->>'vehicleNumber', data->>'vehicleNumber', reviewed_data->>'registrationNumber', data->>'registrationNumber', '') ~* '^[A-Z]{2}[0-9]')
             OR (COALESCE(reviewed_data->>'makeModel', data->>'makeModel', reviewed_data->>'vehicleMake', data->>'vehicleMake', '') != '' AND COALESCE(reviewed_data->>'makeModel', data->>'makeModel', '') !~* 'hospital|waiting|benefit')
             OR (COALESCE(reviewed_data->>'policyCategory', data->>'policyCategory', reviewed_data->>'documentCategory', data->>'documentCategory', selected_service_category, detected_service_category, '') ILIKE '%motor%')
-            OR (COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', '') ~* 'motor|vehicle|private car|two[ -]?wheeler|bike|scooter|commercial vehicle|taxi|school bus|goods carrying|passenger carrying|auto secure|liability only|comprehensive|own damage|package policy|bundled|drive assure|gcv|pcv|trailer|standalone motor|act policy|third party')
+            OR (COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', '') ~* 'motor|vehicle|private car|two[ -]?wheeler|bike|scooter|commercial vehicle|taxi|school bus|goods carrying|passenger carrying|auto secure|drive assure|gcv|pcv|trailer|standalone motor|act policy|third party|pvt')
           )
           AND NOT (
-            COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', '') ~* 'floater|health|mediclaim|hospital|optima|individual|gmc|gpa|warehouse|fire|burglary|msme|sfsp'
-            OR COALESCE(selected_service_category, detected_service_category, '') ~* 'health|fire|warehouse|burglary'
+            COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', '') ~* 'floater|health|mediclaim|hospital|optima|individual|gmc|gpa|warehouse|fire|burglary|msme|sfsp|fidelity|liability|workmen|compensation|cpm|machinery|marine'
+            OR COALESCE(selected_service_category, detected_service_category, '') ~* 'health|fire|warehouse|burglary|non-motor|fidelity|liability|compensation|marine|engineering'
             OR COALESCE(source_file, pdf_file_name, '') ~* 'health policy|health'
           )
         ) THEN 1 END)::integer as motor_count,
