@@ -217,12 +217,12 @@ export function buildRenewalWhatsAppMessage({ recipientName, agentName, customer
           .trim();
         if (!headlineProduct) headlineProduct = fullProductName;
 
-        return `Your ${headlineProduct} Insurance Policy with ${insuranceCompany} is scheduled to expire soon.
+        return `The ${headlineProduct} Insurance Policy for *${policyCustomerName}* with *${insuranceCompany}* is scheduled to expire soon.
 
-Policy Number: ${policyNumber}
-Product: ${fullProductName}
-Expiry Date: ${expiryDate}
-Days Remaining: ${daysRemainingText}`;
+*Policy Number:* ${policyNumber}
+*Product:* ${fullProductName}
+*Expiry Date:* ${expiryDate}
+*Days Remaining:* ${daysRemainingText}`;
       }
     })
     .join("\n\n");

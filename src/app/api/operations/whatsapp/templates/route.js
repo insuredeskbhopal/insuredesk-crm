@@ -36,7 +36,7 @@ const DEFAULT_TEMPLATES = {
     mediaType: "IMAGE",
   },
   renewal_reminder_non_motor: {
-    body: "Dear {{customerName}},\n\nYour {{productName}} Insurance Policy with *{{companyName}}* is scheduled to expire soon.\n\n*Policy Number:* {{policyNumber}}\n*Product:* {{productName}}\n*Expiry Date:* {{expiryDate}}\n\nPlease connect with us in advance to ensure a smooth renewal, avoid any interruption in coverage, and explore the best renewal options available.\n\nPhone: +91 88188 89660\nWebsite: www.bimaheadquarter.com\n\n*Team BimaHeadquarter by InsureDesk IMF Pvt. Ltd.*\n_Your Trusted Insurance Partner_",
+    body: "Dear {{customerName}},\n\nThe {{productName}} Insurance Policy for *{{customerName}}* with *{{companyName}}* is scheduled to expire soon.\n\n*Policy Number:* {{policyNumber}}\n*Product:* {{productName}}\n*Expiry Date:* {{expiryDate}}\n\nPlease connect with us in advance to ensure a smooth renewal, avoid any interruption in coverage, and explore the best renewal options available.\n\nPhone: +91 88188 89660\nWebsite: www.bimaheadquarter.com\n\n*Team BimaHeadquarter by InsureDesk IMF Pvt. Ltd.*\n_Your Trusted Insurance Partner_",
     mediaUrl: "",
     mediaType: "PDF",
   },
