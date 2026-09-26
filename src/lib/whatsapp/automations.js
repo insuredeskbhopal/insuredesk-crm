@@ -79,21 +79,33 @@ export async function triggerDailyBirthdays({ organizationId = null } = {}) {
     },
   });
 
+  let effectiveOrgId = organizationId;
+  if (!effectiveOrgId) {
+    let org = await prisma.organization.findFirst();
+    if (!org) {
+      org = await prisma.organization.create({
+        data: { name: 'Bima Headquarter' },
+      });
+    }
+    effectiveOrgId = org.id;
+  }
+
   let queuedCount = 0;
 
   for (const customer of customers) {
     const dob = new Date(customer.dob);
     if (dob.getMonth() === currentMonth && dob.getDate() === currentDate) {
       // It's this customer's birthday!
-      const orgId = customer.organizationId;
-      if (!orgId) continue; // Must belong to an organization to resolve settings/branding
       if (!customer.phone) continue; // Birthday wishes are client-facing, so a client phone is required
+      const orgId = customer.organizationId || effectiveOrgId;
 
       // Get organization name
-      const org = await prisma.organization.findUnique({
-        where: { id: orgId },
-        select: { name: true },
-      });
+      const org = orgId
+        ? await prisma.organization.findUnique({
+            where: { id: orgId },
+            select: { name: true },
+          })
+        : null;
       const companyName = org?.name || 'Bima Headquarter';
 
       // Load template
@@ -101,7 +113,7 @@ export async function triggerDailyBirthdays({ organizationId = null } = {}) {
         where: {
           name: 'birthday_wish',
           OR: [
-            { organizationId: orgId },
+            ...(orgId ? [{ organizationId: orgId }] : []),
             { organizationId: null },
           ],
         },

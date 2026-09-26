@@ -1,23 +1,8 @@
 import { NextResponse } from "next/server";
-import { verifyJWT } from "@/lib/auth";
-import { recordLogoutAttendance } from "@/lib/attendance/attendance-service";
 
-export async function POST(request) {
+export async function POST() {
   try {
-    // 1. Identify logged-in user and record attendance OUT time if eligible
-    const token = request?.cookies?.get("token")?.value;
-    if (token) {
-      try {
-        const session = await verifyJWT(token);
-        if (session?.id) {
-          await recordLogoutAttendance({ userId: session.id });
-        }
-      } catch (authErr) {
-        console.warn("Could not verify session during logout attendance record:", authErr.message);
-      }
-    }
-
-    // 2. Clear token cookie to log user out
+    // Clear token cookie to log user out (no attendance recording — use /api/auth/punch-out for that)
     const response = NextResponse.json({ success: true, message: "Logged out successfully" });
 
     response.cookies.set({

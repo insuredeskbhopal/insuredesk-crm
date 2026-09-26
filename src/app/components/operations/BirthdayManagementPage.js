@@ -78,6 +78,8 @@ export default function BirthdayManagementPage() {
   const [importResults, setImportResults] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
 
+  const isViewer = Boolean(error && error.toLowerCase().includes("viewer"));
+
   useEffect(() => {
     fetchBirthdays();
   }, []);
@@ -87,8 +89,8 @@ export default function BirthdayManagementPage() {
     setError("");
     try {
       const res = await fetch("/api/operations/birthday-management");
-      if (!res.ok) throw new Error("Failed to fetch client profiles");
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to fetch client profiles");
       setProfiles(data.profiles || []);
     } catch (err) {
       setError(err.message || "Something went wrong while fetching data");
@@ -792,87 +794,89 @@ export default function BirthdayManagementPage() {
         </div>
 
         {/* Action Controls Group */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          {/* Unified Excel Tools Segmented Bar */}
-          <div className="inline-flex items-center rounded-xl border border-slate-300 bg-white p-0.5 shadow-xs">
+        {!isViewer && (
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            {/* Unified Excel Tools Segmented Bar */}
+            <div className="inline-flex items-center rounded-xl border border-slate-300 bg-white p-0.5 shadow-xs">
+              <button
+                type="button"
+                onClick={handleDownloadTemplate}
+                title="Download Excel import template"
+                className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Template</span>
+              </button>
+              <div className="w-px h-4 bg-slate-300" />
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(true)}
+                title="Import clients via Excel"
+                className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+              >
+                <Upload className="w-3.5 h-3.5 text-slate-500" />
+                <span>Import</span>
+              </button>
+              <div className="w-px h-4 bg-slate-300" />
+              <button
+                type="button"
+                onClick={handleExportData}
+                title="Export filtered records to Excel"
+                className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+              >
+                <Download className="w-3.5 h-3.5 text-slate-500" />
+                <span>Export</span>
+              </button>
+            </div>
+
+            {/* Send Today's Wishes Action */}
             <button
               type="button"
-              onClick={handleDownloadTemplate}
-              title="Download Excel import template"
-              className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+              onClick={handleSendAllBirthdays}
+              disabled={isSendingAll || metrics.todayCount === 0}
+              className={`inline-flex items-center gap-2 px-3.5 h-9 rounded-xl text-xs font-bold transition-all shadow-xs border ${
+                metrics.todayCount > 0
+                  ? "bg-white hover:bg-emerald-50 text-emerald-700 border-2 border-emerald-500"
+                  : "bg-slate-50 text-slate-500 border border-slate-300 cursor-not-allowed"
+              }`}
+              title={
+                metrics.todayCount > 0
+                  ? "Send automated birthday wishes to all clients celebrating today"
+                  : "No birthdays scheduled for today"
+              }
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Template</span>
+              {isSendingAll ? (
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 border-t-slate-600 animate-spin" />
+              ) : (
+                <Send className="w-3.5 h-3.5 text-slate-400" />
+              )}
+              <span>Send Today's Wishes</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold ${
+                  metrics.todayCount > 0
+                    ? "bg-emerald-600 text-white"
+                    : "bg-white text-slate-500 border border-slate-300 shadow-2xs"
+                }`}
+              >
+                {metrics.todayCount}
+              </span>
             </button>
-            <div className="w-px h-4 bg-slate-300" />
+
+            {/* Primary Add Birthday Button - All White Theme with 2px contrast border */}
             <button
               type="button"
-              onClick={() => setIsImportModalOpen(true)}
-              title="Import clients via Excel"
-              className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+              onClick={() => {
+                setAddFormData({ name: "", phone: "", email: "", dob: "" });
+                setAddFormErrors({});
+                setIsAddModalOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-4 h-9 rounded-xl bg-white hover:bg-slate-50 text-slate-900 hover:text-black border-2 border-slate-800 hover:border-black font-extrabold text-xs shadow-xs transition-all"
             >
-              <Upload className="w-3.5 h-3.5 text-slate-500" />
-              <span>Import</span>
-            </button>
-            <div className="w-px h-4 bg-slate-300" />
-            <button
-              type="button"
-              onClick={handleExportData}
-              title="Export filtered records to Excel"
-              className="inline-flex items-center gap-1.5 px-3 h-8 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
-            >
-              <Download className="w-3.5 h-3.5 text-slate-500" />
-              <span>Export</span>
+              <Plus className="w-3.5 h-3.5 stroke-[2.5] text-slate-800" />
+              <span>Add Birthday</span>
             </button>
           </div>
-
-          {/* Send Today's Wishes Action */}
-          <button
-            type="button"
-            onClick={handleSendAllBirthdays}
-            disabled={isSendingAll || metrics.todayCount === 0}
-            className={`inline-flex items-center gap-2 px-3.5 h-9 rounded-xl text-xs font-bold transition-all shadow-xs border ${
-              metrics.todayCount > 0
-                ? "bg-white hover:bg-emerald-50 text-emerald-700 border-2 border-emerald-500"
-                : "bg-slate-50 text-slate-500 border border-slate-300 cursor-not-allowed"
-            }`}
-            title={
-              metrics.todayCount > 0
-                ? "Send automated birthday wishes to all clients celebrating today"
-                : "No birthdays scheduled for today"
-            }
-          >
-            {isSendingAll ? (
-              <span className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 border-t-slate-600 animate-spin" />
-            ) : (
-              <Send className="w-3.5 h-3.5 text-slate-400" />
-            )}
-            <span>Send Today's Wishes</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold ${
-                metrics.todayCount > 0
-                  ? "bg-emerald-600 text-white"
-                  : "bg-white text-slate-500 border border-slate-300 shadow-2xs"
-              }`}
-            >
-              {metrics.todayCount}
-            </span>
-          </button>
-
-          {/* Primary Add Birthday Button - All White Theme with 2px contrast border */}
-          <button
-            type="button"
-            onClick={() => {
-              setAddFormData({ name: "", phone: "", email: "", dob: "" });
-              setAddFormErrors({});
-              setIsAddModalOpen(true);
-            }}
-            className="inline-flex items-center gap-1.5 px-4 h-9 rounded-xl bg-white hover:bg-slate-50 text-slate-900 hover:text-black border-2 border-slate-800 hover:border-black font-extrabold text-xs shadow-xs transition-all"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[2.5] text-slate-800" />
-            <span>Add Birthday</span>
-          </button>
-        </div>
+        )}
       </div>
 
       {/* Global Alerts */}
@@ -882,14 +886,24 @@ export default function BirthdayManagementPage() {
           <span className="text-xs font-semibold">{successMessage}</span>
         </div>
       )}
-      {error && (
+      {error && !isViewer && (
         <div className="mb-4 p-3 bg-rose-50 border border-rose-300 rounded-lg flex items-center gap-2 text-rose-700 shadow-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span className="text-xs font-semibold">{error}</span>
         </div>
       )}
 
-      {/* Stats Summary Panel */}
+      {isViewer ? (
+        <div className="bg-white border border-rose-200 rounded-2xl p-8 text-center shadow-xs mb-6">
+          <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 mx-auto flex items-center justify-center mb-3 border border-rose-100">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <h2 className="text-base font-bold text-slate-900 mb-1">Access Restricted</h2>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">{error}</p>
+        </div>
+      ) : (
+        <>
+          {/* Stats Summary Panel */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-xl border border-slate-250 shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-between">
           <div>
@@ -1301,6 +1315,8 @@ export default function BirthdayManagementPage() {
           )}
         </div>
       </div>
+        </>
+      )}
 
       {/* ADD CLIENT BIRTHDAY MODAL */}
       {isAddModalOpen && typeof window !== "undefined" && createPortal(

@@ -134,10 +134,13 @@ export async function POST(request) {
 
     const body = await request.json();
 
-    // Allow all roles (including VIEWER) to send birthday wishes;
-    // block VIEWERs for every other WhatsApp send.
-    if (session.role === "VIEWER" && !body.attachBirthdayCard) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    // Allow all active staff roles (SUPER_ADMIN, ADMIN, MANAGER, AGENT) to send messages;
+    // block VIEWERs (read-only) from sending WhatsApp messages.
+    if (session.role === "VIEWER") {
+      return NextResponse.json(
+        { error: "Unauthorized: Viewer role has read-only access and cannot send WhatsApp messages" },
+        { status: 403 }
+      );
     }
 
     const recipient = body.recipient || body.phone;

@@ -9,6 +9,28 @@ const prisma = defaultPrisma?.dailyPresence ? defaultPrisma : new PrismaClient()
 const ATTENDANCE_START_MINUTES = 8 * 60 + 30;
 
 /**
+ * Validate whether the given IP address is from a known office network.
+ * Returns { allowed: true } or { allowed: false, reason, message }.
+ * If ALLOWED_OFFICE_IPS env var is not set, all IPs are allowed.
+ */
+function validateOfficeIP(ipAddress) {
+  const raw = process.env.ALLOWED_OFFICE_IPS || "";
+  if (!raw.trim()) return { allowed: true }; // no restriction configured
+  const allowedIPs = raw.split(",").map((ip) => ip.trim()).filter(Boolean);
+  if (allowedIPs.length === 0) return { allowed: true };
+  const clientIP = (ipAddress || "").trim();
+  if (!clientIP) {
+    return { allowed: false, reason: "NO_IP", message: "Could not determine your IP address" };
+  }
+  if (allowedIPs.includes(clientIP)) return { allowed: true };
+  return {
+    allowed: false,
+    reason: "IP_NOT_ALLOWED",
+    message: `Attendance can only be recorded from the office network. Your IP (${clientIP}) is not recognised.`,
+  };
+}
+
+/**
  * Record an agent's attendance IN time upon successful login.
  * 
  * Rules:
@@ -16,8 +38,14 @@ const ATTENDANCE_START_MINUTES = 8 * 60 + 30;
  * 2. Recorded only once per day. If IN time is already recorded, subsequent logins are ignored.
  * 3. Does not affect or rely on live tracking/heartbeat.
  */
-export async function recordLoginAttendance({ userId, organizationId = null }) {
+export async function recordLoginAttendance({ userId, organizationId = null, ipAddress = null }) {
   if (!userId) return { recorded: false, error: "Missing userId" };
+
+  // Hard-block attendance from non-office IPs
+  const ipCheck = validateOfficeIP(ipAddress);
+  if (!ipCheck.allowed) {
+    return { recorded: false, reason: ipCheck.reason, message: ipCheck.message };
+  }
 
   try {
     const now = new Date();
@@ -66,6 +94,7 @@ export async function recordLoginAttendance({ userId, organizationId = null }) {
           metadata: {
             ...existingMeta,
             inTime: now.toISOString(),
+            inIP: ipAddress || null,
             attendanceLocked: false,
           },
         },
@@ -88,6 +117,7 @@ export async function recordLoginAttendance({ userId, organizationId = null }) {
         currentStatus: "ONLINE",
         metadata: {
           inTime: now.toISOString(),
+          inIP: ipAddress || null,
           attendanceLocked: false,
         },
       },
@@ -114,8 +144,14 @@ export async function recordLoginAttendance({ userId, organizationId = null }) {
  * 3. Once OUT is recorded, attendance is final and locked for the day.
  * 4. Subsequent logins or logouts on the same day are ignored.
  */
-export async function recordLogoutAttendance({ userId }) {
+export async function recordLogoutAttendance({ userId, ipAddress = null }) {
   if (!userId) return { recorded: false, error: "Missing userId" };
+
+  // Hard-block attendance punch-out from non-office IPs
+  const ipCheck = validateOfficeIP(ipAddress);
+  if (!ipCheck.allowed) {
+    return { recorded: false, reason: ipCheck.reason, message: ipCheck.message };
+  }
 
   try {
     const now = new Date();
@@ -165,6 +201,7 @@ export async function recordLogoutAttendance({ userId }) {
           ...existingMeta,
           inTime: inDate.toISOString(),
           outTime: now.toISOString(),
+          outIP: ipAddress || null,
           attendanceLocked: true,
           durationSeconds,
         },

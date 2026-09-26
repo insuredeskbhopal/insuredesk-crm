@@ -42,6 +42,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
   const [loadingDiagnostics, setLoadingDiagnostics] = useState(false);
   const [toast, setToast] = useState("");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [logoutMode, setLogoutMode] = useState("punch-out"); // "punch-out" | "logout"
   const [user, setUser] = useState({ id: "", name: "Bima Headquarter Admin", email: "admin@bimaheadquarter.com" });
 
   const fetchNotificationCount = async () => {
@@ -389,7 +390,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
           className="tb-out-btn"
           aria-label="Attendance OUT"
           title="Punch OUT: Record exact attendance OUT time and log out"
-          onClick={() => setShowLogoutModal(true)}
+          onClick={() => { setLogoutMode("punch-out"); setShowLogoutModal(true); }}
         >
           <LogOut size={14} />
           <span>OUT</span>
@@ -417,7 +418,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowLogoutModal(true)}
+                  onClick={() => { setLogoutMode("logout"); setShowLogoutModal(true); }}
                   className="tb-profile-btn tb-logout-btn"
                 >
                   <LogOut size={14} className="icon-error" />
@@ -534,11 +535,15 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
           <div className="tb-modal-backdrop" onClick={() => setShowLogoutModal(false)}>
           <div className="tb-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="tb-modal-header">
-              <h3 className="tb-status-title tb-modal-title">Confirm Logout & Punch OUT</h3>
+              <h3 className="tb-status-title tb-modal-title">
+                {logoutMode === "punch-out" ? "Confirm Punch OUT & Logout" : "Confirm Logout"}
+              </h3>
             </div>
             <div className="tb-modal-body">
               <p className="tb-status-desc">
-                Are you sure you want to log out? If your attendance was registered today, this will record your official attendance OUT time and finalize today&apos;s record.
+                {logoutMode === "punch-out"
+                  ? "This will record your official attendance OUT time, finalize today\u2019s attendance, and log you out of the CRM."
+                  : "This will log you out of the CRM without recording attendance OUT time. Your attendance record will remain unchanged."}
               </p>
             </div>
             <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px" }}>
@@ -555,11 +560,17 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                 onClick={async () => {
                   setShowLogoutModal(false);
                   setShowProfile(false);
-                  setToast("Logging out...");
+                  const endpoint = logoutMode === "punch-out" ? "/api/auth/punch-out" : "/api/auth/logout";
+                  setToast(logoutMode === "punch-out" ? "Punching out..." : "Logging out...");
                   try {
-                    await fetch("/api/auth/logout", { method: "POST" });
+                    const res = await fetch(endpoint, { method: "POST" });
+                    const data = await res.json();
+                    if (!res.ok && data.reason === "IP_NOT_ALLOWED") {
+                      setToast(data.error || "Attendance can only be recorded from the office network.");
+                      return;
+                    }
                     clearClientApiCache();
-                    setToast("Logged out successfully. Redirecting...");
+                    setToast(logoutMode === "punch-out" ? "Punched out successfully. Redirecting..." : "Logged out successfully. Redirecting...");
                     setTimeout(() => {
                       window.location.href = "/";
                     }, 1000);
@@ -568,9 +579,9 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
                   }
                 }}
                 className="tb-modal-done-btn"
-                style={{ background: "#dc2626", color: "white" }}
+                style={{ background: logoutMode === "punch-out" ? "#dc2626" : "#64748b", color: "white" }}
               >
-                Log Out
+                {logoutMode === "punch-out" ? "Punch OUT & Log Out" : "Log Out"}
               </button>
             </div>
           </div>

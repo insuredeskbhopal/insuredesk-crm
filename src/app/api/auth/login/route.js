@@ -82,6 +82,7 @@ export async function POST(request) {
       await recordLoginAttendance({
         userId: user.id,
         organizationId: user.organizationId,
+        ipAddress,
       });
     } catch (attendanceErr) {
       console.error("Failed to record attendance on login:", attendanceErr);

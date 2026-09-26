@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
-import { getCustomerProfileScopedFilter } from "@/lib/auth/rbac";
+import { getTenantFilter } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import {
   normalizeIndianPhone,
@@ -27,9 +27,16 @@ export async function GET(request) {
     const session = await requireSession(request);
     if (session.errorResponse) return session.errorResponse;
 
-    const ownProfileFilter = getCustomerProfileScopedFilter(session);
+    if (session.role === "VIEWER") {
+      return NextResponse.json(
+        { error: "Access denied. Viewers cannot view or access client birthday data." },
+        { status: 403 }
+      );
+    }
+
+    const tenantFilter = getTenantFilter(session, "read");
     const where = {
-      ...ownProfileFilter,
+      ...tenantFilter,
       deletedAt: null,
       dob: { not: null },
     };
@@ -268,7 +275,7 @@ export async function PATCH(request) {
     const existing = await prisma.customerProfile.findFirst({
       where: {
         id: profileId,
-        ...getCustomerProfileScopedFilter(session),
+        ...getTenantFilter(session, "write"),
         deletedAt: null,
       },
       select: { id: true },

@@ -22,10 +22,14 @@ export async function POST(request) {
 
 
 
-    const organizationId = session.organizationId;
-    if (!organizationId) {
-      return NextResponse.json({ error: "Organization scope is required" }, { status: 400 });
+    if (session.role === "VIEWER") {
+      return NextResponse.json(
+        { error: "Unauthorized: Viewer role has read-only access and cannot send birthday wishes" },
+        { status: 403 }
+      );
     }
+
+    const organizationId = session.organizationId || null;
 
     // 1. Scan and queue all of today's birthdays for this organization
     const scanResult = await triggerDailyBirthdays({ organizationId });

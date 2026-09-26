@@ -203,11 +203,11 @@ export default function SideNav({
           <div className="tb-modal-backdrop" onClick={() => setShowLogoutModal(false)}>
           <div className="tb-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="tb-modal-header">
-              <h3 className="tb-status-title tb-modal-title">Confirm Logout & Punch OUT</h3>
+              <h3 className="tb-status-title tb-modal-title">Confirm Logout</h3>
             </div>
             <div className="tb-modal-body">
               <p className="tb-status-desc">
-                Are you sure you want to log out? If your attendance was registered today, this will record your official attendance OUT time and finalize today&apos;s record.
+                This will log you out of the CRM. Your attendance record will not be affected &mdash; use the OUT button in the header to punch out.
               </p>
             </div>
             <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", paddingTop: "16px" }}>
@@ -234,7 +234,7 @@ export default function SideNav({
                   }
                 }}
                 className="tb-modal-done-btn"
-                style={{ background: "#dc2626", color: "white" }}
+                style={{ background: "#64748b", color: "white" }}
               >
                 Log Out
               </button>

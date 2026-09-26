@@ -28,6 +28,11 @@ export async function GET(request) {
     const profileWhere = { ...getCustomerProfileScopedFilter(session), deletedAt: null };
     const policyWhere = withoutManualRenewalSources({ ...getTenantFilter(session, "read"), deletedAt: null });
 
+    const isViewer = session.role === "VIEWER";
+    const birthdayWhere = isViewer
+      ? null
+      : { ...getTenantFilter(session, "read"), dob: { not: null }, deletedAt: null };
+
     const [profileTotal, profileCounts, latestProfile, birthdayProfiles, latestBirthday, policyTotal, latestPolicyRaw] = await Promise.all([
       prisma.leadGeneration.count({ where: profileWhere }),
       prisma.leadGeneration.groupBy({
@@ -40,12 +45,14 @@ export async function GET(request) {
         orderBy: { updatedAt: "desc" },
         select: { name: true, phone: true, createdAt: true, updatedAt: true },
       }),
-      prisma.customerProfile.count({ where: { ...profileWhere, dob: { not: null } } }),
-      prisma.customerProfile.findFirst({
-        where: { ...profileWhere, dob: { not: null } },
-        orderBy: { updatedAt: "desc" },
-        select: { name: true, phone: true, createdAt: true, updatedAt: true },
-      }),
+      birthdayWhere ? prisma.customerProfile.count({ where: birthdayWhere }) : Promise.resolve(0),
+      birthdayWhere
+        ? prisma.customerProfile.findFirst({
+            where: birthdayWhere,
+            orderBy: { updatedAt: "desc" },
+            select: { name: true, phone: true, createdAt: true, updatedAt: true },
+          })
+        : Promise.resolve(null),
       prisma.policyRecord.count({ where: policyWhere }),
       prisma.policyRecord.findFirst({
         where: policyWhere,
