@@ -132,11 +132,14 @@ export async function POST(request) {
     const session = await requireSession(request);
     if (session.errorResponse) return session.errorResponse;
 
-    if (session.role === "VIEWER") {
+    const body = await request.json();
+
+    // Allow all roles (including VIEWER) to send birthday wishes;
+    // block VIEWERs for every other WhatsApp send.
+    if (session.role === "VIEWER" && !body.attachBirthdayCard) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const body = await request.json();
     const recipient = body.recipient || body.phone;
     const { message } = body;
     let attachments = Array.isArray(body.attachments) ? [...body.attachments] : [];

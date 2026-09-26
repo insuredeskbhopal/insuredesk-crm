@@ -80,7 +80,7 @@ export default function RenewalPoliciesPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeDrawerPolicy, setActiveDrawerPolicy] = useState(null);
   const [drawerTab, setDrawerTab] = useState("remark");
-  const [viewMode, setViewMode] = useState("customer"); // "customer" | "policy"
+  const [viewMode, setViewMode] = useState("policy"); // "customer" | "policy"
   const [expandedCustomerKeys, setExpandedCustomerKeys] = useState(new Set());
 
   useEffect(() => {
@@ -440,19 +440,19 @@ export default function RenewalPoliciesPage() {
           <div className="rn-view-switcher" role="group" aria-label="View mode">
             <button
               type="button"
-              className={`rn-view-switcher__btn ${viewMode === "customer" ? "active" : ""}`}
-              onClick={() => changeViewMode("customer")}
-            >
-              <Users size={14} />
-              <span>Customer View</span>
-            </button>
-            <button
-              type="button"
               className={`rn-view-switcher__btn ${viewMode === "policy" ? "active" : ""}`}
               onClick={() => changeViewMode("policy")}
             >
               <FileText size={14} />
               <span>Individual Policies</span>
+            </button>
+            <button
+              type="button"
+              className={`rn-view-switcher__btn ${viewMode === "customer" ? "active" : ""}`}
+              onClick={() => changeViewMode("customer")}
+            >
+              <Users size={14} />
+              <span>Customer View</span>
             </button>
           </div>
 

@@ -20,9 +20,7 @@ export async function POST(request) {
     const session = await requireSession(request);
     if (session.errorResponse) return session.errorResponse;
 
-    if (session.role === "VIEWER") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
+
 
     const organizationId = session.organizationId;
     if (!organizationId) {
