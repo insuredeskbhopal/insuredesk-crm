@@ -3379,12 +3379,12 @@ tr.rn-row-whatsapp-sent:hover td {
   flex: 1.25;
   padding: 10px 14px;
   border-radius: 8px;
-  background: #0f172a !important;
-  color: #ffffff !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
   font-size: 13px;
   font-weight: 600;
   border: 1.5px solid #0f172a !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3394,9 +3394,19 @@ tr.rn-row-whatsapp-sent:hover td {
 }
 
 .rad-btn-save-primary:hover:not(:disabled) {
-  background: #1e293b !important;
-  border-color: #1e293b !important;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #334155 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.rad-btn-save-primary svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
+.rad-btn-save-primary span {
+  color: #0f172a !important;
 }
 
 .rad-shortcut-tip {

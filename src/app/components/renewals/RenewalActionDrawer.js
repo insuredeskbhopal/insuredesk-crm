@@ -1502,17 +1502,19 @@ export default function RenewalActionDrawer({
                       type="submit"
                       disabled={isSubmitting}
                       className="rad-btn-save-primary"
+                      style={{ background: "#ffffff", color: "#0f172a", border: "1.5px solid #0f172a" }}
                     >
-                      <CheckCircle2 size={14} />
-                      <span>Save Remark</span>
+                      <CheckCircle2 size={14} style={{ color: "#0f172a" }} />
+                      <span style={{ color: "#0f172a" }}>Save Remark</span>
                     </button>
                     <button
                       type="button"
                       disabled={isSubmitting}
                       onClick={() => handleSave(true)}
                       className="rad-btn-save-secondary"
+                      style={{ background: "#ffffff", color: "#334155", border: "1px solid #cbd5e1" }}
                     >
-                      <span>Save & Next Customer</span> <ArrowRight size={14} />
+                      <span style={{ color: "#334155" }}>Save & Next Customer</span> <ArrowRight size={14} style={{ color: "#334155" }} />
                     </button>
                   </div>
                   <div className="rad-shortcut-tip">
@@ -1817,12 +1819,12 @@ export default function RenewalActionDrawer({
                   marginTop: "4px",
                   padding: "10px 16px",
                   borderRadius: "8px",
-                  background: "#f1f5f9",
+                  background: "#ffffff",
                   color: "#0f172a",
                   fontSize: "13px",
                   fontWeight: 600,
-                  border: "1px solid #94a3b8",
-                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                  border: "1px solid #cbd5e1",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                   cursor: isSubmitting ? "not-allowed" : "pointer",
                 }}
               >
@@ -1942,12 +1944,12 @@ export default function RenewalActionDrawer({
                   marginTop: "4px",
                   padding: "10px 16px",
                   borderRadius: "8px",
-                  background: "#f1f5f9",
+                  background: "#ffffff",
                   color: "#0f172a",
                   fontSize: "13px",
                   fontWeight: 600,
-                  border: "1px solid #94a3b8",
-                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                  border: "1px solid #cbd5e1",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                   cursor: isSubmitting ? "not-allowed" : "pointer",
                 }}
               >
@@ -2300,17 +2302,17 @@ export default function RenewalActionDrawer({
                     flex: 1.3,
                     padding: "11px 16px",
                     borderRadius: "8px",
-                    background: "#f1f5f9",
+                    background: "#ffffff",
                     color: "#0f172a",
                     fontSize: "13px",
                     fontWeight: 600,
-                    border: "1px solid #94a3b8",
+                    border: "1px solid #cbd5e1",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "6px",
                     cursor: isSubmitting ? "not-allowed" : "pointer",
-                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                     transition: "all 0.15s ease",
                   }}
                 >
@@ -2390,17 +2392,17 @@ export default function RenewalActionDrawer({
                     flex: 1.3,
                     padding: "10px 14px",
                     borderRadius: "8px",
-                    background: "#f1f5f9",
+                    background: "#ffffff",
                     color: "#0f172a",
                     fontSize: "13px",
                     fontWeight: 600,
-                    border: "1px solid #94a3b8",
+                    border: "1px solid #cbd5e1",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "6px",
                     cursor: isSubmitting ? "not-allowed" : "pointer",
-                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                   }}
                 >
                   Lost & Next <ChevronRight size={14} />
