@@ -362,6 +362,9 @@ export default function RenewalActionDrawer({
   }, [activeTab, teamMembers.length]);
 
   // Keyboard Shortcuts & Focus Management
+  const handleSaveRef = useRef(handleSave);
+  handleSaveRef.current = handleSave;
+
   useEffect(() => {
     setMounted(true);
     previousFocusRef.current = document.activeElement;
@@ -395,7 +398,7 @@ export default function RenewalActionDrawer({
       // Ctrl + Enter to Save & Next
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
-        handleSave(true);
+        handleSaveRef.current?.(true);
         return;
       }
 

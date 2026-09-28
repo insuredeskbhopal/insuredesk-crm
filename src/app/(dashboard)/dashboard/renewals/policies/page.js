@@ -336,6 +336,7 @@ export default function RenewalPoliciesPage() {
         ids.has(p.id)
           ? {
               ...p,
+              ...updatedPolicy,
               renewalStatus: updatedPolicy.renewalStatus || p.renewalStatus,
               lastRemark: updatedPolicy.lastRemark || p.lastRemark,
               nextFollowUpDate: updatedPolicy.nextFollowUpDate || p.nextFollowUpDate,
@@ -402,7 +403,9 @@ export default function RenewalPoliciesPage() {
     } else {
       const currentIndex = policies.findIndex((p) => p.id === currentPolicy.id);
       if (currentIndex !== -1 && currentIndex + 1 < policies.length) {
-        setActiveDrawerPolicy(policies[currentIndex + 1]);
+        const nextPolicy = policies[currentIndex + 1];
+        setActiveDrawerPolicy(nextPolicy);
+        showToast(`Switched to next policy: ${nextPolicy.insuredName || nextPolicy.policyNumber}`, "info");
       } else {
         setActiveDrawerPolicy(null);
         showToast("Reached the end of policies on this page.", "info");
@@ -851,6 +854,7 @@ export default function RenewalPoliciesPage() {
         </footer>
       </div>   {activeDrawerPolicy && (
         <RenewalActionDrawer
+          key={activeDrawerPolicy.id}
           policy={activeDrawerPolicy}
           relatedPolicies={
             policies.filter(

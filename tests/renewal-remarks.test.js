@@ -11,6 +11,7 @@ const { prismaMock, verifyJWTMock } = vi.hoisted(() => ({
     },
     policyRecord: {
       findMany: vi.fn(),
+      findUnique: vi.fn(),
       updateMany: vi.fn(),
     },
   },

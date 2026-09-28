@@ -46,8 +46,6 @@ export async function POST(request) {
       followUpMode,
       priority,
       nextAction,
-      expectedUpdatedAt,
-      expectedUpdatedAts,
     } = await request.json();
     const text = String(remark || "").trim();
     const targetPolicyIds = Array.isArray(policyIds) && policyIds.length > 0 ? policyIds : policyId ? [policyId] : [];
@@ -79,46 +77,25 @@ export async function POST(request) {
       );
     }
 
-    // Safe Concurrency Check: Verify independent version per policy
-    if (expectedUpdatedAts && typeof expectedUpdatedAts === "object") {
-      const hasConflict = policies.some((p) => {
-        const expStr = expectedUpdatedAts[p.id];
-        if (!expStr || !p.updatedAt) return false;
-        return new Date(p.updatedAt).getTime() > new Date(expStr).getTime();
-      });
-      if (hasConflict) {
-        return Response.json(
-          {
-            error: "Conflict: One or more policies have been modified by another session. Please refresh to view latest changes.",
-            conflict: true,
-          },
-          { status: 409 }
-        );
-      }
-    } else if (expectedUpdatedAt) {
-      const primaryPolicyToCheck = policies.find((p) => p.id === policyId) || policies[0];
-      const expectedTime = new Date(expectedUpdatedAt).getTime();
-      if (primaryPolicyToCheck?.updatedAt && new Date(primaryPolicyToCheck.updatedAt).getTime() > expectedTime) {
-        return Response.json(
-          {
-            error: "Conflict: This record has been updated by another user or session. Please refresh to view latest changes.",
-            conflict: true,
-          },
-          { status: 409 }
-        );
-      }
-    }
-
     const actorName = user.name || user.email || "User";
     const primaryPolicy = policies.find((p) => p.id === policyId) || policies[0];
 
-    // Atomic transaction: Update all policies conditionally & log activity together
+    // Atomic transaction: Update all policies & log activity together
     const { primaryReviewedData, primaryRemark } = await prisma.$transaction(async (tx) => {
       let firstReviewedData = null;
       let firstRemark = null;
 
       for (const pol of policies) {
-        const currentStatus = pol.renewalStatus || "ACTIVE";
+        // Fetch fresh policy inside tx to ensure atomic append to true latest renewalRemarks
+        const freshPol =
+          (typeof tx.policyRecord.findUnique === "function"
+            ? await tx.policyRecord.findUnique({
+                where: { id: pol.id },
+                select: { reviewedData: true, data: true, renewalStatus: true },
+              })
+            : null) || pol;
+
+        const currentStatus = freshPol.renewalStatus || pol.renewalStatus || "ACTIVE";
         const renewalRemark = {
           id: randomUUID(),
           text,
@@ -135,19 +112,13 @@ export async function POST(request) {
           nextAction: String(nextAction || "").trim(),
         };
 
-        const reviewedData = appendRenewalRemark(pol.reviewedData || {}, renewalRemark);
-        const data = appendRenewalRemark(pol.data || {}, renewalRemark);
+        const reviewedData = appendRenewalRemark(freshPol.reviewedData || pol.reviewedData || {}, renewalRemark);
+        const data = appendRenewalRemark(freshPol.data || pol.data || {}, renewalRemark);
 
-        const expTimeStr =
-          (expectedUpdatedAts && expectedUpdatedAts[pol.id]) ||
-          (pol.id === policyId ? expectedUpdatedAt : null);
-        const expTime = expTimeStr ? new Date(expTimeStr).getTime() : null;
-
-        const updateResult = await tx.policyRecord.updateMany({
+        await tx.policyRecord.updateMany({
           where: {
             id: pol.id,
             ...tenantFilter,
-            ...(expTimeStr ? { updatedAt: new Date(expTimeStr) } : {}),
           },
           data: {
             reviewedData,
@@ -156,13 +127,6 @@ export async function POST(request) {
             updatedById: actorId,
           },
         });
-
-        if (updateResult.count === 0) {
-          const conflictErr = new Error("OCC_CONFLICT");
-          conflictErr.code = "OCC_CONFLICT";
-          conflictErr.policyId = pol.id;
-          throw conflictErr;
-        }
 
         if (pol.id === primaryPolicy.id) {
           firstReviewedData = reviewedData;
