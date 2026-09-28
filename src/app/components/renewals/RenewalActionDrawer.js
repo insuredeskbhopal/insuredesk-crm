@@ -362,8 +362,7 @@ export default function RenewalActionDrawer({
   }, [activeTab, teamMembers.length]);
 
   // Keyboard Shortcuts & Focus Management
-  const handleSaveRef = useRef(handleSave);
-  handleSaveRef.current = handleSave;
+  const handleSaveRef = useRef(null);
 
   useEffect(() => {
     setMounted(true);
@@ -735,6 +734,7 @@ export default function RenewalActionDrawer({
       await handleSaveAssignment(null);
     }
   };
+  handleSaveRef.current = handleSave;
 
   // 1. SAVE REMARK / CALL NOTE
   const handleSaveRemark = async (e, andNext = false) => {
