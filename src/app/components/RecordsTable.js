@@ -982,9 +982,11 @@ export default function RecordsTable({
                               width: "28px",
                               height: "28px",
                               borderRadius: "6px",
-                              backgroundColor: "#f1f5f9",
+                              backgroundColor: "#ffffff",
                               color: "#0f172a",
+                              border: "1px solid #cbd5e1",
                               textDecoration: "none",
+                              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                             }}
                           >
                             <Eye size={14} />
@@ -1002,9 +1004,11 @@ export default function RecordsTable({
                               width: "28px",
                               height: "28px",
                               borderRadius: "6px",
-                              backgroundColor: "#0f172a",
-                              color: "#ffffff",
+                              backgroundColor: "#ffffff",
+                              color: "#0f172a",
+                              border: "1px solid #cbd5e1",
                               textDecoration: "none",
+                              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                             }}
                           >
                             <Download size={14} />
@@ -1067,8 +1071,21 @@ export default function RecordsTable({
                           title="View policy details"
                           type="button"
                           onClick={() => setSelectedRecord(record)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "6px",
+                            backgroundColor: "#ffffff",
+                            color: "#0f172a",
+                            border: "1px solid #cbd5e1",
+                            cursor: "pointer",
+                            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
+                          }}
                         >
-                          <Eye size={18} strokeWidth={2.2} />
+                          <Eye size={14} />
                         </button>
                         {canEdit ? (
                           <button
@@ -1077,8 +1094,21 @@ export default function RecordsTable({
                             title="Edit policy record"
                             type="button"
                             onClick={() => onEdit?.(record)}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: "28px",
+                              height: "28px",
+                              borderRadius: "6px",
+                              backgroundColor: "#ffffff",
+                              color: "#0f172a",
+                              border: "1px solid #cbd5e1",
+                              cursor: "pointer",
+                              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
+                            }}
                           >
-                            <Pencil size={18} strokeWidth={2.2} />
+                            <Pencil size={14} />
                           </button>
                         ) : null}
                       </div>
@@ -1212,12 +1242,13 @@ export default function RecordsTable({
                     gap: "6px",
                     padding: "8px 14px",
                     borderRadius: "8px",
-                    border: "none",
-                    backgroundColor: "#0f172a",
-                    color: "#ffffff",
+                    border: "1px solid #cbd5e1",
+                    backgroundColor: "#ffffff",
+                    color: "#0f172a",
                     cursor: isBulkDownloading ? "not-allowed" : "pointer",
                     fontSize: "13px",
                     fontWeight: "600",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                   }}
                 >
                   <Download size={16} strokeWidth={2.2} />

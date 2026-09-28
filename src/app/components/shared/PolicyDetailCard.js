@@ -570,22 +570,24 @@ export default function PolicyDetailCard({
                     style={{
                       padding: "10px 18px",
                       borderRadius: "12px",
-                      border: "none",
-                      backgroundColor: "#0f172a",
-                      color: "#ffffff",
+                      border: "1px solid #cbd5e1",
+                      backgroundColor: "#ffffff",
+                      color: "#0f172a",
                       fontWeight: "600",
                       fontSize: "14px",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "6px",
                       textDecoration: "none",
-                      transition: "background-color 0.2s",
+                      transition: "background-color 0.2s, border-color 0.2s",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "#1e293b";
+                      e.currentTarget.style.backgroundColor = "#f8fafc";
+                      e.currentTarget.style.borderColor = "#94a3b8";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "#0f172a";
+                      e.currentTarget.style.backgroundColor = "#ffffff";
+                      e.currentTarget.style.borderColor = "#cbd5e1";
                     }}
                   >
                     <Download size={16} />

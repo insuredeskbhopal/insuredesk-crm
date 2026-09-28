@@ -531,6 +531,37 @@ tbody tr.row-marked {
   background: rgba(15, 23, 42, 0.05);
 }
 
+.col-pdf-cell .pdf-icon-link,
+.col-action-cell .record-icon-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.col-pdf-cell .pdf-icon-link:hover,
+.col-action-cell .record-icon-action:hover {
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+.col-pdf-cell .pdf-icon-link svg,
+.col-action-cell .record-icon-action svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
 .table-pagination {
   display: flex;
   align-items: center;
