@@ -394,10 +394,14 @@ export default function RenewalActionDrawer({
         }
       }
 
-      // Ctrl + Enter to Save & Next
+      // Ctrl + Enter to Save (or Ctrl + Shift + Enter for Save & Next)
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
-        handleSaveRef.current?.(true);
+        if (e.shiftKey) {
+          handleSaveRef.current?.(true);
+        } else {
+          handleSaveRef.current?.(false);
+        }
         return;
       }
 
@@ -784,12 +788,6 @@ export default function RenewalActionDrawer({
 
       if (res.ok) {
         const resData = await res.json().catch(() => ({}));
-        showToast(
-          targetIds.length > 1
-            ? `Remark logged for ${targetIds.length} policies!`
-            : "Remark recorded successfully!",
-          "success"
-        );
 
         const newRemark = resData.remark || {
           id: String(Date.now()),
@@ -807,13 +805,32 @@ export default function RenewalActionDrawer({
         // Immediately update interaction history in drawer
         setTimeline((prev) => [newRemark, ...(Array.isArray(prev) ? prev : [])]);
 
+        // Keep local activePolicy state in sync so details match the saved remark
+        setActivePolicy((prev) => ({
+          ...prev,
+          renewalStatus: renewalStatus,
+          lastRemark: remarkText.trim(),
+          nextFollowUpDate: followUpDate || prev?.nextFollowUpDate,
+        }));
+
         // Reset the form fields
         setRemarkText("");
         setFollowUpDate("");
         setSelectedChip(null);
 
         if (andNext && onSaveAndNext) {
+          showToast(
+            `Remark saved for ${activePolicy.insuredName || "customer"}!`,
+            "success"
+          );
           onSaveAndNext(optimisticUpdatedPolicy);
+        } else {
+          showToast(
+            targetIds.length > 1
+              ? `Remark logged for ${targetIds.length} policies!`
+              : "Remark recorded successfully!",
+            "success"
+          );
         }
       } else {
         const data = await res.json().catch(() => ({}));
@@ -1484,21 +1501,22 @@ export default function RenewalActionDrawer({
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="rad-btn-save-secondary"
+                      className="rad-btn-save-primary"
                     >
-                      Save
+                      <CheckCircle2 size={14} />
+                      <span>Save Remark</span>
                     </button>
                     <button
                       type="button"
                       disabled={isSubmitting}
                       onClick={() => handleSave(true)}
-                      className="rad-btn-save-primary"
+                      className="rad-btn-save-secondary"
                     >
                       <span>Save & Next Customer</span> <ArrowRight size={14} />
                     </button>
                   </div>
                   <div className="rad-shortcut-tip">
-                    Tip: Press <strong style={{ color: "#0f172a" }}>Ctrl + Enter</strong> to Save & Next
+                    Tip: Press <strong style={{ color: "#0f172a" }}>Ctrl + Enter</strong> to Save Remark
                   </div>
                 </div>
 

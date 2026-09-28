@@ -346,6 +346,18 @@ export default function RenewalPoliciesPage() {
           : p
       )
     );
+    setActiveDrawerPolicy((prev) =>
+      prev && ids.has(prev.id)
+        ? {
+            ...prev,
+            ...updatedPolicy,
+            renewalStatus: updatedPolicy.renewalStatus || prev.renewalStatus,
+            lastRemark: updatedPolicy.lastRemark || prev.lastRemark,
+            nextFollowUpDate: updatedPolicy.nextFollowUpDate || prev.nextFollowUpDate,
+            whatsappMessageSentAt: updatedPolicy.whatsappMessageSentAt || prev.whatsappMessageSentAt,
+          }
+        : prev
+    );
   };
 
   const customerGroups = useMemo(() => {
