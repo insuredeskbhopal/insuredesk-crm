@@ -1190,23 +1190,31 @@ export default function RecordsTable({
                           href={`/api/records/${activeRec.id}/pdf`}
                           download
                           onClick={closeActionMenu}
+                          className="record-menu-action-item"
                           style={{
                             display: "flex",
                             alignItems: "center",
+                            justifyContent: "flex-start",
+                            width: "100%",
+                            boxSizing: "border-box",
                             gap: "8px",
                             padding: "8px 10px",
+                            margin: 0,
                             borderRadius: "6px",
                             fontSize: "12px",
                             fontWeight: 500,
                             color: "#334155",
                             textDecoration: "none",
+                            textAlign: "left",
                             cursor: "pointer",
                           }}
                           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
                           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                         >
-                          <Download size={14} />
-                          <span>Download PDF</span>
+                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+                            <Download size={14} />
+                          </span>
+                          <span style={{ flex: 1, textAlign: "left" }}>Download PDF</span>
                         </a>
                       ) : null}
                       <button
@@ -1215,11 +1223,16 @@ export default function RecordsTable({
                           closeActionMenu();
                           handlePrint(activeRec);
                         }}
+                        className="record-menu-action-item"
                         style={{
                           display: "flex",
                           alignItems: "center",
+                          justifyContent: "flex-start",
+                          width: "100%",
+                          boxSizing: "border-box",
                           gap: "8px",
                           padding: "8px 10px",
+                          margin: 0,
                           borderRadius: "6px",
                           fontSize: "12px",
                           fontWeight: 500,
@@ -1228,13 +1241,14 @@ export default function RecordsTable({
                           border: "none",
                           textAlign: "left",
                           cursor: "pointer",
-                          width: "100%",
                         }}
                         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                       >
-                        <Printer size={14} />
-                        <span>Print Policy</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+                          <Printer size={14} />
+                        </span>
+                        <span style={{ flex: 1, textAlign: "left" }}>Print Policy</span>
                       </button>
                       {canEdit ? (
                         <button
@@ -1243,11 +1257,16 @@ export default function RecordsTable({
                             closeActionMenu();
                             onEdit?.(activeRec);
                           }}
+                          className="record-menu-action-item"
                           style={{
                             display: "flex",
                             alignItems: "center",
+                            justifyContent: "flex-start",
+                            width: "100%",
+                            boxSizing: "border-box",
                             gap: "8px",
                             padding: "8px 10px",
+                            margin: 0,
                             borderRadius: "6px",
                             fontSize: "12px",
                             fontWeight: 500,
@@ -1256,13 +1275,14 @@ export default function RecordsTable({
                             border: "none",
                             textAlign: "left",
                             cursor: "pointer",
-                            width: "100%",
                           }}
                           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
                           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                         >
-                          <Pencil size={14} />
-                          <span>Edit Policy</span>
+                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+                            <Pencil size={14} />
+                          </span>
+                          <span style={{ flex: 1, textAlign: "left" }}>Edit Policy</span>
                         </button>
                       ) : null}
                       {canDelete ? (
@@ -1272,11 +1292,16 @@ export default function RecordsTable({
                             closeActionMenu();
                             onDelete?.([activeRec]);
                           }}
+                          className="record-menu-action-item"
                           style={{
                             display: "flex",
                             alignItems: "center",
+                            justifyContent: "flex-start",
+                            width: "100%",
+                            boxSizing: "border-box",
                             gap: "8px",
                             padding: "8px 10px",
+                            margin: 0,
                             borderRadius: "6px",
                             fontSize: "12px",
                             fontWeight: 500,
@@ -1285,13 +1310,14 @@ export default function RecordsTable({
                             border: "none",
                             textAlign: "left",
                             cursor: "pointer",
-                            width: "100%",
                           }}
                           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fef2f2")}
                           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                         >
-                          <Trash2 size={14} />
-                          <span>Delete Record</span>
+                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+                            <Trash2 size={14} />
+                          </span>
+                          <span style={{ flex: 1, textAlign: "left" }}>Delete Record</span>
                         </button>
                       ) : null}
                     </>

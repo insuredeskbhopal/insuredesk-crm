@@ -592,6 +592,38 @@ tbody tr.row-marked {
   fill: #0f172a !important;
 }
 
+.record-menu-action-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  text-align: left !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+
+.record-menu-action-item span:first-child {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0 !important;
+}
+
+.record-menu-action-item span:last-child {
+  flex: 1 !important;
+  text-align: left !important;
+}
+
 .table-pagination {
   display: flex;
   align-items: center;
