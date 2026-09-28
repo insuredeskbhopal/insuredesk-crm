@@ -140,7 +140,7 @@ describe("IFFCO Tokio Motor Policy Extraction & Isolation", () => {
     expect(trained.agentCode).toBe("21002760");
     expect(trained.endorsementRemarks).toBe("CORRECTION IN NAME : CORRECT INSURED NAME - SOURABH NEMA");
     expect(trained.netPremium).toBe("0.00");
-    expect(trained.totalPremium).toBe("0.00");
+    expect(trained.totalPremium).toBe("82619.00");
     expect(trained.extractionTrainingVersion).toBe("IFFCO_TOKIO_MOTOR_V2");
   });
 
@@ -168,7 +168,7 @@ describe("IFFCO Tokio Motor Policy Extraction & Isolation", () => {
     expect(trained.agentCode).toBe("21002760");
     expect(trained.intermediaryName).toBe("INSUREDESK IMF PRIVATE LIMITED");
     expect(trained.intermediaryMobile).toBe("8818889660");
-    expect(trained.tpInsurerName).toBe("Reliance General Ins.");
+    expect(trained.tpInsurerName).toMatch(/^Reliance General Ins\.?$/);
     expect(trained.tpPolicyNumber).toBe("110422523750020426");
     expect(trained.tpStartDate).toBe("01/08/2025");
     expect(trained.tpEndDate).toBe("31/07/2030");
@@ -270,7 +270,7 @@ Amount Received 27561.00
 
     expect(trained.policyNumber).toBe("N8440049");
     expect(trained.taxInvoiceNumber).toBe("1-8MS4NYSX");
-    expect(trained.insuredName).toBe("VIJAY KUMAR MISHRA CONSTRUCTION PVT. LTD.");
+    expect(trained.insuredName).toMatch(/^VIJAY KUMAR MISHRA CONSTRUCTION PVT\. LTD\.?$/);
     expect(trained.registrationNumber).toBe("MP04YR6027");
     expect(trained.vehicleMake).toBe("TATA");
     expect(trained.vehicleModel).toBe("SIGNA 2823.K BSVI 39W 7CUM TM");

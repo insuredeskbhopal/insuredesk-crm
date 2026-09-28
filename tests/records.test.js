@@ -104,3 +104,32 @@ describe("record customer ID", () => {
     );
   });
 });
+
+import { getPresetDates } from "../src/lib/records/scoped-data.js";
+
+describe("Date Presets Filter Helper", () => {
+  it("correctly generates date ranges for today, yesterday, this-week, last-week, this-month, last-month, and this-year", () => {
+    const todayRange = getPresetDates("today");
+    expect(todayRange).not.toBeNull();
+    expect(todayRange.start.getHours()).toBe(0);
+    expect(todayRange.end.getHours()).toBe(23);
+
+    const yesterdayRange = getPresetDates("yesterday");
+    expect(yesterdayRange).not.toBeNull();
+
+    const thisMonthRange = getPresetDates("this-month");
+    expect(thisMonthRange).not.toBeNull();
+    expect(thisMonthRange.start.getDate()).toBe(1);
+
+    const lastMonthRange = getPresetDates("last-month");
+    expect(lastMonthRange).not.toBeNull();
+    expect(lastMonthRange.start.getDate()).toBe(1);
+
+    const thisYearRange = getPresetDates("this-year");
+    expect(thisYearRange).not.toBeNull();
+    expect(thisYearRange.start.getMonth()).toBe(0);
+    expect(thisYearRange.start.getDate()).toBe(1);
+
+    expect(getPresetDates("invalid")).toBeNull();
+  });
+});

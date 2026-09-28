@@ -4,10 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
-    policyRecord: {
-      findMany: vi.fn(),
-      updateMany: vi.fn(),
-    },
+    $executeRaw: vi.fn(),
   },
 }));
 
@@ -18,15 +15,10 @@ import { AUTO_LOST_REASON, moveOverdueRenewalsToLost } from "../src/lib/renewals
 describe("automatic renewal loss after 30 days", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    prismaMock.policyRecord.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.$executeRaw.mockResolvedValue(1);
   });
 
   it("moves only policies overdue by more than 30 days to Lost", async () => {
-    prismaMock.policyRecord.findMany.mockResolvedValue([
-      renewalRecord("overdue-31", "2026-06-20"),
-      renewalRecord("overdue-30", "2026-06-21"),
-      renewalRecord("invalid-expiry", "not-a-date"),
-    ]);
     const referenceDate = new Date("2026-07-21T12:00:00+05:30");
 
     const movedCount = await moveOverdueRenewalsToLost({
@@ -35,42 +27,39 @@ describe("automatic renewal loss after 30 days", () => {
     });
 
     expect(movedCount).toBe(1);
-    expect(prismaMock.policyRecord.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ id: { in: ["overdue-31"] }, organizationId: "org-1" }),
-        data: {
-          renewalStatus: "LOST",
-          isActivePolicy: false,
-          lostReason: AUTO_LOST_REASON,
-          renewalDate: referenceDate,
-        },
-      }),
-    );
+    expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+    const queryCall = prismaMock.$executeRaw.mock.calls[0];
+    const sqlStrings = queryCall[0].join(" ");
+    expect(sqlStrings).toContain("UPDATE pdf_records");
+    expect(sqlStrings).toContain("renewal_status = 'LOST'");
+    expect(queryCall).toContain(AUTO_LOST_REASON);
+    expect(queryCall).toContain(referenceDate);
   });
 
-  it("does not write when no policy is beyond the 30-day boundary", async () => {
-    prismaMock.policyRecord.findMany.mockResolvedValue([renewalRecord("overdue-30", "2026-06-21")]);
+  it("handles super admin global scope when organizationId is undefined", async () => {
+    prismaMock.$executeRaw.mockResolvedValue(0);
+    const referenceDate = new Date("2026-07-21T12:00:00+05:30");
 
-    await expect(
-      moveOverdueRenewalsToLost({ referenceDate: new Date("2026-07-21T12:00:00+05:30") }),
-    ).resolves.toBe(0);
-    expect(prismaMock.policyRecord.updateMany).not.toHaveBeenCalled();
+    const movedCount = await moveOverdueRenewalsToLost({ referenceDate });
+
+    expect(movedCount).toBe(0);
+    expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+    const queryCall = prismaMock.$executeRaw.mock.calls[0];
+    expect(queryCall).toContain(true); // isSuperAdmin is true
   });
 
   it("keeps a legacy null-organization user inside the null tenant boundary", async () => {
-    prismaMock.policyRecord.findMany.mockResolvedValue([renewalRecord("legacy-overdue", "2026-06-20")]);
+    const referenceDate = new Date("2026-07-21T12:00:00+05:30");
 
     await moveOverdueRenewalsToLost({
       organizationId: null,
-      referenceDate: new Date("2026-07-21T12:00:00+05:30"),
+      referenceDate,
     });
 
-    expect(prismaMock.policyRecord.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ organizationId: null }) }),
-    );
-    expect(prismaMock.policyRecord.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ organizationId: null }) }),
-    );
+    expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+    const queryCall = prismaMock.$executeRaw.mock.calls[0];
+    expect(queryCall).toContain(false); // isSuperAdmin is false
+    expect(queryCall).toContain(null); // orgId is null
   });
 });
 

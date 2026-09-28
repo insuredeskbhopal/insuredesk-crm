@@ -295,3 +295,68 @@ describe("sanitizeRecordPayload", () => {
     expect(getReviewFieldValue({ extractedData: iffcoData, manualFields: [] }, "fuelType")).toBe("Petrol");
   });
 });
+
+import {
+  normalizeIndianPhone,
+  sanitizeCustomerProfilePayload,
+  sanitizeLeadGenerationPayload,
+} from "../src/lib/customer-profiles/utils.js";
+
+describe("Customer Profile & Lead Phone Validation", () => {
+  it("keeps portfolio-only DOB out of lead writes", () => {
+    const lead = sanitizeLeadGenerationPayload({
+      customerProfileId: "3ea500c8-727c-44c3-a0ad-fae4cdf6e961",
+      name: "PATEL WAREHOUSE",
+      phone: "9752569201",
+      dob: "1990-01-01",
+    });
+
+    expect(lead).not.toHaveProperty("dob");
+    expect(lead.customerProfileId).toBe("3ea500c8-727c-44c3-a0ad-fae4cdf6e961");
+  });
+
+  it("sanitizes alternate phone numbers correctly preserving bad numbers for validator", () => {
+    // 1. Valid numbers should normalize to 10 digits
+    const resValid = sanitizeCustomerProfilePayload({
+      phone: "9876543210",
+      alternatePhone: "09876543210",
+    });
+    expect(resValid.phone).toBe("9876543210");
+    expect(resValid.alternatePhone).toBe("9876543210");
+
+    // 2. Invalid alternate phone should preserve input as-is for validation detection
+    const resInvalid = sanitizeCustomerProfilePayload({
+      phone: "9876543210",
+      alternatePhone: "12345",
+    });
+    expect(resInvalid.alternatePhone).toBe("12345");
+
+    // 3. Omitted alternate phone should resolve to blank string
+    const resOmitted = sanitizeCustomerProfilePayload({
+      phone: "9876543210",
+    });
+    expect(resOmitted.alternatePhone).toBe("");
+  });
+
+  it("verifies the endpoints' validation rules for phone validation", () => {
+    const validatePhone = (phone) => {
+      return !!(phone && normalizeIndianPhone(phone) === phone);
+    };
+
+    const validateAltPhone = (altPhone) => {
+      return !altPhone || normalizeIndianPhone(altPhone) === altPhone;
+    };
+
+    // Primary phone validation assertions
+    expect(validatePhone("9876543210")).toBe(true);
+    expect(validatePhone("12345")).toBe(false);
+    expect(validatePhone("")).toBe(false);
+
+    // Alternate phone validation assertions
+    expect(validateAltPhone("9876543210")).toBe(true);
+    expect(validateAltPhone("09876543210")).toBe(false); // must be exact normalized 10-digit format
+    expect(validateAltPhone("12345")).toBe(false);
+    expect(validateAltPhone("")).toBe(true); // allowed to be empty
+    expect(validateAltPhone(null)).toBe(true); // allowed to be null
+  });
+});

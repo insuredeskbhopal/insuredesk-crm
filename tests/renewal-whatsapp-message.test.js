@@ -58,6 +58,7 @@ describe("renewal WhatsApp message", () => {
       { label: "Customer Name", placeholder: "{CustomerName}", example: "BHAIJILAL CHOUHAN" },
       { label: "Insurance Company", placeholder: "{InsuranceCompany}", example: "IFFCO Tokio" },
       { label: "Policy Number", placeholder: "{PolicyNumber}", example: "N4116778" },
+      { label: "Product Name", placeholder: "{ProductName}", example: "Individual Health Insurance" },
       { label: "Vehicle Make", placeholder: "{VehicleMake}", example: "MG" },
       { label: "Vehicle Model", placeholder: "{VehicleModel}", example: "H Savvy" },
       { label: "Registration Number", placeholder: "{RegistrationNumber}", example: "MP04ZL6963" },
@@ -83,7 +84,7 @@ describe("renewal WhatsApp message", () => {
         ],
       }),
     ).toBe(
-      `Dear Amit Sharma,
+      `Dear BHAIJILAL CHOUHAN,
 
 The Motor Insurance Policy for *BHAIJILAL CHOUHAN* with *IFFCO Tokio* is scheduled to expire soon.
 

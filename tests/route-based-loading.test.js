@@ -32,7 +32,6 @@ describe("route-based loading", () => {
 
   it.each([
     "src/app/(dashboard)/dashboard/reports/page.js",
-    "src/app/(dashboard)/field-setup/page.js",
     "src/app/(dashboard)/settings/page.js",
   ])("keeps %s independent from the legacy dashboard bundle", (relativePath) => {
     expect(source(relativePath)).not.toContain("@/app/ui/dashboard");

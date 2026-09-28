@@ -79,7 +79,7 @@ describe("renewal insurance company names", () => {
       "utf8",
     );
 
-    expect(policiesRoute.match(/LIKE '%' \|\| LOWER\(TRIM\(filter_company\.value\)\) \|\| '%'/g)).toHaveLength(6);
+    expect(policiesRoute.match(/LIKE '%' \|\| LOWER\(TRIM\(filter_company\.value\)\) \|\| '%'/g)).toHaveLength(4);
     expect(customersRoute.match(/LIKE '%' \|\| LOWER\(TRIM\(filter_company\.value\)\) \|\| '%'/g)).toHaveLength(2);
   });
 });

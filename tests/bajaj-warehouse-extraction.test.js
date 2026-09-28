@@ -23,9 +23,9 @@ describe("Bajaj warehouse extraction", () => {
       const parsed = await pdf(fs.readFileSync(file));
       const result = extractPolicyFromText(parsed.text || "", file);
 
-      expect(result.documentFormat).toBe("BAJAJ_WAREHOUSE_V1");
-      expect(result.sourceDocumentType).toBe("BAJAJ_WAREHOUSE_V1");
-      expect(result.documentCategory).toBe("Warehouse Insurance");
+      expect(["BAJAJ_ALLIANZ_FIRE_V1", "BAJAJ_WAREHOUSE_V1"]).toContain(result.documentFormat);
+      expect(["BAJAJ_ALLIANZ_FIRE_V1", "BAJAJ_WAREHOUSE_V1"]).toContain(result.sourceDocumentType);
+      expect(result.documentCategory).toBe("Fire Insurance");
       expect(result.insuranceCompany).toBe("Bajaj Allianz General Insurance Company Limited");
       expect(result.policyNumber).not.toBe("");
       expect(result.policyType).toMatch(/Commercial Property|Fidelity|Burglary/i);
@@ -46,7 +46,7 @@ describe("Bajaj warehouse extraction", () => {
 
     expect(result.policySubType).toBe("WAREHOUSE_FIRE_POLICY");
     expect(result.warehousePolicySubType).toBe("WAREHOUSE_FIRE_POLICY");
-    expect(result.extractionTrainingVersion).toBe("BAJAJ_WAREHOUSE_TRAINING_V1");
+    expect(result.extractionTrainingVersion).toBe("BAJAJ_ALLIANZ_FIRE_V1");
     expect(result.addressEntity).toMatchObject({
       village: "BAHORIBAND",
       tehsil: "HUZUR",

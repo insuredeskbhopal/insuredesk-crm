@@ -37,8 +37,8 @@ describe("renewal customer name persistence", () => {
   });
 
   it("uses contact name first and falls back to the extracted insured name", () => {
-    expect(resolvePolicyCustomerName({ contactPerson: "Amit Verma", insuredName: "Rahul Sharma" })).toBe("Amit Verma");
-    expect(resolvePolicyCustomerName({ contactPerson: "Customer", insuredName: "Rahul Sharma" })).toBe("Rahul Sharma");
+    expect(resolvePolicyCustomerName({ contactPerson: "Amit Verma", insuredName: "Rahul Sharma" })).toBe("Rahul Sharma");
+    expect(resolvePolicyCustomerName({ contactPerson: "Rahul Sharma", insuredName: "Customer" })).toBe("Rahul Sharma");
     expect(buildPolicyCustomerNameFields({ insuredName: "Rahul Sharma" })).toEqual({
       contactPersonName: "Rahul Sharma",
       renewalRecipientName: "Rahul Sharma",

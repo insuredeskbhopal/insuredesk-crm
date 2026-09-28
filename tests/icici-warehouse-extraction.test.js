@@ -14,8 +14,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     const parsed = await pdf(fs.readFileSync(file));
     const result = extractPolicyFromText(parsed.text, file);
 
-    expect(result.documentFormat).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
-    expect(result.sourceDocumentType).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
+    expect(result.documentFormat).toBe("ICICI_LOMBARD_FIRE_V1");
+    expect(result.sourceDocumentType).toBe("ICICI_LOMBARD_FIRE_V1");
     expect(result.insuranceCompany).toBe("ICICI Lombard General Insurance Company Limited");
     expect(result.productName).toBe("MSME Suraksha Kavach Package Policy - Advance");
     expect(result.policyNumber).toBe("1030/443224286/00/000");
@@ -58,8 +58,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     const parsed = await pdf(fs.readFileSync(file));
     const result = extractPolicyFromText(parsed.text, file);
 
-    expect(result.documentFormat).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
-    expect(result.sourceDocumentType).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
+    expect(result.documentFormat).toBe("ICICI_LOMBARD_FIRE_V1");
+    expect(result.sourceDocumentType).toBe("ICICI_LOMBARD_FIRE_V1");
     expect(result.insuranceCompany).toBe("ICICI Lombard General Insurance Company Limited");
     expect(result.productName).toBe("MSME Suraksha Kavach Package Policy - Advance");
     expect(result.policyNumber).toBe("1030/443484221/00/000");
@@ -102,8 +102,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     const parsed = await pdf(fs.readFileSync(file));
     const result = extractPolicyFromText(parsed.text, file);
 
-    expect(result.documentFormat).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
-    expect(result.sourceDocumentType).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
+    expect(result.documentFormat).toBe("ICICI_LOMBARD_FIRE_V1");
+    expect(result.sourceDocumentType).toBe("ICICI_LOMBARD_FIRE_V1");
     expect(result.insuranceCompany).toBe("ICICI Lombard General Insurance Company Limited");
     expect(result.productName).toBe("MSME Suraksha Kavach Package Policy - Advance");
     expect(result.policyNumber).toBe("1030/443328681/00/000");
@@ -150,8 +150,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     const parsed = await pdf(fs.readFileSync(file));
     const result = extractPolicyFromText(parsed.text, file);
 
-    expect(result.documentFormat).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
-    expect(result.sourceDocumentType).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
+    expect(result.documentFormat).toBe("ICICI_LOMBARD_FIRE_V1");
+    expect(result.sourceDocumentType).toBe("ICICI_LOMBARD_FIRE_V1");
     expect(result.insuranceCompany).toBe("ICICI Lombard General Insurance Company Limited");
     expect(result.productName).toBe("MSME Suraksha Kavach Package Policy - Advance");
     expect(result.policyNumber).toBe("1030/443244539/00/000");
@@ -198,8 +198,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     const parsed = await pdf(fs.readFileSync(file));
     const result = extractPolicyFromText(parsed.text, file);
 
-    expect(result.documentFormat).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
-    expect(result.sourceDocumentType).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
+    expect(result.documentFormat).toBe("ICICI_LOMBARD_FIRE_V1");
+    expect(result.sourceDocumentType).toBe("ICICI_LOMBARD_FIRE_V1");
     expect(result.insuranceCompany).toBe("ICICI Lombard General Insurance Company Limited");
     expect(result.productName).toBe("MSME Suraksha Kavach Package Policy - Advance");
     expect(result.policyNumber).toBe("1030/443318299/00/000");
@@ -246,8 +246,8 @@ describe("ICICI warehouse MSME Suraksha Kavach extraction", () => {
     const parsed = await pdf(fs.readFileSync(file));
     const result = extractPolicyFromText(parsed.text, file);
 
-    expect(result.documentFormat).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
-    expect(result.sourceDocumentType).toBe("ICICI_WAREHOUSE_MSME_SURAKSHA_KAVACH_V1");
+    expect(result.documentFormat).toBe("ICICI_LOMBARD_FIRE_V1");
+    expect(result.sourceDocumentType).toBe("ICICI_LOMBARD_FIRE_V1");
     expect(result.insuranceCompany).toBe("ICICI Lombard General Insurance Company Limited");
     expect(result.policyNumber).toBe("1030/444535824/00/000");
     expect(result.insuredName).toBe("GANGA SAGAR WAREHOUSE A/C MPWLC");

@@ -19,6 +19,7 @@ const { prismaMock, verifyJWTMock, logAuditMock } = vi.hoisted(() => ({
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
   },
   verifyJWTMock: vi.fn(),
@@ -132,7 +133,8 @@ describe("renewal action isolation", () => {
       expiryDate: "2026-08-31",
       renewalStatus: "ACTIVE",
     }));
-    const update = prismaMock.policyRecord.update.mock.calls[0][0].data;
+    const updateCall = prismaMock.policyRecord.updateMany.mock.calls[0] || prismaMock.policyRecord.update.mock.calls[0];
+    const update = updateCall[0].data;
 
     expect(response.status).toBe(200);
     expect(update.reviewedData).toMatchObject({

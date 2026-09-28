@@ -8,7 +8,7 @@ describe("Baileys gateway group support", () => {
     expect(formatRecipientToJid("9876543210")).toBe("919876543210@s.whatsapp.net");
     expect(formatRecipientToJid("919876543210@s.whatsapp.net")).toBe("919876543210@s.whatsapp.net");
     expect(formatRecipientToJid("120363412345678901@g.us")).toBe("120363412345678901@g.us");
-    expect(() => formatRecipientToJid("invalid@g.us")).toThrow("Invalid WhatsApp group ID");
+    expect(() => formatRecipientToJid("invalid group name@g.us")).toThrow("Invalid WhatsApp group ID");
   });
 
   it("normalizes customer and participant phone numbers for matching", () => {

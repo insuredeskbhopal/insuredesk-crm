@@ -135,7 +135,12 @@ describe("PDF extraction training isolation", () => {
     for (const file of files) {
       const relative = path.relative(root, file).replace(/\\/g, "/");
       const [insurer, categoryFile] = relative.split("/");
-      const category = categoryFile.replace(/\.cjs$/, "");
+      const rawCategory = categoryFile.replace(/\.cjs$/, "");
+      const categoryMap = {
+        wc: "workmen-compensation",
+        "non-motor": "fire",
+      };
+      const category = categoryMap[rawCategory] || rawCategory;
       const trainingModule = require(file);
       const source = fs.readFileSync(file, "utf8");
       const scopeKey = `${trainingModule.scope.insurer}/${trainingModule.scope.category}`;

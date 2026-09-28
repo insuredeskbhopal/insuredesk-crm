@@ -10,9 +10,29 @@ const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs
 
 describe("Liberty motor extraction", () => {
   it("extracts Liberty motor core fields correctly", async () => {
-    const file = path.join(process.cwd(), "storage/BADAMI LAL CHOURASIA_MP04MR7706_2026-27 (1).pdf");
-    const parsed = await pdf(fs.readFileSync(file));
-    const result = extractPolicyFromText(parsed.text || "", "BADAMI LAL CHOURASIA_MP04MR7706_2026-27 (1).pdf");
+    const fixtureText = `
+Liberty General Insurance Company Limited
+TWO WHEELER LIABILITY POLICY SCHEDULE
+Policy No. 201620020126710520600000
+Insured
+BADAMI LAL CHOURASIA
+Address
+BHOPAL MP
+Covernote No 201620020126710520600000
+From 00:00 Hrs of 10/07/2026 To Midnight of 09/07/2027
+Registration Mark
+MP-04-MR-7706
+2009
+HA11EA99F07889
+MBLHA11ED99F08659
+HERO HONDA / CD DELUXE
+1002
+TWO WHEELER LIABILITY POLICY
+Net Premium 714.00
+GST 129.00
+TOTAL POLICY PREMIUM 843.00
+`;
+    const result = extractPolicyFromText(fixtureText, "BADAMI LAL CHOURASIA_MP04MR7706_2026-27 (1).pdf");
 
     expect(result.documentFormat).toBe("LIBERTY_MOTOR_V1");
     expect(result.insuranceCompany).toBe("Liberty General Insurance Limited");

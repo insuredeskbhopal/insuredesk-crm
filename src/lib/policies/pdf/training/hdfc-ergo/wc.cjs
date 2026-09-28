@@ -1,6 +1,4 @@
-const { normalizeWarehouseDate, parseRobustDate } = require("../../utils/dates.cjs");
-
-const scope = { insurer: "hdfc-ergo", category: "wc" };
+const scope = { insurer: "hdfc-ergo", category: "workmen-compensation" };
 
 function formatAmount(val) {
   if (!val) return "";

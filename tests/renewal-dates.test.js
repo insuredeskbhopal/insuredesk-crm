@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { getDaysStatus, getExpiryState, parseRenewalDate, getIndiaDateParts } from "../src/lib/renewals/dates.js";
+import {
+  calculateDaysLeft,
+  calculateRenewalStatus,
+  getDaysStatus,
+  getExpiryState,
+  parseRenewalDate,
+  getIndiaDateParts,
+} from "../src/lib/renewals/dates.js";
 import { parseBusinessDate } from "../src/lib/operations-center/engine.js";
 
 describe("renewal date helpers", () => {
@@ -17,6 +24,38 @@ describe("renewal date helpers", () => {
     expect(getExpiryState("not-a-date")).toBe("invalid");
     expect(getDaysStatus("")).toBe("Missing Expiry Date");
     expect(getDaysStatus("bad-value")).toBe("Invalid Expiry Date");
+  });
+
+  describe("Timezone Stable Days-Left Calculations (IST)", () => {
+    const expiryDateStr = "25/07/2026";
+
+    it("calculates 19 days remaining at 11:30 PM IST (July 6)", () => {
+      const referenceDate = new Date("2026-07-06T23:30:00+05:30");
+      const daysLeft = calculateDaysLeft(expiryDateStr, referenceDate);
+      expect(daysLeft).toBe(19);
+
+      const status = calculateRenewalStatus(expiryDateStr, "", referenceDate);
+      expect(status).toBe("expiry_soon");
+    });
+
+    it("calculates 18 days remaining at 12:30 AM IST (July 7)", () => {
+      const referenceDate = new Date("2026-07-07T00:30:00+05:30");
+      const daysLeft = calculateDaysLeft(expiryDateStr, referenceDate);
+      expect(daysLeft).toBe(18);
+
+      const status = calculateRenewalStatus(expiryDateStr, "", referenceDate);
+      expect(status).toBe("expiry_soon");
+    });
+
+    it("evaluates correctly parsed date from various formatting strings relative to IST", () => {
+      const dmyParsed = parseRenewalDate("25/07/2026");
+      expect(dmyParsed).not.toBeNull();
+      expect(dmyParsed.toISOString()).toBe("2026-07-24T18:30:00.000Z");
+
+      const isoParsed = parseRenewalDate("2026-07-25");
+      expect(isoParsed).not.toBeNull();
+      expect(isoParsed.toISOString()).toBe("2026-07-24T18:30:00.000Z");
+    });
   });
 });
 

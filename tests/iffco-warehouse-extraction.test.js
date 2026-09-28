@@ -353,8 +353,8 @@ describe("IFFCO Tokio Warehouse Policy extraction", () => {
       const parsed = await pdf(fs.readFileSync(tc.file));
       const result = extractPolicyFromText(parsed.text, tc.file);
 
-      expect(result.documentFormat).toBe("IFFCO_TOKIO_WAREHOUSE_V1");
-      expect(result.sourceDocumentType).toBe("IFFCO_TOKIO_WAREHOUSE_V1");
+      expect(result.documentFormat).toBe("IFFCO_TOKIO_NON_MOTOR_V1");
+      expect(result.sourceDocumentType).toBe("IFFCO_TOKIO_NON_MOTOR_V1");
       expect(result.insuranceCompany).toBe("IFFCO Tokio General Insurance Company Limited");
       expect(result.policyType).toBe(tc.policyType);
       expect(result.policyNumber).toBe(tc.policyNumber);
@@ -396,7 +396,7 @@ describe("IFFCO Tokio Warehouse Policy extraction", () => {
     expect(result.iffcoFieldConfidence.sumInsured).toBeGreaterThanOrEqual(0.9);
     expect(result.iffcoFieldEvidence.policyNumber).toContain("12A97642");
     expect(result.needsManualReview).toBe(false);
-    expect(result.extractionTrainingVersion).toBe("IFFCO_TOKIO_WAREHOUSE_TRAINING_V1");
+    expect(result.extractionTrainingVersion).toBe("IFFCO_TOKIO_NON_MOTOR_V1");
   });
 
   it("adds IFFCO warehouse training fields for burglary policies", async () => {

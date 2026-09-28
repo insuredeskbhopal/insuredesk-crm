@@ -53,15 +53,26 @@ function train({ text = "", result = {} }) {
     patch.policyExpiryDate = patch.expiryDate;
   }
 
-  const totMatch = text.match(/Total\s+Premium\(Rs\.\)\s*([0-9,.]+)/i) || text.match(/Total\s+Amount[^\n]*\n?\s*([0-9,.]+)/i);
+  const totMatch =
+    text.match(/Total\s+Premium\(Rs\.\)\s*([0-9,.]+)/i) ||
+    text.match(/Total\s+Amount[^\n]*\n?\s*([0-9,.]+)/i) ||
+    text.match(/Premium[^\n]*?Including\s*GST[^\n0-9]*([0-9,.]+)/i) ||
+    text.match(/Total\s+Premium\s+inclusive\s+Tax[^\n]*\n\s*([0-9,.]+)/i);
   if (totMatch) {
     patch.totalPremium = formatAmount(totMatch[1]);
     patch.grossPremium = patch.totalPremium;
     patch.premium = patch.totalPremium;
     patch.premiumIncludingGst = patch.totalPremium;
+  } else if (result.totalPremium || result.premiumIncludingGst) {
+    patch.totalPremium = formatAmount(result.totalPremium || result.premiumIncludingGst);
+    patch.grossPremium = patch.totalPremium;
+    patch.premium = patch.totalPremium;
+    patch.premiumIncludingGst = patch.totalPremium;
   }
 
-  const netMatch = text.match(/Premium\s*\(Rs\.\)\s*([0-9,.]+)/i);
+  const netMatch =
+    text.match(/Premium\s*\(Rs\.\)\s*([0-9,.]+)/i) ||
+    text.match(/Premium\s+Value\s+without\s+Tax[^\n]*\n\s*([0-9,.]+)/i);
   if (netMatch) {
     patch.netPremium = formatAmount(netMatch[1]);
   }
