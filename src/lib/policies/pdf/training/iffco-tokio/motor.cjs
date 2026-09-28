@@ -547,7 +547,8 @@ function train({ text = "", result = {} }) {
     }
   } else {
     // Check invoice table on page 2 e.g. Taxable Value / Total Value
-    const denseAmtMatch = text.match(/Amount\s*(\d{1,7}\.\d{2})\s*(\d{1,7}\.\d{2})\s*(\d{1,7}\.\d{2})/i);
+    const invoiceBlock = text.match(/Taxable\s+Value[\s\S]*?Amount\s*([0-9.\s,]+)/i)?.[0] || "";
+    const denseAmtMatch = invoiceBlock.match(/Amount\s*(\d{1,7}\.\d{2})\s*(\d{1,7}\.\d{2})\s*(\d{1,7}\.\d{2})/i);
     const invMatch = text.match(/Taxable\s+Value[\s\S]*?Amount\s*([0-9,.]+)\s+([0-9,.]+)\s+([0-9,.]+)\s+([0-9,.]+)\s+([0-9,.]+)/i);
     const totTaxMatch = text.match(/Total\s+Tax\s*([0-9,.]+)\s*₹?/i);
     const totValMatch = text.match(/Total\s+Value\s*([0-9,.]+)\s*₹?/i) ||
@@ -573,6 +574,18 @@ function train({ text = "", result = {} }) {
       patch.premium = patch.totalPremium;
       patch.premiumIncludingGst = patch.totalPremium;
     }
+  }
+
+  // The policy schedule labels the taxable value explicitly; the GST-only
+  // Amount row must never be interpreted as a net-premium invoice row.
+  const scheduleNet = text.match(/(?:Total\s+Taxable\s+Value|Taxable\s+Value)\s*\(A\s*\+\s*B\)\s*(?:\(for\s+\d+\s+years?\))?\s*Rs\.?\s*([0-9,]+(?:\.\d{2})?)/i);
+  if (!bifurcation && scheduleNet) {
+    patch.netPremium = patch.basicPremium = normalizeAmount(scheduleNet[1]);
+  }
+  if (cgstSgstMatch) {
+    patch.cgst = normalizeAmount(cgstSgstMatch[1]);
+    patch.sgst = normalizeAmount(cgstSgstMatch[2]);
+    patch.gstAmount = patch.taxAmount = (Number(patch.cgst.replace(/,/g, "")) + Number(patch.sgst.replace(/,/g, ""))).toFixed(2);
   }
 
   // 11. Payment Details

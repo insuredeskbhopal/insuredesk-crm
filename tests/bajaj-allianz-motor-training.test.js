@@ -245,7 +245,7 @@ describe("Bajaj Allianz motor scoped training", () => {
       spotAssistanceCover: "Yes",
       keysAndLocksCover: "Yes",
       personalBaggageCover: "Yes",
-      compulsoryDeductible: "1000.00",
+      compulsoryDeductible: "",
       imtEndorsements: "IMT-7, IMT-16, IMT-22, IMT-28",
       extractionTrainingVersion: "BAJAJ_ALLIANZ_MOTOR_PRIVATE_CAR_PACKAGE_V1",
     });

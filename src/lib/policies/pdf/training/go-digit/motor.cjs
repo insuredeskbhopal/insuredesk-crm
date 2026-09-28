@@ -133,7 +133,7 @@ function train({ text = "", result = {} }) {
   assign(patch, "ncb", ncb);
 
   const premiumInvoice = text.match(
-    /Invoice NumberInvoice DateNet Premium Igst Cgst Sgst Utgst CessGross Premium\s*([A-Z0-9]{8,20})(\d{4}-\d{2}-\d{2})([0-9,]+\.\d{2})([0-9,]+\.\d{2})([0-9,]+\.\d{2})([0-9,]+\.\d{2})([0-9,]+\.\d{2})([0-9,]+\.\d{2})([0-9,]+\.\d{2})/i,
+    /Invoice\s+Number\s*Invoice\s+Date\s*Net\s+Premium\s+Igst\s+Cgst\s+Sgst\s+Utgst\s+Cess\s*Gross\s+Premium\s*([A-Z0-9]{8,20})\s*(\d{4}-\d{2}-\d{2})\s*([0-9,]+\.\d{2})\s*([0-9,]+\.\d{2})\s*([0-9,]+\.\d{2})\s*([0-9,]+\.\d{2})\s*([0-9,]+\.\d{2})\s*([0-9,]+\.\d{2})\s*([0-9,]+\.\d{2})/i,
   );
   if (premiumInvoice) {
     const netPremium = amount(premiumInvoice[3]);

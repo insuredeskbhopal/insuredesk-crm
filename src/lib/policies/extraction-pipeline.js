@@ -30,7 +30,7 @@ export async function extractPolicyDataFromTextResult({ textResult = {}, sourceF
   const autoFilledFields = [];
 
   for (const [field, update] of Object.entries(aiMergePreview?.eligibleUpdates || {})) {
-    if (update?.suggestedValue && (isInvalidFieldValue(field, autoFilledData[field]) || suspiciousFields.has(field))) {
+    if (update?.suggestedValue && (isInvalidFieldValue(field, autoFilledData[field]) || suspiciousFields.includes(field))) {
       autoFilledData[field] = update.suggestedValue;
       if (field === "registrationNumber" && isInvalidFieldValue("vehicleNumber", autoFilledData.vehicleNumber)) {
         autoFilledData.vehicleNumber = update.suggestedValue;

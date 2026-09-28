@@ -174,6 +174,14 @@ function train({ text = "", result = {} }) {
 
   const netPremium = netPremMatch ? normalizeAmount(netPremMatch[1]) : totalPremium;
 
+  // Read labelled schedule amounts, not the receipt's benefit premium columns.
+  const taxes = {};
+  for (const [field, label] of [["cgst", "CGST"], ["sgst", "SGST(?:\\s*/\\s*UGST)?"], ["igst", "IGST"]]) {
+    const match = text.match(new RegExp(`\\b${label}\\s+Rs\\.?\\s*([0-9,]+(?:\\.[0-9]{1,2})?)`, "i"));
+    if (match) taxes[field] = formatAmount(match[1]);
+  }
+  if (Object.keys(taxes).length === 3) taxes.gstAmount = sumAmounts(taxes.cgst, taxes.sgst, taxes.igst);
+
   const sumInsMatch =
     text.match(/Sum\s+Insured\s*\n?\s*([0-9,.]+)/i) ||
     text.match(/Policy\s+Sum\s+Insured\s*\n?\s*([0-9,.]+)/i);
@@ -212,6 +220,7 @@ function train({ text = "", result = {} }) {
     premiumIncludingGst: totalPremium ? formatAmount(totalPremium) : result.premiumIncludingGst,
     netPremium: netPremium ? formatAmount(netPremium) : totalPremium,
     basicPremium: netPremium ? formatAmount(netPremium) : totalPremium,
+    ...taxes,
     sumInsured: sumInsured ? formatAmount(sumInsured) : result.sumInsured,
     totalSumInsured: sumInsured ? formatAmount(sumInsured) : result.totalSumInsured,
     insuredMembers: members.length > 0 ? members : (cleanHolder ? [{ name: cleanHolder }] : result.insuredMembers || []),

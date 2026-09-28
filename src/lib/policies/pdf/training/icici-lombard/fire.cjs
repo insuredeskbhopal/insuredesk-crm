@@ -20,9 +20,6 @@ function matches({ text = "" }) {
 function train({ text = "", result = {} }) {
   const patch = {};
 
-  patch.insuranceCompany = "ICICI Lombard General Insurance Company Limited";
-  patch.companyName = "ICICI Lombard General Insurance Company Limited";
-  patch.documentCategory = "Fire Insurance";
   patch.policyCategory = "Fire Insurance";
   patch.policyType = result.policyType || "Fire Insurance Policy";
   const prodMatch = text.match(/MSME Suraksha Kavach Package Policy\s*-\s*Advance/i);
@@ -139,15 +136,17 @@ function train({ text = "", result = {} }) {
 
   // Period / Dates
   const periodMatch =
+    text.match(/Period\s+of\s+Insurance\s*From\s*:\s*(?:[0-9:]+\s*(?:Hours\s*)?of\s*)?(\d{1,2}[-/][A-Za-z0-9]{2,3}[-/]\d{4})\s*To\s*:\s*(?:[0-9:]+\s*(?:Hours\s*)?of\s*|Midnight\s+of\s*)?(\d{1,2}[-/][A-Za-z0-9]{2,3}[-/]\d{4})/i) ||
     text.match(/Period\s+of\s+Insurance\s*From\s*[:\s]*(?:[0-9:]+\s*Hours\s*of\s*)?(\d{1,2}\/\d{1,2}\/\d{4})\s*To\s*[:\s]*(?:[0-9:]+\s*Hours\s*of\s*)?(?:Midnight\s*of\s*)?(\d{1,2}\/\d{1,2}\/\d{4})/i) ||
     text.match(/Period\s+of\s+Insurance\s*From\s*[:\s]*(?:00:00\s+Hours\s+of\s*)?([0-9A-Za-z/-]+)\s*To\s*[:\s]*(?:Midnight\s+of\s*)?([0-9A-Za-z/-]+)/i) ||
     text.match(/From\s*[:\s]*([0-9A-Za-z/-]+)\s*(?:00:00\s+Hours\s*)?To\s*(?:Midnight\s+of\s*)?([0-9A-Za-z/-]+)/i) ||
     text.match(/(\d{2}[-/]\d{2}[-/]\d{4})\s+to\s+(\d{2}[-/]\d{2}[-/]\d{4})/i);
   if (periodMatch) {
-    patch.startDate = parseRobustDate(periodMatch[1]) || normalizeWarehouseDate(periodMatch[1]);
-    patch.expiryDate = parseRobustDate(periodMatch[2]) || normalizeWarehouseDate(periodMatch[2]);
+    patch.startDate = normalizeWarehouseDate(parseRobustDate(periodMatch[1]));
+    patch.expiryDate = normalizeWarehouseDate(parseRobustDate(periodMatch[2]));
     patch.policyStartDate = patch.startDate;
     patch.policyExpiryDate = patch.expiryDate;
+    patch.policyEndDate = patch.expiryDate;
   }
 
   // Financials
@@ -215,12 +214,14 @@ function train({ text = "", result = {} }) {
     text.match(/Total\s+Premium\s+inclusive\s+Tax[^\n]*\n?\s*(?:`|₹)?\s*([0-9,.]+)/i) ||
     text.match(/Premium[^\n]*?Including\s*GST[^\n0-9]*([0-9,.]+)/i) ||
     text.match(/Premium\s*\(`\)\s*\(Including\s+GST\)\s*\(`\)\s*([0-9,.]+)/i) ||
-    text.match(/Total\s+Premium\*?\s*[:\s`₹]?\s*([0-9,.]+)/i);
+    text.match(/Total\s+Premium\*?\s*[:\s`₹]*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i);
   if (totMatch) {
     patch.totalPremium = formatAmount(totMatch[1]);
     patch.grossPremium = patch.totalPremium;
     patch.premium = patch.totalPremium;
-    patch.premiumIncludingGst = result.premiumIncludingGst || patch.totalPremium;
+    patch.premiumIncludingGst = /Endorsement\s+Schedule/i.test(text)
+      ? patch.totalPremium
+      : result.premiumIncludingGst || patch.totalPremium;
   }
 
   // Section-wise Sum Insured
@@ -253,6 +254,13 @@ function train({ text = "", result = {} }) {
       patch.sumInsured = formatAmount(bVal + cVal);
       patch.totalSumInsured = patch.sumInsured;
     }
+  }
+
+  const revisedMatch = text.match(/Sum\s+insured\s+under\s+the\s+policy\s+now\s+stands\s+revised\s+as\s+Rs\.?\s*([0-9][0-9,]*)/i);
+  if (/Endorsement\s+Schedule/i.test(text) && revisedMatch) {
+    patch.revisedSumInsured = formatAmount(revisedMatch[1]);
+    patch.sumInsured = patch.revisedSumInsured;
+    patch.totalSumInsured = patch.revisedSumInsured;
   }
 
   // Payment Details

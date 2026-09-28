@@ -80,7 +80,8 @@ function train({ text = "", result = {} }) {
   );
 
   const insuredName = clean(
-    matchGroup(text, /Insured Name\s*([A-Z\s]+?)(?:Policy Number|\n)/i) ||
+    matchGroup(text, /1\.\s*Proposer\s+Name\s*:\s*([^\n]+)/i) ||
+      matchGroup(text, /Insured Name\s*([A-Z\s]+?)(?:Policy Number|Zone|\n)/i) ||
       matchGroup(text, /POLICY DETAILSINSURED DETAILS\s+Insured Name\s*([^\n]+)/i) ||
       matchGroup(text, /1\.\s*Proposer\s+Name\s*:\s*([^\n]+)/i) ||
       matchGroup(text, /Dear\s+([^\n,]+?)(?=\s*We wish to inform|\n|,)/i),
@@ -197,29 +198,29 @@ function train({ text = "", result = {} }) {
       patch.chassisNumber = chassisMatch[0].replace(/\s+/g, "").slice(0, 17);
     }
 
-    patch.vehicleMake = "BAJAJ";
-    patch.vehicleModel = "PULSAR 125";
-    patch.variant = matchGroup(text, /Sub Type[\s\S]*?(NS\s*DISC)/i) || "NS DISC";
+    patch.vehicleMake = result.vehicleMake || matchGroup(text, /[A-Z]{3}\/\d{4}(BAJAJ|HONDA|HERO|TVS|YAMAHA|SUZUKI|ROYAL\s*ENFIELD)/i) || matchGroup(text, /Vehicle Make[ \t]+([^\n]+)/i);
+    patch.vehicleModel = matchGroup(text, /BAJAJ\s*(PULSAR\s*125)/i)?.replace(/\s+/g, " ") || result.vehicleModel || "";
+    patch.variant = matchGroup(text, /Sub Type[\s\S]*?(NS\s*DISC)/i) || result.variant || "";
     patch.bodyType = patch.variant;
     patch.makeModel = `${patch.vehicleMake} ${patch.vehicleModel} ${patch.variant}`.trim();
-    patch.manufacturingYear = matchGroup(text, /NS\s*DISC\s*(\d{4})/i) || matchGroup(text, /Petrol\s*(\d{4})/i) || "2022";
-    patch.cubicCapacity = matchGroup(text, /NS\s*DISC\s*(\d{2,4})\s*Petrol/i) || matchGroup(text, /Cubic Capa-?\s*city[\s\S]*?(\d{2,4})\s*Petrol/i) || "125";
-    patch.seatingCapacity = matchGroup(text, /Petrol\s*\d{4}\s*(\d{1,2})/i) || "2";
-    patch.fuelType = "Petrol";
-    patch.ncb = "0%";
-    patch.ncbPercentage = "0%";
+    patch.manufacturingYear = matchGroup(text, /NS\s*DISC\s*(\d{4})/i) || matchGroup(text, /Petrol\s*(\d{4})/i) || result.manufacturingYear || "";
+    patch.cubicCapacity = matchGroup(text, /NS\s*DISC\s*(\d{2,4})\s*Petrol/i) || matchGroup(text, /Cubic Capa-?\s*city[\s\S]*?(\d{2,4})\s*Petrol/i) || result.cubicCapacity || "";
+    patch.seatingCapacity = matchGroup(text, /Petrol\s*\d{4}\s*(\d{1,2})/i) || result.seatingCapacity || "";
+    patch.fuelType = matchGroup(text, /(Petrol|Diesel|Electric|CNG|LPG)(?=\d{4}\d)/i) || matchGroup(text, /Fuel Type[ \t]+(Petrol|Diesel|Electric|CNG|LPG)/i) || result.fuelType || "";
+    const ncb = text.match(/NCB[\s\S]{0,160}?[: ]\s*(\d{1,2})\s*%/i);
+    if (ncb) patch.ncb = patch.ncbPercentage = `${ncb[1]}%`;
 
     const idv = amount(
-      matchGroup(text, /Total\s+SI[\s\S]*?\d{2}-[A-Z]{3}-\d{2}\s*\d{2}-[A-Z]{3}-\d{2}\s*(\d+)/i) || "68000",
+      matchGroup(text, /Total\s+SI[\s\S]*?\d{2}-[A-Z]{3}-\d{2}\s*\d{2}-[A-Z]{3}-\d{2}\s*(\d+)/i) || "",
     );
     patch.idv = idv;
     patch.totalIdv = idv;
     patch.sumInsured = idv;
 
-    const odNet = amount(matchGroup(text, /Own Damage Premium\s*\(?Rs\.?\)?\s*\n\s*Own Damage Premium\s*(\d+)/i) || "1746");
-    const sgst = amount(matchGroup(text, /State GST\s*\(\d+%\)\s*(\d+)/i) || "157");
-    const cgst = amount(matchGroup(text, /Central GST\s*\(\d+%\)\s*(\d+)/i) || "157");
-    const total = amount(matchGroup(text, /Final Premium Rs\.\s*\n\s*(\d+)/i) || "2060");
+    const odNet = amount(matchGroup(text, /Own Damage Premium\s*\(?Rs\.?\)?\s*\n\s*Own Damage Premium\s*(\d+)/i) || "");
+    const sgst = amount(matchGroup(text, /State GST\s*\(\d+%\)\s*(\d+)/i) || "");
+    const cgst = amount(matchGroup(text, /Central GST\s*\(\d+%\)\s*(\d+)/i) || "");
+    const total = amount(matchGroup(text, /Final Premium Rs\.\s*\n\s*(\d+)/i) || "");
 
     patch.odPremium = odNet;
     patch.netPremium = odNet;
@@ -256,7 +257,7 @@ function train({ text = "", result = {} }) {
       matchGroup(text, /Registration Number[\s\S]*?\b([A-Z]{2}\d{2}[A-Z]{1,3}\d{4})\b/i) ||
       matchGroup(text, /Registration Num-?\s*ber[\s\S]*?\n\s*([A-Z]{2}\d{2}[A-Z]{1,3}\d{4})/i) ||
       matchGroup(text, /([A-Z]{2}\d{2}[A-Z]{1,3}\d{4})/i) ||
-      "MP04CT2032";
+      result.registrationNumber || "";
     assign(patch, "registrationNumber", regNo);
     patch.vehicleNumber = regNo;
 
@@ -265,29 +266,25 @@ function train({ text = "", result = {} }) {
       "rtoLocation",
       matchGroup(text, /Name\s*of\s*Registration\s*Authority\s*:\s*([A-Z0-9-]+)/i) ||
         matchGroup(text, /Place of Registra-?\s*tion\s*\n?\s*([A-Z0-9-]+)/i) ||
-        "MP04-BHOPAL",
+        result.rtoLocation || "",
     );
 
     assign(
       patch,
       "engineNumber",
-      matchGroup(text, /\b(D13A\d{7})\b/i) ||
-        matchGroup(text, /Engine Number\s+(?:Chassis Number[^\n]*\n)?\s*([A-Z0-9]{8,15})/i) ||
-        "D13A5503389",
+      matchGroup(text, /Engine Number\s+(?:Chassis Number[^\n]*\n)?\s*([A-Z0-9]{8,15})/i) ||
+        result.engineNumber || "",
     );
 
-    const chassisMatch =
-      matchGroup(text, /MA3NYFB1SHH\s*278727/i)?.replace(/\s+/g, "") ||
-      (matchGroup(text, /MA3[A-Z0-9\s]{14,20}/i) ? matchGroup(text, /MA3[A-Z0-9\s]{14,20}/i).replace(/\s+/g, "").slice(0, 17) : "") ||
-      "MA3NYFB1SHH278727";
+    const chassisMatch = matchGroup(text, /Chassis Number\s+([A-Z0-9]{17})\b/i) || result.chassisNumber || "";
     patch.chassisNumber = chassisMatch;
 
-    patch.vehicleMake = "MARUTI";
-    patch.vehicleModel = "VITARA BREZZA";
+    patch.vehicleMake = matchGroup(text, /Vehicle Make[ \t]+([^\n]+)/i) || result.vehicleMake || result.makeModel?.split(/\s+-\s+/)[0] || "";
+    patch.vehicleModel = matchGroup(text, /Vehicle Model[ \t]+([^\n]+)/i) || result.vehicleModel?.replace(/^-\s*/, "") || result.makeModel?.split(/\s+-\s+/)[1] || "";
     const variant = clean(
       matchGroup(text, /\b(1\.2\s*VDI\s*\(O\)(?:\s*DDIS\s*200)?)/i) ||
         matchGroup(text, /\b(1\.2\s*VDI[^\n]+)/i) ||
-        "1.2 VDI (O) DDIS 200",
+        result.variant || "",
     );
     patch.variant = variant;
     patch.bodyType = variant;
@@ -299,17 +296,17 @@ function train({ text = "", result = {} }) {
       (rowMatch ? rowMatch[4] : null) ||
       matchGroup(text, /Year of\s+Manufacture[\s\S]*?\b(20\d{2}|19\d{2})\b/i) ||
       matchGroup(text, /Year Of Manufactur-?\s*ing[\s\S]*?\b(20\d{2}|19\d{2})\b/i) ||
-      "2017";
+      result.manufacturingYear || "";
     patch.cubicCapacity =
       (rowMatch ? rowMatch[2] : null) ||
       matchGroup(text, /Cubic Capa-?\s*city\/Kilowatt[\s\S]*?(\d{3,4})/i) ||
       matchGroup(text, /CC(?:\/KW)?\s+Seating Capacity[\s\S]*?(\d{3,4})\s+\d+/i) ||
-      "1248";
+      result.cubicCapacity || "";
     patch.seatingCapacity =
       (rowMatch ? rowMatch[3] : null) ||
       matchGroup(text, /Seating Ca-?\s*pacity[\s\S]*?\b(\d{1,2})\b/i) ||
       "5";
-    patch.fuelType = matchGroup(text, /Fuel Type\s*(Diesel|Petrol|CNG|Electric|LPG)/i) || "Diesel";
+    patch.fuelType = matchGroup(text, /Fuel Type\s*(Diesel|Petrol|CNG|Electric|LPG)/i) || result.fuelType || "";
 
     const ncbVal =
       (rowMatch ? rowMatch[1] : null) ||
@@ -327,7 +324,7 @@ function train({ text = "", result = {} }) {
       (rowMatch ? rowMatch[5] : null) ||
         matchGroup(text, /Name of Pledgee\s*:\s*([^\n.]+)/i) ||
         matchGroup(text, /Hypothecation Details[\s\S]*?([A-Z\s]+(?:BANK|LTD|LIMITED|FINANCE)[^\n]*)/i) ||
-        "HDFC BANK LTD",
+        result.financerName || "",
     );
     if (patch.hypothecation) {
       patch.financier = patch.hypothecation;
@@ -339,7 +336,7 @@ function train({ text = "", result = {} }) {
         matchGroup(text, /Total IDV \(in\s*Rs\.?\)\s*[:\s]*([0-9,.]+)/i) ||
         matchGroup(text, /Vehicle IDV\s*[:\s]*([0-9,.]+)/i) ||
         matchGroup(text, /Total Value\s*[:\s]*([0-9,.]+)/i) ||
-        "341220.00",
+        result.idv || "",
     );
     patch.idv = idv;
     patch.totalIdv = idv;
@@ -349,27 +346,27 @@ function train({ text = "", result = {} }) {
     const odNet = amount(
       matchGroup(text, /Total OD Premium - A\s*([0-9,.]+)/i) ||
         matchGroup(text, /Own Damage Premium\s*([0-9,.]+)/i) ||
-        "5440.00",
+        result.odPremium || "",
     );
-    const basicTp = amount(matchGroup(text, /Basic Third Party Liability\s*([0-9,.]+)/i) || "3416.00");
-    const ownerDriver = amount(matchGroup(text, /PA Cover for Owner-Driver[\s\S]*?(\d+\.\d{2})/i) || "331.00");
+    const basicTp = amount(matchGroup(text, /Basic Third Party Liability\s*([0-9,.]+)/i) || result.basicTpPremium || "");
+    const ownerDriver = amount(matchGroup(text, /PA Cover for Owner-Driver[\s\S]*?(\d+\.\d{2})/i) || "");
     const legalLiability = amount(
       matchGroup(text, /LL to person for Paid driver\/Opera-\s*\n\s*tion\/Maintenance\s*\n\s*([0-9,.]+)/i) ||
         matchGroup(text, /LL to person for Paid driver[\s\S]*?(\d+\.\d{2})/i) ||
-        "50.00",
+        "",
     );
-    const passengerPa = amount(matchGroup(text, /PA Cover For \d+ Passenger[\s\S]*?(\d+\.\d{2})/i) || "250.00");
-    const totalAct = amount(matchGroup(text, /Total Act Premium - B\s*([0-9,.]+)/i) || "4047.00");
+    const passengerPa = amount(matchGroup(text, /PA Cover For \d+ Passenger[\s\S]*?(\d+\.\d{2})/i) || "");
+    const totalAct = amount(matchGroup(text, /Total Act Premium - B\s*([0-9,.]+)/i) || result.tpPremium || "");
     const netPremium = amount(
-      matchGroup(text, /Total Premium \(Net Premium\)[^\n]*?\s*([0-9,.]+)/i) || "9488.00",
+      matchGroup(text, /Total Premium \(Net Premium\)[^\n]*?\s*([0-9,.]+)/i) || result.netPremium || "",
     );
-    const sgst = amount(matchGroup(text, /State GST \(\d+%\)\s*([0-9,.]+)/i) || "854.00");
-    const cgst = amount(matchGroup(text, /Central GST \(\d+%\)\s*([0-9,.]+)/i) || "854.00");
+    const sgst = amount(matchGroup(text, /State GST \(\d+%\)\s*([0-9,.]+)/i) || "");
+    const cgst = amount(matchGroup(text, /Central GST \(\d+%\)\s*([0-9,.]+)/i) || "");
     const totalPremium = amount(
       matchGroup(text, /Final Premium\s*\(\s*Rupees[^\n]*\n\s*([0-9,.]+)/i) ||
         matchGroup(text, /Final Premium[^\n]*?\n\s*([0-9,.]+)/i) ||
         matchGroup(text, /Final Premium[^\n]*?\s+([0-9,.]+)/i) ||
-        "11196.00",
+        result.totalPremium || "",
     );
 
     patch.odPremium = odNet;
@@ -417,14 +414,14 @@ function train({ text = "", result = {} }) {
     assign(
       patch,
       "addOnCovers",
-      clean(matchGroup(text, /Plan Name:([A-Za-z0-9\s]+?)(?:&|Plan Description|$)/i) || "Drive Assure Economy Plus"),
+      clean(matchGroup(text, /Plan Name:([A-Za-z0-9\s]+?)(?:&|Plan Description|$)/i) || ""),
     );
     patch.depreciationShieldCover = "Yes";
     patch.engineProtectorCover = "Yes";
     patch.spotAssistanceCover = "Yes";
     patch.keysAndLocksCover = "Yes";
     patch.personalBaggageCover = "Yes";
-    patch.compulsoryDeductible = amount(matchGroup(text, /compulsory deductible\s*:\s*Rs\.([0-9,.]+)/i) || "1000.00");
+    patch.compulsoryDeductible = amount(matchGroup(text, /compulsory deductible\s*:\s*Rs\.([0-9,.]+)/i) || "");
     patch.imtEndorsements = "IMT-7, IMT-16, IMT-22, IMT-28";
     patch.extractionTrainingVersion = "BAJAJ_ALLIANZ_MOTOR_PRIVATE_CAR_PACKAGE_V1";
   } else if (isCommercialPackage) {
@@ -462,7 +459,7 @@ function train({ text = "", result = {} }) {
       "rtoLocation",
       matchGroup(text, /Name\s*of\s*Registration\s*Authority\s*:\s*([A-Z0-9-]+)/i) ||
         matchGroup(text, /Place of Registra-?\s*tion\s*\n?\s*([A-Z0-9-]+)/i) ||
-        (rtoMatch && rtoMatch[1].toUpperCase() === "MP04" ? "MP04-BHOPAL" : rtoMatch ? rtoMatch[1].toUpperCase() : ""),
+        (rtoMatch && rtoMatch[1].toUpperCase() === "MP04" ? result.rtoLocation || "" : rtoMatch ? rtoMatch[1].toUpperCase() : ""),
     );
 
     const fuelMatch = text.match(/(DIESEL|PETROL|CNG|ELECTRIC|LPG)\s*(\d{1,3}(?:,\d{2,3})+)/i);
@@ -474,7 +471,7 @@ function train({ text = "", result = {} }) {
       patch.vehicleIdv = totalSumInsured;
       patch.sumInsured = totalSumInsured;
     } else {
-      patch.fuelType = matchGroup(text, /Fuel Type\s*(?:Vehicle IDV[^\n]*\n[^\n]*\n)?\s*(Diesel|Petrol|CNG|Electric|LPG)/i) || "Diesel";
+      patch.fuelType = matchGroup(text, /Fuel Type\s*(?:Vehicle IDV[^\n]*\n[^\n]*\n)?\s*(Diesel|Petrol|CNG|Electric|LPG)/i) || result.fuelType || "";
       const totalSumInsured = amount(
         matchGroup(text, /Total Sum In-?\s*sured\s*[\s\S]*?([0-9,]+\.?\d*?)(?:\s*\n|$)/i) ||
           matchGroup(text, /Vehicle IDV\s*\(in Rs\.?\)\s*[\s\S]*?([0-9,]+)/i),
@@ -574,7 +571,7 @@ function train({ text = "", result = {} }) {
     const prevExp = matchGroup(text, /Expiry On\s*-\s*(\d{2}-[A-Z]{3}-\d{2,4})/i);
     if (prevExp) patch.previousPolicyExpiryDate = normalizeWarehouseDate(prevExp);
 
-    patch.compulsoryDeductible = amount(matchGroup(text, /Compulsory Deductible\s*:\s*Rs\.?\s*([0-9,.]+)/i) || "500");
+    patch.compulsoryDeductible = amount(matchGroup(text, /Compulsory Deductible\s*:\s*Rs\.?\s*([0-9,.]+)/i) || "");
 
     const imtList = [];
     if (/Hypothecated|HYPOTHECATED/i.test(text)) imtList.push("IMT-7");
@@ -723,6 +720,10 @@ function train({ text = "", result = {} }) {
     patch.extractionTrainingVersion = "BAJAJ_ALLIANZ_MOTOR_COMMERCIAL_LIABILITY_V2";
   }
 
+  const printedTotal = amount(matchGroup(text, /Final\s+Premium\s*(?:\([^)]*\))?\s*(?:Rs\.?)?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i));
+  if (printedTotal) {
+    patch.totalPremium = patch.grossPremium = patch.premium = patch.premiumIncludingGst = printedTotal;
+  }
   return patch;
 }
 

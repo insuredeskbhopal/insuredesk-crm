@@ -117,7 +117,7 @@ function train({ text = "", result = {} }) {
     patch.basicPremium = net;
   }
 
-  const gstMatch = text.match(/GST\s*\(\d+%\)[\s\S]{0,60}?`?\s*([0-9,]+\.\d{2})/i);
+  const gstMatch = text.match(/GST\s*\(\d+%\)\s*`?\s*([0-9,]+(?:\.\d{1,2})?)/i);
   if (gstMatch?.[1]) {
     const gst = cleanAmount(gstMatch[1]);
     patch.gstAmount = gst;
