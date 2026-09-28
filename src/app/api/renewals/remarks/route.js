@@ -219,7 +219,11 @@ export async function POST(request) {
 
     return Response.json({
       success: true,
-      remark: primaryRemark,
+      remark: {
+        ...primaryRemark,
+        author: primaryRemark?.createdBy || actorName,
+        remark: primaryRemark?.text || text,
+      },
       followUp: primaryReviewedData?.renewalFollowUp,
     });
   } catch (error) {
@@ -235,5 +239,143 @@ export async function POST(request) {
     }
     console.error("Add renewal remark failed:", error);
     return Response.json({ error: "Failed to save renewal remark." }, { status: 500 });
+  }
+}
+
+export async function GET(request) {
+  try {
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return Response.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const user = await verifyJWT(token);
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const policyId = searchParams.get("policyId");
+    const policyIdsParam = searchParams.get("policyIds");
+    const targetPolicyIds = policyIdsParam
+      ? policyIdsParam.split(",").map((s) => s.trim()).filter(Boolean)
+      : policyId
+        ? [policyId]
+        : [];
+
+    if (!targetPolicyIds.length) {
+      return Response.json({ remarks: [] });
+    }
+
+    const tenantFilter = getTenantFilter(user, "read");
+
+    const policies = await prisma.policyRecord.findMany({
+      where: {
+        id: { in: targetPolicyIds },
+        ...tenantFilter,
+      },
+      select: {
+        id: true,
+        data: true,
+        reviewedData: true,
+        renewalStatus: true,
+        customerPortfolioId: true,
+      },
+    });
+
+    if (!policies.length) {
+      return Response.json({ remarks: [] });
+    }
+
+    const allRemarks = [];
+    const seenRemarkIds = new Set();
+
+    for (const pol of policies) {
+      const pRem = [
+        ...(Array.isArray(pol.reviewedData?.renewalRemarks) ? pol.reviewedData.renewalRemarks : []),
+        ...(Array.isArray(pol.data?.renewalRemarks) ? pol.data.renewalRemarks : []),
+      ];
+
+      for (const r of pRem) {
+        if (!r) continue;
+        const key = r.id || `${r.createdAt}-${r.text || r.remark}`;
+        if (seenRemarkIds.has(key)) continue;
+        seenRemarkIds.add(key);
+
+        const remarkText = String(r.text || r.remark || "").trim();
+        if (!remarkText) continue;
+
+        allRemarks.push({
+          id: r.id || key,
+          text: remarkText,
+          remark: remarkText,
+          author: r.createdBy || r.author || r.userName || "Agent",
+          userName: r.createdBy || r.author || r.userName || "Agent",
+          createdBy: r.createdBy || r.author || r.userName || "Agent",
+          createdAt: r.createdAt || new Date().toISOString(),
+          type: r.type || "FOLLOW_UP",
+          oldStatus: r.oldStatus || "",
+          newStatus: r.newStatus || "",
+          nextFollowUpDate: r.nextFollowUpDate || "",
+          followUpStatus: r.followUpStatus || "",
+          followUpMode: r.followUpMode || "",
+          priority: r.priority || "Normal",
+          nextAction: r.nextAction || "",
+          policyId: pol.id,
+        });
+      }
+    }
+
+    // Also include any ActivityLog records recorded for these policies
+    try {
+      const activities = await prisma.activityLog.findMany({
+        where: {
+          recordId: { in: targetPolicyIds },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 30,
+      });
+
+      for (const act of activities) {
+        const data = typeof act.newValue === "object" && act.newValue !== null ? act.newValue : {};
+        const remarkText = String(act.description || data.remark || "").trim();
+        if (!remarkText) continue;
+
+        const isDuplicate = allRemarks.some(
+          (existing) =>
+            existing.text === remarkText &&
+            Math.abs(new Date(existing.createdAt).getTime() - new Date(act.createdAt).getTime()) < 60000
+        );
+
+        if (!isDuplicate) {
+          allRemarks.push({
+            id: act.id,
+            text: remarkText,
+            remark: remarkText,
+            author: data.assignedTo || (act.userRole ? `${act.userRole}` : "Agent"),
+            userName: data.assignedTo || (act.userRole ? `${act.userRole}` : "Agent"),
+            createdBy: data.assignedTo || (act.userRole ? `${act.userRole}` : "Agent"),
+            createdAt: act.createdAt ? new Date(act.createdAt).toISOString() : new Date().toISOString(),
+            type: act.action || "FOLLOW_UP",
+            followUpStatus: data.outcome || "",
+            followUpMode: data.followUpMode || (act.action === "WHATSAPP" ? "WhatsApp" : "Call"),
+            nextFollowUpDate: data.followUpAt || "",
+            priority: data.priority || "Normal",
+            nextAction: data.nextAction || "",
+            policyId: act.recordId || targetPolicyIds[0],
+          });
+        }
+      }
+    } catch (actErr) {
+      console.warn("Could not query activity logs for remarks:", actErr.message);
+    }
+
+    // Sort newest first
+    allRemarks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return Response.json({ remarks: allRemarks });
+  } catch (error) {
+    console.error("GET renewal remarks failed:", error);
+    return Response.json({ remarks: [] }, { status: 500 });
   }
 }

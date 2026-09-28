@@ -302,18 +302,26 @@ export async function GET(request, props) {
 
     // 4. Consolidate Timeline & Remarks History
     const remarks = [];
-    policies.forEach((policy) => {
+    const sourcePolicies = allPolicies && allPolicies.length > 0 ? allPolicies : policies;
+    const seenRemarks = new Set();
+
+    sourcePolicies.forEach((policy) => {
       const history = Array.isArray(policy.renewalRemarks) ? policy.renewalRemarks : [];
       history.forEach((remark) => {
-        remarks.push({
-          ...remark,
-          policyId: policy.id,
-          policyNumber: policy.policyNumber,
-          policyType: policy.displayPolicyType || policy.policyType,
-        });
+        const key = remark.id || `${remark.createdAt}-${remark.text || remark.remark}`;
+        if (!seenRemarks.has(key)) {
+          seenRemarks.add(key);
+          remarks.push({
+            ...remark,
+            text: remark.text || remark.remark,
+            policyId: policy.id,
+            policyNumber: policy.policyNumber,
+            policyType: policy.displayPolicyType || policy.policyType,
+          });
+        }
       });
     });
-    remarks.push(...buildWhatsAppTimelineItems(whatsappLogs, policies));
+    remarks.push(...buildWhatsAppTimelineItems(whatsappLogs, sourcePolicies));
 
     // Sort remarks: newest first
     remarks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

@@ -157,10 +157,10 @@ export default function RenewalActionDrawer({
 
 
   // Remark Form
-  const [selectedChip, setSelectedChip] = useState("Interested (Send Quote)");
-  const [remarkText, setRemarkText] = useState("Customer is interested, requested renewal quote.");
+  const [selectedChip, setSelectedChip] = useState(null);
+  const [remarkText, setRemarkText] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
-  const [renewalStatus, setRenewalStatus] = useState("Interested");
+  const [renewalStatus, setRenewalStatus] = useState("Follow-Up");
   const [followUpMode, setFollowUpMode] = useState("Call");
   const [priority, setPriority] = useState("Normal");
 
@@ -240,6 +240,11 @@ export default function RenewalActionDrawer({
     setWhatsAppRecipientType("individual");
     setWhatsAppGroupId("");
     setRenewalStatus(activePolicy.renewalStatus || "Follow-Up");
+    setSelectedChip(null);
+    setRemarkText("");
+    setFollowUpDate("");
+    setFollowUpMode("Call");
+    setPriority("Normal");
     setNewInsurer(activePolicy.insuranceCompany || "");
     setRenewedPremium(activePolicy.totalPremium || activePolicy.premium || "");
     setNetPremium(activePolicy.netPremium || "");
@@ -324,7 +329,8 @@ export default function RenewalActionDrawer({
     // Fetch timeline
     if (activePolicy.id) {
       setTimelineLoading(true);
-      fetch(`/api/renewals/remarks?policyId=${activePolicy.id}`)
+      const queryIds = Array.from(new Set([activePolicy.id, ...((allPolicies || []).map((p) => p.id).filter(Boolean))]));
+      fetch(`/api/renewals/remarks?policyId=${activePolicy.id}&policyIds=${queryIds.join(",")}`)
         .then((res) => res.json())
         .then((data) => {
           setTimeline(Array.isArray(data.remarks) ? data.remarks : []);
@@ -774,16 +780,37 @@ export default function RenewalActionDrawer({
       });
 
       if (res.ok) {
+        const resData = await res.json().catch(() => ({}));
         showToast(
           targetIds.length > 1
             ? `Remark logged for ${targetIds.length} policies!`
             : "Remark recorded successfully!",
           "success"
         );
+
+        const newRemark = resData.remark || {
+          id: String(Date.now()),
+          text: remarkText.trim(),
+          remark: remarkText.trim(),
+          author: "You",
+          createdBy: "You",
+          createdAt: new Date().toISOString(),
+          followUpStatus: renewalStatus,
+          followUpMode: followUpMode,
+          nextFollowUpDate: followUpDate,
+          priority: priority,
+        };
+
+        // Immediately update interaction history in drawer
+        setTimeline((prev) => [newRemark, ...(Array.isArray(prev) ? prev : [])]);
+
+        // Reset the form fields
+        setRemarkText("");
+        setFollowUpDate("");
+        setSelectedChip(null);
+
         if (andNext && onSaveAndNext) {
           onSaveAndNext(optimisticUpdatedPolicy);
-        } else {
-          onClose();
         }
       } else {
         const data = await res.json().catch(() => ({}));
@@ -1518,10 +1545,10 @@ export default function RenewalActionDrawer({
                       </div>
                     ) : (
                       <div className="rad-timeline-feed">
-                        {timeline.slice(0, 6).map((item, idx) => (
+                        {timeline.map((item, idx) => (
                           <div key={item.id || idx} className="rad-timeline-bubble">
                             <div className="rad-timeline-bubble-head">
-                              <span className="rad-timeline-author">{item.author || item.userName || "Agent"}</span>
+                              <span className="rad-timeline-author">{item.createdBy || item.author || item.userName || "Agent"}</span>
                               <span className="rad-timeline-time">
                                 {item.createdAt ? new Date(item.createdAt).toLocaleString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recent"}
                               </span>
