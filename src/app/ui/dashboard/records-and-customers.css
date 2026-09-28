@@ -119,19 +119,38 @@ th {
 }
 
 .records-table .col-action {
-  width: 96px;
+  width: 130px;
 }
 
 .records-table th.col-pdf-th,
-.records-table td.col-pdf-cell,
-.records-table th.col-action-th,
-.records-table td.col-action-cell {
+.records-table td.col-pdf-cell {
   width: 96px;
   min-width: 96px;
   padding-left: 8px !important;
   padding-right: 8px !important;
   text-align: center !important;
   white-space: nowrap !important;
+}
+
+.records-table th.col-action-th,
+.records-table td.col-action-cell {
+  width: 130px !important;
+  min-width: 130px !important;
+  max-width: 130px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+
+.records-table th.col-action-th {
+  background: #f3f4f5 !important;
+}
+
+.records-table thead,
+.records-table thead tr {
+  background: #f3f4f5 !important;
 }
 
 .records-table .col-default {
@@ -143,6 +162,7 @@ th {
   top: 0;
   z-index: 3;
   white-space: normal;
+  background: #f3f4f5;
 }
 
 .records-table th,
@@ -538,6 +558,9 @@ tbody tr.row-marked {
   justify-content: center !important;
   width: 28px !important;
   height: 28px !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+  box-sizing: border-box !important;
   border-radius: 6px !important;
   background-color: #ffffff !important;
   color: #0f172a !important;
@@ -558,8 +581,15 @@ tbody tr.row-marked {
 
 .col-pdf-cell .pdf-icon-link svg,
 .col-action-cell .record-icon-action svg {
+  display: block !important;
+  width: 15px !important;
+  height: 15px !important;
   color: #0f172a !important;
   stroke: #0f172a !important;
+}
+
+.col-action-cell .record-icon-action svg circle {
+  fill: #0f172a !important;
 }
 
 .table-pagination {

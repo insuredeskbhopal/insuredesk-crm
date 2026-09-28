@@ -444,7 +444,7 @@ const COLUMN_WIDTHS = {
   "col-ppt": 125,
   "col-valid": 125,
   "col-pdf": 96,
-  "col-action": 120,
+  "col-action": 130,
   "col-default": 150,
 };
 
@@ -857,7 +857,7 @@ export default function RecordsTable({
     980,
     columns.reduce(
       (total, column) => total + (COLUMN_WIDTHS[column.className || "col-default"] || 150),
-      (canDelete ? 48 : 0) + (COLUMN_WIDTHS["col-action"] || 120),
+      (canDelete ? 48 : 0) + (COLUMN_WIDTHS["col-action"] || 130),
     ),
   );
 
@@ -953,7 +953,7 @@ export default function RecordsTable({
             {columns.map((column) => (
               <col key={column.key} className={column.className || "col-default"} />
             ))}
-            <col className="col-action" />
+            <col className="col-action" style={{ width: "130px" }} />
           </colgroup>
           <thead>
             <tr>
@@ -983,7 +983,7 @@ export default function RecordsTable({
                   {column.label}
                 </th>
               ))}
-              <th style={{ textAlign: "center" }}>Actions</th>
+              <th className="col-action-th" style={{ textAlign: "center", width: "130px", minWidth: "130px", background: "#f3f4f5" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -1030,7 +1030,7 @@ export default function RecordsTable({
                         )}
                       </td>
                     ))}
-                    <td className="col-action-cell" style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+                    <td className="col-action-cell" style={{ textAlign: "center", whiteSpace: "nowrap", width: "130px", minWidth: "130px" }}>
                       <div style={{ display: "inline-flex", gap: "6px", alignItems: "center", justifyContent: "center" }}>
                         <button
                           aria-label={`View details of ${record.policyNumber || record.insuredName || "policy record"}`}
@@ -1044,6 +1044,9 @@ export default function RecordsTable({
                             justifyContent: "center",
                             width: "28px",
                             height: "28px",
+                            padding: 0,
+                            lineHeight: 0,
+                            boxSizing: "border-box",
                             borderRadius: "6px",
                             backgroundColor: "#ffffff",
                             color: "#0f172a",
@@ -1052,7 +1055,7 @@ export default function RecordsTable({
                             boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                           }}
                         >
-                          <Eye size={14} />
+                          <Eye size={15} strokeWidth={2} />
                         </button>
                         {record.hasPdf ? (
                           <a
@@ -1068,6 +1071,9 @@ export default function RecordsTable({
                               justifyContent: "center",
                               width: "28px",
                               height: "28px",
+                              padding: 0,
+                              lineHeight: 0,
+                              boxSizing: "border-box",
                               borderRadius: "6px",
                               backgroundColor: "#ffffff",
                               color: "#0f172a",
@@ -1076,7 +1082,7 @@ export default function RecordsTable({
                               boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                             }}
                           >
-                            <FileText size={14} />
+                            <FileText size={15} strokeWidth={2} />
                           </a>
                         ) : (
                           <span
@@ -1089,6 +1095,9 @@ export default function RecordsTable({
                               justifyContent: "center",
                               width: "28px",
                               height: "28px",
+                              padding: 0,
+                              lineHeight: 0,
+                              boxSizing: "border-box",
                               borderRadius: "6px",
                               backgroundColor: "#f8fafc",
                               color: "#94a3b8",
@@ -1097,7 +1106,7 @@ export default function RecordsTable({
                               opacity: 0.6,
                             }}
                           >
-                            <FileText size={14} />
+                            <FileText size={15} strokeWidth={2} />
                           </span>
                         )}
                         <button
@@ -1113,6 +1122,9 @@ export default function RecordsTable({
                             justifyContent: "center",
                             width: "28px",
                             height: "28px",
+                            padding: 0,
+                            lineHeight: 0,
+                            boxSizing: "border-box",
                             borderRadius: "6px",
                             backgroundColor: "#ffffff",
                             color: "#0f172a",
@@ -1121,7 +1133,7 @@ export default function RecordsTable({
                             boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                           }}
                         >
-                          <MoreVertical size={14} />
+                          <MoreVertical size={15} strokeWidth={2} />
                         </button>
                       </div>
                     </td>
