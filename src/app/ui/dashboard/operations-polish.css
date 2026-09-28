@@ -687,8 +687,8 @@
   .records-table .col-vehicle { width: 110px !important; }
   .records-table .col-company { width: 120px !important; }
   .records-table .col-group { width: 120px !important; }
-  .records-table .col-action { width: 56px !important; }
-  .records-table .col-pdf { width: 44px !important; }
+  .records-table .col-action { width: 90px !important; }
+  .records-table .col-pdf { width: 90px !important; }
 
   .table-panel {
     padding: 10px !important;

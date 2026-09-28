@@ -115,11 +115,23 @@ th {
 }
 
 .records-table .col-pdf {
-  width: 56px;
+  width: 96px;
 }
 
 .records-table .col-action {
-  width: 92px;
+  width: 96px;
+}
+
+.records-table th.col-pdf-th,
+.records-table td.col-pdf-cell,
+.records-table th.col-action-th,
+.records-table td.col-action-cell {
+  width: 96px;
+  min-width: 96px;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
 }
 
 .records-table .col-default {

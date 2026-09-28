@@ -307,7 +307,7 @@ function ReportFilters({ filters, users, report }) {
           <span>Policy Category</span>
           <select
             name="policyCategory"
-            defaultValue={filters.policyCategory}
+            value={filters.policyCategory || ""}
             onChange={(event) =>
               updateMonthlyReport({ policyCategory: event.currentTarget.value })
             }

@@ -1,6 +1,11 @@
 export function parseMoney(value) {
-  if (typeof value === "number") return value;
-  return Number(String(value || "").replace(/,/g, "")) || 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const cleaned = String(value || "").replace(/,/g, "").trim();
+  const direct = Number(cleaned);
+  if (!Number.isNaN(direct) && Number.isFinite(direct)) return direct;
+  const sanitized = cleaned.replace(/[^0-9.-]/g, "");
+  const num = Number(sanitized);
+  return !Number.isNaN(num) && Number.isFinite(num) ? num : 0;
 }
 
 export function formatMoney(value) {

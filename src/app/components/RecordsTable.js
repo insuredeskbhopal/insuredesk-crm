@@ -413,8 +413,8 @@ const COLUMN_WIDTHS = {
   "col-tehsil": 125,
   "col-ppt": 125,
   "col-valid": 125,
-  "col-pdf": 56,
-  "col-action": 88,
+  "col-pdf": 96,
+  "col-action": 96,
   "col-default": 150,
 };
 
@@ -790,7 +790,7 @@ export default function RecordsTable({
     980,
     columns.reduce(
       (total, column) => total + (COLUMN_WIDTHS[column.className || "col-default"] || 150),
-      (canDelete ? 48 : 0) + 144,
+      (canDelete ? 48 : 0) + 192,
     ),
   );
 

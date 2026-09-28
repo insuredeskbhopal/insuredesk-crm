@@ -102,8 +102,12 @@ const POLICY_SELECT = {
   updatedAt: true,
   data: true,
   reviewedData: true,
+  sourceFile: true,
   selectedCompany: true,
   selectedPolicyType: true,
+  detectedPolicyType: true,
+  selectedServiceCategory: true,
+  detectedServiceCategory: true,
   pdfFileName: true,
   confidenceScore: true,
   extractionQuality: true,
@@ -123,18 +127,76 @@ const POLICY_SUMMARY_SELECT = {
   createdAt: true,
   data: true,
   reviewedData: true,
+  sourceFile: true,
+  selectedPolicyType: true,
+  selectedServiceCategory: true,
   pdfFileName: true,
   renewalStatus: true,
   lostReason: true,
   isActivePolicy: true,
 };
 
-const MONTHLY_POLICY_CATEGORIES = [
+export const MONTHLY_POLICY_CATEGORIES = [
   { value: "motor", label: "Motor Policy" },
+  { value: "non-motor", label: "Non-Motor Policy" },
   { value: "warehouse", label: "Warehouse Policy" },
   { value: "health", label: "Health Policy" },
   { value: "other", label: "Other Policy" },
 ];
+
+export function getPolicyCategory(record) {
+  if (!record || typeof record !== "object") return "other";
+  const d = record.reviewedData || record.data || {};
+  const policyType = String(record.policyType || d.policyType || record.selectedPolicyType || record.detectedPolicyType || "").trim();
+  const serviceCat = String(record.documentCategory || record.selectedServiceCategory || record.detectedServiceCategory || "").trim();
+  const docCat = String(d.documentCategory || d.policyCategory || "").trim();
+  const docFormat = String(record.documentFormat || d.documentFormat || "").trim();
+  const sourceFile = String(record.sourceFile || record.pdfFileName || "").trim();
+  const hasVehicle = Boolean(d.vehicleNumber || d.registrationNumber || d.makeModel || d.engineNumber || d.chassisNumber);
+
+  const combined = `${policyType} ${serviceCat} ${docCat} ${docFormat} ${sourceFile}`.toLowerCase();
+
+  // 1. Health check
+  if (
+    /health|mediclaim|hospital|floater|family\s*floater|optima|critical\s*illness|individual\s*health|group\s*health/i.test(combined) &&
+    !/vehicle|motor|warehouse|car|bike/i.test(policyType)
+  ) {
+    return "health";
+  }
+
+  // 2. Warehouse check (Strict warehouse/storage/godown/mpwlc)
+  if (
+    /warehouse|godown|mpwlc|warehousing|storage/i.test(combined) ||
+    /warehouse/i.test(docFormat) ||
+    /warehouse/i.test(serviceCat) ||
+    /warehouse/i.test(docCat)
+  ) {
+    return "warehouse";
+  }
+
+  // 3. Explicit Non-Motor signals
+  const isExplicitNonMotor =
+    /fire|burglary|fidelity|marine|engineering|workman|workmen|wc\b|cgl\b|pli\b|public\s*liability|erection|property\s*protector|msme|udyam|griha|industrial\s*risk|shop\b|contractors\s*plant/i.test(policyType) ||
+    /fire|burglary|fidelity|marine|engineering|non-motor|non_motor/i.test(serviceCat) ||
+    /fire|burglary|fidelity|marine|engineering|non-motor|non_motor/i.test(docCat);
+
+  const cleanCombinedWithoutNonMotor = combined.replace(/non[-_\s]?motor/g, "");
+
+  const hasMotorKeywords =
+    /\b(motor|private\s*car|two\s*wheeler|commercial\s*vehicle|goods\s*carrying|passenger\s*carrying|auto\s*secure|gcv|pcv|bike|scooter|car|taxi|trailer|bus)\b/i.test(cleanCombinedWithoutNonMotor) ||
+    /\b(tw\s*-\s*package|tw\s*-\s*od|tw\s*-\s*tp|tw-od|tw-tp|pvt\s*-\s*package|pvt\s*-\s*od|pvt\s*-\s*tp|pvt-od|pvt-tp|pvt\s*-package)\b/i.test(cleanCombinedWithoutNonMotor) ||
+    /\b(own\s*damage|liability\s*only|stand\s*alone\s*motor|motor\s*comprehensive)\b/i.test(cleanCombinedWithoutNonMotor);
+
+  if (hasVehicle || (hasMotorKeywords && !isExplicitNonMotor)) {
+    return "motor";
+  }
+
+  if (isExplicitNonMotor || /non[-_\s]?motor/i.test(combined)) {
+    return "non-motor";
+  }
+
+  return "other";
+}
 
 const POLICY_CATEGORY_TERMS = {
   motor: [
@@ -268,8 +330,12 @@ export function getReportQueryPlan(category) {
   };
 }
 
-export async function loadReportingCenterData({ category = "executive", searchParams = {} } = {}) {
-  const session = await getCurrentSessionFromCookies();
+export async function loadReportingCenterData({
+  category = "executive",
+  searchParams = {},
+  session: customSession = null,
+} = {}) {
+  const session = customSession || (await getCurrentSessionFromCookies());
   if (!session) {
     return emptyReportData(category);
   }
@@ -282,7 +348,7 @@ export async function loadReportingCenterData({ category = "executive", searchPa
   const sharedWhere = getTenantFilter(session, "read");
   const auditBaseWhere =
     session.role === "SUPER_ADMIN" ? {} : { organizationId: session.organizationId ?? null };
-  const policyWhere = applyPolicyFilters({ ...sharedWhere }, filters, dateRange);
+  const policyWhere = applyPolicyFilters({ ...sharedWhere }, filters, dateRange, category);
   const claimWhere = applyDateAndFieldFilters({ ...sharedWhere }, filters, dateRange, "updatedAt", {
     statusField: "claimStatus",
     userField: "createdById",
@@ -395,14 +461,27 @@ export async function loadReportingCenterData({ category = "executive", searchPa
       : Promise.resolve([]),
   ]);
 
-  const policies = policiesRaw.map(normalizeRecord);
+  let policies = policiesRaw.map(normalizeRecord);
+  const normalizedCategory = filters.policyCategory
+    ? filters.policyCategory.toLowerCase().replace(/_/g, "-")
+    : "";
+  if (category === "monthly-policies" && normalizedCategory && normalizedCategory !== "all") {
+    policies = policies.filter((p) => getPolicyCategory(p) === normalizedCategory);
+  }
+  const policyTotalCount =
+    category === "monthly-policies"
+      ? policies.length
+      : queryPlan.policies === "none"
+        ? 0
+        : policyTotal;
+
   const context = {
     category,
     session,
     filters,
     dateRange,
     policies,
-    policyTotal,
+    policyTotal: policyTotalCount,
     claims,
     claimTotal,
     endorsements,
@@ -1172,7 +1251,7 @@ function getDateRange(range = "this_month", from = "", to = "") {
   return { start, end, label: range };
 }
 
-function applyPolicyFilters(where, filters, dateRange) {
+function applyPolicyFilters(where, filters, dateRange, category = "") {
   Object.assign(where, withoutManualRenewalSources(where));
   where.savedAt = { gte: dateRange.start, lte: dateRange.end };
   const and = [];
@@ -1197,16 +1276,16 @@ function applyPolicyFilters(where, filters, dateRange) {
       ],
     });
   }
-  if (filters.policyCategory) {
-    const category = filters.policyCategory.toLowerCase();
-    if (category === "other") {
+  if (filters.policyCategory && category !== "monthly-policies") {
+    const cat = filters.policyCategory.toLowerCase();
+    if (cat === "other") {
       and.push({
         NOT: {
           OR: buildPolicyCategoryClauses(Object.values(POLICY_CATEGORY_TERMS).flat()),
         },
       });
-    } else if (POLICY_CATEGORY_TERMS[category]) {
-      and.push({ OR: buildPolicyCategoryClauses(POLICY_CATEGORY_TERMS[category]) });
+    } else if (POLICY_CATEGORY_TERMS[cat]) {
+      and.push({ OR: buildPolicyCategoryClauses(POLICY_CATEGORY_TERMS[cat]) });
     }
   }
   if (filters.status) where.renewalStatus = filters.status;
