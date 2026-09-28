@@ -524,32 +524,37 @@ export default function PolicyDetailCard({
             display: "flex",
             justifyContent: "flex-end",
             alignItems: "center",
-            gap: "12px",
-            padding: "16px 24px",
+            gap: "10px",
+            padding: "14px 24px",
             borderTop: "1px solid #f1f5f9",
             backgroundColor: "#ffffff",
+            flexWrap: "nowrap",
           }}
         >
           {mode === "view" ? (
             <>
               {record.hasPdf ? (
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <>
                   <a
                     href={`/api/records/${record.id}/pdf?view=true`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                      padding: "10px 18px",
-                      borderRadius: "12px",
+                      height: "38px",
+                      padding: "0 16px",
+                      borderRadius: "10px",
                       border: "1px solid #cbd5e1",
                       backgroundColor: "#ffffff",
                       color: "#0f172a",
                       fontWeight: "600",
-                      fontSize: "14px",
+                      fontSize: "13px",
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "6px",
+                      gap: "7px",
                       textDecoration: "none",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+                      boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                       transition: "background-color 0.2s, border-color 0.2s",
                     }}
                     onMouseEnter={(e) => {
@@ -561,24 +566,28 @@ export default function PolicyDetailCard({
                       e.currentTarget.style.borderColor = "#cbd5e1";
                     }}
                   >
-                    <Eye size={16} />
-                    View PDF
+                    <Eye size={15} />
+                    <span>View PDF</span>
                   </a>
                   <a
                     href={`/api/records/${record.id}/pdf`}
                     download
                     style={{
-                      padding: "10px 18px",
-                      borderRadius: "12px",
+                      height: "38px",
+                      padding: "0 16px",
+                      borderRadius: "10px",
                       border: "1px solid #cbd5e1",
                       backgroundColor: "#ffffff",
                       color: "#0f172a",
                       fontWeight: "600",
-                      fontSize: "14px",
+                      fontSize: "13px",
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "6px",
+                      gap: "7px",
                       textDecoration: "none",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+                      boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                       transition: "background-color 0.2s, border-color 0.2s",
                     }}
                     onMouseEnter={(e) => {
@@ -590,12 +599,12 @@ export default function PolicyDetailCard({
                       e.currentTarget.style.borderColor = "#cbd5e1";
                     }}
                   >
-                    <Download size={16} />
-                    Download PDF
+                    <Download size={15} />
+                    <span>Download PDF</span>
                   </a>
-                </div>
+                </>
               ) : (
-                <div style={{ display: "inline-flex", alignItems: "center", padding: "6px 14px", borderRadius: "10px", background: "#f8fafc" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", height: "38px", padding: "0 14px", borderRadius: "10px", background: "#f8fafc", flexShrink: 0 }}>
                   <span style={{
                     fontSize: "13px",
                     fontWeight: "600",
@@ -608,73 +617,24 @@ export default function PolicyDetailCard({
                 </div>
               )}
               <button
+                type="button"
                 onClick={() => onPrint && onPrint(record)}
                 style={{
-                  padding: "10px 24px",
-                  borderRadius: "12px",
+                  height: "38px",
+                  padding: "0 16px",
+                  borderRadius: "10px",
                   border: "1px solid #cbd5e1",
                   backgroundColor: "#ffffff",
                   color: "#0f172a",
                   cursor: "pointer",
                   fontWeight: "600",
-                  fontSize: "14px",
-                  display: "flex",
+                  fontSize: "13px",
+                  display: "inline-flex",
                   alignItems: "center",
-                  gap: "8px",
-                  transition: "background-color 0.2s, border-color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#0f172a";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#ffffff";
-                  e.currentTarget.style.borderColor = "#cbd5e1";
-                }}
-              >
-                <Printer size={16} />
-                Print Details
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowEndorsementModal(true)}
-                style={{
-                  padding: "10px 24px",
-                  borderRadius: "12px",
-                  border: "1px solid #cbd5e1",
-                  backgroundColor: "#ffffff",
-                  color: "#0f172a",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  transition: "background-color 0.2s, border-color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f8fafc";
-                  e.currentTarget.style.borderColor = "#0f172a";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#ffffff";
-                  e.currentTarget.style.borderColor = "#cbd5e1";
-                }}
-              >
-                <FileText size={16} />
-                Endorsement
-              </button>
-              <button
-                onClick={onClose}
-                style={{
-                  padding: "10px 24px",
-                  borderRadius: "12px",
-                  border: "1px solid #cbd5e1",
-                  backgroundColor: "#ffffff",
-                  color: "#475569",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                  fontSize: "14px",
+                  gap: "7px",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                   transition: "background-color 0.2s, border-color 0.2s",
                 }}
                 onMouseEnter={(e) => {
@@ -686,7 +646,75 @@ export default function PolicyDetailCard({
                   e.currentTarget.style.borderColor = "#cbd5e1";
                 }}
               >
-                Close
+                <Printer size={15} />
+                <span>Print Details</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowEndorsementModal(true)}
+                style={{
+                  height: "38px",
+                  padding: "0 16px",
+                  borderRadius: "10px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: "#ffffff",
+                  color: "#0f172a",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
+                  transition: "background-color 0.2s, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#94a3b8";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                }}
+              >
+                <FileText size={15} />
+                <span>Endorsement</span>
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  height: "38px",
+                  padding: "0 20px",
+                  borderRadius: "10px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: "#ffffff",
+                  color: "#475569",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
+                  transition: "background-color 0.2s, border-color 0.2s, color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#f8fafc";
+                  e.currentTarget.style.borderColor = "#94a3b8";
+                  e.currentTarget.style.color = "#0f172a";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#ffffff";
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                  e.currentTarget.style.color = "#475569";
+                }}
+              >
+                <span>Close</span>
               </button>
             </>
           ) : (
@@ -696,14 +724,21 @@ export default function PolicyDetailCard({
                 onClick={onClose}
                 disabled={isSaving}
                 style={{
-                  padding: "10px 24px",
-                  borderRadius: "12px",
+                  height: "38px",
+                  padding: "0 20px",
+                  borderRadius: "10px",
                   border: "1px solid #cbd5e1",
                   backgroundColor: "#ffffff",
                   color: "#475569",
                   cursor: "pointer",
                   fontWeight: "600",
-                  fontSize: "14px",
+                  fontSize: "13px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                   transition: "background-color 0.2s, border-color 0.2s",
                 }}
                 onMouseEnter={(e) => {
@@ -715,24 +750,29 @@ export default function PolicyDetailCard({
                   e.currentTarget.style.borderColor = "#cbd5e1";
                 }}
               >
-                Cancel
+                <span>Cancel</span>
               </button>
               <button
                 type="button"
                 onClick={onSave}
                 disabled={isSaving}
                 style={{
-                  padding: "10px 24px",
-                  borderRadius: "12px",
+                  height: "38px",
+                  padding: "0 20px",
+                  borderRadius: "10px",
                   border: "1px solid #cbd5e1",
                   backgroundColor: "#ffffff",
                   color: "#0f172a",
                   cursor: "pointer",
                   fontWeight: "600",
-                  fontSize: "14px",
-                  display: "flex",
+                  fontSize: "13px",
+                  display: "inline-flex",
                   alignItems: "center",
-                  gap: "8px",
+                  justifyContent: "center",
+                  gap: "7px",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                   transition: "background-color 0.2s, border-color 0.2s",
                 }}
                 onMouseEnter={(e) => {
@@ -744,8 +784,8 @@ export default function PolicyDetailCard({
                   e.currentTarget.style.borderColor = "#cbd5e1";
                 }}
               >
-                {isSaving ? <LoaderCircle size={16} className="spin" /> : <CheckCircle size={16} />}
-                Save Changes
+                {isSaving ? <LoaderCircle size={15} className="spin" /> : <CheckCircle size={15} />}
+                <span>Save Changes</span>
               </button>
             </>
           )}
