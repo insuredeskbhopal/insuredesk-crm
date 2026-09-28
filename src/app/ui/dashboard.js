@@ -267,11 +267,9 @@ const NON_MOTOR_RECORD_COLUMNS = [
 ];
 
 const ALL_RECORD_COLUMNS = [
-  { key: "customerId", label: "Customer ID", className: "col-customer" },
-  { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
+  { key: "insuredName", label: "Insured / Customer", className: "col-insured", primary: true },
+  { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
   { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
-  { key: "policyNumber", label: "Policy Number", className: "col-policy", code: true },
-  { key: "newOrRenewal", fallbackKeys: ["lob", "policyCategory"], label: "New / Renewal", className: "col-default" },
   { key: "policyType", fallbackKeys: ["policyCoverType", "coverType", "documentCategory"], label: "Policy Type", className: "col-type" },
   {
     key: "vehicleLocation",
@@ -279,16 +277,8 @@ const ALL_RECORD_COLUMNS = [
     label: "Vehicle / Location",
     className: "col-default",
   },
-  { key: "startDate", fallbackKeys: ["policyStartDate"], label: "Policy Start", className: "col-date", format: "niceDate" },
-  { key: "expiryDate", fallbackKeys: ["policyEndDate"], label: "Policy Expiry", className: "col-date", format: "niceDate" },
-  {
-    key: "idv",
-    fallbackKeys: ["sumInsured", "idvAmount", "totalSumInsured"],
-    label: "IDV / Sum Insured",
-    className: "col-money",
-    format: "money",
-  },
-  { key: "netPremium", fallbackKeys: ["basicPremium"], label: "Net Premium", className: "col-money", format: "money" },
+  { key: "contactPerson", fallbackKeys: ["contactNumber", "mobile", "contact"], label: "Contact Person", className: "col-contact" },
+  { key: "expiryDate", fallbackKeys: ["policyEndDate"], label: "Expiry", className: "col-date", format: "niceDate" },
   {
     key: "grossPremium",
     fallbackKeys: ["totalPremium", "premium", "premiumIncludingGst"],
@@ -296,7 +286,6 @@ const ALL_RECORD_COLUMNS = [
     className: "col-money",
     format: "money",
   },
-  { key: "contactNumber", fallbackKeys: ["contactPerson", "mobile", "contact"], label: "Contact", className: "col-contact" },
   { key: "status", fallbackKeys: ["policyStatus", "renewalStatus"], label: "Status", className: "col-default" },
 ];
 

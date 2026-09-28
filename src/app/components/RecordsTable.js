@@ -2,17 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Download, Pencil, Eye, Trash2, CheckSquare, Square, MinusSquare } from "lucide-react";
+import { Download, Pencil, Eye, Trash2, CheckSquare, Square, MinusSquare, FileText, MoreVertical, Printer } from "lucide-react";
 import PolicyDetailCard from "@/app/components/shared/PolicyDetailCard";
 import { inferUploadSchema } from "@/app/lib/dashboard-helpers";
 import { showToast } from "@/app/components/shared/ToastProvider";
+import { getShortCompanyDisplay } from "@/lib/renewals/companies";
 
 const DEFAULT_RECORD_COLUMNS = [
-  { key: "customerId", label: "Customer ID", className: "col-customer" },
-  { key: "insuredName", label: "Insured Name", className: "col-insured", primary: true },
+  { key: "insuredName", label: "Insured / Customer", className: "col-insured", primary: true },
+  { key: "policyNumber", label: "Policy No.", className: "col-policy", code: true },
   { key: "insuranceCompany", label: "Insurance Company", className: "col-company" },
-  { key: "policyNumber", label: "Policy Number", className: "col-policy", code: true },
-  { key: "newOrRenewal", fallbackKeys: ["lob", "policyCategory"], label: "New / Renewal", className: "col-default" },
   { key: "policyType", fallbackKeys: ["policyCoverType", "coverType", "documentCategory"], label: "Policy Type", className: "col-type" },
   {
     key: "vehicleLocation",
@@ -20,16 +19,8 @@ const DEFAULT_RECORD_COLUMNS = [
     label: "Vehicle / Location",
     className: "col-default",
   },
-  { key: "startDate", fallbackKeys: ["policyStartDate"], label: "Policy Start", className: "col-date", format: "niceDate" },
-  { key: "expiryDate", fallbackKeys: ["policyEndDate"], label: "Policy Expiry", className: "col-date", format: "niceDate" },
-  {
-    key: "idv",
-    fallbackKeys: ["sumInsured", "idvAmount", "totalSumInsured"],
-    label: "IDV / Sum Insured",
-    className: "col-money",
-    format: "money",
-  },
-  { key: "netPremium", fallbackKeys: ["basicPremium"], label: "Net Premium", className: "col-money", format: "money" },
+  { key: "contactPerson", fallbackKeys: ["contactNumber", "mobile", "contact"], label: "Contact Person", className: "col-contact" },
+  { key: "expiryDate", fallbackKeys: ["policyEndDate"], label: "Expiry", className: "col-date", format: "niceDate" },
   {
     key: "grossPremium",
     fallbackKeys: ["totalPremium", "premium", "premiumIncludingGst"],
@@ -37,7 +28,6 @@ const DEFAULT_RECORD_COLUMNS = [
     className: "col-money",
     format: "money",
   },
-  { key: "contactNumber", fallbackKeys: ["contactPerson", "mobile", "contact"], label: "Contact", className: "col-contact" },
   { key: "status", fallbackKeys: ["policyStatus", "renewalStatus"], label: "Status", className: "col-default" },
 ];
 
@@ -175,12 +165,58 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
     if (veh) return <span className="record-code">{veh}</span>;
     const loc = (record.riskLocation || record.premisesAddress || record.district || "").trim();
     if (loc) {
-      if (loc.length > 28) {
-        return <span title={loc}>{loc.substring(0, 25)}...</span>;
+      if (loc.length > 25) {
+        return <span title={loc}>{loc.substring(0, 22)}...</span>;
       }
-      return loc;
+      return <span title={loc}>{loc}</span>;
     }
     return "-";
+  }
+
+  if (column.key === "insuranceCompany") {
+    const shortName = getShortCompanyDisplay(record.insuranceCompany || rawValue);
+    return (
+      <span title={record.insuranceCompany || rawValue || ""} style={{ fontWeight: 500, color: "#1e293b" }}>
+        {shortName || "-"}
+      </span>
+    );
+  }
+
+  if (column.key === "policyType" || column.key === "policyCoverType") {
+    let typeDisplay = record.policyType || record.policyCoverType || record.coverType || record.documentCategory || rawValue || "-";
+    const upper = String(typeDisplay).toUpperCase();
+    if (upper.includes("PACKAGE") || upper.includes("COMPREHENSIVE") || upper.includes("AUTO SECURE")) {
+      typeDisplay = "Comprehensive";
+    } else if (upper.includes("OD") || upper.includes("OWN DAMAGE")) {
+      typeDisplay = "OD";
+    } else if (upper.includes("TP") || upper.includes("THIRD PARTY") || upper.includes("LIABILITY")) {
+      typeDisplay = "TP";
+    }
+
+    const norRaw = String(record.newOrRenewal || record.policyCategory || record.lob || "").trim();
+    let nor = "";
+    if (/renew/i.test(norRaw)) nor = "Renewal";
+    else if (/new/i.test(norRaw)) nor = "New";
+    else if (norRaw && norRaw !== "-") nor = norRaw;
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+        <span style={{ fontWeight: 500, color: "#1e293b" }}>{typeDisplay}</span>
+        {nor ? (
+          <span
+            style={{
+              display: "inline-block",
+              width: "fit-content",
+              fontSize: "11px",
+              fontWeight: 600,
+              color: nor === "Renewal" ? "#0284c7" : "#16a34a",
+            }}
+          >
+            {nor}
+          </span>
+        ) : null}
+      </div>
+    );
   }
 
   if (column.key === "numberOfInsuredMembers" || column.key === "members") {
@@ -220,30 +256,36 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
     return record.variant || record.policyType || "-";
   }
 
-  if (column.key === "contactPerson") {
-    const raw = String(rawValue || "").trim();
-    const isJunk =
-      raw.length > 60 ||
-      /please\s*go\s*through|discrepanc|rectification|mailing address|registered office|e-mail id|fax:|issuing office/i.test(raw) ||
-      /\b(?:road|street|plot|ward|behind|near|nagar|teh\.?|dist\.?|madhya|bhopal|462001|458888)\b/i.test(raw);
-    return isJunk ? "-" : raw || "-";
-  }
+  if (column.key === "contactPerson" || column.key === "contactNumber" || column.key === "contact") {
+    const rawPerson = (record.contactPerson || "").trim();
+    const rawNum = (record.contactNumber || record.mobile || record.phone || "").trim();
 
+    const isJunkPerson =
+      rawPerson.length > 60 ||
+      /please\s*go\s*through|discrepanc|rectification|mailing address|registered office|e-mail id|fax:|issuing office/i.test(rawPerson) ||
+      /\b(?:road|street|plot|ward|behind|near|nagar|teh\.?|dist\.?|madhya|bhopal|462001|458888)\b/i.test(rawPerson);
+    const person = isJunkPerson ? "" : rawPerson;
 
-  if (column.key === "policyCoverType") {
-    const raw = String(record.policyCoverType || record.coverType || record.policyType || "").trim();
-    if (!raw) return "-";
-    const upper = raw.toUpperCase();
-    if (upper.includes("PACKAGE") || upper.includes("COMPREHENSIVE") || upper.includes("AUTO SECURE")) {
-      return "Comprehensive";
+    const isJunkNumber =
+      rawNum.length > 20 ||
+      /e-mail id|fax:|insured.s details|issuing office|details$/i.test(rawNum);
+    const num = isJunkNumber ? "" : rawNum;
+
+    if (person && num && person !== num) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          <span style={{ fontWeight: 500, color: "#1e293b", fontSize: "12.5px" }}>{person}</span>
+          <span style={{ fontSize: "11px", color: "#64748b" }}>{num}</span>
+        </div>
+      );
     }
-    if (upper.includes("OD") || upper.includes("OWN DAMAGE")) {
-      return "OD";
+    if (person) {
+      return <span style={{ fontWeight: 500, color: "#1e293b", fontSize: "12.5px" }}>{person}</span>;
     }
-    if (upper.includes("TP") || upper.includes("THIRD PARTY") || upper.includes("LIABILITY")) {
-      return "TP";
+    if (num) {
+      return <span style={{ fontWeight: 500, color: "#1e293b", fontSize: "12.5px" }}>{num}</span>;
     }
-    return raw;
+    return "-";
   }
 
   if (column.key === "newOrRenewal") {
@@ -299,36 +341,6 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
     );
   }
 
-
-  if (column.key === "contactNumber" || column.key === "contact") {
-    const rawNum = (record.contactNumber || record.mobile || "").trim();
-    const rawPerson = (record.contactPerson || "").trim();
-    // A valid phone number is short and mostly digits. Anything longer or with company
-    // boilerplate (e.g. New India "E-mail Id/Fax: /", ICICI address blocks) is junk.
-    const isJunkNumber =
-      rawNum.length > 20 ||
-      /e-mail id|fax:|insured.s details|issuing office|details$/i.test(rawNum);
-    const num = isJunkNumber ? "" : rawNum;
-    // Filter out junk contact persons: addresses, boilerplate PDF text, or company name
-    // concatenated with address (typical of ICICI Lombard / New India fire policies)
-    const isJunkPerson =
-      rawPerson.length > 60 ||
-      /please\s*go\s*through|discrepanc|rectification|mailing address|registered office|e-mail id|fax:|issuing office/i.test(rawPerson) ||
-      /\b(?:road|street|plot|ward|behind|near|nagar|teh\.?|dist\.?|madhya|bhopal|462001|458888)\b/i.test(rawPerson);
-    const person = isJunkPerson ? "" : rawPerson;
-    if (num && person && num !== person) {
-      return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
-          <span style={{ fontWeight: 500 }}>{num}</span>
-          <span style={{ fontSize: "11px", color: "#64748b" }}>{person}</span>
-        </div>
-      );
-    }
-    return num || (person && !isJunkPerson ? person : "") || "-";
-  }
-
-
-
   const value =
     column.format === "niceDate"
       ? formatNiceDate(rawValue)
@@ -357,10 +369,28 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
       </div>
     );
   }
-  if (column.primary) {
+  if (column.primary || column.key === "insuredName") {
+    const custId = record.customerId || record.customerCode || record.clientId || "";
     return (
       <div>
-        <strong className="record-primary">{value}</strong>
+        <strong className="record-primary" style={{ display: "block", color: "#0f172a", fontSize: "13px", fontWeight: 600 }}>
+          {value || record.insuredName || "-"}
+        </strong>
+        {custId ? (
+          <span
+            style={{
+              display: "inline-block",
+              marginTop: "2px",
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "#64748b",
+              fontFamily: "monospace",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {custId}
+          </span>
+        ) : null}
         {record.clientIdPending ? (
           <a
             href={`/operations/client-management?clientIdRequest=${record.clientIdRequestId}`}
@@ -393,12 +423,12 @@ const COLUMN_WIDTHS = {
   "col-mark": 48,
   "col-customer": 104,
   "col-saved": 150,
-  "col-insured": 210,
+  "col-insured": 220,
   "col-contact": 150,
   "col-contact-person": 150,
   "col-policy": 150,
   "col-vehicle": 150,
-  "col-type": 150,
+  "col-type": 140,
   "col-company": 150,
   "col-uploader": 150,
   "col-source": 150,
@@ -406,7 +436,7 @@ const COLUMN_WIDTHS = {
   "col-location": 180,
   "col-description": 180,
   "col-occupancy": 180,
-  "col-money": 140,
+  "col-money": 130,
   "col-date": 120,
   "col-duration": 125,
   "col-district": 125,
@@ -414,7 +444,7 @@ const COLUMN_WIDTHS = {
   "col-ppt": 125,
   "col-valid": 125,
   "col-pdf": 96,
-  "col-action": 96,
+  "col-action": 120,
   "col-default": 150,
 };
 
@@ -439,9 +469,46 @@ export default function RecordsTable({
   const [expandedCell, setExpandedCell] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isBulkDownloading, setIsBulkDownloading] = useState(false);
+  const [activeActionMenuId, setActiveActionMenuId] = useState("");
+  const [actionMenuPosition, setActionMenuPosition] = useState(null);
+
+  const openActionMenu = (recordId, event) => {
+    event.stopPropagation();
+    if (activeActionMenuId === recordId) {
+      closeActionMenu();
+      return;
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
+    const menuWidth = 180;
+    const menuHeight = 170;
+    const gap = 4;
+    const viewportWidth = (typeof document !== "undefined" && document.documentElement?.clientWidth) || window.innerWidth;
+    const left = Math.min(viewportWidth - menuWidth - 12, Math.max(12, rect.right - menuWidth));
+    const opensUp = window.innerHeight - rect.bottom < menuHeight + 16;
+    const top = opensUp ? Math.max(12, rect.top - menuHeight - gap) : rect.bottom + gap;
+
+    setActionMenuPosition({ top, left, width: menuWidth });
+    setActiveActionMenuId(recordId);
+  };
+
+  const closeActionMenu = () => {
+    setActiveActionMenuId("");
+    setActionMenuPosition(null);
+  };
+
+  useEffect(() => {
+    if (!activeActionMenuId) return;
+    const handleScrollOrResize = () => closeActionMenu();
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+    return () => {
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+    };
+  }, [activeActionMenuId]);
 
   const getStickyStyle = (colIndex) => {
-    if (colIndex >= 3) return {};
+    if (colIndex >= 2) return {};
 
     const baseOffset = canDelete ? 48 : 0;
     let leftOffset = baseOffset;
@@ -459,8 +526,8 @@ export default function RecordsTable({
   };
 
   const getStickyClassName = (colIndex) => {
-    if (colIndex >= 3) return "";
-    const isLastSticky = colIndex === Math.min(2, columns.length - 1);
+    if (colIndex >= 2) return "";
+    const isLastSticky = colIndex === Math.min(1, columns.length - 1);
     return `sticky-col ${isLastSticky ? "sticky-col-last" : ""}`;
   };
 
@@ -790,7 +857,7 @@ export default function RecordsTable({
     980,
     columns.reduce(
       (total, column) => total + (COLUMN_WIDTHS[column.className || "col-default"] || 150),
-      (canDelete ? 48 : 0) + 192,
+      (canDelete ? 48 : 0) + (COLUMN_WIDTHS["col-action"] || 120),
     ),
   );
 
@@ -886,7 +953,6 @@ export default function RecordsTable({
             {columns.map((column) => (
               <col key={column.key} className={column.className || "col-default"} />
             ))}
-            <col className="col-pdf" />
             <col className="col-action" />
           </colgroup>
           <thead>
@@ -917,8 +983,7 @@ export default function RecordsTable({
                   {column.label}
                 </th>
               ))}
-              <th>PDF</th>
-              <th>Actions</th>
+              <th style={{ textAlign: "center" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -965,106 +1030,8 @@ export default function RecordsTable({
                         )}
                       </td>
                     ))}
-                    <td className="col-pdf-cell" style={{ textAlign: "center", whiteSpace: "nowrap" }}>
-                      {record.hasPdf ? (
-                        <div style={{ display: "inline-flex", gap: "6px", alignItems: "center", justifyContent: "center" }}>
-                          <a
-                            className="pdf-icon-link"
-                            href={`/api/records/${record.id}/pdf?view=true`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="View PDF"
-                            aria-label="View PDF"
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              width: "28px",
-                              height: "28px",
-                              borderRadius: "6px",
-                              backgroundColor: "#ffffff",
-                              color: "#0f172a",
-                              border: "1px solid #cbd5e1",
-                              textDecoration: "none",
-                              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
-                            }}
-                          >
-                            <Eye size={14} />
-                          </a>
-                          <a
-                            className="pdf-icon-link"
-                            href={`/api/records/${record.id}/pdf`}
-                            download
-                            title="Download PDF"
-                            aria-label="Download PDF"
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              width: "28px",
-                              height: "28px",
-                              borderRadius: "6px",
-                              backgroundColor: "#ffffff",
-                              color: "#0f172a",
-                              border: "1px solid #cbd5e1",
-                              textDecoration: "none",
-                              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
-                            }}
-                          >
-                            <Download size={14} />
-                          </a>
-                        </div>
-                      ) : record.isExcelImport ? (
-                        <span
-                          className="badge-excel-import"
-                          title="No PDF - Excel Import"
-                          style={{
-                            display: "inline-block",
-                            padding: "3px 8px",
-                            borderRadius: "4px",
-                            backgroundColor: "#f1f5f9",
-                            color: "#64748b",
-                            fontSize: "11px",
-                            fontWeight: "600",
-                          }}
-                        >
-                          No PDF - Excel Import
-                        </span>
-                      ) : record.pdfStatus === "PDF Match Review Required" ? (
-                        <span
-                          className="badge-review-required"
-                          title="PDF Match Review Required"
-                          style={{
-                            display: "inline-block",
-                            padding: "3px 8px",
-                            borderRadius: "4px",
-                            backgroundColor: "#fef3c7",
-                            color: "#b45309",
-                            fontSize: "11px",
-                            fontWeight: "600",
-                          }}
-                        >
-                          PDF Match Review Required
-                        </span>
-                      ) : (
-                        <span
-                          className="missing-pdf compact"
-                          style={{
-                            display: "inline-block",
-                            padding: "3px 8px",
-                            borderRadius: "4px",
-                            backgroundColor: "#fee2e2",
-                            color: "#dc2626",
-                            fontWeight: "700",
-                            fontSize: "11px",
-                          }}
-                        >
-                          PDF Missing
-                        </span>
-                      )}
-                    </td>
-                    <td className="col-action-cell" style={{ textAlign: "center" }}>
-                      <div style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "center" }}>
+                    <td className="col-action-cell" style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+                      <div style={{ display: "inline-flex", gap: "6px", alignItems: "center", justifyContent: "center" }}>
                         <button
                           aria-label={`View details of ${record.policyNumber || record.insuredName || "policy record"}`}
                           className="record-icon-action"
@@ -1087,13 +1054,14 @@ export default function RecordsTable({
                         >
                           <Eye size={14} />
                         </button>
-                        {canEdit ? (
-                          <button
-                            aria-label={`Edit ${record.policyNumber || record.insuredName || "policy record"}`}
+                        {record.hasPdf ? (
+                          <a
                             className="record-icon-action"
-                            title="Edit policy record"
-                            type="button"
-                            onClick={() => onEdit?.(record)}
+                            href={`/api/records/${record.id}/pdf?view=true`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="View PDF"
+                            aria-label={`View PDF for ${record.policyNumber || record.insuredName || "policy"}`}
                             style={{
                               display: "inline-flex",
                               alignItems: "center",
@@ -1104,13 +1072,57 @@ export default function RecordsTable({
                               backgroundColor: "#ffffff",
                               color: "#0f172a",
                               border: "1px solid #cbd5e1",
-                              cursor: "pointer",
+                              textDecoration: "none",
                               boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                             }}
                           >
-                            <Pencil size={14} />
-                          </button>
-                        ) : null}
+                            <FileText size={14} />
+                          </a>
+                        ) : (
+                          <span
+                            className="record-icon-action disabled"
+                            title={record.isExcelImport ? "No PDF - Excel Import" : "PDF Missing"}
+                            aria-label="No PDF attached"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: "28px",
+                              height: "28px",
+                              borderRadius: "6px",
+                              backgroundColor: "#f8fafc",
+                              color: "#94a3b8",
+                              border: "1px solid #e2e8f0",
+                              cursor: "not-allowed",
+                              opacity: 0.6,
+                            }}
+                          >
+                            <FileText size={14} />
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          className="record-icon-action"
+                          title="More actions"
+                          aria-label={`More actions for ${record.policyNumber || record.insuredName || "policy"}`}
+                          aria-expanded={activeActionMenuId === record.id}
+                          onClick={(e) => openActionMenu(record.id, e)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "6px",
+                            backgroundColor: "#ffffff",
+                            color: "#0f172a",
+                            border: "1px solid #cbd5e1",
+                            cursor: "pointer",
+                            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
+                          }}
+                        >
+                          <MoreVertical size={14} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -1118,7 +1130,7 @@ export default function RecordsTable({
               })
             ) : (
               <tr>
-                <td className="empty" colSpan={columns.length + 2 + (canDelete ? 1 : 0)}>
+                <td className="empty" colSpan={columns.length + 1 + (canDelete ? 1 : 0)}>
                   No database records yet.
                 </td>
               </tr>
@@ -1126,6 +1138,158 @@ export default function RecordsTable({
           </tbody>
         </table>
       </div>
+
+      {activeActionMenuId && actionMenuPosition && typeof document !== "undefined"
+        ? createPortal(
+            <>
+              <div
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  zIndex: 9998,
+                  background: "transparent",
+                }}
+                onClick={closeActionMenu}
+              />
+              <div
+                role="menu"
+                style={{
+                  position: "fixed",
+                  zIndex: 9999,
+                  top: `${actionMenuPosition.top}px`,
+                  left: `${actionMenuPosition.left}px`,
+                  width: `${actionMenuPosition.width || 180}px`,
+                  backgroundColor: "#ffffff",
+                  borderRadius: "8px",
+                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.08)",
+                  padding: "5px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px",
+                }}
+              >
+                {(() => {
+                  const activeRec = records.find((r) => r.id === activeActionMenuId);
+                  if (!activeRec) return null;
+                  return (
+                    <>
+                      {activeRec.hasPdf ? (
+                        <a
+                          href={`/api/records/${activeRec.id}/pdf`}
+                          download
+                          onClick={closeActionMenu}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "8px 10px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: 500,
+                            color: "#334155",
+                            textDecoration: "none",
+                            cursor: "pointer",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                        >
+                          <Download size={14} />
+                          <span>Download PDF</span>
+                        </a>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeActionMenu();
+                          handlePrint(activeRec);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "8px 10px",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: 500,
+                          color: "#334155",
+                          background: "none",
+                          border: "none",
+                          textAlign: "left",
+                          cursor: "pointer",
+                          width: "100%",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                      >
+                        <Printer size={14} />
+                        <span>Print Policy</span>
+                      </button>
+                      {canEdit ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            closeActionMenu();
+                            onEdit?.(activeRec);
+                          }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "8px 10px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: 500,
+                            color: "#334155",
+                            background: "none",
+                            border: "none",
+                            textAlign: "left",
+                            cursor: "pointer",
+                            width: "100%",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                        >
+                          <Pencil size={14} />
+                          <span>Edit Policy</span>
+                        </button>
+                      ) : null}
+                      {canDelete ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            closeActionMenu();
+                            onDelete?.([activeRec]);
+                          }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "8px 10px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: 500,
+                            color: "#dc2626",
+                            background: "none",
+                            border: "none",
+                            textAlign: "left",
+                            cursor: "pointer",
+                            width: "100%",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fef2f2")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                        >
+                          <Trash2 size={14} />
+                          <span>Delete Record</span>
+                        </button>
+                      ) : null}
+                    </>
+                  );
+                })()}
+              </div>
+            </>,
+            document.body,
+          )
+        : null}
 
       {paginate && (records.length > pageSize || records.length > 15) ? (
         <div className="table-pagination" aria-label="Table pagination" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
