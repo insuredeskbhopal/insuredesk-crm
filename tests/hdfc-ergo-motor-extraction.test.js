@@ -7,6 +7,7 @@ import fs from "node:fs";
 const require = createRequire(import.meta.url);
 const pdf = require("pdf-parse");
 const hdfcErgoMotor = require("../src/lib/policies/pdf/training/hdfc-ergo/motor.cjs");
+const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
 const { applyScopedTraining, deriveTrainingScope } = require("../src/lib/policies/pdf/training/registry.cjs");
 
 const sampleOcrText = `HDFC ERGO General Insurance Company Limited PMTB082627608200
@@ -114,6 +115,13 @@ describe("HDFC ERGO Motor Policy Extraction & Isolation", () => {
     expect(trained.cscCode).toBe("200427207967");
     expect(trained.cscName).toBe("INSUREDESK IMF PRIVATE LIMITED");
     expect(trained.extractionTrainingVersion).toBe("HDFC_ERGO_MOTOR_V2");
+  });
+
+  it("keeps standalone own-damage cover despite shared liability premium headings", () => {
+    const result = extractPolicyFromText(sampleOcrText, "hdfc-ergo-motor.pdf");
+
+    expect(result.policyType).toBe("Standalone Motor Own Damage Cover - Private Car");
+    expect(result.policyCoverType).toBe("Own Damage");
   });
 
   it("extracts MR PARTHO CHAKRABORTY real Comprehensive policy correctly", async () => {

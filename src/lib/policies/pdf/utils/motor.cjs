@@ -1198,6 +1198,14 @@ function schemaSupportsCoverType(schema = {}) {
 
 // Start of extractPolicyCoverType (Lines 5664-5693)
 function extractPolicyCoverType(text, policyType = "") {
+  const normalizedPolicyType = String(policyType || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (/\bstand ?alone\b.{0,40}\bown damage\b/.test(normalizedPolicyType)) return "Own Damage";
+  if (/\b(liability|third party) only\b/.test(normalizedPolicyType)) return "Third Party";
+
   // Detect TP+OD (Comprehensive) by premium breakdown pattern FIRST (most reliable)
   const hasOwnDamagePremium = /\bOwn\s*Damage\s*Premium/i.test(text);
   const hasThirdPartyPremium = /\b(Third\s*Party|Liability)\s*Premium/i.test(text);

@@ -30,6 +30,7 @@ const iciciLombardGpa = require("./icici-lombard/gpa.cjs");
 const newIndiaNonMotor = require("./new-india/non-motor.cjs");
 const bajajAllianzFire = require("./bajaj-allianz/fire.cjs");
 const tataAigFire = require("./tata-aig/fire.cjs");
+const shriramMotor = require("./shriram/motor.cjs");
 
 const trainers = [
   iciciLombardMotor,
@@ -64,6 +65,7 @@ const trainers = [
   bajajAllianzFire,
   royalSundaramMotor,
   futureGeneraliMotor,
+  shriramMotor,
 ];
 const protectedScopeFields = [
   "sourceFile",
@@ -274,6 +276,12 @@ function isBajajAllianzFire(result = {}, context = {}) {
   if (/Private\s+Car|Two\s+Wheeler|Commercial\s+Vehicle|Goods\s+Carrying|Passenger\s+Carrying|Motor\s+Package|Motor\s+Policy|Drive\s*Smart/i.test(text)) return false;
   if (/\b(?:Engine\s+No|Chassis\s+No|Registration\s+No|Vehicle\s+Make|Vehicle\s+Model)\b/i.test(text)) return false;
   return /SHOP\s+NON\s+HAZARDOUS/i.test(text) || /OG-\d{2}-\d{4}-4056-\d{8}/i.test(text);
+}
+
+function isShriramMotor(result = {}, context = {}) {
+  const text = String(context.text || result.sourceText || "");
+  if (!/Shriram\s+General\s+Insurance/i.test(text)) return false;
+  return /Certificate\s*cum\s*Policy\s*Schedule|UIN\s*No\.?IRDAN137/i.test(text);
 }
 
 function isTataAigFire(result = {}, context = {}) {
@@ -503,6 +511,9 @@ function deriveTrainingScope(result = {}, context = {}) {
   }
   if (isNewIndiaMotor(result, context)) {
     return { insurer: "new-india", category: "motor" };
+  }
+  if (isShriramMotor(result, context)) {
+    return { insurer: "shriram", category: "motor" };
   }
 
   const insurer = isTataAigMotor(result, context)
@@ -750,6 +761,16 @@ function establishTrainingIdentity(result = {}, context = {}) {
       documentCategory: "Motor Insurance",
       documentFormat: "ROYAL_SUNDARAM_MOTOR_V2",
       sourceDocumentType: "ROYAL_SUNDARAM_MOTOR_V2",
+    };
+  }
+  if (isShriramMotor(result, context)) {
+    return {
+      ...result,
+      insuranceCompany: "Shriram General Insurance Company Limited",
+      companyName: "Shriram General Insurance Company Limited",
+      documentCategory: "Motor Insurance",
+      documentFormat: "SHRIRAM_MOTOR_V1",
+      sourceDocumentType: "SHRIRAM_MOTOR_V1",
     };
   }
   if (isNewIndiaMotor(result, context)) {

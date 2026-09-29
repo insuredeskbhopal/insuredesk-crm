@@ -1679,12 +1679,14 @@ function buildIntelligentResult(legacyData, policyUnderstanding, policySchema, s
     finalizeNewIndiaMotorFields(mergedData);
   }
 
-  // CRITICAL FIX: Ensure premium breakdown detection overrides schema-inferred cover type
-  // If both Own Damage and Third Party premiums are present, force Comprehensive cover
+  // An explicit policy title outranks generic premium headings in shared schedule wording.
   if (mergedData.sourceText) {
     const hasOwnDamagePremium = /\bOwn\s*Damage\s*Premium/i.test(mergedData.sourceText);
     const hasThirdPartyPremium = /\b(Third\s*Party|Liability)\s*Premium/i.test(mergedData.sourceText);
-    if (hasOwnDamagePremium && hasThirdPartyPremium && mergedData.policyCoverType !== "Comprehensive") {
+    const titleCoverType = extractPolicyCoverType("", mergedData.policyType || mergedData.productName || "");
+    if (titleCoverType === "Own Damage" || titleCoverType === "Third Party") {
+      mergedData.policyCoverType = titleCoverType;
+    } else if (hasOwnDamagePremium && hasThirdPartyPremium && mergedData.policyCoverType !== "Comprehensive") {
       mergedData.policyCoverType = "Comprehensive";
     }
   }

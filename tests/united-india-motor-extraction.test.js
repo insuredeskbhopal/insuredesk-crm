@@ -19,6 +19,7 @@ describe("United India motor extraction", () => {
     expect(result.insuranceCompany).toBe("United India Insurance Company Limited");
     expect(result.policyNumber).toBe("1907023126P104555834");
     expect(result.policyType).toBe("MOTOR INSURANCE - GCV PUBLIC CARRIER OTHER THAN 3 WHEELER LIABILITY ONLY POLICY");
+    expect(result.policyCoverType).toBe("Third Party");
     expect(result.insuredName).toBe("MR SUNEEL KUMAR SHUKLA");
     expect(result.startDate).toBe("25/06/2026");
     expect(result.expiryDate).toBe("24/06/2027");
