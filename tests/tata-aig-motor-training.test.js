@@ -79,6 +79,8 @@ Name of the Insurer: GO DIGIT GENERAL INSURANCE CO LTD
       documentFormat: "TATA_AIG_MOTOR_V1",
       policyNumber: "6206570230 00 00",
       registrationNumber: "MP04EB6459",
+      policyStartDate: "28/07/2026",
+      policyEndDate: "27/07/2027",
       vehicleMake: "TATA MOTORS",
       vehicleModel: "NEXON EV",
       makeModel: "TATA MOTORS NEXON EV",

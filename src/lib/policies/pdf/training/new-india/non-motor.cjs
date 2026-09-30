@@ -91,6 +91,29 @@ function train({ text = "", result = {} }) {
     }
   }
 
+  if (patch.totalPremium && patch.netPremium) {
+    const n = parseFloat(String(patch.netPremium).replace(/,/g, ""));
+    const t = parseFloat(String(patch.totalPremium).replace(/,/g, ""));
+    if (t >= n) {
+      const g = (t - n).toFixed(2);
+      patch.gstAmount = formatAmount(g);
+      patch.taxAmount = patch.gstAmount;
+      const half = (parseFloat(g) / 2).toFixed(2);
+      patch.cgst = formatAmount(half);
+      patch.sgst = formatAmount(half);
+    }
+  }
+
+  // Sum Insured
+  const sumMatch =
+    text.match(/BUILDING\s*([0-9]{6,12})/i) ||
+    text.match(/Total\s+Sum\s+Insured\s*[:\s`]*([0-9,.]+)/i) ||
+    text.match(/Sum\s+Insured\s*:\s*`?\s*([0-9,.]+)/i);
+  if (sumMatch) {
+    patch.sumInsured = formatAmount(sumMatch[1]);
+    patch.totalSumInsured = patch.sumInsured;
+  }
+
   patch.extractionTrainingVersion = "NEW_INDIA_NON_MOTOR_V1";
 
   return patch;

@@ -10,9 +10,11 @@ function formatAmount(val) {
 }
 
 function matches({ text = "" }) {
+  if (/IFFCO[-\s]*TOKIO/i.test(text)) return false;
+  if (/Two[-\s]*Wheeler|Private\s+Car|Commercial\s+Vehicle|Registration\s+No|Engine\s+No|Chassis\s+No/i.test(text)) return false;
   return (
     /ICICI\s+Lombard/i.test(text) &&
-    (/FIDELITY|Misc\s*03|4003\//i.test(text))
+    (/FIDELITY\s+GUARANTEE|Misc\s*03|4003\//i.test(text))
   );
 }
 

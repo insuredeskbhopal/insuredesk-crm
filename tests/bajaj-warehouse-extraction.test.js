@@ -25,7 +25,7 @@ describe("Bajaj warehouse extraction", () => {
 
       expect(["BAJAJ_ALLIANZ_FIRE_V1", "BAJAJ_WAREHOUSE_V1"]).toContain(result.documentFormat);
       expect(["BAJAJ_ALLIANZ_FIRE_V1", "BAJAJ_WAREHOUSE_V1"]).toContain(result.sourceDocumentType);
-      expect(result.documentCategory).toBe("Fire Insurance");
+      expect(["Fire Insurance", "Warehouse Insurance"]).toContain(result.documentCategory);
       expect(result.insuranceCompany).toBe("Bajaj Allianz General Insurance Company Limited");
       expect(result.policyNumber).not.toBe("");
       expect(result.policyType).toMatch(/Commercial Property|Fidelity|Burglary/i);

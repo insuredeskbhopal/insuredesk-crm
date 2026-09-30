@@ -102,7 +102,10 @@ function train({ text = "", result = {} }) {
     patch.premiumIncludingGst = patch.totalPremium;
   }
 
-  const sumInsuredMatch = text.match(/Total\s+Sum\s+Insured\s*([0-9,.]+)/i);
+  const sumInsuredMatch =
+    text.match(/BUILDING\s+Sum\s+Insured\s*:\s*([0-9,.]+)/i) ||
+    text.match(/Stock\s+In\s+Trade\s+Sum\s+Insured\s*:\s*([0-9,.]+)/i) ||
+    text.match(/Total\s+Sum\s+Insured\s*[:\s₹`]*([0-9,.]+)/i);
   if (sumInsuredMatch) {
     patch.sumInsured = formatAmount(sumInsuredMatch[1]);
     patch.totalSumInsured = patch.sumInsured;

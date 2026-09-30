@@ -471,6 +471,22 @@ describe("Bajaj Allianz motor scoped training", () => {
     expect(result.extractionTrainingVersion).toBe("BAJAJ_ALLIANZ_MOTOR_COMMERCIAL_PACKAGE_V1");
   });
 
+  it("extracts Ms Siddharth Indane commercial liability policy without inverted premium", async () => {
+    const filePath = path.join(process.cwd(), "storage", "pdf", "Ms Siddharth Indane_MP04ZJ0844_2026-27 POLICY.pdf");
+    if (!fs.existsSync(filePath)) return;
+    const buf = fs.readFileSync(filePath);
+    const parsed = await pdf(buf);
+    const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
+    const result = extractPolicyFromText(parsed.text, "Ms Siddharth Indane_MP04ZJ0844_2026-27 POLICY.pdf");
+
+    expect(result.documentCategory).toBe("Motor Insurance");
+    expect(result.policyNumber).toBe("12-1831-0010525157-00");
+    expect(result.vehicleNumber).toBe("MP-04-ZJ-0844");
+    expect(result.netPremium).toBe("16149.00");
+    expect(result.gstAmount).toBe("820.00");
+    expect(result.totalPremium).toBe("16969.00");
+  });
+
   it("is isolated from Bajaj non-motor and other motor insurers", () => {
     const bajajWarehouse = selectScopedTraining(
       { insuranceCompany: "Bajaj Allianz General Insurance Company Limited", documentCategory: "Warehouse Insurance" },

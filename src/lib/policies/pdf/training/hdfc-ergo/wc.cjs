@@ -62,6 +62,9 @@ function train({ text = "", result = {} }) {
     patch.policyExpiryDate = patch.expiryDate;
   }
 
+  patch.registrationNumber = "";
+  patch.vehicleNumber = "";
+
   // Financials
   const basicMatch = text.match(/Basic\s+Premium[\s\S]{0,100}?\n\s*([0-9,.]+)/i);
   if (basicMatch) {
@@ -76,6 +79,15 @@ function train({ text = "", result = {} }) {
     patch.grossPremium = patch.totalPremium;
     patch.premium = patch.totalPremium;
     patch.premiumIncludingGst = patch.totalPremium;
+  }
+
+  if (patch.totalPremium && patch.netPremium) {
+    const n = parseFloat(String(patch.netPremium).replace(/,/g, ""));
+    const t = parseFloat(String(patch.totalPremium).replace(/,/g, ""));
+    if (t >= n) {
+      patch.gstAmount = formatAmount((t - n).toFixed(2));
+      patch.taxAmount = patch.gstAmount;
+    }
   }
 
   patch.extractionTrainingVersion = "HDFC_ERGO_WC_V1";

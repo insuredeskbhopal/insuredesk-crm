@@ -26,6 +26,8 @@ function train({ text = "", result = {} }) {
   patch.policyCategory = "Workmen Compensation";
   patch.policyType = "Workmen Compensation Policy";
   patch.productName = "Employee's Compensation Insurance";
+  patch.registrationNumber = "";
+  patch.vehicleNumber = "";
 
   // Policy Number
   const polMatch =

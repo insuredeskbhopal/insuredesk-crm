@@ -224,6 +224,25 @@ function train({ text = "", result = {} }) {
       : result.premiumIncludingGst || patch.totalPremium;
   }
 
+  if (/Endorsement\s+Schedule/i.test(text) && patch.totalPremium) {
+    const grossVal = parseFloat(String(patch.totalPremium).replace(/,/g, ""));
+    const netVal = parseFloat(String(patch.netPremium || "").replace(/,/g, ""));
+    const gstVal = parseFloat(String(patch.gstAmount || "0").replace(/,/g, ""));
+    if (grossVal > 0 && (!netVal || Math.abs(grossVal - (netVal + gstVal)) > 5)) {
+      if (/inclusive\s+of\s+taxes/i.test(text)) {
+        const trueNet = Math.round((grossVal / 1.18) * 100) / 100;
+        const trueTax = Math.round((grossVal - trueNet) * 100) / 100;
+        const halfTax = Math.round((trueTax / 2) * 100) / 100;
+        patch.netPremium = formatAmount(trueNet);
+        patch.gstAmount = formatAmount(trueTax);
+        patch.taxAmount = formatAmount(trueTax);
+        patch.cgst = formatAmount(halfTax);
+        patch.sgst = formatAmount(halfTax);
+        patch.igst = "0.00";
+      }
+    }
+  }
+
   // Section-wise Sum Insured
   const bldgMatch = text.match(/MSME\s+Suraksha\s+Kavach\s*-\s*Buildings[^\d]*([0-9,.]+)/i);
   if (bldgMatch) patch.buildingSumInsured = formatAmount(bldgMatch[1]);
@@ -239,6 +258,8 @@ function train({ text = "", result = {} }) {
 
   // Total Sum Insured
   const sumInsuredMatch =
+    text.match(/Home\s+Building\s+Only\s*[:\s]*([0-9,.]+)/i) ||
+    text.match(/Building\s+including\s+fitting\s+and\s+fixture\s*([0-9,.]+)/i) ||
     text.match(/Fire\s+Basic\s+Covers\s*\(`\)\s*([0-9,.]+)/i) ||
     text.match(/Total\s+Sum\s+Insured\s*[:\s₹`]*([0-9,.]+)/i) ||
     text.match(/Sum\s+Insured\s*\(`\)\s*([0-9,.]+)/i);

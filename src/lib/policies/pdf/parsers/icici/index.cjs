@@ -564,7 +564,7 @@ function extractIciciWarehousePremium(text) {
       matchGroup(text, /Premium\s*\(`\)\s*\(Including GST\)\(`\)\s*([0-9,]+(?:\.\d{2})?)/i),
     ) || 
     normalizeAmount(matchGroup(text, /Total Premium inclusive Tax\s*\(`\)\s*([0-9,]+(?:\.\d{2})?)/i)) ||
-    normalizeAmount(matchGroup(text, /Total Premium\s*[:\s\\'`"3]*\s*([0-9,]+)/i)) ||
+    normalizeAmount(matchGroup(text, /Total Premium\s*[:\s\\'`"]*\s*([0-9,]+)/i)) ||
     normalizeAmount(matchGroup(text, /Total Premium\s*[:`\s]*\n\s*([0-9,]+)/i)) ||
     normalizeAmount(matchGroup(text, /Total Premium\s*[:`\s]*\s*([0-9,]+)/i)) ||
     normalizeAmount(matchGroup(text, /Total Premium\s*([0-9,]+(?:\.\d{2})?)/i));
@@ -582,7 +582,7 @@ function extractIciciWarehousePremium(text) {
   
   if (netVal && grossVal && (!cgst || cgst === "0.00" || cgst === "0")) {
     const diff = grossVal - netVal;
-    if (diff > 0) {
+    if (diff > 0 && diff <= netVal * 0.35) {
       gstAmount = diff.toFixed(2);
       cgst = (diff / 2).toFixed(2);
       sgst = (diff / 2).toFixed(2);

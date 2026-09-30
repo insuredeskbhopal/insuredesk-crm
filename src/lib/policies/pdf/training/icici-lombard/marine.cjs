@@ -100,6 +100,16 @@ function train({ text = "", result = {} }) {
     patch.premiumIncludingGst = patch.totalPremium;
   }
 
+  const siMatch =
+    text.match(/Total\s+Sum\s+Insured\s*[:\s]*(?:Rs\.?|INR)?\s*([0-9,.]+)/i) ||
+    text.match(/Cargo\s+Sum\s+Insured\s*[:\s]*(?:Rs\.?|INR)?\s*([0-9,.]+)/i) ||
+    text.match(/Estimated\s+Annual\s+Sum\s+Insured\s*[:\s]*(?:Rs\.?|INR)?\s*([0-9,.]+)/i) ||
+    text.match(/Sum\s+Insured\s*[:\s]*(?:Rs\.?|INR)?\s*([0-9,.]+)/i);
+  if (siMatch) {
+    patch.sumInsured = formatAmount(siMatch[1]);
+    patch.totalSumInsured = patch.sumInsured;
+  }
+
   patch.extractionTrainingVersion = "ICICI_LOMBARD_MARINE_V1";
 
   return patch;

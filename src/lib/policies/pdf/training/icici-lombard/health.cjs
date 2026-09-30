@@ -155,6 +155,9 @@ function train({ text = "", result }) {
   const totalPremium = premiums.totalPremium || result.totalPremium;
 
   return {
+    registrationNumber: "",
+    vehicleNumber: "",
+    vehicleRegistrationNumber: "",
     productName: productName || result.productName || "ICICI Lombard Health",
     policyNumber: matchGroup(policyDetails, /Policy\s+Number\s*([A-Z0-9/-]+)/i) || matchGroup(text, /Policy\s+Number\s*([A-Z0-9/-]+)/i) || result.policyNumber,
     policyType: matchGroup(policyDetails, /Policy\s+Type\s*([^\n]+)/i) || result.policyType || "Health Insurance",

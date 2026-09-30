@@ -651,9 +651,11 @@ function train({ text = "", result = {} }) {
         basicThirdParty,
     );
     const finalPremium = amount(
+      text.match(/Gross\s+Premium\s*[:\s]*([0-9,]+(?:\.\d{2})?)/i)?.[1] ||
+      text.match(/Total\s+Amount\s*[:\s]*([0-9,]+(?:\.\d{2})?)/i)?.[1] ||
       text.match(/(\d+)\s+Final Premium/i)?.[1] ||
-        text.match(/Final Premium\s+(\d+)/i)?.[1] ||
-        text.match(/Final Premium\s*\n\s*(\d+)/i)?.[1],
+      text.match(/Final Premium\s+(\d+)/i)?.[1] ||
+      text.match(/Final Premium\s*\n\s*(\d+)/i)?.[1],
     );
 
     const legalLiability = amount(
@@ -720,9 +722,17 @@ function train({ text = "", result = {} }) {
     patch.extractionTrainingVersion = "BAJAJ_ALLIANZ_MOTOR_COMMERCIAL_LIABILITY_V2";
   }
 
-  const printedTotal = amount(matchGroup(text, /Final\s+Premium\s*(?:\([^)]*\))?\s*(?:Rs\.?)?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i));
+  const printedTotal = amount(
+    matchGroup(text, /Gross\s+Premium\s*[:\s]*([0-9,]+(?:\.\d{2})?)/i) ||
+    matchGroup(text, /Total\s+Amount\s*[:\s]*([0-9,]+(?:\.\d{2})?)/i) ||
+    matchGroup(text, /([0-9,]+)\s+Final\s+Premium/i) ||
+    matchGroup(text, /Final\s+Premium\s+(?:Rs\.?)?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i) ||
+    matchGroup(text, /Final\s+Premium\s*(?:\([^)]*\))?\s*(?:Rs\.?)?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i)
+  );
   if (printedTotal) {
-    patch.totalPremium = patch.grossPremium = patch.premium = patch.premiumIncludingGst = printedTotal;
+    if (!patch.netPremium || Number(printedTotal) >= Number(patch.netPremium)) {
+      patch.totalPremium = patch.grossPremium = patch.premium = patch.premiumIncludingGst = printedTotal;
+    }
   }
   return patch;
 }

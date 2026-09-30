@@ -80,6 +80,16 @@ function train({ text = "", result = {} }) {
     patch.premiumIncludingGst = patch.totalPremium;
   }
 
+  // Sum Insured
+  const sumMatch =
+    text.match(/Sum\s+Insured\s*\(\s*\)\s*\n\s*Contents\s*([0-9,.]+)/i) ||
+    text.match(/Contents\s*([0-9,.]+)/i) ||
+    text.match(/Total\s+Sum\s+Insured\s*[:\s₹`]*([0-9,.]+)/i);
+  if (sumMatch) {
+    patch.sumInsured = formatAmount(sumMatch[1]);
+    patch.totalSumInsured = patch.sumInsured;
+  }
+
   patch.extractionTrainingVersion = "UNITED_INDIA_FIRE_V1";
 
   return patch;

@@ -243,9 +243,10 @@ function isHdfcErgoWc(result = {}, context = {}) {
 
 function isIciciLombardFidelity(result = {}, context = {}) {
   const text = String(context.text || result.sourceText || "");
-  if (/PRIVATE\s+CAR\s+CERTIFICATE|TWO\s+WHEELER\s+CERTIFICATE|COMMERCIAL\s+VEHICLE\s+CERTIFICATE/i.test(text)) return false;
+  if (/IFFCO[-\s]*TOKIO/i.test(text)) return false;
+  if (/TWO[-\s]*WHEELER|PRIVATE\s+CAR|COMMERCIAL\s+VEHICLE|Registration\s+No|Engine\s+No|Chassis\s+No/i.test(text)) return false;
   if (!/ICICI\s+Lombard/i.test(text)) return false;
-  return /FIDELITY|Misc\s*03|\b4003\//i.test(text);
+  return /FIDELITY\s+GUARANTEE|Misc\s*03|\b4003\//i.test(text);
 }
 
 function isIciciLombardCpm(result = {}, context = {}) {

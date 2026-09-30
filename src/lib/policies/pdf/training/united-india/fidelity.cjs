@@ -80,6 +80,16 @@ function train({ text = "", result = {} }) {
     patch.premiumIncludingGst = patch.totalPremium;
   }
 
+  if (patch.totalPremium && patch.netPremium) {
+    const n = parseFloat(String(patch.netPremium).replace(/,/g, ""));
+    const t = parseFloat(String(patch.totalPremium).replace(/,/g, ""));
+    if (t >= n) {
+      patch.gstAmount = formatAmount((t - n).toFixed(2));
+      patch.taxAmount = patch.gstAmount;
+      patch.igst = patch.gstAmount;
+    }
+  }
+
   patch.extractionTrainingVersion = "UNITED_INDIA_FIDELITY_V1";
 
   return patch;

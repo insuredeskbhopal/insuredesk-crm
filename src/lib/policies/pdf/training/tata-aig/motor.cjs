@@ -1,5 +1,6 @@
 const scope = { insurer: "tata-aig", category: "motor" };
 const { sumAmounts } = require("../../utils/amounts.cjs");
+const { matchGroup } = require("../../utils/regex.cjs");
 
 function matches({ text = "", result = {} }) {
   const category = String(result.documentCategory || result.policyType || "");
@@ -26,6 +27,23 @@ function train({ text = "", result = {} }) {
     patch.makeModel = "TATA MOTORS NEXON EV";
     patch.variant = "XZ PLUS";
     patch.extractionTrainingVersion = "TATA_AIG_MOTOR_NEXON_EV_V1";
+  }
+
+  const startDate =
+    matchGroup(text, /(\d{2}\/\d{2}\/\d{4})\s*\([^)]*00:00/i) ||
+    matchGroup(text, /(?:Valid\s*From)[\s\S]*?(\d{2}\/\d{2}\/\d{4})/i) ||
+    matchGroup(text, /Period\s+of\s+Insurance[\s\S]*?(\d{2}\/\d{2}\/\d{4})/i);
+  const endDate =
+    matchGroup(text, /(\d{2}\/\d{2}\/\d{4})\s*\([^)]*Midnight\)/i) ||
+    matchGroup(text, /(?:Valid\s*Till)[\s\S]*?(\d{2}\/\d{2}\/\d{4})/i);
+
+  if (startDate) {
+    patch.policyStartDate = startDate;
+    patch.startDate = startDate;
+  }
+  if (endDate) {
+    patch.policyEndDate = endDate;
+    patch.expiryDate = endDate;
   }
 
   return patch;
