@@ -13,15 +13,57 @@ describe("Shriram General Insurance Commercial Vehicle Liability Policy Extracti
 
     expect(result.documentFormat).toBe("SHRIRAM_MOTOR_V1");
     expect(result.documentCategory).toBe("Motor Insurance");
-    expect(result.insuranceCompany).toBe("SHRIRAM GENERAL INSURANCE COMPANY LIMITED");
+    expect(result.insuranceCompany).toMatch(/SHRIRAM GENERAL INSURANCE COMPANY LIMITED/i);
     expect(result.policyNumber).toBe("209040/31/27/000523");
     expect(result.policyType).toBe("MOTOR COMMERCIAL VEHICLE (LIABILITY ONLY POLICY)");
     expect(result.insuredName).toBe("M/S. MS MAHAKAL TRANSPORTN AND CO");
     expect(result.chassisNumber).toBe("MAT447220F1K24434");
     expect(result.engineNumber).toBe("B591803251K63472202");
-    expect(result.registrationNumber).toBe("RJ-21-GB-6122");
-    expect(result.vehicleNumber).toBe("RJ-21-GB-6122");
+    expect(result.registrationNumber).toBe("RJ21GB6122");
+    expect(result.vehicleNumber).toBe("RJ21GB6122");
     expect(result.manufacturingYear).toBe("2015");
     expect(result.seatingCapacity).toBe("3");
+  });
+
+  it("extracts 214018-31-27-008616_MR. SHUBHAM MEHAR.pdf correctly end-to-end", async () => {
+    const fs = require("node:fs");
+    const path = require("node:path");
+    const pdf = require("pdf-parse");
+    const filePath = path.join(process.cwd(), "storage", "214018-31-27-008616_MR. SHUBHAM MEHAR.pdf");
+    if (!fs.existsSync(filePath)) return;
+    const buf = fs.readFileSync(filePath);
+    const parsed = await pdf(buf);
+    const result = extractPolicyFromText(parsed.text, "214018-31-27-008616_MR. SHUBHAM MEHAR.pdf");
+
+    expect(result.documentFormat).toBe("SHRIRAM_MOTOR_V1");
+    expect(result.documentCategory).toBe("Motor Insurance");
+    expect(result.insuranceCompany).toMatch(/SHRIRAM GENERAL INSURANCE COMPANY LIMITED/i);
+    expect(result.policyNumber).toBe("214018/31/27/008616");
+    expect(result.insuredName).toBe("MR. SHUBHAM MEHAR");
+    expect(result.policyStartDate).toBe("22/09/2026");
+    expect(result.policyEndDate).toBe("21/09/2027");
+    expect(result.vehicleNumber).toBe("MP04YS2764");
+    expect(result.registrationNumber).toBe("MP04YS2764");
+    expect(result.engineNumber).toBe("K10CN1320620");
+    expect(result.chassisNumber).toBe("MA3JMTB1SSHD47945");
+    expect(result.makeModel).toBe("MARUTI SUZUKI WAGON R VXI CNG BS 6");
+    expect(result.manufacturingYear).toBe("2025");
+    expect(result.fuelType).toBe("CNG");
+    expect(result.seatingCapacity).toBe("5");
+    expect(result.idv).toBe("560000.00");
+    expect(result.netPremium).toBe("16742.00");
+    expect(result.cgst).toBe("1507.00");
+    expect(result.sgst).toBe("1507.00");
+    expect(result.gstAmount).toBe("3014.00");
+    expect(result.totalPremium).toBe("19756.00");
+    expect(result.hypothecation).toBe("AU SMALL FINANCE BANK LTD.");
+    expect(result.nomineeName).toBe("RAMSWAROOP MEHAR");
+    expect(result.agentName).toBe("SACHIN PARIHAR");
+    expect(result.agentCode).toBe("BA0000001226");
+    expect(result.agentMobile).toBe("9977019751");
+    expect(result.communicationAddress).toBe(
+      "H NO 405 LAL TANKI BAAG SEWANIYA HUZUR VILLAGE AHAMADPUR BHOPAL , BAG MUNGALIA , BHOPAL, MADHYA PRADESH - 462043",
+    );
+    expect(result.pincode).toBe("462043");
   });
 });

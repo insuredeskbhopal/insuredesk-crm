@@ -69,6 +69,7 @@ function train({ text = "", result = {} }) {
 
   // --- Insured Name ---
   const insuredName = clean(
+    matchGroup(text, /Insured's\s+Code\s*\/\s*Name\s*\n?\s*IN-\d+\s*\/\s*([\s\S]+?)(?=\s*GSTIN\s*No)/i) ||
     matchGroup(text, /Insured's\s+Code\s*\/\s*Name\s*\n?\s*IN-\d+\s*\/\s*([^\n]+)/i) ||
     matchGroup(text, /Insured's\s+Code\s*\/\s*Name\s*([^\n]+)/i) ||
     matchGroup(text, /Name\s+of\s+Insured\s*[:.-]?\s*([^\n]+)/i)
@@ -77,23 +78,32 @@ function train({ text = "", result = {} }) {
   if (insuredName) {
     patch.customerName = insuredName;
     patch.contactPerson = insuredName;
+    patch.groupName = insuredName;
   }
 
   // --- Address ---
-  const address = cleanHdfcValue(
-    matchGroup(text, /Insured Address and\s*\n?\s*Contact Details\s*\n([\s\S]+?)(?=Insured Address as Per|CKYC|Insured State|$)/i) ||
-    matchGroup(text, /Insured Address as Per\s*\n?\s*RC\s*\n([\s\S]+?)(?=CKYC|Insured State|$)/i)
+  let address = cleanHdfcValue(
+    matchGroup(text, /Insured Address and\s*\n?\s*Contact Details\s*\n([\s\S]+?)(?=,?\s*Mob-|,?\s*Email-|Insured Address as Per|CKYC|Insured State|$)/i) ||
+    matchGroup(text, /Insured Address as Per\s*\n?\s*RC\s*\n([\s\S]+?)(?=,?\s*Mob-|,?\s*Email-|CKYC|Insured State|$)/i) ||
+    matchGroup(text, /Insured Address and\s*\n?\s*Contact Details\s*\n([\s\S]+?)(?=Insured Address as Per|CKYC|Insured State|$)/i)
   );
-  assign(patch, "communicationAddress", address);
-  assign(patch, "mailingAddress", address);
+  if (address) {
+    address = address.replace(/,?\s*Mob-[\s\S]*$/i, "").replace(/\s+/g, " ").replace(/,\s*,/g, ",").trim();
+    assign(patch, "communicationAddress", address);
+    assign(patch, "mailingAddress", address);
+    const pinMatch = address.match(/(\d{6})\b/);
+    if (pinMatch) patch.pincode = pinMatch[1];
+  }
 
   // --- Contact ---
-  const contactNumber =
-    matchGroup(text, /Mob-\s*\*+(\d{4,10})/i) ||
-    matchGroup(text, /Mobile\s*No\.?-?\s*(\d{10})/i);
-  if (contactNumber) {
-    patch.contactNumber = contactNumber;
-    patch.customerMobile = contactNumber;
+  const unmaskedMobile = matchGroup(text, /Mobile\s*No\.?-?\s*([6-9]\d{9})/i);
+  const maskedMobile = matchGroup(text, /Mob-\s*([*0-9]{8,14})/i);
+  if (unmaskedMobile) {
+    patch.contactNumber = unmaskedMobile;
+    patch.customerMobile = unmaskedMobile;
+  } else if (maskedMobile) {
+    patch.contactNumber = maskedMobile;
+    patch.customerMobile = maskedMobile;
   }
 
   // --- Email ---
@@ -169,12 +179,17 @@ function train({ text = "", result = {} }) {
   );
 
   // --- Seating Capacity ---
-  assign(
-    patch,
-    "seatingCapacity",
-    matchGroup(text, /SEAT CAP[\s\S]*?(\d\s*\+\s*\d)/i) ||
-    matchGroup(text, /(\d\s*\+\s*\d)\s*$/im)
-  );
+  const seatSumMatch = text.match(/(\d)\s*\+\s*(\d)\b/);
+  if (seatSumMatch) {
+    patch.seatingCapacity = String(parseInt(seatSumMatch[1], 10) + parseInt(seatSumMatch[2], 10));
+  } else {
+    assign(
+      patch,
+      "seatingCapacity",
+      matchGroup(text, /SEAT CAP[\s\S]*?(\d\s*\+\s*\d)/i) ||
+      matchGroup(text, /(\d\s*\+\s*\d)\s*$/im)
+    );
+  }
 
   // --- IDV ---
   // Shriram PDFs concatenate IDV columns into one string like:
