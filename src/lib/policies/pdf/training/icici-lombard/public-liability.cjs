@@ -42,13 +42,17 @@ function train({ text = "", result = {} }) {
   if (nameMatch) {
     patch.insuredName = nameMatch[1].replace(/^:\s*/, "").replace(/\s+/g, " ").trim();
     patch.customerName = patch.insuredName;
+    patch.proposerName = patch.insuredName;
+    patch.contactPerson = patch.insuredName;
+    patch.groupName = patch.insuredName;
   }
 
   // Address
   const addrMatch =
-    text.match(/Address\s+of\s+the\s+Insured\s*[:\s]*\n?\s*([A-Za-z0-9\s.,&/()-]+?)(?=\s*Telephone|\s*Email|\s*Period|\s*Pincode|\n\n)/i) ||
-    text.match(/PLOT\s+NO\s*:\s*[A-Za-z0-9\s.,&/()-]+?(?=\s*Telephone|\s*Email|\s*Period|\n\n)/i) ||
-    text.match(/Address\s*[:\s]*\n?\s*([A-Za-z0-9\s.,&/()-]+?)(?=\s*Telephone|\s*Email|\s*Period|\n\n)/i);
+    text.match(/(?:2Mailing\s+Address\s+of\s+the\s+insured|Address\s+of\s+the\s+Insured)\s*[:\s]*\n?\s*([A-Za-z0-9\s.,&/()-]+?)(?=\s*\d*Business\s+of\s+the\s+insured|\s*Telephone|\s*Email|\s*Period|\s*Pincode|\n\n)/i) ||
+    text.match(/Address\s+of\s+the\s+Insured\s*[:\s]*\n?\s*([A-Za-z0-9\s.,&/()-]+?)(?=\s*\d*Business\s+of\s+the\s+insured|\s*Telephone|\s*Email|\s*Period|\s*Pincode|\n\n)/i) ||
+    text.match(/PLOT\s+NO\s*:\s*[A-Za-z0-9\s.,&/()-]+?(?=\s*\d*Business\s+of\s+the\s+insured|\s*Telephone|\s*Email|\s*Period|\n\n)/i) ||
+    text.match(/Address\s*[:\s]*\n?\s*([A-Za-z0-9\s.,&/()-]+?)(?=\s*\d*Business\s+of\s+the\s+insured|\s*Telephone|\s*Email|\s*Period|\n\n)/i);
   if (addrMatch) {
     patch.communicationAddress = addrMatch[1].replace(/\s+/g, " ").trim();
   }
@@ -62,6 +66,7 @@ function train({ text = "", result = {} }) {
     patch.expiryDate = parseRobustDate(fromTo[2]) || normalizeWarehouseDate(fromTo[2]);
     patch.policyStartDate = patch.startDate;
     patch.policyExpiryDate = patch.expiryDate;
+    patch.policyEndDate = patch.expiryDate;
   }
 
   // Financials
@@ -74,6 +79,27 @@ function train({ text = "", result = {} }) {
   if (gstMatch) {
     patch.gstAmount = formatAmount(gstMatch[1]);
     patch.taxAmount = patch.gstAmount;
+  }
+
+  const cgstMatch =
+    text.match(/(?:^|\n)\s*\d*CGST\s*9\s*(\d+\.\d{2})/i) ||
+    text.match(/CGST\s*(?:INR|Rs\.?|₹)?\s*([0-9,.]+)/i);
+  if (cgstMatch) {
+    patch.cgst = formatAmount(cgstMatch[1]);
+  }
+
+  const sgstMatch =
+    text.match(/(?:^|\n)\s*\d*(?:SGST|UTGST)\s*9\s*(\d+\.\d{2})/i) ||
+    text.match(/(?:SGST|UTGST)\s*(?:INR|Rs\.?|₹)?\s*([0-9,.]+)/i);
+  if (sgstMatch) {
+    patch.sgst = formatAmount(sgstMatch[1]);
+  }
+
+  const igstMatch =
+    text.match(/(?:^|\n)\s*\d*IGST\s*(?:18|0)\s*(\d+\.\d{2})/i) ||
+    text.match(/IGST\s*(?:INR|Rs\.?|₹)?\s*([0-9,.]+)/i);
+  if (igstMatch) {
+    patch.igst = formatAmount(igstMatch[1]);
   }
 
   const totMatch =
@@ -92,6 +118,33 @@ function train({ text = "", result = {} }) {
     patch.sumInsured = formatAmount(aoyMatch[1]);
     patch.totalSumInsured = patch.sumInsured;
   }
+
+  // Intermediary Details
+  const interMatch = text.match(
+    /(?:13Intermediary\s+Details|Intermediary\s+Details)[\s\S]*?Name\s*([^\n]+)[\s\S]*?Code\s*([^\n]+)[\s\S]*?Phone\s+No\.?\s*([^\n]+)[\s\S]*?Email\s+ID\s*([^\n]+)/i,
+  );
+  if (interMatch) {
+    patch.agentName = interMatch[1].trim();
+    patch.agentCode = interMatch[2].trim();
+    patch.agentMobile = interMatch[3].trim();
+    patch.agentEmail = interMatch[4].trim();
+  }
+
+  // Risk Location / Premise Insured (Annexure A)
+  const premiseMatch = text.match(
+    /Address\s+of\s+Premise\s+Insured\s*\n\s*1\s*\n([\s\S]+?)(?=\n\s*(?:ICICI|2\b|Page|\d+\s*\/))/i,
+  );
+  if (premiseMatch) {
+    patch.riskLocation = premiseMatch[1].replace(/\s+/g, " ").trim();
+    patch.locationOfRisk = patch.riskLocation;
+  }
+
+  // Zero out motor fields to ensure complete isolation
+  patch.registrationNumber = "";
+  patch.vehicleNumber = "";
+  patch.makeModel = "";
+  patch.chassisNumber = "";
+  patch.engineNumber = "";
 
   // Payment Details
   patch.modeOfPayment = "Online";

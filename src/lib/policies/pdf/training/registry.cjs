@@ -31,6 +31,7 @@ const newIndiaNonMotor = require("./new-india/non-motor.cjs");
 const bajajAllianzFire = require("./bajaj-allianz/fire.cjs");
 const tataAigFire = require("./tata-aig/fire.cjs");
 const shriramMotor = require("./shriram/motor.cjs");
+const bajajAllianzHealth = require("./bajaj-allianz/health.cjs");
 
 const trainers = [
   iciciLombardMotor,
@@ -63,6 +64,7 @@ const trainers = [
   newIndiaNonMotor,
   bajajAllianzMotor,
   bajajAllianzFire,
+  bajajAllianzHealth,
   royalSundaramMotor,
   futureGeneraliMotor,
   shriramMotor,
@@ -301,6 +303,27 @@ function isCareHealth(result = {}, context = {}) {
   return /Care\s*Health|careinsurance\.com|Religare/i.test(text);
 }
 
+function isBajajAllianzHealth(result = {}, context = {}) {
+  const insurer = result.insuranceCompany || result.companyName || "";
+  if (insurer && !/Bajaj\s*(?:Allianz|General)/i.test(insurer)) return false;
+
+  const text = String(context.text || result.sourceText || "");
+  if (!/Bajaj\s*(?:Allianz|General)/i.test(text)) return false;
+  if (
+    /Private\s+Car|Two\s+Wheeler|Commercial\s+Vehicle|Goods\s+Carrying|Passenger\s+Carrying|Drive\s*Assure/i.test(
+      text,
+    )
+  ) {
+    return false;
+  }
+  if (/\b(?:Engine\s+No|Chassis\s+No|Registration\s+No|Vehicle\s+Make|Vehicle\s+Model)\b/i.test(text)) {
+    return false;
+  }
+  return /BAJHLGP|Flexi\s+Health\s+Protect|Health\s*Guard|Extra\s*Care|Global\s*Health|Group\s+Policy\s+No|cat-\d/i.test(
+    text,
+  );
+}
+
 function isGoDigitMotor(result = {}, context = {}) {
   const text = String(context.text || result.sourceText || "");
   const header = text.slice(0, 3000);
@@ -413,7 +436,7 @@ function isBajajAllianzMotor(result = {}, context = {}) {
   const category = normalizeCategory(result.documentCategory || result.policyType);
   if (category && category !== "motor") return false;
   if (!/Bajaj\s*(?:Allianz|General)/i.test(text)) return false;
-  if (/Health\s*Guard|Extra\s*Care|Global\s*Health/i.test(text)) return false;
+  if (/BAJHLGP|Flexi\s+Health\s+Protect|Health\s*Guard|Extra\s*Care|Global\s*Health/i.test(text)) return false;
   return (
     /STANDALONE\s*OWN\s*DAMAGE|Two-Wheeler|Two\s+Wheeler|Private\s+Car|Commercial\s+Vehicle|Vehicle\s+Details|Drive\s+Assure|Certificate\s+of\s+Insurance|OG-\d{2}-\d{4}|Liability\s+Only\s+Policy\s+for\s+Commercial/i.test(text)
   );
@@ -487,6 +510,9 @@ function deriveTrainingScope(result = {}, context = {}) {
   }
   if (isHdfcErgoMotor(result, context)) {
     return { insurer: "hdfc-ergo", category: "motor" };
+  }
+  if (isBajajAllianzHealth(result, context)) {
+    return { insurer: "bajaj-allianz", category: "health" };
   }
   if (isBajajAllianzMotor(result, context)) {
     return { insurer: "bajaj-allianz", category: "motor" };
@@ -736,6 +762,16 @@ function establishTrainingIdentity(result = {}, context = {}) {
       documentCategory: "Health Insurance",
       documentFormat: "CARE_HEALTH_V1",
       sourceDocumentType: "CARE_HEALTH_V1",
+    };
+  }
+  if (isBajajAllianzHealth(result, context)) {
+    return {
+      ...result,
+      insuranceCompany: "Bajaj Allianz General Insurance Company Limited",
+      companyName: "Bajaj Allianz General Insurance Company Limited",
+      documentCategory: "Health Insurance",
+      documentFormat: "BAJAJ_ALLIANZ_HEALTH_V1",
+      sourceDocumentType: "BAJAJ_ALLIANZ_HEALTH_V1",
     };
   }
   if (isGoDigitMotor(result, context)) {
