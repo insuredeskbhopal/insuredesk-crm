@@ -50,8 +50,8 @@ async function loadPolicyRecordTabCounts({ isSuperAdmin, orgId, session, datePre
             OR (COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', '') ~* 'motor|vehicle|private car|two[ -]?wheeler|bike|scooter|commercial vehicle|taxi|school bus|goods carrying|passenger carrying|auto secure|drive assure|gcv|pcv|trailer|standalone motor|act policy|third party|pvt')
           )
           AND NOT (
-            COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', '') ~* 'floater|health|mediclaim|hospital|optima|individual|gmc|gpa|warehouse|fire|burglary|msme|sfsp|fidelity|liability|workmen|compensation|cpm|machinery|marine'
-            OR COALESCE(selected_service_category, detected_service_category, '') ~* 'health|fire|warehouse|burglary|non-motor|fidelity|liability|compensation|marine|engineering'
+            COALESCE(selected_policy_type, reviewed_data->>'policyType', data->>'policyType', '') ~* 'floater|health|mediclaim|hospital|optima|individual|gmc|gpa|warehouse|fire|burglary|msme|sfsp|fidelity|public[ -]?liability|cgl|workmen|compensation|cpm|machinery|marine'
+            OR COALESCE(selected_service_category, detected_service_category, '') ~* 'health|fire|warehouse|burglary|non-motor|fidelity|public[ -]?liability|compensation|marine|engineering'
             OR COALESCE(source_file, pdf_file_name, '') ~* 'health policy|health'
           )
         ) THEN 1 END)::integer as motor_count,
