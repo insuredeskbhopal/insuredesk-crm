@@ -127,22 +127,21 @@ export async function GET(request) {
     const sqlParams = [isSuperAdmin, organizationId, startIso, endIso, categoryFilterVal];
     const tenantFilter = getTenantFilter(session, "read");
 
-    const safePremiumSql = `(CASE
+    const safePremiumSql = `COALESCE(total_premium, net_premium, (CASE
       WHEN NULLIF(REGEXP_REPLACE(COALESCE(reviewed_data->>'totalPremium', data->>'totalPremium', reviewed_data->>'netPremium', data->>'netPremium', ''), '[^0-9.]', '', 'g'), '') ~ '^[0-9]+(\\.[0-9]+)?$'
       THEN CAST(REGEXP_REPLACE(COALESCE(reviewed_data->>'totalPremium', data->>'totalPremium', reviewed_data->>'netPremium', data->>'netPremium', ''), '[^0-9.]', '', 'g') AS NUMERIC)
       ELSE 0
-    END)`;
+    END))`;
 
     const policySummaryQuery = `
       WITH active_records AS (
         SELECT
           COALESCE(
+            insured_name,
             NULLIF(BTRIM(reviewed_data->>'insuredName'), ''),
             NULLIF(BTRIM(data->>'insuredName'), ''),
             NULLIF(BTRIM(reviewed_data->>'customerName'), ''),
             NULLIF(BTRIM(data->>'customerName'), ''),
-            NULLIF(BTRIM(reviewed_data->>'Insured Name'), ''),
-            NULLIF(BTRIM(data->>'Insured Name'), ''),
             'Unnamed insured'
           ) AS customer_name,
           is_active_policy,
@@ -156,12 +155,9 @@ export async function GET(request) {
           AND ($3::timestamptz IS NULL OR COALESCE(saved_at, created_at) >= $3::timestamptz)
           AND ($4::timestamptz IS NULL OR COALESCE(saved_at, created_at) <= $4::timestamptz)
           AND ($5::text IS NULL OR COALESCE(
+            policy_category,
             NULLIF(BTRIM(reviewed_data->>'policyCategory'), ''),
             NULLIF(BTRIM(data->>'policyCategory'), ''),
-            NULLIF(BTRIM(reviewed_data->>'documentCategory'), ''),
-            NULLIF(BTRIM(data->>'documentCategory'), ''),
-            NULLIF(BTRIM(reviewed_data->>'policyType'), ''),
-            NULLIF(BTRIM(data->>'policyType'), ''),
             'General Insurance'
           ) ILIKE '%' || $5::text || '%')
       )
@@ -189,12 +185,9 @@ export async function GET(request) {
           AND ($3::timestamptz IS NULL OR COALESCE(saved_at, created_at) >= $3::timestamptz)
           AND ($4::timestamptz IS NULL OR COALESCE(saved_at, created_at) <= $4::timestamptz)
           AND ($5::text IS NULL OR COALESCE(
+            policy_category,
             NULLIF(BTRIM(reviewed_data->>'policyCategory'), ''),
             NULLIF(BTRIM(data->>'policyCategory'), ''),
-            NULLIF(BTRIM(reviewed_data->>'documentCategory'), ''),
-            NULLIF(BTRIM(data->>'documentCategory'), ''),
-            NULLIF(BTRIM(reviewed_data->>'policyType'), ''),
-            NULLIF(BTRIM(data->>'policyType'), ''),
             'General Insurance'
           ) ILIKE '%' || $5::text || '%')
         GROUP BY 1, 2, 3, 4
@@ -216,12 +209,9 @@ export async function GET(request) {
           AND ($3::timestamptz IS NULL OR COALESCE(saved_at, created_at) >= $3::timestamptz)
           AND ($4::timestamptz IS NULL OR COALESCE(saved_at, created_at) <= $4::timestamptz)
           AND ($5::text IS NULL OR COALESCE(
+            policy_category,
             NULLIF(BTRIM(reviewed_data->>'policyCategory'), ''),
             NULLIF(BTRIM(data->>'policyCategory'), ''),
-            NULLIF(BTRIM(reviewed_data->>'documentCategory'), ''),
-            NULLIF(BTRIM(data->>'documentCategory'), ''),
-            NULLIF(BTRIM(reviewed_data->>'policyType'), ''),
-            NULLIF(BTRIM(data->>'policyType'), ''),
             'General Insurance'
           ) ILIKE '%' || $5::text || '%')
         GROUP BY 1, 2, 3, 4
@@ -244,12 +234,9 @@ export async function GET(request) {
           AND ($3::timestamptz IS NULL OR COALESCE(saved_at, created_at) >= $3::timestamptz)
           AND ($4::timestamptz IS NULL OR COALESCE(saved_at, created_at) <= $4::timestamptz)
           AND ($5::text IS NULL OR COALESCE(
+            policy_category,
             NULLIF(BTRIM(reviewed_data->>'policyCategory'), ''),
             NULLIF(BTRIM(data->>'policyCategory'), ''),
-            NULLIF(BTRIM(reviewed_data->>'documentCategory'), ''),
-            NULLIF(BTRIM(data->>'documentCategory'), ''),
-            NULLIF(BTRIM(reviewed_data->>'policyType'), ''),
-            NULLIF(BTRIM(data->>'policyType'), ''),
             'General Insurance'
           ) ILIKE '%' || $5::text || '%')
         GROUP BY 1, 2, 3, 4, 5
@@ -260,10 +247,9 @@ export async function GET(request) {
     const categoryBreakdownQuery = `
       SELECT
         COALESCE(
+          policy_category,
           NULLIF(BTRIM(reviewed_data->>'policyCategory'), ''),
           NULLIF(BTRIM(data->>'policyCategory'), ''),
-          NULLIF(BTRIM(reviewed_data->>'documentCategory'), ''),
-          NULLIF(BTRIM(data->>'documentCategory'), ''),
           'General Insurance'
         ) AS category,
         COUNT(*)::integer AS count,
@@ -275,12 +261,9 @@ export async function GET(request) {
         AND ($3::timestamptz IS NULL OR COALESCE(saved_at, created_at) >= $3::timestamptz)
         AND ($4::timestamptz IS NULL OR COALESCE(saved_at, created_at) <= $4::timestamptz)
         AND ($5::text IS NULL OR COALESCE(
+          policy_category,
           NULLIF(BTRIM(reviewed_data->>'policyCategory'), ''),
           NULLIF(BTRIM(data->>'policyCategory'), ''),
-          NULLIF(BTRIM(reviewed_data->>'documentCategory'), ''),
-          NULLIF(BTRIM(data->>'documentCategory'), ''),
-          NULLIF(BTRIM(reviewed_data->>'policyType'), ''),
-          NULLIF(BTRIM(data->>'policyType'), ''),
           'General Insurance'
         ) ILIKE '%' || $5::text || '%')
       GROUP BY 1
@@ -306,12 +289,9 @@ export async function GET(request) {
         AND ($3::timestamptz IS NULL OR COALESCE(saved_at, created_at) >= $3::timestamptz)
         AND ($4::timestamptz IS NULL OR COALESCE(saved_at, created_at) <= $4::timestamptz)
         AND ($5::text IS NULL OR COALESCE(
+          policy_category,
           NULLIF(BTRIM(reviewed_data->>'policyCategory'), ''),
           NULLIF(BTRIM(data->>'policyCategory'), ''),
-          NULLIF(BTRIM(reviewed_data->>'documentCategory'), ''),
-          NULLIF(BTRIM(data->>'documentCategory'), ''),
-          NULLIF(BTRIM(reviewed_data->>'policyType'), ''),
-          NULLIF(BTRIM(data->>'policyType'), ''),
           'General Insurance'
         ) ILIKE '%' || $5::text || '%')
       GROUP BY 1
@@ -324,10 +304,9 @@ export async function GET(request) {
         id,
         COALESCE(saved_at, created_at) AS "createdAt",
         COALESCE(
+          insured_name,
           NULLIF(BTRIM(reviewed_data->>'insuredName'), ''),
           NULLIF(BTRIM(data->>'insuredName'), ''),
-          NULLIF(BTRIM(reviewed_data->>'customerName'), ''),
-          NULLIF(BTRIM(data->>'customerName'), ''),
           'Unnamed Customer'
         ) AS "customerName",
         COALESCE(
@@ -338,18 +317,19 @@ export async function GET(request) {
           'Unknown Insurer'
         ) AS "companyName",
         COALESCE(
+          policy_category,
           NULLIF(BTRIM(reviewed_data->>'policyType'), ''),
           NULLIF(BTRIM(data->>'policyType'), ''),
-          NULLIF(BTRIM(reviewed_data->>'documentCategory'), ''),
-          NULLIF(BTRIM(data->>'documentCategory'), ''),
           'Policy'
         ) AS "policyType",
         COALESCE(
+          policy_category,
           NULLIF(BTRIM(reviewed_data->>'documentCategory'), ''),
           NULLIF(BTRIM(data->>'documentCategory'), ''),
           'General Insurance'
         ) AS "documentCategory",
         COALESCE(
+          policy_number,
           NULLIF(BTRIM(reviewed_data->>'policyNumber'), ''),
           NULLIF(BTRIM(data->>'policyNumber'), ''),
           'Pending'
@@ -362,12 +342,9 @@ export async function GET(request) {
         AND ($3::timestamptz IS NULL OR COALESCE(saved_at, created_at) >= $3::timestamptz)
         AND ($4::timestamptz IS NULL OR COALESCE(saved_at, created_at) <= $4::timestamptz)
         AND ($5::text IS NULL OR COALESCE(
+          policy_category,
           NULLIF(BTRIM(reviewed_data->>'policyCategory'), ''),
           NULLIF(BTRIM(data->>'policyCategory'), ''),
-          NULLIF(BTRIM(reviewed_data->>'documentCategory'), ''),
-          NULLIF(BTRIM(data->>'documentCategory'), ''),
-          NULLIF(BTRIM(reviewed_data->>'policyType'), ''),
-          NULLIF(BTRIM(data->>'policyType'), ''),
           'General Insurance'
         ) ILIKE '%' || $5::text || '%')
       ORDER BY COALESCE(saved_at, created_at) DESC

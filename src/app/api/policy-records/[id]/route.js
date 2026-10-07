@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
-import { normalizeRecord } from "@/lib/records";
+import { normalizeRecord, parseCanonicalNumber, parseCanonicalDate } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/records/validation";
 import { verifyJWT } from "@/lib/auth";
 import { canAccessSharedResource, getTenantFilter, UserRole } from "@/lib/auth/rbac";
@@ -64,8 +64,15 @@ export async function PUT(request, { params }) {
       existing.pdfFileName ||
       existing.data?.sourceFile ||
       "Untitled.pdf";
+    const baseForReview = { ...(existing.reviewedData || existing.extractedData || existing.data || {}) };
+    delete baseForReview.sourceText;
+    delete baseForReview.policyUnderstanding;
+    delete baseForReview.fieldConfidence;
+    delete baseForReview.extractionLog;
+    delete baseForReview.extractionQuality;
+
     const reviewedData = sanitizeRecordPayload({
-      ...(existing.reviewedData || existing.extractedData || existing.data || {}),
+      ...baseForReview,
       ...incomingReviewedData,
       sourceFile,
     });
@@ -215,6 +222,18 @@ export async function PUT(request, { params }) {
               ? "ACTION_REQUIRED"
               : "PENDING"
             : "LINKED",
+          // Canonical Operational Columns
+          policyNumber: reviewedData.policyNumber || mergedData.policyNumber || null,
+          normalizedPolicyNumber: (reviewedData.policyNumber || mergedData.policyNumber || "").trim().toLowerCase() || null,
+          insuredName: policyCustomerName || reviewedData.insuredName || mergedData.insuredName || null,
+          grossPremium: parseCanonicalNumber(reviewedData.grossPremium || reviewedData.totalPremium || reviewedData.premium || mergedData.grossPremium),
+          netPremium: parseCanonicalNumber(reviewedData.netPremium || reviewedData.basicPremium || mergedData.netPremium),
+          totalPremium: parseCanonicalNumber(reviewedData.totalPremium || reviewedData.grossPremium || reviewedData.premium || mergedData.totalPremium),
+          policyStartDate: parseCanonicalDate(reviewedData.startDate || reviewedData.policyStartDate || mergedData.startDate),
+          policyExpiryDate: parseCanonicalDate(reviewedData.expiryDate || reviewedData.policyEndDate || mergedData.expiryDate),
+          vehicleRegistrationNumber: String(reviewedData.vehicleNumber || reviewedData.registrationNumber || mergedData.vehicleNumber || "").trim() || null,
+          makeModel: String(reviewedData.makeModel || reviewedData.vehicleMake || mergedData.makeModel || "").trim() || null,
+          policyCategory: String(reviewedData.policyCategory || reviewedData.documentCategory || payload.selectedServiceCategory || existing.selectedServiceCategory || mergedData.policyCategory || "").trim() || null,
         },
         include: {
           createdBy: {

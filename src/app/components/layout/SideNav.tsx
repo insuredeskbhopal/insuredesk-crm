@@ -123,7 +123,6 @@ export default function SideNav({
             className={activePage === "dashboard" ? "active" : ""}
             href={ROUTE_MAP["dashboard"]}
             title="Dashboard"
-            prefetch={false}
             onClick={() => { if (onCloseSidebar) onCloseSidebar(); }}
           >
             <LayoutDashboard size={20} /> <span className="side-nav-label">Dashboard</span>
@@ -159,7 +158,6 @@ export default function SideNav({
                             key={child.id}
                             href={ROUTE_MAP[child.id] || "/dashboard"}
                             title={child.label}
-                            prefetch={false}
                             onClick={() => { if (onCloseSidebar) onCloseSidebar(); }}
                           >
                             <span className="side-nav-label">{child.label}</span>
@@ -177,7 +175,6 @@ export default function SideNav({
                     className={activePage === item.id ? "active" : ""}
                     href={ROUTE_MAP[item.id] || "/dashboard"}
                     title={item.label}
-                    prefetch={false}
                     onClick={() => { if (onCloseSidebar) onCloseSidebar(); }}
                   >
                     <Icon size={20} /> <span className="side-nav-label">{item.label}</span>

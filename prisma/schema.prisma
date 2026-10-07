@@ -601,6 +601,19 @@ model PolicyRecord {
   renewalRecipientEmail   String?            @map("renewal_recipient_email")
   endorsements            Endorsement[]
 
+  // Canonical Operational Policy Fields (Remediation)
+  policyNumber            String?            @map("policy_number")
+  normalizedPolicyNumber  String?            @map("normalized_policy_number")
+  insuredName             String?            @map("insured_name")
+  grossPremium            Decimal?           @map("gross_premium") @db.Decimal(14, 2)
+  netPremium              Decimal?           @map("net_premium") @db.Decimal(14, 2)
+  totalPremium            Decimal?           @map("total_premium") @db.Decimal(14, 2)
+  policyStartDate         DateTime?          @map("policy_start_date") @db.Timestamptz(6)
+  policyExpiryDate        DateTime?          @map("policy_expiry_date") @db.Timestamptz(6)
+  vehicleRegistrationNumber String?          @map("vehicle_registration_number")
+  makeModel               String?            @map("make_model")
+  policyCategory          String?            @map("policy_category")
+
   @@index([savedAt])
   @@index([uploadedFileId])
   @@index([policySchemaId])
@@ -621,6 +634,12 @@ model PolicyRecord {
   @@index([updatedAt])
   @@index([deletedAt])
   @@index([createdById])
+  @@index([policyNumber])
+  @@index([normalizedPolicyNumber])
+  @@index([insuredName])
+  @@index([policyExpiryDate])
+  @@index([policyCategory])
+  @@index([vehicleRegistrationNumber])
   @@map("pdf_records")
 }
 

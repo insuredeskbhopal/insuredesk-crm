@@ -10,7 +10,7 @@ import { UPLOAD_STATUS } from "@/lib/uploads/status";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
-import { getSavedAtDateFilter } from "@/lib/records/scoped-data";
+import { getSavedAtDateFilter, POLICY_LIST_SELECT } from "@/lib/records/scoped-data";
 import {
   MANUAL_RENEWAL_IMPORT_METHOD,
   withoutManualRenewalSources,
@@ -395,31 +395,7 @@ export async function GET(request) {
       where.AND = [...existingAnd, ...andFilters];
     }
 
-    const selectOptions = {
-      id: true,
-      savedAt: true,
-      createdAt: true,
-      data: true,
-      reviewedData: true,
-      extractionMethod: true,
-      extractionQuality: true,
-      confidenceScore: true,
-      pdfFileName: true,
-      pdfMimeType: true,
-      sourceFile: true,
-      uploadedFileId: true,
-      organizationId: true,
-      createdById: true,
-      clientIdRequestId: true,
-      clientIdPending: true,
-      clientIdStatus: true,
-      createdBy: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    };
+    const selectOptions = POLICY_LIST_SELECT;
 
     const [records, totalCount] = await Promise.all([
       prisma.policyRecord.findMany({

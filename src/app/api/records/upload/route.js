@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
-import { normalizeRecord } from "@/lib/records";
+import { normalizeRecord, parseCanonicalNumber, parseCanonicalDate } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/records/validation";
 import {
   MAX_UPLOAD_BYTES,
@@ -122,6 +122,13 @@ export async function POST(request) {
           },
         });
 
+        const compactReviewedData = { ...data };
+        delete compactReviewedData.sourceText;
+        delete compactReviewedData.policyUnderstanding;
+        delete compactReviewedData.fieldConfidence;
+        delete compactReviewedData.extractionLog;
+        delete compactReviewedData.extractionQuality;
+
         const record = await prisma.policyRecord.create({
           data: {
             id: randomUUID(),
@@ -139,7 +146,7 @@ export async function POST(request) {
             selectedPolicyType: data.policyType || "",
             confidenceScore: Number(data.confidenceScore || 0),
             extractedData: data,
-            reviewedData: data,
+            reviewedData: compactReviewedData,
             extractionMethod: data.extractionMethod || textResult.extractionMethod || "",
             extractionQuality: data.extractionQuality || {},
             extractionLog: textResult.extractionLog || {},
@@ -147,6 +154,18 @@ export async function POST(request) {
             uploadedFileId: uploadedFile.id,
             organizationId: user.organizationId,
             createdById: user.userId || user.id,
+            // Canonical Operational Fields
+            policyNumber: data.policyNumber ? String(data.policyNumber).trim() : null,
+            normalizedPolicyNumber: data.policyNumber ? String(data.policyNumber).trim().toLowerCase() : null,
+            insuredName: data.insuredName || data.customerName || null,
+            grossPremium: parseCanonicalNumber(data.grossPremium || data.totalPremium || data.premium),
+            netPremium: parseCanonicalNumber(data.netPremium || data.basicPremium),
+            totalPremium: parseCanonicalNumber(data.totalPremium || data.grossPremium || data.premium),
+            policyStartDate: parseCanonicalDate(data.startDate || data.policyStartDate),
+            policyExpiryDate: parseCanonicalDate(data.expiryDate || data.policyEndDate),
+            vehicleRegistrationNumber: String(data.vehicleNumber || data.registrationNumber || "").trim() || null,
+            makeModel: String(data.makeModel || data.vehicleMake || "").trim() || null,
+            policyCategory: String(data.policyCategory || data.documentCategory || "").trim() || null,
             ...customerNameFields,
           },
         });

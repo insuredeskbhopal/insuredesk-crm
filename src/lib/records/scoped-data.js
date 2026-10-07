@@ -3,6 +3,129 @@ import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
 import { MANUAL_RENEWAL_SQL_EXCLUSION, withoutManualRenewalSources } from "@/lib/records/manual-renewal-source";
 
+export const POLICY_LIST_SELECT = {
+  id: true,
+  createdAt: true,
+  savedAt: true,
+  sourceFile: true,
+  pdfFileName: true,
+  pdfMimeType: true,
+  uploadedFileId: true,
+  organizationId: true,
+  createdById: true,
+  renewalStatus: true,
+  previousPolicyId: true,
+  renewedPolicyId: true,
+  renewalDate: true,
+  lostReason: true,
+  isActivePolicy: true,
+  // Canonical operational fields (replaces reading wide data & reviewedData)
+  policyNumber: true,
+  normalizedPolicyNumber: true,
+  insuredName: true,
+  grossPremium: true,
+  netPremium: true,
+  totalPremium: true,
+  policyStartDate: true,
+  policyExpiryDate: true,
+  vehicleRegistrationNumber: true,
+  makeModel: true,
+  policyCategory: true,
+  selectedCompany: true,
+  selectedPolicyType: true,
+  selectedServiceCategory: true,
+  detectedCompany: true,
+  detectedPolicyType: true,
+  detectedServiceCategory: true,
+  confidenceScore: true,
+  extractionMethod: true,
+  clientIdStatus: true,
+  clientIdPending: true,
+  customerPortfolioId: true,
+  contactPersonName: true,
+  contactPersonMobile: true,
+  contactPersonEmail: true,
+  renewalRecipientName: true,
+  renewalRecipientMobile: true,
+  renewalRecipientEmail: true,
+  createdBy: {
+    select: {
+      name: true,
+      email: true,
+    },
+  },
+};
+
+export const CUSTOMER_POLICY_SUMMARY_SELECT = {
+  id: true,
+  createdAt: true,
+  savedAt: true,
+  sourceFile: true,
+  pdfFileName: true,
+  uploadedFileId: true,
+  organizationId: true,
+  policyNumber: true,
+  normalizedPolicyNumber: true,
+  insuredName: true,
+  grossPremium: true,
+  netPremium: true,
+  totalPremium: true,
+  policyStartDate: true,
+  policyExpiryDate: true,
+  vehicleRegistrationNumber: true,
+  makeModel: true,
+  policyCategory: true,
+  selectedCompany: true,
+  selectedPolicyType: true,
+  isActivePolicy: true,
+  renewalStatus: true,
+  customerPortfolioId: true,
+  contactPersonName: true,
+  contactPersonMobile: true,
+  createdBy: {
+    select: {
+      name: true,
+      email: true,
+    },
+  },
+};
+
+export const RENEWAL_POLICY_SELECT = {
+  id: true,
+  savedAt: true,
+  createdAt: true,
+  updatedAt: true,
+  policyNumber: true,
+  insuredName: true,
+  grossPremium: true,
+  netPremium: true,
+  totalPremium: true,
+  policyStartDate: true,
+  policyExpiryDate: true,
+  vehicleRegistrationNumber: true,
+  makeModel: true,
+  policyCategory: true,
+  selectedCompany: true,
+  selectedPolicyType: true,
+  renewalStatus: true,
+  previousPolicyId: true,
+  renewedPolicyId: true,
+  renewalDate: true,
+  lostReason: true,
+  isActivePolicy: true,
+  customerPortfolioId: true,
+  contactPersonName: true,
+  contactPersonMobile: true,
+  contactPersonEmail: true,
+  renewalRecipientName: true,
+  renewalRecipientMobile: true,
+  renewalRecipientEmail: true,
+  sourceFile: true,
+  pdfFileName: true,
+  createdBy: { select: { name: true, email: true } },
+  updatedBy: { select: { name: true, email: true } },
+};
+
 export const POLICY_RECORD_SELECT = {
   id: true,
   createdAt: true,
@@ -24,6 +147,17 @@ export const POLICY_RECORD_SELECT = {
   renewalDate: true,
   lostReason: true,
   isActivePolicy: true,
+  policyNumber: true,
+  normalizedPolicyNumber: true,
+  insuredName: true,
+  grossPremium: true,
+  netPremium: true,
+  totalPremium: true,
+  policyStartDate: true,
+  policyExpiryDate: true,
+  vehicleRegistrationNumber: true,
+  makeModel: true,
+  policyCategory: true,
   createdBy: {
     select: {
       name: true,
@@ -189,38 +323,24 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
     );
   }
 
-  // 1. Search Query (q)
+  // 1. Search Query (q) - Optimized around canonical indexed relational columns
   if (q.trim()) {
-    const searchTerms = q.trim().toLowerCase();
-    const searchKeys = [
-      "clientId",
-      "clientIdRequestId",
-      "insuredName",
-      "policyNumber",
-      "contactNumber",
-      "customerMobile",
-      "contactPerson",
-      "whatsappGroupName",
-      "groupName",
-      "policyType",
-      "vehicleNumber",
-      "registrationNumber",
-      "engineNumber",
-      "chassisNumber",
-      "makeModel",
-      "rtoLocation",
-      "district",
-      "tehsil",
-      "insuranceCompany",
-      "sourceFile",
-      "pdfFileName",
-    ];
-    const searchOrs = [];
-    for (const key of searchKeys) {
-      searchOrs.push({ reviewedData: { path: [key], string_contains: searchTerms, mode: "insensitive" } });
-      searchOrs.push({ data: { path: [key], string_contains: searchTerms, mode: "insensitive" } });
-    }
-    andFilters.push({ OR: searchOrs });
+    const searchTerms = q.trim();
+    andFilters.push({
+      OR: [
+        { policyNumber: { contains: searchTerms, mode: "insensitive" } },
+        { insuredName: { contains: searchTerms, mode: "insensitive" } },
+        { vehicleRegistrationNumber: { contains: searchTerms, mode: "insensitive" } },
+        { makeModel: { contains: searchTerms, mode: "insensitive" } },
+        { selectedCompany: { contains: searchTerms, mode: "insensitive" } },
+        { selectedPolicyType: { contains: searchTerms, mode: "insensitive" } },
+        { contactPersonMobile: { contains: searchTerms, mode: "insensitive" } },
+        { contactPersonName: { contains: searchTerms, mode: "insensitive" } },
+        { renewalRecipientMobile: { contains: searchTerms, mode: "insensitive" } },
+        { sourceFile: { contains: searchTerms, mode: "insensitive" } },
+        { pdfFileName: { contains: searchTerms, mode: "insensitive" } },
+      ],
+    });
   }
 
   // 2. Custom Field Filter
@@ -474,14 +594,16 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
         SELECT id FROM pdf_records
         WHERE deleted_at IS NULL
           AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
-          AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (
-            SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
+          ${options.excludeRenewalSources !== false ? MANUAL_RENEWAL_SQL_EXCLUSION : ""}
+          AND normalized_policy_number IS NOT NULL AND normalized_policy_number != ''
+          AND normalized_policy_number IN (
+            SELECT normalized_policy_number
             FROM pdf_records
             WHERE deleted_at IS NULL
               AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
               ${options.excludeRenewalSources !== false ? MANUAL_RENEWAL_SQL_EXCLUSION : ""}
-              AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
-            GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
+              AND normalized_policy_number IS NOT NULL AND normalized_policy_number != ''
+            GROUP BY normalized_policy_number
             HAVING COUNT(*) > 1
           )
       `;
@@ -500,7 +622,7 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
         page,
         limit,
         skip,
-        select: options.select || POLICY_RECORD_SELECT,
+        select: options.select || POLICY_LIST_SELECT,
       });
     }
   }
@@ -510,7 +632,7 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
       prisma.policyRecord.findMany({
         where,
         orderBy: { savedAt: "desc" },
-        select: options.select || POLICY_RECORD_SELECT,
+        select: options.select || POLICY_LIST_SELECT,
         skip,
         take: limit,
       }),
@@ -529,7 +651,7 @@ async function loadScopedPolicyRecordsUnsafe(options = {}) {
   return prisma.policyRecord.findMany({
     where,
     orderBy: { savedAt: "desc" },
-    select: options.select || POLICY_RECORD_SELECT,
+    select: options.select || POLICY_LIST_SELECT,
   });
 }
 
@@ -601,14 +723,14 @@ async function loadDuplicatePolicyRecords({
     : "";
   const duplicateBase = `
     WITH duplicate_keys AS (
-        SELECT COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') AS policy_number
+      SELECT normalized_policy_number AS policy_number
       FROM pdf_records
       WHERE deleted_at IS NULL
         AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
         ${renewalSourceWhere}
         ${sourceFileWhere}
-        AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') != ''
-      GROUP BY COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '')
+        AND normalized_policy_number IS NOT NULL AND normalized_policy_number != ''
+      GROUP BY normalized_policy_number
       HAVING COUNT(*) > 1
     ),
     duplicate_records AS (
@@ -618,7 +740,7 @@ async function loadDuplicatePolicyRecords({
         AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
         ${renewalSourceWhere}
         ${sourceFileWhere}
-        AND COALESCE(reviewed_data->>'policyNumber', data->>'policyNumber', '') IN (SELECT policy_number FROM duplicate_keys)
+        AND normalized_policy_number IN (SELECT policy_number FROM duplicate_keys)
         ${extraWhere}
     )
   `;
@@ -720,12 +842,11 @@ export async function loadScopedCustomerPolicyPage(options = {}) {
           pr.id,
           pr.saved_at,
           COALESCE(
+            pr.insured_name,
             NULLIF(BTRIM(pr.reviewed_data->>'insuredName'), ''),
             NULLIF(BTRIM(pr.data->>'insuredName'), ''),
             NULLIF(BTRIM(pr.reviewed_data->>'customerName'), ''),
             NULLIF(BTRIM(pr.data->>'customerName'), ''),
-            NULLIF(BTRIM(pr.reviewed_data->>'Insured Name'), ''),
-            NULLIF(BTRIM(pr.data->>'Insured Name'), ''),
             'Unnamed insured'
           ) AS customer_name
         FROM pdf_records pr
@@ -771,7 +892,7 @@ export async function loadScopedCustomerPolicyPage(options = {}) {
     const rows = ids.length
       ? await prisma.policyRecord.findMany({
           where: { ...tenantFilter, id: { in: ids } },
-          select: POLICY_RECORD_SELECT,
+          select: CUSTOMER_POLICY_SUMMARY_SELECT,
         })
       : [];
     const rowMap = new Map(rows.map((record) => [record.id, record]));
@@ -803,12 +924,11 @@ export async function loadScopedCustomerPolicies(customerName) {
          AND ($1::boolean OR organization_id IS NOT DISTINCT FROM $2::uuid)
          ${MANUAL_RENEWAL_SQL_EXCLUSION}
          AND COALESCE(
+           insured_name,
            NULLIF(BTRIM(reviewed_data->>'insuredName'), ''),
            NULLIF(BTRIM(data->>'insuredName'), ''),
            NULLIF(BTRIM(reviewed_data->>'customerName'), ''),
            NULLIF(BTRIM(data->>'customerName'), ''),
-           NULLIF(BTRIM(reviewed_data->>'Insured Name'), ''),
-           NULLIF(BTRIM(data->>'Insured Name'), ''),
            'Unnamed insured'
          ) = $3
        ORDER BY saved_at DESC`,
@@ -820,7 +940,7 @@ export async function loadScopedCustomerPolicies(customerName) {
     if (!ids.length) return [];
     const rows = await prisma.policyRecord.findMany({
       where: { ...getTenantFilter(session, "read"), id: { in: ids } },
-      select: POLICY_RECORD_SELECT,
+      select: CUSTOMER_POLICY_SUMMARY_SELECT,
     });
     const rowMap = new Map(rows.map((record) => [record.id, record]));
     return ids.map((id) => rowMap.get(id)).filter(Boolean);

@@ -24,7 +24,12 @@ export function normalizeRecord(record) {
   if (!record || typeof record !== "object") return {};
   const payload = record.reviewedData || record.data || {};
   const legacy = record.data || {};
-  const policyNumber = payload.policyNumber || legacy.policyNumber || payload["Policy No."] || "";
+  const policyNumber =
+    record.policyNumber ||
+    payload.policyNumber ||
+    legacy.policyNumber ||
+    payload["Policy No."] ||
+    "";
   let uploadedAt = record.uploadedFile?.createdAt || record.savedAt || record.createdAt || "";
   if (policyNumber === "45140031260200003089") {
     uploadedAt = new Date("2026-06-29T12:00:00Z");
@@ -35,6 +40,7 @@ export function normalizeRecord(record) {
   const rawUpdater = record.updatedBy;
   const updater = typeof rawUpdater === "object" && rawUpdater !== null ? rawUpdater : {};
   const insuredName =
+    record.insuredName ||
     payload.insuredName ||
     legacy.insuredName ||
     payload.customerName ||
@@ -102,8 +108,20 @@ export function normalizeRecord(record) {
   const assignedTo =
     payload.assignedTo || legacy.assignedTo || renewalFollowUp?.assignedTo || createdByName || "";
 
-  const startDate = payload.startDate || payload.policyStartDate || legacy.startDate || payload["Start date"] || "";
-  const expiryDate = payload.expiryDate || payload.policyEndDate || legacy.expiryDate || payload["Expiry date"] || "";
+  const startDate =
+    (record.policyStartDate ? (record.policyStartDate instanceof Date ? record.policyStartDate.toISOString().split("T")[0] : String(record.policyStartDate).split("T")[0]) : "") ||
+    payload.startDate ||
+    payload.policyStartDate ||
+    legacy.startDate ||
+    payload["Start date"] ||
+    "";
+  const expiryDate =
+    (record.policyExpiryDate ? (record.policyExpiryDate instanceof Date ? record.policyExpiryDate.toISOString().split("T")[0] : String(record.policyExpiryDate).split("T")[0]) : "") ||
+    payload.expiryDate ||
+    payload.policyEndDate ||
+    legacy.expiryDate ||
+    payload["Expiry date"] ||
+    "";
 
   return {
     id: record.id,
@@ -183,6 +201,7 @@ export function normalizeRecord(record) {
       payload.whatsappGroupName || legacy.whatsappGroupName || payload["WhatsApp Group Name"] || "",
     groupName: payload.groupName || legacy.groupName || payload["Group name"] || "",
     documentCategory:
+      record.policyCategory ||
       payload.documentCategory ||
       legacy.documentCategory ||
       record.selectedServiceCategory ||
@@ -241,35 +260,41 @@ export function normalizeRecord(record) {
       legacy.premium ||
       "",
     grossPremium:
-      payload.grossPremium ||
-      legacy.grossPremium ||
-      payload.totalPremium ||
-      legacy.totalPremium ||
-      payload.premiumIncludingGst ||
-      legacy.premiumIncludingGst ||
-      payload.premium ||
-      legacy.premium ||
-      "",
+      (record.grossPremium !== null && record.grossPremium !== undefined)
+        ? String(record.grossPremium)
+        : (payload.grossPremium ||
+          legacy.grossPremium ||
+          payload.totalPremium ||
+          legacy.totalPremium ||
+          payload.premiumIncludingGst ||
+          legacy.premiumIncludingGst ||
+          payload.premium ||
+          legacy.premium ||
+          ""),
     totalPremium:
-      payload.totalPremium ||
-      legacy.totalPremium ||
-      payload.grossPremium ||
-      legacy.grossPremium ||
-      payload.premium ||
-      legacy.premium ||
-      payload.basicPremium ||
-      legacy.basicPremium ||
-      payload.collectedAmount ||
-      legacy.collectedAmount ||
-      payload["Total Premium"] ||
-      "",
+      (record.totalPremium !== null && record.totalPremium !== undefined)
+        ? String(record.totalPremium)
+        : (payload.totalPremium ||
+          legacy.totalPremium ||
+          payload.grossPremium ||
+          legacy.grossPremium ||
+          payload.premium ||
+          legacy.premium ||
+          payload.basicPremium ||
+          legacy.basicPremium ||
+          payload.collectedAmount ||
+          legacy.collectedAmount ||
+          payload["Total Premium"] ||
+          ""),
     netPremium:
-      payload.netPremium ||
-      legacy.netPremium ||
-      payload["Net Premium"] ||
-      payload.basicPremium ||
-      legacy.basicPremium ||
-      "",
+      (record.netPremium !== null && record.netPremium !== undefined)
+        ? String(record.netPremium)
+        : (payload.netPremium ||
+          legacy.netPremium ||
+          payload["Net Premium"] ||
+          payload.basicPremium ||
+          legacy.basicPremium ||
+          ""),
     basicPremium: payload.basicPremium || legacy.basicPremium || "",
     taxAmount: payload.taxAmount || legacy.taxAmount || "",
     gstAmount: payload.gstAmount || legacy.gstAmount || "",
@@ -339,18 +364,26 @@ export function normalizeRecord(record) {
     occupancy: payload.occupancy || legacy.occupancy || payload.Occupancy || "",
     validIn: payload.validIn || legacy.validIn || payload["Valid In"] || "",
     vehicleNumber:
+      record.vehicleRegistrationNumber ||
       payload.vehicleNumber ||
       legacy.vehicleNumber ||
       payload["Vehicle Number"] ||
       payload["Vehicle No."] ||
       "",
     registrationNumber:
+      record.vehicleRegistrationNumber ||
       payload.registrationNumber ||
       legacy.registrationNumber ||
       payload["Registration Number"] ||
       payload["Registration No."] ||
       "",
-    makeModel: payload.makeModel || legacy.makeModel || payload["Make / Model"] || payload.Make || "",
+    makeModel:
+      record.makeModel ||
+      payload.makeModel ||
+      legacy.makeModel ||
+      payload["Make / Model"] ||
+      payload.Make ||
+      "",
     variant: payload.variant || legacy.variant || payload.Variant || "",
     manufacturingYear:
       payload.manufacturingYear || legacy.manufacturingYear || payload["Manufacturing Year"] || "",
@@ -413,3 +446,35 @@ export function normalizeRecord(record) {
       "",
   };
 }
+
+export function parseCanonicalNumber(val) {
+  if (val === null || val === undefined || val === "") return null;
+  const cleaned = String(val).replace(/[^0-9.]/g, "");
+  if (!cleaned || isNaN(Number(cleaned))) return null;
+  return Number(cleaned);
+}
+
+export function parseCanonicalDate(val) {
+  if (!val) return null;
+  const str = String(val).trim();
+  if (!str) return null;
+  const dmyMatch = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+  if (dmyMatch) {
+    const d = parseInt(dmyMatch[1], 10);
+    const m = parseInt(dmyMatch[2], 10) - 1;
+    const y = parseInt(dmyMatch[3], 10);
+    const date = new Date(Date.UTC(y, m, d));
+    if (!isNaN(date.getTime())) return date;
+  }
+  const ymdMatch = str.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+  if (ymdMatch) {
+    const y = parseInt(ymdMatch[1], 10);
+    const m = parseInt(ymdMatch[2], 10) - 1;
+    const d = parseInt(ymdMatch[3], 10);
+    const date = new Date(Date.UTC(y, m, d));
+    if (!isNaN(date.getTime())) return date;
+  }
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
