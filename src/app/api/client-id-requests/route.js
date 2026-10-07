@@ -363,6 +363,8 @@ export async function PATCH(request) {
                   await policyDatabase.policyRecord.update({
                     where: { id: policy.id },
                     data: {
+                      insuredName: name,
+                      contactPersonMobile: phone,
                       data: { ...(policy.data || {}), ...identityUpdate },
                       reviewedData: { ...(policy.reviewedData || policy.data || {}), ...identityUpdate },
                       extractedData: policy.extractedData

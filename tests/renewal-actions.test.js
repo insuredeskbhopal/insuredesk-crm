@@ -35,6 +35,8 @@ vi.mock("@/lib/audit", () => ({
 }));
 vi.mock("@/lib/records", () => ({
   normalizeRecord: (record) => record.normalized || record,
+  buildCanonicalFields: (sourceData) => ({}),
+  sanitizeReviewedData: (d) => d,
 }));
 vi.mock("@/lib/policies/type-display", () => ({
   withRenewalPolicyDisplay: (policy) => policy,

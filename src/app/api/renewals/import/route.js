@@ -4,6 +4,7 @@ import { verifyJWT } from "@/lib/auth";
 import renewalImportIdentity from "@/lib/renewals/import-identity.cjs";
 import { normalizeRenewalInsuranceCompany } from "@/lib/renewals/companies";
 import { normalizeCustomerName, resolvePolicyCustomerName } from "@/lib/renewals/customer-name";
+import { buildCanonicalFields, sanitizeReviewedData } from "@/lib/records";
 import * as XLSX from "xlsx";
 
 const MANUAL_RENEWAL_IMPORT_METHOD = "renewal_excel_import";
@@ -273,8 +274,11 @@ export async function POST(request) {
           updateData.renewalRecipientEmail = record.renewalRecipientEmail || contactEmail || null;
 
           if (dataMerge.changedFields.length) updateData.data = dataMerge.data;
-          if (reviewedMerge.changedFields.length) updateData.reviewedData = reviewedMerge.data;
+          if (reviewedMerge.changedFields.length) updateData.reviewedData = sanitizeReviewedData(reviewedMerge.data);
           if (extractedMerge.changedFields.length) updateData.extractedData = extractedMerge.data;
+
+          const updatedCanonical = buildCanonicalFields(reviewedMerge.data || dataMerge.data || payload);
+          Object.assign(updateData, updatedCanonical);
 
           if (insuranceCompany && record.detectedCompany !== insuranceCompany) {
             updateData.detectedCompany = insuranceCompany;
@@ -338,6 +342,9 @@ export async function POST(request) {
         const contactMobile = String(sanitizedData.contactNumber || sanitizedData.customerMobile || "").trim();
         const contactEmail = String(sanitizedData.email || sanitizedData.customerEmail || "").trim();
 
+        const canonicalFields = buildCanonicalFields(sanitizedData);
+        const safeReviewedData = sanitizeReviewedData(sanitizedData);
+
         await prisma.policyRecord.create({
           data: {
             id: recordId,
@@ -359,7 +366,7 @@ export async function POST(request) {
             selectedPolicyType: sanitizedData.policyType || product,
             confidenceScore: 1.0,
             extractedData: sanitizedData,
-            reviewedData: sanitizedData,
+            reviewedData: safeReviewedData,
             extractionMethod: MANUAL_RENEWAL_IMPORT_METHOD,
             extractionQuality: {},
             extractionLog: {},
@@ -376,6 +383,7 @@ export async function POST(request) {
             renewalRecipientName: contactName || null,
             renewalRecipientMobile: contactMobile || null,
             renewalRecipientEmail: contactEmail || null,
+            ...canonicalFields,
           },
         });
         existingRecords.push({

@@ -6,6 +6,7 @@ import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 import { normalizeRenewalInsuranceCompany } from "@/lib/renewals/companies";
 import { normalizeCustomerName, resolvePolicyCustomerName } from "@/lib/renewals/customer-name";
+import { buildCanonicalFields, sanitizeReviewedData } from "@/lib/records";
 
 export const runtime = "nodejs";
 
@@ -402,6 +403,8 @@ export async function POST(request) {
       }
 
       const expectedTime = expectedUpdatedAt ? new Date(expectedUpdatedAt).getTime() : null;
+      const canonicalFields = buildCanonicalFields(updatedPayload);
+      const safeReviewedData = sanitizeReviewedData(updatedPayload);
       const updateResult = await tx.policyRecord.updateMany({
         where: {
           id: policyId,
@@ -409,28 +412,29 @@ export async function POST(request) {
           ...(expectedTime ? { updatedAt: new Date(expectedUpdatedAt) } : {}),
         },
         data: {
-        customerPortfolioId,
-        contactPersonName: finalContactPersonName || null,
-        contactPersonMobile: cleanPhone || null,
-        contactPersonEmail: finalContactPersonEmail || null,
-        renewalRecipientName: finalRenewalRecipientName || null,
-        renewalRecipientMobile: cleanRenewalMobile || null,
-        renewalRecipientEmail: finalRenewalRecipientEmail || null,
-        renewalStatus: finalStatus,
-        selectedCompany: standardInsuranceCompany,
-        selectedPolicyType: finalPolicyType,
-        isActivePolicy,
-        reviewedData: updatedPayload,
-        data: updatedPayload,
-        updatedById: actorId,
-        renewalDate: ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(
-          finalStatus,
-        )
-          ? new Date()
-          : undefined,
-        lostReason: ["LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(finalStatus)
-          ? cleanRemarkText || "Marked Lost"
-          : undefined,
+          customerPortfolioId,
+          contactPersonName: finalContactPersonName || null,
+          contactPersonMobile: cleanPhone || null,
+          contactPersonEmail: finalContactPersonEmail || null,
+          renewalRecipientName: finalRenewalRecipientName || null,
+          renewalRecipientMobile: cleanRenewalMobile || null,
+          renewalRecipientEmail: finalRenewalRecipientEmail || null,
+          renewalStatus: finalStatus,
+          selectedCompany: standardInsuranceCompany,
+          selectedPolicyType: finalPolicyType,
+          isActivePolicy,
+          reviewedData: safeReviewedData,
+          data: updatedPayload,
+          ...canonicalFields,
+          updatedById: actorId,
+          renewalDate: ["RENEWED", "LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(
+            finalStatus,
+          )
+            ? new Date()
+            : undefined,
+          lostReason: ["LOST", "NOT_INTERESTED", "WRONG_NUMBER", "RENEWED_ELSEWHERE"].includes(finalStatus)
+            ? cleanRemarkText || "Marked Lost"
+            : undefined,
         },
       });
 

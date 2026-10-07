@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
-import { normalizeRecord } from "@/lib/records";
+import { buildCanonicalFields, normalizeRecord, sanitizeReviewedData } from "@/lib/records";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { withRenewalCompanyDisplay } from "@/lib/renewals/companies";
 import { logActivity } from "@/lib/activities/activity-service";
@@ -291,6 +291,8 @@ export async function POST(request) {
           },
         });
 
+        const canonicalFields = buildCanonicalFields(extractedPayload);
+        const safeReviewedData = sanitizeReviewedData(extractedPayload);
         const newPolicyRecord = await tx.policyRecord.create({
           data: {
             id: randomUUID(),
@@ -308,7 +310,7 @@ export async function POST(request) {
             selectedPolicyType: extractedPayload.policyType || "",
             confidenceScore: Number(extractedPayload.confidenceScore || 0),
             extractedData: extractedPayload,
-            reviewedData: extractedPayload,
+            reviewedData: safeReviewedData,
             extractionMethod: extractedPayload.extractionMethod || textResult.extractionMethod || "",
             extractionQuality: extractedPayload.extractionQuality || {},
             extractionLog: textResult.extractionLog || {},
@@ -321,6 +323,7 @@ export async function POST(request) {
             renewalStatus: "ACTIVE",
             customerPortfolioId: oldPolicy.customerPortfolioId || null,
             ...customerNameFields,
+            ...canonicalFields,
           },
         });
 

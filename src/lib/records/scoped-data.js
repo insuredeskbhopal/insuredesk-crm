@@ -48,6 +48,7 @@ export const POLICY_LIST_SELECT = {
   renewalRecipientName: true,
   renewalRecipientMobile: true,
   renewalRecipientEmail: true,
+  reviewedData: true,
   createdBy: {
     select: {
       name: true,
@@ -82,6 +83,7 @@ export const CUSTOMER_POLICY_SUMMARY_SELECT = {
   customerPortfolioId: true,
   contactPersonName: true,
   contactPersonMobile: true,
+  reviewedData: true,
   createdBy: {
     select: {
       name: true,

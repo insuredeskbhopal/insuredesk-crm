@@ -178,7 +178,7 @@ export function normalizeRecord(record) {
     sourceFile: payload.sourceFile || legacy.sourceFile || payload.sourceFileName || "",
     status: payload.status || legacy.status || "saved",
     insuredName,
-    policyNumber: payload.policyNumber || legacy.policyNumber || payload["Policy No."] || "",
+    policyNumber: policyNumber || record.policyNumber || "",
     contactNumber,
     contactPerson: contactPersonName,
     email:
@@ -232,7 +232,14 @@ export function normalizeRecord(record) {
       legacy.description ||
       "",
     issuedAt: payload.issuedAt || legacy.issuedAt || payload.validIn || legacy.validIn || "",
-    policyType: payload.policyType || legacy.policyType || payload["Policy Type"] || "",
+    policyType:
+      payload.policyType ||
+      legacy.policyType ||
+      payload["Policy Type"] ||
+      record.selectedPolicyType ||
+      record.detectedPolicyType ||
+      record.policyCategory ||
+      "",
     policyTenure: payload.policyTenure || legacy.policyTenure || "",
     premium:
       payload.premium ||
@@ -351,11 +358,23 @@ export function normalizeRecord(record) {
     followUpStatus: renewalFollowUp?.followUpStatus || latestRenewalRemark?.followUpStatus || "",
     priority: renewalFollowUp?.priority || latestRenewalRemark?.priority || "",
     nextAction: renewalFollowUp?.nextAction || latestRenewalRemark?.nextAction || "",
-    sumInsured: payload.sumInsured || legacy.sumInsured || payload["Sum Insured"] || "",
+    sumInsured:
+      payload.sumInsured ||
+      legacy.sumInsured ||
+      payload["Sum Insured"] ||
+      payload.totalSumInsured ||
+      payload.idv ||
+      "",
     startDate,
     expiryDate,
     duration: payload.duration || legacy.duration || payload.Duration || "",
-    riskLocation: payload.riskLocation || legacy.riskLocation || payload["Risk location"] || "",
+    riskLocation:
+      payload.riskLocation ||
+      legacy.riskLocation ||
+      payload["Risk location"] ||
+      payload.premisesAddress ||
+      legacy.premisesAddress ||
+      "",
     district: payload.district || legacy.district || payload.District || "",
     tehsil: payload.tehsil || legacy.tehsil || payload.Tehsil || "",
     insuranceCompany,
@@ -400,11 +419,15 @@ export function normalizeRecord(record) {
     fuelType: payload.fuelType || legacy.fuelType || payload["Fuel Type"] || "",
     cubicCapacity: payload.cubicCapacity || legacy.cubicCapacity || payload["Cubic Capacity"] || "",
     seatingCapacity: payload.seatingCapacity || legacy.seatingCapacity || payload["Seating Capacity"] || "",
-    grossVehicleWeight:
-      payload.grossVehicleWeight || legacy.grossVehicleWeight || payload["Gross Vehicle Weight"] || "",
-    idv: payload.idv || legacy.idv || payload.IDV || "",
+    idv: payload.idv || legacy.idv || payload.IDV || payload.idvAmount || "",
     ncb: payload.ncb || legacy.ncb || payload.NCB || "",
-    policyCoverType: payload.policyCoverType || legacy.policyCoverType || payload["Cover Type"] || "",
+    policyCoverType:
+      payload.policyCoverType ||
+      legacy.policyCoverType ||
+      payload["Cover Type"] ||
+      record.selectedPolicyType ||
+      record.detectedPolicyType ||
+      "",
     rtoLocation: payload.rtoLocation || legacy.rtoLocation || payload["RTO Location"] || "",
     nomineeName: payload.nomineeName || legacy.nomineeName || payload["Nominee Name"] || "",
     nomineeRelationship: payload.nomineeRelationship || legacy.nomineeRelationship || "",
@@ -438,11 +461,12 @@ export function normalizeRecord(record) {
     newOrRenewal:
       payload.newOrRenewal ||
       legacy.newOrRenewal ||
-      payload.lob ||
-      legacy.lob ||
+      (payload.lob && /new|renew/i.test(payload.lob) ? payload.lob : "") ||
+      (legacy.lob && /new|renew/i.test(legacy.lob) ? legacy.lob : "") ||
       payload["New / Renewal"] ||
       payload["New/Renewal"] ||
       payload["New / renewal"] ||
+      (record.previousPolicyId ? "Renewal" : "") ||
       "",
   };
 }
@@ -476,5 +500,86 @@ export function parseCanonicalDate(val) {
   }
   const d = new Date(str);
   return isNaN(d.getTime()) ? null : d;
+}
+
+export function sanitizeReviewedData(data) {
+  if (!data || typeof data !== "object") return data;
+  const copy = { ...data };
+  delete copy.sourceText;
+  delete copy.policyUnderstanding;
+  delete copy.fieldConfidence;
+  delete copy.extractionLog;
+  delete copy.extractionQuality;
+  delete copy.rawText;
+  return copy;
+}
+
+export function buildCanonicalFields(sourceData = {}, options = {}) {
+  const policyNumber = String(
+    sourceData.policyNumber ||
+    sourceData["Policy No."] ||
+    options.policyNumber ||
+    ""
+  ).trim() || null;
+
+  const normalizedPolicyNumber = policyNumber
+    ? policyNumber.toLowerCase().replace(/[^a-z0-9]/g, "") || null
+    : null;
+
+  const insuredName = String(
+    options.insuredName ||
+    sourceData.insuredName ||
+    sourceData.customerName ||
+    sourceData["Insured Name"] ||
+    ""
+  ).trim() || null;
+
+  const grossPremium = parseCanonicalNumber(
+    sourceData.grossPremium ?? sourceData.totalPremium ?? sourceData.premium ?? options.grossPremium
+  );
+  const netPremium = parseCanonicalNumber(
+    sourceData.netPremium ?? sourceData.basicPremium ?? options.netPremium
+  );
+  const totalPremium = parseCanonicalNumber(
+    sourceData.totalPremium ?? sourceData.grossPremium ?? sourceData.netPremium ?? sourceData.premium ?? options.totalPremium
+  );
+
+  const policyStartDate = parseCanonicalDate(
+    sourceData.startDate || sourceData.policyStartDate || sourceData["Start date"] || options.policyStartDate
+  );
+  const policyExpiryDate = parseCanonicalDate(
+    sourceData.expiryDate || sourceData.policyEndDate || sourceData["Expiry date"] || options.policyExpiryDate
+  );
+
+  const vehicleRegistrationNumber = String(
+    sourceData.vehicleNumber || sourceData.registrationNumber || sourceData["Registration No."] || options.vehicleRegistrationNumber || ""
+  ).trim() || null;
+
+  const makeModel = String(
+    sourceData.makeModel || sourceData.vehicleMake || options.makeModel || ""
+  ).trim() || null;
+
+  const policyCategory = String(
+    sourceData.policyCategory ||
+    sourceData.documentCategory ||
+    sourceData.policyType ||
+    options.policyCategory ||
+    options.selectedServiceCategory ||
+    ""
+  ).trim() || null;
+
+  return {
+    policyNumber,
+    normalizedPolicyNumber,
+    insuredName,
+    grossPremium,
+    netPremium,
+    totalPremium,
+    policyStartDate,
+    policyExpiryDate,
+    vehicleRegistrationNumber,
+    makeModel,
+    policyCategory,
+  };
 }
 

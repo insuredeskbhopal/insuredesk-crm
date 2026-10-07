@@ -100,8 +100,20 @@ const POLICY_SELECT = {
   savedAt: true,
   createdAt: true,
   updatedAt: true,
-  data: true,
-  reviewedData: true,
+  policyNumber: true,
+  normalizedPolicyNumber: true,
+  insuredName: true,
+  grossPremium: true,
+  netPremium: true,
+  totalPremium: true,
+  policyStartDate: true,
+  policyExpiryDate: true,
+  policyCategory: true,
+  vehicleRegistrationNumber: true,
+  makeModel: true,
+  contactPersonMobile: true,
+  contactPersonName: true,
+  customerPortfolioId: true,
   sourceFile: true,
   selectedCompany: true,
   selectedPolicyType: true,
@@ -125,8 +137,17 @@ const POLICY_SUMMARY_SELECT = {
   id: true,
   savedAt: true,
   createdAt: true,
-  data: true,
-  reviewedData: true,
+  policyNumber: true,
+  normalizedPolicyNumber: true,
+  insuredName: true,
+  grossPremium: true,
+  netPremium: true,
+  totalPremium: true,
+  policyStartDate: true,
+  policyExpiryDate: true,
+  policyCategory: true,
+  vehicleRegistrationNumber: true,
+  makeModel: true,
   sourceFile: true,
   selectedPolicyType: true,
   selectedServiceCategory: true,
@@ -146,6 +167,7 @@ export const MONTHLY_POLICY_CATEGORIES = [
 
 export function getPolicyCategory(record) {
   if (!record || typeof record !== "object") return "other";
+  if (record.policyCategory) return record.policyCategory.toLowerCase();
   const d = record.reviewedData || record.data || {};
   const policyType = String(record.policyType || d.policyType || record.selectedPolicyType || record.detectedPolicyType || "").trim();
   const serviceCat = String(record.documentCategory || record.selectedServiceCategory || record.detectedServiceCategory || "").trim();
@@ -1299,6 +1321,7 @@ function applyPolicyFilters(where, filters, dateRange, category = "") {
 
 function buildPolicyCategoryClauses(terms) {
   return terms.flatMap((term) => [
+    { policyCategory: { contains: term, mode: "insensitive" } },
     { selectedPolicyType: { contains: term, mode: "insensitive" } },
     { detectedPolicyType: { contains: term, mode: "insensitive" } },
     { selectedServiceCategory: { contains: term, mode: "insensitive" } },

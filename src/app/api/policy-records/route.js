@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 import { prisma } from "@/lib/db/prisma";
-import { normalizeRecord } from "@/lib/records";
+import { buildCanonicalFields, normalizeRecord, sanitizeReviewedData } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/records/validation";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
@@ -624,6 +624,8 @@ export async function POST(request) {
 
     const createRecord = (database) => {
       const customerNameFields = buildPolicyCustomerNameFields(reviewedData, legacyPayload, extractedData);
+      const canonicalFields = buildCanonicalFields(reviewedData, legacyPayload);
+      const safeReviewedData = sanitizeReviewedData(reviewedData);
       return database.policyRecord.create({
         data: {
           id: randomUUID(),
@@ -644,7 +646,7 @@ export async function POST(request) {
           selectedPolicyType: payload.selectedPolicyType || "",
           confidenceScore: Number(payload.confidenceScore ?? uploadedFile?.confidenceScore ?? 0),
           extractedData,
-          reviewedData,
+          reviewedData: safeReviewedData,
           extractionMethod: payload.extractionMethod || uploadedFile?.extractionMethod || "",
           extractionQuality: payload.extractionQuality || uploadedFile?.extractionQuality || {},
           extractionLog: payload.extractionLog || uploadedFile?.extractionLog || {},
@@ -661,6 +663,7 @@ export async function POST(request) {
               : "PENDING"
             : "LINKED",
           ...customerNameFields,
+          ...canonicalFields,
         },
       });
     };

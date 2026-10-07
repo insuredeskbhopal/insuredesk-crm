@@ -446,7 +446,7 @@ export async function GET(request) {
       });
     }
 
-    const isRegisterTab = tab === "register";
+    const _isRegisterTab = tab === "register";
 
     const [dataResult, countsResult] = await Promise.all([
       prisma.$queryRawUnsafe(dataQuery, ...queryParams, limit, offset),
@@ -480,8 +480,18 @@ export async function GET(request) {
         select: {
           id: true,
           savedAt: true,
-          data: true,
           reviewedData: true,
+          policyNumber: true,
+          normalizedPolicyNumber: true,
+          insuredName: true,
+          grossPremium: true,
+          netPremium: true,
+          totalPremium: true,
+          policyStartDate: true,
+          policyExpiryDate: true,
+          policyCategory: true,
+          vehicleRegistrationNumber: true,
+          makeModel: true,
           renewalStatus: true,
           previousPolicyId: true,
           renewedPolicyId: true,
@@ -491,6 +501,7 @@ export async function GET(request) {
           selectedCompany: true,
           selectedPolicyType: true,
           pdfFileName: true,
+          sourceFile: true,
           createdAt: true,
           updatedAt: true,
           createdById: true,
@@ -519,15 +530,26 @@ export async function GET(request) {
       if (renewedPolicyIds.length > 0) {
         const renewedPolicies = await prisma.policyRecord.findMany({
           where: { id: { in: renewedPolicyIds } },
-          select: { id: true, data: true, reviewedData: true, selectedCompany: true, savedAt: true, createdAt: true },
+          select: {
+            id: true,
+            policyNumber: true,
+            selectedCompany: true,
+            totalPremium: true,
+            grossPremium: true,
+            savedAt: true,
+            createdAt: true,
+          },
         });
         renewedPolicies.forEach((p) => {
-          const payload = p.reviewedData || p.data || {};
-          const ic = payload.insuranceCompany || payload.insurerName || p.selectedCompany || "";
-          const tp = payload.totalPremium || payload.premium || "";
+          const tp =
+            p.totalPremium !== null
+              ? Number(p.totalPremium)
+              : p.grossPremium !== null
+                ? Number(p.grossPremium)
+                : "";
           renewedPolicyMap[p.id] = {
-            policyNumber: payload.policyNumber || "",
-            insuranceCompany: normalizeRenewalInsuranceCompany(ic),
+            policyNumber: p.policyNumber || "",
+            insuranceCompany: normalizeRenewalInsuranceCompany(p.selectedCompany || ""),
             totalPremium: tp,
             savedAt: p.savedAt || p.createdAt || null,
           };
