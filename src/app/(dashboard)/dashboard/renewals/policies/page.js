@@ -542,12 +542,13 @@ export default function RenewalPoliciesPage() {
             <thead>
               <tr>
                 <th style={{ width: "3.5%", textAlign: "center" }}></th>
-                <th style={{ width: "30%" }}>Customer / Policy Number</th>
-                <th style={{ width: "15%" }}>Mobile / Asset</th>
-                <th style={{ width: "15%" }}>Policy Type</th>
-                <th style={{ width: "13%" }}>Expiry Date</th>
-                <th style={{ width: "13%" }}>Renewal Premium</th>
-                <th style={{ width: "10.5%", textAlign: "right" }}>Actions</th>
+                <th style={{ width: "27%" }}>Customer / Policy Number</th>
+                <th style={{ width: "14%" }}>Mobile / Asset</th>
+                <th style={{ width: "13%" }}>Policy Type</th>
+                <th style={{ width: "12%" }}>Expiry Date</th>
+                <th style={{ width: "11%" }}>Renewal Premium</th>
+                <th style={{ width: "10%" }}>Status</th>
+                <th style={{ width: "9.5%", textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -606,6 +607,17 @@ export default function RenewalPoliciesPage() {
                       </td>
                       <td>
                         <strong>{formatRenewalRegisterAmount(group.totalPremium)}</strong>
+                      </td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        {(() => {
+                          const primaryStatus = group.policies[0]?.renewalStatus || "unknown";
+                          const groupTone = getRenewalRegisterStatusTone(primaryStatus);
+                          return (
+                            <span className={`rn-policy-register__status rn-policy-register__status--${groupTone}`}>
+                              {String(primaryStatus).replaceAll("_", " ")}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td style={{ textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "flex-end", gap: "6px" }}>
@@ -745,6 +757,16 @@ export default function RenewalPoliciesPage() {
                                 {formatRenewalRegisterAmount(p.totalPremium || p.premium)}
                               </span>
                             </td>
+                            <td style={{ whiteSpace: "nowrap" }}>
+                              {(() => {
+                                const subTone = getRenewalRegisterStatusTone(p.renewalStatus);
+                                return (
+                                  <span className={`rn-policy-register__status rn-policy-register__status--${subTone}`}>
+                                    {String(p.renewalStatus || "unknown").replaceAll("_", " ")}
+                                  </span>
+                                );
+                              })()}
+                            </td>
                             <td style={{ textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
                               <button
                                 type="button"
@@ -768,15 +790,16 @@ export default function RenewalPoliciesPage() {
             <thead>
               {isCustomTable ? (
                 <tr>
-                  <th style={{ width: "12%" }}>Policy Type</th>
+                  <th style={{ width: "11%" }}>Policy Type</th>
                   <th style={{ width: "10%" }}>Contact No.</th>
-                  <th style={{ width: "12%" }}>Contact Person Name</th>
-                  <th style={{ width: "13%" }}>Policy No.</th>
-                  <th style={{ width: "18%" }}>Insured Name</th>
-                  <th style={{ width: "12%" }}>Sum Insured Description</th>
+                  <th style={{ width: "11%" }}>Contact Person Name</th>
+                  <th style={{ width: "12%" }}>Policy No.</th>
+                  <th style={{ width: "16%" }}>Insured Name</th>
+                  <th style={{ width: "11%" }}>Sum Insured Description</th>
                   <th style={{ width: "7.5%" }}>Premium</th>
                   <th style={{ width: "7.5%" }}>Expiry Date</th>
                   <th style={{ width: "10%" }}>Insurance Company</th>
+                  <th style={{ width: "7%" }}>Status</th>
                   <th style={{ width: "4%" }}>Action</th>
                 </tr>
               ) : (
@@ -956,6 +979,11 @@ function PolicyRegisterRow({
         <td style={{ whiteSpace: "nowrap" }}><strong>{formatRenewalRegisterAmount(policy.totalPremium || policy.premium)}</strong></td>
         <td style={{ whiteSpace: "nowrap" }}><strong>{formatRenewalRegisterDate(policy.expiryDate)}</strong><small>{policy.daysStatus || ""}</small></td>
         <td style={{ whiteSpace: "nowrap" }}>{insurer}</td>
+        <td style={{ whiteSpace: "nowrap" }}>
+          <span className={`rn-policy-register__status rn-policy-register__status--${statusTone}`}>
+            {String(policy.renewalStatus || "unknown").replaceAll("_", " ")}
+          </span>
+        </td>
         <td className="rn-policy-register__actions">{actionDropdown}</td>
       </tr>
     );
