@@ -6,7 +6,7 @@ import { Download, Pencil, Eye, Trash2, CheckSquare, Square, MinusSquare, FileTe
 import PolicyDetailCard from "@/app/components/shared/PolicyDetailCard";
 import { inferUploadSchema } from "@/app/lib/dashboard-helpers";
 import { showToast } from "@/app/components/shared/ToastProvider";
-import { getShortCompanyDisplay } from "@/lib/renewals/companies";
+import { normalizeRenewalInsuranceCompany } from "@/lib/renewals/companies";
 
 const DEFAULT_RECORD_COLUMNS = [
   { key: "insuredName", label: "Insured / Customer", className: "col-insured", primary: true },
@@ -174,10 +174,15 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
   }
 
   if (column.key === "insuranceCompany") {
-    const shortName = getShortCompanyDisplay(record.insuranceCompany || rawValue);
+    const fullCompanyName =
+      normalizeRenewalInsuranceCompany(record.insuranceCompany || record.selectedCompany || rawValue) ||
+      record.insuranceCompany ||
+      record.selectedCompany ||
+      rawValue ||
+      "-";
     return (
-      <span title={record.insuranceCompany || rawValue || ""} style={{ fontWeight: 500, color: "#1e293b" }}>
-        {shortName || "-"}
+      <span title={fullCompanyName} style={{ fontWeight: 500, color: "#1e293b", lineHeight: 1.35 }}>
+        {fullCompanyName}
       </span>
     );
   }
@@ -429,7 +434,7 @@ const COLUMN_WIDTHS = {
   "col-policy": 150,
   "col-vehicle": 150,
   "col-type": 140,
-  "col-company": 150,
+  "col-company": 180,
   "col-uploader": 150,
   "col-source": 150,
   "col-group": 180,

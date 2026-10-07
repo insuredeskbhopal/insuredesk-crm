@@ -10,12 +10,13 @@ const INSURANCE_COMPANY_MASTER = [
     active: true,
   },
   {
-    name: "Generali Central Insurance Company Limited",
+    name: "Future Generali India Insurance Company Limited",
     aliases: [
-      "Future Generali India Insurance Company Limited",
       "Future Generali",
       "Future Generali India Insurance",
       "Future Generali India Insurance Company Ltd",
+      "Future Generali Insurance",
+      "Generali Central Insurance Company Limited",
       "Generali Central",
       "Generali Central Insurance",
       "Generali Central India Insurance",

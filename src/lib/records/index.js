@@ -568,10 +568,22 @@ export function buildCanonicalFields(sourceData = {}, options = {}) {
     ""
   ).trim() || null;
 
+  const selectedCompany = normalizeInsuranceCompanyName(
+    sourceData.insuranceCompany ||
+    sourceData.selectedCompany ||
+    sourceData.companyName ||
+    sourceData.insurerName ||
+    sourceData["Insurance Company"] ||
+    options.selectedCompany ||
+    options.insuranceCompany ||
+    ""
+  ) || null;
+
   return {
     policyNumber,
     normalizedPolicyNumber,
     insuredName,
+    selectedCompany,
     grossPremium,
     netPremium,
     totalPremium,

@@ -13,7 +13,7 @@ describe("renewal insurance company names", () => {
     ["ICICI", "ICICI Lombard General Insurance Company Limited"],
     ["ICICI Lombard", "ICICI Lombard General Insurance Company Limited"],
     ["HDFC", "HDFC ERGO General Insurance Company Limited"],
-    ["Future", "Generali Central Insurance Company Limited"],
+    ["Future", "Future Generali India Insurance Company Limited"],
     ["IFFCO", "IFFCO Tokio General Insurance Company Limited"],
     ["RELIANCE", "Reliance General Insurance Company Limited"],
     ["SHRIRAM", "Shriram General Insurance Company Limited"],
