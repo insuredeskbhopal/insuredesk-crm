@@ -1,3 +1,4 @@
+/* @vitest-environment node */
 import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 
@@ -171,5 +172,53 @@ describe("Go Digit motor scoped training", () => {
     const result = applyScopedTraining(base, { text: privateCarText });
 
     expect(result).toMatchObject(base);
+  });
+
+  it("extracts ARVIND KUMAR MISHRA real PDF field by field", async () => {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const pdf = require("pdf-parse");
+    const { extractPolicyFromText } = require("../src/lib/policies/pdf/extractor.cjs");
+
+    const filePath = path.join(process.cwd(), "storage", "ARVIND KUMAR MISHRA_24BH2081M_2026-27.pdf");
+    if (!fs.existsSync(filePath)) return;
+    const buf = fs.readFileSync(filePath);
+    const parsed = await pdf(buf);
+    const result = extractPolicyFromText(parsed.text, "ARVIND KUMAR MISHRA_24BH2081M_2026-27.pdf");
+
+    expect(result).toMatchObject({
+      insuranceCompany: "Go Digit General Insurance Limited",
+      policyNumber: "D276189451",
+      insuredName: "ARVIND KUMAR MISHRA",
+      vehicleNumber: "24BH2081M",
+      registrationNumber: "24BH2081M",
+      vehicleMake: "KIA",
+      vehicleModel: "SONET",
+      variant: "D1.5 6MT HTE (O) BSVI",
+      fuelType: "Diesel",
+      cubicCapacity: "1493 CC",
+      seatingCapacity: "5",
+      manufacturingYear: "2024",
+      chassisNumber: "MZBFB813LRN472199",
+      engineNumber: "D4FARM272528",
+      startDate: "29-Oct-2026",
+      expiryDate: "28-Oct-2027",
+      idv: "847847.00",
+      ncb: "20 %",
+      ncbDiscount: "811.65",
+      basicOwnDamage: "3246.58",
+      odPremium: "8615.11",
+      tpPremium: "0.00",
+      netPremium: "8615.11",
+      cgst: "775.36",
+      sgst: "775.36",
+      totalPremium: "10165.83",
+      pinCode: "462026",
+      partnerName: "Insuredesk IMF Private Limited",
+      activeTpPolicyNumber: "77000031240960063241",
+      previousPolicyNumber: "D232417460",
+      receiptNumber: "RA318999870",
+      endorsements: "IMT-22",
+    });
   });
 });

@@ -364,17 +364,27 @@ function isNewIndiaMotor(result = {}, context = {}) {
   const category = normalizeCategory(result.documentCategory);
   if (category && category !== "motor") return false;
   const insurer = result.insuranceCompany || result.companyName || "";
-  if (insurer && /TATA\s*AIG|ICICI\s*Lombard|Bajaj|HDFC\s*ERGO|Shriram|Liberty|Digit|IFFCO|Generali|Royal\s+Sundaram/i.test(insurer)) {
+  if (insurer && /TATA\s*AIG|ICICI\s*Lombard|Bajaj|Shriram|Liberty|Digit|IFFCO|Generali|Royal\s+Sundaram/i.test(insurer)) {
     return false;
   }
-  const header = text.slice(0, 3000);
+  if (insurer && /HDFC\s*ERGO/i.test(insurer) && !/Bundled\/Liability\s+Insurer:\s*HDFC/i.test(text)) {
+    return false;
+  }
+  const header = text.slice(0, 1500);
+  if (/Go\s+Digit|godigit\.com/i.test(header)) return false;
   if (/Future\s+Generali|generalicentral|generali/i.test(header)) return false;
   if (/IFFCO\s*[- ]?\s*TOKIO/i.test(header)) return false;
   if (/Royal\s+Sundaram/i.test(text.slice(0, 500))) return false;
-  return (
-    /THE\s+NEW\s+INDIA\s+ASSURANCE|NEW\s+INDIA\s+ASSURANCE|newindia\.co\.in/i.test(text) &&
-    /Motor|Private\s+Car|Two\s+Wheeler|Commercial\s+Vehicle/i.test(result.documentCategory || result.policyType || text)
-  );
+  if (/TATA\s*AIG|tataaig\.com/i.test(header)) return false;
+  if (/ICICI\s*Lombard|icicilombard\.com/i.test(header)) return false;
+  if (/Bajaj\s*(?:Allianz|General)/i.test(header)) return false;
+  const hasNewIndiaInHeader = /THE\s+NEW\s+INDIA\s+ASSURANCE|NEW\s+INDIA\s+ASSURANCE|newindia\.co\.in/i.test(header);
+  if (!hasNewIndiaInHeader) {
+    if (!/THE\s+NEW\s+INDIA\s+ASSURANCE|NEW\s+INDIA\s+ASSURANCE|newindia\.co\.in/i.test(text)) {
+      return false;
+    }
+  }
+  return /Motor|Private\s+Car|Two\s+Wheeler|Commercial\s+Vehicle/i.test(result.documentCategory || result.policyType || text);
 }
 
 function isIffcoTokioMotor(result = {}, context = {}) {
@@ -415,7 +425,7 @@ function isIciciLombardMotor(result = {}, context = {}) {
   if (!/ICICI\s*Lombard|icicilombard\.com/i.test(header)) return false;
   if (/ELEVATE|ICIHLIP|Complete\s+Health|Health\s+Shield/i.test(header)) return false;
   return (
-    /Stand-Alone\s+Own\s+Damage|Own\s+Damage\s+Private\s+Car|Private\s+Car|Two\s+Wheeler|Commercial\s+Vehicle|Motor\s+Vehicle|3001\/[A-Z0-9]+|IRDAN115/i.test(
+    /Stand-Alone\s+Own\s+Damage|Own\s+Damage\s+Private\s+Car|Private\s+Car|Two\s*Wheeler|Commercial\s+Vehicle|Motor\s+Vehicle|300[15]\/[A-Z0-9]+|IRDAN115/i.test(
       result.documentCategory || result.policyType || text,
     )
   );
@@ -425,7 +435,10 @@ function isHdfcErgoMotor(result = {}, context = {}) {
   const text = String(context.text || result.sourceText || "");
   const category = normalizeCategory(result.documentCategory || result.policyType);
   if (category && category !== "motor") return false;
-  if (!/HDFC\s*ERGO/i.test(text)) return false;
+  const header = text.slice(0, 1500);
+  if (/THE\s+NEW\s+INDIA\s+ASSURANCE|NEW\s+INDIA\s+ASSURANCE|newindia\.co\.in/i.test(header)) return false;
+  if (/Go\s+Digit|godigit\.com/i.test(header)) return false;
+  if (!/HDFC\s*ERGO/i.test(header) && !/PMTB\d+/i.test(text)) return false;
   if (/Optima\s+Secure|Optima\s+Restore|my\s*:\s*health|Health\s*Suraksha/i.test(text)) return false;
   return (
     /Standalone\s+Motor\s+Own\s+Damage|Proposal\s+Form\s+cum\s+Transcript\s+Letter|Private\s+Car|Two\s+Wheeler|Commercial\s+Vehicle|Vehicle\s+Details|Total\s+IDV|PMTB\d+/i.test(text)
@@ -538,6 +551,9 @@ function deriveTrainingScope(result = {}, context = {}) {
   }
   if (isNewIndiaMotor(result, context)) {
     return { insurer: "new-india", category: "motor" };
+  }
+  if (isGoDigitMotor(result, context)) {
+    return { insurer: "go-digit", category: "motor" };
   }
   if (isShriramMotor(result, context)) {
     return { insurer: "shriram", category: "motor" };
@@ -780,6 +796,9 @@ function establishTrainingIdentity(result = {}, context = {}) {
       ...result,
       insuranceCompany: "Go Digit General Insurance Limited",
       companyName: "Go Digit General Insurance Limited",
+      documentCategory: "Motor Insurance",
+      documentFormat: "GO_DIGIT_MOTOR_V1",
+      sourceDocumentType: "GO_DIGIT_MOTOR_V1",
     };
   }
   if (isTataAigMotor(result, context)) {

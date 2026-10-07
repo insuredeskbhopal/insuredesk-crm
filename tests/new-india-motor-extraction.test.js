@@ -245,4 +245,66 @@ describe("New India Commercial Vehicle Motor Policy extraction", () => {
     expect(selectScopedTraining(newIndiaWarehouse, { text: sampleText })).toHaveLength(0);
     expect(selectScopedTraining(tataMotor, { text: sampleText })).toHaveLength(0);
   });
+
+  it("extracts TRUPTI BHAWALKAR real PDF field by field", async () => {
+    const filePath = path.join(process.cwd(), "storage", "TRUPTI BHAWALKAR_TS07KC1265_2026-27.pdf");
+    if (!fs.existsSync(filePath)) return;
+    const buf = fs.readFileSync(filePath);
+    const data = await pdf(buf);
+
+    const result = extractPolicyFromText(data.text, "TRUPTI BHAWALKAR_TS07KC1265_2026-27.pdf");
+
+    expect(result).toMatchObject({
+      insuranceCompany: "The New India Assurance Company Limited",
+      policyNumber: "45140031261800006018",
+      uinNumber: "IRDAN190RP0002V01201920",
+      policyType: "Standalone Motor Own Damage Policy for Two Wheelers - Enhanced Covers",
+      policyCoverType: "Standalone Own Damage",
+      insuredName: "TRUPTI BHAWALKAR",
+      customerId: "POB7156672",
+      pan: "CGBPB0343L",
+      registrationNumber: "TS-07-KC-1265",
+      vehicleNumber: "TS-07-KC-1265",
+      vehicleMake: "TVS",
+      vehicleModel: "JUPITER",
+      variant: "ZX DRUM BS VI",
+      bodyType: "Metal",
+      fuelType: "Petrol",
+      cubicCapacity: "109",
+      seatingCapacity: "2",
+      manufacturingYear: "2023",
+      chassisNumber: "MD626CG58P1K00552",
+      engineNumber: "DG5KP1500145",
+      rtoLocation: "RTA RANGAREDDY",
+      startDate: "25/09/2026",
+      expiryDate: "24/09/2027",
+      idv: "60750.00",
+      compulsoryExcess: "100.00",
+      ncb: "35%",
+      ncbDiscount: "142.54",
+      basicOwnDamage: "407.00",
+      nilDepreciationPremium: "243.00",
+      rsaPremium: "25.00",
+      odPremium: "533.00",
+      tpPremium: "0.00",
+      netPremium: "533.00",
+      igst: "96.00",
+      cgst: "0.00",
+      sgst: "0.00",
+      totalPremium: "629.00",
+      pinCode: "500089",
+      activeTpPolicyNumber: "2301205717780400000",
+      activeTpInsurer: "HDFC ERGO GENERAL INSURANCE CO. LTD.",
+      bundledPolicyPeriod: "25/09/2023 to 24/09/2028",
+      previousPolicyNumber: "45140031251800005923",
+      previousInsurer: "THE NEW INDIA ASSURANCE COMPANY LTD.",
+      receiptNumber: "10000089260900877162 - 23/09/26",
+      agentName: "Mr. Anand Soni",
+      agentMobile: "8818889660",
+      agentEmail: "anand.soni10@gmail.com",
+      addOnsOpted: expect.arrayContaining(["Zero Depreciation", "Roadside Assistance"]),
+      customerMobile: "XXXXXX8757",
+      customerEmail: "insuredeskbhopal@gmail.com",
+    });
+  });
 });

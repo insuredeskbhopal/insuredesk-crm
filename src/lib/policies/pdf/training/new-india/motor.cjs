@@ -7,6 +7,9 @@ const scope = { insurer: "new-india", category: "motor" };
 function matches({ text = "", result = {} }) {
   const company = String(result.insuranceCompany || result.companyName || "");
   const format = String(result.documentFormat || "");
+  if (company && !/NEW\s+INDIA/i.test(company) && !/Bundled\/Liability\s+Insurer:\s*HDFC/i.test(text)) {
+    return false;
+  }
   const isNewIndiaCompany = /NEW\s+INDIA/i.test(company) || /NEW\s+INDIA/i.test(text);
   const isMotor = /Motor|Private\s+Car|Two\s+Wheeler|Commercial\s+Vehicle|Liability\s+Only/i.test(
     result.documentCategory || result.policyType || format || text,
@@ -65,7 +68,7 @@ function train({ text = "", result = {} }) {
 
   if (/Liability\s+Only/i.test(patch.policyType || text)) {
     patch.policyCoverType = "Third Party";
-  } else if (/Standalone\s+Own\s+Damage|Own\s+Damage\s+Only/i.test(patch.policyType || text)) {
+  } else if (/Standalone\s+(?:Motor\s+)?Own\s+Damage|Own\s+Damage\s+Only/i.test(patch.policyType || text)) {
     patch.policyCoverType = "Standalone Own Damage";
   } else if (/Package/i.test(patch.policyType || text)) {
     patch.policyCoverType = "Comprehensive";
@@ -81,6 +84,8 @@ function train({ text = "", result = {} }) {
     patch.contactPerson = insuredName;
   }
   assign(patch, "customerId", matchGroup(text, /Customer ID\s*[:\s]*([A-Z0-9]+)/i));
+  assign(patch, "panNumber", matchGroup(text, /PAN\s+No\s*:?\s*([A-Z0-9]{10})/i));
+  if (patch.panNumber) patch.pan = patch.panNumber;
 
   const addressMatch = matchGroup(
     text,
@@ -141,7 +146,7 @@ function train({ text = "", result = {} }) {
     patch.invoiceNumber = patch.taxInvoiceNo;
   }
 
-  // 5. Previous Policy Details
+  // 5. Previous & Bundled Policy Details
   const prevInsurerMatch = text.match(
     /Previous\s+Insurer\s*:?\s*([A-Z0-9 /&.,-]+?)(?=\s*Previous\s+Policy\s+Number|$)/i,
   );
@@ -149,6 +154,26 @@ function train({ text = "", result = {} }) {
     patch.previousInsurer = clean(prevInsurerMatch[1].replace(/Previous.*/i, ""));
   }
   assign(patch, "previousPolicyNumber", matchGroup(text, /Previous\s+Policy\s+Number\s*:?\s*([A-Z0-9/.-]+)/i));
+
+  const bundledPolicyNo = matchGroup(text, /Related\s+Bundled\/Liability\s+Policy\s+No\.?:?\s*(\d{15,25})/i);
+  const bundledPeriod = matchGroup(text, /Bundled\/Liability\s+Policy\s+period\s*:?\s*(\d{1,2}\/\d{1,2}\/\d{4}\s+to\s+\d{1,2}\/\d{1,2}\/\d{4})/i);
+  const bundledInsurer = matchGroup(text, /Bundled\/Liability\s+Insurer\s*:?\s*([^\n\r]+)/i);
+  if (bundledPolicyNo) {
+    patch.activeTpPolicyNumber = bundledPolicyNo;
+    patch.bundledPolicyNumber = bundledPolicyNo;
+  }
+  if (bundledInsurer) {
+    patch.activeTpInsurer = clean(bundledInsurer);
+    patch.bundledInsurer = clean(bundledInsurer);
+  }
+  if (bundledPeriod) {
+    patch.bundledPolicyPeriod = clean(bundledPeriod);
+    const bDates = bundledPeriod.match(/(\d{1,2}\/\d{1,2}\/\d{4})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{4})/);
+    if (bDates) {
+      patch.activeTpStartDate = bDates[1];
+      patch.activeTpEndDate = bDates[2];
+    }
+  }
 
   // 6. Vehicle Details
   const regNoMatch =
@@ -179,9 +204,7 @@ function train({ text = "", result = {} }) {
   );
 
   const chEngMatch = text.match(
-    /Chassis\s+no\.\s*\/\s*Engine\s+(?:no\.|Number)\s*:?\s*([A-Z0-9]+)\s*\/\s*([A-Z0-9]+[\s\r\n]*[A-Z0-9]+)/i,
-  ) || text.match(
-    /Chassis\s+no\.\s*\/\s*Engine\s+no\.\s*:?\s*([A-Z0-9]+)\s*\/\s*([A-Z0-9]+[\s\r\n]*[A-Z0-9]+)/i,
+    /Chassis\s+no\.?\s*\/\s*Engine\s+(?:no\.|Number)\s*:?\s*([A-Z0-9]+)\s*\/\s*([A-Z0-9]+[\s\r\n]*[A-Z0-9]+)/i,
   );
   if (chEngMatch) {
     patch.chassisNumber = chEngMatch[1].trim();
@@ -204,13 +227,19 @@ function train({ text = "", result = {} }) {
     else patch.fuelType = fuelMatch[1].trim();
   }
 
-  const ccMatch = text.match(/Cubic\s+capacity(?:\(cc\)\/Wattage\(kW\))?\s*:?\s*(\d+)/i);
+  const bodyFuelMatch = text.match(/Type\s+of\s+body\s*\/\s*Type\s+of\s+Fuel\s*([A-Za-z0-9]+)\/([A-Za-z0-9]+)/i);
+  if (bodyFuelMatch) {
+    if (!patch.bodyType) patch.bodyType = clean(bodyFuelMatch[1]);
+    if (!patch.fuelType) patch.fuelType = clean(bodyFuelMatch[2]);
+  }
+
+  const ccMatch = text.match(/Cubic\s+capacity[\s\S]{0,40}?:?\s*(\d+)\s*(?:cc)?/i);
   if (ccMatch) {
     patch.cubicCapacity = ccMatch[1].trim();
   }
 
   const bodyMatch = text.match(/Type\s+of\s+body\s*:?\s*([A-Za-z0-9]+?)(?=\s*Gross|Gross|\s*Make|Make|\s*Variant|Variant|\s*Seating|Seating|\n|$)/i);
-  if (bodyMatch) {
+  if (bodyMatch && !patch.bodyType) {
     patch.bodyType = clean(bodyMatch[1]);
   }
 
@@ -229,6 +258,12 @@ function train({ text = "", result = {} }) {
   const rtoMatch = text.match(/Name\s+of\s+registration\s+authority\s*:?\s*([^\n\r]+?)(?=\s+FASTag|\s+INSURED|\n|$)/i);
   if (rtoMatch) {
     patch.rtoLocation = clean(rtoMatch[1]);
+  }
+
+  const compExcess = matchGroup(text, /Compulsory\s+excess\s+in\s+Rs\s*:?\s*(\d+)/i);
+  if (compExcess) {
+    patch.compulsoryDeductible = normalizeAmount(compExcess);
+    patch.compulsoryExcess = normalizeAmount(compExcess);
   }
 
   const subTypeMatch = text.match(
@@ -256,6 +291,18 @@ function train({ text = "", result = {} }) {
     patch.financerName = "";
   }
 
+  // Opted Addons
+  const addOnsOpted = [];
+  if (/Nil\s+Depreciation\s+Cover\s*Yes/i.test(text)) {
+    addOnsOpted.push("Zero Depreciation");
+    patch.zeroDepreciation = "Yes";
+  }
+  if (/Roadside\s+Assistance\s+Cover[\s\S]{0,30}?Yes/i.test(text)) {
+    addOnsOpted.push("Roadside Assistance");
+    patch.roadsideAssistance = "Yes";
+  }
+  if (addOnsOpted.length) patch.addOnsOpted = addOnsOpted;
+
   // 7. IDV (Insured Declared Value) Table
   const denseIdv =
     text.match(/For\s+individual\s+covers\s*\(OD\)\s*in\s*RS\s*:?\s*([0-9,]+)/i) ||
@@ -270,6 +317,10 @@ function train({ text = "", result = {} }) {
   patch.sumInsured = idvVal;
 
   // 8. Premium Breakdown
+  const odScheduleMatch = text.match(
+    /Basic\s+OD\s+Premium[\s\S]*?Total\s+NCB\s+Discount\s*\((\d+(?:\.\d+)?%)\)[\s\S]*?Roadside\s+Assistance[^\n]*\n\s*(\d+(?:\.\d+)?)\s*\n\s*(\d+(?:\.\d+)?)\s*\n\s*(\d+(?:\.\d+)?)\s*\n\s*(\d+(?:\.\d+)?)[\s\S]*?Calculated\s+OD\s+Premium\s*(\d+)/i
+  );
+
   const premiumTableMatch = text.match(/Basic TP Premium[\s\S]*?oprn\s*\n\s*(\d+)\s*\n+\s*(\d+)/i);
   const basicTp = amount(
     premiumTableMatch ? premiumTableMatch[1] : (matchGroup(text, /Basic\s+TP\s+Premium[\s\S]{0,100}?\n\s*(\d+(?:\.\d+)?)/i) || "0"),
@@ -279,12 +330,12 @@ function train({ text = "", result = {} }) {
   );
 
   const basicOdMatch = text.match(/Basic\s+OD\s+Premium[\s\S]{0,100}?\n\s*(\d+(?:\.\d+)?)/i);
-  const basicOd = amount(basicOdMatch ? basicOdMatch[1] : "0");
+  const basicOd = amount(odScheduleMatch ? odScheduleMatch[2] : (basicOdMatch ? basicOdMatch[1] : "0"));
 
   const calcOdMatch =
     text.match(/Calculated\s+OD\s+Premium\s*(\d+(?:\.\d+)?)/i) ||
     text.match(/Total\s+OD\s+Premium\s*(?:\(Rs\)|in\s*Rs)?\s*(\d+(?:\.\d+)?)/i);
-  const totalOd = amount(calcOdMatch ? calcOdMatch[1] : basicOd);
+  const totalOd = amount(odScheduleMatch ? odScheduleMatch[6] : (calcOdMatch ? calcOdMatch[1] : basicOd));
 
   const calcTpMatch =
     text.match(/Calculated\s+TP\s+Premium\s*(\d+(?:\.\d+)?)/i) ||
@@ -298,14 +349,20 @@ function train({ text = "", result = {} }) {
   }
 
   const ncbMatch = text.match(/Total\s+NCB\s+Discount\s*\(\s*(\d+(?:\.\d+)?)\s*%\s*\)[\s\S]*?\n\s*\d+\s*\n\s*([0-9.]+)/i);
-  if (ncbMatch) {
+  if (odScheduleMatch) {
+    patch.ncbPercentage = odScheduleMatch[1].replace(/%/g, "").trim();
+    patch.ncb = `${patch.ncbPercentage}%`;
+    patch.ncbDiscount = amount(odScheduleMatch[3]);
+    patch.nilDepreciationPremium = amount(odScheduleMatch[4]);
+    patch.rsaPremium = amount(odScheduleMatch[5]);
+  } else if (ncbMatch) {
     patch.ncbPercentage = ncbMatch[1].trim();
     patch.ncb = `${patch.ncbPercentage}%`;
     patch.ncbDiscount = amount(ncbMatch[2]);
   }
 
   const netMatch = text.match(/Net\s+Premium\s*(?:in\s*Rs|\(Rs\))?\s*[:\s]*([0-9,.]+)/i);
-  const netPremium = amount(netMatch ? netMatch[1] : totalTp);
+  const netPremium = amount(netMatch ? netMatch[1] : (totalOd !== "0.00" ? totalOd : totalTp));
 
   const gstMatch = text.match(/GST\s*(?:in\s*Rs|\(Rs\))?\s*[:\s]*([0-9,.]+)/i);
   const totalGst = amount(gstMatch ? gstMatch[1] : "0");
@@ -317,21 +374,38 @@ function train({ text = "", result = {} }) {
   patch.basicOwnDamage = basicOd;
   patch.netOwnDamagePremium = totalOd;
 
-  patch.basicThirdPartyLiability = basicTp;
-  patch.basicTpPremium = basicTp;
-  patch.legalLiabilityPremium = llPaidDriver;
-  patch.tpPremium = totalTp;
-  patch.totalActPremium = totalTp;
-  patch.liabilityPremium = totalTp;
-  patch.netLiabilityPremium = totalTp;
-  patch.tpDriverOwner = totalTp;
+  const isStandaloneOD = /Standalone\s+Motor\s+Own\s+Damage|Standalone\s+Own\s+Damage/i.test(patch.policyType || text);
+  if (isStandaloneOD) {
+    patch.basicThirdPartyLiability = "0.00";
+    patch.basicTpPremium = "0.00";
+    patch.legalLiabilityPremium = "0.00";
+    patch.tpPremium = "0.00";
+    patch.totalActPremium = "0.00";
+    patch.liabilityPremium = "0.00";
+    patch.netLiabilityPremium = "0.00";
+    patch.tpDriverOwner = "0.00";
+  } else {
+    patch.basicThirdPartyLiability = basicTp;
+    patch.basicTpPremium = basicTp;
+    patch.legalLiabilityPremium = llPaidDriver;
+    patch.tpPremium = totalTp;
+    patch.totalActPremium = totalTp;
+    patch.liabilityPremium = totalTp;
+    patch.netLiabilityPremium = totalTp;
+    patch.tpDriverOwner = totalTp;
+  }
 
   patch.netPremium = netPremium;
   patch.basicPremium = netPremium;
   patch.gstAmount = totalGst;
   patch.taxAmount = totalGst;
 
-  if (totalGst && totalGst !== "0.00") {
+  const igstMatch = text.match(/IGST\s*18\s*(\d+(?:\.\d+)?)/i);
+  if (igstMatch) {
+    patch.igst = amount(igstMatch[1]);
+    patch.cgst = "0.00";
+    patch.sgst = "0.00";
+  } else if (totalGst && totalGst !== "0.00") {
     const halfGst = (Number(totalGst) / 2).toFixed(2);
     patch.sgst = halfGst;
     patch.cgst = halfGst;
