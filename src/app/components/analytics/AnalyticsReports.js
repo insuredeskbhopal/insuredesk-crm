@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Calendar, Briefcase, Car, AlertCircle } from "lucide-react";
+import ReviewAnalyticsPanel from "./ReviewAnalyticsPanel";
 
 // Bezier Curve generator for smooth path strings
 function getBezierPath(points) {
@@ -1311,7 +1312,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       `}} />
 
       {/* 1. Interactive Charts Dashboard (at the very top) */}
-      {activeTab !== "monthly-report" && (
+      {activeTab !== "monthly-report" && activeTab !== "review-analytics" && (
         <div className="reports-charts-grid">
           {/* Line Graph (Daily Upload Premium Trend) */}
           <div className="chart-card">
@@ -1474,6 +1475,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
             { id: "motor-individual", label: "Individual Motor Report" },
             { id: "warehouse-report", label: "Warehouse Report" },
             { id: "monthly-report", label: "Monthly Performance Report" },
+            { id: "review-analytics", label: "Reviews & Feedback" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1487,7 +1489,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         </div>
 
         <div className="filters-row">
-          {activeTab === "monthly-report" ? (
+          {activeTab === "review-analytics" ? null : activeTab === "monthly-report" ? (
             <>
               <div className="filter-group">
                 <span className="filter-label">Month:</span>
@@ -1597,7 +1599,7 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
       </div>
 
       {/* 3. Main Report Table Container */}
-      {activeTab !== "monthly-report" && (
+      {activeTab !== "monthly-report" && activeTab !== "review-analytics" && (
         <div className="table-card">
         <div className="report-table-wrapper">
           <table className="report-table">
@@ -1726,6 +1728,9 @@ export default function AnalyticsReports({ records = [], onEditRecord }) {
         )}
       </div>
       )}
+
+      {/* Google Review & Feedback Analytics Panel */}
+      {activeTab === "review-analytics" && <ReviewAnalyticsPanel />}
 
       {/* Monthly Performance Report Page View */}
       {activeTab === "monthly-report" && (

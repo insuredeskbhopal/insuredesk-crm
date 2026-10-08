@@ -2,6 +2,7 @@ import { Users } from "lucide-react";
 import Metric from "../shared/Metric";
 import PdfLink from "../shared/PdfLink";
 import { formatMoney } from "@/lib/records/analytics";
+import ReviewShareButtons from "@/app/components/crm/ReviewShareButtons";
 
 export default function ClientProfile({ client, onBack, onPolicySelect }) {
   return (
@@ -39,6 +40,14 @@ export default function ClientProfile({ client, onBack, onPolicySelect }) {
         <Metric label="District" value={client.district || "-"} />
         <Metric label="Contact" value={client.contactNumber || "-"} />
       </section>
+
+      <div style={{ marginBottom: "20px" }}>
+        <ReviewShareButtons
+          customerName={client.name}
+          customerPhone={client.contactNumber}
+          campaign="customer_profile"
+        />
+      </div>
 
       <div className="policy-table-card">
         <div className="policy-table-head">

@@ -34,6 +34,7 @@
     "nodemailer": "^9.0.1",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^5.7.284",
+    "qrcode": "^1.5.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tesseract.js": "^7.0.0",

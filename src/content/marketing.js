@@ -33,6 +33,22 @@ const STATIC_MARKETING_PAGES = [
     changeFrequency: "monthly",
   },
   {
+    path: "/review",
+    title: "Share Your Experience | Bima Headquarter",
+    description:
+      "Share your experience with Bima Headquarter and help us improve our insurance service. Official feedback and review page for InsureDesk IMF Pvt. Ltd., Bhopal.",
+    heading: "Your Trust Matters to Us",
+    summary:
+      "Share your genuine feedback and review your insurance advisory experience with Bima Headquarter.",
+    sections: [
+      "Official Google Business Profile review link for Bima Headquarter.",
+      "Optional confidential private feedback for senior advisory management.",
+      "IRDAI Registered Corporate Insurance Intermediary in Bhopal, Madhya Pradesh.",
+    ],
+    priority: 0.8,
+    changeFrequency: "weekly",
+  },
+  {
     path: "/privacy-policy",
     title: "Privacy Policy & Data Protection Charter",
     description:

@@ -110,16 +110,10 @@ button {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 36px;
+  cursor: pointer;
   border: 0;
   border-radius: 8px;
-  background: #ffffff;
-  color: #000000;
-  cursor: pointer;
-  padding: 0 14px;
-  font-weight: 700;
-  box-shadow: none;
-  transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
+  font-family: inherit;
   white-space: nowrap;
 }
 
@@ -131,21 +125,10 @@ textarea {
   max-width: 100%;
 }
 
-button:hover:not(:disabled) {
-  background: #ffffff;
-  color: #000000;
-  border-color: transparent;
-}
-
-button:active,
-button:focus,
-button:focus-visible {
-  background: #ffffff;
-  color: #000000;
-  border-color: transparent;
-  box-shadow: none;
-  transform: scale(0.98);
-  animation: buttonPulse 0.4s ease-out;
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 button.btn-add-endorsement,
@@ -182,15 +165,18 @@ button.btn-primary-dark *,
   }
 }
 
-body,
-body * {
+/* CRM-only: Force black text inside the dashboard shell.
+   Public pages (.landing-shell) are excluded so dark-background
+   buttons, hero sections, and nav elements retain their intended colors. */
+.app-shell,
+.app-shell * {
   color: #000000 !important;
 }
 
-svg,
-[class*="icon"],
-[class^="icon"],
-.icon {
+.app-shell svg,
+.app-shell [class*="icon"],
+.app-shell [class^="icon"],
+.app-shell .icon {
   color: #000000 !important;
 }
 
@@ -226,28 +212,23 @@ svg,
   box-shadow: none !important;
 }
 
-button:hover:not(:disabled),
 .browse-button:hover,
 .secondary-action:hover {
-  background: #ffffff !important;
+  background: #f8fafc !important;
   border-color: rgba(25, 28, 29, 0.24) !important;
 }
 
-button:active,
-button:focus,
-button:focus-visible,
 .browse-button:active,
 .browse-button:focus,
 .browse-button:focus-visible,
 .secondary-action:active,
 .secondary-action:focus,
 .secondary-action:focus-visible {
-  background: #ffffff !important;
+  background: #f1f5f9 !important;
   color: #000000 !important;
   border: 1px solid rgba(25, 28, 29, 0.24) !important;
   box-shadow: none !important;
-  transform: scale(0.98) !important;
-  animation: buttonPulse 0.4s ease-out !important;
+  transform: scale(0.98);
 }
 
 .pdf-link {
@@ -298,7 +279,7 @@ button:focus-visible,
   box-shadow: 0 8px 18px rgba(25, 28, 29, 0.08);
 }
 
-button:hover:not(:disabled) {
+.app-shell button:hover:not(:disabled) {
   transform: translateY(-1px);
   border-color: rgba(25, 28, 29, 0.24);
   box-shadow: 0 12px 26px rgba(25, 28, 29, 0.08);
@@ -752,6 +733,124 @@ tbody tr:hover {
 .client-portal-hero .client-portal-interactive:focus-visible svg {
   color: #000000 !important;
   stroke: currentColor !important;
+}
+
+/* Review Page (bhq-page-wrap) Color Overrides - exempt dark CTA buttons,
+   selected category pills, and their icons from the global black-text rule */
+/* Review Page (bhq-page-wrap) Professional Interaction Standards
+   - Dark background = light text and icons (#F5F2EA)
+   - Light background = dark text and icons (#171A19)
+   - Selected/active buttons retain styling until another option is clicked */
+.bhq-btn-forest-cta,
+.bhq-btn-forest-cta *,
+.bhq-btn-forest-cta span,
+.bhq-btn-forest-cta svg,
+.bhq-btn-submit-leadership,
+.bhq-btn-submit-leadership *,
+.bhq-btn-submit-leadership span,
+.bhq-btn-submit-leadership svg {
+  color: #F5F2EA !important;
+  stroke: #F5F2EA !important;
+}
+
+.bhq-btn-forest-cta:hover,
+.bhq-btn-forest-cta:focus,
+.bhq-btn-forest-cta:active,
+.bhq-btn-submit-leadership:hover,
+.bhq-btn-submit-leadership:focus,
+.bhq-btn-submit-leadership:active {
+  color: #F5F2EA !important;
+  stroke: #F5F2EA !important;
+  animation: none !important;
+}
+
+.bhq-btn-forest-cta {
+  background-color: #0B261E !important;
+}
+.bhq-btn-forest-cta:hover {
+  background-color: #0E362B !important;
+}
+.bhq-btn-forest-cta:active {
+  background-color: #081d17 !important;
+}
+
+.bhq-btn-submit-leadership {
+  background-color: #0B261E !important;
+}
+.bhq-btn-submit-leadership:hover:not(:disabled) {
+  background-color: #0E362B !important;
+}
+.bhq-btn-submit-leadership:active:not(:disabled) {
+  background-color: #081d17 !important;
+}
+
+/* Secondary tool buttons (Light background = dark text) */
+.bhq-btn-tool,
+.bhq-btn-tool span {
+  color: #171A19 !important;
+}
+.bhq-btn-tool:hover,
+.bhq-btn-tool:hover span,
+.bhq-btn-tool:focus,
+.bhq-btn-tool:focus span,
+.bhq-btn-tool:active,
+.bhq-btn-tool:active span {
+  color: #171A19 !important;
+  background-color: #F5F2EA !important;
+}
+.bhq-btn-tool svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+}
+
+/* Selected Category Pill (Dark background = light text, retained until another option clicked) */
+.bhq-cat-selected,
+.bhq-cat-selected *,
+.bhq-cat-selected:hover,
+.bhq-cat-selected:focus,
+.bhq-cat-selected:active {
+  color: #F5F2EA !important;
+  background-color: #0B261E !important;
+  border-color: #0B261E !important;
+}
+.bhq-cat-selected:hover {
+  background-color: #0E362B !important;
+}
+
+/* Unselected Category Pill (Light background = dark text) */
+.bhq-cat-unselected,
+.bhq-cat-unselected * {
+  color: #374151 !important;
+  background-color: #ffffff !important;
+  border-color: #D6D0C2 !important;
+}
+.bhq-cat-unselected:hover,
+.bhq-cat-unselected:hover * {
+  color: #0B261E !important;
+  background-color: #F5F2EA !important;
+  border-color: #B8B0A0 !important;
+}
+
+/* Language Toggle Buttons */
+.bhq-lang-btn-selected,
+.bhq-lang-btn-selected * {
+  color: #F5F2EA !important;
+  background-color: #0B261E !important;
+  border-color: #0B261E !important;
+}
+.bhq-lang-btn-unselected,
+.bhq-lang-btn-unselected * {
+  color: #525854 !important;
+  background-color: transparent !important;
+}
+.bhq-lang-btn-unselected:hover,
+.bhq-lang-btn-unselected:hover * {
+  color: #0B261E !important;
+}
+
+/* Prevent unwanted animations/flashes inside review page */
+.bhq-page-wrap button {
+  animation: none !important;
 }
 
 /* Add Endorsement Button Color Overrides */
