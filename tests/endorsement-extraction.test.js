@@ -58,7 +58,7 @@ describe("Endorsement Policy extraction regression baseline", () => {
       policyNumber: "1030/440516959/00/000",
       sumInsured: "2,10,00,000.00",
       netPremium: "4,395.00",
-      premiumIncludingGst: "3.00"
+      premiumIncludingGst: "36,962.00"
     },
     {
       file: "tests/POLICY PORTAL ENTRY- JUNE/MISHRA WAREHOUSE PVT. LTD. AC MPWLC_ ENDORSEMENT.pdf",
@@ -68,7 +68,7 @@ describe("Endorsement Policy extraction regression baseline", () => {
       policyNumber: "1030/435138091/00/000",
       sumInsured: "61,100,000.00",
       netPremium: "33,350.00",
-      premiumIncludingGst: "195973.00"
+      premiumIncludingGst: "1,95,973.00"
     },
     {
       file: "tests/POLICY PORTAL ENTRY- JUNE/TARA AGRO PARK AC MPWLC -endorsement.pdf",
@@ -78,7 +78,7 @@ describe("Endorsement Policy extraction regression baseline", () => {
       policyNumber: "1030/432322688/00/000",
       sumInsured: "15,16,20,000.00",
       netPremium: "16,509.00",
-      premiumIncludingGst: "47517.00"
+      premiumIncludingGst: "47,517.00"
     },
     {
       file: "tests/POLICY PORTAL ENTRY- JUNE/SHRI MOOLCHAND JI WAREHOUSE AC MPWLC - BURGLARY  ENDORSEMENT.pdf",
@@ -98,7 +98,7 @@ describe("Endorsement Policy extraction regression baseline", () => {
       policyNumber: "1030/429784772/00/000",
       sumInsured: "14,70,00,000.00",
       netPremium: "26,034.00",
-      premiumIncludingGst: "923.00"
+      premiumIncludingGst: "33,923.00"
     },
     {
       file: "tests/POLICY PORTAL ENTRY- JUNE/DEVANSHI WAREHOUSE AC MPWLC ENDORSEMENT.pdf",
@@ -108,7 +108,7 @@ describe("Endorsement Policy extraction regression baseline", () => {
       policyNumber: "1030/421336154/00/000",
       sumInsured: "20,00,00,000.00",
       netPremium: "530.00",
-      premiumIncludingGst: "3.00"
+      premiumIncludingGst: "1,40,008.00"
     },
     {
       file: "tests/POLICY PORTAL ENTRY- JUNE/AGRAWAL WAREHOUSE AC MPWLC_ ENDO.pdf",
@@ -128,7 +128,7 @@ describe("Endorsement Policy extraction regression baseline", () => {
       policyNumber: "1030/437418639/00/000",
       sumInsured: "8,12,70,000.00",
       netPremium: "21,645.00",
-      premiumIncludingGst: "3.00"
+      premiumIncludingGst: "71,913.00"
     },
     {
       file: "tests/POLICY PORTAL ENTRY- JUNE/ENDO_K S PUSHPDEEEP WAREHOUSE.pdf",
@@ -138,7 +138,7 @@ describe("Endorsement Policy extraction regression baseline", () => {
       policyNumber: "1030/431934072/00/000",
       sumInsured: "8,00,00,000.00",
       netPremium: "31,757.00",
-      premiumIncludingGst: "36,963.00"
+      premiumIncludingGst: "47,506.00"
     },
     {
       file: "tests/POLICY PORTAL ENTRY- JUNE/ENDO_KRISHNA WAREHOUSE-POLICY.pdf",
@@ -148,7 +148,7 @@ describe("Endorsement Policy extraction regression baseline", () => {
       policyNumber: "1030/440516959/00/000",
       sumInsured: "1,00,00,000.00",
       netPremium: "4,395.00",
-      premiumIncludingGst: "6,963.00"
+      premiumIncludingGst: "36,963.00"
     }
   ];
 

@@ -21,6 +21,8 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/d/") ||
+    pathname === "/r" ||
+    pathname.startsWith("/r/") ||
     pathname.startsWith("/logo") ||
     pathname.startsWith("/brand") ||
     pathname.startsWith("/images") ||
@@ -85,7 +87,10 @@ export async function middleware(request: NextRequest) {
     pathname === "/api/app/version" ||
     pathname === "/api/client/app-version" ||
     pathname.startsWith("/api/blog/") ||
-    pathname.startsWith("/api/downloads");
+    pathname.startsWith("/api/downloads") ||
+    pathname === "/api/review/feedback" ||
+    pathname === "/api/review/track" ||
+    pathname === "/api/review/qr";
 
   const isAuthApi = pathname.startsWith("/api/auth");
   const isClientAuthApi = pathname.startsWith("/api/auth/client/");

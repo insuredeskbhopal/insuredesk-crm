@@ -149,15 +149,44 @@ function train({ text = "", result = {} }) {
     patch.policyEndDate = patch.expiryDate;
   }
 
-  // Financials
-  const netMatch =
-    text.match(/Total\s+value\s+of\s+services\s*\(Premium\s+Value\s+without\s+Tax\)[^\n]*\n?\s*(?:`|₹)?\s*([0-9,.]+)/i) ||
-    text.match(/Net\s+Premium\s*[:\s`₹]?\s*([0-9,.]+)/i) ||
-    text.match(/Base\s+Premium\s*[:\s`₹]?\s*([0-9,.]+)/i);
-  if (result.netPremium) {
-    patch.netPremium = formatAmount(result.netPremium);
-  } else if (netMatch) {
-    patch.netPremium = formatAmount(netMatch[1]);
+  // Financials & Endorsement Transaction Values
+  const isEndorsement = /Endorsement\s+(?:Schedule|Details|Wording)/i.test(text);
+
+  const extraNetMatch =
+    text.match(/extra\s+premium\s+amounting\s+to\s*(?:Rs\.?|₹|`|INR)?\s*([0-9,]+(?:\.[0-9]{2})?)/i) ||
+    text.match(/premium\s+of\s*(?:Rs\.?|₹|`|INR)?\s*([0-9,]+(?:\.[0-9]{2})?)\s*(?:\/-\s*)?stands\s+charged/i) ||
+    text.match(/premium\s+amounting\s+to\s*(?:Rs\.?|₹|`|INR)?\s*([0-9,]+(?:\.[0-9]{2})?)\s*(?:\/-\s*)?as\s+shown/i);
+
+  const returnNetMatch =
+    text.match(/return\s+premium\s+amounting\s+to\s*(?:Rs\.?|₹|`|INR)?\s*([0-9,]+(?:\.[0-9]{2})?)/i);
+
+  if (extraNetMatch) {
+    const extraNum = parseFloat(extraNetMatch[1].replace(/,/g, ""));
+    patch.additionalPremium = formatAmount(extraNum);
+    patch.additionalNetPremium = formatAmount(extraNum);
+    patch.endorsementNetPremium = formatAmount(extraNum);
+    patch.netPremium = formatAmount(extraNum);
+    const endoGst = Math.round(extraNum * 0.18 * 100) / 100;
+    const endoGross = Math.round(extraNum * 1.18 * 100) / 100;
+    patch.additionalGst = formatAmount(endoGst);
+    patch.additionalPayable = formatAmount(endoGross);
+  } else if (returnNetMatch) {
+    const retNum = parseFloat(returnNetMatch[1].replace(/,/g, ""));
+    patch.returnPremium = formatAmount(retNum);
+    patch.returnNetPremium = formatAmount(retNum);
+    patch.netPremium = `-${formatAmount(retNum)}`;
+  }
+
+  if (!patch.netPremium) {
+    const netMatch =
+      text.match(/Total\s+value\s+of\s+services\s*\(Premium\s+Value\s+without\s+Tax\)[^\n]*\n?\s*(?:`|₹)?\s*([0-9,.]+)/i) ||
+      text.match(/Net\s+Premium\s*[:\s`₹]?\s*([0-9,.]+)/i) ||
+      text.match(/Base\s+Premium\s*[:\s`₹]?\s*([0-9,.]+)/i);
+    if (result.netPremium) {
+      patch.netPremium = formatAmount(result.netPremium);
+    } else if (netMatch) {
+      patch.netPremium = formatAmount(netMatch[1]);
+    }
   }
 
   const cgstMatch =
@@ -210,21 +239,27 @@ function train({ text = "", result = {} }) {
     }
   }
 
+  // Handle OCR misinterpretations of currency symbol ` / ₹ before colon, e.g. "Total Premium 3: 36962" or "Total Premium `: 33923"
   const totMatch =
     text.match(/Total\s+Premium\s+inclusive\s+Tax[^\n]*\n?\s*(?:`|₹)?\s*([0-9,.]+)/i) ||
     text.match(/Premium[^\n]*?Including\s*GST[^\n0-9]*([0-9,.]+)/i) ||
     text.match(/Premium\s*\(`\)\s*\(Including\s+GST\)\s*\(`\)\s*([0-9,.]+)/i) ||
+    text.match(/Total\s+Premium\*?\s*(?:`\s*:|₹\s*:|3\s*:|:)?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i) ||
     text.match(/Total\s+Premium\*?\s*[:\s`₹]*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i);
   if (totMatch) {
-    patch.totalPremium = formatAmount(totMatch[1]);
-    patch.grossPremium = patch.totalPremium;
-    patch.premium = patch.totalPremium;
-    patch.premiumIncludingGst = /Endorsement\s+Schedule/i.test(text)
-      ? patch.totalPremium
-      : result.premiumIncludingGst || patch.totalPremium;
+    const formattedTot = formatAmount(totMatch[1]);
+    patch.totalPremium = formattedTot;
+    patch.grossPremium = formattedTot;
+    patch.premium = formattedTot;
+    patch.cumulativeTotalPremium = formattedTot;
+    patch.premiumIncludingGst = isEndorsement
+      ? formattedTot
+      : result.premiumIncludingGst || formattedTot;
   }
 
-  if (/Endorsement\s+Schedule/i.test(text) && patch.totalPremium) {
+  // For Endorsements, ONLY derive net from gross if extraNetMatch and returnNetMatch were NOT present!
+  // NEVER derive endorsement net premium from cumulative gross premium when explicit extra net premium is stated.
+  if (isEndorsement && patch.totalPremium && !extraNetMatch && !returnNetMatch) {
     const grossVal = parseFloat(String(patch.totalPremium).replace(/,/g, ""));
     const netVal = parseFloat(String(patch.netPremium || "").replace(/,/g, ""));
     const gstVal = parseFloat(String(patch.gstAmount || "0").replace(/,/g, ""));

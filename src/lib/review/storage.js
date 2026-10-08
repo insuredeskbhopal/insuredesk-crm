@@ -2,15 +2,17 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 
-const STORAGE_DIR = path.join(process.cwd(), "storage", "reviews");
-const EVENTS_FILE = path.join(STORAGE_DIR, "events.jsonl");
-const FEEDBACK_FILE = path.join(STORAGE_DIR, "feedback.jsonl");
+const BASE_STORAGE_DIR = process.env.VERCEL
+  ? path.join("/tmp", "storage", "reviews")
+  : path.join(process.cwd(), "storage", "reviews");
+const EVENTS_FILE = path.join(BASE_STORAGE_DIR, "events.jsonl");
+const FEEDBACK_FILE = path.join(BASE_STORAGE_DIR, "feedback.jsonl");
 
 let dirReadyPromise = null;
 
 async function ensureStorageDir() {
   if (!dirReadyPromise) {
-    dirReadyPromise = fs.mkdir(STORAGE_DIR, { recursive: true }).catch((err) => {
+    dirReadyPromise = fs.mkdir(BASE_STORAGE_DIR, { recursive: true }).catch((err) => {
       console.error("[Review Storage] Failed to ensure directory:", err);
       dirReadyPromise = null;
       throw err;
