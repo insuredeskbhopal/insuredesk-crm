@@ -3,17 +3,12 @@
 import { useState, useEffect } from "react";
 import {
   ExternalLink,
-  Users,
   Eye,
-  QrCode,
-  MessageCircle,
   TrendingUp,
   RefreshCw,
   Star,
-  CheckCircle2,
   AlertCircle,
   HelpCircle,
-  Share2,
 } from "lucide-react";
 
 export default function ReviewAnalyticsPanel() {
@@ -61,7 +56,6 @@ export default function ReviewAnalyticsPanel() {
   };
 
   const sources = data?.sourceBreakdown || {};
-  const trends = data?.dailyTrends || [];
   const feedbackList = data?.recentFeedback || [];
 
   return (

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Check, MessageCircle, QrCode, Share2, ExternalLink } from "lucide-react";
+import { Copy, Check, MessageCircle, QrCode, Share2 } from "lucide-react";
 import { BRAND_CONFIG, WHATSAPP_REVIEW_TEMPLATE_HINDI } from "@/lib/review/config";
 
 export default function ReviewShareButtons({
   customerPhone = "",
-  customerName = "",
+  customerName: _customerName = "",
   campaign = "crm_customer",
   compact = false,
 }) {
@@ -28,11 +28,17 @@ export default function ReviewShareButtons({
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(reviewLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      if (typeof window !== "undefined" && window.navigator?.clipboard?.writeText) {
+        await window.navigator.clipboard.writeText(reviewLink);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+        return;
+      }
     } catch {
       // Fallback
+    }
+
+    try {
       const input = document.createElement("input");
       input.value = reviewLink;
       document.body.appendChild(input);
@@ -41,7 +47,7 @@ export default function ReviewShareButtons({
       document.body.removeChild(input);
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
-    }
+    } catch {}
   };
 
   const handleWhatsAppShare = () => {

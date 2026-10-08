@@ -2,30 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import {
-  ExternalLink,
-  MessageSquare,
-  ShieldCheck,
   CheckCircle2,
-  Sparkles,
-  QrCode,
-  Download,
   AlertCircle,
-  Building2,
-  Headphones,
   Check,
-  FileCheck,
   Lock,
   ArrowUpRight,
   Send,
-  HelpCircle,
-  Award,
-  Clock,
-  MapPin,
   Star,
-  Shield,
-  FileText,
   Copy,
   Share2,
   Compass,
@@ -112,8 +96,8 @@ export default function ReviewPageClient({ initialCampaign = "direct", initialSo
 
   const handleCopyLink = () => {
     const url = BRAND_CONFIG.shortcutRedirectUrl;
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(url);
+    if (typeof window !== "undefined" && window.navigator?.clipboard?.writeText) {
+      window.navigator.clipboard.writeText(url);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);
     }
