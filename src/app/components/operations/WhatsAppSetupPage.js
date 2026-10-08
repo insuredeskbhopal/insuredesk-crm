@@ -24,6 +24,10 @@ import {
   Layers,
   Info,
   RotateCcw,
+  Star,
+  Trash2,
+  QrCode,
+  Pause,
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
 import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
@@ -94,6 +98,17 @@ export default function WhatsAppSetupPage() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
 
+  // Multi-Account Management
+  const [accounts, setAccounts] = useState([]);
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
+  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+  const [newAccountLabel, setNewAccountLabel] = useState("");
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [qrModalAccount, setQrModalAccount] = useState(null);
+  const [testAccountId, setTestAccountId] = useState("");
+  const [accountActionLoading, setAccountActionLoading] = useState(null);
+  const [metrics, setMetrics] = useState(null);
+
   // Test message
   const [testPhone, setTestPhone] = useState("");
   const [testRecipientType, setTestRecipientType] = useState("individual");
@@ -149,6 +164,7 @@ export default function WhatsAppSetupPage() {
 
   useEffect(() => {
     fetchStatus();
+    fetchAccounts();
     fetchTemplates();
 
     return () => {
@@ -245,6 +261,154 @@ export default function WhatsAppSetupPage() {
       showToast("error", err.message || "Failed to disconnect WhatsApp");
     } finally {
       setIsLoggingOut(false);
+    }
+  }
+
+  async function fetchAccounts() {
+    setIsLoadingAccounts(true);
+    try {
+      const res = await fetch("/api/operations/whatsapp/sessions");
+      if (!res.ok) throw new Error("Failed to load accounts");
+      const data = await res.json();
+      if (data.accounts) {
+        setAccounts(data.accounts);
+        if (data.metrics) setMetrics(data.metrics);
+        if (qrModalAccount) {
+          const current = data.accounts.find((a) => a.id === qrModalAccount.id);
+          if (current?.connected) {
+            showToast("success", `Account '${current.label}' connected successfully!`);
+            setQrModalAccount(null);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Could not load WhatsApp accounts:", err.message);
+    } finally {
+      setIsLoadingAccounts(false);
+    }
+  }
+
+  async function handleCreateAccount() {
+    if (!newAccountLabel.trim()) {
+      showToast("error", "Please enter a name for the new WhatsApp account");
+      return;
+    }
+    setIsCreatingAccount(true);
+    try {
+      const res = await fetch("/api/operations/whatsapp/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create", label: newAccountLabel.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create account");
+      showToast("success", `Account created. Loading QR code...`);
+      setShowAddAccountModal(false);
+      const createdId = data.account?.id || `account_${Date.now()}`;
+      const createdLabel = data.account?.label || newAccountLabel;
+      setNewAccountLabel("");
+      await fetchAccounts();
+      handleOpenQrModal(createdId, createdLabel);
+    } catch (err) {
+      showToast("error", err.message || "Failed to create account");
+    } finally {
+      setIsCreatingAccount(false);
+    }
+  }
+
+  async function handleOpenQrModal(accountId, label) {
+    try {
+      const res = await fetch(`/api/operations/whatsapp/status?accountId=${encodeURIComponent(accountId)}`);
+      const data = await res.json();
+      setQrModalAccount({
+        id: accountId,
+        label: label || accountId,
+        qrCode: data.qrCode || null,
+        connected: data.connected || false,
+      });
+    } catch (err) {
+      showToast("error", "Failed to retrieve QR code for account");
+    }
+  }
+
+  async function handleSetDefaultAccount(accountId) {
+    setAccountActionLoading(accountId);
+    try {
+      const res = await fetch("/api/operations/whatsapp/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set-default", accountId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to set active sender");
+      showToast("success", "Active Operations Sender updated! Future messages will send from this account.");
+      await fetchAccounts();
+      fetchStatus(true, true);
+    } catch (err) {
+      showToast("error", err.message || "Failed to update active sender");
+    } finally {
+      setAccountActionLoading(null);
+    }
+  }
+
+  async function handlePauseAccount(accountId) {
+    setAccountActionLoading(accountId);
+    try {
+      const res = await fetch("/api/operations/whatsapp/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "pause", accountId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to disconnect account");
+      showToast("success", "Session disconnected. Login credentials preserved on disk.");
+      await fetchAccounts();
+      fetchStatus(true, true);
+    } catch (err) {
+      showToast("error", err.message || "Failed to disconnect account");
+    } finally {
+      setAccountActionLoading(null);
+    }
+  }
+
+  async function handleLogoutAccount(accountId) {
+    setAccountActionLoading(accountId);
+    try {
+      const res = await fetch("/api/operations/whatsapp/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "logout", accountId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to logout account");
+      showToast("success", "Account logged out from WhatsApp.");
+      await fetchAccounts();
+      fetchStatus(true, true);
+    } catch (err) {
+      showToast("error", err.message || "Failed to logout account");
+    } finally {
+      setAccountActionLoading(null);
+    }
+  }
+
+  async function handleDeleteAccount(accountId) {
+    if (!window.confirm("Are you sure you want to permanently delete this account and its credentials?")) return;
+    setAccountActionLoading(accountId);
+    try {
+      const res = await fetch("/api/operations/whatsapp/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", accountId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete account");
+      showToast("success", "Account permanently removed.");
+      await fetchAccounts();
+      fetchStatus(true, true);
+    } catch (err) {
+      showToast("error", err.message || "Failed to delete account");
+    } finally {
+      setAccountActionLoading(null);
     }
   }
 
@@ -352,14 +516,15 @@ export default function WhatsAppSetupPage() {
         body: JSON.stringify({
           recipient,
           message: testMessage,
+          accountId: testAccountId || undefined,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send message");
 
-      setTestResult({ success: true, messageId: data.messageId });
-      showToast("success", "Test message sent successfully!");
+      setTestResult({ success: true, messageId: data.messageId, accountId: data.accountId });
+      showToast("success", `Test message dispatched via ${data.accountId || "Active Sender"}!`);
     } catch (err) {
       setTestResult({ success: false, error: err.message });
       showToast("error", err.message || "Failed to send test message");
@@ -848,183 +1013,325 @@ export default function WhatsAppSetupPage() {
 
       {/* SECTION 2: GATEWAY CONNECTION & TEST SENDER */}
       {activeMainSection === "connection" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* CONNECTION STATUS */}
+        <div className="space-y-8">
+          {/* SECTION: MULTI-ACCOUNT MANAGEMENT */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-8">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 mb-6">
               <div>
-                <h3 className="text-base font-bold text-slate-900">WhatsApp Gateway Session</h3>
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Smartphone className="w-5 h-5 text-emerald-600" /> Connected WhatsApp Numbers
+                </h3>
                 <p className="text-xs text-slate-500 font-normal mt-0.5">
-                  Manage active WhatsApp web gateway instance & authentication QR pair.
+                  Link multiple WhatsApp accounts. All CRM automated operations will dispatch from the selected Active Operations Sender.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => fetchStatus(false, true)}
-                className="p-2 text-slate-500 hover:text-slate-900 bg-slate-100 rounded-xl transition"
-              >
-                <RefreshCw size={14} className={isCheckingStatus ? "animate-spin text-emerald-600" : ""} />
-              </button>
-            </div>
-
-            <div className="flex flex-col items-center text-center py-4">
-              <div
-                className={`w-16 h-16 rounded-3xl flex items-center justify-center border-2 mb-4 transition-all ${
-                  connected
-                    ? "bg-emerald-50 border-emerald-300 text-emerald-600 shadow-sm"
-                    : (status === "SCAN_QR_CODE" || status === "QR_READY")
-                    ? "bg-amber-50 border-amber-300 text-amber-600 animate-pulse shadow-sm"
-                    : "bg-slate-100 border-slate-300 text-slate-500"
-                }`}
-              >
-                <Smartphone className="w-8 h-8" />
-              </div>
-
-              <h4 className="text-base font-bold text-slate-900 uppercase tracking-wide">
-                {connected ? (
-                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
-                    <CheckCircle2 size={14} className="text-emerald-600" /> WhatsApp Gateway Connected
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 border border-slate-250 text-slate-700 text-xs font-bold">
-                    {status.replace(/_/g, " ")}
-                  </span>
-                )}
-              </h4>
-              <p className="text-xs text-slate-400 font-medium mt-2">
-                Last checked: {lastChecked ? lastChecked.toLocaleTimeString("en-IN") : "Never"}
-              </p>
-
-              {connected && (
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowDisconnectModal(true)}
-                  disabled={isLoggingOut}
-                  className="mt-6 px-4 py-2 bg-white border border-rose-200 text-rose-700 font-semibold rounded-xl text-xs hover:bg-rose-50 hover:border-rose-300 transition shadow-sm disabled:opacity-50"
+                  onClick={() => fetchAccounts()}
+                  disabled={isLoadingAccounts}
+                  className="p-2 text-slate-500 hover:text-slate-900 bg-slate-100 rounded-xl transition"
+                  title="Refresh Accounts"
                 >
-                  Disconnect Session
+                  <RefreshCw size={14} className={isLoadingAccounts ? "animate-spin text-emerald-600" : ""} />
                 </button>
-              )}
+                <button
+                  type="button"
+                  onClick={() => setShowAddAccountModal(true)}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition"
+                >
+                  <Plus size={14} /> Link New Number
+                </button>
+              </div>
+            </div>
 
-              {statusError && !connected && (
-                <div className="mt-4 p-3 bg-rose-50 rounded-xl text-xs text-rose-700 font-medium border border-rose-200 max-w-sm">
-                  {statusError}
+            {/* Account Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {accounts.length === 0 ? (
+                <div className="col-span-full py-8 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200">
+                  Loading WhatsApp accounts...
                 </div>
-              )}
+              ) : (
+                accounts.map((acc) => {
+                  const isActionBusy = accountActionLoading === acc.id;
+                  return (
+                    <div
+                      key={acc.id}
+                      className={`rounded-2xl p-5 border transition-all ${
+                        acc.isDefault
+                          ? "bg-emerald-50/20 border-2 border-emerald-500 shadow-sm"
+                          : "bg-white border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div>
+                          <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                            {acc.label}
+                            {acc.isDefault && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                ⭐ Primary Sender
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-500 mt-0.5">
+                            {acc.phoneNumber ? `+${acc.phoneNumber}` : "Awaiting scan"}
+                          </div>
+                        </div>
+                        <span
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full border whitespace-nowrap ${
+                            acc.connected
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : acc.state === "PAUSED"
+                              ? "bg-slate-100 text-slate-600 border-slate-300"
+                              : acc.state === "QR_READY"
+                              ? "bg-amber-50 text-amber-700 border-amber-200 animate-pulse"
+                              : "bg-rose-50 text-rose-700 border-rose-200"
+                          }`}
+                        >
+                          {acc.connected ? "● Connected" : acc.state === "PAUSED" ? "⏸ Disconnected" : acc.state === "QR_READY" ? "Scan QR" : acc.state}
+                        </span>
+                      </div>
 
-              {/* QR Code Scan area */}
-              {(status === "SCAN_QR_CODE" || status === "QR_READY") && qrCode && (
-                <div className="mt-6 w-full flex flex-col items-center">
-                  <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
-                    <Image
-                      src={qrCode}
-                      alt="WhatsApp Web Login QR Code"
-                      width={200}
-                      height={200}
-                      unoptimized
-                      className="w-52 h-52 block rounded-lg"
-                    />
-                  </div>
-                  <div className="flex gap-2.5 items-center text-slate-600 mt-4 text-xs leading-relaxed max-w-xs font-medium bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-left">
-                    <Info size={18} className="text-emerald-600 shrink-0" />
-                    <span>Scan this QR code using your phone's WhatsApp Linked Devices menu.</span>
-                  </div>
-                </div>
+                      <div className="text-[10px] text-slate-400 mb-4 font-mono">
+                        ID: {acc.id}
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+                        {acc.connected && !acc.isDefault && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetDefaultAccount(acc.id)}
+                            disabled={isActionBusy}
+                            className="flex-1 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[11px] font-bold transition shadow-sm disabled:opacity-50"
+                          >
+                            Set as Active
+                          </button>
+                        )}
+                        {!acc.connected && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenQrModal(acc.id, acc.label)}
+                            className="flex-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold transition shadow-sm"
+                          >
+                            Scan QR Code
+                          </button>
+                        )}
+                        {acc.connected && (
+                          <button
+                            type="button"
+                            onClick={() => handlePauseAccount(acc.id)}
+                            disabled={isActionBusy}
+                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition disabled:opacity-50"
+                            title="Disconnect without deleting session"
+                          >
+                            Disconnect
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleLogoutAccount(acc.id)}
+                          disabled={isActionBusy}
+                          className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-[11px] font-semibold transition disabled:opacity-50"
+                          title="Log out from WhatsApp"
+                        >
+                          Logout
+                        </button>
+                        {accounts.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAccount(acc.id)}
+                            disabled={isActionBusy}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition disabled:opacity-50"
+                            title="Permanently remove account"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
+
+            {/* Gateway Metrics Strip */}
+            {metrics && (
+              <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-3">
+                <div className="flex items-center gap-4">
+                  <span><strong>Gateway RSS:</strong> {metrics.memory?.rssMb} MB</span>
+                  <span><strong>Heap Used:</strong> {metrics.memory?.heapUsedMb} MB</span>
+                  <span><strong>Uptime:</strong> {Math.floor(metrics.uptimeSeconds / 60)} min</span>
+                </div>
+                <div className="font-mono text-[11px] text-slate-400">
+                  Active Dispatch Account: {metrics.activeSenderId}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* TEST DISPATCHER */}
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-8">
-            <div className="pb-4 border-b border-slate-200 mb-6">
-              <h3 className="text-base font-bold text-slate-900">Send Test WhatsApp Message</h3>
-              <p className="text-xs text-slate-500 font-normal mt-0.5">
-                Send an instant test message to verify recipient routing & session health.
-              </p>
-            </div>
-
-            <form onSubmit={handleSendTest} className="space-y-5">
-              <WhatsAppRecipientPicker
-                type={testRecipientType}
-                onTypeChange={(value) => {
-                  setTestRecipientType(value);
-                  if (value === "individual") setTestGroupId("");
-                }}
-                groupId={testGroupId}
-                onGroupChange={setTestGroupId}
-                disabled={isSendingTest || !connected}
-              />
-
-              {testRecipientType === "individual" ? (
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Recipient Phone Number
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 91XXXXXXXXXX"
-                    value={testPhone}
-                    onChange={(e) => setTestPhone(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1 font-medium">
-                    Include country code (e.g. 91 for India) without '+' or spaces.
-                  </p>
-                </div>
-              ) : null}
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                  Message Content
-                </label>
-                <textarea
-                  rows="4"
-                  value={testMessage}
-                  onChange={(e) => setTestMessage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition leading-relaxed"
-                />
+          {/* LOWER SECTION: TEST DISPATCHER & DIAGNOSTICS */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-8">
+              <div className="pb-4 border-b border-slate-200 mb-6">
+                <h3 className="text-base font-bold text-slate-900">Send Test WhatsApp Message</h3>
+                <p className="text-xs text-slate-500 font-normal mt-0.5">
+                  Send a test message from a specific account or default primary sender.
+                </p>
               </div>
 
-              <button
-                type="submit"
-                disabled={isSendingTest || !connected}
-                className="w-full flex items-center justify-center gap-2 px-5 py-3 font-bold rounded-xl text-xs shadow-sm disabled:opacity-50 transition hover:bg-slate-50"
-                style={{
-                  background: "#ffffff",
-                  color: "#0f172a",
-                  border: "1.5px solid #0f172a",
-                }}
-              >
-                <Send size={14} className={isSendingTest ? "animate-pulse text-slate-900" : "text-slate-900"} />
-                {isSendingTest ? "Sending Test Message..." : "Dispatch Test Message"}
-              </button>
-
-              {testResult && (
-                <div
-                  className={`p-4 rounded-2xl border text-xs font-medium ${
-                    testResult.success
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-900"
-                      : "bg-rose-50 border-rose-200 text-rose-900"
-                  }`}
-                >
-                  {testResult.success ? (
-                    <div>
-                      <p className="font-bold flex items-center gap-1.5 text-emerald-800">
-                        <CheckCircle2 size={15} className="text-emerald-600" /> Test Message Sent!
-                      </p>
-                      <p className="text-[10px] text-slate-500 mt-1 font-mono">Message ID: {testResult.messageId}</p>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="font-bold flex items-center gap-1.5 text-rose-800">
-                        <AlertCircle size={15} className="text-rose-600" /> Dispatch Failed
-                      </p>
-                      <p className="text-[10px] text-rose-700 mt-1">{testResult.error}</p>
-                    </div>
-                  )}
+              <form onSubmit={handleSendTest} className="space-y-5">
+                {/* Account Selection */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                    Dispatch From Account
+                  </label>
+                  <select
+                    value={testAccountId}
+                    onChange={(e) => setTestAccountId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition font-medium"
+                  >
+                    <option value="">Active Operations Sender (Default)</option>
+                    {accounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.label} {acc.phoneNumber ? `(+${acc.phoneNumber})` : `(${acc.state})`} {acc.isDefault ? "⭐ [Default]" : ""}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
-            </form>
+
+                <WhatsAppRecipientPicker
+                  type={testRecipientType}
+                  onTypeChange={(value) => {
+                    setTestRecipientType(value);
+                    if (value === "individual") setTestGroupId("");
+                  }}
+                  groupId={testGroupId}
+                  onGroupChange={setTestGroupId}
+                  disabled={isSendingTest}
+                />
+
+                {testRecipientType === "individual" ? (
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                      Recipient Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 91XXXXXXXXXX"
+                      value={testPhone}
+                      onChange={(e) => setTestPhone(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1 font-medium">
+                      Include country code (e.g. 91 for India) without '+' or spaces.
+                    </p>
+                  </div>
+                ) : null}
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                    Message Content
+                  </label>
+                  <textarea
+                    rows="4"
+                    value={testMessage}
+                    onChange={(e) => setTestMessage(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition leading-relaxed"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSendingTest}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3 font-bold rounded-xl text-xs shadow-sm disabled:opacity-50 transition hover:bg-slate-50"
+                  style={{
+                    background: "#ffffff",
+                    color: "#0f172a",
+                    border: "1.5px solid #0f172a",
+                  }}
+                >
+                  <Send size={14} className={isSendingTest ? "animate-pulse text-slate-900" : "text-slate-900"} />
+                  {isSendingTest ? "Sending Test Message..." : "Dispatch Test Message"}
+                </button>
+
+                {testResult && (
+                  <div
+                    className={`p-4 rounded-2xl border text-xs font-medium ${
+                      testResult.success
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-900"
+                        : "bg-rose-50 border-rose-200 text-rose-900"
+                    }`}
+                  >
+                    {testResult.success ? (
+                      <div>
+                        <p className="font-bold flex items-center gap-1.5 text-emerald-800">
+                          <CheckCircle2 size={15} className="text-emerald-600" /> Test Message Sent!
+                        </p>
+                        <p className="text-[10px] text-slate-500 mt-1 font-mono">Message ID: {testResult.messageId}</p>
+                        {testResult.accountId && (
+                          <p className="text-[10px] text-slate-500 font-mono">Dispatched Via: {testResult.accountId}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="font-bold flex items-center gap-1.5 text-rose-800">
+                          <AlertCircle size={15} className="text-rose-600" /> Dispatch Failed
+                        </p>
+                        <p className="text-[10px] text-rose-700 mt-1">{testResult.error}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </form>
+            </div>
+
+            {/* Active Primary Status Details */}
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-8 flex flex-col justify-between">
+              <div>
+                <div className="pb-4 border-b border-slate-200 mb-6">
+                  <h3 className="text-base font-bold text-slate-900">Active Sender Health</h3>
+                  <p className="text-xs text-slate-500 font-normal mt-0.5">
+                    Live connection diagnostic for the current primary outbound account.
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-center text-center py-4">
+                  <div
+                    className={`w-16 h-16 rounded-3xl flex items-center justify-center border-2 mb-4 transition-all ${
+                      connected
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-600 shadow-sm"
+                        : "bg-slate-100 border-slate-300 text-slate-500"
+                    }`}
+                  >
+                    <Smartphone className="w-8 h-8" />
+                  </div>
+
+                  <h4 className="text-base font-bold text-slate-900 uppercase tracking-wide">
+                    {connected ? (
+                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
+                        <CheckCircle2 size={14} className="text-emerald-600" /> Primary Account Online
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 border border-slate-250 text-slate-700 text-xs font-bold">
+                        {status.replace(/_/g, " ")}
+                      </span>
+                    )}
+                  </h4>
+
+                  <p className="text-xs text-slate-400 font-medium mt-2">
+                    Last sync: {lastChecked ? lastChecked.toLocaleTimeString("en-IN") : "Never"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-slate-600 leading-relaxed font-medium">
+                <div className="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                  <Info size={14} className="text-emerald-600" /> Routing Rules:
+                </div>
+                All automated renewals, birthday greetings, and claim updates automatically dispatch through whichever account is set as <strong>Primary Sender</strong>. Messages already in queue retain the sender account assigned at enqueue time.
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1235,6 +1542,120 @@ export default function WhatsAppSetupPage() {
                   className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-xs shadow-md transition disabled:opacity-50"
                 >
                   {isLoggingOut ? "Disconnecting..." : "Disconnect"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </ModalPortal>
+      )}
+      {/* ADD ACCOUNT MODAL */}
+      {showAddAccountModal && (
+        <ModalPortal>
+          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+            <div
+              className="bg-white rounded-3xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl text-left"
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-4 text-emerald-600">
+                <Smartphone className="w-6 h-6" />
+              </div>
+
+              <h3 className="text-base font-bold text-slate-900 mb-1">Link New WhatsApp Account</h3>
+              <p className="text-xs text-slate-500 leading-relaxed mb-5 font-medium">
+                Enter an identifying label for this number (e.g., "Support Desk", "Claims Helpline").
+              </p>
+
+              <div className="mb-5">
+                <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                  Account Name / Label
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Sales Desk WhatsApp"
+                  value={newAccountLabel}
+                  onChange={(e) => setNewAccountLabel(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-2.5 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowAddAccountModal(false)}
+                  className="px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-50 text-slate-700 bg-white transition shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateAccount}
+                  disabled={isCreatingAccount || !newAccountLabel.trim()}
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs shadow-md transition disabled:opacity-50"
+                >
+                  {isCreatingAccount ? "Generating QR..." : "Proceed to QR Scan"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </ModalPortal>
+      )}
+
+      {/* QR PAIRING MODAL */}
+      {qrModalAccount && (
+        <ModalPortal>
+          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+            <div
+              className="bg-white rounded-3xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl text-center"
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <div className="text-left">
+                  <h3 className="text-sm font-bold text-slate-900">Scan QR: {qrModalAccount.label}</h3>
+                  <p className="text-[11px] text-slate-400 font-mono">ID: {qrModalAccount.id}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQrModalAccount(null)}
+                  className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {qrModalAccount.qrCode ? (
+                <div className="flex flex-col items-center">
+                  <div className="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm mb-3">
+                    <Image
+                      src={qrModalAccount.qrCode}
+                      alt="WhatsApp Login QR Code"
+                      width={200}
+                      height={200}
+                      unoptimized
+                      className="w-48 h-48 block rounded-lg"
+                    />
+                  </div>
+                  <div className="flex gap-2 items-center text-slate-600 text-xs font-medium bg-slate-50 p-3 rounded-xl border border-slate-200 text-left">
+                    <Info size={16} className="text-emerald-600 shrink-0" />
+                    <span>Open WhatsApp on your phone ➔ Linked Devices ➔ Link a Device.</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-12 text-center text-xs text-slate-500">
+                  <RefreshCw className="w-8 h-8 mx-auto mb-2 animate-spin text-emerald-600" />
+                  Generating WhatsApp Web QR Code...
+                </div>
+              )}
+
+              <div className="mt-5 pt-3 border-t border-slate-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setQrModalAccount(null)}
+                  className="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-50 text-slate-700 bg-white transition"
+                >
+                  Close
                 </button>
               </div>
             </div>

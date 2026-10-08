@@ -1111,6 +1111,7 @@ model WhatsAppMessageQueue {
   scheduledAt     DateTime  @default(now()) @map("scheduled_at") @db.Timestamptz(6)
   sentAt          DateTime? @map("sent_at") @db.Timestamptz(6)
   openwaMessageId String?   @map("openwa_message_id")
+  accountId       String?   @map("account_id")
   uniqueKey       String?   @unique @map("unique_key")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)

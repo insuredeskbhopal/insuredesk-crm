@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
-import { sendWhatsAppText, sendWhatsAppImage, sendWhatsAppFile } from "./whatsapp-client";
+import { sendWhatsAppText, sendWhatsAppImage, sendWhatsAppFile, getWhatsAppStatus } from "./whatsapp-client";
 
 // Replaces template placeholders with variable values
 export function compileTemplate(body, variables = {}) {
@@ -21,7 +21,7 @@ export function compileTemplate(body, variables = {}) {
   return compiled;
 }
 
-// Safely enqueues a WhatsApp message, skipping if uniqueKey is already present
+// Safely enqueues a WhatsApp message, locking fixed accountId at enqueue time
 export async function enqueueMessage({
   organizationId,
   recipientPhone,
@@ -33,12 +33,24 @@ export async function enqueueMessage({
   caption = null,
   uniqueKey = null,
   scheduledAt = new Date(),
+  accountId = null,
 }) {
   if (!organizationId) {
     throw new Error('organizationId is required to enqueue a message');
   }
   if (!recipientPhone) {
     throw new Error('recipientPhone is required to enqueue a message');
+  }
+
+  // Determine and lock the fixed sender account ID at enqueue time
+  let lockedAccountId = accountId;
+  if (!lockedAccountId) {
+    try {
+      const status = await getWhatsAppStatus();
+      lockedAccountId = status.accountId || "insuredesk_session";
+    } catch {
+      lockedAccountId = "insuredesk_session";
+    }
   }
 
   try {
@@ -54,6 +66,7 @@ export async function enqueueMessage({
         caption,
         uniqueKey,
         scheduledAt,
+        accountId: lockedAccountId,
         status: 'PENDING',
       },
     });
@@ -120,6 +133,8 @@ export async function processQueueBatch(limit = 5) {
       },
     });
 
+    const targetAccountId = message.accountId || null;
+
     try {
       let openwaResponse;
       if (message.messageType === 'IMAGE') {
@@ -134,23 +149,25 @@ export async function processQueueBatch(limit = 5) {
           message.recipientPhone,
           mediaPayload,
           "birthday_greeting.jpg",
-          message.caption || message.messageBody
+          message.caption || message.messageBody,
+          targetAccountId
         );
       } else if (message.messageType === 'PDF') {
         openwaResponse = await sendWhatsAppFile(
           message.recipientPhone,
           message.mediaUrl,
           message.fileName,
-          message.caption || message.messageBody
+          message.caption || message.messageBody,
+          targetAccountId
         );
       } else {
         openwaResponse = await sendWhatsAppText(
           message.recipientPhone,
-          message.messageBody
+          message.messageBody,
+          targetAccountId
         );
       }
 
-      // OpenWA success
       const msgId = typeof openwaResponse === 'object' ? openwaResponse.id || openwaResponse.response : openwaResponse;
 
       await prisma.whatsAppMessageQueue.update({
@@ -166,12 +183,13 @@ export async function processQueueBatch(limit = 5) {
       processedCount++;
       consecutiveFailures = 0; // reset consecutive failure counter on success
     } catch (err) {
-      console.error(`Failed to send WhatsApp message ${message.id}:`, err);
+      console.error(`Failed to send WhatsApp message ${message.id} via account '${targetAccountId || "default"}':`, err);
       consecutiveFailures++;
       
       const currentAttempts = message.attempts + 1;
       const nextStatus = currentAttempts >= 3 ? 'FAILED' : 'RETRYING';
 
+      // Strictly record failure on the stamped account. NEVER automatically re-route to another account!
       await prisma.whatsAppMessageQueue.update({
         where: { id: message.id },
         data: {
@@ -181,8 +199,8 @@ export async function processQueueBatch(limit = 5) {
       });
     }
 
-    // Apply safe rate-limiting delay between sending messages (8-12 seconds)
-    if (processedCount < messages.length && consecutiveFailures < maxConsecutiveFailures) {
+    // Apply safe rate-limiting delay between sending messages (8-12 seconds in production)
+    if (processedCount < messages.length && consecutiveFailures < maxConsecutiveFailures && process.env.NODE_ENV !== 'test') {
       const delayMs = Math.floor(Math.random() * 4000) + 8000; // 8,000ms - 12,000ms
       console.log(`Rate-limiting: sleeping for ${delayMs}ms before the next message...`);
       await new Promise((resolve) => setTimeout(resolve, delayMs));

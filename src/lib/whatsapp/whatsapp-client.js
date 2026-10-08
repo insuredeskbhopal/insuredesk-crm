@@ -1,9 +1,8 @@
 /**
  * WhatsApp Gateway REST Client
  *
- * Communicates with the standalone Baileys gateway (Express server on localhost:8090).
- * Drop-in replacement for openwa-client.js — same exported function signatures,
- * so queue-manager.js and API routes only need to update import paths.
+ * Communicates with the standalone Baileys gateway (multi-account capable).
+ * Provider-agnostic interface ready for future Meta Cloud API adapters.
  */
 
 function getGatewayConfig() {
@@ -67,27 +66,79 @@ export async function callGateway(method, endpoint, payload = null) {
       ? await response.json().catch(() => ({}))
       : await response.text().catch(() => "");
     const gatewayMessage = typeof errorBody === "object" ? errorBody.error : "";
-    const fallbackMessage = response.status === 404
-      ? "WhatsApp group discovery is not active on the gateway. Deploy and restart the latest gateway version."
-      : `WhatsApp gateway request failed (${response.status}).`;
+    let fallbackMessage;
+    if (response.status === 404 && endpoint.startsWith("groups")) {
+      fallbackMessage = "WhatsApp group discovery is not active on the gateway. Deploy and restart the latest gateway version.";
+    } else if (response.status === 404) {
+      fallbackMessage = "Endpoint not found on WhatsApp gateway. Ensure the latest gateway is running.";
+    } else {
+      fallbackMessage = `WhatsApp gateway request failed (${response.status}).`;
+    }
     throw new Error(gatewayMessage || fallbackMessage);
   }
 
   return response.json();
 }
 
-// ── Exported API (new names) ────────────────────────────────────────
+// ── Multi-Account Session Management API ────────────────────────────
 
-export async function getWhatsAppStatus() {
+export async function getWhatsAppSessions() {
   try {
-    const res = await callGateway("GET", "status");
+    const res = await callGateway("GET", "sessions");
+    return Array.isArray(res.accounts) ? res.accounts : [];
+  } catch (error) {
+    console.error("Failed to fetch WhatsApp sessions:", error.message);
+    return [];
+  }
+}
+
+export async function createWhatsAppSession(label) {
+  return callGateway("POST", "sessions", { label: label || "New WhatsApp Number" });
+}
+
+export async function setPrimaryWhatsAppSession(accountId) {
+  if (!accountId) throw new Error("Account ID is required to set primary session");
+  return callGateway("POST", `sessions/${encodeURIComponent(accountId)}/set-default`);
+}
+
+export async function pauseWhatsAppSession(accountId) {
+  if (!accountId) throw new Error("Account ID is required to pause session");
+  return callGateway("POST", `sessions/${encodeURIComponent(accountId)}/pause`);
+}
+
+export async function logoutWhatsAppSession(accountId) {
+  if (!accountId) throw new Error("Account ID is required to logout session");
+  return callGateway("POST", `sessions/${encodeURIComponent(accountId)}/logout`);
+}
+
+export async function deleteWhatsAppSession(accountId) {
+  if (!accountId) throw new Error("Account ID is required to delete session");
+  return callGateway("DELETE", `sessions/${encodeURIComponent(accountId)}`);
+}
+
+export async function getWhatsAppMetrics() {
+  try {
+    return await callGateway("GET", "metrics");
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// ── Status & QR Code ────────────────────────────────────────────────
+
+export async function getWhatsAppStatus(accountId = null) {
+  try {
+    const query = accountId ? `?accountId=${encodeURIComponent(accountId)}` : "";
+    const res = await callGateway("GET", `status${query}`);
     return {
       connected: res.connected || false,
       state: res.state || "UNKNOWN",
+      accountId: res.accountId || accountId,
+      phoneNumber: res.phoneNumber || null,
+      isDefault: res.isDefault ?? true,
       lastChecked: new Date(),
     };
   } catch (error) {
-    // Gateway is completely unreachable
     return {
       connected: false,
       state: "UNREACHABLE",
@@ -97,13 +148,17 @@ export async function getWhatsAppStatus() {
   }
 }
 
-export async function getWhatsAppQrCode() {
+export async function getWhatsAppQrCode(accountId = null) {
   try {
-    const res = await callGateway("GET", "qr");
+    const endpoint = accountId
+      ? `sessions/${encodeURIComponent(accountId)}/qr`
+      : "qr";
+    const res = await callGateway("GET", endpoint);
     if (res.success && res.qrCode) {
       return {
         success: true,
         qrCode: res.qrCode,
+        accountId: res.accountId || accountId,
       };
     }
     return {
@@ -118,83 +173,113 @@ export async function getWhatsAppQrCode() {
   }
 }
 
-export async function sendWhatsAppText(to, content) {
+// ── Outbound Dispatch API (Account-Aware) ───────────────────────────
+
+export async function sendWhatsAppText(to, content, accountId = null) {
   const recipient = formatRecipient(to);
-  const res = await callGateway("POST", "send-text", {
+  const payload = {
     to: recipient,
     content,
-  });
+  };
+  if (accountId) payload.accountId = accountId;
+
+  const res = await callGateway("POST", "send-text", payload);
   if (res.success === false) {
     throw new Error(res.error || res.message || "WhatsApp gateway could not send the message.");
   }
-  return {
+  const output = {
     id: res.id || null,
     success: res.success || false,
     timestamp: res.timestamp || null,
   };
+  if (res.accountId || accountId) {
+    output.accountId = res.accountId || accountId;
+  }
+  return output;
 }
 
-export async function sendWhatsAppImage(to, fileData, filename, caption) {
+export async function sendWhatsAppImage(to, fileData, filename, caption, accountId = null) {
   const recipient = formatRecipient(to);
-  const res = await callGateway("POST", "send-media", {
+  const payload = {
     to: recipient,
     mediaBase64: fileData,
     filename: filename || "image.png",
     caption: caption || "",
     type: "image",
-  });
+  };
+  if (accountId) payload.accountId = accountId;
+
+  const res = await callGateway("POST", "send-media", payload);
   if (res.success === false) {
     throw new Error(res.error || res.message || "WhatsApp gateway could not send the image.");
   }
-  return {
+  const output = {
     id: res.id || null,
     success: res.success || false,
     timestamp: res.timestamp || null,
   };
+  if (res.accountId || accountId) {
+    output.accountId = res.accountId || accountId;
+  }
+  return output;
 }
 
-export async function sendWhatsAppFile(to, fileData, filename, caption) {
+export async function sendWhatsAppFile(to, fileData, filename, caption, accountId = null) {
   const recipient = formatRecipient(to);
-  const res = await callGateway("POST", "send-media", {
+  const payload = {
     to: recipient,
     mediaBase64: fileData,
     filename: filename || "document.pdf",
     caption: caption || "",
     type: "document",
-  });
+  };
+  if (accountId) payload.accountId = accountId;
+
+  const res = await callGateway("POST", "send-media", payload);
   if (res.success === false) {
     throw new Error(res.error || res.message || "WhatsApp gateway could not send the file.");
   }
-  return {
+  const output = {
     id: res.id || null,
     success: res.success || false,
     timestamp: res.timestamp || null,
   };
+  if (res.accountId || accountId) {
+    output.accountId = res.accountId || accountId;
+  }
+  return output;
 }
 
-export async function sendWhatsAppBirthdayWish(to, name, caption) {
+export async function sendWhatsAppBirthdayWish(to, name, caption, accountId = null) {
   const recipient = formatRecipient(to);
-  const res = await callGateway("POST", "send-birthday-wish", {
+  const payload = {
     to: recipient,
     name: name || "Valued Client",
     caption: caption || "",
-  });
+  };
+  if (accountId) payload.accountId = accountId;
+
+  const res = await callGateway("POST", "send-birthday-wish", payload);
   if (res.success === false) {
     throw new Error(res.error || res.message || "WhatsApp gateway could not send the birthday wish.");
   }
-  return {
+  const output = {
     id: res.id || null,
     success: res.success || false,
     timestamp: res.timestamp || null,
   };
+  if (res.accountId || accountId) {
+    output.accountId = res.accountId || accountId;
+  }
+  return output;
 }
 
-// ── Backward-compatible aliases (old OpenWA names) ──────────────────
-// These allow any file still importing the old names to work without changes.
+// ── Backward-Compatible Legacy Aliases ──────────────────────────────
 
-export async function logoutWhatsApp() {
+export async function logoutWhatsApp(accountId = null) {
   try {
-    const res = await callGateway("POST", "logout");
+    const payload = accountId ? { accountId } : {};
+    const res = await callGateway("POST", "logout", payload);
     return {
       success: res.success || false,
       message: res.message || "Logged out successfully",
@@ -223,8 +308,9 @@ export async function matchWhatsAppGroups(phone) {
   };
 }
 
-export async function refreshWhatsAppGroups() {
-  const groups = await callGateway("POST", "groups/refresh");
+export async function refreshWhatsAppGroups(accountId = null) {
+  const payload = accountId ? { accountId } : {};
+  const groups = await callGateway("POST", "groups/refresh", payload);
   return Array.isArray(groups) ? groups : [];
 }
 

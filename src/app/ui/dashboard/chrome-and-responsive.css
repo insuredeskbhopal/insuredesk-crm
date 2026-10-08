@@ -391,7 +391,7 @@
   flex-direction: column;
   gap: 16px;
   position: relative;
-  color: var(--primary, #191c1d);
+  color: #0f172a;
 }
 
 .tb-modal-header {
@@ -828,8 +828,9 @@
 
 .tb-status-desc {
   margin: 0;
-  font-size: var(--font-size-xs);
-  color: var(--outline);
+  font-size: 13px;
+  line-height: 1.5;
+  color: #475569;
 }
 
 .tb-env-grid {
@@ -1021,7 +1022,7 @@
 
 .tb-modal-title {
   margin: 0;
-  color: var(--primary);
+  color: #0f172a;
 }
 
 .tb-status-block.success {

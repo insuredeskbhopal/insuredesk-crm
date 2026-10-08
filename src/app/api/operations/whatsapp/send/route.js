@@ -161,6 +161,8 @@ export async function POST(request) {
       ? String(message || "").trim()
       : withAgentSignature(message, body.signature || buildDefaultAgentSignature(session));
 
+    const targetAccountId = body.accountId || null;
+
     // Render personalized birthday card directly in memory on-the-fly and dispatch
     if (body.attachBirthdayCard) {
       const { generateBirthdayCard } = await import("@/lib/birthday/card-renderer");
@@ -170,11 +172,13 @@ export async function POST(request) {
         recipient,
         card.base64,
         "birthday_greeting.jpg",
-        signedMessage
+        signedMessage,
+        targetAccountId
       );
       return NextResponse.json({
         success: true,
         messageId: imgRes.id || null,
+        accountId: targetAccountId,
       });
     }
 
@@ -191,22 +195,22 @@ export async function POST(request) {
       const captionText = signedMessage || primaryAttachment.caption || "";
 
       if (primaryAttachment.mediaType === "document") {
-        const docRes = await sendWhatsAppFile(recipient, primaryAttachment.mediaBase64, primaryAttachment.filename, captionText);
+        const docRes = await sendWhatsAppFile(recipient, primaryAttachment.mediaBase64, primaryAttachment.filename, captionText, targetAccountId);
         responses.push(docRes);
       } else {
-        const imgRes = await sendWhatsAppImage(recipient, primaryAttachment.mediaBase64, primaryAttachment.filename, captionText);
+        const imgRes = await sendWhatsAppImage(recipient, primaryAttachment.mediaBase64, primaryAttachment.filename, captionText, targetAccountId);
         responses.push(imgRes);
       }
 
       for (let i = 1; i < resolvedAttachments.length; i++) {
         const att = resolvedAttachments[i];
         const attRes = att.mediaType === "document"
-          ? await sendWhatsAppFile(recipient, att.mediaBase64, att.filename, att.caption)
-          : await sendWhatsAppImage(recipient, att.mediaBase64, att.filename, att.caption);
+          ? await sendWhatsAppFile(recipient, att.mediaBase64, att.filename, att.caption, targetAccountId)
+          : await sendWhatsAppImage(recipient, att.mediaBase64, att.filename, att.caption, targetAccountId);
         responses.push(attRes);
       }
     } else if (signedMessage) {
-      const textRes = await sendWhatsAppText(recipient, signedMessage);
+      const textRes = await sendWhatsAppText(recipient, signedMessage, targetAccountId);
       responses.push(textRes);
     }
 

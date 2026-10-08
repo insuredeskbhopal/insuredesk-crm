@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  startConnection,
   getStatus,
   getQrCode,
   sendText,
@@ -8,7 +7,14 @@ import {
   listGroups,
   matchGroupsByPhone,
   refreshGroups,
-  logout,
+  logoutSession,
+  pauseSession,
+  deleteAccountSession,
+  setPrimaryAccount,
+  createNewAccount,
+  listAllAccountsWithStatus,
+  startAllAccounts,
+  getGatewayMetrics,
 } from "./baileys-manager.js";
 import { apiKeyAuth } from "./auth-middleware.js";
 
@@ -53,6 +59,11 @@ app.get(["/health", "/healthz"], (_req, res) => {
 // ---- All other routes require API key ----
 app.use(apiKeyAuth);
 
+// ---- GET /metrics (Diagnostics & Resource Benchmarks) ----
+app.get("/metrics", (_req, res) => {
+  res.json({ success: true, ...getGatewayMetrics() });
+});
+
 // ---- POST /ocr (Remote PDF OCR Engine) ----
 app.post("/ocr", async (req, res) => {
   const startTime = Date.now();
@@ -84,9 +95,100 @@ app.post("/ocr", async (req, res) => {
   }
 });
 
-// ---- GET /status ----
-app.get("/status", (_req, res) => {
-  const status = getStatus();
+// ── Multi-Session Management Endpoints ──────────────────────────────
+
+// GET /sessions — list all registered accounts with connection status
+app.get("/sessions", (_req, res) => {
+  try {
+    const sessions = listAllAccountsWithStatus();
+    res.json({ success: true, accounts: sessions });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /sessions — register a new account and initiate QR pairing
+app.post("/sessions", async (req, res) => {
+  try {
+    const { label } = req.body || {};
+    const account = await createNewAccount(label || "Secondary Account");
+    res.json({ success: true, account });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// GET /sessions/:id/status
+app.get("/sessions/:id/status", (req, res) => {
+  try {
+    const status = getStatus(req.params.id);
+    res.json({ success: true, ...status });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /sessions/:id/qr
+app.get("/sessions/:id/qr", (req, res) => {
+  const accountId = req.params.id;
+  const qrDataUrl = getQrCode(accountId);
+  const status = getStatus(accountId);
+
+  res.json({
+    success: true,
+    accountId,
+    qrCode: qrDataUrl,
+    connected: status.connected,
+    state: status.state,
+  });
+});
+
+// POST /sessions/:id/set-default — make this account the active sender
+app.post("/sessions/:id/set-default", (req, res) => {
+  try {
+    const updated = setPrimaryAccount(req.params.id);
+    res.json({ success: true, account: updated });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// POST /sessions/:id/pause — disconnect WebSocket without deleting auth data
+app.post("/sessions/:id/pause", async (req, res) => {
+  try {
+    const result = await pauseSession(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /sessions/:id/logout — disconnect and invalidate auth credentials
+app.post("/sessions/:id/logout", async (req, res) => {
+  try {
+    const result = await logoutSession(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /sessions/:id — permanently delete account and session data
+app.delete("/sessions/:id", async (req, res) => {
+  try {
+    const result = await deleteAccountSession(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// ── Legacy & Default Compatibility Endpoints ────────────────────────
+
+// GET /status (supports optional ?accountId=...)
+app.get("/status", (req, res) => {
+  const accountId = req.query.accountId || null;
+  const status = getStatus(accountId);
   res.json({
     success: true,
     ...status,
@@ -94,16 +196,18 @@ app.get("/status", (_req, res) => {
   });
 });
 
-// ---- GET /qr ----
-app.get("/qr", (_req, res) => {
-  const qrDataUrl = getQrCode();
+// GET /qr (supports optional ?accountId=...)
+app.get("/qr", (req, res) => {
+  const accountId = req.query.accountId || null;
+  const qrDataUrl = getQrCode(accountId);
   if (qrDataUrl) {
-    res.json({ success: true, qrCode: qrDataUrl });
+    res.json({ success: true, qrCode: qrDataUrl, accountId });
   } else {
-    const status = getStatus();
+    const status = getStatus(accountId);
     res.json({
       success: true,
       qrCode: null,
+      accountId,
       message: status.connected
         ? "Already connected — no QR needed"
         : "QR not yet available. Waiting for WhatsApp...",
@@ -111,12 +215,12 @@ app.get("/qr", (_req, res) => {
   }
 });
 
-// ---- GET /groups ----
+// GET /groups
 app.get("/groups", (req, res) => {
   res.json(listGroups({ search: req.query.search, limit: req.query.limit }));
 });
 
-// ---- GET /groups/match?phone=... ----
+// GET /groups/match?phone=...
 app.get("/groups/match", (req, res) => {
   if (!req.query.phone) {
     return res.status(400).json({ success: false, error: "A customer phone number is required" });
@@ -124,26 +228,27 @@ app.get("/groups/match", (req, res) => {
   res.json(matchGroupsByPhone(req.query.phone));
 });
 
-// ---- POST /groups/refresh ----
-app.post("/groups/refresh", async (_req, res) => {
+// POST /groups/refresh
+app.post("/groups/refresh", async (req, res) => {
   try {
-    res.json(await refreshGroups());
+    const accountId = req.body?.accountId || req.query?.accountId || null;
+    res.json(await refreshGroups(accountId));
   } catch (err) {
     console.error("[Gateway] group refresh error:", err);
     res.status(503).json({ success: false, error: err.message || "Failed to refresh WhatsApp groups" });
   }
 });
 
-// ---- POST /send-text ----
+// POST /send-text
 app.post("/send-text", async (req, res) => {
   try {
-    const { to, content } = req.body;
+    const { to, content, accountId } = req.body;
     if (!to || !content) {
       return res
         .status(400)
         .json({ success: false, error: "Fields 'to' and 'content' are required" });
     }
-    const result = await sendText(to, content);
+    const result = await sendText(to, content, accountId);
     res.json(result);
   } catch (err) {
     console.error("[Gateway] send-text error:", err);
@@ -153,10 +258,10 @@ app.post("/send-text", async (req, res) => {
   }
 });
 
-// ---- POST /send-media ----
+// POST /send-media
 app.post("/send-media", async (req, res) => {
   try {
-    const { to, mediaBase64, filename, caption, type } = req.body;
+    const { to, mediaBase64, filename, caption, type, accountId } = req.body;
     if (!to || !mediaBase64) {
       return res.status(400).json({
         success: false,
@@ -168,7 +273,8 @@ app.post("/send-media", async (req, res) => {
       mediaBase64,
       filename || "file",
       caption || "",
-      type || "document"
+      type || "document",
+      accountId
     );
     res.json(result);
   } catch (err) {
@@ -180,10 +286,10 @@ app.post("/send-media", async (req, res) => {
   }
 });
 
-// ---- POST /send-birthday-wish ----
+// POST /send-birthday-wish
 app.post("/send-birthday-wish", async (req, res) => {
   try {
-    const { to, name, caption } = req.body;
+    const { to, name, caption, accountId } = req.body;
     if (!to) {
       return res.status(400).json({ success: false, error: "Field 'to' is required" });
     }
@@ -196,7 +302,8 @@ app.post("/send-birthday-wish", async (req, res) => {
       base64,
       "birthday_greeting.png",
       caption || "",
-      "image"
+      "image",
+      accountId
     );
     res.json(result);
   } catch (err) {
@@ -208,11 +315,12 @@ app.post("/send-birthday-wish", async (req, res) => {
   }
 });
 
-// ---- POST /logout ----
-app.post("/logout", async (_req, res) => {
+// POST /logout (backward-compatible legacy)
+app.post("/logout", async (req, res) => {
   try {
-    await logout();
-    res.json({ success: true, message: "Logged out and session cleared" });
+    const accountId = req.body?.accountId || null;
+    const result = await logoutSession(accountId);
+    res.json(result);
   } catch (err) {
     console.error("[Gateway] logout error:", err);
     res
@@ -224,15 +332,15 @@ app.post("/logout", async (_req, res) => {
 // ---- Start Server ----
 app.listen(PORT, HOST, async () => {
   console.log("╔══════════════════════════════════════════════════╗");
-  console.log("║   InsureDesk WhatsApp Gateway (Baileys)         ║");
+  console.log("║   InsureDesk WhatsApp Gateway (Multi-Account)    ║");
   console.log(`║   Listening on http://${HOST}:${PORT}            ║`);
   console.log("╚══════════════════════════════════════════════════╝");
   console.log("");
 
-  // Start the WhatsApp connection
+  // Start all registered accounts
   try {
-    await startConnection();
+    await startAllAccounts();
   } catch (err) {
-    console.error("[Gateway] Failed to start WhatsApp connection:", err);
+    console.error("[Gateway] Failed to start accounts:", err);
   }
 });
