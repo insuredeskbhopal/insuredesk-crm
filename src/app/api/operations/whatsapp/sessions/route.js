@@ -134,14 +134,23 @@ export async function POST(request) {
       if (!account || (account.organizationId && account.organizationId !== session.organizationId))
         return NextResponse.json({ error: "Account is unavailable" }, { status: 403 });
       // Import connection identity, without inventing its original owner.
-      await prisma.whatsAppAccount.create({
-        data: {
-          id: account.id,
-          label: account.label,
-          organizationId: session.organizationId,
-          access: { create: { userId: session.userId } },
-        },
-      });
+      try {
+        await prisma.whatsAppAccount.create({
+          data: {
+            id: account.id,
+            label: account.label,
+            organizationId: session.organizationId,
+            access: { create: { userId: session.userId } },
+          },
+        });
+      } catch (error) {
+        if (error.code !== "P2002") throw error;
+        const existing = await prisma.whatsAppAccount.findFirst({
+          where: { id: accountId, organizationId: session.organizationId },
+        });
+        if (!existing)
+          return NextResponse.json({ error: "Account is unavailable" }, { status: 403 });
+      }
     } else {
       const account = await requireManagedWhatsAppAccount(session, accountId);
       if (account.errorResponse) return account.errorResponse;

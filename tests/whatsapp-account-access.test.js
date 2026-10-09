@@ -223,9 +223,45 @@ describe("Independent employee WhatsApp routing", () => {
     accounts[0].organizationId = null;
     m.verifyJWT.mockResolvedValue(actor("siya", "MANAGER", null));
     users.siya.primaryWhatsAppAccountId = "claims";
+    expect((await list(request("siya"))).status).toBe(200);
     expect((await send(request("siya", { recipient: "919999999999", message: "Legacy workspace" }))).status).toBe(200);
     expect(queue[0]).toMatchObject({ organizationId: null, initiatedByUserId: "siya", accountId: "claims" });
     expect(m.client.sendWhatsAppText.mock.calls.at(-1)[2]).toBe("claims");
+  });
+  it.each(["SUPER_ADMIN", "ADMIN", "MANAGER", "AGENT"])("allows %s account listing in the legacy workspace", async (role) => {
+    m.verifyJWT.mockResolvedValue(actor("siya", role, null));
+    expect((await list(request("siya"))).status).toBe(200);
+  });
+  it("denies client sessions and prevents viewer writes", async () => {
+    m.verifyJWT.mockResolvedValue(actor("siya", "CLIENT", null));
+    expect((await list(request("siya"))).status).toBe(403);
+    m.verifyJWT.mockResolvedValue(actor("siya", "VIEWER", null));
+    expect((await list(request("siya"))).status).toBe(200);
+    expect((await select(request("siya", { action: "register", accountId: "claims" }))).status).toBe(403);
+  });
+  it("treats duplicate registration in the same workspace as already enabled without altering access or ownership", async () => {
+    m.verifyJWT.mockResolvedValue(actor("admin", "ADMIN"));
+    m.prisma.whatsAppAccount.create.mockRejectedValue({ code: "P2002" });
+    const original = globalThis.structuredClone(accounts[0]);
+    const results = await Promise.all([select(request("admin", { action: "register", accountId: "claims" })), select(request("admin", { action: "register", accountId: "claims" }))]);
+    expect(results.map((r) => r.status)).toEqual([200, 200]);
+    expect(accounts[0]).toEqual(original);
+    expect(m.prisma.whatsAppAccount.update).not.toHaveBeenCalled();
+    expect(m.prisma.whatsAppAccountAccess.upsert).not.toHaveBeenCalled();
+  });
+  it("rejects duplicate registration belonging to another workspace", async () => {
+    m.verifyJWT.mockResolvedValue(actor("admin", "ADMIN"));
+    accounts[0].organizationId = "other-org";
+    m.client.getWhatsAppSessions.mockResolvedValue([{ id: "claims", label: "Claims" }]);
+    m.prisma.whatsAppAccount.create.mockRejectedValue({ code: "P2002" });
+    expect((await select(request("admin", { action: "register", accountId: "claims" }))).status).toBe(403);
+  });
+  it("does not hide unrelated registration database failures", async () => {
+    m.verifyJWT.mockResolvedValue(actor("admin", "ADMIN"));
+    m.prisma.whatsAppAccount.create.mockRejectedValue(new Error("Database unavailable"));
+    const response = await select(request("admin", { action: "register", accountId: "claims" }));
+    expect(response.status).toBe(500);
+    expect((await response.json()).error).toBe("Database unavailable");
   });
   it("atomically claims one queued message across two simultaneous workers", async () => {
     users.siya.primaryWhatsAppAccountId = "claims";

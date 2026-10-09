@@ -5,6 +5,7 @@ export default function PrimaryWhatsAppSelector() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   async function load() {
     try {
       const result = await cachedJson("/api/operations/whatsapp/sessions", {
@@ -13,8 +14,11 @@ export default function PrimaryWhatsAppSelector() {
       });
       if (result.error) throw new Error(result.error);
       setData(result);
+      setError("");
     } catch (error) {
       setError(error.message);
+    } finally {
+      setLoading(false);
     }
   }
   useEffect(() => {
@@ -65,11 +69,11 @@ export default function PrimaryWhatsAppSelector() {
           aria-label="My Primary WhatsApp"
           className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs"
           value={data?.primaryAccountId || ""}
-          disabled={saving || !data?.canCreate}
+          disabled={saving || Boolean(error) || !data?.canCreate}
           onChange={(e) => select(e.target.value)}
         >
           <option value="" disabled>
-            {data ? "Choose a WhatsApp sender" : "Loading accounts…"}
+            {loading ? "Loading accounts…" : error ? "Accounts unavailable" : "Choose a WhatsApp sender"}
           </option>
           {data?.primaryAccountId && !selected && (
             <option value={data.primaryAccountId} disabled>
