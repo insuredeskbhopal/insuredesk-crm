@@ -67,7 +67,9 @@ export async function callGateway(method, endpoint, payload = null) {
       : await response.text().catch(() => "");
     const gatewayMessage = typeof errorBody === "object" ? errorBody.error : "";
     let fallbackMessage;
-    if (response.status === 404 && endpoint.startsWith("groups")) {
+    if (response.status === 404 && endpoint.split("/")[0] === "sessions") {
+      fallbackMessage = "This WhatsApp gateway does not support multiple accounts. Deploy and restart the latest whatsapp-gateway service, then retry linking the number.";
+    } else if (response.status === 404 && endpoint.startsWith("groups")) {
       fallbackMessage = "WhatsApp group discovery is not active on the gateway. Deploy and restart the latest gateway version.";
     } else if (response.status === 404) {
       fallbackMessage = "Endpoint not found on WhatsApp gateway. Ensure the latest gateway is running.";
@@ -83,13 +85,8 @@ export async function callGateway(method, endpoint, payload = null) {
 // ── Multi-Account Session Management API ────────────────────────────
 
 export async function getWhatsAppSessions() {
-  try {
-    const res = await callGateway("GET", "sessions");
-    return Array.isArray(res.accounts) ? res.accounts : [];
-  } catch (error) {
-    console.error("Failed to fetch WhatsApp sessions:", error.message);
-    return [];
-  }
+  const res = await callGateway("GET", "sessions");
+  return Array.isArray(res.accounts) ? res.accounts : [];
 }
 
 export async function createWhatsAppSession(label) {

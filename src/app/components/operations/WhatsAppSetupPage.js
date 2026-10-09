@@ -101,6 +101,7 @@ export default function WhatsAppSetupPage() {
   // Multi-Account Management
   const [accounts, setAccounts] = useState([]);
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
+  const [accountsError, setAccountsError] = useState(null);
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
   const [newAccountLabel, setNewAccountLabel] = useState("");
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
@@ -266,10 +267,11 @@ export default function WhatsAppSetupPage() {
 
   async function fetchAccounts() {
     setIsLoadingAccounts(true);
+    setAccountsError(null);
     try {
       const res = await fetch("/api/operations/whatsapp/sessions");
-      if (!res.ok) throw new Error("Failed to load accounts");
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load accounts");
       if (data.accounts) {
         setAccounts(data.accounts);
         if (data.metrics) setMetrics(data.metrics);
@@ -282,6 +284,7 @@ export default function WhatsAppSetupPage() {
         }
       }
     } catch (err) {
+      setAccountsError(err.message || "Failed to load accounts");
       console.warn("Could not load WhatsApp accounts:", err.message);
     } finally {
       setIsLoadingAccounts(false);
@@ -1047,9 +1050,14 @@ export default function WhatsAppSetupPage() {
 
             {/* Account Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {accountsError && (
+                <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                  {accountsError}
+                </div>
+              )}
               {accounts.length === 0 ? (
                 <div className="col-span-full py-8 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200">
-                  Loading WhatsApp accounts...
+                  {isLoadingAccounts ? "Loading WhatsApp accounts..." : accountsError ? "Accounts unavailable. Retry using the refresh button above." : "No WhatsApp accounts linked. Use Link New Number to add one."}
                 </div>
               ) : (
                 accounts.map((acc) => {

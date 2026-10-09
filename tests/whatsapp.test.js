@@ -7,6 +7,8 @@ import {
   refreshWhatsAppGroups,
   sendWhatsAppText,
   sendWhatsAppFile,
+  getWhatsAppSessions,
+  createWhatsAppSession,
 } from "../src/lib/whatsapp/whatsapp-client.js";
 import { extractVehicleNumber, isRenewalQuoteGroup, buildRenewalQuoteEntry, prepareRenewalQuotePayload } from "../src/lib/whatsapp/renewal-quote-capture.js";
 
@@ -91,6 +93,24 @@ describe("Renewal quote capture", () => {
 });
 
 describe("WhatsApp Gateway REST Client Wrapper", () => {
+  it("surfaces unsupported multi-account gateways for listing and creation", async () => {
+    for (const operation of [getWhatsAppSessions, () => createWhatsAppSession("Support")]) {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        headers: { get: () => "text/html" },
+        text: async () => "Cannot GET /sessions",
+      });
+      await expect(operation()).rejects.toThrow("Deploy and restart the latest whatsapp-gateway service");
+    }
+  });
+
+  it("returns the gateway account list", async () => {
+    const accounts = [{ id: "support", label: "Support", connected: true }];
+    fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ success: true, accounts }) });
+    await expect(getWhatsAppSessions()).resolves.toEqual(accounts);
+  });
+
   it("returns status object when server responds successfully", async () => {
     fetch.mockResolvedValueOnce({
       ok: true,

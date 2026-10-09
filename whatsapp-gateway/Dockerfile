@@ -1,4 +1,4 @@
-FROM node:20-bullseye-slim
+FROM node:22-bookworm-slim
 
 # Install system dependencies for @napi-rs/canvas, OCR, and font rendering
 RUN apt-get update && apt-get install -y --no-install-recommends \
