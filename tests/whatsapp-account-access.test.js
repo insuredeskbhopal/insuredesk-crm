@@ -112,6 +112,34 @@ beforeEach(() => {
   m.prisma.whatsAppMessageQueue.updateMany.mockResolvedValue({ count: 1 });
 });
 describe("Independent employee WhatsApp routing", () => {
+  it("refreshes authorized account state without fetching staff or gateway diagnostics", async () => {
+    m.verifyJWT.mockImplementation(async (id) => actor(id, "ADMIN"));
+    users.siya.primaryWhatsAppAccountId = "claims";
+    const full = await (await list(request("siya"))).json();
+    expect(m.client.getWhatsAppMetrics).toHaveBeenCalledTimes(1);
+    expect(m.prisma.user.findMany).toHaveBeenCalledTimes(1);
+    const sync = await (await list(request("siya", {}, "?view=sync"))).json();
+    expect(sync.accounts).toEqual(full.accounts);
+    expect(sync.primaryAccountId).toBe("claims");
+    expect(sync.canAdmin).toBe(true);
+    expect(sync).not.toHaveProperty("users");
+    expect(sync).not.toHaveProperty("metrics");
+    expect(m.client.getWhatsAppMetrics).toHaveBeenCalledTimes(1);
+    expect(m.prisma.user.findMany).toHaveBeenCalledTimes(1);
+    expect(sync.accounts.some((account) => account.id === "foreign")).toBe(false);
+  });
+
+  it("keeps sync reads isolated to the authenticated employee's accounts and hides grants", async () => {
+    users.rahul.primaryWhatsAppAccountId = "operations";
+    const sync = await (await list(request("rahul", {}, "?view=sync"))).json();
+    expect(sync.accounts.map((account) => account.id)).toEqual(["operations"]);
+    expect(sync.accounts[0].canUse).toBe(true);
+    expect(sync.accounts[0]).not.toHaveProperty("accessUserIds");
+    expect(sync.primaryAccountId).toBe("operations");
+    expect(sync.canAdmin).toBe(false);
+    expect(m.client.getWhatsAppMetrics).not.toHaveBeenCalled();
+    expect(m.prisma.user.findMany).not.toHaveBeenCalled();
+  });
   it("isolates Siya and Rahul, changes only future Siya sends, and survives new request/login objects", async () => {
     expect((await select(request("siya", { action: "set-primary", accountId: "claims" }))).status).toBe(200);
     expect((await select(request("rahul", { action: "set-primary", accountId: "operations" }))).status).toBe(

@@ -1,36 +1,35 @@
 "use client";
 import { cachedJson } from "@/app/lib/client-api";
+import { getWhatsAppRevision, notifyWhatsAppUpdate, useWhatsAppSync } from "@/app/lib/whatsapp-sync";
 import { useEffect, useState } from "react";
 export default function PrimaryWhatsAppSelector() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  async function load() {
+  async function load(silent = false) {
+    const revision = getWhatsAppRevision();
     try {
-      const result = await cachedJson("/api/operations/whatsapp/sessions", {
+      const result = await cachedJson(`/api/operations/whatsapp/sessions${silent ? "?view=sync" : ""}`, {
         ttlMs: 0,
         fetchOptions: { cache: "no-store" },
       });
+      if (revision !== getWhatsAppRevision()) return;
       if (result.error) throw new Error(result.error);
       setData(result);
       setError("");
     } catch (error) {
+      if (revision !== getWhatsAppRevision()) return;
       setError(error.message);
     } finally {
       setLoading(false);
     }
   }
+  useWhatsAppSync(({ type }) => {
+    if (type === "accounts" || type === "all") void load(true);
+  });
   useEffect(() => {
     load();
-    const timer = window.setInterval(load, 30000);
-    window.addEventListener("focus", load);
-    window.addEventListener("whatsapp-primary-changed", load);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener("focus", load);
-      window.removeEventListener("whatsapp-primary-changed", load);
-    };
   }, []);
   async function select(accountId) {
     setSaving(true);
@@ -43,8 +42,8 @@ export default function PrimaryWhatsAppSelector() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not save your sender");
-      await load();
-      window.dispatchEvent(new window.Event("whatsapp-primary-changed"));
+      notifyWhatsAppUpdate();
+      await load(true);
     } catch (error) {
       setError(error.message);
     } finally {

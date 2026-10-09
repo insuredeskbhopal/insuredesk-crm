@@ -4,6 +4,7 @@ export async function loadLeadAgentReport({ session, page = 1, limit = 25, q = "
   if (!session) {
     throw new Error("Authentication required.");
   }
+  if (session.role !== "SUPER_ADMIN") throw new Error("Super Admin access is required.");
 
   const safePage = Math.max(1, Number.parseInt(page, 10) || 1);
   const safeLimit = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 25));

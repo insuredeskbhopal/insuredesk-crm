@@ -68,7 +68,7 @@ describe("long-session performance safeguards", () => {
     expect(whatsapp).toContain("queueRequestRef.current?.abort()");
     expect(whatsapp).toContain("fetchStatus(false, true)");
     expect(cache).toContain("const MAX_CACHE_ENTRIES = 25");
-    expect(cache).toContain("export function clearClientApiCache()");
+    expect(cache).toContain("export function clearClientApiCache(url)");
   });
 
   it("lazy loads WhatsApp-only customer components", () => {

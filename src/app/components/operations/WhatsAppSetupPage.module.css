@@ -325,31 +325,105 @@
   letter-spacing: 0;
 }
 .page .accountList {
-  padding: 0 26px;
+  --account-actions-width: 348px;
+  --account-separator: linear-gradient(180deg, transparent, #64758812 20%, #64758812 80%, transparent);
+  padding: 18px 26px 0;
+}
+.page .accountListWithAccess {
+  --account-actions-width: 496px;
 }
 .page .accountRow {
-  display: flex;
+  display: grid;
+  grid-template-columns: 44px minmax(160px, 1fr) 128px var(--account-actions-width);
   align-items: center;
-  gap: 16px;
-  padding: 25px 0;
+  gap: 20px;
+  min-height: 84px;
+  padding: 18px 0;
+  transition: background-color 150ms ease;
+}
+.page .accountRow:not(.accountListHeader):hover {
+  background: #f9fbfc;
+}
+.page .accountRow[data-primary="true"] {
+  background: linear-gradient(90deg, #f0f8f580, transparent 70%);
 }
 .page .accountRow + .accountRow {
   border-top: 1px solid #edf1f4;
 }
+.page .accountRow.accountRowWithAccess {
+  grid-template-columns: 44px minmax(160px, 1fr) 94px 128px var(--account-actions-width);
+}
+.page .accountRow.accountListHeader {
+  min-height: 44px;
+  padding: 12px 0;
+  border-radius: 7px 7px 0 0;
+  background: #f6f8fa;
+  color: #63778b !important;
+  font-size: 11px;
+  font-weight: 600;
+}
+.page .accountListHeader > span {
+  color: #63778b !important;
+}
+.page .accountListHeader .accountActions > span {
+  color: #63778b !important;
+  text-align: center;
+  white-space: nowrap;
+}
+.page .accountListHeader .adminAccountActions > span:first-child {
+  padding-left: 8px;
+  text-align: left;
+}
+.page .accountColumnTitle {
+  grid-column: 1 / span 2;
+  padding-left: 64px;
+}
+.page .accountActionLabel {
+  white-space: nowrap;
+  color: inherit !important;
+}
+.page .accountAccessCount {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.page .accountAccessCount > span {
+  color: #8a9baa !important;
+  font-size: 10px;
+}
+.page .accountAccessCount strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #f3f6f9;
+  color: #526579 !important;
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
 .page .accountAvatar {
   display: grid;
   place-items: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 10px;
-  background: #edf5f5;
-  border: 1px solid #d8e9e7;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #edf5f4;
+  border: 1px solid #dfebe8;
   color: #17766f !important;
   flex-shrink: 0;
 }
 .page .accountIdentity {
-  flex: 1;
   min-width: 0;
+}
+.page .accountOwnerNote {
+  display: block;
+  margin-top: 5px;
+  color: #8a9baa !important;
+  font-size: 11px;
+  overflow-wrap: anywhere;
 }
 .page .accountName {
   display: flex;
@@ -360,11 +434,12 @@
 .page .accountName h3 {
   color: var(--ink) !important;
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
 }
 .page .accountIdentity p {
   color: #6c7f90 !important;
-  font-size: 13px;
+  font-size: 12px;
   margin: 4px 0 0;
   font-variant-numeric: tabular-nums;
 }
@@ -373,10 +448,10 @@
   align-items: center;
   gap: 4px;
   padding: 3px 7px;
-  color: #60798b !important;
-  border: 1px solid #dce5ec;
-  background: #f7fafc;
-  border-radius: 5px;
+  color: #087f70 !important;
+  border: 1px solid #d8ebe5;
+  background: #f0f8f4;
+  border-radius: 999px;
   font-size: 10px;
   font-weight: 500;
   white-space: nowrap;
@@ -387,28 +462,112 @@
   align-items: center;
   gap: 6px;
   color: #087f70 !important;
-  font-size: 12px;
+  font-size: 11px;
   white-space: nowrap;
-  padding: 5px 10px;
-  background: #eef8f4;
-  border-radius: 5px;
+  padding: 5px 9px;
+  border: 1px solid #dceee6;
+  border-radius: 999px;
+  background: #f0f8f4;
+  justify-self: start;
 }
 .page .connectedBadge i,
 .page .disconnectedBadge i {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: currentColor;
+  background: #087f70;
 }
 .page .disconnectedBadge {
-  color: #a36d30 !important;
-  background: #fff7eb;
+  border-color: #f0e7d5;
+  background: #fcf8ee;
+  color: #946328 !important;
+  text-transform: capitalize;
+}
+.page .disconnectedBadge i {
+  background: #a36d30;
 }
 .page .accountActions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 132px 86px 62px 44px;
+  grid-template-areas: "sender disconnect logout remove";
   align-items: center;
-  gap: 4px;
-  margin-left: 20px;
+  gap: 8px;
+}
+.page .adminAccountActions {
+  grid-template-columns: 140px 132px 86px 62px 44px;
+  grid-template-areas: "access sender disconnect logout remove";
+}
+.page .accountActions button {
+  min-height: 34px;
+  padding: 8px;
+  border-radius: 7px;
+  border: 0;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: none;
+}
+.page .accountActions button:hover:not(:disabled) {
+  background: #f3f6f7;
+  box-shadow: none;
+  transform: none;
+}
+.page .accountActions .accountAccessAction {
+  grid-area: access;
+  justify-content: flex-start;
+  color: #526579 !important;
+  white-space: normal;
+  line-height: 1.4;
+  gap: 6px;
+}
+.page .accountAccessAction svg {
+  flex-shrink: 0;
+}
+.page .accountActions .accountSenderAction {
+  grid-area: sender;
+  color: #087f70 !important;
+  border: 1px solid #c9e2dc;
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 600;
+}
+.page .accountActions .accountSenderAction:hover:not(:disabled) {
+  border-color: #a8d0c6;
+  background: #edf7f2;
+}
+.page .accountPrimaryState {
+  grid-area: sender;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  color: #087f70 !important;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.page .accountActions .textButton {
+  grid-area: disconnect;
+}
+.page .accountActions .dangerButton {
+  grid-area: logout;
+}
+.page .accountActions .dangerButton:hover:not(:disabled) {
+  background: #fff1f1;
+}
+.page .accountActions .iconButton {
+  grid-area: remove;
+  justify-self: center;
+  width: 30px;
+  padding: 6px;
+}
+.page .accountActions .iconButton:hover:not(:disabled) {
+  background: #fff1f1;
+  color: #b73c3c !important;
+}
+.page .accountActions .iconButton svg {
+  color: inherit !important;
 }
 .page .accountFooter {
   display: flex;
@@ -593,69 +752,120 @@
   font-size: 13px;
   margin: 0;
 }
+.page .templatesPanel {
+  box-shadow: none;
+}
+.page .templatesHeader {
+  padding-block: 24px;
+}
+.page .templateHeaderNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted) !important;
+  font-size: 12px;
+  white-space: nowrap;
+}
 .page .templateLayout {
   display: grid;
-  grid-template-columns: 205px minmax(0, 1fr);
+  grid-template-columns: 190px minmax(0, 1fr);
 }
 .page .templateSidebar {
-  padding: 25px 14px;
-  background: #fafcfd;
+  padding: 28px 0;
+  background: #fbfcfc;
   border-right: 1px solid var(--line);
   border-radius: 0 0 0 10px;
 }
+.page .libraryLabel {
+  display: block;
+  margin: 0 20px 28px;
+  color: #344b60 !important;
+  font-size: 12px;
+  font-weight: 600;
+}
 .page .templateGroup + .templateGroup {
-  margin-top: 24px;
+  margin-top: 30px;
 }
 .page .templateGroup h3 {
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: #8a9baa !important;
-  margin: 0 10px 10px;
+  letter-spacing: 0.09em;
+  color: #7b8e9c !important;
+  margin: 0 20px 12px;
 }
 .page .templateButton,
 .page .selectedTemplate {
   display: flex;
   align-items: center;
-  gap: 9px;
+  justify-content: flex-start;
+  gap: 10px;
   width: 100%;
   background: transparent;
-  color: #62788a !important;
+  color: #5c7284 !important;
   border: 0;
-  border-radius: 6px;
+  border-left: 2px solid transparent;
+  border-radius: 0;
   font-size: 12px;
   font-weight: 500;
-  padding: 10px;
+  padding: 12px 18px;
   text-align: left;
-  margin: 3px 0;
+  margin: 0;
+  line-height: 1.5;
+  box-shadow: none;
+  transform: none;
 }
-.page .selectedTemplate {
-  background: #e6f2f0;
-  color: #087f78 !important;
+.page .templateButton svg,
+.page .selectedTemplate svg {
+  flex-shrink: 0;
 }
-.page .templateButton:hover {
-  background: #edf2f5;
+.page .selectedTemplate,
+.page .selectedTemplate:hover:not(:disabled) {
+  border-left-color: var(--teal);
+  background: #edf6f3;
+  color: #08695f !important;
+  font-weight: 600;
+}
+.page .templateButton:hover:not(:disabled) {
+  background: #f2f5f6;
+  color: var(--ink) !important;
+}
+.page .templateSidebar button:hover:not(:disabled) {
+  box-shadow: none;
+  transform: none;
 }
 .page .templateMain {
-  padding: 26px;
+  padding: 28px;
   min-width: 0;
 }
 .page .templateHeading {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  gap: 16px;
+  padding-bottom: 22px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid #edf1f4;
+}
+.page .templateCategory {
+  display: block;
+  margin-bottom: 5px;
+  color: #718294 !important;
+  font-size: 11px;
 }
 .page .templateHeading h3 {
   margin: 0;
   color: var(--ink) !important;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.5px;
 }
-.page .templateHeading > span {
+.page .templateEditingNote {
   color: #8091a0 !important;
   font-size: 11px;
 }
 .page .templateEditorGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(250px, 0.8fr);
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 0.7fr);
   gap: 28px;
   align-items: start;
 }
@@ -663,36 +873,282 @@
   display: grid;
   gap: 24px;
   min-width: 0;
+  align-content: start;
 }
-.page .editor textarea {
-  font-family: inherit;
-  line-height: 1.7;
+.page .messageField {
+  border: 1px solid #d6e1e5;
+  border-radius: 9px;
+  overflow: hidden;
   background: #fff;
 }
-.page .editor > div:last-child {
-  flex-wrap: wrap;
-  gap: 16px;
+.page .messageField:focus-within {
+  border-color: #087f78;
+  box-shadow: 0 0 0 2px #e1f1ee;
 }
-.page .editor > div:last-child > span {
-  max-width: 280px;
+.page .editorToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 13px 18px;
+  border-bottom: 1px solid #e7edef;
+  background: #f8fafb;
+}
+.page .editorToolbar label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0;
+  color: #344b60 !important;
+}
+.page .characterCount {
+  color: #8091a0 !important;
   font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.page .editor .messageTextarea {
+  display: block;
+  width: 100%;
+  min-height: 330px;
+  padding: 18px;
+  border: 0;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.8;
+  background: #fff;
+  resize: vertical;
+  outline: none;
+  box-shadow: none;
+}
+.page .editorSectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 12px;
+}
+.page .editorSectionHeading h4,
+.page .previewHeading h4 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #344b60 !important;
+  font-size: 12px;
+  font-weight: 600;
+}
+.page .editorSectionHeading > span {
+  color: #8091a0 !important;
+  font-size: 11px;
+}
+.page .variableList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.page .variableButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border: 1px solid #e3eaed;
+  border-radius: 4px;
+  background: #fff;
+  color: #5c7284 !important;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.page .variableButton:hover:not(:disabled) {
+  border-color: #a5cec5;
+  background: #f0f8f5;
+  color: #08695f !important;
+  box-shadow: none;
+  transform: none;
+}
+.page .attachmentSection {
+  padding-top: 20px;
+  border-top: 1px solid #edf1f4;
+}
+.page .attachmentFields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px;
+  gap: 12px;
+}
+.page .attachmentFields label {
+  display: block;
+  margin-bottom: 6px;
+  color: #718294 !important;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+.page .attachmentInput {
+  width: 100%;
+  height: 40px;
+  padding: 9px 10px;
+  border-color: #d6e1e5;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.page .attachmentSection p {
+  margin: 8px 0 0;
+  color: #8091a0 !important;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.page .editorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid #edf1f4;
+  padding-top: 20px;
+}
+.page .editorFooterNote {
+  max-width: 240px;
+  color: #8091a0 !important;
+  font-size: 11px;
+  line-height: 1.6;
 }
 .page .preview {
   min-width: 0;
+  position: sticky;
+  top: 96px;
 }
-.page .preview > span {
-  font-size: 11px;
-  color: #7c8e9c !important;
+.page .previewHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
 }
-.page .preview > div {
+.page .previewLive {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #087f78 !important;
+  font-size: 10px;
+}
+.page .previewLive > span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #087f78;
+}
+.page .chatPreview {
+  border: 1px solid #dce7e3;
   border-radius: 12px;
-  border-color: #dde5e9;
-  box-shadow: none;
-  min-height: 420px;
+  overflow: hidden;
+  background: #f2f5f3;
 }
-.page .preview > p {
+.page .chatHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  background: #fff;
+  border-bottom: 1px solid #e1e9e5;
+}
+.page .chatAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e5f1ec;
+  color: #08695f !important;
+  font-size: 11px;
+  font-weight: 600;
+}
+.page .chatHeader strong {
+  display: block;
+  color: var(--ink) !important;
+  font-size: 13px;
+  font-weight: 600;
+}
+.page .chatHeader div > span {
+  display: block;
+  margin-top: 2px;
+  color: #8091a0 !important;
+  font-size: 10px;
+}
+.page .chatHeader > svg {
+  margin-left: auto;
+  color: #82a298 !important;
+}
+.page .chatBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 18px;
+  min-height: 390px;
+  max-height: 560px;
+  padding: 20px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.page .chatDate {
+  align-self: center;
+  color: #7b8e83 !important;
+  font-size: 10px;
+}
+.page .chatBubble {
+  flex-shrink: 0;
+  max-width: 100%;
+  padding: 16px;
+  border: 1px solid #d9e8de;
+  border-radius: 10px 2px 10px 10px;
+  background: #e8f3eb;
+  box-shadow: 0 2px 2px #17352b05;
+}
+.page .chatMessage {
+  color: #294439 !important;
+  font-size: 12px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.page .chatAttachment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #cfdfd3;
+  color: #396453 !important;
+  font-size: 11px;
+}
+.page .chatTimestamp {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  margin-top: 12px;
+  color: #7b8e83 !important;
+  font-size: 9px;
+}
+.page .chatTicks {
+  color: #518faf !important;
+  font-size: 11px;
+}
+.page .previewNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 14px 0 0;
+  color: #8091a0 !important;
   font-size: 11px;
   line-height: 1.6;
+}
+.page .previewNote svg {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 .overlay {
   position: fixed;
@@ -734,6 +1190,60 @@
   border-radius: 7px;
   font-size: 13px;
 }
+@media (max-width: 1400px) {
+  .page .accountRow.accountListHeader {
+    display: none;
+  }
+  .page .accountRow.accountRowWithAccess {
+    grid-template-columns: 44px minmax(0, 1fr) 94px 128px;
+    gap: 12px 16px;
+  }
+  .page .accountRowWithAccess .accountActions {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+}
+@media (min-width: 1401px) {
+  .page .accountRow > .accountAccessCount,
+  .page .accountRow > .connectedBadge,
+  .page .accountRow > .disconnectedBadge,
+  .page .accountRow > .accountActions,
+  .page .accountListHeader > span:not(.accountColumnTitle) {
+    position: relative;
+  }
+  .page .accountRow > .accountAccessCount::before,
+  .page .accountRow > .connectedBadge::before,
+  .page .accountRow > .disconnectedBadge::before,
+  .page .accountRow > .accountActions::before,
+  .page .accountListHeader > span:not(.accountColumnTitle)::before {
+    content: "";
+    position: absolute;
+    inset-block: -14px;
+    left: -10px;
+    width: 1px;
+    background: var(--account-separator);
+    pointer-events: none;
+  }
+  .page .accountActions {
+    background-image: var(--account-separator), var(--account-separator), var(--account-separator);
+    background-size: 1px 100%;
+    background-position: 136px 0, 230px 0, 300px 0;
+    background-repeat: no-repeat;
+  }
+  .page .adminAccountActions {
+    background-image:
+      var(--account-separator), var(--account-separator), var(--account-separator), var(--account-separator);
+    background-position: 144px 0, 284px 0, 378px 0, 448px 0;
+  }
+  .page .accountAccessCount > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
 @media (max-width: 1200px) {
   .page .summaryItem {
     padding: 20px 16px;
@@ -742,17 +1252,54 @@
   .page .summaryIcon {
     display: none;
   }
-  .page .accountActions {
-    margin-left: 0;
+  .page .accountRow {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 12px 16px;
   }
+  .page .accountActions {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+  .page .templateEditingNote {
+    display: none;
+  }
+}
+@media (max-width: 1100px) {
   .page .templateEditorGrid {
     grid-template-columns: 1fr;
   }
   .page .preview {
-    max-width: 360px;
+    position: static;
+    max-width: 480px;
+    width: 100%;
   }
-  .page .templateHeading > span {
-    display: none;
+}
+@media (max-width: 1000px) {
+  .page .accountRowWithAccess .accountActions {
+    grid-column: 1 / -1;
+  }
+  .page .accountActions {
+    grid-column: 1 / -1;
+    width: 100%;
+    padding-top: 8px;
+    grid-template-columns: minmax(132px, 1fr) minmax(0, 1fr) 44px;
+    grid-template-areas: "sender sender sender" "disconnect logout remove";
+    row-gap: 8px;
+  }
+  .page .adminAccountActions {
+    grid-template-areas: "access sender sender" "disconnect logout remove";
+  }
+  .page .accountActions .accountSenderAction {
+    justify-self: start;
+    padding-inline: 12px;
+  }
+  .page .accountPrimaryState {
+    justify-self: start;
+    padding-inline: 12px;
+  }
+  .page .accountActions .textButton,
+  .page .accountActions .dangerButton {
+    justify-content: flex-start;
   }
 }
 @media (max-width: 900px) {
@@ -769,14 +1316,6 @@
   }
   .page .sideStack {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .page .accountRow {
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .page .accountActions {
-    width: 100%;
-    padding-left: 62px;
   }
   .page .summaryItem {
     padding: 18px 13px;
@@ -830,19 +1369,11 @@
   .page .accountList {
     padding: 0 20px;
   }
-  .page .accountRow > .connectedBadge,
-  .page .accountRow > .disconnectedBadge {
-    margin-left: 62px;
-  }
   .page .accountName {
     gap: 5px;
   }
   .page .accountName h3 {
     font-size: 14px;
-  }
-  .page .accountActions {
-    flex-wrap: wrap;
-    gap: 4px;
   }
   .page .accountFooter {
     padding: 14px 20px;
@@ -861,7 +1392,10 @@
   .page .templateSidebar {
     border-right: 0;
     border-bottom: 1px solid var(--line);
-    padding: 20px;
+    padding: 20px 16px;
+  }
+  .page .libraryLabel {
+    margin: 0 0 18px;
   }
   .page .templateGroup {
     display: flex;
@@ -870,7 +1404,7 @@
   }
   .page .templateGroup h3 {
     width: 100%;
-    margin-left: 0;
+    margin: 0 0 5px;
   }
   .page .templateGroup + .templateGroup {
     margin-top: 12px;
@@ -878,10 +1412,28 @@
   .page .templateButton,
   .page .selectedTemplate {
     width: auto;
-    padding: 8px;
+    border-left: 0;
+    border-bottom: 2px solid transparent;
+    padding: 8px 0;
+    margin-right: 16px;
+    background: transparent;
+  }
+  .page .selectedTemplate,
+  .page .selectedTemplate:hover:not(:disabled) {
+    border-bottom-color: var(--teal);
+    background: transparent;
   }
   .page .templateMain {
     padding: 20px;
+  }
+  .page .templateHeaderNote {
+    display: none;
+  }
+  .page .attachmentFields {
+    grid-template-columns: 1fr;
+  }
+  .page .editorFooter {
+    flex-wrap: wrap;
   }
   .dialog {
     padding: 25px;
@@ -953,9 +1505,9 @@
   border-bottom-color: var(--teal);
 }
 @media (max-width: 600px) {
-  .page .accountRow {
-    display: grid;
-    grid-template-columns: 50px minmax(0, 1fr);
+  .page .accountRow,
+  .page .accountRow.accountRowWithAccess {
+    grid-template-columns: 44px minmax(0, 1fr);
     gap: 10px 14px;
   }
   .page .accountAvatar {
@@ -970,23 +1522,27 @@
     margin-left: 0;
     justify-self: start;
   }
+  .page .accountAccessCount {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
   .page .accountActions {
-    grid-column: 1 / -1;
     padding: 8px 0 0;
-    width: 100%;
   }
 }
 
-.page .editor p {
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.6;
+@media (max-width: 360px) {
+  .page .accountActions,
+  .page .accountRowWithAccess .accountActions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+  }
+  .page .adminAccountActions {
+    grid-template-areas: "access access access" "sender sender sender" "disconnect logout remove";
+  }
 }
-.page .editor button[title] {
-  font-size: 11px;
-  border-radius: 5px;
-  padding: 6px 8px;
-}
+
 .page :global(.text-emerald-200) {
   color: #abe0d7 !important;
 }
@@ -1053,8 +1609,14 @@
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23087f78' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='6' y='2' width='12' height='20' rx='3'/%3E%3Cpath d='M11 18h2'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23087f78' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"),
     linear-gradient(to left, #edf6f4 42px, #fff 42px);
-  background-position: left 14px center, right 13px center, center;
-  background-size: 18px 18px, 16px 16px, 100% 100%;
+  background-position:
+    left 14px center,
+    right 13px center,
+    center;
+  background-size:
+    18px 18px,
+    16px 16px,
+    100% 100%;
   background-repeat: no-repeat;
   color: #243e4b !important;
   font-size: 13px;
@@ -1063,7 +1625,9 @@
   text-overflow: ellipsis;
   box-shadow: 0 2px 6px #172c4006;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 .page .primarySenderControl select:hover:not(:disabled) {
   border-color: #81b8ae;

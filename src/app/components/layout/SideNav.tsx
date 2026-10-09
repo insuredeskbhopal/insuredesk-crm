@@ -120,6 +120,7 @@ export default function SideNav({
 
         <nav>
           <Link
+            prefetch={false}
             className={activePage === "dashboard" ? "active" : ""}
             href={ROUTE_MAP["dashboard"]}
             title="Dashboard"
@@ -154,6 +155,7 @@ export default function SideNav({
                       <div className="side-nav-submenu">
                         {item.children.map((child) => (
                           <Link
+                            prefetch={false}
                             className={activePage === child.id ? "active" : ""}
                             key={child.id}
                             href={ROUTE_MAP[child.id] || "/dashboard"}
@@ -172,6 +174,7 @@ export default function SideNav({
               return (
                 <div className="side-nav-group" key={item.id}>
                   <Link
+                    prefetch={false}
                     className={activePage === item.id ? "active" : ""}
                     href={ROUTE_MAP[item.id] || "/dashboard"}
                     title={item.label}

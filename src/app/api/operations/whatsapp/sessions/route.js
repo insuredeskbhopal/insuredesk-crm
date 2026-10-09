@@ -23,12 +23,13 @@ export async function GET(request) {
     const session = await requireWhatsAppStaff(request);
     if (session.errorResponse) return session.errorResponse;
     const admin = isWhatsAppAdmin(session);
+    const sync = new URL(request.url).searchParams.get("view") === "sync";
     const [gateway, registered, user, metrics, users, org] = await Promise.all([
       getWhatsAppSessions(),
       prisma.whatsAppAccount.findMany({ include: { access: true, owner: { select: { name: true } } } }),
       prisma.user.findUnique({ where: { id: session.userId }, select: { primaryWhatsAppAccountId: true } }),
-      getWhatsAppMetrics(),
-      admin
+      sync ? null : getWhatsAppMetrics(),
+      admin && !sync
         ? prisma.user.findMany({
             where: { organizationId: session.organizationId, deletedAt: null },
             select: { id: true, name: true, email: true },
@@ -77,8 +78,7 @@ export async function GET(request) {
       primaryAccountId: user?.primaryWhatsAppAccountId || null,
       canCreate: session.role !== "VIEWER",
       canAdmin: admin,
-      users,
-      metrics: metrics.success ? metrics : null,
+      ...(!sync ? { users, metrics: metrics?.success ? metrics : null } : {}),
     });
   } catch (error) {
     return NextResponse.json(

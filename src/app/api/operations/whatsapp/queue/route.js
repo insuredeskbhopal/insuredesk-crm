@@ -97,16 +97,30 @@ export async function POST(request) {
       return NextResponse.json({ error: "Resend this attachment from its original CRM form; the audit record does not contain its file." }, { status: 409 });
     }
 
-    // Reset status to PENDING
-    const updated = await prisma.whatsAppMessageQueue.update({
-      where: { id: messageId },
-      data: {
-        status: "PENDING",
-        attempts: 0,
-        errorMessage: null,
-        scheduledAt: new Date(),
-      },
-    });
+    // Recheck scope and eligibility atomically so retries cannot reset an active send.
+    let updated;
+    try {
+      updated = await prisma.whatsAppMessageQueue.update({
+        where: {
+          id: messageId,
+          organizationId: orgId,
+          ...(!isWhatsAppAdmin(session) ? { initiatedByUserId: session.userId } : {}),
+          status: { in: ["FAILED", "RETRYING"] },
+        },
+        data: {
+          status: "PENDING",
+          attempts: 0,
+          errorMessage: null,
+          scheduledAt: new Date(),
+        },
+      });
+    } catch (error) {
+      if (error.code !== "P2025") throw error;
+      return NextResponse.json(
+        { error: "Message is no longer eligible for retry. Refresh and try again." },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({ success: true, message: updated });
   } catch (error) {

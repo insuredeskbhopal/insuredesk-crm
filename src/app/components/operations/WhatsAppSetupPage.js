@@ -30,6 +30,7 @@ import PrimaryWhatsAppSelector from "@/app/components/whatsapp/PrimaryWhatsAppSe
 import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
 import ModalPortal from "@/app/components/shared/ModalPortal";
 import { cachedJson } from "@/app/lib/client-api";
+import { getWhatsAppRevision, notifyWhatsAppUpdate, useWhatsAppSync } from "@/app/lib/whatsapp-sync";
 import styles from "./WhatsAppSetupPage.module.css";
 
 const TEMPLATE_VARIABLES = [
@@ -142,20 +143,22 @@ export default function WhatsAppSetupPage() {
   // Global Alerts
   const [toast, setToast] = useState(null);
 
-  // Polling ref for QR code
-  const pollIntervalRef = useRef(null);
   const statusRequestRef = useRef(null);
   const queueRequestRef = useRef(null);
+  const templateRequestRef = useRef(null);
+  const templateEditsRef = useRef(new Map());
+  const pendingGrantsRef = useRef(new Map());
   const toastTimerRef = useRef(null);
 
-  useEffect(() => {
-    const refresh = () => {
-      fetchAccounts();
-      fetchStatus();
-    };
-    window.addEventListener("whatsapp-primary-changed", refresh);
-    return () => window.removeEventListener("whatsapp-primary-changed", refresh);
-  }, []);
+  useWhatsAppSync(({ type }) => {
+    if (type === "accounts" || type === "all") {
+      void fetchAccounts(true);
+    }
+    if (type === "templates" || (type === "all" && activeMainSection === "templates"))
+      void fetchTemplates(true);
+    if (type === "queue" || type === "all")
+      void fetchQueue({ silent: true });
+  }, 5000);
 
   const compilePreviewText = (text) => {
     if (!text) return "Type a template message in the editor to see a live preview here...";
@@ -183,11 +186,11 @@ export default function WhatsAppSetupPage() {
     fetchTemplates();
 
     return () => {
-      stopPollingStatus();
       statusRequestRef.current?.abort();
       statusRequestRef.current = null;
       queueRequestRef.current?.abort();
       queueRequestRef.current = null;
+      templateRequestRef.current?.abort();
       if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
     };
   }, []);
@@ -212,8 +215,8 @@ export default function WhatsAppSetupPage() {
         if (controller.signal.aborted) return;
         if (data.connected) {
           setQrModalAccount(null);
-          fetchAccounts();
-          fetchStatus();
+          notifyWhatsAppUpdate();
+          fetchAccounts(true);
           showToast("success", "Your WhatsApp account is connected.");
         } else {
           setQrModalAccount((current) =>
@@ -263,30 +266,6 @@ export default function WhatsAppSetupPage() {
     };
   }, [showAddAccountModal, !!accountConfirmation, !!qrModalAccount, !!accessAccount]);
 
-  // Poll status when not connected
-  useEffect(() => {
-    if (!connected && status !== "UNREACHABLE") {
-      startPollingStatus();
-    } else {
-      stopPollingStatus();
-    }
-    return () => stopPollingStatus();
-  }, [connected, status]);
-
-  const startPollingStatus = () => {
-    if (pollIntervalRef.current) return;
-    pollIntervalRef.current = window.setInterval(() => {
-      if (!document.hidden) fetchStatus(true);
-    }, 5000);
-  };
-
-  const stopPollingStatus = () => {
-    if (pollIntervalRef.current) {
-      window.clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
-  };
-
   const showToast = (type, message) => {
     setToast({ type, message });
     if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
@@ -297,6 +276,7 @@ export default function WhatsAppSetupPage() {
   };
 
   async function fetchStatus(isSilent = false, force = false) {
+    const revision = getWhatsAppRevision();
     if (statusRequestRef.current) {
       if (!force) return;
       statusRequestRef.current.abort();
@@ -308,6 +288,7 @@ export default function WhatsAppSetupPage() {
     try {
       const res = await fetch("/api/operations/whatsapp/status", { signal: controller.signal });
       const data = await res.json();
+      if (controller.signal.aborted || revision !== getWhatsAppRevision()) return;
       if (!res.ok) throw new Error(data.error || "Failed to fetch connection status");
       setConnected(data.connected);
       setStatus(data.status);
@@ -315,46 +296,76 @@ export default function WhatsAppSetupPage() {
       setLastChecked(data.lastChecked ? new Date(data.lastChecked) : new Date());
       setStatusError(data.error);
     } catch (err) {
-      if (err?.name === "AbortError") return;
+      if (err?.name === "AbortError" || revision !== getWhatsAppRevision()) return;
       setStatus("UNREACHABLE");
       setConnected(false);
       setQrCode(null);
       setStatusError(err.message);
       setLastChecked(new Date());
     } finally {
-      if (statusRequestRef.current === controller) statusRequestRef.current = null;
-      if (!isSilent && !controller.signal.aborted) setIsCheckingStatus(false);
+      if (statusRequestRef.current === controller) {
+        statusRequestRef.current = null;
+        setIsCheckingStatus(false);
+      }
     }
   }
 
-  async function fetchAccounts() {
-    setIsLoadingAccounts(true);
-    setAccountsError(null);
+  async function fetchAccounts(silent = false, lightweight = silent) {
+    const revision = getWhatsAppRevision();
+    if (!silent) setIsLoadingAccounts(true);
     try {
-      const data = await cachedJson("/api/operations/whatsapp/sessions", {
+      const data = await cachedJson(`/api/operations/whatsapp/sessions${lightweight ? "?view=sync" : ""}`, {
         ttlMs: 0,
         fetchOptions: { cache: "no-store" },
       });
+      if (revision !== getWhatsAppRevision()) return;
       if (data.error) throw new Error(data.error);
+      setAccountsError(null);
       if (data.accounts) {
         setAccounts(data.accounts);
         setCanCreateAccount(data.canCreate === true);
         setCanAdmin(data.canAdmin === true);
-        setStaffUsers(data.users || []);
+        if (Array.isArray(data.users)) setStaffUsers(data.users);
         if (data.metrics) setMetrics(data.metrics);
-        if (qrModalAccount) {
-          const current = data.accounts.find((a) => a.id === qrModalAccount.id);
-          if (current?.connected) {
-            showToast("success", `Account '${current.label}' connected successfully!`);
-            setQrModalAccount(null);
+        const selected = data.accounts.find((account) => account.id === data.primaryAccountId);
+        const senderReady = Boolean(data.canCreate && selected?.canUse && selected.connected);
+        setConnected(senderReady);
+        setStatus(data.canCreate && selected?.canUse ? selected.state || "UNREACHABLE" : "UNREACHABLE");
+        setStatusError(
+          !data.primaryAccountId ? "Select My Primary WhatsApp before sending a message"
+            : !selected?.canUse ? "Selected sender is no longer authorized"
+              : !data.canCreate ? "Staff sending access required"
+                : !selected.connected ? "Your selected sender is disconnected" : null,
+        );
+        setLastChecked(new Date());
+        setAccessAccount((current) => {
+          if (!current) return null;
+          const latest = data.accounts.find((account) => account.id === current.id);
+          if (!data.canAdmin || !latest) return null;
+          const accessUserIds = new Set(latest.accessUserIds || []);
+          for (const [key, allowed] of pendingGrantsRef.current) {
+            const [accountId, userId] = JSON.parse(key);
+            if (accountId === current.id) {
+              if (allowed) accessUserIds.add(userId);
+              else accessUserIds.delete(userId);
+            }
           }
-        }
+          return { ...latest, accessUserIds: [...accessUserIds] };
+        });
+        setQrModalAccount((current) =>
+          current && data.accounts.some((account) => account.id === current.id && account.connected)
+            ? null : current,
+        );
       }
     } catch (err) {
+      if (revision !== getWhatsAppRevision()) return;
       setAccountsError(err.message || "Failed to load accounts");
+      setConnected(false);
+      setStatus("UNREACHABLE");
+      setStatusError(err.message || "Failed to load accounts");
       console.warn("Could not load WhatsApp accounts:", err.message);
     } finally {
-      setIsLoadingAccounts(false);
+      if (!silent) setIsLoadingAccounts(false);
     }
   }
 
@@ -363,6 +374,7 @@ export default function WhatsAppSetupPage() {
     const wasAllowed = accessAccount?.id === accountId && accessAccount.accessUserIds.includes(extra.userId);
     if (action === "grant") {
       if (savingAccess.includes(grantKey)) return;
+      pendingGrantsRef.current.set(JSON.stringify([accountId, extra.userId]), extra.allowed);
       setSavingAccess((current) => [...current, grantKey]);
       setAccessAccount((current) =>
         current?.id === accountId
@@ -383,10 +395,10 @@ export default function WhatsAppSetupPage() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not update access");
-      await fetchAccounts();
+      notifyWhatsAppUpdate();
+      await fetchAccounts(true);
       if (action === "assign-owner")
         setAccessAccount((current) => current && { ...current, ownerUserId: extra.ownerUserId });
-      window.dispatchEvent(new window.Event("whatsapp-primary-changed"));
       showToast("success", "WhatsApp settings saved.");
     } catch (error) {
       if (action === "grant")
@@ -402,6 +414,7 @@ export default function WhatsAppSetupPage() {
         );
       showToast("error", error.message);
     } finally {
+      pendingGrantsRef.current.delete(JSON.stringify([accountId, extra.userId]));
       if (action === "grant")
         setSavingAccess((current) => current.filter((key) => key !== grantKey));
     }
@@ -421,12 +434,13 @@ export default function WhatsAppSetupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create account");
+      notifyWhatsAppUpdate();
       showToast("success", `Account created. Loading QR code...`);
       setShowAddAccountModal(false);
       const createdId = data.account?.id || `account_${Date.now()}`;
       const createdLabel = data.account?.label || newAccountLabel;
       setNewAccountLabel("");
-      await fetchAccounts();
+      await fetchAccounts(true);
       handleOpenQrModal(createdId, createdLabel);
     } catch (err) {
       showToast("error", err.message || "Failed to create account");
@@ -445,6 +459,7 @@ export default function WhatsAppSetupPage() {
       });
       const result = await connect.json();
       if (!connect.ok) throw new Error(result.error || "Could not start pairing");
+      notifyWhatsAppUpdate();
       const res = await fetch(`/api/operations/whatsapp/status?accountId=${encodeURIComponent(accountId)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Cannot access this account");
@@ -470,9 +485,9 @@ export default function WhatsAppSetupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to set active sender");
+      notifyWhatsAppUpdate();
       showToast("success", "My Primary WhatsApp saved. Your future messages will use this account.");
-      await fetchAccounts();
-      fetchStatus(true, true);
+      await fetchAccounts(true);
     } catch (err) {
       showToast("error", err.message || "Failed to update active sender");
     } finally {
@@ -490,9 +505,9 @@ export default function WhatsAppSetupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to disconnect account");
+      notifyWhatsAppUpdate();
       showToast("success", "Session disconnected. Login credentials preserved on disk.");
-      await fetchAccounts();
-      fetchStatus(true, true);
+      await fetchAccounts(true);
     } catch (err) {
       showToast("error", err.message || "Failed to disconnect account");
     } finally {
@@ -510,9 +525,9 @@ export default function WhatsAppSetupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to logout account");
+      notifyWhatsAppUpdate();
       showToast("success", "Account logged out from WhatsApp.");
-      await fetchAccounts();
-      fetchStatus(true, true);
+      await fetchAccounts(true);
     } catch (err) {
       showToast("error", err.message || "Failed to logout account");
     } finally {
@@ -530,9 +545,9 @@ export default function WhatsAppSetupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete account");
+      notifyWhatsAppUpdate();
       showToast("success", "Account permanently removed.");
-      await fetchAccounts();
-      fetchStatus(true, true);
+      await fetchAccounts(true);
     } catch (err) {
       showToast("error", err.message || "Failed to delete account");
     } finally {
@@ -540,35 +555,52 @@ export default function WhatsAppSetupPage() {
     }
   }
 
-  async function fetchTemplates() {
+  async function fetchTemplates(silent = false, force = false) {
+    if (templateRequestRef.current) {
+      if (!force) return;
+      templateRequestRef.current.abort();
+    }
+    const controller = new window.AbortController();
+    templateRequestRef.current = controller;
     try {
-      const res = await fetch("/api/operations/whatsapp/templates");
+      const res = await fetch("/api/operations/whatsapp/templates", {
+        signal: controller.signal, cache: "no-store",
+      });
       if (!res.ok) throw new Error("Failed to load templates");
       const data = await res.json();
-      setTemplates(data.templates || []);
+      if (controller.signal.aborted) return;
+      setTemplates((current) => (data.templates || []).map((template) =>
+        templateEditsRef.current.has(template.name)
+          ? current.find((item) => item.name === template.name) || template : template,
+      ));
     } catch (err) {
-      showToast("error", err.message || "Failed to load templates");
+      if (err?.name !== "AbortError" && !silent)
+        showToast("error", err.message || "Failed to load templates");
+    } finally {
+      if (templateRequestRef.current === controller) templateRequestRef.current = null;
     }
   }
 
-  async function fetchQueue({ offset = queueOffset, statusFilter = queueStatusFilter } = {}) {
+  async function fetchQueue({ offset = queueOffset, statusFilter = queueStatusFilter, silent = false } = {}) {
+    if (silent && queueRequestRef.current) return;
     queueRequestRef.current?.abort();
     const controller = new window.AbortController();
     queueRequestRef.current = controller;
-    setIsLoadingQueue(true);
+    if (!silent) setIsLoadingQueue(true);
     try {
       const statusParam = statusFilter ? `&status=${statusFilter}` : "";
       const res = await fetch(
         `/api/operations/whatsapp/queue?limit=${queueLimit}&offset=${offset}${statusParam}`,
-        { signal: controller.signal },
+        { signal: controller.signal, cache: "no-store" },
       );
       if (!res.ok) throw new Error("Failed to load queue");
       const data = await res.json();
+      if (controller.signal.aborted) return;
       setQueueMessages(data.messages || []);
       setTotalCount(data.totalCount || 0);
     } catch (err) {
       if (err?.name === "AbortError") return;
-      showToast("error", err.message || "Failed to load message queue");
+      if (!silent) showToast("error", err.message || "Failed to load message queue");
     } finally {
       if (queueRequestRef.current === controller) {
         queueRequestRef.current = null;
@@ -577,25 +609,35 @@ export default function WhatsAppSetupPage() {
     }
   }
 
+  const markTemplateEdited = () => {
+    const edits = templateEditsRef.current;
+    edits.set(activeTemplateTab, (edits.get(activeTemplateTab) || 0) + 1);
+  };
+
   const handleTemplateBodyChange = (e) => {
+    markTemplateEdited();
     setTemplates((prev) =>
       prev.map((t) => (t.name === activeTemplateTab ? { ...t, body: e.target.value } : t)),
     );
   };
 
   const handleTemplateMediaChange = (e) => {
+    markTemplateEdited();
     setTemplates((prev) =>
       prev.map((t) => (t.name === activeTemplateTab ? { ...t, mediaUrl: e.target.value } : t)),
     );
   };
 
   const handleTemplateMediaTypeChange = (e) => {
+    markTemplateEdited();
     setTemplates((prev) =>
       prev.map((t) => (t.name === activeTemplateTab ? { ...t, mediaType: e.target.value } : t)),
     );
   };
 
   const handleSaveTemplate = async () => {
+    const savedName = activeTemplate.name;
+    const savedVersion = templateEditsRef.current.get(savedName);
     setIsSavingTemplate(true);
     setTemplateSuccess(false);
     try {
@@ -611,10 +653,13 @@ export default function WhatsAppSetupPage() {
       });
 
       if (!res.ok) throw new Error("Failed to save template");
+      if (templateEditsRef.current.get(savedName) === savedVersion)
+        templateEditsRef.current.delete(savedName);
 
       setTemplateSuccess(true);
       showToast("success", "Template updated successfully!");
-      fetchTemplates();
+      void fetchTemplates(false, true);
+      notifyWhatsAppUpdate("templates");
     } catch (err) {
       showToast("error", err.message || "Failed to save template");
     } finally {
@@ -648,6 +693,7 @@ export default function WhatsAppSetupPage() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send message");
+      notifyWhatsAppUpdate("queue");
 
       setTestResult({ success: true, messageId: data.messageId, accountId: data.accountId });
       showToast("success", `Test message dispatched via ${data.accountId || "My Primary WhatsApp"}!`);
@@ -667,8 +713,8 @@ export default function WhatsAppSetupPage() {
         body: JSON.stringify({ messageId: msgId }),
       });
       if (!res.ok) throw new Error("Failed to queue message for retry");
+      notifyWhatsAppUpdate("queue");
       showToast("success", "Message reset to PENDING. Will send shortly.");
-      fetchQueue();
     } catch (err) {
       showToast("error", err.message || "Failed to retry message");
     }
@@ -684,8 +730,8 @@ export default function WhatsAppSetupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error("Failed to queue messages for retry");
+      notifyWhatsAppUpdate("queue");
       showToast("success", `Queued ${data.count || 0} messages for retry.`);
-      fetchQueue();
     } catch (err) {
       showToast("error", err.message || "Failed to retry messages");
     } finally {
@@ -703,6 +749,7 @@ export default function WhatsAppSetupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to run WhatsApp automation");
+      notifyWhatsAppUpdate("queue");
 
       const scans = data.scans || {};
       const sent = data.batch?.processedCount || 0;
@@ -710,7 +757,6 @@ export default function WhatsAppSetupPage() {
         "success",
         `Automation completed. Queued ${scans.birthdaysQueued || 0} birthdays, ${scans.renewalsQueued || 0} renewals, ${scans.internalDigestQueued || 0} internal digests. Sent ${sent}.`,
       );
-      fetchQueue();
     } catch (err) {
       showToast("error", err.message || "Failed to run WhatsApp automation");
     } finally {
@@ -721,6 +767,7 @@ export default function WhatsAppSetupPage() {
   const handleInsertTag = (tag) => {
     const el = document.getElementById("template-textarea");
     if (!el) return;
+    markTemplateEdited();
     const start = el.selectionStart;
     const end = el.selectionEnd;
     const text = el.value;
@@ -884,16 +931,20 @@ export default function WhatsAppSetupPage() {
 
       {/* MESSAGE TEMPLATES */}
       {activeMainSection === "templates" && (
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
+        <section className={`${styles.panel} ${styles.templatesPanel}`}>
+          <div className={`${styles.panelHeader} ${styles.templatesHeader}`}>
             <div>
-              <span className={styles.eyebrow}>PERSONALIZE YOUR MESSAGES</span>
+              <span className={styles.eyebrow}>YOUR MESSAGE LIBRARY</span>
               <h2>Message templates</h2>
-              <p>Edit reusable messages and preview exactly what your customer will see.</p>
+              <p>A consistent voice for every reminder, greeting and update.</p>
             </div>
+            <span className={styles.templateHeaderNote}>
+              <MessageSquare size={16} aria-hidden="true" /> Reusable messages
+            </span>
           </div>
           <div className={styles.templateLayout}>
             <aside className={styles.templateSidebar} aria-label="Choose a message template">
+              <span className={styles.libraryLabel}>Choose a template</span>
               {TEMPLATE_GROUPS.map((group) => (
                 <div key={group.id} className={styles.templateGroup}>
                   <h3>
@@ -928,84 +979,97 @@ export default function WhatsAppSetupPage() {
             </aside>
             <div className={styles.templateMain}>
               <div className={styles.templateHeading}>
-                <h3>{currentModule.templates.find((t) => t.id === activeTemplateTab)?.label}</h3>
-                <span>Live preview</span>
+                <div>
+                  <span className={styles.templateCategory}>
+                    {currentModule.label
+                      .replace(" Module", "")
+                      .replace("Customer Profiling & Greetings", "Customer greetings")
+                      .replace("Policy & Claims Operations", "Policy & claims")}
+                  </span>
+                  <h3>{currentModule.templates.find((t) => t.id === activeTemplateTab)?.label}</h3>
+                </div>
+                <span className={styles.templateEditingNote}>Edit below. Preview as you type.</span>
               </div>
               <div className={styles.templateEditorGrid}>
-                {/* Left Column: Form Editor (2 Cols) */}
+                {/* Message editor */}
                 <div className={styles.editor}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/60 p-5 rounded-xl border border-slate-200">
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
-                        Attachment Media URL (Optional)
+                  <div className={styles.messageField}>
+                    <div className={styles.editorToolbar}>
+                      <label htmlFor="template-textarea">
+                        <MessageSquare size={15} aria-hidden="true" /> Message
                       </label>
-                      <input
-                        type="text"
-                        value={activeTemplate.mediaUrl || ""}
-                        onChange={handleTemplateMediaChange}
-                        placeholder="https://example.com/image.png or base64 data"
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition"
-                      />
-                      <p className="text-sm text-slate-400 mt-1 font-medium">
-                        Public image URL, PDF document, or brochure. Empty sends standard text-only.
-                      </p>
-                    </div>
-                    <div className="md:col-span-1">
-                      <label className="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
-                        Attachment Type
-                      </label>
-                      <select
-                        value={activeTemplate.mediaType || "IMAGE"}
-                        onChange={handleTemplateMediaTypeChange}
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition font-medium"
-                      >
-                        <option value="IMAGE">IMAGE</option>
-                        <option value="PDF">PDF / DOCUMENT</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wider">
-                        Message Body / Caption Text
-                      </label>
-                      <span className="text-sm text-slate-400 font-mono">
+                      <span className={styles.characterCount}>
                         {activeTemplate.body ? `${activeTemplate.body.length} characters` : ""}
                       </span>
                     </div>
                     <textarea
                       id="template-textarea"
-                      rows="7"
+                      rows="12"
                       value={activeTemplate.body || ""}
                       onChange={handleTemplateBodyChange}
-                      className="w-full px-4 py-3 bg-slate-50/40 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition font-mono leading-relaxed shadow-inner"
+                      className={styles.messageTextarea}
                     />
                   </div>
 
-                  <div>
-                    <span className="block text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wider">
-                      Available Dynamic Variables (Click to Insert)
-                    </span>
-                    <div className="flex flex-wrap gap-2">
+                  <div className={styles.variableSection}>
+                    <div className={styles.editorSectionHeading}>
+                      <h4>Personalize your message</h4>
+                      <span>Click a field to insert</span>
+                    </div>
+                    <div className={styles.variableList}>
                       {TEMPLATE_VARIABLES.map((v) => (
                         <button
                           key={v.tag}
                           type="button"
                           onClick={() => handleInsertTag(v.tag)}
                           title={v.desc}
-                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-250 rounded-xl text-sm font-semibold text-slate-700 font-mono transition flex items-center gap-1.5 hover:text-slate-900"
+                          className={styles.variableButton}
                         >
-                          <Plus size={12} className="text-slate-500" />
+                          <Plus size={12} aria-hidden="true" />
                           {v.tag}
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-slate-200 pt-5">
-                    <span className="text-sm text-slate-400 font-medium">
-                      * Dynamic fields automatically compile values from customer records upon dispatch.
+                  <div className={styles.attachmentSection}>
+                    <div className={styles.editorSectionHeading}>
+                      <h4>
+                        <FileText size={15} aria-hidden="true" /> Attachment
+                      </h4>
+                      <span>Optional</span>
+                    </div>
+                    <div className={styles.attachmentFields}>
+                      <div>
+                        <label htmlFor="template-media-url">Media URL</label>
+                        <input
+                          id="template-media-url"
+                          type="text"
+                          value={activeTemplate.mediaUrl || ""}
+                          onChange={handleTemplateMediaChange}
+                          placeholder="https://example.com/image.png or base64 data"
+                          className={styles.attachmentInput}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="template-media-type">File type</label>
+                        <select
+                          id="template-media-type"
+                          value={activeTemplate.mediaType || "IMAGE"}
+                          onChange={handleTemplateMediaTypeChange}
+                          className={styles.attachmentInput}
+                        >
+                          <option value="IMAGE">Image</option>
+                          <option value="PDF">PDF / Document</option>
+                        </select>
+                      </div>
+                    </div>
+                    <p>Use a public image or document URL. Leave empty for a text-only message.</p>
+                  </div>
+
+                  <div className={styles.editorFooter}>
+                    <span className={styles.editorFooterNote}>
+                      Customer fields are filled in automatically when sent.
                     </span>
                     <button
                       type="button"
@@ -1014,64 +1078,58 @@ export default function WhatsAppSetupPage() {
                       className={styles.primaryButton}
                     >
                       <Save size={16} />
-                      {isSavingTemplate ? "Saving Template..." : "Save Template"}
+                      {isSavingTemplate ? "Saving…" : "Save template"}
                     </button>
                   </div>
                 </div>
 
-                {/* Right Column: Mobile Device Simulator (1 Col) */}
+                {/* Customer preview */}
                 <div className={styles.preview}>
-                  <span className="block text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wider">
-                    Customer preview
-                  </span>
+                  <div className={styles.previewHeading}>
+                    <h4>Customer preview</h4>
+                    <span className={styles.previewLive}>
+                      <span aria-hidden="true" /> Live
+                    </span>
+                  </div>
 
-                  <div className="border border-slate-300 rounded-xl overflow-hidden shadow-lg flex flex-col h-[400px] bg-[#efeae2] relative">
-                    {/* Smartphone Header Notch */}
-                    <div className="bg-[#075E54] text-white px-4 py-3 flex items-center justify-between shrink-0 shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center font-semibold text-sm border border-white/20">
-                          ID
-                        </div>
-                        <div>
-                          <div className="font-semibold text-sm text-white">InsureDesk Customer</div>
-                          <div className="text-sm text-emerald-200 font-normal">online</div>
-                        </div>
+                  <div className={styles.chatPreview}>
+                    <div className={styles.chatHeader}>
+                      <span className={styles.chatAvatar}>JD</span>
+                      <div>
+                        <strong>John Doe</strong>
+                        <span>Example customer</span>
                       </div>
+                      <MessageSquare size={18} aria-hidden="true" />
                     </div>
-
-                    {/* Chat Area Wallpaper */}
-                    <div className="flex-1 p-3.5 overflow-y-auto flex flex-col justify-end bg-[#efeae2]">
-                      <div className="bg-[#dcf8c6] text-slate-900 p-3.5 rounded-xl rounded-tr-none shadow-md max-w-[92%] self-end relative text-sm leading-relaxed border border-[#cbe5bd]">
+                    <div className={styles.chatBody}>
+                      <span className={styles.chatDate}>Today</span>
+                      <div className={styles.chatBubble}>
                         {activeTemplate.mediaUrl && (
-                          <div className="mb-2 bg-black/5 rounded-xl p-2 border border-black/10 flex items-center gap-2 shrink-0">
-                            {activeTemplate.mediaType === "IMAGE" ? (
-                              <span className="text-sm text-slate-800 font-semibold truncate">
-                                Image attachment
-                              </span>
-                            ) : (
-                              <span className="text-sm text-slate-800 font-semibold truncate">
-                                PDF attachment
-                              </span>
-                            )}
+                          <div className={styles.chatAttachment}>
+                            <FileText size={18} aria-hidden="true" />
+                            <span>
+                              {activeTemplate.mediaType === "IMAGE" ? "Image attachment" : "PDF attachment"}
+                            </span>
                           </div>
                         )}
 
-                        <div className="whitespace-pre-wrap font-sans text-slate-900 break-words pr-2">
-                          {compilePreviewText(activeTemplate.body)}
-                        </div>
+                        <div className={styles.chatMessage}>{compilePreviewText(activeTemplate.body)}</div>
 
-                        <div className="text-[9.5px] text-slate-500 text-right mt-2 font-medium flex items-center justify-end gap-1">
+                        <div className={styles.chatTimestamp}>
                           <span>
                             {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                           </span>
-                          <span className="text-[#34B7F1] text-sm font-semibold">✓✓</span>
+                          <span className={styles.chatTicks} aria-label="Read">
+                            ✓✓
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <p className="text-sm text-slate-400 mt-2.5 font-medium text-center">
-                    Example customer details are used in this preview.
+                  <p className={styles.previewNote}>
+                    <Info size={14} aria-hidden="true" /> Preview uses sample details. Your message will use
+                    each customer’s information.
                   </p>
                 </div>
               </div>
@@ -1122,7 +1180,24 @@ export default function WhatsAppSetupPage() {
                 <PrimaryWhatsAppSelector />
               </div>
             </div>
-            <div className={styles.accountList}>
+            <div className={`${styles.accountList} ${canAdmin ? styles.accountListWithAccess : ""}`}>
+              {accounts.length > 0 && (
+                <div
+                  className={`${styles.accountRow} ${styles.accountListHeader} ${canAdmin ? styles.accountRowWithAccess : ""}`}
+                  aria-hidden="true"
+                >
+                  <span className={styles.accountColumnTitle}>Account</span>
+                  {canAdmin && <span>Access given</span>}
+                  <span>Status</span>
+                  <div className={`${styles.accountActions} ${canAdmin ? styles.adminAccountActions : ""}`}>
+                    {canAdmin && <span>Manage access</span>}
+                    <span>Primary / QR</span>
+                    <span>Disconnect</span>
+                    <span>Log out</span>
+                    <span>Remove</span>
+                  </div>
+                </div>
+              )}
               {accounts.length === 0 ? (
                 <div className={styles.emptyState}>
                   <Smartphone size={28} />
@@ -1143,7 +1218,11 @@ export default function WhatsAppSetupPage() {
                 accounts.map((acc) => {
                   const isActionBusy = accountActionLoading === acc.id || !acc.canManage;
                   return (
-                    <article key={acc.id} className={styles.accountRow}>
+                    <article
+                      key={acc.id}
+                      className={`${styles.accountRow} ${canAdmin ? styles.accountRowWithAccess : ""}`}
+                      data-primary={acc.isDefault || undefined}
+                    >
                       <div className={styles.accountAvatar}>
                         <Smartphone size={23} />
                       </div>
@@ -1162,7 +1241,24 @@ export default function WhatsAppSetupPage() {
                             ? `+${acc.phoneNumber}`
                             : "Link your device to connect this account"}
                         </p>
+                        {!acc.canManage && (
+                          <span
+                            className={styles.accountOwnerNote}
+                            title="Only the linking staff member can manage this account"
+                          >
+                            {acc.ownerName ? `Managed by ${acc.ownerName}` : "Owner: Unknown"}
+                          </span>
+                        )}
                       </div>
+                      {canAdmin && (
+                        <div className={styles.accountAccessCount}>
+                          <span>Access given</span>
+                          <strong>
+                            <Users size={14} aria-hidden="true" />
+                            {acc.accessUserIds?.length || 0} staff
+                          </strong>
+                        </div>
+                      )}
                       <span className={acc.connected ? styles.connectedBadge : styles.disconnectedBadge}>
                         <i />
                         {acc.connected
@@ -1171,46 +1267,53 @@ export default function WhatsAppSetupPage() {
                             ? "Paused"
                             : acc.state === "QR_READY"
                               ? "Awaiting scan"
-                              : (acc.state || "Disconnected").replace(/_/g, " ")}
+                              : (acc.state || "Disconnected").replace(/_/g, " ").toLowerCase()}
                       </span>
-                      <div className={styles.accountActions}>
+                      <div
+                        className={`${styles.accountActions} ${canAdmin ? styles.adminAccountActions : ""}`}
+                      >
                         {canAdmin &&
                           (acc.registered ? (
                             <button
                               type="button"
-                              className={styles.secondaryButton}
-                              onClick={() => setAccessAccount(acc)}
+                              className={`${styles.secondaryButton} ${styles.accountAccessAction}`}
+                              onClick={() => {
+                                setAccessAccount(acc);
+                                void fetchAccounts(true, false);
+                              }}
                             >
-                              Manage access
+                              <ShieldCheck size={14} aria-hidden="true" />
+                              <span className={styles.accountActionLabel}>Manage access</span>
                             </button>
                           ) : (
                             <button
                               type="button"
-                              className={styles.secondaryButton}
+                              className={`${styles.secondaryButton} ${styles.accountAccessAction}`}
                               onClick={() => updateAccountAccess("register", acc.id)}
                             >
                               Enable account access
                             </button>
                           ))}
-                        {!acc.canManage && (
-                          <span title="Only the linking staff member can manage this account">
-                            {acc.ownerName ? `Managed by ${acc.ownerName}` : "Owner: Unknown"}
-                          </span>
-                        )}
                         {acc.connected && acc.canUse && !acc.isDefault && (
                           <button
                             type="button"
-                            className={styles.secondaryButton}
+                            className={`${styles.secondaryButton} ${styles.accountSenderAction}`}
                             disabled={accountActionLoading === acc.id}
                             onClick={() => handleSetDefaultAccount(acc.id)}
                           >
                             Set my primary
                           </button>
                         )}
+                        {acc.connected && acc.isDefault && (
+                          <span className={styles.accountPrimaryState}>
+                            <CheckCircle2 size={14} aria-hidden="true" />
+                            Selected
+                          </span>
+                        )}
                         {!acc.connected && (
                           <button
                             type="button"
-                            className={styles.secondaryButton}
+                            className={`${styles.secondaryButton} ${styles.accountSenderAction}`}
                             disabled={isActionBusy}
                             onClick={() => handleOpenQrModal(acc.id, acc.label)}
                           >

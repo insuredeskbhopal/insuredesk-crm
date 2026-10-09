@@ -9,8 +9,8 @@ import { loadLeadAgentReport } from "../src/lib/reports/lead-generation.js";
 
 describe("Super Admin lead agent report", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    queryRawMock.mockResolvedValue([
+    vi.resetAllMocks();
+    const agentRows = [
       {
         created_by_id: "00000000-0000-4000-8000-000000000001",
         agent_name: "Agent One",
@@ -24,7 +24,11 @@ describe("Super Admin lead agent report", () => {
         latest_lead_at: new Date("2026-07-21T00:00:00Z"),
         agent_count: 3,
       },
-    ]);
+    ];
+    queryRawMock
+      .mockResolvedValueOnce(agentRows)
+      .mockResolvedValueOnce([{ active_agents: 3, total_leads: 12, converted: 2 }])
+      .mockResolvedValueOnce(agentRows);
   });
 
   it("returns creator-grouped, server-paginated lead totals", async () => {
@@ -41,9 +45,9 @@ describe("Super Admin lead agent report", () => {
     expect(queryRawMock.mock.calls[0].at(-1)).toBe(1);
   });
 
-  it("rejects non-Super-Admin report access", async () => {
+  it.each(["ADMIN", "MANAGER", "AGENT", "VIEWER", "CLIENT"])("rejects %s report access without database work", async (role) => {
     await expect(
-      loadLeadAgentReport({ session: { role: "ADMIN", organizationId: null } }),
+      loadLeadAgentReport({ session: { role, organizationId: null } }),
     ).rejects.toThrow("Super Admin access is required");
     expect(queryRawMock).not.toHaveBeenCalled();
   });

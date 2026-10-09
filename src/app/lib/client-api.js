@@ -37,11 +37,12 @@ export async function cachedJson(url, options = {}) {
   const promise = fetch(url, fetchOptions)
     .then(async (response) => {
       const data = await response.json();
-      cache.set(cacheKey, { data, timestamp: Date.now() });
+      if (cache.get(cacheKey)?.promise === promise)
+        cache.set(cacheKey, { data, timestamp: Date.now() });
       return data;
     })
     .catch((error) => {
-      cache.delete(cacheKey);
+      if (cache.get(cacheKey)?.promise === promise) cache.delete(cacheKey);
       throw error;
     });
 
@@ -49,6 +50,8 @@ export async function cachedJson(url, options = {}) {
   return promise;
 }
 
-export function clearClientApiCache() {
-  getCache().clear();
+export function clearClientApiCache(url) {
+  const cache = getCache();
+  if (!url) cache.clear();
+  else for (const key of cache.keys()) if (key.startsWith(`${url}:`)) cache.delete(key);
 }
