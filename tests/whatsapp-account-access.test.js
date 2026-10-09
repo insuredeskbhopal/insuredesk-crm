@@ -7,7 +7,7 @@ const m = vi.hoisted(() => ({
     user: { findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     organization: { findUnique: vi.fn(), update: vi.fn() },
     whatsAppAccount: { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
-    whatsAppAccountAccess: { upsert: vi.fn(), deleteMany: vi.fn() },
+    whatsAppAccountAccess: { upsert: vi.fn(), createMany: vi.fn(), deleteMany: vi.fn() },
     whatsAppMessageQueue: { create: vi.fn(), update: vi.fn(), updateMany: vi.fn(), findFirst: vi.fn(), count: vi.fn(), findMany: vi.fn() },
   },
   client: {
@@ -248,6 +248,7 @@ describe("Independent employee WhatsApp routing", () => {
     expect(accounts[0]).toEqual(original);
     expect(m.prisma.whatsAppAccount.update).not.toHaveBeenCalled();
     expect(m.prisma.whatsAppAccountAccess.upsert).not.toHaveBeenCalled();
+    expect(m.prisma.whatsAppAccountAccess.createMany).not.toHaveBeenCalled();
   });
   it("rejects duplicate registration belonging to another workspace", async () => {
     m.verifyJWT.mockResolvedValue(actor("admin", "ADMIN"));
@@ -262,6 +263,33 @@ describe("Independent employee WhatsApp routing", () => {
     const response = await select(request("admin", { action: "register", accountId: "claims" }));
     expect(response.status).toBe(500);
     expect((await response.json()).error).toBe("Database unavailable");
+  });
+  it("allows repeated administrator grants without duplicating access or changing ownership", async () => {
+    m.verifyJWT.mockResolvedValue(actor("admin", "ADMIN"));
+    m.prisma.user.findFirst.mockImplementation(async ({ where }) => where.id === "rahul" && where.organizationId === "org" ? users.rahul : null);
+    const grants = new Set();
+    m.prisma.whatsAppAccountAccess.createMany.mockImplementation(async ({ data, skipDuplicates }) => {
+      const key = `${data.accountId}:${data.userId}`;
+      if (grants.has(key)) {
+        if (!skipDuplicates) throw Object.assign(new Error("Duplicate grant"), { code: "P2002" });
+        return { count: 0 };
+      }
+      grants.add(key);
+      return { count: 1 };
+    });
+    const results = await Promise.all([select(request("admin", { action: "grant", accountId: "claims", userId: "rahul", allowed: true })), select(request("admin", { action: "grant", accountId: "claims", userId: "rahul", allowed: true }))]);
+    expect(results.map(response => response.status)).toEqual([200, 200]);
+    expect(grants.size).toBe(1);
+    expect(accounts[0].ownerUserId).toBeNull();
+    expect(m.prisma.whatsAppAccount.update).not.toHaveBeenCalled();
+  });
+  it("rejects access grants by non-admin owners and for foreign-workspace targets", async () => {
+    accounts[0].ownerUserId = "siya";
+    expect((await select(request("siya", { action: "grant", accountId: "claims", userId: "rahul", allowed: true }))).status).toBe(403);
+    m.verifyJWT.mockResolvedValue(actor("admin", "ADMIN"));
+    m.prisma.user.findFirst.mockResolvedValue(null);
+    expect((await select(request("admin", { action: "grant", accountId: "claims", userId: "foreign", allowed: true }))).status).toBe(400);
+    expect(m.prisma.whatsAppAccountAccess.createMany).not.toHaveBeenCalled();
   });
   it("atomically claims one queued message across two simultaneous workers", async () => {
     users.siya.primaryWhatsAppAccountId = "claims";

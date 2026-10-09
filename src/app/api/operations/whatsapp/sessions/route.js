@@ -195,10 +195,9 @@ export async function POST(request) {
           if (action === "assign-owner")
             await prisma.whatsAppAccount.update({ where: { id: accountId }, data: { ownerUserId } });
           else if (allowed === true)
-            await prisma.whatsAppAccountAccess.upsert({
-              where: { accountId_userId: { accountId, userId } },
-              create: { accountId, userId },
-              update: {},
+            await prisma.whatsAppAccountAccess.createMany({
+              data: { accountId, userId },
+              skipDuplicates: true,
             });
           else await prisma.whatsAppAccountAccess.deleteMany({ where: { accountId, userId } });
         }
