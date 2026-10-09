@@ -68,4 +68,8 @@ export default [
       "react/jsx-uses-vars": "error",
     },
   },
+  {
+    files: ["whatsapp-gateway/**/*.js"],
+    languageOptions: { globals: { clearTimeout: "readonly" } },
+  },
 ];

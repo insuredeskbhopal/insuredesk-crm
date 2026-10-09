@@ -1,0 +1,231 @@
+.picker {
+  min-width: 0;
+  color: #344b60;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5ebef;
+}
+.picker.picker .title {
+  margin: 0 0 4px;
+  color: #172c40 !important;
+  font-size: 14px;
+  font-weight: 600;
+}
+.picker.picker .description {
+  margin: 0;
+  color: #718294 !important;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.tabs {
+  display: flex;
+  flex-shrink: 0;
+  gap: 22px;
+  align-self: stretch;
+}
+.picker.picker .tab,
+.picker.picker .activeTab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  margin-bottom: -13px;
+  padding: 8px 0 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #718294 !important;
+  font-size: 12px;
+  font-weight: 600;
+}
+.picker.picker .activeTab,
+.picker.picker .activeTab:hover:not(:disabled) {
+  border-bottom-color: #087f78;
+  color: #087f78 !important;
+}
+.picker.picker .tab:hover:not(:disabled) {
+  border-bottom-color: transparent;
+  color: #344b60 !important;
+}
+.count {
+  font-size: 10px;
+  color: #087f78 !important;
+}
+.picker.picker button,
+.picker.picker button:hover:not(:disabled),
+.picker.picker button:active {
+  box-shadow: none;
+  transform: none;
+  cursor: pointer;
+}
+.picker.picker button:focus-visible {
+  outline: 2px solid #87c8be;
+  outline-offset: 2px;
+}
+.picker.picker button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.groupPanel {
+  padding-top: 18px;
+}
+.matches,
+.searchPanel {
+  min-width: 0;
+}
+.picker.picker .searchHeading {
+  margin: 0 0 12px;
+  color: #344b60 !important;
+  font-size: 12px;
+  font-weight: 600;
+}
+.picker.picker .searchField {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid #dce5e9;
+  border-radius: 8px;
+  background: #f8fafb;
+  color: #81939f !important;
+}
+.searchField svg {
+  flex-shrink: 0;
+}
+.searchField:focus-within {
+  border-color: #82bdb4;
+}
+.picker.picker .searchField .searchInput {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #172c40 !important;
+  font-size: 13px;
+  outline: none;
+  box-shadow: none;
+}
+.results {
+  max-height: 240px;
+  margin-top: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.picker.picker .groupRow,
+.picker.picker .selectedRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 54px;
+  padding: 12px 10px;
+  border: 0;
+  border-bottom: 1px solid #edf1f4;
+  border-radius: 0;
+  background: #fff;
+  text-align: left;
+}
+.picker.picker .groupRow:hover:not(:disabled),
+.picker.picker .selectedRow {
+  background: #f0f8f5;
+}
+.groupIcon,
+.selectedIcon {
+  flex-shrink: 0;
+  color: #087f78 !important;
+}
+.groupIdentity {
+  flex: 1;
+  min-width: 0;
+}
+.picker.picker .groupName {
+  display: block;
+  margin: 0;
+  color: #243e4b !important;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.picker.picker .groupMeta {
+  display: block;
+  margin: 3px 0 0;
+  color: #718294 !important;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.selectedGroup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border-left: 3px solid #087f78;
+  background: #f0f8f5;
+}
+.picker.picker .textButton,
+.picker.picker .refreshButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  padding: 6px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #087f78 !important;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.refreshButton {
+  margin-top: 12px;
+}
+.picker.picker .empty,
+.loading {
+  padding: 18px 10px;
+  margin: 0;
+  color: #718294 !important;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.picker.picker .error {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid #cc6262;
+  background: #fff5f5;
+  color: #a34648 !important;
+  font-size: 12px;
+  line-height: 1.6;
+}
+@media (max-width: 520px) {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .tabs {
+    align-self: flex-start;
+  }
+  .picker.picker .tab,
+  .picker.picker .activeTab {
+    padding-top: 0;
+  }
+}

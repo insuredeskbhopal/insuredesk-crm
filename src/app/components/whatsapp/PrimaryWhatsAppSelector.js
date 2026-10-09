@@ -62,9 +62,9 @@ export default function PrimaryWhatsAppSelector() {
           ? "Your selected sender is disconnected"
           : "");
   return (
-    <div className="min-w-0 max-w-xs">
+    <div className="whatsapp-primary-selector min-w-0 max-w-xs">
       <label className="block text-xs font-semibold">
-        My Primary WhatsApp
+        <span className="whatsapp-primary-label">My Primary WhatsApp</span>
         <select
           aria-label="My Primary WhatsApp"
           className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs"

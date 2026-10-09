@@ -109,6 +109,7 @@ export default function WhatsAppSetupPage() {
   const [canAdmin, setCanAdmin] = useState(false);
   const [staffUsers, setStaffUsers] = useState([]);
   const [accessAccount, setAccessAccount] = useState(null);
+  const [savingAccess, setSavingAccess] = useState([]);
   const [accountActionLoading, setAccountActionLoading] = useState(null);
   const [metrics, setMetrics] = useState(null);
 
@@ -358,6 +359,22 @@ export default function WhatsAppSetupPage() {
   }
 
   async function updateAccountAccess(action, accountId, extra = {}) {
+    const grantKey = `${accountId}:${extra.userId}`;
+    const wasAllowed = accessAccount?.id === accountId && accessAccount.accessUserIds.includes(extra.userId);
+    if (action === "grant") {
+      if (savingAccess.includes(grantKey)) return;
+      setSavingAccess((current) => [...current, grantKey]);
+      setAccessAccount((current) =>
+        current?.id === accountId
+          ? {
+              ...current,
+              accessUserIds: extra.allowed
+                ? [...current.accessUserIds.filter((id) => id !== extra.userId), extra.userId]
+                : current.accessUserIds.filter((id) => id !== extra.userId),
+            }
+          : current,
+      );
+    }
     try {
       const response = await fetch("/api/operations/whatsapp/sessions", {
         method: "POST",
@@ -367,22 +384,26 @@ export default function WhatsAppSetupPage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not update access");
       await fetchAccounts();
-      if (action === "grant")
-        setAccessAccount(
-          (current) =>
-            current && {
-              ...current,
-              accessUserIds: extra.allowed
-                ? [...current.accessUserIds, extra.userId]
-                : current.accessUserIds.filter((id) => id !== extra.userId),
-            },
-        );
       if (action === "assign-owner")
         setAccessAccount((current) => current && { ...current, ownerUserId: extra.ownerUserId });
       window.dispatchEvent(new window.Event("whatsapp-primary-changed"));
       showToast("success", "WhatsApp settings saved.");
     } catch (error) {
+      if (action === "grant")
+        setAccessAccount((current) =>
+          current?.id === accountId
+            ? {
+                ...current,
+                accessUserIds: wasAllowed
+                  ? [...current.accessUserIds.filter((id) => id !== extra.userId), extra.userId]
+                  : current.accessUserIds.filter((id) => id !== extra.userId),
+              }
+            : current,
+        );
       showToast("error", error.message);
+    } finally {
+      if (action === "grant")
+        setSavingAccess((current) => current.filter((key) => key !== grantKey));
     }
   }
 
@@ -1087,8 +1108,19 @@ export default function WhatsAppSetupPage() {
                 {accountsError}
               </div>
             )}
-            <div className={styles.panelBody}>
-              <PrimaryWhatsAppSelector />
+            <div className={styles.primarySenderSection}>
+              <div className={styles.primarySenderIntro}>
+                <span className={styles.primarySenderIcon} aria-hidden="true">
+                  <Smartphone size={22} />
+                </span>
+                <div>
+                  <h3>Your sending account</h3>
+                  <p>Choose your personal WhatsApp sender for CRM messages.</p>
+                </div>
+              </div>
+              <div className={styles.primarySenderControl}>
+                <PrimaryWhatsAppSelector />
+              </div>
             </div>
             <div className={styles.accountList}>
               {accounts.length === 0 ? (
@@ -1689,65 +1721,86 @@ export default function WhatsAppSetupPage() {
               role="dialog"
               aria-modal="true"
               aria-label="Manage WhatsApp access"
-              className={`${styles.dialog} max-h-[85vh] overflow-auto`}
+              className={`${styles.dialog} ${styles.accessDialog}`}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="flex items-center justify-between gap-4 mb-4">
-                <h2>Access to {accessAccount.label}</h2>
+              <div className={styles.accessHeader}>
+                <span className={styles.accessHeaderIcon} aria-hidden="true">
+                  <ShieldCheck size={22} />
+                </span>
+                <div className={styles.accessHeading}>
+                  <h2>Manage access</h2>
+                  <p>{accessAccount.label}</p>
+                </div>
                 <button
                   type="button"
                   autoFocus
                   aria-label="Close access settings"
+                  className={styles.accessClose}
                   onClick={() => setAccessAccount(null)}
                 >
                   <X size={20} />
                 </button>
               </div>
-              <p>Sending access does not allow staff to disconnect this session.</p>
-              <label className="block my-4">
-                Responsible session owner
-                <select
-                  value={accessAccount.ownerUserId || ""}
-                  onChange={(e) =>
-                    updateAccountAccess("assign-owner", accessAccount.id, {
-                      ownerUserId: e.target.value || null,
-                    })
-                  }
-                  className="block w-full border rounded p-2"
-                >
-                  <option value="">Unknown</option>
+              <div className={styles.accessBody}>
+                <p className={styles.accessNotice}>
+                  Sending access does not allow staff to disconnect this session.
+                </p>
+                <label className={styles.accessOwner}>
+                  <span>Responsible session owner</span>
+                  <select
+                    value={accessAccount.ownerUserId || ""}
+                    onChange={(e) =>
+                      updateAccountAccess("assign-owner", accessAccount.id, {
+                        ownerUserId: e.target.value || null,
+                      })
+                    }
+                    className={styles.accessOwnerSelect}
+                  >
+                    <option value="">Unknown</option>
+                    {staffUsers.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name || user.email}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className={styles.accessSectionHeading}>
+                  <h3>Staff sending access</h3>
+                  <span>{staffUsers.length} staff</span>
+                </div>
+                <div className={styles.accessStaffList}>
                   {staffUsers.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name || user.email}
-                    </option>
+                    <label key={user.id} className={styles.accessStaffRow}>
+                      <span className={styles.accessStaffName}>{user.name || user.email}</span>
+                      <input
+                        type="checkbox"
+                        className={styles.accessCheckbox}
+                        checked={accessAccount.accessUserIds.includes(user.id)}
+                        disabled={savingAccess.includes(`${accessAccount.id}:${user.id}`)}
+                        aria-busy={savingAccess.includes(`${accessAccount.id}:${user.id}`)}
+                        onChange={(e) =>
+                          updateAccountAccess("grant", accessAccount.id, {
+                            userId: user.id,
+                            allowed: e.target.checked,
+                          })
+                        }
+                      />
+                    </label>
                   ))}
-                </select>
-              </label>
-              <div className="space-y-3">
-                {staffUsers.map((user) => (
-                  <label key={user.id} className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={accessAccount.accessUserIds.includes(user.id)}
-                      onChange={(e) =>
-                        updateAccountAccess("grant", accessAccount.id, {
-                          userId: user.id,
-                          allowed: e.target.checked,
-                        })
-                      }
-                    />
-                    {user.name || user.email}
-                  </label>
-                ))}
+                </div>
               </div>
               {accessAccount.connected && (
-                <button
-                  type="button"
-                  className={styles.secondaryButton}
-                  onClick={() => updateAccountAccess("set-system", accessAccount.id)}
-                >
-                  Authorize as system automation sender
-                </button>
+                <div className={styles.accessFooter}>
+                  <button
+                    type="button"
+                    className={styles.accessAutomationButton}
+                    onClick={() => updateAccountAccess("set-system", accessAccount.id)}
+                  >
+                    <Zap size={16} aria-hidden="true" />
+                    Authorize as system automation sender
+                  </button>
+                </div>
               )}
             </section>
           </div>

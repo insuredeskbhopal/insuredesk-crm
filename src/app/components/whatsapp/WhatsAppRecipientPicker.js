@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, RefreshCw, Search, UserRound, UsersRound } from "lucide-react";
+import styles from "./WhatsAppRecipientPicker.module.css";
 
 const normalizePhone = (value) => {
   let digits = String(value || "").replace(/\D/g, "");
@@ -103,8 +104,9 @@ export default function WhatsAppRecipientPicker({
   }, [contactPhone]);
 
   useEffect(() => {
-    if (type === "group" && matches.length === 0 && normalizePhone(contactPhone).length >= 10) {
-      void findMatches();
+    if (type === "group" && matches.length === 0) {
+      if (normalizePhone(contactPhone).length >= 10) void findMatches();
+      else setSearchOpen(true);
     }
   }, [type]);
 
@@ -114,7 +116,7 @@ export default function WhatsAppRecipientPicker({
       setSearching(false);
       return undefined;
     }
-    if (query.length < 2) {
+    if (query.length > 0 && query.length < 2) {
       setSearchResults([]);
       setSearching(false);
       return undefined;
@@ -155,7 +157,14 @@ export default function WhatsAppRecipientPicker({
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-      await findMatches();
+      if (normalizePhone(contactPhone).length >= 10) await findMatches();
+      else {
+        const payload = await fetchGroups(
+          `/api/operations/whatsapp/groups?search=${encodeURIComponent(searchQuery.trim())}&limit=30`,
+        );
+        setSearchResults(Array.isArray(payload.groups) ? payload.groups : []);
+        setSearchOpen(true);
+      }
     } catch (refreshError) {
       setError(refreshError.message || "Could not refresh WhatsApp groups");
     } finally {
@@ -164,13 +173,13 @@ export default function WhatsAppRecipientPicker({
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
-      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+    <div className={styles.picker}>
+      <div className={styles.header}>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">Destination</p>
-          <p className="mt-0.5 text-xs text-slate-500">Choose who should receive this message.</p>
+          <p className={styles.title}>Send to</p>
+          <p className={styles.description}>Choose an individual or a WhatsApp group.</p>
         </div>
-        <div className="grid w-full grid-cols-2 rounded-xl border border-slate-200 bg-white p-1 shadow-inner sm:w-64" role="radiogroup" aria-label="WhatsApp recipient type">
+        <div className={styles.tabs} role="radiogroup" aria-label="WhatsApp recipient type">
           {[
             ["individual", "Individual", UserRound],
             ["group", "Group", UsersRound],
@@ -182,15 +191,11 @@ export default function WhatsAppRecipientPicker({
               aria-checked={type === value}
               disabled={disabled}
               onClick={() => onTypeChange(value)}
-              className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border bg-white px-3 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 ${
-                type === value
-                  ? "border-slate-900 text-slate-900 shadow-md"
-                  : "border-transparent text-slate-600 hover:shadow-sm hover:text-slate-900"
-              } disabled:cursor-not-allowed disabled:opacity-50`}
+              className={type === value ? styles.activeTab : styles.tab}
             >
               <Icon size={14} /> {label}
               {value === "group" && matches.length > 0 && (
-                <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                <span className={styles.count}>
                   {matches.length}
                 </span>
               )}
@@ -200,21 +205,21 @@ export default function WhatsAppRecipientPicker({
       </div>
 
       {type === "group" ? (
-        <div className="rn-recipient-panel mt-4 border-t border-slate-100 pt-4">
+        <div className={styles.groupPanel}>
           {matching ? (
-            <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-3 text-xs font-medium text-slate-600">
+            <div className={styles.loading} role="status">
               <RefreshCw size={14} className="animate-spin text-emerald-600" /> Finding groups containing this contact…
             </div>
           ) : selectionMode === "manual" && selectedGroup && !searchOpen ? (
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 shadow-md shadow-emerald-100/60">
+            <div className={styles.selectedGroup}>
               <div className="flex min-w-0 items-center gap-2.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <span className={styles.selectedIcon}>
                   <CheckCircle2 size={17} />
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-xs font-bold text-slate-900">{selectedGroup.name}</p>
-                  <p className="mt-0.5 text-[11px] text-slate-500">
-                    Selected manually{selectedGroup.participants ? ` · ${selectedGroup.participants} members` : ""}
+                  <p className={styles.groupName}>{selectedGroup.name}</p>
+                  <p className={styles.groupMeta}>
+                    Selected group{selectedGroup.participants ? ` · ${selectedGroup.participants} members` : ""}
                   </p>
                 </div>
               </div>
@@ -222,13 +227,13 @@ export default function WhatsAppRecipientPicker({
                 type="button"
                 disabled={disabled}
                 onClick={() => setSearchOpen(true)}
-                className="shrink-0 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-[11px] font-semibold text-emerald-700 shadow-md transition hover:-translate-y-0.5 hover:bg-emerald-100 hover:shadow-lg"
+                className={styles.textButton}
               >
                 Change
               </button>
             </div>
           ) : matches.length > 0 && !searchOpen ? (
-            <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-3 shadow-md shadow-slate-200/70">
+            <div className={styles.matches}>
               <div className="flex items-start justify-between gap-3 px-1 pb-3">
                 <div className="flex min-w-0 items-start gap-2.5">
                   <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
@@ -247,7 +252,7 @@ export default function WhatsAppRecipientPicker({
                   type="button"
                   disabled={disabled}
                   onClick={() => setSearchOpen(true)}
-                  className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-700 shadow-md transition hover:-translate-y-0.5 hover:border-emerald-200 hover:text-emerald-700 hover:shadow-lg"
+                  className={styles.textButton}
                 >
                   Change
                 </button>
@@ -267,11 +272,7 @@ export default function WhatsAppRecipientPicker({
                         setSelectionMode("auto");
                         onGroupChange(group.id);
                       }}
-                      className={`flex w-full min-w-0 items-center gap-3 rounded-xl border p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
-                        selected
-                          ? "border-emerald-400 bg-white shadow-md shadow-emerald-100/70 ring-1 ring-emerald-100"
-                          : "border-slate-200 bg-white hover:border-emerald-200"
-                      } disabled:cursor-not-allowed disabled:opacity-50`}
+                      className={selected ? styles.selectedRow : styles.groupRow}
                     >
                       <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
                         selected ? "border-emerald-600 bg-emerald-600" : "border-slate-300 bg-white"
@@ -304,12 +305,12 @@ export default function WhatsAppRecipientPicker({
           ) : null}
 
           {!matching && searchOpen ? (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div className={styles.searchPanel}>
               {matches.length === 0 && normalizePhone(contactPhone).length >= 10 ? (
-                <p className="mb-2 text-xs font-semibold text-slate-700">No matching WhatsApp group found.</p>
+                <p className={styles.searchHeading}>No contact match. Choose a group below.</p>
               ) : matches.length > 0 ? (
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold text-slate-700">Search another group</p>
+                  <p className={styles.searchHeading}>Choose another group</p>
                   <button
                     type="button"
                     onClick={() => {
@@ -317,47 +318,57 @@ export default function WhatsAppRecipientPicker({
                       onGroupChange(matches[0]?.id || "");
                       setSearchOpen(false);
                     }}
-                    className="text-[11px] font-semibold text-emerald-700"
+                    className={styles.textButton}
                   >
                     Keep auto match
                   </button>
                 </div>
               ) : (
-                <p className="mb-2 text-xs font-semibold text-slate-700">Search for a WhatsApp group</p>
+                <p className={styles.searchHeading}>Choose a WhatsApp group</p>
               )}
-              <div className="relative">
-                <Search size={14} className="pointer-events-none absolute left-3 top-2.5 text-slate-400" />
+              <label className={styles.searchField}>
+                <Search size={16} aria-hidden="true" />
                 <input
                   type="search"
+                  aria-label="Search WhatsApp groups"
                   value={searchQuery}
                   autoFocus
                   disabled={disabled}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Type at least 2 letters of the group name…"
-                  className="h-9 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-xs text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  placeholder="Search groups by name…"
+                  className={styles.searchInput}
                 />
-              </div>
-              <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">
-                {searching ? <p className="px-2 py-2 text-[11px] text-slate-500">Searching…</p> : null}
-                {!searching && searchQuery.trim().length >= 2 && searchResults.length === 0 && !error ? (
-                  <p className="px-2 py-2 text-[11px] text-slate-500">No groups match this search.</p>
+              </label>
+              <div className={styles.results} role="radiogroup" aria-label="Available WhatsApp groups" aria-busy={searching}>
+                {searching ? <p className={styles.empty} role="status">Loading groups…</p> : null}
+                {!searching && searchQuery.trim().length === 1 ? (
+                  <p className={styles.empty}>Type at least 2 letters to search.</p>
+                ) : null}
+                {!searching && (searchQuery.trim().length === 0 || searchQuery.trim().length >= 2) && searchResults.length === 0 && !error ? (
+                  <p className={styles.empty}>
+                    {searchQuery.trim() ? "No groups match this search." : "No groups synced yet. Refresh groups to try again."}
+                  </p>
                 ) : null}
                 {searchResults.map((group) => (
                   <button
                     key={group.id}
                     type="button"
+                    role="radio"
+                    aria-checked={groupId === group.id}
                     disabled={disabled}
                     onClick={() => {
                       setSelectionMode("manual");
                       onGroupChange(group.id);
                       setSearchOpen(false);
                     }}
-                    className={`flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-xs transition ${
-                      groupId === group.id ? "bg-emerald-100 font-bold text-emerald-800" : "bg-white text-slate-700 hover:bg-slate-100"
-                    }`}
+                    className={groupId === group.id ? styles.selectedRow : styles.groupRow}
                   >
-                    <span className="truncate">{group.name}</span>
-                    <span className="ml-3 shrink-0 text-[10px] text-slate-400">{group.participants || 0} members</span>
+                    <UsersRound size={17} className={styles.groupIcon} aria-hidden="true" />
+                    <span className={styles.groupIdentity}>
+                      <span className={styles.groupName}>{group.name}</span>
+                      <span className={styles.groupMeta}>{group.participants || 0} members</span>
+                    </span>
+                    {groupId === group.id ? <CheckCircle2 size={17} className={styles.selectedIcon} aria-hidden="true" /> : null}
                   </button>
                 ))}
               </div>
@@ -365,14 +376,14 @@ export default function WhatsAppRecipientPicker({
                 type="button"
                 disabled={disabled || refreshing}
                 onClick={refreshGroups}
-                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-emerald-700 disabled:opacity-50"
+                className={styles.refreshButton}
               >
-                <RefreshCw size={12} className={refreshing ? "animate-spin" : ""} /> Refresh synced groups
+                <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} /> {refreshing ? "Refreshing groups…" : "Refresh groups"}
               </button>
             </div>
           ) : null}
 
-          {error ? <p className="mt-2 rounded-md bg-rose-50 px-2.5 py-2 text-[11px] font-medium leading-4 text-rose-700">{error}</p> : null}
+          {error ? <p className={styles.error} role="alert">{error}</p> : null}
         </div>
       ) : null}
     </div>
