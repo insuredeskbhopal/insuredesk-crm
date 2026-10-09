@@ -93,8 +93,7 @@ export default function WhatsAppSetupPage() {
   const [lastChecked, setLastChecked] = useState(null);
   const [statusError, setStatusError] = useState(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [showDisconnectModal, setShowDisconnectModal] = useState(false);
+  const [accountConfirmation, setAccountConfirmation] = useState(null);
 
   // Multi-Account Management
   const [accounts, setAccounts] = useState([]);
@@ -217,12 +216,12 @@ export default function WhatsAppSetupPage() {
   }, [qrModalAccount?.id]);
 
   useEffect(() => {
-    if (!showAddAccountModal && !showDisconnectModal && !qrModalAccount) return;
+    if (!showAddAccountModal && !accountConfirmation && !qrModalAccount) return;
     const previousFocus = document.activeElement;
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
         setShowAddAccountModal(false);
-        setShowDisconnectModal(false);
+        setAccountConfirmation(null);
         setQrModalAccount(null);
       }
       if (event.key === "Tab") {
@@ -246,7 +245,7 @@ export default function WhatsAppSetupPage() {
       document.removeEventListener("keydown", onKeyDown);
       previousFocus?.focus();
     };
-  }, [showAddAccountModal, showDisconnectModal, !!qrModalAccount]);
+  }, [showAddAccountModal, !!accountConfirmation, !!qrModalAccount]);
 
   // Poll status when not connected
   useEffect(() => {
@@ -309,24 +308,6 @@ export default function WhatsAppSetupPage() {
     } finally {
       if (statusRequestRef.current === controller) statusRequestRef.current = null;
       if (!isSilent && !controller.signal.aborted) setIsCheckingStatus(false);
-    }
-  }
-
-  async function handleLogout() {
-    setIsLoggingOut(true);
-    setShowDisconnectModal(false);
-    try {
-      const res = await fetch("/api/operations/whatsapp/logout", {
-        method: "POST",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to disconnect WhatsApp");
-      showToast("success", "Successfully disconnected WhatsApp session");
-      fetchStatus(false, true);
-    } catch (err) {
-      showToast("error", err.message || "Failed to disconnect WhatsApp");
-    } finally {
-      setIsLoggingOut(false);
     }
   }
 
@@ -460,8 +441,6 @@ export default function WhatsAppSetupPage() {
   }
 
   async function handleDeleteAccount(accountId) {
-    if (!window.confirm("Are you sure you want to permanently delete this account and its credentials?"))
-      return;
     setAccountActionLoading(accountId);
     try {
       const res = await fetch("/api/operations/whatsapp/sessions", {
@@ -1136,7 +1115,7 @@ export default function WhatsAppSetupPage() {
                           type="button"
                           className={styles.dangerButton}
                           disabled={isActionBusy}
-                          onClick={() => handleLogoutAccount(acc.id)}
+                          onClick={() => setAccountConfirmation({ action: "logout", account: acc })}
                         >
                           Log out
                         </button>
@@ -1145,7 +1124,7 @@ export default function WhatsAppSetupPage() {
                             type="button"
                             className={styles.iconButton}
                             disabled={isActionBusy}
-                            onClick={() => handleDeleteAccount(acc.id)}
+                            onClick={() => setAccountConfirmation({ action: "delete", account: acc })}
                             aria-label={`Remove ${acc.label}`}
                             title="Remove account"
                           >
@@ -1533,7 +1512,7 @@ export default function WhatsAppSetupPage() {
       )}
 
       {/* DISCONNECT CONFIRMATION MODAL */}
-      {showDisconnectModal && (
+      {accountConfirmation && (
         <ModalPortal>
           <div className={styles.overlay}>
             <div
@@ -1546,27 +1525,35 @@ export default function WhatsAppSetupPage() {
                 <AlertTriangle className="w-6 h-6" />
               </div>
 
-              <h3 className="text-base font-semibold text-slate-900 mb-1.5">Disconnect WhatsApp?</h3>
+              <h3 className="text-base font-semibold text-slate-900 mb-1.5">
+                {accountConfirmation.action === "delete" ? "Remove this account?" : "Log out of WhatsApp?"}
+              </h3>
               <p className="text-sm text-slate-500 leading-relaxed mb-6 font-medium">
-                Are you sure you want to disconnect your WhatsApp session? This will stop all scheduled
-                messages until re-linked.
+                {accountConfirmation.action === "delete"
+                  ? `This permanently removes ${accountConfirmation.account.label} and its saved connection. You will need to link the number again to use it.`
+                  : `This signs out ${accountConfirmation.account.label}. Scan a new QR code to reconnect and send messages from this number.`}
               </p>
 
               <div className="flex gap-2.5 justify-center">
                 <button
                   type="button"
-                  onClick={() => setShowDisconnectModal(false)}
+                  onClick={() => setAccountConfirmation(null)}
+                  autoFocus
                   className="px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold hover:bg-slate-50 text-slate-700 bg-white transition shadow-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
+                  onClick={() => {
+                    const { action, account } = accountConfirmation;
+                    setAccountConfirmation(null);
+                    if (action === "delete") handleDeleteAccount(account.id);
+                    else handleLogoutAccount(account.id);
+                  }}
                   className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-sm shadow-md transition disabled:opacity-50"
                 >
-                  {isLoggingOut ? "Disconnecting..." : "Disconnect"}
+                  {accountConfirmation.action === "delete" ? "Remove account" : "Log out"}
                 </button>
               </div>
             </div>
