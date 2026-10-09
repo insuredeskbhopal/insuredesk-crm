@@ -20,10 +20,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const organizationId = session.role === "SUPER_ADMIN" ? session.organizationId || undefined : session.organizationId;
-    if (!organizationId && session.role !== "SUPER_ADMIN") {
-      return NextResponse.json({ error: "Organization scope is required" }, { status: 400 });
-    }
+    const organizationId = session.organizationId || null;
 
     const body = await request.json().catch(() => ({}));
     const batchLimit = Math.max(1, Math.min(parseInt(body.batchLimit || "5", 10) || 5, 10));

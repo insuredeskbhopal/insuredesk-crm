@@ -29,6 +29,7 @@ import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
 import PrimaryWhatsAppSelector from "@/app/components/whatsapp/PrimaryWhatsAppSelector";
 import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
 import ModalPortal from "@/app/components/shared/ModalPortal";
+import { cachedJson } from "@/app/lib/client-api";
 import styles from "./WhatsAppSetupPage.module.css";
 
 const TEMPLATE_VARIABLES = [
@@ -147,7 +148,10 @@ export default function WhatsAppSetupPage() {
   const toastTimerRef = useRef(null);
 
   useEffect(() => {
-    const refresh = () => { fetchAccounts(); fetchStatus(); };
+    const refresh = () => {
+      fetchAccounts();
+      fetchStatus();
+    };
     window.addEventListener("whatsapp-primary-changed", refresh);
     return () => window.removeEventListener("whatsapp-primary-changed", refresh);
   }, []);
@@ -302,8 +306,8 @@ export default function WhatsAppSetupPage() {
     if (!isSilent) setIsCheckingStatus(true);
     try {
       const res = await fetch("/api/operations/whatsapp/status", { signal: controller.signal });
-      if (!res.ok) throw new Error("Failed to fetch connection status");
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch connection status");
       setConnected(data.connected);
       setStatus(data.status);
       setQrCode(data.qrCode);
@@ -326,9 +330,11 @@ export default function WhatsAppSetupPage() {
     setIsLoadingAccounts(true);
     setAccountsError(null);
     try {
-      const res = await fetch("/api/operations/whatsapp/sessions");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load accounts");
+      const data = await cachedJson("/api/operations/whatsapp/sessions", {
+        ttlMs: 0,
+        fetchOptions: { cache: "no-store" },
+      });
+      if (data.error) throw new Error(data.error);
       if (data.accounts) {
         setAccounts(data.accounts);
         setCanCreateAccount(data.canCreate === true);
@@ -353,15 +359,31 @@ export default function WhatsAppSetupPage() {
 
   async function updateAccountAccess(action, accountId, extra = {}) {
     try {
-      const response = await fetch("/api/operations/whatsapp/sessions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, accountId, ...extra }) });
+      const response = await fetch("/api/operations/whatsapp/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, accountId, ...extra }),
+      });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not update access");
       await fetchAccounts();
-      if (action === "grant") setAccessAccount(current => current && ({ ...current, accessUserIds: extra.allowed ? [...current.accessUserIds, extra.userId] : current.accessUserIds.filter(id => id !== extra.userId) }));
-      if (action === "assign-owner") setAccessAccount(current => current && ({ ...current, ownerUserId: extra.ownerUserId }));
+      if (action === "grant")
+        setAccessAccount(
+          (current) =>
+            current && {
+              ...current,
+              accessUserIds: extra.allowed
+                ? [...current.accessUserIds, extra.userId]
+                : current.accessUserIds.filter((id) => id !== extra.userId),
+            },
+        );
+      if (action === "assign-owner")
+        setAccessAccount((current) => current && { ...current, ownerUserId: extra.ownerUserId });
       window.dispatchEvent(new window.Event("whatsapp-primary-changed"));
       showToast("success", "WhatsApp settings saved.");
-    } catch (error) { showToast("error", error.message); }
+    } catch (error) {
+      showToast("error", error.message);
+    }
   }
 
   async function handleCreateAccount() {
@@ -393,7 +415,15 @@ export default function WhatsAppSetupPage() {
   }
 
   async function handleOpenQrModal(accountId, label) {
+    setQrModalAccount({ id: accountId, label: label || accountId, qrCode: null, connected: false });
     try {
+      const connect = await fetch("/api/operations/whatsapp/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "connect", accountId }),
+      });
+      const result = await connect.json();
+      if (!connect.ok) throw new Error(result.error || "Could not start pairing");
       const res = await fetch(`/api/operations/whatsapp/status?accountId=${encodeURIComponent(accountId)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Cannot access this account");
@@ -403,8 +433,9 @@ export default function WhatsAppSetupPage() {
         qrCode: data.qrCode || null,
         connected: data.connected || false,
       });
-    } catch {
-      showToast("error", "Failed to retrieve QR code for account");
+    } catch (error) {
+      setQrModalAccount(null);
+      showToast("error", error.message || "Failed to retrieve QR code for account");
     }
   }
 
@@ -1056,7 +1087,9 @@ export default function WhatsAppSetupPage() {
                 {accountsError}
               </div>
             )}
-            <div className={styles.panelBody}><PrimaryWhatsAppSelector /></div>
+            <div className={styles.panelBody}>
+              <PrimaryWhatsAppSelector />
+            </div>
             <div className={styles.accountList}>
               {accounts.length === 0 ? (
                 <div className={styles.emptyState}>
@@ -1109,7 +1142,24 @@ export default function WhatsAppSetupPage() {
                               : (acc.state || "Disconnected").replace(/_/g, " ")}
                       </span>
                       <div className={styles.accountActions}>
-                        {canAdmin && (acc.registered ? <button type="button" className={styles.secondaryButton} onClick={() => setAccessAccount(acc)}>Manage access</button> : <button type="button" className={styles.secondaryButton} onClick={() => updateAccountAccess("register", acc.id)}>Enable account access</button>)}
+                        {canAdmin &&
+                          (acc.registered ? (
+                            <button
+                              type="button"
+                              className={styles.secondaryButton}
+                              onClick={() => setAccessAccount(acc)}
+                            >
+                              Manage access
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className={styles.secondaryButton}
+                              onClick={() => updateAccountAccess("register", acc.id)}
+                            >
+                              Enable account access
+                            </button>
+                          ))}
                         {!acc.canManage && (
                           <span title="Only the linking staff member can manage this account">
                             {acc.ownerName ? `Managed by ${acc.ownerName}` : "Owner: Unknown"}
@@ -1634,17 +1684,71 @@ export default function WhatsAppSetupPage() {
       {/* QR PAIRING MODAL */}
       {accessAccount && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950/50 backdrop-blur-sm p-4" onClick={() => setAccessAccount(null)}>
-            <section role="dialog" aria-modal="true" aria-label="Manage WhatsApp access" className={`${styles.dialog} max-h-[85vh] overflow-auto`} onClick={event => event.stopPropagation()}>
-              <div className={styles.dialogHeader}><h2>Access to {accessAccount.label}</h2><button type="button" aria-label="Close access settings" onClick={() => setAccessAccount(null)}><X size={20}/></button></div>
+          <div className={styles.overlay} onClick={() => setAccessAccount(null)}>
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-label="Manage WhatsApp access"
+              className={`${styles.dialog} max-h-[85vh] overflow-auto`}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <h2>Access to {accessAccount.label}</h2>
+                <button
+                  type="button"
+                  autoFocus
+                  aria-label="Close access settings"
+                  onClick={() => setAccessAccount(null)}
+                >
+                  <X size={20} />
+                </button>
+              </div>
               <p>Sending access does not allow staff to disconnect this session.</p>
-              <label className="block my-4">Responsible session owner
-                <select value={accessAccount.ownerUserId || ""} onChange={e => updateAccountAccess("assign-owner", accessAccount.id, { ownerUserId: e.target.value || null })} className="block w-full border rounded p-2">
-                  <option value="">Unknown</option>{staffUsers.map(user => <option key={user.id} value={user.id}>{user.name || user.email}</option>)}
+              <label className="block my-4">
+                Responsible session owner
+                <select
+                  value={accessAccount.ownerUserId || ""}
+                  onChange={(e) =>
+                    updateAccountAccess("assign-owner", accessAccount.id, {
+                      ownerUserId: e.target.value || null,
+                    })
+                  }
+                  className="block w-full border rounded p-2"
+                >
+                  <option value="">Unknown</option>
+                  {staffUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name || user.email}
+                    </option>
+                  ))}
                 </select>
               </label>
-              <div className="space-y-3">{staffUsers.map(user => <label key={user.id} className="flex items-center gap-3"><input type="checkbox" checked={accessAccount.accessUserIds.includes(user.id)} onChange={e => updateAccountAccess("grant", accessAccount.id, { userId: user.id, allowed: e.target.checked })}/>{user.name || user.email}</label>)}</div>
-              {accessAccount.connected && <button type="button" className={styles.secondaryButton} onClick={() => updateAccountAccess("set-system", accessAccount.id)}>Authorize as system automation sender</button>}
+              <div className="space-y-3">
+                {staffUsers.map((user) => (
+                  <label key={user.id} className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={accessAccount.accessUserIds.includes(user.id)}
+                      onChange={(e) =>
+                        updateAccountAccess("grant", accessAccount.id, {
+                          userId: user.id,
+                          allowed: e.target.checked,
+                        })
+                      }
+                    />
+                    {user.name || user.email}
+                  </label>
+                ))}
+              </div>
+              {accessAccount.connected && (
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={() => updateAccountAccess("set-system", accessAccount.id)}
+                >
+                  Authorize as system automation sender
+                </button>
+              )}
             </section>
           </div>
         </ModalPortal>

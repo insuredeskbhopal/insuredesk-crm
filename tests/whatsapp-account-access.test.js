@@ -1,140 +1,252 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-
-const mocks = vi.hoisted(() => ({
+const m = vi.hoisted(() => ({
   verifyJWT: vi.fn(),
-  getWhatsAppSessions: vi.fn(),
-  getWhatsAppMetrics: vi.fn(),
-  createWhatsAppSession: vi.fn(),
-  setPrimaryWhatsAppSession: vi.fn(),
-  pauseWhatsAppSession: vi.fn(),
-  logoutWhatsAppSession: vi.fn(),
-  deleteWhatsAppSession: vi.fn(),
-  getWhatsAppStatus: vi.fn(),
-  getWhatsAppQrCode: vi.fn(),
+  logAudit: vi.fn(),
+  prisma: {
+    user: { findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    organization: { findUnique: vi.fn(), update: vi.fn() },
+    whatsAppAccount: { findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
+    whatsAppAccountAccess: { upsert: vi.fn(), deleteMany: vi.fn() },
+    whatsAppMessageQueue: { create: vi.fn(), update: vi.fn(), updateMany: vi.fn(), findFirst: vi.fn(), count: vi.fn(), findMany: vi.fn() },
+  },
+  client: {
+    getWhatsAppSessions: vi.fn(),
+    getWhatsAppMetrics: vi.fn(),
+    getWhatsAppStatus: vi.fn(),
+    getWhatsAppQrCode: vi.fn(),
+    createWhatsAppSession: vi.fn(),
+    pauseWhatsAppSession: vi.fn(),
+    logoutWhatsAppSession: vi.fn(),
+    deleteWhatsAppSession: vi.fn(),
+    sendWhatsAppText: vi.fn(),
+    sendWhatsAppImage: vi.fn(),
+    sendWhatsAppFile: vi.fn(),
+  },
 }));
-vi.mock("@/lib/auth", () => ({ verifyJWT: mocks.verifyJWT }));
-vi.mock("@/lib/whatsapp/whatsapp-client", () => mocks);
-import { GET, POST } from "@/app/api/operations/whatsapp/sessions/route";
-import { GET as status } from "@/app/api/operations/whatsapp/status/route";
+vi.mock("@/lib/auth", () => ({ verifyJWT: m.verifyJWT }));
+vi.mock("@/lib/db/prisma", () => ({ prisma: m.prisma }));
+vi.mock("@/lib/audit", () => ({ logAudit: m.logAudit }));
+vi.mock("@/lib/whatsapp/whatsapp-client", () => m.client);
+import { POST as select, GET as list } from "@/app/api/operations/whatsapp/sessions/route";
+import { POST as send } from "@/app/api/operations/whatsapp/send/route";
+import { POST as retry } from "@/app/api/operations/whatsapp/queue/route";
 import { POST as logout } from "@/app/api/operations/whatsapp/logout/route";
-import {
-  initAccountRegistry,
-  registerAccount,
-  updateAccount,
-  getAccount,
-} from "../whatsapp-gateway/account-registry.js";
-
-const payal = { userId: "payal", organizationId: "org", name: "Payal", role: "MANAGER" };
-const own = { id: "payal_wa", ownerUserId: "payal", organizationId: "org", ownerName: "Payal" };
-const request = (body = {}, query = "") => ({
-  cookies: { get: () => ({ value: "token" }) },
-  json: async () => body,
-  url: `https://crm.test/api/operations/whatsapp/status${query}`,
+import { GET as status } from "@/app/api/operations/whatsapp/status/route";
+import { resolveWhatsAppSender } from "@/lib/whatsapp/account-access";
+import { enqueueMessage, processQueueBatch } from "@/lib/whatsapp/queue-manager";
+let users, accounts, queue;
+const actor = (id, role = "MANAGER", organizationId = "org") => ({
+  userId: id,
+  organizationId,
+  role,
+  name: id,
 });
-
+const request = (id, body = {}, query = "") => ({
+  cookies: { get: () => ({ value: id }) },
+  json: async () => body,
+  url: `https://crm.test/api/status${query}`,
+});
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.verifyJWT.mockResolvedValue(payal);
-  mocks.getWhatsAppSessions.mockResolvedValue([
-    own,
-    { ...own, id: "other_wa", ownerUserId: "other" },
-    { id: "legacy" },
-    { ...own, id: "foreign", organizationId: "other-org" },
-  ]);
-  mocks.getWhatsAppMetrics.mockResolvedValue({ success: true });
-  for (const name of [
-    "createWhatsAppSession",
-    "setPrimaryWhatsAppSession",
-    "pauseWhatsAppSession",
-    "logoutWhatsAppSession",
-    "deleteWhatsAppSession",
-  ])
-    mocks[name].mockResolvedValue({ success: true });
+  users = {
+    siya: { id: "siya", primaryWhatsAppAccountId: null },
+    rahul: { id: "rahul", primaryWhatsAppAccountId: null },
+  };
+  accounts = [
+    {
+      id: "claims",
+      label: "Claims",
+      organizationId: "org",
+      ownerUserId: null,
+      connected: true,
+      access: [{ userId: "siya" }],
+    },
+    {
+      id: "operations",
+      label: "Operations",
+      organizationId: "org",
+      ownerUserId: "admin",
+      connected: true,
+      access: [{ userId: "siya" }, { userId: "rahul" }],
+    },
+    {
+      id: "foreign",
+      label: "Foreign",
+      organizationId: "other-org",
+      connected: true,
+      access: [{ userId: "siya" }],
+    },
+  ];
+  queue = [];
+  m.verifyJWT.mockImplementation(async (id) => actor(id));
+  m.prisma.user.findFirst.mockImplementation(async ({ where }) => users[where.id] || null);
+  m.prisma.user.findUnique.mockImplementation(async ({ where }) => users[where.id]);
+  m.prisma.user.update.mockImplementation(async ({ where, data }) => Object.assign(users[where.id], data));
+  m.prisma.user.findMany.mockResolvedValue([]);
+  m.prisma.whatsAppAccount.findFirst.mockImplementation(
+    async ({ where }) =>
+      accounts.find(
+        (a) =>
+          a.id === where.id &&
+          a.organizationId === where.organizationId &&
+          (!where.OR ||
+            a.ownerUserId === where.OR[0].ownerUserId ||
+            a.access.some((g) => g.userId === where.OR[1].access.some.userId)),
+      ) || null,
+  );
+  m.prisma.whatsAppAccount.findMany.mockImplementation(async () => accounts);
+  m.prisma.organization.findUnique.mockResolvedValue({ systemWhatsAppAccountId: "operations" });
+  m.client.getWhatsAppSessions.mockImplementation(async () => accounts);
+  m.client.getWhatsAppMetrics.mockResolvedValue({ success: true });
+  m.client.getWhatsAppStatus.mockResolvedValue({ connected: true, state: "CONNECTED" });
+  for (const name of ["sendWhatsAppText", "sendWhatsAppFile", "sendWhatsAppImage"])
+    m.client[name].mockResolvedValue({ id: "wa-reference", success: true });
+  m.prisma.whatsAppMessageQueue.create.mockImplementation(async ({ data }) => {
+    const row = { id: `msg-${queue.length}`, ...data };
+    queue.push(row);
+    return row;
+  });
+  m.prisma.whatsAppMessageQueue.update.mockResolvedValue({});
+  m.prisma.whatsAppMessageQueue.count.mockResolvedValue(0);
+  m.prisma.whatsAppMessageQueue.updateMany.mockResolvedValue({ count: 1 });
 });
-
-describe("WhatsApp staff ownership", () => {
-  it.each(["MANAGER", "AGENT", "ADMIN", "SUPER_ADMIN"])(
-    "allows %s to link and stamps JWT ownership, ignoring submitted ownership",
-    async (role) => {
-      mocks.verifyJWT.mockResolvedValue({ ...payal, role });
-      expect(
-        (await POST(request({ action: "create", label: "My number", ownerUserId: "other" }))).status,
-      ).toBe(200);
-      expect(mocks.createWhatsAppSession).toHaveBeenCalledWith("My number", {
-        ownerUserId: "payal",
-        organizationId: "org",
-        ownerName: "Payal",
-      });
+describe("Independent employee WhatsApp routing", () => {
+  it("isolates Siya and Rahul, changes only future Siya sends, and survives new request/login objects", async () => {
+    expect((await select(request("siya", { action: "set-primary", accountId: "claims" }))).status).toBe(200);
+    expect((await select(request("rahul", { action: "set-primary", accountId: "operations" }))).status).toBe(
+      200,
+    );
+    await send(
+      request("siya", { recipient: "919999999999", message: "Claims update", accountId: "foreign" }),
+    );
+    await send(request("rahul", { recipient: "919999999998", message: "Renewal" }));
+    expect(m.client.sendWhatsAppText.mock.calls.map((c) => c[2])).toEqual(["claims", "operations"]);
+    await select(request("siya", { action: "set-primary", accountId: "operations" }));
+    await send(request("siya", { recipient: "919999999999", message: "New update" }));
+    expect(m.client.sendWhatsAppText.mock.calls.at(-1)[2]).toBe("operations");
+    expect(users.rahul.primaryWhatsAppAccountId).toBe("operations");
+    expect((await (await list(request("siya"))).json()).primaryAccountId).toBe("operations");
+    expect((await (await list(request("rahul"))).json()).primaryAccountId).toBe("operations");
+    expect(queue[0]).toMatchObject({
+      initiatedByUserId: "siya",
+      accountId: "claims",
+      recipientPhone: "919999999999",
+      status: "SENDING",
+    });
+    expect(m.prisma.whatsAppMessageQueue.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "SENT",
+          openwaMessageId: "wa-reference",
+          sentAt: expect.any(Date),
+        }),
+      }),
+    );
+    expect(accounts[0].ownerUserId).toBeNull(); // Selection requires access, not a guessed original owner.
+    expect(m.client.logoutWhatsAppSession).not.toHaveBeenCalled();
+  });
+  it.each(["claims", "foreign", "missing"])(
+    "rejects Rahul's unauthorized selection of %s",
+    async (accountId) => {
+      expect((await select(request("rahul", { action: "set-primary", accountId }))).status).toBe(403);
+      expect(users.rahul.primaryWhatsAppAccountId).toBeNull();
     },
   );
-  it.each(["CLIENT", "VIEWER", "USER"])("rejects %s account mutations", async (role) => {
-    mocks.verifyJWT.mockResolvedValue({ ...payal, role });
-    expect((await POST(request({ action: "create" }))).status).toBe(403);
-    expect(mocks.createWhatsAppSession).not.toHaveBeenCalled();
+  it("requires selection and never falls back on disconnect, revocation, or removed account", async () => {
+    await expect(resolveWhatsAppSender(actor("siya"))).rejects.toThrow("Select My Primary");
+    users.siya.primaryWhatsAppAccountId = "claims";
+    accounts[0].connected = false;
+    expect((await send(request("siya", { recipient: "919999999999", message: "Test" }))).status).toBe(409);
+    expect(users.siya.primaryWhatsAppAccountId).toBe("claims");
+    accounts[0].connected = true;
+    accounts[0].access = [];
+    expect((await send(request("siya", { recipient: "919999999999", message: "Test" }))).status).toBe(403);
+    accounts.shift();
+    await expect(resolveWhatsAppSender(actor("siya"))).rejects.toThrow("not authorized");
+    expect(m.client.sendWhatsAppText).not.toHaveBeenCalled();
   });
-  it("requires authentication", async () => {
-    mocks.verifyJWT.mockResolvedValue(null);
-    expect((await POST(request({ action: "create" }))).status).toBe(401);
+  it.each(["pause", "logout", "delete"])("sending access does not confer %s permission", async (action) => {
+    expect((await select(request("siya", { action, accountId: "claims" }))).status).toBe(403);
+    expect((await logout(request("siya", { accountId: "claims" }))).status).toBe(403);
   });
-  it.each(["pause", "logout", "delete", "set-default"])("permits only the owner to %s", async (action) => {
-    expect((await POST(request({ action, accountId: own.id }))).status).toBe(200);
-    for (const accountId of ["other_wa", "legacy", "foreign", "missing"]) {
-      expect((await POST(request({ action, accountId }))).status).toBe(403);
-    }
+  it("does not leak other organizations through the account listing", async () => {
+    m.verifyJWT.mockResolvedValue(actor("siya", "ADMIN"));
+    const data = await (await list(request("siya"))).json();
+    expect(data.accounts.map((a) => a.id)).not.toContain("foreign");
   });
-  it("does not give admins an ownership bypass", async () => {
-    mocks.verifyJWT.mockResolvedValue({ ...payal, role: "ADMIN" });
-    expect((await POST(request({ action: "logout", accountId: "other_wa" }))).status).toBe(403);
-    expect(mocks.logoutWhatsAppSession).not.toHaveBeenCalled();
+  it("denies pairing QR to a sender grant recipient", async () => {
+    expect((await status(request("siya", {}, "?accountId=claims"))).status).toBe(403);
+    expect(m.client.getWhatsAppQrCode).not.toHaveBeenCalled();
   });
-  it("returns management permissions and hides other organizations", async () => {
-    const data = await (await GET(request())).json();
-    expect(data.canCreate).toBe(true);
-    expect(data.accounts.map((a) => [a.id, a.canManage])).toEqual([
-      ["payal_wa", true],
-      ["other_wa", false],
-      ["legacy", false],
+  it("routes a policy PDF attachment and birthday image through the personal sender", async () => {
+    users.siya.primaryWhatsAppAccountId = "claims";
+    expect(
+      (
+        await send(
+          request("siya", {
+            recipient: "919999999999",
+            message: "Policy",
+            attachments: [{ filename: "policy.pdf", mediaBase64: "JVBERi0=", mediaType: "document" }],
+          }),
+        )
+      ).status,
+    ).toBe(200);
+    expect(m.client.sendWhatsAppFile.mock.calls[0][4]).toBe("claims");
+    expect(queue[0].initiatedByUserId).toBe("siya");
+    expect((await send(request("siya", { recipient: "919999999999", message: "Image", attachments: [{ filename: "greeting.jpg", mediaBase64: "aW1hZ2U=", mediaType: "image" }] }))).status).toBe(200);
+    expect(m.client.sendWhatsAppImage.mock.calls[0][4]).toBe("claims");
+  });
+  it("uses only explicitly configured organization system sender", async () => {
+    expect(await resolveWhatsAppSender({ organizationId: "org" })).toBe("operations");
+    m.prisma.organization.findUnique.mockResolvedValue({ systemWhatsAppAccountId: null });
+    await expect(resolveWhatsAppSender({ organizationId: "org" })).rejects.toThrow("configure the system");
+  });
+  it("locks queued sender at enqueue and rechecks access without adopting a later preference", async () => {
+    users.siya.primaryWhatsAppAccountId = "claims";
+    const result = await enqueueMessage({
+      organizationId: "org",
+      initiatedByUserId: "siya",
+      recipientPhone: "919999999999",
+      messageBody: "Queued follow-up",
+    });
+    users.siya.primaryWhatsAppAccountId = "operations";
+    m.prisma.whatsAppMessageQueue.findMany.mockResolvedValue([{ ...result.message, attempts: 0 }]);
+    expect((await processQueueBatch(1)).processedCount).toBe(1);
+    expect(m.client.sendWhatsAppText.mock.calls.at(-1)[2]).toBe("claims");
+    accounts[0].access = [];
+    m.client.sendWhatsAppText.mockClear();
+    expect((await processQueueBatch(1)).processedCount).toBe(0);
+    expect(m.client.sendWhatsAppText).not.toHaveBeenCalled();
+  });
+  it("supports BHQ's legacy null workspace without moving staff to another organization", async () => {
+    accounts[0].organizationId = null;
+    m.verifyJWT.mockResolvedValue(actor("siya", "MANAGER", null));
+    users.siya.primaryWhatsAppAccountId = "claims";
+    expect((await send(request("siya", { recipient: "919999999999", message: "Legacy workspace" }))).status).toBe(200);
+    expect(queue[0]).toMatchObject({ organizationId: null, initiatedByUserId: "siya", accountId: "claims" });
+    expect(m.client.sendWhatsAppText.mock.calls.at(-1)[2]).toBe("claims");
+  });
+  it("atomically claims one queued message across two simultaneous workers", async () => {
+    users.siya.primaryWhatsAppAccountId = "claims";
+    const { message } = await enqueueMessage({ organizationId: "org", initiatedByUserId: "siya", recipientPhone: "919999999999", messageBody: "One message" });
+    m.prisma.whatsAppMessageQueue.findMany.mockResolvedValue([{ ...message, attempts: 0 }]);
+    let pending = true;
+    m.prisma.whatsAppMessageQueue.updateMany.mockImplementation(async () => { if (!pending) return { count: 0 }; pending = false; return { count: 1 }; });
+    const batches = await Promise.all([processQueueBatch(1), processQueueBatch(1)]);
+    expect(batches.reduce((total, result) => total + result.processedCount, 0)).toBe(1);
+    expect(m.client.sendWhatsAppText).toHaveBeenCalledTimes(1);
+  });
+  it("refuses retry of attachment audit rows without the original file payload", async () => {
+    m.prisma.whatsAppMessageQueue.findFirst.mockResolvedValue({ id: "audit", initiatedByUserId: "siya", messageType: "PDF", fileName: "policy.pdf", mediaUrl: null });
+    expect((await retry(request("siya", { messageId: "audit" }))).status).toBe(409);
+    expect(m.prisma.whatsAppMessageQueue.update).not.toHaveBeenCalled();
+  });
+  it("legacy queued null sender never routes through the gateway default", async () => {
+    m.prisma.whatsAppMessageQueue.findMany.mockResolvedValue([
+      { id: "legacy", organizationId: "org", recipientPhone: "919999999999", accountId: null, attempts: 0 },
     ]);
-  });
-  it("closes the legacy default-logout bypass", async () => {
-    expect((await logout(request())).status).toBe(400);
-    expect((await logout(request({ accountId: "other_wa" }))).status).toBe(403);
-    expect(mocks.logoutWhatsAppSession).not.toHaveBeenCalled();
-    expect((await logout(request({ accountId: own.id }))).status).toBe(200);
-  });
-  it("polls the owned account QR and denies another user's QR", async () => {
-    mocks.getWhatsAppStatus.mockResolvedValue({ connected: false, state: "QR_READY", accountId: own.id });
-    mocks.getWhatsAppQrCode.mockResolvedValue({ success: true, qrCode: "qr" });
-    expect((await status(request({}, "?accountId=payal_wa"))).status).toBe(200);
-    expect(mocks.getWhatsAppQrCode).toHaveBeenCalledWith(own.id);
-    mocks.getWhatsAppQrCode.mockClear();
-    expect((await status(request({}, "?accountId=other_wa"))).status).toBe(403);
-    expect(mocks.getWhatsAppQrCode).not.toHaveBeenCalled();
-  });
-  it("never exposes another owner's default pairing QR", async () => {
-    mocks.getWhatsAppStatus.mockResolvedValue({ connected: false, state: "QR_READY", accountId: "other_wa" });
-    expect((await (await status(request())).json()).qrCode).toBeNull();
-    expect(mocks.getWhatsAppQrCode).not.toHaveBeenCalled();
-  });
-  it("persists immutable ownership across registry reloads", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "wa-owner-"));
-    try {
-      initAccountRegistry(dir);
-      expect(() => registerAccount("unowned", "Missing owner")).toThrow("owner is required");
-      registerAccount(own.id, "Payal", own);
-      updateAccount(own.id, { ownerUserId: "other", organizationId: "other-org", status: "CONNECTED" });
-      initAccountRegistry(dir);
-      expect(getAccount(own.id)).toMatchObject({
-        ownerUserId: "payal",
-        organizationId: "org",
-        status: "CONNECTED",
-      });
-    } finally {
-      fs.rmSync(dir, { recursive: true, force: true });
-    }
+    expect((await processQueueBatch(1)).processedCount).toBe(0);
+    expect(m.client.sendWhatsAppText).not.toHaveBeenCalled();
   });
 });

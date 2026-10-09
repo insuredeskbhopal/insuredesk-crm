@@ -27,7 +27,7 @@ describe("Baileys gateway group support", () => {
     expect(manager).toContain("normalizeGroupParticipants");
     expect(manager).toContain("verifiedName");
     expect(manager).toContain("matchGroupsByPhone");
-    expect(manager).toContain("refreshGroups().catch");
+    expect(manager).not.toContain("refreshGroups().catch");
     expect(server).toContain('app.get("/groups"');
     expect(server).toContain('app.get("/groups/match"');
     expect(server).toContain('app.post("/groups/refresh"');

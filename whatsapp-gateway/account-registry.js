@@ -124,10 +124,10 @@ export function registerAccount(id, label, owner) {
     throw new Error(`Account '${cleanId}' is already registered.`);
   }
 
-  if (!owner?.ownerUserId || !owner?.organizationId) throw new Error("Account owner is required");
+  if (!owner?.ownerUserId) throw new Error("Account owner is required");
   const newAccount = {
     ownerUserId: String(owner.ownerUserId),
-    organizationId: String(owner.organizationId),
+    organizationId: owner.organizationId ? String(owner.organizationId) : null,
     ownerName: String(owner.ownerName || "Staff member"),
     id: cleanId,
     label: String(label || cleanId).trim(),

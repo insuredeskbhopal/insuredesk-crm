@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireWhatsAppStaff, resolveWhatsAppSender } from "@/lib/whatsapp/account-access";
-import { getWhatsAppGroups, matchWhatsAppGroups, refreshWhatsAppGroups } from "@/lib/whatsapp/whatsapp-client";
+import {
+  getWhatsAppGroups,
+  matchWhatsAppGroups,
+  refreshWhatsAppGroups,
+} from "@/lib/whatsapp/whatsapp-client";
 
 export const runtime = "nodejs";
 
@@ -37,6 +41,9 @@ export async function POST(request) {
     if (session.role === "VIEWER") return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     return NextResponse.json({ success: true, groups: await refreshWhatsAppGroups(accountId) });
   } catch (error) {
-    return NextResponse.json({ error: error.message || "Failed to refresh WhatsApp groups" }, { status: 503 });
+    return NextResponse.json(
+      { error: error.message || "Failed to refresh WhatsApp groups" },
+      { status: 503 },
+    );
   }
 }

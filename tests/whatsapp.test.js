@@ -143,7 +143,7 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
     expect(fetch).toHaveBeenLastCalledWith(
       expect.stringContaining("/send-text"),
       expect.objectContaining({
-        body: JSON.stringify({ to: "120363412345678901@g.us", content: "Group reminder" }),
+        body: JSON.stringify({ to: "120363412345678901@g.us", content: "Group reminder", accountId: "selected_account" }),
       }),
     );
   });
@@ -159,7 +159,7 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
     expect(fetch).toHaveBeenLastCalledWith(
       expect.stringContaining("/send-text"),
       expect.objectContaining({
-        body: JSON.stringify({ to: "919876543210", content: "Individual reminder" }),
+        body: JSON.stringify({ to: "919876543210", content: "Individual reminder", accountId: "selected_account" }),
       }),
     );
   });
@@ -184,7 +184,7 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
     fetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(match) });
 
     await expect(matchWhatsAppGroups("+91 91111 11692", "selected_account")).resolves.toEqual(match);
-    expect(fetch.mock.calls.at(-1)[0]).toContain("/groups/match?phone=%2B91%2091111%2011692");
+    expect(fetch.mock.calls.at(-1)[0]).toContain("/groups/match?phone=%2B91+91111+11692");
   });
 
   it("replaces an HTML 404 response with a readable group deployment error", async () => {
@@ -210,13 +210,15 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
       "9876543210",
       "JVBERi0xLjQKJ...",
       "POLICY_MP04CL3716.pdf",
-      "Dear Customer, please find attached policy copy."
+      "Dear Customer, please find attached policy copy.",
+      "selected_account"
     );
 
     expect(res).toEqual({
       id: "file-message-123",
       success: true,
       timestamp: 1727083000,
+      accountId: "selected_account",
     });
 
     expect(fetch).toHaveBeenLastCalledWith(
@@ -228,6 +230,7 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
           filename: "POLICY_MP04CL3716.pdf",
           caption: "Dear Customer, please find attached policy copy.",
           type: "document",
+          accountId: "selected_account",
         }),
       }),
     );

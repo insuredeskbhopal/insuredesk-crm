@@ -30,8 +30,7 @@ import {
 } from "./account-registry.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const sessionsRoot =
-  process.env.WHATSAPP_GATEWAY_SESSIONS_DIR || path.join(__dirname, "sessions");
+const sessionsRoot = process.env.WHATSAPP_GATEWAY_SESSIONS_DIR || path.join(__dirname, "sessions");
 
 const logger = pino({ level: "warn" });
 const MAX_RECONNECT_ATTEMPTS = 10;
@@ -148,7 +147,7 @@ export async function startConnection(accountId = null) {
   const session = getOrCreateSessionState(targetId);
 
   // Prevent duplicate concurrent connects
-  if (session.connectionState === "CONNECTING" || session.connectionState === "CONNECTED") {
+  if (["CONNECTING", "CONNECTED", "QR_READY"].includes(session.connectionState)) {
     return session.sock;
   }
 
@@ -166,123 +165,137 @@ export async function startConnection(accountId = null) {
     fs.mkdirSync(sessionDir, { recursive: true });
   }
 
-  const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
-  const { version } = await fetchLatestBaileysVersion();
+  try {
+    const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+    const { version } = await fetchLatestBaileysVersion();
 
-  const sock = makeWASocket({
-    version,
-    auth: {
-      creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, logger),
-    },
-    logger,
-    generateHighQualityLinkPreview: false,
-    browser: ["InsureDesk CRM", "Chrome", "133.0.0.0"],
-    connectTimeoutMs: 60000,
-    keepAliveIntervalMs: 25000,
-  });
+    const sock = makeWASocket({
+      version,
+      auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, logger),
+      },
+      logger,
+      generateHighQualityLinkPreview: false,
+      browser: ["InsureDesk CRM", "Chrome", "133.0.0.0"],
+      connectTimeoutMs: 60000,
+      keepAliveIntervalMs: 25000,
+    });
 
-  session.sock = sock;
+    session.sock = sock;
 
-  // ---- Connection Update Handler ----
-  sock.ev.on("connection.update", async (update) => {
-    const { connection, lastDisconnect, qr } = update;
+    // ---- Connection Update Handler ----
+    sock.ev.on("connection.update", async (update) => {
+      if (session.sock !== sock || session.connectionState === "PAUSED") return;
+      const { connection, lastDisconnect, qr } = update;
 
-    if (qr) {
-      try {
-        session.currentQrDataUrl = await QRCode.toDataURL(qr, {
-          width: 300,
-          margin: 2,
-        });
-        session.connectionState = "QR_READY";
-        console.log(`[Baileys][${targetId}] QR code generated. Waiting for scan...`);
-      } catch (err) {
-        console.error(`[Baileys][${targetId}] Failed to generate QR:`, err);
+      if (qr) {
+        try {
+          session.currentQrDataUrl = await QRCode.toDataURL(qr, {
+            width: 300,
+            margin: 2,
+          });
+          session.connectionState = "QR_READY";
+          console.log(`[Baileys][${targetId}] QR code generated. Waiting for scan...`);
+        } catch (err) {
+          console.error(`[Baileys][${targetId}] Failed to generate QR:`, err);
+        }
       }
-    }
 
-    if (connection === "close") {
-      session.currentQrDataUrl = null;
-
-      const statusCode =
-        (lastDisconnect?.error instanceof Boom
-          ? lastDisconnect.error.output?.statusCode
-          : lastDisconnect?.error?.output?.statusCode) ?? 500;
-
-      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-
-      console.log(
-        `[Baileys][${targetId}] Connection closed. Status: ${statusCode}. LoggedOut: ${!shouldReconnect}`
-      );
-
-      if (shouldReconnect && session.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-        session.reconnectAttempts++;
-        const delay = Math.min(session.reconnectAttempts * 2000, 30000);
-        console.log(
-          `[Baileys][${targetId}] Reconnecting in ${delay}ms (attempt ${session.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`
-        );
-        session.connectionState = "CONNECTING";
-        session.reconnectTimer = setTimeout(() => startConnection(targetId), delay);
-      } else {
-        session.connectionState = "DISCONNECTED";
+      if (connection === "close") {
+        session.currentQrDataUrl = null;
         session.sock = null;
-        updateAccount(targetId, { status: "DISCONNECTED" });
 
-        if (!shouldReconnect) {
-          console.log(`[Baileys][${targetId}] Logged out by WhatsApp server.`);
-          updateAccount(targetId, { status: "LOGGED_OUT" });
+        const statusCode =
+          (lastDisconnect?.error instanceof Boom
+            ? lastDisconnect.error.output?.statusCode
+            : lastDisconnect?.error?.output?.statusCode) ?? 500;
+
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+        console.log(
+          `[Baileys][${targetId}] Connection closed. Status: ${statusCode}. LoggedOut: ${!shouldReconnect}`,
+        );
+
+        if (shouldReconnect && session.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          session.reconnectAttempts++;
+          const delay = Math.min(session.reconnectAttempts * 2000, 30000);
+          console.log(
+            `[Baileys][${targetId}] Reconnecting in ${delay}ms (attempt ${session.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`,
+          );
+          session.connectionState = "RECONNECTING";
+          session.reconnectTimer = setTimeout(
+            () =>
+              startConnection(targetId).catch((error) =>
+                console.error(`[Baileys][${targetId}] Reconnect failed:`, error.message),
+              ),
+            delay,
+          );
         } else {
-          console.error(
-            `[Baileys][${targetId}] Max reconnection attempts reached. Manual retry required.`
+          session.connectionState = "DISCONNECTED";
+          session.sock = null;
+          updateAccount(targetId, { status: "DISCONNECTED" });
+
+          if (!shouldReconnect) {
+            console.log(`[Baileys][${targetId}] Logged out by WhatsApp server.`);
+            updateAccount(targetId, { status: "LOGGED_OUT" });
+          } else {
+            console.error(`[Baileys][${targetId}] Max reconnection attempts reached. Manual retry required.`);
+          }
+        }
+      }
+
+      if (connection === "open") {
+        session.connectionState = "CONNECTED";
+        session.currentQrDataUrl = null;
+        session.reconnectAttempts = 0;
+        session.lastConnectedAt = new Date().toISOString();
+
+        // Extract verified phone number from socket user
+        const rawUser = sock.user?.id || "";
+        const phoneDigits = rawUser.split(":")[0].replace(/\D/g, "");
+        session.phoneNumber = phoneDigits || null;
+
+        updateAccount(targetId, {
+          status: "CONNECTED",
+          phoneNumber: session.phoneNumber,
+        });
+
+        console.log(
+          `[Baileys][${targetId}] ✅ Connected successfully! Phone: ${session.phoneNumber || "Unknown"}`,
+        );
+
+        // Auto-refresh participating groups for this account
+        refreshGroups(targetId).catch((error) => {
+          console.error(`[Groups][${targetId}] Automatic discovery failed:`, error.message);
+        });
+      }
+    });
+
+    // ---- Credential Persistence ----
+    sock.ev.on("creds.update", saveCreds);
+
+    // Group activity tracking
+    sock.ev.on("messages.upsert", ({ messages }) => {
+      for (const message of messages || []) {
+        const groupId = message?.key?.remoteJid;
+        if (groupId?.endsWith("@g.us")) {
+          const timestamp = Number(message.messageTimestamp || 0);
+          markStoredGroupActivity(
+            groupId,
+            timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString(),
           );
         }
       }
-    }
+    });
 
-    if (connection === "open") {
-      session.connectionState = "CONNECTED";
-      session.currentQrDataUrl = null;
-      session.reconnectAttempts = 0;
-      session.lastConnectedAt = new Date().toISOString();
-
-      // Extract verified phone number from socket user
-      const rawUser = sock.user?.id || "";
-      const phoneDigits = rawUser.split(":")[0].replace(/\D/g, "");
-      session.phoneNumber = phoneDigits || null;
-
-      updateAccount(targetId, {
-        status: "CONNECTED",
-        phoneNumber: session.phoneNumber,
-      });
-
-      console.log(`[Baileys][${targetId}] ✅ Connected successfully! Phone: ${session.phoneNumber || "Unknown"}`);
-
-      // Auto-refresh participating groups for this account
-      refreshGroups(targetId).catch((error) => {
-        console.error(`[Groups][${targetId}] Automatic discovery failed:`, error.message);
-      });
-      refreshGroups().catch(() => {});
-    }
-  });
-
-  // ---- Credential Persistence ----
-  sock.ev.on("creds.update", saveCreds);
-
-  // Group activity tracking
-  sock.ev.on("messages.upsert", ({ messages }) => {
-    for (const message of messages || []) {
-      const groupId = message?.key?.remoteJid;
-      if (groupId?.endsWith("@g.us")) {
-        const timestamp = Number(message.messageTimestamp || 0);
-        markStoredGroupActivity(
-          groupId,
-          timestamp ? new Date(timestamp * 1000).toISOString() : new Date().toISOString()
-        );
-      }
-    }
-  });
-
-  return sock;
+    return sock;
+  } catch (error) {
+    session.connectionState = "DISCONNECTED";
+    session.sock = null;
+    updateAccount(targetId, { status: "DISCONNECTED" });
+    throw error;
+  }
 }
 
 /**
@@ -298,6 +311,7 @@ export async function pauseSession(accountId) {
     session.reconnectTimer = null;
   }
 
+  if (session) session.connectionState = "PAUSED";
   if (session?.sock) {
     try {
       session.sock.end(undefined);
@@ -331,6 +345,7 @@ export async function logoutSession(accountId) {
     session.reconnectTimer = null;
   }
 
+  if (session) session.connectionState = "PAUSED";
   if (session?.sock) {
     try {
       await session.sock.logout();
@@ -523,7 +538,9 @@ function formatSendError(error, jid) {
   if (!jid.endsWith("@g.us")) return error;
   const message = String(error?.message || "");
   if (/not.?authorized|forbidden|not.?found|item-not-found|participant/i.test(message)) {
-    return new Error("Unable to send to this WhatsApp group. It may have been deleted or this account may have been removed.");
+    return new Error(
+      "Unable to send to this WhatsApp group. It may have been deleted or this account may have been removed.",
+    );
   }
   return error;
 }
@@ -586,7 +603,11 @@ export async function sendMedia(to, mediaBase64, filename, caption, type, accoun
     throw new Error("Invalid media payload: expected base64 string or buffer");
   }
 
-  const isDocument = type === "document" || String(filename || "").toLowerCase().endsWith(".pdf");
+  const isDocument =
+    type === "document" ||
+    String(filename || "")
+      .toLowerCase()
+      .endsWith(".pdf");
 
   let messagePayload;
   if (!isDocument && (type === "image" || String(filename || "").match(/\.(jpe?g|png|webp)$/i))) {
@@ -595,7 +616,7 @@ export async function sendMedia(to, mediaBase64, filename, caption, type, accoun
     messagePayload = {
       image: buffer,
       caption: caption || "",
-      mimetype: isJpeg ? "image/jpeg" : (isPng ? "image/png" : "image/jpeg"),
+      mimetype: isJpeg ? "image/jpeg" : isPng ? "image/png" : "image/jpeg",
       fileName: filename || (isJpeg ? "birthday_card.jpg" : "birthday_card.png"),
     };
   } else {
@@ -649,7 +670,7 @@ export function getGatewayMetrics() {
   const mem = process.memoryUsage();
   const accounts = getAllAccounts();
   const connectedCount = accounts.filter(
-    (acc) => activeSessions.get(acc.id)?.connectionState === "CONNECTED"
+    (acc) => activeSessions.get(acc.id)?.connectionState === "CONNECTED",
   ).length;
 
   return {

@@ -41,13 +41,16 @@ function withAgentSignature(message, signature) {
   return `${text}\n\n${signOff}`;
 }
 
-
-
 async function resolveAttachmentPayload(attachment = {}) {
-  const attachmentData = attachment.mediaBase64 || attachment.data || attachment.attachmentData || attachment.base64 || "";
+  const attachmentData =
+    attachment.mediaBase64 || attachment.data || attachment.attachmentData || attachment.base64 || "";
   const attachmentUrl = attachment.attachmentUrl || attachment.url || attachment.mediaUrl || "";
-  const rawFilename = String(attachment.filename || attachment.attachmentFileName || attachment.fileName || attachment.name || "").trim();
-  const isPdf = String(attachment.mediaType || attachment.type || attachment.attachmentType || "").toLowerCase() === "document" ||
+  const rawFilename = String(
+    attachment.filename || attachment.attachmentFileName || attachment.fileName || attachment.name || "",
+  ).trim();
+  const isPdf =
+    String(attachment.mediaType || attachment.type || attachment.attachmentType || "").toLowerCase() ===
+      "document" ||
     rawFilename.toLowerCase().endsWith(".pdf") ||
     String(attachmentData).startsWith("data:application/pdf") ||
     String(attachmentUrl).toLowerCase().endsWith(".pdf");
@@ -83,12 +86,17 @@ async function resolveAttachmentPayload(attachment = {}) {
           pdfBuffer = await fs.readFile(localPath);
         }
         if (pdfBuffer) {
-          const cleanNum = String(record.data?.policyNumber || record.selectedPolicyType || "Policy").replace(/[^a-zA-Z0-9_-]/g, "_");
+          const cleanNum = String(record.data?.policyNumber || record.selectedPolicyType || "Policy").replace(
+            /[^a-zA-Z0-9_-]/g,
+            "_",
+          );
           const policyFileName = rawFilename || record.pdfFileName || `${cleanNum}.pdf`;
           return {
             mediaBase64: pdfBuffer.toString("base64"),
             mediaType: "document",
-            filename: policyFileName.toLowerCase().endsWith(".pdf") ? policyFileName : `${policyFileName}.pdf`,
+            filename: policyFileName.toLowerCase().endsWith(".pdf")
+              ? policyFileName
+              : `${policyFileName}.pdf`,
             caption,
           };
         }
@@ -131,7 +139,7 @@ export async function POST(request) {
     if (session.role === "VIEWER") {
       return NextResponse.json(
         { error: "Unauthorized: Viewer role has read-only access and cannot send WhatsApp messages" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -146,7 +154,10 @@ export async function POST(request) {
     }
 
     if (!recipient || (!message && attachments.length === 0 && !body.attachBirthdayCard)) {
-      return NextResponse.json({ error: "Recipient and a message or attachment are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Recipient and a message or attachment are required" },
+        { status: 400 },
+      );
     }
 
     const signedMessage = body.attachBirthdayCard
@@ -154,10 +165,17 @@ export async function POST(request) {
       : withAgentSignature(message, body.signature || buildDefaultAgentSignature(session));
 
     const targetAccountId = await resolveWhatsAppSender(session);
-    const context = { userId: session.userId, organizationId: session.organizationId, accountId: targetAccountId, recipientName: body.recipientName };
+    const context = {
+      userId: session.userId,
+      organizationId: session.organizationId,
+      accountId: targetAccountId,
+      recipientName: body.recipientName,
+    };
     const sendWhatsAppText = (to, message) => dispatchWhatsApp(context, "TEXT", to, message);
-    const sendWhatsAppImage = (to, data, filename, caption) => dispatchWhatsApp(context, "IMAGE", to, data, filename, caption);
-    const sendWhatsAppFile = (to, data, filename, caption) => dispatchWhatsApp(context, "PDF", to, data, filename, caption);
+    const sendWhatsAppImage = (to, data, filename, caption) =>
+      dispatchWhatsApp(context, "IMAGE", to, data, filename, caption);
+    const sendWhatsAppFile = (to, data, filename, caption) =>
+      dispatchWhatsApp(context, "PDF", to, data, filename, caption);
 
     // Render personalized birthday card directly in memory on-the-fly and dispatch
     if (body.attachBirthdayCard) {
@@ -168,7 +186,7 @@ export async function POST(request) {
         card.base64,
         "birthday_greeting.jpg",
         signedMessage,
-        targetAccountId
+        targetAccountId,
       );
       return NextResponse.json({
         success: true,
@@ -190,18 +208,31 @@ export async function POST(request) {
       const captionText = signedMessage || primaryAttachment.caption || "";
 
       if (primaryAttachment.mediaType === "document") {
-        const docRes = await sendWhatsAppFile(recipient, primaryAttachment.mediaBase64, primaryAttachment.filename, captionText, targetAccountId);
+        const docRes = await sendWhatsAppFile(
+          recipient,
+          primaryAttachment.mediaBase64,
+          primaryAttachment.filename,
+          captionText,
+          targetAccountId,
+        );
         responses.push(docRes);
       } else {
-        const imgRes = await sendWhatsAppImage(recipient, primaryAttachment.mediaBase64, primaryAttachment.filename, captionText, targetAccountId);
+        const imgRes = await sendWhatsAppImage(
+          recipient,
+          primaryAttachment.mediaBase64,
+          primaryAttachment.filename,
+          captionText,
+          targetAccountId,
+        );
         responses.push(imgRes);
       }
 
       for (let i = 1; i < resolvedAttachments.length; i++) {
         const att = resolvedAttachments[i];
-        const attRes = att.mediaType === "document"
-          ? await sendWhatsAppFile(recipient, att.mediaBase64, att.filename, att.caption, targetAccountId)
-          : await sendWhatsAppImage(recipient, att.mediaBase64, att.filename, att.caption, targetAccountId);
+        const attRes =
+          att.mediaType === "document"
+            ? await sendWhatsAppFile(recipient, att.mediaBase64, att.filename, att.caption, targetAccountId)
+            : await sendWhatsAppImage(recipient, att.mediaBase64, att.filename, att.caption, targetAccountId);
         responses.push(attRes);
       }
     } else if (signedMessage) {
@@ -210,7 +241,8 @@ export async function POST(request) {
     }
 
     const firstResponse = responses[0];
-    const msgId = typeof firstResponse === "object" ? firstResponse.id || firstResponse.response : firstResponse;
+    const msgId =
+      typeof firstResponse === "object" ? firstResponse.id || firstResponse.response : firstResponse;
 
     return NextResponse.json({
       success: true,
@@ -223,7 +255,7 @@ export async function POST(request) {
     console.error("Failed to send WhatsApp message:", error);
     return NextResponse.json(
       { error: error.message || "Failed to send WhatsApp message" },
-      { status: error.status || 500 }
+      { status: error.status || 500 },
     );
   }
 }

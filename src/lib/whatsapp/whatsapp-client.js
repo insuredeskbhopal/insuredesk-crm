@@ -98,6 +98,11 @@ export async function setPrimaryWhatsAppSession(accountId) {
   return callGateway("POST", `sessions/${encodeURIComponent(accountId)}/set-default`);
 }
 
+export async function connectWhatsAppSession(accountId) {
+  if (!accountId) throw new Error("Account ID is required to connect");
+  return callGateway("POST", `sessions/${encodeURIComponent(accountId)}/connect`);
+}
+
 export async function pauseWhatsAppSession(accountId) {
   if (!accountId) throw new Error("Account ID is required to pause session");
   return callGateway("POST", `sessions/${encodeURIComponent(accountId)}/pause`);

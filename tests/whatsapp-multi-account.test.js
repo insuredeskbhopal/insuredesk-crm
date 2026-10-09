@@ -4,11 +4,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { prismaMock, whatsappClientMock } = vi.hoisted(() => ({
   prismaMock: {
+    organization: { findUnique: vi.fn() },
     whatsAppMessageQueue: {
       create: vi.fn(),
       count: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
   whatsappClientMock: {
@@ -20,12 +22,15 @@ const { prismaMock, whatsappClientMock } = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("@/lib/whatsapp/account-access", () => ({ resolveWhatsAppSender: vi.fn(async () => (await whatsappClientMock.getWhatsAppStatus()).accountId), authorizedAccount: vi.fn() }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
 vi.mock("@/lib/whatsapp/whatsapp-client", () => whatsappClientMock);
 
 describe("WhatsApp Multi-Account Architecture & Queue Isolation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    prismaMock.whatsAppMessageQueue.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.organization.findUnique.mockImplementation(async () => ({ systemWhatsAppAccountId: (await whatsappClientMock.getWhatsAppStatus()).accountId }));
   });
 
   describe("Queue Enqueue Isolation", () => {
@@ -60,7 +65,8 @@ describe("WhatsApp Multi-Account Architecture & Queue Isolation", () => {
       });
     });
 
-    it("preserves explicitly specified accountId at enqueue time", async () => {
+    it("preserves the resolved authorized accountId at enqueue time", async () => {
+      whatsappClientMock.getWhatsAppStatus.mockResolvedValue({ accountId: "support_desk_secondary" });
       prismaMock.whatsAppMessageQueue.create.mockImplementation(({ data }) =>
         Promise.resolve({ id: "msg-2", ...data })
       );
@@ -84,7 +90,8 @@ describe("WhatsApp Multi-Account Architecture & Queue Isolation", () => {
   });
 
   describe("Queue Dispatch & Sender Independence", () => {
-    it("dispatches message strictly through its stamped accountId, ignoring primary sender changes", async () => {
+    it("dispatches message strictly through its stamped accountId", async () => {
+      whatsappClientMock.getWhatsAppStatus.mockResolvedValue({ accountId: "account_original_sender" });
       const queuedMessage = {
         id: "msg-locked",
         organizationId: "org-1",
@@ -123,6 +130,7 @@ describe("WhatsApp Multi-Account Architecture & Queue Isolation", () => {
     });
 
     it("does NOT fallback or switch to another account when sending fails", async () => {
+      whatsappClientMock.getWhatsAppStatus.mockResolvedValue({ accountId: "account_failing_sender" });
       const failedMessage = {
         id: "msg-fail",
         organizationId: "org-1",

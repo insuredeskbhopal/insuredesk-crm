@@ -136,10 +136,14 @@ curl -X GET "https://bimaheadquarter.com/api/cron/whatsapp-worker?secret=your_se
 ```
 
 
-## Account ownership
+## User primary, access, and session responsibility
 
-Managers, agents, and administrators can link numbers. Viewers remain read-only.
-The CRM stamps each new account with the authenticated staff user's ID, organization, and name; the gateway persists this metadata in `accounts.json`.
-Only that owner can scan a pairing QR, pause, log out, remove, or select that account as sender. Administrator roles do not bypass ownership. The legacy logout endpoint requires an explicit owned account ID.
-Existing accounts without ownership metadata are read-only until their original owner is verified and assigned; never assign them to the next person who opens the page.
-Deploy the gateway ownership support together with the CRM changes. Gateway `POST /sessions` now requires an `owner` object supplied by the authenticated CRM server.
+Managers, agents, and administrators can link numbers. Administrators register existing gateway accounts into their CRM workspace and explicitly grant sending access through Manage access. Unknown original owners remain Unknown until an administrator assigns responsibility.
+
+My Primary WhatsApp stores a preference against the authenticated CRM user, independent of the gateway global active account. Selecting a permitted connected account changes only that user's preference. It never changes ownership or disconnects a session. All manual sending paths resolve this preference on the backend; missing, unauthorized, or disconnected selections block sending without fallback. Viewers remain read-only.
+
+Session pairing, pause, logout, and removal require responsibility for that account or administrative permission in the same workspace. Sending access grants confer no session management permission. Existing BHQ staff retain their null organization scope; organization assignments are unchanged.
+
+Administrators separately authorize the system automation sender. The message queue records sender and initiating user; retries retain the original sender and recheck access. Historical queued messages without a valid sender need administrator review and are never silently reassigned.
+
+Pairing explicitly connects the account; QR polling is scoped to it. Reconnection uses a distinct retry state and ignores stale socket events. Pause preserves credentials. Deploy CRM and gateway together; existing credentials stay on the persistent volume.

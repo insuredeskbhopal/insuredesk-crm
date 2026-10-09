@@ -37,9 +37,6 @@ export async function enqueueMessage({
   accountId = null,
   initiatedByUserId = null,
 }) {
-  if (!organizationId) {
-    throw new Error('organizationId is required to enqueue a message');
-  }
   if (!recipientPhone) {
     throw new Error('recipientPhone is required to enqueue a message');
   }
@@ -120,13 +117,14 @@ export async function processQueueBatch(limit = 5) {
     }
 
     // Update status to SENDING
-    await prisma.whatsAppMessageQueue.update({
-      where: { id: message.id },
+    const claimed = await prisma.whatsAppMessageQueue.updateMany({
+      where: { id: message.id, status: { in: ["PENDING", "RETRYING"] } },
       data: {
         status: 'SENDING',
         attempts: { increment: 1 },
       },
     });
+    if (!claimed.count) continue;
 
     const targetAccountId = message.accountId || null;
 
@@ -138,8 +136,9 @@ export async function processQueueBatch(limit = 5) {
         if (!user) throw new Error("Initiating staff member is no longer authorized");
         await authorizedAccount(message.initiatedByUserId, message.organizationId, targetAccountId);
       } else {
-        const org = await prisma.organization.findUnique({ where: { id: message.organizationId } });
-        if (org?.systemWhatsAppAccountId !== targetAccountId) throw new Error("Queued system sender is no longer authorized");
+        const org = message.organizationId ? await prisma.organization.findUnique({ where: { id: message.organizationId } }) : null;
+        const legacy = message.organizationId ? null : await prisma.whatsAppAccount.findFirst({ where: { id: targetAccountId, organizationId: null, isSystemSender: true } });
+        if (message.organizationId ? org?.systemWhatsAppAccountId !== targetAccountId : !legacy) throw new Error("Queued system sender is no longer authorized");
       }
       let openwaResponse;
       if (message.messageType === 'IMAGE') {

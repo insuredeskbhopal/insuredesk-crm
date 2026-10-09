@@ -1,39 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { verifyJWT } from "@/lib/auth";
+import { requireWhatsAppStaff, isWhatsAppAdmin } from "@/lib/whatsapp/account-access";
 
 export const runtime = "nodejs";
 
-async function requireSession(request) {
-  const token = request.cookies.get("token")?.value;
-  if (!token) return { errorResponse: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) };
-  const session = await verifyJWT(token);
-  if (!session) {
-    return { errorResponse: NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }) };
-  }
-  return session;
-}
-
 export async function GET(request) {
   try {
-    const session = await requireSession(request);
+    const session = await requireWhatsAppStaff(request);
     if (session.errorResponse) return session.errorResponse;
 
     const orgId = session.organizationId || null;
-    const isSuperAdmin = session.role === "SUPER_ADMIN";
-    if (!orgId && !isSuperAdmin) {
-      return NextResponse.json({ error: "Organization scope is required" }, { status: 400 });
-    }
 
     const { searchParams } = new URL(request.url);
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10) || 50));
     const offset = Math.max(0, parseInt(searchParams.get("offset") || "0", 10) || 0);
     const status = searchParams.get("status");
 
-    const where = {};
-    if (orgId) {
-      where.organizationId = orgId;
-    }
+    const where = { organizationId: orgId };
     if (status) {
       where.status = status;
     }
@@ -65,7 +48,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = await requireSession(request);
+    const session = await requireWhatsAppStaff(request, true);
     if (session.errorResponse) return session.errorResponse;
 
     if (session.role === "VIEWER") {
@@ -73,10 +56,6 @@ export async function POST(request) {
     }
 
     const orgId = session.organizationId || null;
-    const isSuperAdmin = session.role === "SUPER_ADMIN";
-    if (!orgId && !isSuperAdmin) {
-      return NextResponse.json({ error: "Organization scope is required" }, { status: 400 });
-    }
 
     const body = await request.json();
     const { messageId, action } = body;
@@ -84,8 +63,10 @@ export async function POST(request) {
     if (action === "retry_all") {
       const result = await prisma.whatsAppMessageQueue.updateMany({
         where: {
-          ...(orgId ? { organizationId: orgId } : {}),
+          organizationId: orgId,
+          ...(!isWhatsAppAdmin(session) ? { initiatedByUserId: session.userId } : {}),
           status: { in: ["FAILED", "RETRYING"] },
+          OR: [{ messageType: "TEXT" }, { mediaUrl: { not: null } }, { fileName: { contains: "birthday" } }],
         },
         data: {
           status: "PENDING",
@@ -103,11 +84,17 @@ export async function POST(request) {
 
     // Verify ownership
     const message = await prisma.whatsAppMessageQueue.findFirst({
-      where: { id: messageId, ...(orgId ? { organizationId: orgId } : {}) },
+      where: { id: messageId, organizationId: orgId },
     });
 
     if (!message) {
       return NextResponse.json({ error: "Message not found" }, { status: 404 });
+    }
+
+    if (!isWhatsAppAdmin(session) && message.initiatedByUserId !== session.userId) return NextResponse.json({ error: "Only the initiating employee or an administrator can retry this message" }, { status: 403 });
+
+    if (["PDF", "IMAGE"].includes(message.messageType) && !message.mediaUrl && !message.fileName?.includes("birthday")) {
+      return NextResponse.json({ error: "Resend this attachment from its original CRM form; the audit record does not contain its file." }, { status: 409 });
     }
 
     // Reset status to PENDING

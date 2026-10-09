@@ -1101,8 +1101,8 @@ model WhatsAppTemplate {
 
 model WhatsAppMessageQueue {
   id              String    @id @default(uuid()) @db.Uuid
-  organizationId  String    @map("organization_id") @db.Uuid
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId  String?    @map("organization_id") @db.Uuid
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   recipientPhone  String    @map("recipient_phone")
   recipientName   String    @map("recipient_name")
   messageType     String    @map("message_type")
@@ -1129,10 +1129,11 @@ model WhatsAppMessageQueue {
 
 model WhatsAppAccount {
   id String @id
-  organizationId String @map("organization_id") @db.Uuid
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String? @map("organization_id") @db.Uuid
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   ownerUserId String? @map("owner_user_id") @db.Uuid
   owner User? @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  isSystemSender Boolean @default(false) @map("is_system_sender")
   label String
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   access WhatsAppAccountAccess[]

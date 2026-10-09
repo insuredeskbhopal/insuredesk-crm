@@ -49,7 +49,7 @@ function calculateDaysLeft(dateStr) {
 }
 
 // Triggers daily birthday wishes queueing
-export async function triggerDailyBirthdays({ organizationId = null, initiatedByUserId = null } = {}) {
+export async function triggerDailyBirthdays({ organizationId = undefined, initiatedByUserId = null } = {}) {
   console.log('Running daily birthday automation scan...');
 
   // Get current date in IST (UTC + 5:30)
@@ -67,7 +67,7 @@ export async function triggerDailyBirthdays({ organizationId = null, initiatedBy
     where: {
       deletedAt: null,
       dob: { not: null },
-      ...(organizationId ? { organizationId } : {}),
+      ...(organizationId !== undefined ? { organizationId } : {}),
     },
     select: {
       id: true,
@@ -89,7 +89,6 @@ export async function triggerDailyBirthdays({ organizationId = null, initiatedBy
       // It's this customer's birthday!
       if (!customer.phone) continue; // Birthday wishes are client-facing, so a client phone is required
       const orgId = customer.organizationId || organizationId;
-      if (!orgId) continue;
 
       // Get organization name
       const org = orgId
@@ -174,7 +173,7 @@ export async function triggerUpcomingRenewals({ organizationId, initiatedByUserI
     where: {
       deletedAt: null,
       isActivePolicy: true,
-      ...(organizationId ? { organizationId } : {}),
+      ...(organizationId !== undefined ? { organizationId } : {}),
       renewalStatus: {
         notIn: ['RENEWED', 'LOST', 'NOT_INTERESTED', 'WRONG_NUMBER', 'RENEWED_ELSEWHERE'],
       },
@@ -242,7 +241,7 @@ export async function triggerUpcomingRenewals({ organizationId, initiatedByUserI
   return { queuedCount, autoLostCount };
 }
 
-export async function triggerInternalOperationsDigest({ organizationId = null, initiatedByUserId = null } = {}) {
+export async function triggerInternalOperationsDigest({ organizationId = undefined, initiatedByUserId = null } = {}) {
   console.log('Running internal operations WhatsApp digest scan...');
 
   const now = new Date();
@@ -256,7 +255,7 @@ export async function triggerInternalOperationsDigest({ organizationId = null, i
       status: { in: OPEN_TASK_STATUSES },
       type: { in: ['FOLLOW_UP', 'CALL', 'RENEWAL', 'CLAIM'] },
       dueAt: { lte: todayEnd },
-      ...(organizationId ? { organizationId } : { organizationId: { not: null } }),
+      ...(organizationId !== undefined ? { organizationId } : {}),
     },
     orderBy: [{ dueAt: 'asc' }, { updatedAt: 'desc' }],
     take: 200,

@@ -12,10 +12,12 @@ import {
   deleteAccountSession,
   setPrimaryAccount,
   createNewAccount,
+  startConnection,
   listAllAccountsWithStatus,
   startAllAccounts,
   getGatewayMetrics,
 } from "./baileys-manager.js";
+import { getAccount } from "./account-registry.js";
 import { apiKeyAuth } from "./auth-middleware.js";
 
 // ---- Load env from parent .env if gateway .env doesn't exist ----
@@ -116,6 +118,15 @@ app.post("/sessions", async (req, res) => {
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }
+});
+
+// Explicitly resume a paused or expired pairing session; credentials are preserved.
+app.post("/sessions/:id/connect", async (req, res) => {
+  try {
+    if (!getAccount(req.params.id)) return res.status(404).json({ success: false, error: "Account not found" });
+    await startConnection(req.params.id);
+    res.json({ success: true });
+  } catch (error) { res.status(503).json({ success: false, error: error.message }); }
 });
 
 // GET /sessions/:id/status
