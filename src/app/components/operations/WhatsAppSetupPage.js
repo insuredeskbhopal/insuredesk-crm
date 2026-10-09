@@ -16,22 +16,19 @@ import {
   Zap,
   Users,
   ShieldCheck,
+  X,
   Gift,
   Sparkles,
   Mail,
   MessageSquare,
-  Radio,
-  Layers,
   Info,
   RotateCcw,
-  Star,
   Trash2,
-  QrCode,
-  Pause,
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
 import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
 import ModalPortal from "@/app/components/shared/ModalPortal";
+import styles from "./WhatsAppSetupPage.module.css";
 
 const TEMPLATE_VARIABLES = [
   { tag: "{{customerName}}", desc: "Customer's Full Name" },
@@ -52,7 +49,8 @@ export default function WhatsAppSetupPage() {
       id: "renewals",
       label: "Renewals Module",
       icon: RefreshCw,
-      description: "Customize all automated & manual renewal reminder templates used in Renewals & Customer Profile.",
+      description:
+        "Customize all automated & manual renewal reminder templates used in Renewals & Customer Profile.",
       templates: [
         { id: "due_soon", label: "Due Soon Notice", icon: Clock },
         { id: "today", label: "Expires Today", icon: AlertTriangle },
@@ -86,12 +84,12 @@ export default function WhatsAppSetupPage() {
   const [selectedModuleGroup, setSelectedModuleGroup] = useState("renewals");
   const currentModule = TEMPLATE_GROUPS.find((g) => g.id === selectedModuleGroup) || TEMPLATE_GROUPS[0];
   // Main Dashboard Tab Navigation
-  const [activeMainSection, setActiveMainSection] = useState("templates"); // "templates" | "connection" | "logs"
+  const [activeMainSection, setActiveMainSection] = useState("connection"); // "templates" | "connection" | "logs"
 
   // Connection Status
   const [status, setStatus] = useState("UNREACHABLE");
   const [connected, setConnected] = useState(false);
-  const [qrCode, setQrCode] = useState(null);
+  const [, setQrCode] = useState(null);
   const [lastChecked, setLastChecked] = useState(null);
   const [statusError, setStatusError] = useState(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
@@ -114,13 +112,15 @@ export default function WhatsAppSetupPage() {
   const [testPhone, setTestPhone] = useState("");
   const [testRecipientType, setTestRecipientType] = useState("individual");
   const [testGroupId, setTestGroupId] = useState("");
-  const [testMessage, setTestMessage] = useState("Hello! This is a test message from Bima Headquarter CRM WhatsApp integration.");
+  const [testMessage, setTestMessage] = useState(
+    "Hello! This is a test message from Bima Headquarter CRM WhatsApp integration.",
+  );
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [testResult, setTestResult] = useState(null);
 
   // Templates
   const [templates, setTemplates] = useState([]);
-  const [activeTemplateTab, setActiveTemplateTab] = useState("birthday_wish");
+  const [activeTemplateTab, setActiveTemplateTab] = useState("due_soon");
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [, setTemplateSuccess] = useState(false);
 
@@ -182,6 +182,71 @@ export default function WhatsAppSetupPage() {
     fetchQueue({ offset: queueOffset, statusFilter: queueStatusFilter });
     return () => queueRequestRef.current?.abort();
   }, [queueLimit, queueOffset, queueStatusFilter]);
+
+  useEffect(() => {
+    if (!qrModalAccount?.id) return;
+    const accountId = qrModalAccount.id;
+    const controller = new window.AbortController();
+    const timer = window.setInterval(async () => {
+      try {
+        const response = await fetch(
+          `/api/operations/whatsapp/status?accountId=${encodeURIComponent(accountId)}`,
+          { signal: controller.signal },
+        );
+        if (!response.ok) return;
+        const data = await response.json();
+        if (controller.signal.aborted) return;
+        if (data.connected) {
+          setQrModalAccount(null);
+          fetchAccounts();
+          fetchStatus();
+          showToast("success", "Your WhatsApp account is connected.");
+        } else {
+          setQrModalAccount((current) =>
+            current?.id === accountId ? { ...current, qrCode: data.qrCode || null } : current,
+          );
+        }
+      } catch {
+        /* Retry on the next poll while the dialog is open. */
+      }
+    }, 4000);
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+    };
+  }, [qrModalAccount?.id]);
+
+  useEffect(() => {
+    if (!showAddAccountModal && !showDisconnectModal && !qrModalAccount) return;
+    const previousFocus = document.activeElement;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setShowAddAccountModal(false);
+        setShowDisconnectModal(false);
+        setQrModalAccount(null);
+      }
+      if (event.key === "Tab") {
+        const controls = document
+          .querySelector('[role="dialog"]')
+          ?.querySelectorAll('button:not(:disabled), input, select, textarea, [tabindex="0"]');
+        if (!controls?.length) return;
+        const first = controls[0],
+          last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previousFocus?.focus();
+    };
+  }, [showAddAccountModal, showDisconnectModal, !!qrModalAccount]);
 
   // Poll status when not connected
   useEffect(() => {
@@ -329,7 +394,7 @@ export default function WhatsAppSetupPage() {
         qrCode: data.qrCode || null,
         connected: data.connected || false,
       });
-    } catch (err) {
+    } catch {
       showToast("error", "Failed to retrieve QR code for account");
     }
   }
@@ -395,7 +460,8 @@ export default function WhatsAppSetupPage() {
   }
 
   async function handleDeleteAccount(accountId) {
-    if (!window.confirm("Are you sure you want to permanently delete this account and its credentials?")) return;
+    if (!window.confirm("Are you sure you want to permanently delete this account and its credentials?"))
+      return;
     setAccountActionLoading(accountId);
     try {
       const res = await fetch("/api/operations/whatsapp/sessions", {
@@ -454,25 +520,19 @@ export default function WhatsAppSetupPage() {
 
   const handleTemplateBodyChange = (e) => {
     setTemplates((prev) =>
-      prev.map((t) =>
-        t.name === activeTemplateTab ? { ...t, body: e.target.value } : t
-      )
+      prev.map((t) => (t.name === activeTemplateTab ? { ...t, body: e.target.value } : t)),
     );
   };
 
   const handleTemplateMediaChange = (e) => {
     setTemplates((prev) =>
-      prev.map((t) =>
-        t.name === activeTemplateTab ? { ...t, mediaUrl: e.target.value } : t
-      )
+      prev.map((t) => (t.name === activeTemplateTab ? { ...t, mediaUrl: e.target.value } : t)),
     );
   };
 
   const handleTemplateMediaTypeChange = (e) => {
     setTemplates((prev) =>
-      prev.map((t) =>
-        t.name === activeTemplateTab ? { ...t, mediaType: e.target.value } : t
-      )
+      prev.map((t) => (t.name === activeTemplateTab ? { ...t, mediaType: e.target.value } : t)),
     );
   };
 
@@ -507,7 +567,12 @@ export default function WhatsAppSetupPage() {
     e.preventDefault();
     const recipient = testRecipientType === "group" ? testGroupId : testPhone;
     if (!recipient) {
-      showToast("error", testRecipientType === "group" ? "Please select a WhatsApp group" : "Please specify a recipient phone number");
+      showToast(
+        "error",
+        testRecipientType === "group"
+          ? "Please select a WhatsApp group"
+          : "Please specify a recipient phone number",
+      );
       return;
     }
     setIsSendingTest(true);
@@ -585,7 +650,7 @@ export default function WhatsAppSetupPage() {
       const sent = data.batch?.processedCount || 0;
       showToast(
         "success",
-        `Automation completed. Queued ${scans.birthdaysQueued || 0} birthdays, ${scans.renewalsQueued || 0} renewals, ${scans.internalDigestQueued || 0} internal digests. Sent ${sent}.`
+        `Automation completed. Queued ${scans.birthdaysQueued || 0} birthdays, ${scans.renewalsQueued || 0} renewals, ${scans.internalDigestQueued || 0} internal digests. Sent ${sent}.`,
       );
       fetchQueue();
     } catch (err) {
@@ -605,11 +670,7 @@ export default function WhatsAppSetupPage() {
     const after = text.substring(end, text.length);
     const newBody = before + tag + after;
 
-    setTemplates((prev) =>
-      prev.map((t) =>
-        t.name === activeTemplateTab ? { ...t, body: newBody } : t
-      )
-    );
+    setTemplates((prev) => prev.map((t) => (t.name === activeTemplateTab ? { ...t, body: newBody } : t)));
 
     // Reposition cursor
     setTimeout(() => {
@@ -628,12 +689,12 @@ export default function WhatsAppSetupPage() {
   };
 
   return (
-    <div className="whatsapp-setup-page pb-16 max-w-7xl mx-auto px-4 sm:px-6">
+    <div className={styles.page}>
       {/* Toast Alert */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-[100] animate-slide-in">
           <div
-            className={`flex items-center gap-3 px-4 py-3.5 rounded-xl shadow-xl border text-xs font-semibold ${
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-xl shadow-xl border text-sm font-semibold ${
               toast.type === "success"
                 ? "bg-emerald-50 border-emerald-200 text-emerald-900"
                 : "bg-rose-50 border-rose-200 text-rose-900"
@@ -651,539 +712,471 @@ export default function WhatsAppSetupPage() {
 
       <OperationsBackLink />
 
-      {/* Hero Header & Action Bar - Light Theme */}
-      <div
-        className="rounded-3xl p-6 sm:p-8 mb-8 relative overflow-hidden"
-        style={{
-          background: "#ffffff",
-          border: "1px solid #e2e8f0",
-          boxShadow: "0 4px 20px -2px rgba(15, 23, 42, 0.05)",
-          color: "#0f172a",
-        }}
-      >
-        {/* Decorative Light Background Blurs */}
-        <div className="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
-        <div className="absolute right-40 -bottom-20 w-80 h-80 rounded-full bg-blue-500/5 blur-3xl pointer-events-none" />
+      <header className={styles.header}>
+        <div>
+          <span className={styles.eyebrow}>CUSTOMER COMMUNICATIONS</span>
+          <h1>WhatsApp workspace</h1>
+          <p>Your numbers, messages, and automations. One place to manage every conversation.</p>
+        </div>
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            disabled={isCheckingStatus}
+            onClick={() => {
+              fetchStatus();
+              fetchAccounts();
+              fetchTemplates();
+              fetchQueue();
+            }}
+          >
+            <RefreshCw size={16} className={isCheckingStatus ? "animate-spin" : ""} />
+            {isCheckingStatus ? "Refreshing…" : "Refresh"}
+          </button>
+          <button
+            type="button"
+            className={styles.primaryButton}
+            onClick={handleRunAutomations}
+            disabled={isRunningAutomations || !connected}
+          >
+            <Zap size={16} /> {isRunningAutomations ? "Running…" : "Run automations"}
+          </button>
+        </div>
+      </header>
 
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold"
-              style={{
-                background: "#ecfdf5",
-                border: "1px solid #a7f3d0",
-                color: "#047857",
-              }}
-            >
-              <Radio className="w-3.5 h-3.5 animate-pulse text-emerald-600" />
-              <span>WhatsApp Operations Hub</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight" style={{ color: "#0f172a" }}>
-              Automation & Messaging Center
-            </h1>
-            <p className="text-xs sm:text-sm max-w-2xl font-medium leading-relaxed" style={{ color: "#475569" }}>
-              Configure your WhatsApp gateway session, build smart dynamic notification templates, and monitor automated queue dispatches.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                fetchStatus();
-                fetchTemplates();
-                fetchQueue();
-              }}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition"
-              style={{
-                background: "#f8fafc",
-                border: "1px solid #cbd5e1",
-                color: "#334155",
-              }}
-            >
-              <RefreshCw size={14} className={isCheckingStatus ? "animate-spin text-emerald-600" : ""} style={{ color: "#059669" }} />
-              Sync Status
-            </button>
-
-            <button
-              type="button"
-              onClick={handleRunAutomations}
-              disabled={isRunningAutomations || !connected}
-              className="flex items-center gap-2 px-5 py-2.5 font-bold rounded-xl text-xs shadow-md transition disabled:opacity-50"
-              style={{ background: "#10b981", color: "#ffffff" }}
-            >
-              <Zap size={14} className={isRunningAutomations ? "animate-bounce" : ""} />
-              {isRunningAutomations ? "Running..." : "Run Automations"}
-            </button>
+      <div className={styles.summary}>
+        <div className={styles.summaryItem}>
+          <span className={styles.summaryIcon}>
+            <Smartphone size={19} />
+          </span>
+          <div>
+            <span className={styles.metricLabel}>Gateway connection</span>
+            <strong>
+              <i className={connected ? styles.onlineDot : styles.offlineDot} />
+              {connected ? "Connected" : status.replace(/_/g, " ")}
+            </strong>
+            <small>{connected ? "Ready to send messages" : "Check your sender connection"}</small>
           </div>
         </div>
-
-        {/* Mini KPI Dashboard Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 pt-6 relative z-10" style={{ borderTop: "1px solid #f1f5f9" }}>
-          <div className="rounded-2xl p-4 flex items-center gap-4" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={connected
-                ? { background: "#d1fae5", color: "#047857", border: "1px solid #a7f3d0" }
-                : { background: "#ffe4e6", color: "#e11d48", border: "1px solid #fecdd3" }
-              }
-            >
-              <Smartphone className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-[11px] uppercase font-semibold tracking-wider" style={{ color: "#64748b" }}>Gateway State</div>
-              <div className="text-sm font-bold flex items-center gap-1.5 mt-0.5" style={{ color: "#0f172a" }}>
-                <span className="w-2 h-2 rounded-full" style={{ background: connected ? "#10b981" : "#f43f5e" }} />
-                {connected ? "Connected & Active" : status.replace(/_/g, " ")}
-              </div>
-            </div>
+        <div className={styles.summaryItem}>
+          <span className={styles.summaryIcon}>
+            <Users size={19} />
+          </span>
+          <div>
+            <span className={styles.metricLabel}>Linked accounts</span>
+            <strong>
+              {accounts.length}
+              <span className={styles.metricUnit}> numbers</span>
+            </strong>
+            <small>{accounts.filter((a) => a.connected).length} connected now</small>
           </div>
-
-          <div className="rounded-2xl p-4 flex items-center gap-4" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#dbeafe", color: "#1d4ed8", border: "1px solid #bfdbfe" }}>
-              <Clock className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-[11px] uppercase font-semibold tracking-wider" style={{ color: "#64748b" }}>Queue Workload</div>
-              <div className="text-sm font-bold mt-0.5" style={{ color: "#0f172a" }}>
-                {totalCount} Total Messages
-              </div>
-            </div>
+        </div>
+        <div className={styles.summaryItem}>
+          <span className={styles.summaryIcon}>
+            <MessageSquare size={19} />
+          </span>
+          <div>
+            <span className={styles.metricLabel}>Message history</span>
+            <strong>
+              {totalCount}
+              <span className={styles.metricUnit}> messages</span>
+            </strong>
+            <small>Across your delivery queue</small>
           </div>
-
-          <div className="rounded-2xl p-4 flex items-center gap-4" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#f3e8ff", color: "#7e22ce", border: "1px solid #e9d5ff" }}>
-              <Layers className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-[11px] uppercase font-semibold tracking-wider" style={{ color: "#64748b" }}>Templates Configured</div>
-              <div className="text-sm font-bold mt-0.5" style={{ color: "#0f172a" }}>
-                {templates.length || 9} Active Workflows
-              </div>
-            </div>
+        </div>
+        <div className={styles.summaryItem}>
+          <span className={styles.summaryIcon}>
+            <FileText size={19} />
+          </span>
+          <div>
+            <span className={styles.metricLabel}>Message templates</span>
+            <strong>
+              {templates.length}
+              <span className={styles.metricUnit}> templates</span>
+            </strong>
+            <small>Personalized for your customers</small>
           </div>
         </div>
       </div>
 
-      {/* Main Navigation Switcher Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-px mb-8 overflow-x-auto">
+      <nav className={styles.tabs} aria-label="WhatsApp workspace sections">
         {[
-          { id: "templates", label: "Notification Templates", icon: MessageSquare },
-          { id: "connection", label: "Gateway & Testing", icon: Smartphone },
-          { id: "logs", label: "Message Queue & Logs", icon: Clock },
+          { id: "connection", label: "Accounts & testing", icon: Smartphone },
+          { id: "templates", label: "Message templates", icon: MessageSquare },
+          { id: "logs", label: "Delivery history", icon: Clock },
         ].map((tab) => {
           const Icon = tab.icon;
-          const isActive = activeMainSection === tab.id;
           return (
             <button
               key={tab.id}
               type="button"
+              aria-current={activeMainSection === tab.id ? "page" : undefined}
+              className={activeMainSection === tab.id ? styles.activeTab : styles.tab}
               onClick={() => setActiveMainSection(tab.id)}
-              className={`flex items-center gap-2 px-5 py-3 text-xs font-semibold border-b-2 transition whitespace-nowrap ${
-                isActive
-                  ? "border-slate-900 text-slate-900 bg-slate-50/60 rounded-t-xl"
-                  : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50/40"
-              }`}
             >
-              <Icon size={15} className={isActive ? "text-slate-900" : "text-slate-400"} />
+              <Icon size={17} />
               {tab.label}
             </button>
           );
         })}
-      </div>
+        <span className={styles.tabNote}>
+          <ShieldCheck size={14} /> Internal workspace
+        </span>
+      </nav>
 
-      {/* SECTION 1: NOTIFICATION TEMPLATES */}
+      {/* MESSAGE TEMPLATES */}
       {activeMainSection === "templates" && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-8">
-            <div className="flex flex-col gap-4 mb-6">
-              {/* Level 1: Platform CRM Module Bar */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-50/80 p-3 rounded-2xl border border-slate-200">
-                <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap px-1">
-                    CRM Module:
-                  </span>
-                  {TEMPLATE_GROUPS.map((group) => {
-                    const GroupIcon = group.icon;
-                    const isModuleActive = selectedModuleGroup === group.id;
-                    return (
-                      <button
-                        key={group.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedModuleGroup(group.id);
-                          setActiveTemplateTab(group.templates[0].id);
-                          setTemplateSuccess(false);
-                        }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-                          isModuleActive
-                            ? "bg-white text-slate-900 shadow-md border-2 border-slate-900"
-                            : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300"
-                        }`}
-                      >
-                        <GroupIcon size={14} className={isModuleActive ? "text-slate-900" : "text-slate-400"} />
-                        {group.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Level 2: Message Formats in Selected Module */}
-              <div>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2.5">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                    {currentModule.label} Formats
-                  </h4>
-                  <span className="text-[11px] text-slate-400 font-medium">
-                    {currentModule.description}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 overflow-x-auto p-1.5 bg-slate-100/70 rounded-xl border border-slate-200">
-                  {currentModule.templates.map((tmpl) => {
-                    const TmplIcon = tmpl.icon;
-                    const isActive = activeTemplateTab === tmpl.id;
+        <section className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <div>
+              <span className={styles.eyebrow}>PERSONALIZE YOUR MESSAGES</span>
+              <h2>Message templates</h2>
+              <p>Edit reusable messages and preview exactly what your customer will see.</p>
+            </div>
+          </div>
+          <div className={styles.templateLayout}>
+            <aside className={styles.templateSidebar} aria-label="Choose a message template">
+              {TEMPLATE_GROUPS.map((group) => (
+                <div key={group.id} className={styles.templateGroup}>
+                  <h3>
+                    {group.label
+                      .replace(" Module", "")
+                      .replace("Customer Profiling & Greetings", "Customer greetings")
+                      .replace("Policy & Claims Operations", "Policy & claims")}
+                  </h3>
+                  {group.templates.map((tmpl) => {
+                    const Icon = tmpl.icon;
                     return (
                       <button
                         key={tmpl.id}
                         type="button"
+                        aria-pressed={activeTemplateTab === tmpl.id}
+                        className={
+                          activeTemplateTab === tmpl.id ? styles.selectedTemplate : styles.templateButton
+                        }
                         onClick={() => {
+                          setSelectedModuleGroup(group.id);
                           setActiveTemplateTab(tmpl.id);
                           setTemplateSuccess(false);
                         }}
-                        className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition whitespace-nowrap ${
-                          isActive
-                            ? "bg-white text-emerald-800 shadow-sm border-2 border-emerald-600"
-                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-                        }`}
                       >
-                        <TmplIcon size={13} className={isActive ? "text-emerald-600" : "text-slate-400"} />
+                        <Icon size={16} />
                         {tmpl.label}
                       </button>
                     );
                   })}
                 </div>
+              ))}
+            </aside>
+            <div className={styles.templateMain}>
+              <div className={styles.templateHeading}>
+                <h3>{currentModule.templates.find((t) => t.id === activeTemplateTab)?.label}</h3>
+                <span>Live preview</span>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-              {/* Left Column: Form Editor (2 Cols) */}
-              <div className="xl:col-span-2 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/60 p-5 rounded-2xl border border-slate-200">
-                  <div className="md:col-span-2">
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                      Attachment Media URL (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={activeTemplate.mediaUrl || ""}
-                      onChange={handleTemplateMediaChange}
-                      placeholder="https://example.com/image.png or base64 data"
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition"
-                    />
-                    <p className="text-[10px] text-slate-400 mt-1 font-medium">
-                      Public image URL, PDF document, or brochure. Empty sends standard text-only.
-                    </p>
-                  </div>
-                  <div className="md:col-span-1">
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                      Attachment Type
-                    </label>
-                    <select
-                      value={activeTemplate.mediaType || "IMAGE"}
-                      onChange={handleTemplateMediaTypeChange}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition font-medium"
-                    >
-                      <option value="IMAGE">IMAGE</option>
-                      <option value="PDF">PDF / DOCUMENT</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                      Message Body / Caption Text
-                    </label>
-                    <span className="text-[11px] text-slate-400 font-mono">
-                      {activeTemplate.body ? `${activeTemplate.body.length} characters` : ""}
-                    </span>
-                  </div>
-                  <textarea
-                    id="template-textarea"
-                    rows="7"
-                    value={activeTemplate.body || ""}
-                    onChange={handleTemplateBodyChange}
-                    className="w-full px-4 py-3 bg-slate-50/40 border border-slate-300 rounded-2xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition font-mono leading-relaxed shadow-inner"
-                  />
-                </div>
-
-                <div>
-                  <span className="block text-[11px] font-bold text-slate-700 mb-2 uppercase tracking-wider">
-                    Available Dynamic Variables (Click to Insert)
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {TEMPLATE_VARIABLES.map((v) => (
-                      <button
-                        key={v.tag}
-                        type="button"
-                        onClick={() => handleInsertTag(v.tag)}
-                        title={v.desc}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-250 rounded-xl text-[11px] font-semibold text-slate-700 font-mono transition flex items-center gap-1.5 hover:text-slate-900"
+              <div className={styles.templateEditorGrid}>
+                {/* Left Column: Form Editor (2 Cols) */}
+                <div className={styles.editor}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/60 p-5 rounded-xl border border-slate-200">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
+                        Attachment Media URL (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={activeTemplate.mediaUrl || ""}
+                        onChange={handleTemplateMediaChange}
+                        placeholder="https://example.com/image.png or base64 data"
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition"
+                      />
+                      <p className="text-sm text-slate-400 mt-1 font-medium">
+                        Public image URL, PDF document, or brochure. Empty sends standard text-only.
+                      </p>
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
+                        Attachment Type
+                      </label>
+                      <select
+                        value={activeTemplate.mediaType || "IMAGE"}
+                        onChange={handleTemplateMediaTypeChange}
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition font-medium"
                       >
-                        <Plus size={12} className="text-slate-500" />
-                        {v.tag}
-                      </button>
-                    ))}
+                        <option value="IMAGE">IMAGE</option>
+                        <option value="PDF">PDF / DOCUMENT</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wider">
+                        Message Body / Caption Text
+                      </label>
+                      <span className="text-sm text-slate-400 font-mono">
+                        {activeTemplate.body ? `${activeTemplate.body.length} characters` : ""}
+                      </span>
+                    </div>
+                    <textarea
+                      id="template-textarea"
+                      rows="7"
+                      value={activeTemplate.body || ""}
+                      onChange={handleTemplateBodyChange}
+                      className="w-full px-4 py-3 bg-slate-50/40 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition font-mono leading-relaxed shadow-inner"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="block text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wider">
+                      Available Dynamic Variables (Click to Insert)
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {TEMPLATE_VARIABLES.map((v) => (
+                        <button
+                          key={v.tag}
+                          type="button"
+                          onClick={() => handleInsertTag(v.tag)}
+                          title={v.desc}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-250 rounded-xl text-sm font-semibold text-slate-700 font-mono transition flex items-center gap-1.5 hover:text-slate-900"
+                        >
+                          <Plus size={12} className="text-slate-500" />
+                          {v.tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-5">
+                    <span className="text-sm text-slate-400 font-medium">
+                      * Dynamic fields automatically compile values from customer records upon dispatch.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleSaveTemplate}
+                      disabled={isSavingTemplate}
+                      className={styles.primaryButton}
+                    >
+                      <Save size={16} />
+                      {isSavingTemplate ? "Saving Template..." : "Save Template"}
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-slate-200 pt-5">
-                  <span className="text-[11px] text-slate-400 font-medium">
-                    * Dynamic fields automatically compile values from customer records upon dispatch.
+                {/* Right Column: Mobile Device Simulator (1 Col) */}
+                <div className={styles.preview}>
+                  <span className="block text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wider">
+                    Customer preview
                   </span>
-                  <button
-                    type="button"
-                    onClick={handleSaveTemplate}
-                    disabled={isSavingTemplate}
-                    className="flex items-center gap-2 px-6 py-2.5 font-bold rounded-xl text-xs shadow-sm transition disabled:opacity-50 hover:bg-slate-50"
-                    style={{
-                      background: "#ffffff",
-                      color: "#0f172a",
-                      border: "1.5px solid #0f172a",
-                    }}
-                  >
-                    <Save size={14} className="text-slate-900" />
-                    {isSavingTemplate ? "Saving Template..." : "Save Template"}
-                  </button>
-                </div>
-              </div>
 
-              {/* Right Column: Mobile Device Simulator (1 Col) */}
-              <div className="xl:col-span-1 flex flex-col justify-start">
-                <span className="block text-[11px] font-bold text-slate-700 mb-2 uppercase tracking-wider">
-                  Real-time WhatsApp Device Preview
-                </span>
-
-                <div className="border border-slate-300 rounded-3xl overflow-hidden shadow-lg flex flex-col h-[400px] bg-[#efeae2] relative">
-                  {/* Smartphone Header Notch */}
-                  <div className="bg-[#075E54] text-white px-4 py-3 flex items-center justify-between shrink-0 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-xs border border-white/20">
-                        ID
-                      </div>
-                      <div>
-                        <div className="font-semibold text-xs text-white">InsureDesk Customer</div>
-                        <div className="text-[10px] text-emerald-200 font-normal">online</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Chat Area Wallpaper */}
-                  <div className="flex-1 p-3.5 overflow-y-auto flex flex-col justify-end bg-[#efeae2]">
-                    <div className="bg-[#dcf8c6] text-slate-900 p-3.5 rounded-2xl rounded-tr-none shadow-md max-w-[92%] self-end relative text-xs leading-relaxed border border-[#cbe5bd]">
-                      {activeTemplate.mediaUrl && (
-                        <div className="mb-2 bg-black/5 rounded-xl p-2 border border-black/10 flex items-center gap-2 shrink-0">
-                          {activeTemplate.mediaType === "IMAGE" ? (
-                            <span className="text-[10px] text-slate-800 font-semibold truncate">🖼️ Image Attachment Attached</span>
-                          ) : (
-                            <span className="text-[10px] text-slate-800 font-semibold truncate">📄 PDF Document Attached</span>
-                          )}
+                  <div className="border border-slate-300 rounded-xl overflow-hidden shadow-lg flex flex-col h-[400px] bg-[#efeae2] relative">
+                    {/* Smartphone Header Notch */}
+                    <div className="bg-[#075E54] text-white px-4 py-3 flex items-center justify-between shrink-0 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center font-semibold text-sm border border-white/20">
+                          ID
                         </div>
-                      )}
-
-                      <div className="whitespace-pre-wrap font-sans text-slate-900 break-words pr-2">
-                        {compilePreviewText(activeTemplate.body)}
+                        <div>
+                          <div className="font-semibold text-sm text-white">InsureDesk Customer</div>
+                          <div className="text-sm text-emerald-200 font-normal">online</div>
+                        </div>
                       </div>
+                    </div>
 
-                      <div className="text-[9.5px] text-slate-500 text-right mt-2 font-medium flex items-center justify-end gap-1">
-                        <span>{new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
-                        <span className="text-[#34B7F1] text-[11px] font-bold">✓✓</span>
+                    {/* Chat Area Wallpaper */}
+                    <div className="flex-1 p-3.5 overflow-y-auto flex flex-col justify-end bg-[#efeae2]">
+                      <div className="bg-[#dcf8c6] text-slate-900 p-3.5 rounded-xl rounded-tr-none shadow-md max-w-[92%] self-end relative text-sm leading-relaxed border border-[#cbe5bd]">
+                        {activeTemplate.mediaUrl && (
+                          <div className="mb-2 bg-black/5 rounded-xl p-2 border border-black/10 flex items-center gap-2 shrink-0">
+                            {activeTemplate.mediaType === "IMAGE" ? (
+                              <span className="text-sm text-slate-800 font-semibold truncate">
+                                Image attachment
+                              </span>
+                            ) : (
+                              <span className="text-sm text-slate-800 font-semibold truncate">
+                                PDF attachment
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="whitespace-pre-wrap font-sans text-slate-900 break-words pr-2">
+                          {compilePreviewText(activeTemplate.body)}
+                        </div>
+
+                        <div className="text-[9.5px] text-slate-500 text-right mt-2 font-medium flex items-center justify-end gap-1">
+                          <span>
+                            {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                          <span className="text-[#34B7F1] text-sm font-semibold">✓✓</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <p className="text-[10px] text-slate-400 mt-2.5 font-medium text-center">
-                  Preview compiled using mock recipient records.
-                </p>
+                  <p className="text-sm text-slate-400 mt-2.5 font-medium text-center">
+                    Example customer details are used in this preview.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
       )}
 
       {/* SECTION 2: GATEWAY CONNECTION & TEST SENDER */}
       {activeMainSection === "connection" && (
-        <div className="space-y-8">
-          {/* SECTION: MULTI-ACCOUNT MANAGEMENT */}
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 mb-6">
+        <div className={styles.connectionLayout}>
+          <section className={styles.panel}>
+            <div className={styles.panelHeader}>
               <div>
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Smartphone className="w-5 h-5 text-emerald-600" /> Connected WhatsApp Numbers
-                </h3>
-                <p className="text-xs text-slate-500 font-normal mt-0.5">
-                  Link multiple WhatsApp accounts. All CRM automated operations will dispatch from the selected Active Operations Sender.
-                </p>
+                <span className={styles.eyebrow}>YOUR SENDING NUMBERS</span>
+                <h2>
+                  Connected accounts <span className={styles.count}>{accounts.length}</span>
+                </h2>
+                <p>Choose the active sender for renewals, greetings, and policy updates.</p>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => fetchAccounts()}
-                  disabled={isLoadingAccounts}
-                  className="p-2 text-slate-500 hover:text-slate-900 bg-slate-100 rounded-xl transition"
-                  title="Refresh Accounts"
-                >
-                  <RefreshCw size={14} className={isLoadingAccounts ? "animate-spin text-emerald-600" : ""} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddAccountModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition"
-                >
-                  <Plus size={14} /> Link New Number
-                </button>
-              </div>
+              <button
+                type="button"
+                className={styles.primaryButton}
+                onClick={() => setShowAddAccountModal(true)}
+              >
+                <Plus size={17} />
+                Link new number
+              </button>
             </div>
-
-            {/* Account Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {accountsError && (
-                <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                  {accountsError}
-                </div>
-              )}
+            {accountsError && (
+              <div role="alert" className={styles.error}>
+                <AlertCircle size={18} />
+                {accountsError}
+              </div>
+            )}
+            <div className={styles.accountList}>
               {accounts.length === 0 ? (
-                <div className="col-span-full py-8 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-slate-200">
-                  {isLoadingAccounts ? "Loading WhatsApp accounts..." : accountsError ? "Accounts unavailable. Retry using the refresh button above." : "No WhatsApp accounts linked. Use Link New Number to add one."}
+                <div className={styles.emptyState}>
+                  <Smartphone size={28} />
+                  <h3>
+                    {isLoadingAccounts
+                      ? "Loading your accounts…"
+                      : accountsError
+                        ? "Accounts are unavailable"
+                        : "Connect your first number"}
+                  </h3>
+                  <p>
+                    {accountsError
+                      ? "Use Refresh above to try again."
+                      : "Link a WhatsApp number to start sending customer messages."}
+                  </p>
                 </div>
               ) : (
                 accounts.map((acc) => {
                   const isActionBusy = accountActionLoading === acc.id;
                   return (
-                    <div
-                      key={acc.id}
-                      className={`rounded-2xl p-5 border transition-all ${
-                        acc.isDefault
-                          ? "bg-emerald-50/20 border-2 border-emerald-500 shadow-sm"
-                          : "bg-white border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-3">
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                            {acc.label}
-                            {acc.isDefault && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                ⭐ Primary Sender
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[11px] font-mono text-slate-500 mt-0.5">
-                            {acc.phoneNumber ? `+${acc.phoneNumber}` : "Awaiting scan"}
-                          </div>
+                    <article key={acc.id} className={styles.accountRow}>
+                      <div className={styles.accountAvatar}>
+                        <Smartphone size={23} />
+                      </div>
+                      <div className={styles.accountIdentity}>
+                        <div className={styles.accountName}>
+                          <h3>{acc.label}</h3>
+                          {acc.isDefault && (
+                            <span className={styles.senderBadge}>
+                              <ShieldCheck size={13} />
+                              Active sender
+                            </span>
+                          )}
                         </div>
-                        <span
-                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full border whitespace-nowrap ${
-                            acc.connected
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : acc.state === "PAUSED"
-                              ? "bg-slate-100 text-slate-600 border-slate-300"
-                              : acc.state === "QR_READY"
-                              ? "bg-amber-50 text-amber-700 border-amber-200 animate-pulse"
-                              : "bg-rose-50 text-rose-700 border-rose-200"
-                          }`}
-                        >
-                          {acc.connected ? "● Connected" : acc.state === "PAUSED" ? "⏸ Disconnected" : acc.state === "QR_READY" ? "Scan QR" : acc.state}
-                        </span>
+                        <p>
+                          {acc.phoneNumber
+                            ? `+${acc.phoneNumber}`
+                            : "Link your device to connect this account"}
+                        </p>
                       </div>
-
-                      <div className="text-[10px] text-slate-400 mb-4 font-mono">
-                        ID: {acc.id}
-                      </div>
-
-                      {/* Action buttons */}
-                      <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+                      <span className={acc.connected ? styles.connectedBadge : styles.disconnectedBadge}>
+                        <i />
+                        {acc.connected
+                          ? "Connected"
+                          : acc.state === "PAUSED"
+                            ? "Paused"
+                            : acc.state === "QR_READY"
+                              ? "Awaiting scan"
+                              : (acc.state || "Disconnected").replace(/_/g, " ")}
+                      </span>
+                      <div className={styles.accountActions}>
                         {acc.connected && !acc.isDefault && (
                           <button
                             type="button"
-                            onClick={() => handleSetDefaultAccount(acc.id)}
+                            className={styles.secondaryButton}
                             disabled={isActionBusy}
-                            className="flex-1 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[11px] font-bold transition shadow-sm disabled:opacity-50"
+                            onClick={() => handleSetDefaultAccount(acc.id)}
                           >
-                            Set as Active
+                            Use as sender
                           </button>
                         )}
                         {!acc.connected && (
                           <button
                             type="button"
+                            className={styles.secondaryButton}
+                            disabled={isActionBusy}
                             onClick={() => handleOpenQrModal(acc.id, acc.label)}
-                            className="flex-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold transition shadow-sm"
                           >
-                            Scan QR Code
+                            <Smartphone size={14} />
+                            Scan QR
                           </button>
                         )}
                         {acc.connected && (
                           <button
                             type="button"
-                            onClick={() => handlePauseAccount(acc.id)}
+                            className={styles.textButton}
                             disabled={isActionBusy}
-                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition disabled:opacity-50"
-                            title="Disconnect without deleting session"
+                            onClick={() => handlePauseAccount(acc.id)}
                           >
                             Disconnect
                           </button>
                         )}
                         <button
                           type="button"
-                          onClick={() => handleLogoutAccount(acc.id)}
+                          className={styles.dangerButton}
                           disabled={isActionBusy}
-                          className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-[11px] font-semibold transition disabled:opacity-50"
-                          title="Log out from WhatsApp"
+                          onClick={() => handleLogoutAccount(acc.id)}
                         >
-                          Logout
+                          Log out
                         </button>
                         {accounts.length > 1 && (
                           <button
                             type="button"
-                            onClick={() => handleDeleteAccount(acc.id)}
+                            className={styles.iconButton}
                             disabled={isActionBusy}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition disabled:opacity-50"
-                            title="Permanently remove account"
+                            onClick={() => handleDeleteAccount(acc.id)}
+                            aria-label={`Remove ${acc.label}`}
+                            title="Remove account"
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={16} />
                           </button>
                         )}
                       </div>
-                    </div>
+                    </article>
                   );
                 })
               )}
             </div>
-
-            {/* Gateway Metrics Strip */}
-            {metrics && (
-              <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-3">
-                <div className="flex items-center gap-4">
-                  <span><strong>Gateway RSS:</strong> {metrics.memory?.rssMb} MB</span>
-                  <span><strong>Heap Used:</strong> {metrics.memory?.heapUsedMb} MB</span>
-                  <span><strong>Uptime:</strong> {Math.floor(metrics.uptimeSeconds / 60)} min</span>
-                </div>
-                <div className="font-mono text-[11px] text-slate-400">
-                  Active Dispatch Account: {metrics.activeSenderId}
-                </div>
-              </div>
-            )}
-          </div>
+            <div className={styles.accountFooter}>
+              <span>
+                <ShieldCheck size={15} />
+                Linked sessions are saved securely on your gateway.
+              </span>
+              <span>
+                {isLoadingAccounts
+                  ? "Refreshing accounts…"
+                  : `${accounts.filter((a) => a.connected).length} of ${accounts.length} accounts connected`}
+              </span>
+            </div>
+          </section>
 
           {/* LOWER SECTION: TEST DISPATCHER & DIAGNOSTICS */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-8">
-              <div className="pb-4 border-b border-slate-200 mb-6">
-                <h3 className="text-base font-bold text-slate-900">Send Test WhatsApp Message</h3>
-                <p className="text-xs text-slate-500 font-normal mt-0.5">
+          <div className={styles.testingLayout}>
+            <div className={styles.panelBody}>
+              <div className={styles.formHeading}>
+                <h3 className="text-base font-semibold text-slate-900">Send a test message</h3>
+                <p className="text-sm text-slate-500 font-normal mt-0.5">
                   Send a test message from a specific account or default primary sender.
                 </p>
               </div>
@@ -1191,18 +1184,19 @@ export default function WhatsAppSetupPage() {
               <form onSubmit={handleSendTest} className="space-y-5">
                 {/* Account Selection */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Dispatch From Account
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
+                    Send from
                   </label>
                   <select
                     value={testAccountId}
                     onChange={(e) => setTestAccountId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition font-medium"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition font-medium"
                   >
-                    <option value="">Active Operations Sender (Default)</option>
+                    <option value="">Active sender (default)</option>
                     {accounts.map((acc) => (
                       <option key={acc.id} value={acc.id}>
-                        {acc.label} {acc.phoneNumber ? `(+${acc.phoneNumber})` : `(${acc.state})`} {acc.isDefault ? "⭐ [Default]" : ""}
+                        {acc.label} {acc.phoneNumber ? `(+${acc.phoneNumber})` : `(${acc.state})`}{" "}
+                        {acc.isDefault ? "[Active sender]" : ""}
                       </option>
                     ))}
                   </select>
@@ -1221,7 +1215,7 @@ export default function WhatsAppSetupPage() {
 
                 {testRecipientType === "individual" ? (
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
                       Recipient Phone Number
                     </label>
                     <input
@@ -1229,43 +1223,34 @@ export default function WhatsAppSetupPage() {
                       placeholder="e.g. 91XXXXXXXXXX"
                       value={testPhone}
                       onChange={(e) => setTestPhone(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition"
                     />
-                    <p className="text-[10px] text-slate-400 mt-1 font-medium">
+                    <p className="text-sm text-slate-400 mt-1 font-medium">
                       Include country code (e.g. 91 for India) without '+' or spaces.
                     </p>
                   </div>
                 ) : null}
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Message Content
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
+                    Your message
                   </label>
                   <textarea
                     rows="4"
                     value={testMessage}
                     onChange={(e) => setTestMessage(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition leading-relaxed"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition leading-relaxed"
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isSendingTest}
-                  className="w-full flex items-center justify-center gap-2 px-5 py-3 font-bold rounded-xl text-xs shadow-sm disabled:opacity-50 transition hover:bg-slate-50"
-                  style={{
-                    background: "#ffffff",
-                    color: "#0f172a",
-                    border: "1.5px solid #0f172a",
-                  }}
-                >
-                  <Send size={14} className={isSendingTest ? "animate-pulse text-slate-900" : "text-slate-900"} />
-                  {isSendingTest ? "Sending Test Message..." : "Dispatch Test Message"}
+                <button type="submit" disabled={isSendingTest} className={styles.primaryButton}>
+                  <Send size={16} className={isSendingTest ? "animate-pulse" : ""} />
+                  {isSendingTest ? "Sending Test Message..." : "Send test message"}
                 </button>
 
                 {testResult && (
                   <div
-                    className={`p-4 rounded-2xl border text-xs font-medium ${
+                    className={`p-4 rounded-xl border text-sm font-medium ${
                       testResult.success
                         ? "bg-emerald-50 border-emerald-200 text-emerald-900"
                         : "bg-rose-50 border-rose-200 text-rose-900"
@@ -1273,20 +1258,24 @@ export default function WhatsAppSetupPage() {
                   >
                     {testResult.success ? (
                       <div>
-                        <p className="font-bold flex items-center gap-1.5 text-emerald-800">
+                        <p className="font-semibold flex items-center gap-1.5 text-emerald-800">
                           <CheckCircle2 size={15} className="text-emerald-600" /> Test Message Sent!
                         </p>
-                        <p className="text-[10px] text-slate-500 mt-1 font-mono">Message ID: {testResult.messageId}</p>
+                        <p className="text-sm text-slate-500 mt-1 font-mono">
+                          Message ID: {testResult.messageId}
+                        </p>
                         {testResult.accountId && (
-                          <p className="text-[10px] text-slate-500 font-mono">Dispatched Via: {testResult.accountId}</p>
+                          <p className="text-sm text-slate-500 font-mono">
+                            Dispatched Via: {testResult.accountId}
+                          </p>
                         )}
                       </div>
                     ) : (
                       <div>
-                        <p className="font-bold flex items-center gap-1.5 text-rose-800">
+                        <p className="font-semibold flex items-center gap-1.5 text-rose-800">
                           <AlertCircle size={15} className="text-rose-600" /> Dispatch Failed
                         </p>
-                        <p className="text-[10px] text-rose-700 mt-1">{testResult.error}</p>
+                        <p className="text-sm text-rose-700 mt-1">{testResult.error}</p>
                       </div>
                     )}
                   </div>
@@ -1294,66 +1283,86 @@ export default function WhatsAppSetupPage() {
               </form>
             </div>
 
-            {/* Active Primary Status Details */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-8 flex flex-col justify-between">
-              <div>
-                <div className="pb-4 border-b border-slate-200 mb-6">
-                  <h3 className="text-base font-bold text-slate-900">Active Sender Health</h3>
-                  <p className="text-xs text-slate-500 font-normal mt-0.5">
-                    Live connection diagnostic for the current primary outbound account.
-                  </p>
+            <aside className={styles.sideStack}>
+              <section className={styles.healthPanel}>
+                <div className={styles.healthHeader}>
+                  <span className={styles.eyebrow}>SENDER STATUS</span>
+                  <i className={connected ? styles.onlineDot : styles.offlineDot} />
                 </div>
-
-                <div className="flex flex-col items-center text-center py-4">
-                  <div
-                    className={`w-16 h-16 rounded-3xl flex items-center justify-center border-2 mb-4 transition-all ${
-                      connected
-                        ? "bg-emerald-50 border-emerald-300 text-emerald-600 shadow-sm"
-                        : "bg-slate-100 border-slate-300 text-slate-500"
-                    }`}
-                  >
-                    <Smartphone className="w-8 h-8" />
+                <h2>{connected ? "You're ready to send." : "Your sender needs attention."}</h2>
+                <p>
+                  {connected
+                    ? "Your active number is connected. New automated messages will use this account."
+                    : statusError || "Connect your WhatsApp number to start sending messages."}
+                </p>
+                <dl className={styles.healthDetails}>
+                  <div>
+                    <dt>Active sender</dt>
+                    <dd>{accounts.find((a) => a.isDefault)?.label || "No active sender"}</dd>
                   </div>
-
-                  <h4 className="text-base font-bold text-slate-900 uppercase tracking-wide">
-                    {connected ? (
-                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
-                        <CheckCircle2 size={14} className="text-emerald-600" /> Primary Account Online
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-100 border border-slate-250 text-slate-700 text-xs font-bold">
-                        {status.replace(/_/g, " ")}
-                      </span>
-                    )}
-                  </h4>
-
-                  <p className="text-xs text-slate-400 font-medium mt-2">
-                    Last sync: {lastChecked ? lastChecked.toLocaleTimeString("en-IN") : "Never"}
-                  </p>
+                  <div>
+                    <dt>Last checked</dt>
+                    <dd>
+                      {lastChecked
+                        ? lastChecked.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+                        : "Not yet checked"}
+                    </dd>
+                  </div>
+                  {metrics && (
+                    <div>
+                      <dt>Gateway uptime</dt>
+                      <dd>{Math.floor(metrics.uptimeSeconds / 60)} min</dd>
+                    </div>
+                  )}
+                </dl>
+                <div className={styles.healthNote}>
+                  <Info size={16} />
+                  <span>
+                    Queued messages keep their originally assigned sender, even when you switch accounts.
+                  </span>
                 </div>
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-slate-600 leading-relaxed font-medium">
-                <div className="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-                  <Info size={14} className="text-emerald-600" /> Routing Rules:
-                </div>
-                All automated renewals, birthday greetings, and claim updates automatically dispatch through whichever account is set as <strong>Primary Sender</strong>. Messages already in queue retain the sender account assigned at enqueue time.
-              </div>
-            </div>
+              </section>
+              <section className={styles.guidePanel}>
+                <h3>Linking a new number?</h3>
+                <p>Keep the phone handy. Setup takes just a moment.</p>
+                <ol>
+                  <li>
+                    <span>1</span>
+                    <div>
+                      <strong>Add your account</strong>
+                      <p>Click Link new number and give it a name.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span>2</span>
+                    <div>
+                      <strong>Open WhatsApp on your phone</strong>
+                      <p>Go to Settings → Linked devices.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span>3</span>
+                    <div>
+                      <strong>Scan the QR code</strong>
+                      <p>Choose Link a device and scan to connect.</p>
+                    </div>
+                  </li>
+                </ol>
+              </section>
+            </aside>
           </div>
         </div>
       )}
 
       {/* SECTION 3: MESSAGE QUEUE & DISPATCH LOGS */}
       {activeMainSection === "logs" && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-8">
+        <div className={styles.panelBody}>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-900">
-                WhatsApp Message Queue & Logs
-              </h3>
-              <p className="text-xs text-slate-500 font-normal mt-0.5">
-                Inspect real-time dispatch queue, retry failed messages, and review delivery logs. Total: {totalCount} records.
+              <h3 className="text-base font-semibold text-slate-900">Delivery history</h3>
+              <p className="text-sm text-slate-500 font-normal mt-0.5">
+                Inspect real-time dispatch queue, retry failed messages, and review delivery logs. Total:{" "}
+                {totalCount} records.
               </p>
             </div>
 
@@ -1361,7 +1370,7 @@ export default function WhatsAppSetupPage() {
               <select
                 value={queueStatusFilter}
                 onChange={(e) => handleStatusFilterChange(e.target.value)}
-                className="px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none"
+                className="px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none"
               >
                 <option value="">All Statuses</option>
                 <option value="PENDING">PENDING</option>
@@ -1375,7 +1384,7 @@ export default function WhatsAppSetupPage() {
                 type="button"
                 onClick={handleRetryAllFailed}
                 disabled={isRetryingQueue}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-xl text-xs hover:bg-slate-50 transition shadow-sm"
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-xl text-sm hover:bg-slate-50 transition shadow-sm"
               >
                 <RotateCcw size={13} />
                 Retry Failed
@@ -1386,13 +1395,13 @@ export default function WhatsAppSetupPage() {
           {isLoadingQueue ? (
             <div className="flex flex-col items-center justify-center py-16 bg-white">
               <div className="w-6 h-6 rounded-full border-2 border-slate-300 border-t-slate-900 animate-spin mb-2" />
-              <p className="text-slate-400 text-xs font-medium">Loading queue logs...</p>
+              <p className="text-slate-400 text-sm font-medium">Loading queue logs...</p>
             </div>
           ) : queueMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-white">
               <Clock className="w-9 h-9 text-slate-300 mb-2" />
-              <h4 className="text-xs font-bold text-slate-700">No Queue Messages Found</h4>
-              <p className="text-[11px] text-slate-400 max-w-xs mt-0.5">
+              <h4 className="text-sm font-semibold text-slate-700">No Queue Messages Found</h4>
+              <p className="text-sm text-slate-400 max-w-xs mt-0.5">
                 The message queue is empty. Active triggers will enqueue messages at scheduled thresholds.
               </p>
             </div>
@@ -1400,7 +1409,7 @@ export default function WhatsAppSetupPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-wider border-b border-slate-200">
+                  <tr className="bg-slate-50 text-slate-500 text-sm font-semibold uppercase tracking-wider border-b border-slate-200">
                     <th className="py-3.5 px-4">Recipient</th>
                     <th className="py-3.5 px-4">Type</th>
                     <th className="py-3.5 px-4 w-1/3">Message</th>
@@ -1413,61 +1422,66 @@ export default function WhatsAppSetupPage() {
                 <tbody className="divide-y divide-slate-200 text-slate-700">
                   {queueMessages.map((msg) => {
                     const date = msg.sentAt || msg.scheduledAt || msg.createdAt;
-                    const formattedTime = date ? new Date(date).toLocaleString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }) : "N/A";
+                    const formattedTime = date
+                      ? new Date(date).toLocaleString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "N/A";
 
                     return (
                       <tr key={msg.id} className="hover:bg-slate-50/60 transition-colors">
                         <td className="py-3 px-4">
-                          <div className="font-semibold text-slate-900 text-xs">{msg.recipientName}</div>
-                          <div className="text-[10px] text-slate-400 font-mono mt-0.5">{msg.recipientPhone}</div>
+                          <div className="font-semibold text-slate-900 text-sm">{msg.recipientName}</div>
+                          <div className="text-sm text-slate-400 font-mono mt-0.5">{msg.recipientPhone}</div>
                         </td>
                         <td className="py-3 px-4">
-                          <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
+                          <span className="text-sm font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
                             {msg.messageType}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-xs font-normal text-slate-600 leading-normal">
+                        <td className="py-3 px-4 text-sm font-normal text-slate-600 leading-normal">
                           <div className="line-clamp-2" title={msg.messageBody}>
                             {msg.messageBody}
                           </div>
                           {msg.mediaUrl && (
-                            <div className="text-[10px] text-slate-600 font-medium mt-1 flex items-center gap-1">
+                            <div className="text-sm text-slate-600 font-medium mt-1 flex items-center gap-1">
                               <FileText size={10} />
                               <span className="truncate max-w-[120px]">{msg.fileName || "attachment"}</span>
                             </div>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-center text-xs font-semibold text-slate-500">
+                        <td className="py-3 px-4 text-center text-sm font-semibold text-slate-500">
                           {msg.attempts} / 3
                         </td>
-                        <td className="py-3 px-4 text-xs">
+                        <td className="py-3 px-4 text-sm">
                           <span
-                            className={`inline-block px-2 py-0.5 rounded-md font-bold uppercase text-[9px] border ${
+                            className={`inline-block px-2 py-0.5 rounded-md font-semibold uppercase text-sm border ${
                               msg.status === "SENT"
                                 ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                                 : msg.status === "SENDING"
-                                ? "bg-blue-50 border-blue-200 text-blue-700"
-                                : msg.status === "PENDING"
-                                ? "bg-slate-100 border-slate-200 text-slate-600"
-                                : msg.status === "RETRYING"
-                                ? "bg-amber-50 border-amber-200 text-amber-700"
-                                : "bg-rose-50 border-rose-200 text-rose-700"
+                                  ? "bg-blue-50 border-blue-200 text-blue-700"
+                                  : msg.status === "PENDING"
+                                    ? "bg-slate-100 border-slate-200 text-slate-600"
+                                    : msg.status === "RETRYING"
+                                      ? "bg-amber-50 border-amber-200 text-amber-700"
+                                      : "bg-rose-50 border-rose-200 text-rose-700"
                             }`}
                           >
                             {msg.status}
                           </span>
                           {msg.errorMessage && (
-                            <div className="text-[9px] text-rose-600 font-medium mt-1 leading-normal max-w-[140px] truncate" title={msg.errorMessage}>
+                            <div
+                              className="text-sm text-rose-600 font-medium mt-1 leading-normal max-w-[140px] truncate"
+                              title={msg.errorMessage}
+                            >
                               {msg.errorMessage}
                             </div>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                        <td className="py-3 px-4 text-sm font-medium text-slate-400 whitespace-nowrap">
                           {formattedTime}
                         </td>
                         <td className="py-3 px-4 text-right">
@@ -1491,9 +1505,10 @@ export default function WhatsAppSetupPage() {
           )}
 
           {/* Pagination Footer */}
-          <div className="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500 font-medium mt-4 rounded-2xl">
+          <div className="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-between items-center text-sm text-slate-500 font-medium mt-4 rounded-xl">
             <span>
-              Showing {queueOffset + 1} - {Math.min(queueOffset + queueLimit, totalCount)} of {totalCount} records
+              Showing {queueOffset + 1} - {Math.min(queueOffset + queueLimit, totalCount)} of {totalCount}{" "}
+              records
             </span>
             <div className="flex gap-2">
               <button
@@ -1520,26 +1535,28 @@ export default function WhatsAppSetupPage() {
       {/* DISCONNECT CONFIRMATION MODAL */}
       {showDisconnectModal && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+          <div className={styles.overlay}>
             <div
-              className="bg-white rounded-3xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl text-center"
+              className={`${styles.dialog} text-center`}
               role="dialog"
               aria-modal="true"
+              aria-label="WhatsApp account setup"
             >
-              <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto mb-4 text-rose-600">
+              <div className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto mb-4 text-rose-600">
                 <AlertTriangle className="w-6 h-6" />
               </div>
 
-              <h3 className="text-base font-bold text-slate-900 mb-1.5">Disconnect WhatsApp?</h3>
-              <p className="text-xs text-slate-500 leading-relaxed mb-6 font-medium">
-                Are you sure you want to disconnect your WhatsApp session? This will stop all scheduled messages until re-linked.
+              <h3 className="text-base font-semibold text-slate-900 mb-1.5">Disconnect WhatsApp?</h3>
+              <p className="text-sm text-slate-500 leading-relaxed mb-6 font-medium">
+                Are you sure you want to disconnect your WhatsApp session? This will stop all scheduled
+                messages until re-linked.
               </p>
 
               <div className="flex gap-2.5 justify-center">
                 <button
                   type="button"
                   onClick={() => setShowDisconnectModal(false)}
-                  className="px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-50 text-slate-700 bg-white transition shadow-sm"
+                  className="px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold hover:bg-slate-50 text-slate-700 bg-white transition shadow-sm"
                 >
                   Cancel
                 </button>
@@ -1547,7 +1564,7 @@ export default function WhatsAppSetupPage() {
                   type="button"
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-xs shadow-md transition disabled:opacity-50"
+                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-sm shadow-md transition disabled:opacity-50"
                 >
                   {isLoggingOut ? "Disconnecting..." : "Disconnect"}
                 </button>
@@ -1559,31 +1576,32 @@ export default function WhatsAppSetupPage() {
       {/* ADD ACCOUNT MODAL */}
       {showAddAccountModal && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+          <div className={styles.overlay}>
             <div
-              className="bg-white rounded-3xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl text-left"
+              className={styles.dialog}
               role="dialog"
               aria-modal="true"
+              aria-label="WhatsApp account setup"
             >
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-4 text-emerald-600">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-4 text-emerald-600">
                 <Smartphone className="w-6 h-6" />
               </div>
 
-              <h3 className="text-base font-bold text-slate-900 mb-1">Link New WhatsApp Account</h3>
-              <p className="text-xs text-slate-500 leading-relaxed mb-5 font-medium">
+              <h3 className="text-base font-semibold text-slate-900 mb-1">Link a WhatsApp number</h3>
+              <p className="text-sm text-slate-500 leading-relaxed mb-5 font-medium">
                 Enter an identifying label for this number (e.g., "Support Desk", "Claims Helpline").
               </p>
 
               <div className="mb-5">
-                <label className="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                  Account Name / Label
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
+                  Account name
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. Sales Desk WhatsApp"
                   value={newAccountLabel}
                   onChange={(e) => setNewAccountLabel(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-slate-900 transition"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition"
                   autoFocus
                 />
               </div>
@@ -1592,7 +1610,7 @@ export default function WhatsAppSetupPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddAccountModal(false)}
-                  className="px-4 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-50 text-slate-700 bg-white transition shadow-sm"
+                  className="px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold hover:bg-slate-50 text-slate-700 bg-white transition shadow-sm"
                 >
                   Cancel
                 </button>
@@ -1600,9 +1618,9 @@ export default function WhatsAppSetupPage() {
                   type="button"
                   onClick={handleCreateAccount}
                   disabled={isCreatingAccount || !newAccountLabel.trim()}
-                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs shadow-md transition disabled:opacity-50"
+                  className={styles.primaryButton}
                 >
-                  {isCreatingAccount ? "Generating QR..." : "Proceed to QR Scan"}
+                  {isCreatingAccount ? "Generating QR..." : "Create & scan QR"}
                 </button>
               </div>
             </div>
@@ -1613,29 +1631,32 @@ export default function WhatsAppSetupPage() {
       {/* QR PAIRING MODAL */}
       {qrModalAccount && (
         <ModalPortal>
-          <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300">
+          <div className={styles.overlay}>
             <div
-              className="bg-white rounded-3xl border border-slate-200 p-6 max-w-sm w-full shadow-2xl text-center"
+              className={`${styles.dialog} text-center`}
               role="dialog"
               aria-modal="true"
+              aria-label="WhatsApp account setup"
             >
               <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
                 <div className="text-left">
-                  <h3 className="text-sm font-bold text-slate-900">Scan QR: {qrModalAccount.label}</h3>
-                  <p className="text-[11px] text-slate-400 font-mono">ID: {qrModalAccount.id}</p>
+                  <h3 className="text-sm font-semibold text-slate-900">Scan QR: {qrModalAccount.label}</h3>
+                  <p className="text-sm text-slate-500">WhatsApp → Settings → Linked devices</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setQrModalAccount(null)}
-                  className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+                  autoFocus
+                  className={styles.iconButton}
+                  aria-label="Close QR code"
                 >
-                  ✕
+                  <X size={18} />
                 </button>
               </div>
 
               {qrModalAccount.qrCode ? (
                 <div className="flex flex-col items-center">
-                  <div className="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm mb-3">
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-sm mb-3">
                     <Image
                       src={qrModalAccount.qrCode}
                       alt="WhatsApp Login QR Code"
@@ -1645,13 +1666,13 @@ export default function WhatsAppSetupPage() {
                       className="w-48 h-48 block rounded-lg"
                     />
                   </div>
-                  <div className="flex gap-2 items-center text-slate-600 text-xs font-medium bg-slate-50 p-3 rounded-xl border border-slate-200 text-left">
+                  <div className="flex gap-2 items-center text-slate-600 text-sm font-medium bg-slate-50 p-3 rounded-xl border border-slate-200 text-left">
                     <Info size={16} className="text-emerald-600 shrink-0" />
                     <span>Open WhatsApp on your phone ➔ Linked Devices ➔ Link a Device.</span>
                   </div>
                 </div>
               ) : (
-                <div className="py-12 text-center text-xs text-slate-500">
+                <div className="py-12 text-center text-sm text-slate-500">
                   <RefreshCw className="w-8 h-8 mx-auto mb-2 animate-spin text-emerald-600" />
                   Generating WhatsApp Web QR Code...
                 </div>
@@ -1661,7 +1682,7 @@ export default function WhatsAppSetupPage() {
                 <button
                   type="button"
                   onClick={() => setQrModalAccount(null)}
-                  className="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-50 text-slate-700 bg-white transition"
+                  className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold hover:bg-slate-50 text-slate-700 bg-white transition"
                 >
                   Close
                 </button>
