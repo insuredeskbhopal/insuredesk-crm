@@ -14,6 +14,7 @@ import {
   Clock,
   Menu,
 } from "lucide-react";
+import PrimaryWhatsAppSelector from "@/app/components/whatsapp/PrimaryWhatsAppSelector";
 import SearchBox from "@/app/components/shared/SearchBox";
 import ModalPortal from "@/app/components/shared/ModalPortal";
 import BrandLogo from "@/app/components/brand/BrandLogo";
@@ -239,6 +240,7 @@ export default function TopBar({ query, onQueryChange, isSidebarOpen, onToggleSi
       </div>
 
       <div className="top-actions">
+        <PrimaryWhatsAppSelector />
         <SearchBox
           className="global-search"
           value={query}

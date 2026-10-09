@@ -138,7 +138,7 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
       json: () => Promise.resolve({ success: true, id: "group-message" }),
     });
 
-    await sendWhatsAppText("120363412345678901@g.us", "Group reminder");
+    await sendWhatsAppText("120363412345678901@g.us", "Group reminder", "selected_account");
 
     expect(fetch).toHaveBeenLastCalledWith(
       expect.stringContaining("/send-text"),
@@ -154,7 +154,7 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
       json: () => Promise.resolve({ success: true, id: "individual-message" }),
     });
 
-    await sendWhatsAppText("9876543210", "Individual reminder");
+    await sendWhatsAppText("9876543210", "Individual reminder", "selected_account");
 
     expect(fetch).toHaveBeenLastCalledWith(
       expect.stringContaining("/send-text"),
@@ -170,7 +170,7 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(groups) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(groups) });
 
-    await expect(getWhatsAppGroups()).resolves.toEqual(groups);
+    await expect(getWhatsAppGroups({ accountId: "selected_account" })).resolves.toEqual(groups);
     await expect(refreshWhatsAppGroups()).resolves.toEqual(groups);
     expect(fetch.mock.calls.at(-2)[0]).toContain("/groups");
     expect(fetch.mock.calls.at(-1)[0]).toContain("/groups/refresh");
@@ -183,7 +183,7 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
     };
     fetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(match) });
 
-    await expect(matchWhatsAppGroups("+91 91111 11692")).resolves.toEqual(match);
+    await expect(matchWhatsAppGroups("+91 91111 11692", "selected_account")).resolves.toEqual(match);
     expect(fetch.mock.calls.at(-1)[0]).toContain("/groups/match?phone=%2B91%2091111%2011692");
   });
 
@@ -195,7 +195,7 @@ describe("WhatsApp Gateway REST Client Wrapper", () => {
       text: () => Promise.resolve("<!DOCTYPE html><pre>Cannot GET /groups</pre>"),
     });
 
-    await expect(getWhatsAppGroups()).rejects.toThrow(
+    await expect(getWhatsAppGroups({ accountId: "selected_account" })).rejects.toThrow(
       "WhatsApp group discovery is not active on the gateway. Deploy and restart the latest gateway version.",
     );
   });

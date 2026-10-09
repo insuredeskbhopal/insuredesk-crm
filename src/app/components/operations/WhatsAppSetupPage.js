@@ -26,6 +26,7 @@ import {
   Trash2,
 } from "lucide-react";
 import OperationsBackLink from "@/app/components/operations/OperationsBackLink";
+import PrimaryWhatsAppSelector from "@/app/components/whatsapp/PrimaryWhatsAppSelector";
 import WhatsAppRecipientPicker from "@/app/components/whatsapp/WhatsAppRecipientPicker";
 import ModalPortal from "@/app/components/shared/ModalPortal";
 import styles from "./WhatsAppSetupPage.module.css";
@@ -97,13 +98,16 @@ export default function WhatsAppSetupPage() {
 
   // Multi-Account Management
   const [accounts, setAccounts] = useState([]);
+  const [canCreateAccount, setCanCreateAccount] = useState(false);
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
   const [accountsError, setAccountsError] = useState(null);
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
   const [newAccountLabel, setNewAccountLabel] = useState("");
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [qrModalAccount, setQrModalAccount] = useState(null);
-  const [testAccountId, setTestAccountId] = useState("");
+  const [canAdmin, setCanAdmin] = useState(false);
+  const [staffUsers, setStaffUsers] = useState([]);
+  const [accessAccount, setAccessAccount] = useState(null);
   const [accountActionLoading, setAccountActionLoading] = useState(null);
   const [metrics, setMetrics] = useState(null);
 
@@ -141,6 +145,12 @@ export default function WhatsAppSetupPage() {
   const statusRequestRef = useRef(null);
   const queueRequestRef = useRef(null);
   const toastTimerRef = useRef(null);
+
+  useEffect(() => {
+    const refresh = () => { fetchAccounts(); fetchStatus(); };
+    window.addEventListener("whatsapp-primary-changed", refresh);
+    return () => window.removeEventListener("whatsapp-primary-changed", refresh);
+  }, []);
 
   const compilePreviewText = (text) => {
     if (!text) return "Type a template message in the editor to see a live preview here...";
@@ -216,13 +226,14 @@ export default function WhatsAppSetupPage() {
   }, [qrModalAccount?.id]);
 
   useEffect(() => {
-    if (!showAddAccountModal && !accountConfirmation && !qrModalAccount) return;
+    if (!showAddAccountModal && !accountConfirmation && !qrModalAccount && !accessAccount) return;
     const previousFocus = document.activeElement;
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
         setShowAddAccountModal(false);
         setAccountConfirmation(null);
         setQrModalAccount(null);
+        setAccessAccount(null);
       }
       if (event.key === "Tab") {
         const controls = document
@@ -245,7 +256,7 @@ export default function WhatsAppSetupPage() {
       document.removeEventListener("keydown", onKeyDown);
       previousFocus?.focus();
     };
-  }, [showAddAccountModal, !!accountConfirmation, !!qrModalAccount]);
+  }, [showAddAccountModal, !!accountConfirmation, !!qrModalAccount, !!accessAccount]);
 
   // Poll status when not connected
   useEffect(() => {
@@ -320,6 +331,9 @@ export default function WhatsAppSetupPage() {
       if (!res.ok) throw new Error(data.error || "Failed to load accounts");
       if (data.accounts) {
         setAccounts(data.accounts);
+        setCanCreateAccount(data.canCreate === true);
+        setCanAdmin(data.canAdmin === true);
+        setStaffUsers(data.users || []);
         if (data.metrics) setMetrics(data.metrics);
         if (qrModalAccount) {
           const current = data.accounts.find((a) => a.id === qrModalAccount.id);
@@ -335,6 +349,19 @@ export default function WhatsAppSetupPage() {
     } finally {
       setIsLoadingAccounts(false);
     }
+  }
+
+  async function updateAccountAccess(action, accountId, extra = {}) {
+    try {
+      const response = await fetch("/api/operations/whatsapp/sessions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, accountId, ...extra }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not update access");
+      await fetchAccounts();
+      if (action === "grant") setAccessAccount(current => current && ({ ...current, accessUserIds: extra.allowed ? [...current.accessUserIds, extra.userId] : current.accessUserIds.filter(id => id !== extra.userId) }));
+      if (action === "assign-owner") setAccessAccount(current => current && ({ ...current, ownerUserId: extra.ownerUserId }));
+      window.dispatchEvent(new window.Event("whatsapp-primary-changed"));
+      showToast("success", "WhatsApp settings saved.");
+    } catch (error) { showToast("error", error.message); }
   }
 
   async function handleCreateAccount() {
@@ -369,6 +396,7 @@ export default function WhatsAppSetupPage() {
     try {
       const res = await fetch(`/api/operations/whatsapp/status?accountId=${encodeURIComponent(accountId)}`);
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Cannot access this account");
       setQrModalAccount({
         id: accountId,
         label: label || accountId,
@@ -386,11 +414,11 @@ export default function WhatsAppSetupPage() {
       const res = await fetch("/api/operations/whatsapp/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "set-default", accountId }),
+        body: JSON.stringify({ action: "set-primary", accountId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to set active sender");
-      showToast("success", "Active Operations Sender updated! Future messages will send from this account.");
+      showToast("success", "My Primary WhatsApp saved. Your future messages will use this account.");
       await fetchAccounts();
       fetchStatus(true, true);
     } catch (err) {
@@ -563,7 +591,6 @@ export default function WhatsAppSetupPage() {
         body: JSON.stringify({
           recipient,
           message: testMessage,
-          accountId: testAccountId || undefined,
         }),
       });
 
@@ -571,7 +598,7 @@ export default function WhatsAppSetupPage() {
       if (!res.ok) throw new Error(data.error || "Failed to send message");
 
       setTestResult({ success: true, messageId: data.messageId, accountId: data.accountId });
-      showToast("success", `Test message dispatched via ${data.accountId || "Active Sender"}!`);
+      showToast("success", `Test message dispatched via ${data.accountId || "My Primary WhatsApp"}!`);
     } catch (err) {
       setTestResult({ success: false, error: err.message });
       showToast("error", err.message || "Failed to send test message");
@@ -1016,6 +1043,7 @@ export default function WhatsAppSetupPage() {
               <button
                 type="button"
                 className={styles.primaryButton}
+                disabled={!canCreateAccount}
                 onClick={() => setShowAddAccountModal(true)}
               >
                 <Plus size={17} />
@@ -1028,6 +1056,7 @@ export default function WhatsAppSetupPage() {
                 {accountsError}
               </div>
             )}
+            <div className={styles.panelBody}><PrimaryWhatsAppSelector /></div>
             <div className={styles.accountList}>
               {accounts.length === 0 ? (
                 <div className={styles.emptyState}>
@@ -1047,7 +1076,7 @@ export default function WhatsAppSetupPage() {
                 </div>
               ) : (
                 accounts.map((acc) => {
-                  const isActionBusy = accountActionLoading === acc.id;
+                  const isActionBusy = accountActionLoading === acc.id || !acc.canManage;
                   return (
                     <article key={acc.id} className={styles.accountRow}>
                       <div className={styles.accountAvatar}>
@@ -1059,7 +1088,7 @@ export default function WhatsAppSetupPage() {
                           {acc.isDefault && (
                             <span className={styles.senderBadge}>
                               <ShieldCheck size={13} />
-                              Active sender
+                              My primary
                             </span>
                           )}
                         </div>
@@ -1080,14 +1109,20 @@ export default function WhatsAppSetupPage() {
                               : (acc.state || "Disconnected").replace(/_/g, " ")}
                       </span>
                       <div className={styles.accountActions}>
-                        {acc.connected && !acc.isDefault && (
+                        {canAdmin && (acc.registered ? <button type="button" className={styles.secondaryButton} onClick={() => setAccessAccount(acc)}>Manage access</button> : <button type="button" className={styles.secondaryButton} onClick={() => updateAccountAccess("register", acc.id)}>Enable account access</button>)}
+                        {!acc.canManage && (
+                          <span title="Only the linking staff member can manage this account">
+                            {acc.ownerName ? `Managed by ${acc.ownerName}` : "Owner: Unknown"}
+                          </span>
+                        )}
+                        {acc.connected && acc.canUse && !acc.isDefault && (
                           <button
                             type="button"
                             className={styles.secondaryButton}
-                            disabled={isActionBusy}
+                            disabled={accountActionLoading === acc.id}
                             onClick={() => handleSetDefaultAccount(acc.id)}
                           >
-                            Use as sender
+                            Set my primary
                           </button>
                         )}
                         {!acc.connected && (
@@ -1156,31 +1191,12 @@ export default function WhatsAppSetupPage() {
               <div className={styles.formHeading}>
                 <h3 className="text-base font-semibold text-slate-900">Send a test message</h3>
                 <p className="text-sm text-slate-500 font-normal mt-0.5">
-                  Send a test message from a specific account or default primary sender.
+                  Send a test message from your personal primary account.
                 </p>
               </div>
 
               <form onSubmit={handleSendTest} className="space-y-5">
-                {/* Account Selection */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">
-                    Send from
-                  </label>
-                  <select
-                    value={testAccountId}
-                    onChange={(e) => setTestAccountId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition font-medium"
-                  >
-                    <option value="">Active sender (default)</option>
-                    {accounts.map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.label} {acc.phoneNumber ? `(+${acc.phoneNumber})` : `(${acc.state})`}{" "}
-                        {acc.isDefault ? "[Active sender]" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
+                <p className="text-sm">Messages use My Primary WhatsApp selected above.</p>
                 <WhatsAppRecipientPicker
                   type={testRecipientType}
                   onTypeChange={(value) => {
@@ -1616,6 +1632,23 @@ export default function WhatsAppSetupPage() {
       )}
 
       {/* QR PAIRING MODAL */}
+      {accessAccount && (
+        <ModalPortal>
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950/50 backdrop-blur-sm p-4" onClick={() => setAccessAccount(null)}>
+            <section role="dialog" aria-modal="true" aria-label="Manage WhatsApp access" className={`${styles.dialog} max-h-[85vh] overflow-auto`} onClick={event => event.stopPropagation()}>
+              <div className={styles.dialogHeader}><h2>Access to {accessAccount.label}</h2><button type="button" aria-label="Close access settings" onClick={() => setAccessAccount(null)}><X size={20}/></button></div>
+              <p>Sending access does not allow staff to disconnect this session.</p>
+              <label className="block my-4">Responsible session owner
+                <select value={accessAccount.ownerUserId || ""} onChange={e => updateAccountAccess("assign-owner", accessAccount.id, { ownerUserId: e.target.value || null })} className="block w-full border rounded p-2">
+                  <option value="">Unknown</option>{staffUsers.map(user => <option key={user.id} value={user.id}>{user.name || user.email}</option>)}
+                </select>
+              </label>
+              <div className="space-y-3">{staffUsers.map(user => <label key={user.id} className="flex items-center gap-3"><input type="checkbox" checked={accessAccount.accessUserIds.includes(user.id)} onChange={e => updateAccountAccess("grant", accessAccount.id, { userId: user.id, allowed: e.target.checked })}/>{user.name || user.email}</label>)}</div>
+              {accessAccount.connected && <button type="button" className={styles.secondaryButton} onClick={() => updateAccountAccess("set-system", accessAccount.id)}>Authorize as system automation sender</button>}
+            </section>
+          </div>
+        </ModalPortal>
+      )}
       {qrModalAccount && (
         <ModalPortal>
           <div className={styles.overlay}>

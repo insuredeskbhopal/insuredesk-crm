@@ -1,31 +1,25 @@
 import { NextResponse } from "next/server";
-import { verifyJWT } from "@/lib/auth";
+import { requireWhatsAppStaff, resolveWhatsAppSender } from "@/lib/whatsapp/account-access";
 import { getWhatsAppGroups, matchWhatsAppGroups, refreshWhatsAppGroups } from "@/lib/whatsapp/whatsapp-client";
 
 export const runtime = "nodejs";
 
-async function requireSession(request) {
-  const token = request.cookies.get("token")?.value;
-  if (!token) return { errorResponse: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) };
-  const session = await verifyJWT(token);
-  if (!session) return { errorResponse: NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }) };
-  return session;
-}
-
 export async function GET(request) {
   try {
-    const session = await requireSession(request);
+    const session = await requireWhatsAppStaff(request, true);
     if (session.errorResponse) return session.errorResponse;
+    const accountId = await resolveWhatsAppSender(session);
     const { searchParams } = new URL(request.url);
     const phone = searchParams.get("phone");
     if (phone) {
-      const match = await matchWhatsAppGroups(phone);
+      const match = await matchWhatsAppGroups(phone, accountId);
       return NextResponse.json({ success: true, ...match });
     }
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "30", 10) || 30));
     return NextResponse.json({
       success: true,
       groups: await getWhatsAppGroups({
+        accountId,
         search: searchParams.get("search") || "",
         limit,
       }),
@@ -37,10 +31,11 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = await requireSession(request);
+    const session = await requireWhatsAppStaff(request, true);
     if (session.errorResponse) return session.errorResponse;
+    const accountId = await resolveWhatsAppSender(session);
     if (session.role === "VIEWER") return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    return NextResponse.json({ success: true, groups: await refreshWhatsAppGroups() });
+    return NextResponse.json({ success: true, groups: await refreshWhatsAppGroups(accountId) });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Failed to refresh WhatsApp groups" }, { status: 503 });
   }

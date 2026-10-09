@@ -49,7 +49,7 @@ function calculateDaysLeft(dateStr) {
 }
 
 // Triggers daily birthday wishes queueing
-export async function triggerDailyBirthdays({ organizationId = null } = {}) {
+export async function triggerDailyBirthdays({ organizationId = null, initiatedByUserId = null } = {}) {
   console.log('Running daily birthday automation scan...');
 
   // Get current date in IST (UTC + 5:30)
@@ -79,16 +79,7 @@ export async function triggerDailyBirthdays({ organizationId = null } = {}) {
     },
   });
 
-  let effectiveOrgId = organizationId;
-  if (!effectiveOrgId) {
-    let org = await prisma.organization.findFirst();
-    if (!org) {
-      org = await prisma.organization.create({
-        data: { name: 'Bima Headquarter' },
-      });
-    }
-    effectiveOrgId = org.id;
-  }
+
 
   let queuedCount = 0;
 
@@ -97,7 +88,8 @@ export async function triggerDailyBirthdays({ organizationId = null } = {}) {
     if (dob.getMonth() === currentMonth && dob.getDate() === currentDate) {
       // It's this customer's birthday!
       if (!customer.phone) continue; // Birthday wishes are client-facing, so a client phone is required
-      const orgId = customer.organizationId || effectiveOrgId;
+      const orgId = customer.organizationId || organizationId;
+      if (!orgId) continue;
 
       // Get organization name
       const org = orgId
@@ -140,6 +132,7 @@ export async function triggerDailyBirthdays({ organizationId = null } = {}) {
       const uniqueKey = `birthday:${customer.id}:${todayStr}`;
 
       const enqueueResult = await enqueueMessage({
+        initiatedByUserId,
         organizationId: orgId,
         recipientPhone: customer.phone,
         recipientName: customerDisplayName,
@@ -163,7 +156,7 @@ export async function triggerDailyBirthdays({ organizationId = null } = {}) {
 
 // Triggers upcoming renewals scan. These automated renewal alerts are internal only;
 // agents can still manually send WhatsApp reminders to clients from the UI.
-export async function triggerUpcomingRenewals({ organizationId } = {}) {
+export async function triggerUpcomingRenewals({ organizationId, initiatedByUserId = null } = {}) {
   console.log('Running internal upcoming renewals scan...');
 
   const now = new Date();
@@ -228,6 +221,7 @@ export async function triggerUpcomingRenewals({ organizationId } = {}) {
     const uniqueKey = `internal-renewal:${rawPolicy.id}:${daysLeft}days:${todayStr}`;
 
     const enqueueResult = await enqueueMessage({
+        initiatedByUserId,
       organizationId: orgId,
       recipientPhone: INTERNAL_AUTOMATION_PHONE,
       recipientName: 'Internal Operations',
@@ -248,7 +242,7 @@ export async function triggerUpcomingRenewals({ organizationId } = {}) {
   return { queuedCount, autoLostCount };
 }
 
-export async function triggerInternalOperationsDigest({ organizationId = null } = {}) {
+export async function triggerInternalOperationsDigest({ organizationId = null, initiatedByUserId = null } = {}) {
   console.log('Running internal operations WhatsApp digest scan...');
 
   const now = new Date();
@@ -318,6 +312,7 @@ export async function triggerInternalOperationsDigest({ organizationId = null } 
     ].filter(Boolean).join("\n");
 
     const enqueueResult = await enqueueMessage({
+        initiatedByUserId,
       organizationId,
       recipientPhone: INTERNAL_AUTOMATION_PHONE,
       recipientName: 'Internal Operations',

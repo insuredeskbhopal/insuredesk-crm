@@ -110,8 +110,8 @@ app.get("/sessions", (_req, res) => {
 // POST /sessions — register a new account and initiate QR pairing
 app.post("/sessions", async (req, res) => {
   try {
-    const { label } = req.body || {};
-    const account = await createNewAccount(label || "Secondary Account");
+    const { label, owner } = req.body || {};
+    const account = await createNewAccount(label || "Secondary Account", owner);
     res.json({ success: true, account });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
@@ -217,7 +217,7 @@ app.get("/qr", (req, res) => {
 
 // GET /groups
 app.get("/groups", (req, res) => {
-  res.json(listGroups({ search: req.query.search, limit: req.query.limit }));
+  res.json(listGroups({ search: req.query.search, limit: req.query.limit, accountId: req.query.accountId }));
 });
 
 // GET /groups/match?phone=...
@@ -225,7 +225,7 @@ app.get("/groups/match", (req, res) => {
   if (!req.query.phone) {
     return res.status(400).json({ success: false, error: "A customer phone number is required" });
   }
-  res.json(matchGroupsByPhone(req.query.phone));
+  res.json(matchGroupsByPhone(req.query.phone, req.query.accountId));
 });
 
 // POST /groups/refresh

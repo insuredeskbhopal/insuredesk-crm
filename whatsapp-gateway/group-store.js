@@ -31,22 +31,23 @@ function writeStore(groups) {
   cachedGroups = groups;
 }
 
-export function getStoredGroups({ includeInactive = false } = {}) {
-  const groups = readStore().groups;
+export function getStoredGroups({ includeInactive = false, accountId = null } = {}) {
+  const groups = readStore().groups.filter((group) => !accountId || group.whatsappSessionId === accountId);
   return includeInactive ? groups : groups.filter((group) => group.active !== false);
 }
 
 export function storeDiscoveredGroups(discoveredGroups, whatsappSessionId) {
   const syncedAt = new Date().toISOString();
   const existing = new Map(
-    getStoredGroups({ includeInactive: true }).map((group) => [group.groupId, group]),
+    getStoredGroups({ includeInactive: true }).map((group) => [`${group.whatsappSessionId}:${group.groupId}`, group]),
   );
   const discoveredIds = new Set();
 
   for (const group of discoveredGroups) {
     discoveredIds.add(group.groupId);
-    existing.set(group.groupId, {
-      ...existing.get(group.groupId),
+    const key = `${whatsappSessionId}:${group.groupId}`;
+    existing.set(key, {
+      ...existing.get(key),
       id: group.groupId,
       whatsappSessionId: whatsappSessionId || null,
       groupId: group.groupId,
@@ -60,7 +61,7 @@ export function storeDiscoveredGroups(discoveredGroups, whatsappSessionId) {
   }
 
   for (const [groupId, group] of existing) {
-    if (!discoveredIds.has(groupId)) {
+    if (group.whatsappSessionId === whatsappSessionId && !discoveredIds.has(group.groupId)) {
       existing.set(groupId, { ...group, active: false, lastSyncedAt: syncedAt });
     }
   }
@@ -72,11 +73,11 @@ export function storeDiscoveredGroups(discoveredGroups, whatsappSessionId) {
   return groups.filter((group) => group.active);
 }
 
-export function findStoredGroupsByParticipant(phone) {
+export function findStoredGroupsByParticipant(phone, accountId = null) {
   const normalizedPhone = String(phone || "").replace(/\D/g, "");
   if (!normalizedPhone) return [];
 
-  return getStoredGroups()
+  return getStoredGroups({ accountId })
     .filter((group) => group.groupParticipants?.some((participant) => participant.phone === normalizedPhone))
     .sort((a, b) =>
       String(b.lastActivity || "").localeCompare(String(a.lastActivity || "")) ||
@@ -85,12 +86,12 @@ export function findStoredGroupsByParticipant(phone) {
     );
 }
 
-export function searchStoredGroups(search, limit = 30) {
+export function searchStoredGroups(search, limit = 30, accountId = null) {
   const query = String(search || "").trim().toLocaleLowerCase();
   if (!query) return [];
   const safeLimit = Math.min(Math.max(Number(limit) || 30, 1), 50);
 
-  return getStoredGroups()
+  return getStoredGroups({ accountId })
     .filter((group) =>
       String(group.groupName || "").toLocaleLowerCase().includes(query) ||
       String(group.groupId || "").toLocaleLowerCase().includes(query),

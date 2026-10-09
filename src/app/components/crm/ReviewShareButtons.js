@@ -50,12 +50,14 @@ export default function ReviewShareButtons({
     } catch {}
   };
 
-  const handleWhatsAppShare = () => {
-    const encodedMessage = encodeURIComponent(customWhatsAppText);
-    const whatsappUrl = formattedPhone
-      ? `https://wa.me/${formattedPhone}?text=${encodedMessage}`
-      : `https://wa.me/?text=${encodedMessage}`;
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+  const handleWhatsAppShare = async () => {
+    if (!formattedPhone) { window.alert("Choose a customer with a phone number before sending."); return; }
+    try {
+      const response = await fetch("/api/operations/whatsapp/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipient: formattedPhone, message: customWhatsAppText }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not send review request");
+      window.alert("Review request sent from My Primary WhatsApp.");
+    } catch (error) { window.alert(error.message); }
   };
 
   const handleDownloadQr = () => {

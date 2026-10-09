@@ -564,69 +564,6 @@ export default function RenewalActionDrawer({
     setAttachedFile(null);
   };
 
-  const handleOpenWhatsAppWeb = () => {
-    const isGroup = whatsappRecipientType === "group";
-    const targetRecipient = isGroup ? whatsappGroupId : cleanPhone;
-
-    if (attachedFile) {
-      try {
-        const link = document.createElement("a");
-        link.href = attachedFile.dataUrl || `data:${attachedFile.type || "application/pdf"};base64,${attachedFile.base64}`;
-        link.download = attachedFile.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        showToast(`Document "${attachedFile.name}" downloaded! Opening WhatsApp Web — attach it to the chat.`, "info");
-      } catch (err) {
-        console.error("Auto-download failed:", err);
-      }
-    }
-
-    if (isGroup) {
-      if (customWhatsAppMessage) {
-        window.navigator.clipboard.writeText(customWhatsAppMessage);
-      }
-      window.open("https://web.whatsapp.com", "_blank");
-      if (!attachedFile) {
-        showToast("Message copied! Opening WhatsApp Web to paste into group.", "info");
-      }
-    } else {
-      if (cleanPhone.length < 10) {
-        showToast("No valid phone number for WhatsApp.", "error");
-        return;
-      }
-      const phoneWithCountry = `91${cleanPhone}`;
-      const url = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(customWhatsAppMessage)}`;
-      window.open(url, "_blank");
-    }
-
-    // Record audit and trigger row highlight
-    if (activePolicy?.id) {
-      const sentTimestamp = new Date().toISOString();
-      activePolicy.whatsappMessageSentAt = sentTimestamp;
-      onPolicyUpdated?.({
-        ...activePolicy,
-        whatsappMessageSentAt: sentTimestamp,
-      });
-      fetch("/api/renewals/whatsapp-message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          policyId: activePolicy.id,
-          recipient: targetRecipient,
-          phone: targetRecipient,
-          message: customWhatsAppMessage,
-          logAudit: true,
-          isGroup,
-          hasAttachment: Boolean(attachedFile),
-          attachmentName: attachedFile?.name || null,
-        }),
-      }).catch((auditErr) => {
-        console.error("Failed to log WhatsApp web audit:", auditErr);
-      });
-    }
-  };
-
   const handleSendViaApi = async () => {
     const isGroup = whatsappRecipientType === "group";
     const targetRecipient = isGroup ? whatsappGroupId : cleanPhone;
@@ -678,7 +615,7 @@ export default function RenewalActionDrawer({
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "WhatsApp gateway failed. Try 'Open in WhatsApp Web'.");
+        throw new Error(data.error || "WhatsApp send failed. Check My Primary WhatsApp.");
       }
 
       // Log audit
@@ -3073,7 +3010,7 @@ export default function RenewalActionDrawer({
                 {/* WhatsApp Web Action */}
                 <button
                   type="button"
-                  onClick={handleOpenWhatsAppWeb}
+                  onClick={handleSendViaApi}
                   disabled={whatsappRecipientType === "individual" && !cleanPhone}
                   style={{
                     flex: 1,
@@ -3095,7 +3032,7 @@ export default function RenewalActionDrawer({
                   }}
                 >
                   <ExternalLink size={14} />
-                  <span>{whatsappRecipientType === "group" ? "Open Web & Paste" : "Open in WhatsApp Web"}</span>
+                  <span>{whatsappRecipientType === "group" ? "Open Web & Paste" : "Send from my primary"}</span>
                 </button>
 
                 {/* Primary Action: Direct WhatsApp API Gateway */}

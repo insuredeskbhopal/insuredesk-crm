@@ -134,3 +134,12 @@ Sequentially processes pending messages in the queue, implementing strict anti-s
 ```bash
 curl -X GET "https://bimaheadquarter.com/api/cron/whatsapp-worker?secret=your_secure_cron_secret_here"
 ```
+
+
+## Account ownership
+
+Managers, agents, and administrators can link numbers. Viewers remain read-only.
+The CRM stamps each new account with the authenticated staff user's ID, organization, and name; the gateway persists this metadata in `accounts.json`.
+Only that owner can scan a pairing QR, pause, log out, remove, or select that account as sender. Administrator roles do not bypass ownership. The legacy logout endpoint requires an explicit owned account ID.
+Existing accounts without ownership metadata are read-only until their original owner is verified and assigned; never assign them to the next person who opens the page.
+Deploy the gateway ownership support together with the CRM changes. Gateway `POST /sessions` now requires an `owner` object supplied by the authenticated CRM server.

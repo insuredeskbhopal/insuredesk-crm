@@ -738,15 +738,18 @@ export default function WorkCenterControlTower({ initialData, onRefresh }) {
                       <div className="text-[11px] text-amber-700 font-semibold">{item.status.replaceAll("_", " ")}</div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <a
-                        href={`https://wa.me/${(item.customerMobile || "").replace(/[^0-9]/g, "")}`}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const response = await fetch("/api/operations/whatsapp/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipient: item.customerMobile, message: `Hello ${item.customerName || "Customer"}, please contact Bima Headquarter regarding ${item.title || "your pending request"}.` }) });
+                          const data = await response.json();
+                          window.alert(response.ok ? "Reminder sent from My Primary WhatsApp." : data.error || "Could not send reminder");
+                        }}
                         className="p-1.5 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                         title="Send WhatsApp Reminder"
                       >
                         <MessageSquare size={14} />
-                      </a>
+                      </button>
                       <a
                         href={`tel:${item.customerMobile || ""}`}
                         className="p-1.5 rounded bg-blue-50 text-blue-700 hover:bg-blue-100"

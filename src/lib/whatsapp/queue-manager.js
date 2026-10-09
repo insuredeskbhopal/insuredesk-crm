@@ -1,5 +1,6 @@
+import { resolveWhatsAppSender, authorizedAccount } from "./account-access";
 import { prisma } from "@/lib/db/prisma";
-import { sendWhatsAppText, sendWhatsAppImage, sendWhatsAppFile, getWhatsAppStatus } from "./whatsapp-client";
+import { sendWhatsAppText, sendWhatsAppImage, sendWhatsAppFile } from "./whatsapp-client";
 
 // Replaces template placeholders with variable values
 export function compileTemplate(body, variables = {}) {
@@ -34,6 +35,7 @@ export async function enqueueMessage({
   uniqueKey = null,
   scheduledAt = new Date(),
   accountId = null,
+  initiatedByUserId = null,
 }) {
   if (!organizationId) {
     throw new Error('organizationId is required to enqueue a message');
@@ -42,16 +44,8 @@ export async function enqueueMessage({
     throw new Error('recipientPhone is required to enqueue a message');
   }
 
-  // Determine and lock the fixed sender account ID at enqueue time
-  let lockedAccountId = accountId;
-  if (!lockedAccountId) {
-    try {
-      const status = await getWhatsAppStatus();
-      lockedAccountId = status.accountId || "insuredesk_session";
-    } catch {
-      lockedAccountId = "insuredesk_session";
-    }
-  }
+  const lockedAccountId = await resolveWhatsAppSender({ userId: initiatedByUserId, organizationId });
+  if (accountId && accountId !== lockedAccountId) throw new Error("Sender differs from the authorized primary WhatsApp account");
 
   try {
     const message = await prisma.whatsAppMessageQueue.create({
@@ -67,6 +61,7 @@ export async function enqueueMessage({
         uniqueKey,
         scheduledAt,
         accountId: lockedAccountId,
+        initiatedByUserId,
         status: 'PENDING',
       },
     });
@@ -136,6 +131,16 @@ export async function processQueueBatch(limit = 5) {
     const targetAccountId = message.accountId || null;
 
     try {
+      if (!targetAccountId) throw new Error("Queued message has no authorized sender; administrator review required");
+      // Keep the original sender when a user changes their primary, but recheck revoked access.
+      if (message.initiatedByUserId) {
+        const user = await prisma.user.findFirst({ where: { id: message.initiatedByUserId, organizationId: message.organizationId, deletedAt: null, role: { not: "VIEWER" } } });
+        if (!user) throw new Error("Initiating staff member is no longer authorized");
+        await authorizedAccount(message.initiatedByUserId, message.organizationId, targetAccountId);
+      } else {
+        const org = await prisma.organization.findUnique({ where: { id: message.organizationId } });
+        if (org?.systemWhatsAppAccountId !== targetAccountId) throw new Error("Queued system sender is no longer authorized");
+      }
       let openwaResponse;
       if (message.messageType === 'IMAGE') {
         let mediaPayload = message.mediaUrl;

@@ -109,6 +109,9 @@ export function listAllAccountsWithStatus() {
     return {
       id: acc.id,
       label: acc.label,
+      ownerUserId: acc.ownerUserId || null,
+      organizationId: acc.organizationId || null,
+      ownerName: acc.ownerName || null,
       phoneNumber: session?.phoneNumber || acc.phoneNumber || null,
       state,
       connected: state === "CONNECTED",
@@ -387,9 +390,9 @@ export function setPrimaryAccount(accountId) {
 /**
  * Register a new account and begin connection to generate QR
  */
-export async function createNewAccount(label) {
+export async function createNewAccount(label, owner) {
   const id = `account_${Date.now()}`;
-  const account = registerAccount(id, label);
+  const account = registerAccount(id, label, owner);
   startConnection(id).catch((err) => {
     console.error(`[Baileys][${id}] Initial connection failed:`, err);
   });
@@ -448,17 +451,17 @@ function publicGroup(group) {
   };
 }
 
-export function listGroups({ search = "", limit } = {}) {
-  const groups = search ? searchStoredGroups(search, limit) : getStoredGroups();
+export function listGroups({ search = "", limit, accountId = null } = {}) {
+  const groups = search ? searchStoredGroups(search, limit, accountId) : getStoredGroups({ accountId });
   return groups.map(publicGroup);
 }
 
-export function matchGroupsByPhone(phone) {
+export function matchGroupsByPhone(phone, accountId = null) {
   const normalizedPhone = normalizeIndianPhone(phone);
   if (!normalizedPhone) return { phone: "", groups: [] };
   return {
     phone: normalizedPhone,
-    groups: findStoredGroupsByParticipant(normalizedPhone).map(publicGroup),
+    groups: findStoredGroupsByParticipant(normalizedPhone, accountId).map(publicGroup),
   };
 }
 
@@ -478,18 +481,18 @@ function normalizeGroupParticipants(participants) {
   return [...normalized.values()];
 }
 
-let groupRefreshPromise = null;
+const groupRefreshPromises = new Map();
 
 export async function refreshGroups(accountId = null) {
   const targetId = accountId || getActiveAccountId();
   const session = activeSessions.get(targetId);
 
-  if (groupRefreshPromise) return groupRefreshPromise;
+  if (groupRefreshPromises.has(targetId)) return groupRefreshPromises.get(targetId);
   if (!session?.sock || session.connectionState !== "CONNECTED") {
     throw new Error(`WhatsApp account '${targetId}' is not connected; groups cannot be refreshed`);
   }
 
-  groupRefreshPromise = (async () => {
+  const promise = (async () => {
     const participating = await session.sock.groupFetchAllParticipating();
     const groups = Object.values(participating || {}).map((group) => ({
       groupId: group.id,
@@ -498,20 +501,20 @@ export async function refreshGroups(accountId = null) {
       groupParticipants: normalizeGroupParticipants(group.participants),
       creationTime: group.creation ? new Date(Number(group.creation) * 1000).toISOString() : null,
     }));
-    const phoneSessionId = session.sock.user?.id ? String(session.sock.user.id).split(":")[0] : targetId;
-    storeDiscoveredGroups(groups, phoneSessionId);
+    storeDiscoveredGroups(groups, targetId);
     console.log(`[Groups][${targetId}] Synced ${groups.length} participating group(s).`);
-    return listGroups();
+    return listGroups({ accountId: targetId });
   })().finally(() => {
-    groupRefreshPromise = null;
+    groupRefreshPromises.delete(targetId);
   });
 
-  return groupRefreshPromise;
+  groupRefreshPromises.set(targetId, promise);
+  return promise;
 }
 
-function assertAvailableGroup(jid) {
+function assertAvailableGroup(jid, accountId) {
   if (!jid.endsWith("@g.us")) return;
-  if (!getStoredGroups().some((group) => group.groupId === jid)) {
+  if (!getStoredGroups({ accountId }).some((group) => group.groupId === jid)) {
     throw new Error("WhatsApp group is no longer available. Refresh the group list and try again.");
   }
 }
@@ -539,7 +542,7 @@ export async function sendText(to, content, accountId = null) {
 
   const jid = formatRecipientToJid(to);
   if (!jid) throw new Error("A valid WhatsApp recipient is required");
-  assertAvailableGroup(jid);
+  assertAvailableGroup(jid, targetId);
 
   let result;
   try {
@@ -570,7 +573,7 @@ export async function sendMedia(to, mediaBase64, filename, caption, type, accoun
 
   const jid = formatRecipientToJid(to);
   if (!jid) throw new Error("A valid WhatsApp recipient is required");
-  assertAvailableGroup(jid);
+  assertAvailableGroup(jid, targetId);
 
   let buffer;
   if (Buffer.isBuffer(mediaBase64)) {

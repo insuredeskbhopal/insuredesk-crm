@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
-import { sendWhatsAppText } from "@/lib/whatsapp/whatsapp-client";
+import { resolveWhatsAppSender } from "@/lib/whatsapp/account-access";
+import { dispatchWhatsApp } from "@/lib/whatsapp/dispatch";
 
 /**
  * Compiles and sends a 1-time WhatsApp Welcome Message with a clean branded PDF link
@@ -14,6 +15,7 @@ import { sendWhatsAppText } from "@/lib/whatsapp/whatsapp-client";
  */
 export async function sendPolicyUploadWelcomeMessage({
   recordId,
+  initiatedByUserId = null,
   data = {},
   contactName = null,
   contactPhone = null,
@@ -166,7 +168,8 @@ by InsureDesk IMF Pvt. Ltd.`;
 
   // 6. Send WhatsApp message via Gateway
   try {
-    const sendRes = await sendWhatsAppText(formattedPhone, welcomeMessage);
+    const accountId = await resolveWhatsAppSender({ userId: initiatedByUserId, organizationId: record.organizationId });
+    const sendRes = await dispatchWhatsApp({ userId: initiatedByUserId, organizationId: record.organizationId, accountId, recipientName: resolvedName }, "TEXT", formattedPhone, welcomeMessage);
 
     // 7. Record 1-time delivery timestamp in policy record
     const updatedReviewed = {

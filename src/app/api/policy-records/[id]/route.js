@@ -400,6 +400,7 @@ export async function PUT(request, { params }) {
 
     // Trigger 1-time WhatsApp welcome message with clean PDF link to contact person
     sendPolicyUploadWelcomeMessage({
+      initiatedByUserId: actorId,
       recordId: record.id,
       data: reviewedData || record.reviewedData || record.extractedData || record.data,
     }).catch((msgErr) => {

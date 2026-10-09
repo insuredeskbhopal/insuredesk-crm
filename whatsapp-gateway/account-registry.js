@@ -114,7 +114,7 @@ export function getAccount(accountId) {
   return memoryRegistry?.accounts?.[accountId] || null;
 }
 
-export function registerAccount(id, label) {
+export function registerAccount(id, label, owner) {
   if (!memoryRegistry) throw new Error("Account registry not initialized");
   const cleanId = String(id || "").trim();
   if (!ACCOUNT_ID_REGEX.test(cleanId)) {
@@ -124,7 +124,11 @@ export function registerAccount(id, label) {
     throw new Error(`Account '${cleanId}' is already registered.`);
   }
 
+  if (!owner?.ownerUserId || !owner?.organizationId) throw new Error("Account owner is required");
   const newAccount = {
+    ownerUserId: String(owner.ownerUserId),
+    organizationId: String(owner.organizationId),
+    ownerName: String(owner.ownerName || "Staff member"),
     id: cleanId,
     label: String(label || cleanId).trim(),
     phoneNumber: null,
@@ -144,7 +148,10 @@ export function updateAccount(accountId, updates = {}) {
   const updated = {
     ...current,
     ...updates,
-    id: current.id, // Immutable ID
+    id: current.id, // Immutable ID and ownership
+    ownerUserId: current.ownerUserId,
+    organizationId: current.organizationId,
+    ownerName: current.ownerName,
     lastSeenAt: new Date().toISOString(),
   };
   memoryRegistry.accounts[accountId] = updated;

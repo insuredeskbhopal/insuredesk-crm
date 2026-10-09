@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { verifyJWT } from "@/lib/auth";
-import { sendWhatsAppText, sendWhatsAppImage, sendWhatsAppFile } from "@/lib/whatsapp/whatsapp-client";
+import { resolveWhatsAppSender, requireWhatsAppStaff } from "@/lib/whatsapp/account-access";
+import { dispatchWhatsApp } from "@/lib/whatsapp/dispatch";
 
 export const runtime = "nodejs";
 
@@ -41,15 +41,7 @@ function withAgentSignature(message, signature) {
   return `${text}\n\n${signOff}`;
 }
 
-async function requireSession(request) {
-  const token = request.cookies.get("token")?.value;
-  if (!token) return { errorResponse: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) };
-  const session = await verifyJWT(token);
-  if (!session) {
-    return { errorResponse: NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }) };
-  }
-  return session;
-}
+
 
 async function resolveAttachmentPayload(attachment = {}) {
   const attachmentData = attachment.mediaBase64 || attachment.data || attachment.attachmentData || attachment.base64 || "";
@@ -129,7 +121,7 @@ async function resolveAttachmentPayload(attachment = {}) {
 
 export async function POST(request) {
   try {
-    const session = await requireSession(request);
+    const session = await requireWhatsAppStaff(request, true);
     if (session.errorResponse) return session.errorResponse;
 
     const body = await request.json();
@@ -161,13 +153,16 @@ export async function POST(request) {
       ? String(message || "").trim()
       : withAgentSignature(message, body.signature || buildDefaultAgentSignature(session));
 
-    const targetAccountId = body.accountId || null;
+    const targetAccountId = await resolveWhatsAppSender(session);
+    const context = { userId: session.userId, organizationId: session.organizationId, accountId: targetAccountId, recipientName: body.recipientName };
+    const sendWhatsAppText = (to, message) => dispatchWhatsApp(context, "TEXT", to, message);
+    const sendWhatsAppImage = (to, data, filename, caption) => dispatchWhatsApp(context, "IMAGE", to, data, filename, caption);
+    const sendWhatsAppFile = (to, data, filename, caption) => dispatchWhatsApp(context, "PDF", to, data, filename, caption);
 
     // Render personalized birthday card directly in memory on-the-fly and dispatch
     if (body.attachBirthdayCard) {
       const { generateBirthdayCard } = await import("@/lib/birthday/card-renderer");
       const card = await generateBirthdayCard({ recipientName: body.recipientName || "Valued Client" });
-      const { sendWhatsAppImage } = await import("@/lib/whatsapp/whatsapp-client");
       const imgRes = await sendWhatsAppImage(
         recipient,
         card.base64,
@@ -221,13 +216,14 @@ export async function POST(request) {
       success: true,
       messageId: msgId ? String(msgId) : null,
       response: firstResponse,
+      accountId: targetAccountId,
       attachmentCount: resolvedAttachments.length,
     });
   } catch (error) {
     console.error("Failed to send WhatsApp message:", error);
     return NextResponse.json(
       { error: error.message || "Failed to send WhatsApp message" },
-      { status: 500 }
+      { status: error.status || 500 }
     );
   }
 }

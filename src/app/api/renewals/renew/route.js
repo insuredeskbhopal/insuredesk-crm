@@ -390,6 +390,7 @@ export async function POST(request) {
     // 5. Trigger welcome message asynchronously if a new policy document was created
     if (result?.stagedData && result?.policy?.id) {
       sendPolicyUploadWelcomeMessage({
+      initiatedByUserId: user.userId || user.id,
         recordId: result.policy.id,
         data: result.stagedData,
       }).catch((msgErr) => {

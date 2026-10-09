@@ -703,32 +703,6 @@ export default function BirthdayManagementPage() {
     }
   };
 
-  // Open in WhatsApp Web as fallback
-  const handleOpenWhatsAppWeb = async () => {
-    if (!greetingTarget || !customMessage) return;
-    if (recipientType === "group") {
-      if (typeof window !== "undefined" && window.navigator?.clipboard?.writeText) {
-        try {
-          await window.navigator.clipboard.writeText(customMessage);
-          showToast("success", "Message copied to clipboard! Opening WhatsApp Web...");
-        } catch {
-          // clipboard fallback
-        }
-      }
-      if (typeof window !== "undefined") {
-        window.open("https://web.whatsapp.com/", "_blank");
-      }
-      return;
-    }
-
-    const cleanPhone = (greetingTarget.phone || "").replace(/\D/g, "");
-    const formattedPhone = cleanPhone.startsWith("91") && cleanPhone.length === 12 ? cleanPhone : `91${cleanPhone}`;
-    const url = `https://web.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(customMessage)}`;
-    if (typeof window !== "undefined") {
-      window.open(url, "_blank");
-    }
-  };
-
   // Send WhatsApp greetings to all customers whose birthday is today
   const handleSendAllBirthdays = async () => {
     setIsSendingAll(true);
@@ -1923,7 +1897,7 @@ export default function BirthdayManagementPage() {
             <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <button
                 type="button"
-                onClick={handleOpenWhatsAppWeb}
+                onClick={handleSendGreeting}
                 disabled={isSendingGreeting}
                 className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-slate-750 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl shadow-xs transition disabled:opacity-50"
               >

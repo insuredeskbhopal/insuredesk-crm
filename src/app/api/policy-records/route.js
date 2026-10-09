@@ -804,6 +804,7 @@ export async function POST(request) {
 
     // Trigger 1-time WhatsApp welcome message with clean PDF link to contact person
     sendPolicyUploadWelcomeMessage({
+      initiatedByUserId: user.userId || user.id,
       recordId: record.id,
       data: reviewedData || legacyPayload || extractedData,
     }).catch((msgErr) => {

@@ -1,24 +1,15 @@
 import { NextResponse } from "next/server";
-import { verifyJWT } from "@/lib/auth";
+import { requireWhatsAppStaff, resolveWhatsAppSender } from "@/lib/whatsapp/account-access";
 import { triggerDailyBirthdays } from "@/lib/whatsapp/automations";
 import { processQueueBatch } from "@/lib/whatsapp/queue-manager";
 
 export const runtime = "nodejs";
 
-async function requireSession(request) {
-  const token = request.cookies.get("token")?.value;
-  if (!token) return { errorResponse: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) };
-  const session = await verifyJWT(token);
-  if (!session) {
-    return { errorResponse: NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }) };
-  }
-  return session;
-}
-
 export async function POST(request) {
   try {
-    const session = await requireSession(request);
+    const session = await requireWhatsAppStaff(request, true);
     if (session.errorResponse) return session.errorResponse;
+    await resolveWhatsAppSender(session);
 
 
 
@@ -32,7 +23,7 @@ export async function POST(request) {
     const organizationId = session.organizationId || null;
 
     // 1. Scan and queue all of today's birthdays for this organization
-    const scanResult = await triggerDailyBirthdays({ organizationId });
+    const scanResult = await triggerDailyBirthdays({ organizationId, initiatedByUserId: session.userId });
 
     // 2. Process/send messages in background if any were enqueued
     if (scanResult.queuedCount > 0) {
@@ -50,7 +41,7 @@ export async function POST(request) {
     console.error("Birthday wishes send-all failed:", error);
     return NextResponse.json(
       { error: error.message || "Failed to trigger sending wishes" },
-      { status: 500 }
+      { status: error.status || 500 }
     );
   }
 }

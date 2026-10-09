@@ -89,8 +89,8 @@ export async function getWhatsAppSessions() {
   return Array.isArray(res.accounts) ? res.accounts : [];
 }
 
-export async function createWhatsAppSession(label) {
-  return callGateway("POST", "sessions", { label: label || "New WhatsApp Number" });
+export async function createWhatsAppSession(label, owner) {
+  return callGateway("POST", "sessions", { label: label || "New WhatsApp Number", owner });
 }
 
 export async function setPrimaryWhatsAppSession(accountId) {
@@ -173,6 +173,7 @@ export async function getWhatsAppQrCode(accountId = null) {
 // ── Outbound Dispatch API (Account-Aware) ───────────────────────────
 
 export async function sendWhatsAppText(to, content, accountId = null) {
+  if (!accountId) throw new Error("An explicit authorized WhatsApp sender is required");
   const recipient = formatRecipient(to);
   const payload = {
     to: recipient,
@@ -196,6 +197,7 @@ export async function sendWhatsAppText(to, content, accountId = null) {
 }
 
 export async function sendWhatsAppImage(to, fileData, filename, caption, accountId = null) {
+  if (!accountId) throw new Error("An explicit authorized WhatsApp sender is required");
   const recipient = formatRecipient(to);
   const payload = {
     to: recipient,
@@ -222,6 +224,7 @@ export async function sendWhatsAppImage(to, fileData, filename, caption, account
 }
 
 export async function sendWhatsAppFile(to, fileData, filename, caption, accountId = null) {
+  if (!accountId) throw new Error("An explicit authorized WhatsApp sender is required");
   const recipient = formatRecipient(to);
   const payload = {
     to: recipient,
@@ -248,6 +251,7 @@ export async function sendWhatsAppFile(to, fileData, filename, caption, accountI
 }
 
 export async function sendWhatsAppBirthdayWish(to, name, caption, accountId = null) {
+  if (!accountId) throw new Error("An explicit authorized WhatsApp sender is required");
   const recipient = formatRecipient(to);
   const payload = {
     to: recipient,
@@ -289,20 +293,16 @@ export async function logoutWhatsApp(accountId = null) {
   }
 }
 
-export async function getWhatsAppGroups({ search = "", limit = 30 } = {}) {
-  const query = search
-    ? `?search=${encodeURIComponent(search)}&limit=${encodeURIComponent(limit)}`
-    : "";
-  const groups = await callGateway("GET", `groups${query}`);
+export async function getWhatsAppGroups({ search = "", limit = 30, accountId } = {}) {
+  if (!accountId) throw new Error("A selected WhatsApp sender is required");
+  const query = new URLSearchParams({ search, limit: String(limit), accountId });
+  const groups = await callGateway("GET", `groups?${query}`);
   return Array.isArray(groups) ? groups : [];
 }
-
-export async function matchWhatsAppGroups(phone) {
-  const result = await callGateway("GET", `groups/match?phone=${encodeURIComponent(phone)}`);
-  return {
-    phone: result.phone || "",
-    groups: Array.isArray(result.groups) ? result.groups : [],
-  };
+export async function matchWhatsAppGroups(phone, accountId) {
+  if (!accountId) throw new Error("A selected WhatsApp sender is required");
+  const result = await callGateway("GET", `groups/match?${new URLSearchParams({ phone, accountId })}`);
+  return { phone: result.phone || "", groups: Array.isArray(result.groups) ? result.groups : [] };
 }
 
 export async function refreshWhatsAppGroups(accountId = null) {
