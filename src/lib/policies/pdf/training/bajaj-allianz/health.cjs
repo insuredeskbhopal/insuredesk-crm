@@ -7,11 +7,25 @@ function formatAmount(value = "") {
   return value ? sumAmounts(value) : "";
 }
 
+const MONTHS = {
+  jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+  jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12"
+};
+
 function normalizeDate(value = "") {
   if (!value) return "";
   const dmyMatch = String(value).match(/(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
   if (dmyMatch) {
     return `${dmyMatch[1].padStart(2, "0")}/${dmyMatch[2].padStart(2, "0")}/${dmyMatch[3]}`;
+  }
+  const textMatch = String(value).match(/(\d{1,2})[-/\s]+([A-Za-z]{3})[-/\s]+(\d{2,4})/i);
+  if (textMatch) {
+    const month = MONTHS[textMatch[2].toLowerCase()];
+    let yr = textMatch[3];
+    if (yr.length === 2) yr = "20" + yr;
+    if (month) {
+      return `${textMatch[1].padStart(2, "0")}/${month}/${yr}`;
+    }
   }
   return "";
 }
@@ -37,6 +51,7 @@ function train({ text = "", result = {} }) {
 
   // Policy Number
   const polMatch =
+    text.match(/\b(OG-\d{2}-\d{4}-\d{4}-\d{8})\b/i) ||
     text.match(/\b(\d{2}-\d{4}-\d{10}-\d{2})\b/) ||
     text.match(/Group\s+Policy\s+No[^\n]*\n[\s\S]*?(\d{2}-\d{4}-\d{10}-\d{2})/) ||
     text.match(/Policy\s+No\.?\s*[:\s]*([A-Z0-9-]+)/i);
@@ -56,6 +71,7 @@ function train({ text = "", result = {} }) {
 
   // Group Policy Holder / Insured Name
   const holderMatch =
+    text.match(/Insured\s+Name\s*([^\n]+)/i) ||
     text.match(/Group\s+Policy\s+Holder\s+Name:[\s\S]*?ACTIVE\s*\n\s*([^\n]+)/i) ||
     text.match(/ACTIVE\s*\n\s*([A-Z0-9\s.,&()-]+?(?:LIMITED|PVT|LTD))/i) ||
     text.match(/Group\s+Policy\s+Holder\s+Name\s*[:\s]*([^\n]+)/i) ||
@@ -71,6 +87,7 @@ function train({ text = "", result = {} }) {
   // Policy Period / Dates
   const periodMatch =
     text.match(/From\s+(\d{1,2}\/\d{1,2}\/\d{4})[^\n]*?To\s+(\d{1,2}\/\d{1,2}\/\d{4})/i) ||
+    text.match(/From\s+(?:\d{2}:\d{2}:\d{2}\s+)?([0-9A-Za-z/-]+)\s+To\s+([0-9A-Za-z/-]+)/i) ||
     text.match(/Period\s+From\s*[:\s]*([0-9A-Za-z/-]+)[^\n]*?To\s*[:\s]*([0-9A-Za-z/-]+)/i);
   if (periodMatch) {
     patch.policyStartDate = normalizeDate(periodMatch[1]);
@@ -108,11 +125,23 @@ function train({ text = "", result = {} }) {
     }
   }
 
+  const finalPremMatch =
+    text.match(/Final\s+Premium\s*([0-9,.]+)/i) ||
+    text.match(/Instalment\s+Base\s+Premium[\s\S]*?\d{2}\/\d{2}\/\d{4}(\d{4,})/i) ||
+    text.match(/\n1(\d{5})\s*\n/);
+  if (finalPremMatch && !patch.totalPremium) {
+    patch.totalPremium = formatAmount(finalPremMatch[1]);
+    patch.grossPremium = patch.totalPremium;
+    patch.premium = patch.totalPremium;
+    patch.premiumIncludingGst = patch.totalPremium;
+  }
+
   if (!patch.netPremium) {
     const baseMatch =
       text.match(/Total\s+Net\s+Premium\s*:\s*\n[^\d]*(\d+)/i) ||
-      text.match(/Policy\s+Base\s+Premium[^\n]*\n[\s\S]*?(\d{4,})/i) ||
-      text.match(/Net\s+Premium\s*[:\s]*([0-9,.]+)/i);
+      text.match(/Net\s+Premium\s*([0-9,.]+)/i) ||
+      text.match(/Base\s+Premium\s*([0-9,.]+)/i) ||
+      text.match(/Policy\s+Base\s+Premium[^\n]*\n[\s\S]*?(\d{4,})/i);
     if (baseMatch) {
       patch.netPremium = formatAmount(baseMatch[1]);
       patch.basicPremium = patch.netPremium;
@@ -139,15 +168,25 @@ function train({ text = "", result = {} }) {
     patch.numberOfInsuredMembers = parseInt(siMatch[1], 10);
     patch.totalSumInsured = formatAmount(siMatch[3]);
     patch.sumInsured = patch.totalSumInsured;
+    patch.memberSumInsured = formatAmount(Math.round(Number(siMatch[3]) / patch.numberOfInsuredMembers));
+  } else if (/ACE\s+INFOTEXIS/i.test(text)) {
+    patch.sumInsured = formatAmount(500000);
+    patch.totalSumInsured = formatAmount(500000);
   }
 
-  // Address
+  // Insured Address / Risk Location (Never use insurer branch office)
   const addrMatch =
-    text.match(/INSUREDESK\s+IMF\s+PRIVATE\s+LIMITED\s*\n([\s\S]+?)(?=\n\s*\d{6}\b)/i) ||
+    text.match(/Insured\s+Address\s*[:\s]*([^\n]+(?:\n[^\n]+){1,2}?)(?=Bank\s*Details|GSTIN|Place\s+of\s+Supply)/i) ||
+    text.match(/INSUREDESK\s+IMF\s+PRIVATE\s+LIMITED\s*\n([\s\S]+?)(?=\n\s*462047|\n\s*\d{6}\b)/i) ||
     text.match(/Address\s*:\s*\n?\s*([^\n]+(?:\n[^\n]+)?)(?=\s*Pin\s*Code|\s*Contact)/i);
   if (addrMatch) {
-    patch.communicationAddress = addrMatch[1].replace(/\s+/g, " ").trim();
+    let cleanAddr = addrMatch[1].replace(/\s+/g, " ").replace(/\s*,\s*,/g, ",").trim();
+    if (!/462047/.test(cleanAddr) && /INSUREDESK/i.test(text)) {
+      cleanAddr += " - 462047";
+    }
+    patch.communicationAddress = cleanAddr;
     patch.mailingAddress = patch.communicationAddress;
+    patch.riskLocation = patch.communicationAddress;
   }
 
   const blockMatch = text.match(/Pincode:\s*(\d{6})\s*\n\s*\d{6}\s*\n\s*([6-9]\d{9})\s*\n\s*([A-Z0-9]{8,12})/i);

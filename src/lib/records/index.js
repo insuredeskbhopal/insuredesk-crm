@@ -1,5 +1,6 @@
 import insuranceCompanyMaster from "@/lib/master/insurance-companies.cjs";
 import { resolvePolicyCustomerName } from "@/lib/renewals/customer-name";
+import { resolveDocumentCategory } from "@/lib/policies/category-resolver.cjs";
 
 const { normalizeInsuranceCompanyName } = insuranceCompanyMaster;
 
@@ -559,14 +560,19 @@ export function buildCanonicalFields(sourceData = {}, options = {}) {
     sourceData.makeModel || sourceData.vehicleMake || options.makeModel || ""
   ).trim() || null;
 
-  const policyCategory = String(
-    sourceData.policyCategory ||
-    sourceData.documentCategory ||
-    sourceData.policyType ||
-    options.policyCategory ||
-    options.selectedServiceCategory ||
-    ""
-  ).trim() || null;
+  const policyCategory = resolveDocumentCategory({
+    currentCategory:
+      sourceData.policyCategory ||
+      sourceData.documentCategory ||
+      options.policyCategory ||
+      options.selectedServiceCategory ||
+      "",
+    policyType: sourceData.policyType || options.selectedPolicyType || "",
+    insuredName,
+    sourceFile: sourceData.sourceFile || options.sourceFile || "",
+    vehicleRegistrationNumber,
+    makeModel,
+  });
 
   const selectedCompany = normalizeInsuranceCompanyName(
     sourceData.insuranceCompany ||

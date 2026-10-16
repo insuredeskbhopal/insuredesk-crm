@@ -44,6 +44,7 @@ function premiumBaseCTE() {
         ${premiumExpression()} AS premium,
         COALESCE(reviewed_data->>'expiryDate', reviewed_data->>'policyEndDate', data->>'expiryDate', data->>'policyEndDate') AS raw_expiry,
         COALESCE(
+          NULLIF(policy_category, ''),
           NULLIF(reviewed_data->>'documentCategory', ''),
           NULLIF(data->>'documentCategory', ''),
           NULLIF(selected_service_category, ''),
@@ -52,6 +53,13 @@ function premiumBaseCTE() {
           NULLIF(data->>'policyType', ''),
           ''
         ) AS raw_category,
+        COALESCE(
+          NULLIF(policy_category, ''),
+          NULLIF(selected_policy_type, ''),
+          NULLIF(reviewed_data->>'policyType', ''),
+          NULLIF(data->>'policyType', ''),
+          ''
+        ) AS raw_policy_type,
         LOWER(CONCAT_WS(' ',
           reviewed_data->>'insuredName', data->>'insuredName',
           reviewed_data->>'customerName', data->>'customerName',
@@ -68,9 +76,9 @@ function premiumBaseCTE() {
       SELECT parsed.*,
         (${expiryExpression}) AS expiry_date,
         CASE
+          WHEN (raw_category ~* 'warehouse|godown' OR raw_policy_type ~* 'warehouse|godown') THEN 'Warehouse'
+          WHEN (raw_category ~* 'health|mediclaim|medical|hospital|personal\\s*accident' OR raw_policy_type ~* 'health|mediclaim') THEN 'Health'
           WHEN raw_category ~* 'motor|vehicle|private\\s*car|two\\s*wheeler|commercial\\s*vehicle|gcv|pcv|car|scooter|bike' THEN 'Motor'
-          WHEN raw_category ~* 'health|mediclaim|medical|hospital|personal\\s*accident' THEN 'Health'
-          WHEN raw_category ~* 'warehouse|godown' THEN 'Warehouse'
           ELSE 'Non-Motor'
         END AS policy_category
       FROM parsed

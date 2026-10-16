@@ -1,6 +1,7 @@
 import { extractPolicyFromText } from "./pdf/extractor.cjs";
 import { buildAiMergePreview } from "./ai/merge-preview.js";
 import { reviewPolicyExtractionPassivelyWithAi } from "./ai/extraction-review.js";
+import { resolveDocumentCategory } from "./category-resolver.cjs";
 
 export async function extractPolicyDataFromTextResult({ textResult = {}, sourceFile = "" } = {}) {
   const rawText = textResult.rawText || "";
@@ -42,8 +43,20 @@ export async function extractPolicyDataFromTextResult({ textResult = {}, sourceF
     }
   }
 
+  const resolvedCategory = resolveDocumentCategory({
+    currentCategory: autoFilledData.documentCategory || ruleBasedData.documentCategory || "",
+    policyType: autoFilledData.policyType || ruleBasedData.policyType || "",
+    insuredName: autoFilledData.insuredName || autoFilledData.customerName || ruleBasedData.insuredName || "",
+    sourceFile: autoFilledData.sourceFile || ruleBasedData.sourceFile || sourceFile || "",
+    text: rawText,
+    vehicleRegistrationNumber: autoFilledData.vehicleNumber || autoFilledData.registrationNumber || ruleBasedData.vehicleNumber || ruleBasedData.registrationNumber || "",
+    makeModel: autoFilledData.makeModel || ruleBasedData.makeModel || "",
+  });
+
   const data = {
     ...autoFilledData,
+    documentCategory: resolvedCategory,
+    policyCategory: resolvedCategory,
     extractionQuality: {
       ...(ruleBasedData.extractionQuality || {}),
       aiReview,
@@ -58,7 +71,8 @@ export async function extractPolicyDataFromTextResult({ textResult = {}, sourceF
       sourceFile: data.sourceFile || ruleBasedData.sourceFile || sourceFile || "Untitled.pdf",
       status: data.status || ruleBasedData.status || "saved",
       documentFormat: data.documentFormat || ruleBasedData.documentFormat || "",
-      documentCategory: data.documentCategory || ruleBasedData.documentCategory || "",
+      documentCategory: resolvedCategory,
+      policyCategory: resolvedCategory,
       sourceText: rawText,
       extractionMethod: scannedDocument
         ? `ai_primary_${textResult.extractionMethod || "ocr"}`

@@ -439,6 +439,7 @@ function buildPivotRows(records, grouping) {
 
 function getRecordCategory(record = {}) {
   const haystack = [
+    record.policyCategory,
     record.documentCategory,
     record.selectedServiceCategory,
     record.detectedServiceCategory,
@@ -449,14 +450,14 @@ function getRecordCategory(record = {}) {
     .join(" ")
     .toLowerCase();
 
-  if (/\b(motor|vehicle|private\s*car|two\s*wheeler|commercial\s*vehicle|gcv|pcv|car|scooter|bike)\b/.test(haystack)) {
-    return "motor";
+  if (/\b(warehouse|godown)\b/.test(haystack)) {
+    return "warehouse";
   }
   if (/\b(health|mediclaim|medical|hospital|personal\s*accident)\b/.test(haystack)) {
     return "health";
   }
-  if (/\b(warehouse|godown)\b/.test(haystack)) {
-    return "warehouse";
+  if (/\b(motor|vehicle|private\s*car|two\s*wheeler|commercial\s*vehicle|gcv|pcv|car|scooter|bike)\b/.test(haystack)) {
+    return "motor";
   }
   return "nonMotor";
 }

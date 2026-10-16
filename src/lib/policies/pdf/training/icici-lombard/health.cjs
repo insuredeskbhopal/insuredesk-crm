@@ -107,11 +107,14 @@ function extractPremiums(text = "") {
     "i",
   );
   const match = text.match(pattern);
+  const totalPaidMatch = text.match(/Total\s*Premium\s*paid\s*\(₹\)\s*([0-9,]+(?:\.[0-9]{2})?)/i) ||
+                         text.match(/Total\s*Amount\s*Payable\s*\(₹\)\s*([0-9,]+(?:\.[0-9]{2})?)/i);
+  const totalPaid = totalPaidMatch ? normalizeAmount(totalPaidMatch[1]) : "";
   return {
     basicPremium: normalizeAmount(match?.[1] || ""),
     taxAmount: normalizeAmount(match?.[2] || ""),
     stampDuty: normalizeAmount(match?.[3] || ""),
-    totalPremium: normalizeAmount(match?.[4] || ""),
+    totalPremium: normalizeAmount(match?.[4] || totalPaid),
   };
 }
 
@@ -194,6 +197,7 @@ function train({ text = "", result }) {
     gstAmount: premiums.taxAmount || result.gstAmount,
     stampDuty: premiums.stampDuty || result.stampDuty,
     totalPremium,
+    grossPremium: totalPremium,
     premiumIncludingGst: totalPremium || result.premiumIncludingGst,
     premium: totalPremium || result.premium,
     nomineeName: nominee.name || result.nomineeName,

@@ -58,8 +58,15 @@ async function loadPolicyRecordTabCounts({ isSuperAdmin, orgId, session, datePre
         ) AND NOT (
           policy_category ILIKE '%warehouse%'
           OR policy_category ILIKE '%health%'
+          OR policy_category ILIKE '%fire%'
+          OR policy_category ILIKE '%burglary%'
+          OR policy_category ILIKE '%marine%'
+          OR policy_category ILIKE '%workmen%'
+          OR policy_category ILIKE '%engineering%'
           OR selected_policy_type ILIKE '%health%'
           OR selected_policy_type ILIKE '%mediclaim%'
+          OR selected_policy_type ILIKE '%fire%'
+          OR selected_policy_type ILIKE '%burglary%'
         ) THEN 1 END)::integer as motor_count,
         COUNT(CASE WHEN (
           policy_category ILIKE '%warehouse%'

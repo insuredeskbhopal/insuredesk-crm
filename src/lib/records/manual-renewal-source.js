@@ -20,6 +20,8 @@ export function withoutManualRenewalSources(where = {}) {
       { OR: [{ extractionMethod: { not: MANUAL_RENEWAL_IMPORT_METHOD } }, { extractionMethod: null }] },
       { OR: [{ sourceFile: { not: MANUAL_RENEWAL_SOURCE_FILE } }, { sourceFile: null }] },
       { OR: [{ pdfFileName: { not: MANUAL_RENEWAL_SOURCE_FILE } }, { pdfFileName: null }] },
+      { OR: [{ sourceFile: { not: "generic_renewal_template.xlsx" } }, { sourceFile: null }] },
+      { OR: [{ pdfFileName: { not: "generic_renewal_template.xlsx" } }, { pdfFileName: null }] },
     ],
   };
 }
@@ -29,6 +31,8 @@ export const MANUAL_RENEWAL_SQL_EXCLUSION = `
     COALESCE(extraction_method, '') = '${MANUAL_RENEWAL_IMPORT_METHOD}'
     OR COALESCE(source_file, '') = '${MANUAL_RENEWAL_SOURCE_FILE}'
     OR COALESCE(pdf_file_name, '') = '${MANUAL_RENEWAL_SOURCE_FILE}'
+    OR COALESCE(source_file, '') = 'generic_renewal_template.xlsx'
+    OR COALESCE(pdf_file_name, '') = 'generic_renewal_template.xlsx'
     OR COALESCE(reviewed_data->>'manualRenewalSource', data->>'manualRenewalSource', '') = 'true'
   )
 `;

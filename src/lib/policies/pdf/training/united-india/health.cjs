@@ -174,7 +174,7 @@ function train({ text = "", result = {} }) {
     0,
   );
 
-  let sumInsured = sumInsFromMembers > 0 ? String(sumInsFromMembers) : "";
+  let sumInsured = (members[0]?.sumInsured) || (sumInsFromMembers > 0 ? String(sumInsFromMembers) : "");
   if (!sumInsured) {
     const sumInsMatch = text.match(/Gold\s*([0-9,.]+)/i) ||
       text.match(/Platinum\s*([0-9,.]+)/i) ||
