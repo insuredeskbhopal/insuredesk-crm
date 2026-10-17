@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { isRenewalQuoteGroup, buildRenewalQuoteEntry, storeRenewalQuoteEntry } from "@/lib/whatsapp/renewal-quote-capture";
 import { downloadWhatsAppMedia } from "@/lib/whatsapp/whatsapp-client";
@@ -7,14 +8,28 @@ export const runtime = "nodejs";
 
 export async function POST(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const orgId = searchParams.get("orgId");
-    
-    // Webhook auth check: we can pass a secret in query param e.g. ?secret=...
-    const webhookSecret = searchParams.get("secret");
-    if (process.env.OPENWA_WEBHOOK_SECRET && webhookSecret !== process.env.OPENWA_WEBHOOK_SECRET) {
+    const expectedSecret = process.env.OPENWA_WEBHOOK_SECRET;
+    if (!expectedSecret || typeof expectedSecret !== "string" || expectedSecret.trim() === "") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const webhookSecret = searchParams.get("secret");
+    if (!webhookSecret || typeof webhookSecret !== "string") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const providedBuffer = Buffer.from(webhookSecret, "utf8");
+    const expectedBuffer = Buffer.from(expectedSecret, "utf8");
+
+    if (
+      providedBuffer.length !== expectedBuffer.length ||
+      !timingSafeEqual(providedBuffer, expectedBuffer)
+    ) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const orgId = searchParams.get("orgId");
 
     const payload = await request.json();
     console.log("Received OpenWA webhook event:", JSON.stringify(payload, null, 2));
