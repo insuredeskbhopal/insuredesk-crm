@@ -3742,6 +3742,200 @@ tr.rn-row-whatsapp-sent:hover td {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
 }
 
+/* ==========================================================================
+   Renewal Import Studio - Header & Branding Modernization
+   ========================================================================== */
+
+.rn-studio-header {
+  padding: 10px 22px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background-color: #ffffff !important;
+  gap: 16px !important;
+  min-height: 58px !important;
+  box-sizing: border-box !important;
+}
+
+.rn-studio-brand-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  flex-shrink: 0 !important;
+}
+
+.rn-studio-brand-logo {
+  height: 32px !important;
+  width: auto !important;
+  max-width: 130px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+.rn-studio-header-divider {
+  width: 1px !important;
+  height: 28px !important;
+  background-color: #e2e8f0 !important;
+  flex-shrink: 0 !important;
+}
+
+.rn-studio-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  border: 1px solid #e2e8f0 !important;
+  white-space: nowrap !important;
+}
+
+.rn-status-dot-pulse {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+  display: inline-block !important;
+}
+
+/* Header Right Control Bar */
+.rn-studio-controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Unified Header Selector Pill (Category & Month) */
+.rn-header-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  padding: 0 0 0 9px !important;
+  height: 32px !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.rn-header-pill:hover,
+.rn-header-pill:focus-within {
+  border-color: #94a3b8 !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.06) !important;
+}
+
+.rn-header-pill-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #64748b !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+  padding-right: 6px !important;
+  line-height: 1 !important;
+}
+
+.rn-header-pill-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background: transparent !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: calc(100% - 9px) center !important;
+  padding: 0 28px 0 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  border: none !important;
+  border-left: 1px solid #e2e8f0 !important;
+  border-top-right-radius: 7px !important;
+  border-bottom-right-radius: 7px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+  cursor: pointer !important;
+  outline: none !important;
+  white-space: nowrap !important;
+}
+
+.rn-header-pill-select:hover {
+  color: #0284c7 !important;
+}
+
+/* Template Button Group */
+.rn-template-button-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  padding: 2px !important;
+  gap: 2px !important;
+  height: 32px !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+}
+
+.rn-template-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 0 10px !important;
+  height: 26px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+}
+
+.rn-template-btn:hover {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* Close Modal Button */
+.rn-modal-close-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+}
+
+.rn-modal-close-btn:hover {
+  background: #fee2e2 !important;
+  border-color: #fecaca !important;
+  color: #dc2626 !important;
+}
+
 
 
 

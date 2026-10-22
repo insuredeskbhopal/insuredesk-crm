@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import * as XLSX from "xlsx";
 import ModalPortal from "@/app/components/shared/ModalPortal";
 import { showToast } from "@/app/components/shared/ToastProvider";
 import {
   AlertCircle,
   AlertTriangle,
+  Calendar,
   Check,
   CheckCircle2,
   ClipboardCopy,
   FileSpreadsheet,
   FileText,
+  Layers,
   Plus,
   RefreshCw,
   Search,
@@ -677,72 +680,47 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
             color: "#0f172a",
           }}
         >
-          {/* Top Header Bar - Clean Enterprise Style */}
-          <div
-            style={{
-              padding: "12px 20px",
-              borderBottom: "1px solid #e2e8f0",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              backgroundColor: "#ffffff",
-              flexWrap: "wrap",
-              gap: "10px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "9px",
-                  backgroundColor: "#0f172a",
-                  color: "#ffffff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 2px 6px rgba(15, 23, 42, 0.12)",
-                }}
-              >
-                <FileSpreadsheet size={18} />
-              </div>
+          {/* Top Header Bar - Clean Enterprise Style with Brand Logo */}
+          <div className="rn-studio-header">
+            <div className="rn-studio-brand-group">
+              <Image
+                src="/brand/main-logo-wide.webp"
+                alt="Bima Headquarter"
+                width={124}
+                height={52}
+                priority
+                unoptimized
+                className="rn-studio-brand-logo"
+              />
+              <div className="rn-studio-header-divider" />
               <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a", margin: 0, letterSpacing: "-0.01em" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <h2 style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", margin: 0, letterSpacing: "-0.01em" }}>
                     Renewal Import Studio
                   </h2>
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: "600",
-                      backgroundColor: "#f1f5f9",
-                      color: "#334155",
-                      padding: "2px 8px",
-                      borderRadius: "6px",
-                      border: "1px solid #e2e8f0",
-                    }}
-                  >
+                  <span className="rn-studio-badge">
+                    <span className="rn-status-dot-pulse" />
                     Interactive Spreadsheet
                   </span>
                 </div>
-                <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0 0" }}>
+                <p style={{ fontSize: "11.5px", color: "#64748b", margin: "1px 0 0 0" }}>
                   Review, edit, and paste renewal records in real time before committing to the CRM.
                 </p>
               </div>
             </div>
 
             {/* Header Right: Category Selector + Month Selector + Templates + Close */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-              {/* Category Picker */}
-              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                <span style={{ fontSize: "11px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                  Category:
+            <div className="rn-studio-controls">
+              {/* Category Unified Pill */}
+              <div className="rn-header-pill" title="Select line of business to optimize template and defaults">
+                <span className="rn-header-pill-label">
+                  <Layers size={12} style={{ color: "#2563eb" }} />
+                  Category
                 </span>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="rn-category-dropdown"
-                  title="Select line of business to optimize template and defaults"
+                  className="rn-header-pill-select"
                 >
                   {TEMPLATE_CATEGORIES.map((cat) => (
                     <option key={cat.id} value={cat.id}>
@@ -752,16 +730,16 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                 </select>
               </div>
 
-              {/* Renewal Target Month Picker */}
-              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                <span style={{ fontSize: "11px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                  Month:
+              {/* Renewal Target Month Unified Pill */}
+              <div className="rn-header-pill" title="Target renewal month for data accuracy and filtering">
+                <span className="rn-header-pill-label">
+                  <Calendar size={12} style={{ color: "#0d9488" }} />
+                  Month
                 </span>
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="rn-category-dropdown"
-                  title="Target renewal month for data accuracy and filtering"
+                  className="rn-header-pill-select"
                 >
                   {RENEWAL_MONTHS.map((m) => (
                     <option key={m.value} value={m.value}>
@@ -772,26 +750,26 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
               </div>
 
               {/* Templates */}
-              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <div className="rn-template-button-group">
                 <button
                   type="button"
                   onClick={() => handleDownloadTemplate("xlsx")}
                   disabled={downloadingFormat === "xlsx" || importing}
-                  style={topTemplateBtnStyle}
+                  className="rn-template-btn"
                   title={`Download Excel template (${selectedCategory.toUpperCase()}${selectedMonth !== "auto" ? ` • Month ${selectedMonth}` : ""})`}
                 >
-                  <FileSpreadsheet size={13} style={{ color: "#2563eb" }} />
-                  {downloadingFormat === "xlsx" ? "Downloading..." : "Excel"}
+                  <FileSpreadsheet size={13} style={{ color: "#16a34a" }} />
+                  <span>{downloadingFormat === "xlsx" ? "Downloading..." : "Excel"}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDownloadTemplate("csv")}
                   disabled={downloadingFormat === "csv" || importing}
-                  style={topTemplateBtnStyle}
+                  className="rn-template-btn"
                   title={`Download CSV template (${selectedCategory.toUpperCase()}${selectedMonth !== "auto" ? ` • Month ${selectedMonth}` : ""})`}
                 >
                   <FileText size={13} style={{ color: "#475569" }} />
-                  {downloadingFormat === "csv" ? "Downloading..." : "CSV"}
+                  <span>{downloadingFormat === "csv" ? "Downloading..." : "CSV"}</span>
                 </button>
               </div>
 
@@ -800,27 +778,7 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
               <button
                 type="button"
                 onClick={() => !importing && onClose()}
-                style={{
-                  width: "30px",
-                  height: "30px",
-                  borderRadius: "7px",
-                  backgroundColor: "#f8fafc",
-                  border: "1px solid #e2e8f0",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#64748b",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f1f5f9";
-                  e.currentTarget.style.color = "#0f172a";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f8fafc";
-                  e.currentTarget.style.color = "#64748b";
-                }}
+                className="rn-modal-close-btn"
                 title="Close Studio"
               >
                 <X size={15} />
@@ -1996,21 +1954,6 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
     </ModalPortal>
   );
 }
-
-const topTemplateBtnStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "5px",
-  padding: "4px 9px",
-  fontSize: "11px",
-  fontWeight: "600",
-  color: "#334155",
-  backgroundColor: "#f8fafc",
-  border: "1px solid #cbd5e1",
-  borderRadius: "6px",
-  cursor: "pointer",
-  transition: "all 0.15s ease",
-};
 
 const toolActionBtnStyle = {
   display: "inline-flex",
