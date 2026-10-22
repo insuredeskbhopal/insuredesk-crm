@@ -3525,4 +3525,223 @@ tr.rn-row-whatsapp-sent:hover td {
   font-weight: 500;
 }
 
+/* Renewal Import Studio - Data Grid Polish */
+.rn-sheet-row:hover {
+  background-color: #f8fafc !important;
+}
+
+.rn-sheet-row:hover input:not(:focus),
+.rn-sheet-row:hover select:not(:focus) {
+  border-color: #cbd5e1 !important;
+  background-color: #ffffff !important;
+}
+
+.rn-sheet-row input:focus,
+.rn-sheet-row select:focus {
+  border-color: #3b82f6 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+  outline: none !important;
+}
+
+/* Header Trigger Button - Clean Enterprise Style Immune to .app-shell black text */
+.rn-header-import-btn,
+.rn-header-import-btn:visited {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  padding: 7px 15px !important;
+  border-radius: 9px !important;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  text-decoration: none !important;
+}
+
+.rn-header-import-btn *,
+.rn-header-import-btn span {
+  color: #0f172a !important;
+}
+
+.rn-header-import-btn svg {
+  color: #2563eb !important;
+  stroke: #2563eb !important;
+}
+
+.rn-header-import-btn:hover {
+  background-color: #f8fafc !important;
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Status / State Badge Dropdown in Spreadsheet Grid - arrow never overlaps text */
+.rn-status-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: calc(100% - 6px) center !important;
+  padding: 3px 20px 3px 8px !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  border: 1px solid transparent !important;
+  transition: all 0.15s ease !important;
+  height: 26px !important;
+  line-height: 18px !important;
+}
+
+.rn-status-select:hover {
+  border-color: #cbd5e1 !important;
+}
+
+.rn-status-select.status-active {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+.rn-status-select.status-renewed {
+  background-color: #f0fdf4 !important;
+  color: #15803d !important;
+}
+
+.rn-status-select.status-lost {
+  background-color: #fef2f2 !important;
+  color: #b91c1c !important;
+}
+
+/* Compact, crisp spreadsheet cell inputs - overrides any 38px global input rules */
+.rn-sheet-cell-input {
+  width: 100% !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding: 3px 6px !important;
+  font-size: 12px !important;
+  line-height: 20px !important;
+  border: 1px solid transparent !important;
+  border-radius: 4px !important;
+  background-color: transparent !important;
+  color: #1e293b !important;
+  outline: none !important;
+  transition: all 0.12s ease !important;
+  box-sizing: border-box !important;
+}
+
+.rn-sheet-cell-input:hover {
+  border-color: #cbd5e1 !important;
+  background-color: #ffffff !important;
+}
+
+.rn-sheet-cell-input:focus {
+  border-color: #3b82f6 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Header Category Dropdown Pill */
+.rn-category-dropdown {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: calc(100% - 8px) center !important;
+  padding: 4px 26px 4px 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  background-color: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 7px !important;
+  cursor: pointer !important;
+  outline: none !important;
+  height: 28px !important;
+  line-height: 18px !important;
+  transition: all 0.15s ease !important;
+}
+
+.rn-category-dropdown:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Segmented Pill Toggle (Linear / Raycast Style - completely avoids radio inputs) */
+.rn-segmented-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  background-color: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 3px !important;
+  gap: 3px !important;
+}
+
+.rn-segmented-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+  height: 28px !important;
+  line-height: 18px !important;
+}
+
+.rn-segmented-item:hover:not(.active) {
+  color: #0f172a !important;
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+.rn-segmented-item.active {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Paste Modal Clean Textarea */
+.rn-paste-textarea {
+  width: 100% !important;
+  height: 200px !important;
+  min-height: 160px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 12px !important;
+  padding: 12px 14px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 9px !important;
+  outline: none !important;
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  line-height: 1.5 !important;
+  resize: vertical !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.rn-paste-textarea:focus {
+  border-color: #3b82f6 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+
+
 
