@@ -125,6 +125,8 @@ function createBlankRow(category = "all", month = "auto") {
     policyNumber: "",
     insuredName: "",
     contactNumber: "",
+    contactPersonName: "",
+    sumInsuredDescription: "",
     insuranceCompany: "",
     policyType: getDefaultPolicyTypeForCategory(category),
     expiryDate: defaultDate,
@@ -154,14 +156,22 @@ function parseRowData(raw, index = 0, defaultCategory = "all", defaultMonth = "a
   ).replace(/:+$/, "").trim();
 
   let insuredName = normalizeRawValue(
-    row.insuredname || row.customername || row.clientname || row.name || row.proposername || ""
+    row.insuredname || row.customername || row.clientname || row.name || row.proposername || row.policyholder || ""
+  );
+
+  let contactPersonName = normalizeRawValue(
+    row.contactpersonname || row.contactperson || row.contactname || row.personname || ""
   );
 
   let rawPhone = normalizeRawValue(
-    row.contactnumber || row.customermobile || row.mobile || row.phone || row.mob || row.contactno || ""
+    row.contactnumber || row.customermobile || row.mobile || row.phone || row.mob || row.contactno || row.renewalmobile || ""
   );
   let contactDigits = rawPhone.replace(/\D/g, "");
   let contactNumber = contactDigits.length >= 10 ? contactDigits.slice(-10) : contactDigits;
+
+  let sumInsuredDescription = normalizeRawValue(
+    row.suminsureddescription || row.suminsured || row.suminsureddesc || row.idv || ""
+  );
 
   let insuranceCompany = normalizeRawValue(
     row.insurancecompany || row.companyname || row.company || row.insurer || ""
@@ -185,11 +195,20 @@ function parseRowData(raw, index = 0, defaultCategory = "all", defaultMonth = "a
     row.grosspremium || row.premium || row.totalpremium || row.netpremium || ""
   );
 
+  let rawVehicleRisk = normalizeRawValue(row.vehiclerisk || row.vehicleandrisk || "");
   let registrationNumber = normalizeRawValue(
-    row.registrationnumber || row.vehiclenumber || row.regno || row.vehicleno || ""
+    row.registrationnumber || row.vehiclenumber || row.regno || row.vehicleno || rawVehicleRisk || ""
   ).toUpperCase();
 
   let makeModel = normalizeRawValue(row.makemodel || row.make || row.model || "");
+  if (!makeModel && rawVehicleRisk) {
+    const parts = rawVehicleRisk.split(/\s*[-/|]\s*/);
+    if (parts.length >= 2) {
+      registrationNumber = parts[0].trim().toUpperCase();
+      makeModel = parts.slice(1).join(" - ").trim();
+    }
+  }
+
   let quote = normalizeRawValue(row.quote || row.quoteamount || "");
   let remark = normalizeRawValue(row.remark || row.remarks || "");
   let status = normalizeRawValue(row.status || "ACTIVE").toUpperCase();
@@ -202,6 +221,8 @@ function parseRowData(raw, index = 0, defaultCategory = "all", defaultMonth = "a
     policyNumber,
     insuredName,
     contactNumber,
+    contactPersonName,
+    sumInsuredDescription,
     insuranceCompany,
     policyType: policyType || getDefaultPolicyTypeForCategory(defaultCategory),
     expiryDate,
@@ -247,11 +268,59 @@ function parseTabularText(text, defaultCategory = "all", defaultMonth = "auto") 
     "premium",
     "reg",
     "vehicle",
+    "holder",
   ];
   const isHeader = headerCandidates.some((h) => headerKeywords.some((k) => h.includes(k)));
 
   const headers = isHeader ? rows[0] : null;
   const dataRows = isHeader ? rows.slice(1) : rows;
+
+  let positionalCols = [];
+  if (defaultCategory === "warehouse" || defaultCategory === "nonmotor") {
+    positionalCols = [
+      "policyType",
+      "contactNumber",
+      "contactPersonName",
+      "policyNumber",
+      "insuredName",
+      "sumInsuredDescription",
+      "grossPremium",
+      "expiryDate",
+      "insuranceCompany",
+      "status",
+      "remark",
+    ];
+  } else if (defaultCategory === "motor") {
+    positionalCols = [
+      "insuredName",
+      "policyNumber",
+      "policyType",
+      "registrationNumber",
+      "makeModel",
+      "expiryDate",
+      "contactNumber",
+      "grossPremium",
+      "insuranceCompany",
+      "status",
+      "quote",
+      "remark",
+    ];
+  } else {
+    positionalCols = [
+      "policyNumber",
+      "insuredName",
+      "contactNumber",
+      "insuranceCompany",
+      "policyType",
+      "expiryDate",
+      "grossPremium",
+      "registrationNumber",
+      "makeModel",
+      "quote",
+      "remark",
+      "status",
+    ];
+  }
 
   return dataRows
     .filter((tokens) => tokens.some((cell) => cell.trim().length > 0))
@@ -262,21 +331,6 @@ function parseTabularText(text, defaultCategory = "all", defaultMonth = "auto") 
           obj[h] = tokens[hIdx] || "";
         });
       } else {
-        // Positional fallback matching standard template order
-        const positionalCols = [
-          "policyNumber",
-          "insuredName",
-          "contactNumber",
-          "insuranceCompany",
-          "policyType",
-          "expiryDate",
-          "grossPremium",
-          "registrationNumber",
-          "makeModel",
-          "quote",
-          "remark",
-          "status",
-        ];
         positionalCols.forEach((col, cIdx) => {
           obj[col] = tokens[cIdx] || "";
         });
@@ -325,6 +379,19 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
   const [showPasteModal, setShowPasteModal] = useState(false);
   const [pastedRawText, setPastedRawText] = useState("");
   const [pasteMode, setPasteMode] = useState("append"); // "append" | "replace"
+
+  const isWarehouseOrNonMotor = selectedCategory === "warehouse" || selectedCategory === "nonmotor";
+  const isMotor = selectedCategory === "motor";
+
+  const pastePlaceholder = useMemo(() => {
+    if (selectedCategory === "motor") {
+      return "Policyholder\tPolicy Number\tPolicy Type\tVehicle / Risk\tMake / Model\tExpiry Date\tRenewal Mobile\tGross Premium\tInsurance Company\tStatus\tQuote\tRemark\nVIJAY KUMAR MISHRA CONST PVT LTD\t45140031250100007692\tCommercial Vehicle\tMP17HH4323\tTata Signa 2823\t2026-11-02\t9685717917\t45531\tThe New India Assurance Company Limited\tACTIVE\t\tRequested NCB confirmation\n...";
+    }
+    if (selectedCategory === "warehouse" || selectedCategory === "nonmotor") {
+      return "Policy Type\tContact No.\tContact Person Name\tPolicy No.\tInsured Name\tSum Insured Description\tPremium\tExpiry Date\tInsurance Company\tStatus\tRemark\nWarehouse Policy\t9826012345\tANAND SONI\tOG-24-1234-1801-00005678\tANAND ELECTRONICS & TRADERS\tStock & Building SI: 3 Cr\t38250\t2026-11-15\tBajaj Allianz General Insurance\tACTIVE\tPlot 12 Mandideep\n...";
+    }
+    return "Policy Number\tInsured Name\tContact Number\tInsurance Company\tPolicy Type\tExpiry Date\tGross Premium\tRegistration Number\tMake / Model\tQuote\tRemark\tStatus\n45140031250100007692\tVIJAY KUMAR\t9685717917\tThe New India Assurance\tCommercial Vehicle\t2026-11-02\t45531\tMP17HH4323\tTata Signa\t\tNotes\tACTIVE\n...";
+  }, [selectedCategory]);
 
   const fileInputRef = useRef(null);
 
@@ -593,6 +660,8 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
         (r.insuredName || "").toLowerCase().includes(q) ||
         (r.policyNumber || "").toLowerCase().includes(q) ||
         (r.contactNumber || "").includes(q) ||
+        (r.contactPersonName || "").toLowerCase().includes(q) ||
+        (r.sumInsuredDescription || "").toLowerCase().includes(q) ||
         (r.insuranceCompany || "").toLowerCase().includes(q) ||
         (r.registrationNumber || "").toLowerCase().includes(q) ||
         (r.policyType || "").toLowerCase().includes(q) ||
@@ -1278,7 +1347,7 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                   borderSpacing: 0,
                   fontSize: "12px",
                   backgroundColor: "#ffffff",
-                  minWidth: "1620px",
+                  minWidth: isWarehouseOrNonMotor ? "1780px" : isMotor ? "1840px" : "2050px",
                 }}
               >
                 <thead
@@ -1290,24 +1359,62 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                     borderBottom: "1px solid #cbd5e1",
                   }}
                 >
-                  <tr>
-                    <th style={{ ...thStyle, width: "42px", textAlign: "center" }}>#</th>
-                    <th style={{ ...thStyle, width: "105px", textAlign: "center" }}>Validation</th>
-                    <th style={{ ...thStyle, width: "190px" }}>Policy Number *</th>
-                    <th style={{ ...thStyle, width: "230px" }}>Insured Name *</th>
-                    <th style={{ ...thStyle, width: "155px" }}>Contact (10-Digit)</th>
-                    <th style={{ ...thStyle, width: "220px" }}>Insurance Company</th>
-                    <th style={{ ...thStyle, width: "160px" }}>Policy Type</th>
-                    <th style={{ ...thStyle, width: "145px" }}>Expiry Date *</th>
-                    <th style={{ ...thStyle, width: "120px", textAlign: "right" }}>Gross Premium</th>
-                    <th style={{ ...thStyle, width: "135px" }}>Registration No.</th>
-                    <th style={{ ...thStyle, width: "150px" }}>Make / Model</th>
-                    <th style={{ ...thStyle, width: "105px", textAlign: "right" }}>Quote</th>
-                    <th style={{ ...thStyle, width: "180px" }}>Remark</th>
-                    {/* Fixed Status column */}
-                    <th style={{ ...thStyle, width: "115px", textAlign: "center" }}>Status</th>
-                    <th style={{ ...thStyle, width: "42px", textAlign: "center" }}></th>
-                  </tr>
+                  {isWarehouseOrNonMotor ? (
+                    <tr>
+                      <th style={{ ...thStyle, width: "42px", textAlign: "center" }}>#</th>
+                      <th style={{ ...thStyle, width: "105px", textAlign: "center" }}>Validation</th>
+                      <th style={{ ...thStyle, width: "160px" }}>Policy Type</th>
+                      <th style={{ ...thStyle, width: "145px" }}>Contact No.</th>
+                      <th style={{ ...thStyle, width: "180px" }}>Contact Person Name</th>
+                      <th style={{ ...thStyle, width: "190px" }}>Policy No. *</th>
+                      <th style={{ ...thStyle, width: "220px" }}>Insured Name *</th>
+                      <th style={{ ...thStyle, width: "220px" }}>Sum Insured Description</th>
+                      <th style={{ ...thStyle, width: "125px", textAlign: "right" }}>Premium</th>
+                      <th style={{ ...thStyle, width: "145px" }}>Expiry Date *</th>
+                      <th style={{ ...thStyle, width: "220px" }}>Insurance Company</th>
+                      <th style={{ ...thStyle, width: "115px", textAlign: "center" }}>Status</th>
+                      <th style={{ ...thStyle, width: "180px" }}>Remark</th>
+                      <th style={{ ...thStyle, width: "42px", textAlign: "center" }}></th>
+                    </tr>
+                  ) : isMotor ? (
+                    <tr>
+                      <th style={{ ...thStyle, width: "42px", textAlign: "center" }}>#</th>
+                      <th style={{ ...thStyle, width: "105px", textAlign: "center" }}>Validation</th>
+                      <th style={{ ...thStyle, width: "220px" }}>Policyholder *</th>
+                      <th style={{ ...thStyle, width: "190px" }}>Policy Number *</th>
+                      <th style={{ ...thStyle, width: "160px" }}>Policy Type</th>
+                      <th style={{ ...thStyle, width: "180px" }}>Vehicle / Risk</th>
+                      <th style={{ ...thStyle, width: "150px" }}>Make / Model</th>
+                      <th style={{ ...thStyle, width: "145px" }}>Expiry Date *</th>
+                      <th style={{ ...thStyle, width: "145px" }}>Renewal Mobile</th>
+                      <th style={{ ...thStyle, width: "125px", textAlign: "right" }}>Gross Premium</th>
+                      <th style={{ ...thStyle, width: "220px" }}>Insurance Company</th>
+                      <th style={{ ...thStyle, width: "115px", textAlign: "center" }}>Status</th>
+                      <th style={{ ...thStyle, width: "105px", textAlign: "right" }}>Quote</th>
+                      <th style={{ ...thStyle, width: "180px" }}>Remark</th>
+                      <th style={{ ...thStyle, width: "42px", textAlign: "center" }}></th>
+                    </tr>
+                  ) : (
+                    <tr>
+                      <th style={{ ...thStyle, width: "42px", textAlign: "center" }}>#</th>
+                      <th style={{ ...thStyle, width: "105px", textAlign: "center" }}>Validation</th>
+                      <th style={{ ...thStyle, width: "190px" }}>Policy Number *</th>
+                      <th style={{ ...thStyle, width: "220px" }}>Insured Name *</th>
+                      <th style={{ ...thStyle, width: "145px" }}>Contact (10-Digit)</th>
+                      <th style={{ ...thStyle, width: "160px" }}>Contact Person</th>
+                      <th style={{ ...thStyle, width: "220px" }}>Insurance Company</th>
+                      <th style={{ ...thStyle, width: "160px" }}>Policy Type</th>
+                      <th style={{ ...thStyle, width: "145px" }}>Expiry Date *</th>
+                      <th style={{ ...thStyle, width: "125px", textAlign: "right" }}>Gross Premium</th>
+                      <th style={{ ...thStyle, width: "190px" }}>Sum Insured Description</th>
+                      <th style={{ ...thStyle, width: "140px" }}>Registration No.</th>
+                      <th style={{ ...thStyle, width: "150px" }}>Make / Model</th>
+                      <th style={{ ...thStyle, width: "105px", textAlign: "right" }}>Quote</th>
+                      <th style={{ ...thStyle, width: "180px" }}>Remark</th>
+                      <th style={{ ...thStyle, width: "115px", textAlign: "center" }}>Status</th>
+                      <th style={{ ...thStyle, width: "42px", textAlign: "center" }}></th>
+                    </tr>
+                  )}
                 </thead>
                 <tbody>
                   {displayedRows.map((row, idx) => {
@@ -1375,231 +1482,693 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                           )}
                         </td>
 
-                        {/* Policy Number */}
-                        <td style={tdStyle}>
-                          <input
-                            type="text"
-                            value={row.policyNumber}
-                            onChange={(e) => handleCellChange(row.id, "policyNumber", e.target.value)}
-                            placeholder="e.g. 45140031250100007692"
-                            className="rn-sheet-cell-input"
-                            style={{
-                              ...cellInputStyle,
-                              fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                              letterSpacing: "-0.01em",
-                              backgroundColor: !row.policyNumber && !row.registrationNumber ? "#fff1f2" : "transparent",
-                            }}
-                          />
-                        </td>
+                        {isWarehouseOrNonMotor ? (
+                          <>
+                            {/* Policy Type */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                list="rn-policy-types-list"
+                                value={row.policyType}
+                                onChange={(e) => handleCellChange(row.id, "policyType", e.target.value)}
+                                placeholder="Policy Type"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
 
-                        {/* Insured Name */}
-                        <td style={tdStyle}>
-                          <input
-                            type="text"
-                            value={row.insuredName}
-                            onChange={(e) => handleCellChange(row.id, "insuredName", e.target.value)}
-                            placeholder="Insured / Client Name"
-                            className="rn-sheet-cell-input"
-                            style={{
-                              ...cellInputStyle,
-                              fontWeight: "600",
-                              color: "#0f172a",
-                              backgroundColor: !row.insuredName ? "#fff1f2" : "transparent",
-                            }}
-                          />
-                        </td>
+                            {/* Contact No. */}
+                            <td style={tdStyle}>
+                              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                                <input
+                                  type="text"
+                                  value={row.contactNumber}
+                                  onChange={(e) => {
+                                    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                    handleCellChange(row.id, "contactNumber", digits);
+                                  }}
+                                  placeholder="10 Digits"
+                                  maxLength={10}
+                                  className="rn-sheet-cell-input"
+                                  style={{
+                                    ...cellInputStyle,
+                                    paddingRight: row.contactNumber ? "42px" : "8px",
+                                    fontFamily: "ui-monospace, SFMono-Regular, monospace",
+                                  }}
+                                />
+                                {row.contactNumber && (
+                                  <span
+                                    style={{
+                                      position: "absolute",
+                                      right: "6px",
+                                      fontSize: "10px",
+                                      fontWeight: "700",
+                                      color: is10Digits ? "#15803d" : "#b45309",
+                                      backgroundColor: is10Digits ? "#dcfce7" : "#fef3c7",
+                                      padding: "1px 5px",
+                                      borderRadius: "4px",
+                                      pointerEvents: "none",
+                                    }}
+                                  >
+                                    {contactDigits.length}/10
+                                  </span>
+                                )}
+                              </div>
+                            </td>
 
-                        {/* Contact Number */}
-                        <td style={tdStyle}>
-                          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                            <input
-                              type="text"
-                              value={row.contactNumber}
-                              onChange={(e) => {
-                                const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
-                                handleCellChange(row.id, "contactNumber", digits);
-                              }}
-                              placeholder="10 Digits"
-                              maxLength={10}
-                              className="rn-sheet-cell-input"
-                              style={{
-                                ...cellInputStyle,
-                                paddingRight: row.contactNumber ? "42px" : "8px",
-                                fontFamily: "ui-monospace, SFMono-Regular, monospace",
-                              }}
-                            />
-                            {row.contactNumber && (
-                              <span
+                            {/* Contact Person Name */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.contactPersonName || ""}
+                                onChange={(e) => handleCellChange(row.id, "contactPersonName", e.target.value)}
+                                placeholder="Contact Person"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+
+                            {/* Policy No. */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.policyNumber}
+                                onChange={(e) => handleCellChange(row.id, "policyNumber", e.target.value)}
+                                placeholder="Policy Number"
+                                className="rn-sheet-cell-input"
                                 style={{
-                                  position: "absolute",
-                                  right: "6px",
-                                  fontSize: "10px",
-                                  fontWeight: "700",
-                                  color: is10Digits ? "#15803d" : "#b45309",
-                                  backgroundColor: is10Digits ? "#dcfce7" : "#fef3c7",
-                                  padding: "1px 5px",
-                                  borderRadius: "4px",
-                                  pointerEvents: "none",
+                                  ...cellInputStyle,
+                                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                  letterSpacing: "-0.01em",
+                                  backgroundColor: !row.policyNumber && !row.registrationNumber ? "#fff1f2" : "transparent",
                                 }}
-                              >
-                                {contactDigits.length}/10
-                              </span>
-                            )}
-                          </div>
-                        </td>
+                              />
+                            </td>
 
-                        {/* Insurance Company */}
-                        <td style={tdStyle}>
-                          <input
-                            type="text"
-                            list="rn-companies-list"
-                            value={row.insuranceCompany}
-                            onChange={(e) => handleCellChange(row.id, "insuranceCompany", e.target.value)}
-                            placeholder="Select / Type Insurer"
-                            className="rn-sheet-cell-input"
-                            style={cellInputStyle}
-                          />
-                        </td>
-
-                        {/* Policy Type */}
-                        <td style={tdStyle}>
-                          <input
-                            type="text"
-                            list="rn-policy-types-list"
-                            value={row.policyType}
-                            onChange={(e) => handleCellChange(row.id, "policyType", e.target.value)}
-                            placeholder="e.g. Commercial Vehicle"
-                            className="rn-sheet-cell-input"
-                            style={cellInputStyle}
-                          />
-                        </td>
-
-                        {/* Expiry Date (with target month mismatch indicator) */}
-                        <td style={tdStyle}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            <input
-                              type="date"
-                              value={row.expiryDate}
-                              onChange={(e) => handleCellChange(row.id, "expiryDate", e.target.value)}
-                              className="rn-sheet-cell-input"
-                              style={{
-                                ...cellInputStyle,
-                                fontSize: "11px",
-                                fontFamily: "ui-monospace, monospace",
-                              }}
-                            />
-                            {isMonthMismatch && (
-                              <span
-                                title={`Expiry month (${MONTH_SHORT_NAMES[rowExpiryMonth]}) differs from target month (${MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]})`}
+                            {/* Insured Name */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.insuredName}
+                                onChange={(e) => handleCellChange(row.id, "insuredName", e.target.value)}
+                                placeholder="Insured / Client Name"
+                                className="rn-sheet-cell-input"
                                 style={{
-                                  fontSize: "10px",
-                                  fontWeight: "700",
-                                  color: "#b45309",
-                                  backgroundColor: "#fffbeb",
-                                  border: "1px solid #fef3c7",
-                                  padding: "1px 4px",
-                                  borderRadius: "4px",
-                                  whiteSpace: "nowrap",
-                                  cursor: "help",
+                                  ...cellInputStyle,
+                                  fontWeight: "600",
+                                  color: "#0f172a",
+                                  backgroundColor: !row.insuredName ? "#fff1f2" : "transparent",
                                 }}
+                              />
+                            </td>
+
+                            {/* Sum Insured Description */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.sumInsuredDescription || ""}
+                                onChange={(e) => handleCellChange(row.id, "sumInsuredDescription", e.target.value)}
+                                placeholder="e.g. Stock & Building SI: 3 Cr"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+
+                            {/* Premium */}
+                            <td style={tdStyle}>
+                              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                                <span style={{ position: "absolute", left: "6px", color: "#94a3b8", fontSize: "11px", pointerEvents: "none" }}>₹</span>
+                                <input
+                                  type="text"
+                                  value={row.grossPremium}
+                                  onChange={(e) => handleCellChange(row.id, "grossPremium", e.target.value)}
+                                  placeholder="0"
+                                  className="rn-sheet-cell-input"
+                                  style={{
+                                    ...cellInputStyle,
+                                    paddingLeft: "16px",
+                                    textAlign: "right",
+                                    fontFamily: "ui-monospace, monospace",
+                                  }}
+                                />
+                              </div>
+                            </td>
+
+                            {/* Expiry Date */}
+                            <td style={tdStyle}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                <input
+                                  type="date"
+                                  value={row.expiryDate}
+                                  onChange={(e) => handleCellChange(row.id, "expiryDate", e.target.value)}
+                                  className="rn-sheet-cell-input"
+                                  style={{
+                                    ...cellInputStyle,
+                                    fontSize: "11px",
+                                    fontFamily: "ui-monospace, monospace",
+                                  }}
+                                />
+                                {isMonthMismatch && (
+                                  <span
+                                    title={`Expiry month (${MONTH_SHORT_NAMES[rowExpiryMonth]}) differs from target month (${MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]})`}
+                                    style={{
+                                      fontSize: "10px",
+                                      fontWeight: "700",
+                                      color: "#b45309",
+                                      backgroundColor: "#fffbeb",
+                                      border: "1px solid #fef3c7",
+                                      padding: "1px 4px",
+                                      borderRadius: "4px",
+                                      whiteSpace: "nowrap",
+                                      cursor: "help",
+                                    }}
+                                  >
+                                    {MONTH_SHORT_NAMES[rowExpiryMonth]}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Insurance Company */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                list="rn-companies-list"
+                                value={row.insuranceCompany}
+                                onChange={(e) => handleCellChange(row.id, "insuranceCompany", e.target.value)}
+                                placeholder="Select / Type Insurer"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+
+                            {/* Status */}
+                            <td style={{ ...tdStyle, textAlign: "center" }}>
+                              <select
+                                value={row.status || "ACTIVE"}
+                                onChange={(e) => handleCellChange(row.id, "status", e.target.value)}
+                                className={`rn-status-select status-${(row.status || "active").toLowerCase()}`}
+                                style={{ width: "95px" }}
                               >
-                                {MONTH_SHORT_NAMES[rowExpiryMonth]}
-                              </span>
-                            )}
-                          </div>
-                        </td>
+                                <option value="ACTIVE">Active</option>
+                                <option value="RENEWED">Renewed</option>
+                                <option value="LOST">Lost</option>
+                              </select>
+                            </td>
 
-                        {/* Gross Premium */}
-                        <td style={tdStyle}>
-                          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                            <span style={{ position: "absolute", left: "6px", color: "#94a3b8", fontSize: "11px", pointerEvents: "none" }}>₹</span>
-                            <input
-                              type="text"
-                              value={row.grossPremium}
-                              onChange={(e) => handleCellChange(row.id, "grossPremium", e.target.value)}
-                              placeholder="0"
-                              className="rn-sheet-cell-input"
-                              style={{
-                                ...cellInputStyle,
-                                paddingLeft: "16px",
-                                textAlign: "right",
-                                fontFamily: "ui-monospace, monospace",
-                              }}
-                            />
-                          </div>
-                        </td>
+                            {/* Remark */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.remark}
+                                onChange={(e) => handleCellChange(row.id, "remark", e.target.value)}
+                                placeholder="Remark / Risk Location"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+                          </>
+                        ) : isMotor ? (
+                          <>
+                            {/* Policyholder */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.insuredName}
+                                onChange={(e) => handleCellChange(row.id, "insuredName", e.target.value)}
+                                placeholder="Policyholder Name"
+                                className="rn-sheet-cell-input"
+                                style={{
+                                  ...cellInputStyle,
+                                  fontWeight: "600",
+                                  color: "#0f172a",
+                                  backgroundColor: !row.insuredName ? "#fff1f2" : "transparent",
+                                }}
+                              />
+                            </td>
 
-                        {/* Registration Number */}
-                        <td style={tdStyle}>
-                          <input
-                            type="text"
-                            value={row.registrationNumber}
-                            onChange={(e) => handleCellChange(row.id, "registrationNumber", e.target.value.toUpperCase())}
-                            placeholder="e.g. MP17HH4323"
-                            className="rn-sheet-cell-input"
-                            style={{
-                              ...cellInputStyle,
-                              fontFamily: "ui-monospace, monospace",
-                              textTransform: "uppercase",
-                              fontWeight: "600",
-                              color: "#334155",
-                            }}
-                          />
-                        </td>
+                            {/* Policy Number */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.policyNumber}
+                                onChange={(e) => handleCellChange(row.id, "policyNumber", e.target.value)}
+                                placeholder="Policy Number"
+                                className="rn-sheet-cell-input"
+                                style={{
+                                  ...cellInputStyle,
+                                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                  letterSpacing: "-0.01em",
+                                  backgroundColor: !row.policyNumber && !row.registrationNumber ? "#fff1f2" : "transparent",
+                                }}
+                              />
+                            </td>
 
-                        {/* Make / Model */}
-                        <td style={tdStyle}>
-                          <input
-                            type="text"
-                            value={row.makeModel}
-                            onChange={(e) => handleCellChange(row.id, "makeModel", e.target.value)}
-                            placeholder="Make & Model"
-                            className="rn-sheet-cell-input"
-                            style={cellInputStyle}
-                          />
-                        </td>
+                            {/* Policy Type */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                list="rn-policy-types-list"
+                                value={row.policyType}
+                                onChange={(e) => handleCellChange(row.id, "policyType", e.target.value)}
+                                placeholder="Commercial / Car / 2W"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
 
-                        {/* Quote */}
-                        <td style={tdStyle}>
-                          <input
-                            type="text"
-                            value={row.quote}
-                            onChange={(e) => handleCellChange(row.id, "quote", e.target.value)}
-                            placeholder="Quote"
-                            className="rn-sheet-cell-input"
-                            style={{
-                              ...cellInputStyle,
-                              textAlign: "right",
-                              fontFamily: "ui-monospace, monospace",
-                            }}
-                          />
-                        </td>
+                            {/* Vehicle / Risk */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.registrationNumber}
+                                onChange={(e) => handleCellChange(row.id, "registrationNumber", e.target.value.toUpperCase())}
+                                placeholder="e.g. MP17HH4323"
+                                className="rn-sheet-cell-input"
+                                style={{
+                                  ...cellInputStyle,
+                                  fontFamily: "ui-monospace, monospace",
+                                  textTransform: "uppercase",
+                                  fontWeight: "600",
+                                  color: "#334155",
+                                }}
+                              />
+                            </td>
 
-                        {/* Remark */}
-                        <td style={tdStyle}>
-                          <input
-                            type="text"
-                            value={row.remark}
-                            onChange={(e) => handleCellChange(row.id, "remark", e.target.value)}
-                            placeholder="Notes..."
-                            className="rn-sheet-cell-input"
-                            style={cellInputStyle}
-                          />
-                        </td>
+                            {/* Make / Model */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.makeModel}
+                                onChange={(e) => handleCellChange(row.id, "makeModel", e.target.value)}
+                                placeholder="Make & Model"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
 
-                        {/* Status (Fixed CSS: Arrow neatly positioned on right, never overlaps text) */}
-                        <td style={{ ...tdStyle, textAlign: "center" }}>
-                          <select
-                            value={row.status || "ACTIVE"}
-                            onChange={(e) => handleCellChange(row.id, "status", e.target.value)}
-                            className={`rn-status-select status-${(row.status || "active").toLowerCase()}`}
-                            style={{ width: "95px" }}
-                          >
-                            <option value="ACTIVE">Active</option>
-                            <option value="RENEWED">Renewed</option>
-                            <option value="LOST">Lost</option>
-                          </select>
-                        </td>
+                            {/* Expiry Date */}
+                            <td style={tdStyle}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                <input
+                                  type="date"
+                                  value={row.expiryDate}
+                                  onChange={(e) => handleCellChange(row.id, "expiryDate", e.target.value)}
+                                  className="rn-sheet-cell-input"
+                                  style={{
+                                    ...cellInputStyle,
+                                    fontSize: "11px",
+                                    fontFamily: "ui-monospace, monospace",
+                                  }}
+                                />
+                                {isMonthMismatch && (
+                                  <span
+                                    title={`Expiry month (${MONTH_SHORT_NAMES[rowExpiryMonth]}) differs from target month (${MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]})`}
+                                    style={{
+                                      fontSize: "10px",
+                                      fontWeight: "700",
+                                      color: "#b45309",
+                                      backgroundColor: "#fffbeb",
+                                      border: "1px solid #fef3c7",
+                                      padding: "1px 4px",
+                                      borderRadius: "4px",
+                                      whiteSpace: "nowrap",
+                                      cursor: "help",
+                                    }}
+                                  >
+                                    {MONTH_SHORT_NAMES[rowExpiryMonth]}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Renewal Mobile */}
+                            <td style={tdStyle}>
+                              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                                <input
+                                  type="text"
+                                  value={row.contactNumber}
+                                  onChange={(e) => {
+                                    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                    handleCellChange(row.id, "contactNumber", digits);
+                                  }}
+                                  placeholder="10 Digits"
+                                  maxLength={10}
+                                  className="rn-sheet-cell-input"
+                                  style={{
+                                    ...cellInputStyle,
+                                    paddingRight: row.contactNumber ? "42px" : "8px",
+                                    fontFamily: "ui-monospace, SFMono-Regular, monospace",
+                                  }}
+                                />
+                                {row.contactNumber && (
+                                  <span
+                                    style={{
+                                      position: "absolute",
+                                      right: "6px",
+                                      fontSize: "10px",
+                                      fontWeight: "700",
+                                      color: is10Digits ? "#15803d" : "#b45309",
+                                      backgroundColor: is10Digits ? "#dcfce7" : "#fef3c7",
+                                      padding: "1px 5px",
+                                      borderRadius: "4px",
+                                      pointerEvents: "none",
+                                    }}
+                                  >
+                                    {contactDigits.length}/10
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Gross Premium */}
+                            <td style={tdStyle}>
+                              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                                <span style={{ position: "absolute", left: "6px", color: "#94a3b8", fontSize: "11px", pointerEvents: "none" }}>₹</span>
+                                <input
+                                  type="text"
+                                  value={row.grossPremium}
+                                  onChange={(e) => handleCellChange(row.id, "grossPremium", e.target.value)}
+                                  placeholder="0"
+                                  className="rn-sheet-cell-input"
+                                  style={{
+                                    ...cellInputStyle,
+                                    paddingLeft: "16px",
+                                    textAlign: "right",
+                                    fontFamily: "ui-monospace, monospace",
+                                  }}
+                                />
+                              </div>
+                            </td>
+
+                            {/* Insurance Company */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                list="rn-companies-list"
+                                value={row.insuranceCompany}
+                                onChange={(e) => handleCellChange(row.id, "insuranceCompany", e.target.value)}
+                                placeholder="Select / Type Insurer"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+
+                            {/* Status */}
+                            <td style={{ ...tdStyle, textAlign: "center" }}>
+                              <select
+                                value={row.status || "ACTIVE"}
+                                onChange={(e) => handleCellChange(row.id, "status", e.target.value)}
+                                className={`rn-status-select status-${(row.status || "active").toLowerCase()}`}
+                                style={{ width: "95px" }}
+                              >
+                                <option value="ACTIVE">Active</option>
+                                <option value="RENEWED">Renewed</option>
+                                <option value="LOST">Lost</option>
+                              </select>
+                            </td>
+
+                            {/* Quote */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.quote}
+                                onChange={(e) => handleCellChange(row.id, "quote", e.target.value)}
+                                placeholder="Quote"
+                                className="rn-sheet-cell-input"
+                                style={{
+                                  ...cellInputStyle,
+                                  textAlign: "right",
+                                  fontFamily: "ui-monospace, monospace",
+                                }}
+                              />
+                            </td>
+
+                            {/* Remark */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.remark}
+                                onChange={(e) => handleCellChange(row.id, "remark", e.target.value)}
+                                placeholder="Notes..."
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            {/* Policy Number */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.policyNumber}
+                                onChange={(e) => handleCellChange(row.id, "policyNumber", e.target.value)}
+                                placeholder="e.g. 45140031250100007692"
+                                className="rn-sheet-cell-input"
+                                style={{
+                                  ...cellInputStyle,
+                                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                  letterSpacing: "-0.01em",
+                                  backgroundColor: !row.policyNumber && !row.registrationNumber ? "#fff1f2" : "transparent",
+                                }}
+                              />
+                            </td>
+
+                            {/* Insured Name */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.insuredName}
+                                onChange={(e) => handleCellChange(row.id, "insuredName", e.target.value)}
+                                placeholder="Insured / Client Name"
+                                className="rn-sheet-cell-input"
+                                style={{
+                                  ...cellInputStyle,
+                                  fontWeight: "600",
+                                  color: "#0f172a",
+                                  backgroundColor: !row.insuredName ? "#fff1f2" : "transparent",
+                                }}
+                              />
+                            </td>
+
+                            {/* Contact Number */}
+                            <td style={tdStyle}>
+                              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                                <input
+                                  type="text"
+                                  value={row.contactNumber}
+                                  onChange={(e) => {
+                                    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                    handleCellChange(row.id, "contactNumber", digits);
+                                  }}
+                                  placeholder="10 Digits"
+                                  maxLength={10}
+                                  className="rn-sheet-cell-input"
+                                  style={{
+                                    ...cellInputStyle,
+                                    paddingRight: row.contactNumber ? "42px" : "8px",
+                                    fontFamily: "ui-monospace, SFMono-Regular, monospace",
+                                  }}
+                                />
+                                {row.contactNumber && (
+                                  <span
+                                    style={{
+                                      position: "absolute",
+                                      right: "6px",
+                                      fontSize: "10px",
+                                      fontWeight: "700",
+                                      color: is10Digits ? "#15803d" : "#b45309",
+                                      backgroundColor: is10Digits ? "#dcfce7" : "#fef3c7",
+                                      padding: "1px 5px",
+                                      borderRadius: "4px",
+                                      pointerEvents: "none",
+                                    }}
+                                  >
+                                    {contactDigits.length}/10
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Contact Person */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.contactPersonName || ""}
+                                onChange={(e) => handleCellChange(row.id, "contactPersonName", e.target.value)}
+                                placeholder="Contact Person"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+
+                            {/* Insurance Company */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                list="rn-companies-list"
+                                value={row.insuranceCompany}
+                                onChange={(e) => handleCellChange(row.id, "insuranceCompany", e.target.value)}
+                                placeholder="Select / Type Insurer"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+
+                            {/* Policy Type */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                list="rn-policy-types-list"
+                                value={row.policyType}
+                                onChange={(e) => handleCellChange(row.id, "policyType", e.target.value)}
+                                placeholder="e.g. Commercial Vehicle"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+
+                            {/* Expiry Date */}
+                            <td style={tdStyle}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                <input
+                                  type="date"
+                                  value={row.expiryDate}
+                                  onChange={(e) => handleCellChange(row.id, "expiryDate", e.target.value)}
+                                  className="rn-sheet-cell-input"
+                                  style={{
+                                    ...cellInputStyle,
+                                    fontSize: "11px",
+                                    fontFamily: "ui-monospace, monospace",
+                                  }}
+                                />
+                                {isMonthMismatch && (
+                                  <span
+                                    title={`Expiry month (${MONTH_SHORT_NAMES[rowExpiryMonth]}) differs from target month (${MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]})`}
+                                    style={{
+                                      fontSize: "10px",
+                                      fontWeight: "700",
+                                      color: "#b45309",
+                                      backgroundColor: "#fffbeb",
+                                      border: "1px solid #fef3c7",
+                                      padding: "1px 4px",
+                                      borderRadius: "4px",
+                                      whiteSpace: "nowrap",
+                                      cursor: "help",
+                                    }}
+                                  >
+                                    {MONTH_SHORT_NAMES[rowExpiryMonth]}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Gross Premium */}
+                            <td style={tdStyle}>
+                              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                                <span style={{ position: "absolute", left: "6px", color: "#94a3b8", fontSize: "11px", pointerEvents: "none" }}>₹</span>
+                                <input
+                                  type="text"
+                                  value={row.grossPremium}
+                                  onChange={(e) => handleCellChange(row.id, "grossPremium", e.target.value)}
+                                  placeholder="0"
+                                  className="rn-sheet-cell-input"
+                                  style={{
+                                    ...cellInputStyle,
+                                    paddingLeft: "16px",
+                                    textAlign: "right",
+                                    fontFamily: "ui-monospace, monospace",
+                                  }}
+                                />
+                              </div>
+                            </td>
+
+                            {/* Sum Insured Description */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.sumInsuredDescription || ""}
+                                onChange={(e) => handleCellChange(row.id, "sumInsuredDescription", e.target.value)}
+                                placeholder="Sum Insured Description"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+
+                            {/* Registration Number */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.registrationNumber}
+                                onChange={(e) => handleCellChange(row.id, "registrationNumber", e.target.value.toUpperCase())}
+                                placeholder="e.g. MP17HH4323"
+                                className="rn-sheet-cell-input"
+                                style={{
+                                  ...cellInputStyle,
+                                  fontFamily: "ui-monospace, monospace",
+                                  textTransform: "uppercase",
+                                  fontWeight: "600",
+                                  color: "#334155",
+                                }}
+                              />
+                            </td>
+
+                            {/* Make / Model */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.makeModel}
+                                onChange={(e) => handleCellChange(row.id, "makeModel", e.target.value)}
+                                placeholder="Make & Model"
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+
+                            {/* Quote */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.quote}
+                                onChange={(e) => handleCellChange(row.id, "quote", e.target.value)}
+                                placeholder="Quote"
+                                className="rn-sheet-cell-input"
+                                style={{
+                                  ...cellInputStyle,
+                                  textAlign: "right",
+                                  fontFamily: "ui-monospace, monospace",
+                                }}
+                              />
+                            </td>
+
+                            {/* Remark */}
+                            <td style={tdStyle}>
+                              <input
+                                type="text"
+                                value={row.remark}
+                                onChange={(e) => handleCellChange(row.id, "remark", e.target.value)}
+                                placeholder="Notes..."
+                                className="rn-sheet-cell-input"
+                                style={cellInputStyle}
+                              />
+                            </td>
+
+                            {/* Status */}
+                            <td style={{ ...tdStyle, textAlign: "center" }}>
+                              <select
+                                value={row.status || "ACTIVE"}
+                                onChange={(e) => handleCellChange(row.id, "status", e.target.value)}
+                                className={`rn-status-select status-${(row.status || "active").toLowerCase()}`}
+                                style={{ width: "95px" }}
+                              >
+                                <option value="ACTIVE">Active</option>
+                                <option value="RENEWED">Renewed</option>
+                                <option value="LOST">Lost</option>
+                              </select>
+                            </td>
+                          </>
+                        )}
 
                         {/* Delete Row */}
                         <td style={{ ...tdStyle, textAlign: "center" }}>
@@ -1842,7 +2411,7 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                 autoFocus
                 value={pastedRawText}
                 onChange={(e) => setPastedRawText(e.target.value)}
-                placeholder={"Policy Number\tInsured Name\tContact Number\tInsurance Company\tExpiry Date\tGross Premium\n45140031250100007692\tVIJAY KUMAR\t9685717917\tThe New India\t2026-11-02\t45531\n..."}
+                placeholder={pastePlaceholder}
                 className="rn-paste-textarea"
               />
 

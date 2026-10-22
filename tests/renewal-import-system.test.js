@@ -133,6 +133,9 @@ describe("Renewal Import System", () => {
       expect(motorRes.status).toBe(200);
       expect(motorRes.headers.get("Content-Disposition")).toContain('filename="renewal_import_template_motor.csv"');
       const motorCsv = await motorRes.text();
+      expect(motorCsv).toContain("Policyholder");
+      expect(motorCsv).toContain("Vehicle / Risk");
+      expect(motorCsv).toContain("Renewal Mobile");
       expect(motorCsv).toContain("Commercial Vehicle");
 
       // Health category
@@ -160,6 +163,24 @@ describe("Renewal Import System", () => {
       expect(warehouseRes.headers.get("Content-Disposition")).toContain('filename="renewal_import_template_warehouse.csv"');
       const warehouseCsv = await warehouseRes.text();
       expect(warehouseCsv).toContain("Warehouse Policy");
+      expect(warehouseCsv).toContain("Contact Person Name");
+      expect(warehouseCsv).toContain("Sum Insured Description");
+      expect(warehouseCsv).toContain("Contact No.");
+
+      // Non-motor category
+      const nonMotorReq = {
+        url: "http://localhost:3000/api/renewals/import?template=true&format=csv&category=nonmotor",
+        cookies: {
+          get: (name) => (name === "token" ? { value: "valid-jwt-token" } : null),
+        },
+      };
+      const nonMotorRes = await GET(nonMotorReq);
+      expect(nonMotorRes.status).toBe(200);
+      expect(nonMotorRes.headers.get("Content-Disposition")).toContain('filename="renewal_import_template_nonmotor.csv"');
+      const nonMotorCsv = await nonMotorRes.text();
+      expect(nonMotorCsv).toContain("Marine Cargo");
+      expect(nonMotorCsv).toContain("Contact Person Name");
+      expect(nonMotorCsv).toContain("Sum Insured Description");
     });
   });
 

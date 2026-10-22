@@ -36,6 +36,7 @@ const headerMap = {
   "customer name": "insuredName",
   "client name": "insuredName",
   "holder name": "insuredName",
+  policyholder: "insuredName",
   name: "insuredName",
 
   // Policy details
@@ -70,6 +71,11 @@ const headerMap = {
 
   // Sum Insured / IDV
   "sum insured": "sumInsured",
+  "sum insured description": "sumInsuredDescription",
+  "sum insured descript": "sumInsuredDescription",
+  "sum insured desc": "sumInsuredDescription",
+  suminsureddescription: "sumInsuredDescription",
+  "sum insured / description": "sumInsuredDescription",
   "expiring policy sum insured": "sumInsured",
   idv: "idv",
 
@@ -103,6 +109,10 @@ const headerMap = {
   vehiclenumber: "vehicleNumber",
   "vehicle no": "vehicleNumber",
   "vehicle no.": "vehicleNumber",
+  "vehicle / risk": "registrationNumber",
+  "vehicle/risk": "registrationNumber",
+  "vehicle & risk": "registrationNumber",
+  "vehicle risk": "registrationNumber",
   "registration number": "registrationNumber",
   registrationnumber: "registrationNumber",
   "registration no": "registrationNumber",
@@ -132,6 +142,8 @@ const headerMap = {
   "contact number": "contactNumber",
   "contact no": "contactNumber",
   "contact no.": "contactNumber",
+  "renewal mobile": "contactNumber",
+  renewalmobile: "contactNumber",
   mob: "contactNumber",
   "mob no": "contactNumber",
   "mob no.": "contactNumber",
@@ -146,12 +158,12 @@ const headerMap = {
   "phone no": "contactNumber",
   "phone no.": "contactNumber",
   "customer mobile": "contactNumber",
-  "contact person": "contactPerson",
-  contactperson: "contactPerson",
-  "contact person name": "contactPerson",
-  contactpersonname: "contactPerson",
-  "contact name": "contactPerson",
-  "person name": "contactPerson",
+  "contact person": "contactPersonName",
+  contactperson: "contactPersonName",
+  "contact person name": "contactPersonName",
+  contactpersonname: "contactPersonName",
+  "contact name": "contactPersonName",
+  "person name": "contactPersonName",
   "whatsapp group name": "whatsappGroupName",
   whatsapp: "contactNumber",
   remark: "remark",
@@ -179,10 +191,10 @@ const KNOWN_PAYLOAD_FIELDS = new Set([
   "policyNumber", "insuredName", "contactNumber", "customerMobile",
   "insuranceCompany", "companyName", "policyType", "policyCategory",
   "startDate", "expiryDate", "registrationDate", "premium", "totalPremium",
-  "netPremium", "odPremium", "sumInsured", "idv", "quote", "vehicleNumber",
+  "netPremium", "odPremium", "sumInsured", "sumInsuredDescription", "idv", "quote", "vehicleNumber",
   "registrationNumber", "makeModel", "vehicleMake", "vehicleModel", "variant",
   "manufacturingYear", "engineNumber", "chassisNumber", "fuelType", "cubicCapacity",
-  "ncb", "rtoLocation", "remark", "status", "contactPerson", "whatsappGroupName",
+  "ncb", "rtoLocation", "remark", "status", "contactPerson", "contactPersonName", "whatsappGroupName",
   "riskLocation", "businessDescription", "occupancy", "paymentLink", "call", "sNo"
 ]);
 
@@ -217,46 +229,49 @@ export async function GET(request) {
       filenamePrefix = "renewal_import_template_motor";
       sampleRows = [
         {
+          "Policyholder": "VIJAY KUMAR MISHRA CONST PVT LTD",
           "Policy Number": "45140031250100007692",
-          "Insured Name": "VIJAY KUMAR MISHRA CONST PVT LTD",
-          "Contact Number": "9685717917",
-          "Insurance Company": "The New India Assurance Company Limited",
           "Policy Type": "Commercial Vehicle",
-          "Expiry Date": "2026-11-02",
-          "Gross Premium": 45531,
+          "Vehicle / Risk": "MP17HH4323 - Tata Signa 2823",
           "Registration Number": "MP17HH4323",
           "Make / Model": "Tata Signa 2823",
+          "Expiry Date": "2026-11-02",
+          "Renewal Mobile": "9685717917",
+          "Gross Premium": 45531,
+          "Insurance Company": "The New India Assurance Company Limited",
+          "Status": "ACTIVE",
           Quote: "",
           Remark: "Requested NCB confirmation",
-          Status: "ACTIVE",
         },
         {
+          "Policyholder": "AMITABH VARMA",
           "Policy Number": "2311200045612345",
-          "Insured Name": "AMITABH VARMA",
-          "Contact Number": "9893011223",
-          "Insurance Company": "ICICI Lombard General Insurance",
           "Policy Type": "Private Car",
-          "Expiry Date": "2026-11-20",
-          "Gross Premium": 14250,
+          "Vehicle / Risk": "MP04CB1234 - Hyundai Creta SX",
           "Registration Number": "MP04CB1234",
           "Make / Model": "Hyundai Creta SX",
+          "Expiry Date": "2026-11-20",
+          "Renewal Mobile": "9893011223",
+          "Gross Premium": 14250,
+          "Insurance Company": "ICICI Lombard General Insurance Company Limited",
+          "Status": "ACTIVE",
           Quote: "13800",
           Remark: "Comprehensive package with Zero Dep",
-          Status: "ACTIVE",
         },
         {
+          "Policyholder": "SURESH PATIDAR",
           "Policy Number": "OG-25-1901-1802-00001234",
-          "Insured Name": "SURESH PATIDAR",
-          "Contact Number": "9425123456",
-          "Insurance Company": "Bajaj Allianz General Insurance",
           "Policy Type": "Two Wheeler",
-          "Expiry Date": "2026-11-25",
-          "Gross Premium": 1850,
+          "Vehicle / Risk": "MP09AB5678 - Honda Activa 6G",
           "Registration Number": "MP09AB5678",
           "Make / Model": "Honda Activa 6G",
+          "Expiry Date": "2026-11-25",
+          "Renewal Mobile": "9425123456",
+          "Gross Premium": 1850,
+          "Insurance Company": "Bajaj Allianz General Insurance Company Limited",
+          "Status": "ACTIVE",
           Quote: "",
           Remark: "Renewal notice sent on WhatsApp",
-          Status: "ACTIVE",
         },
       ];
     } else if (category === "health") {
@@ -309,92 +324,86 @@ export async function GET(request) {
       filenamePrefix = "renewal_import_template_warehouse";
       sampleRows = [
         {
-          "Policy Number": "OG-24-1234-1801-00005678",
-          "Insured Name": "ANAND ELECTRONICS & TRADERS",
-          "Contact Number": "9826012345",
-          "Insurance Company": "Bajaj Allianz General Insurance",
           "Policy Type": "Warehouse Policy",
+          "Contact No.": "9826012345",
+          "Contact Person Name": "ANAND SONI",
+          "Policy No.": "OG-24-1234-1801-00005678",
+          "Insured Name": "ANAND ELECTRONICS & TRADERS",
+          "Sum Insured Description": "Stock & Building SI: 3 Cr",
+          "Premium": 38250,
           "Expiry Date": "2026-11-15",
-          "Gross Premium": 38250,
-          "Registration Number": "",
-          "Make / Model": "",
-          Quote: "36000",
-          Remark: "Plot 12 Mandideep Ind Area - Stock & Building SI: 3 Cr",
-          Status: "ACTIVE",
+          "Insurance Company": "Bajaj Allianz General Insurance Company Limited",
+          "Status": "ACTIVE",
+          "Remark": "Plot 12 Mandideep Ind Area",
         },
         {
-          "Policy Number": "11040011240100009876",
-          "Insured Name": "SHREE KRISHNA LOGISTICS GODOWN",
-          "Contact Number": "9755011223",
-          "Insurance Company": "The New India Assurance Company Limited",
           "Policy Type": "Standard Fire & Special Perils",
+          "Contact No.": "9755011223",
+          "Contact Person Name": "KRISHNA AGRAWAL",
+          "Policy No.": "11040011240100009876",
+          "Insured Name": "SHREE KRISHNA LOGISTICS GODOWN",
+          "Sum Insured Description": "Godown No 4, Stocks SI: 5 Cr",
+          "Premium": 52400,
           "Expiry Date": "2026-11-30",
-          "Gross Premium": 52400,
-          "Registration Number": "",
-          "Make / Model": "",
-          Quote: "",
-          Remark: "Godown No 4, Transport Nagar SI: 5 Cr",
-          Status: "ACTIVE",
+          "Insurance Company": "The New India Assurance Company Limited",
+          "Status": "ACTIVE",
+          "Remark": "Transport Nagar Godown",
         },
         {
-          "Policy Number": "TATA-BURG-2026-443322",
-          "Insured Name": "MAHESH TEXTILES DEPOT",
-          "Contact Number": "9424077889",
-          "Insurance Company": "Tata AIG General Insurance Company Limited",
           "Policy Type": "Burglary & Housebreaking",
+          "Contact No.": "9424077889",
+          "Contact Person Name": "MAHESH PATEL",
+          "Policy No.": "TATA-BURG-2026-443322",
+          "Insured Name": "MAHESH TEXTILES DEPOT",
+          "Sum Insured Description": "Textile Inventory First Loss 25%",
+          "Premium": 12500,
           "Expiry Date": "2026-12-10",
-          "Gross Premium": 12500,
-          "Registration Number": "",
-          "Make / Model": "",
-          Quote: "11800",
-          Remark: "First Loss Basis 25%",
-          Status: "ACTIVE",
+          "Insurance Company": "Tata AIG General Insurance Company Limited",
+          "Status": "ACTIVE",
+          "Remark": "First Loss Basis 25%",
         },
       ];
     } else if (category === "nonmotor") {
       filenamePrefix = "renewal_import_template_nonmotor";
       sampleRows = [
         {
-          "Policy Number": "MAR-2026-998877",
-          "Insured Name": "CENTRAL EXPORTS CORP",
-          "Contact Number": "9827011998",
-          "Insurance Company": "United India Insurance Company Limited",
           "Policy Type": "Marine Cargo",
+          "Contact No.": "9827011998",
+          "Contact Person Name": "VIKRAM JOSHI",
+          "Policy No.": "MAR-2026-998877",
+          "Insured Name": "CENTRAL EXPORTS CORP",
+          "Sum Insured Description": "Annual Open Marine Declaration SI: 2 Cr",
+          "Premium": 28600,
           "Expiry Date": "2026-11-22",
-          "Gross Premium": 28600,
-          "Registration Number": "",
-          "Make / Model": "",
-          Quote: "",
-          Remark: "Annual Open Marine Declaration",
-          Status: "ACTIVE",
+          "Insurance Company": "United India Insurance Company Limited",
+          "Status": "ACTIVE",
+          "Remark": "Annual Open Marine Declaration",
         },
         {
-          "Policy Number": "WC-2026-334455",
-          "Insured Name": "BHARAT INFRASTRUCTURE BUILDERS",
-          "Contact Number": "9179044556",
-          "Insurance Company": "National Insurance Company Limited",
           "Policy Type": "Workmen Compensation",
+          "Contact No.": "9179044556",
+          "Contact Person Name": "BHARAT SHARMA",
+          "Policy No.": "WC-2026-334455",
+          "Insured Name": "BHARAT INFRASTRUCTURE BUILDERS",
+          "Sum Insured Description": "60 Construction Workers Covered",
+          "Premium": 42000,
           "Expiry Date": "2026-12-01",
-          "Gross Premium": 42000,
-          "Registration Number": "",
-          "Make / Model": "",
-          Quote: "39500",
-          Remark: "60 Construction Workers Covered",
-          Status: "ACTIVE",
+          "Insurance Company": "National Insurance Company Limited",
+          "Status": "ACTIVE",
+          "Remark": "Civil Site Project Cover",
         },
         {
-          "Policy Number": "PL-2026-778899",
-          "Insured Name": "ROYAL PALACE HOTEL & RESORTS",
-          "Contact Number": "9893088776",
-          "Insurance Company": "The Oriental Insurance Company Limited",
           "Policy Type": "Public Liability",
+          "Contact No.": "9893088776",
+          "Contact Person Name": "SANJEEV VERMA",
+          "Policy No.": "PL-2026-778899",
+          "Insured Name": "ROYAL PALACE HOTEL & RESORTS",
+          "Sum Insured Description": "AOA / AOY Ratio 1:1 SI: 1 Cr",
+          "Premium": 19500,
           "Expiry Date": "2026-12-20",
-          "Gross Premium": 19500,
-          "Registration Number": "",
-          "Make / Model": "",
-          Quote: "",
-          Remark: "AOA / AOY Ratio 1:1",
-          Status: "ACTIVE",
+          "Insurance Company": "The Oriental Insurance Company Limited",
+          "Status": "ACTIVE",
+          "Remark": "Hotel Property Liability",
         },
       ];
     } else {
@@ -404,10 +413,13 @@ export async function GET(request) {
           "Policy Number": "45140031250100007692",
           "Insured Name": "VIJAY KUMAR MISHRA CONST PVT LTD",
           "Contact Number": "9685717917",
+          "Contact Person Name": "VIJAY MISHRA",
           "Insurance Company": "The New India Assurance Company Limited",
           "Policy Type": "Commercial Vehicle",
           "Expiry Date": "2026-11-02",
           "Gross Premium": 45531,
+          "Sum Insured Description": "Commercial Truck IDV: 24 Lakhs",
+          "Vehicle / Risk": "MP17HH4323 - Tata Signa",
           "Registration Number": "MP17HH4323",
           "Make / Model": "Tata Signa",
           Quote: "",
@@ -418,13 +430,16 @@ export async function GET(request) {
           "Policy Number": "OG-24-1234-1801-00005678",
           "Insured Name": "ANAND ELECTRONICS & TRADERS",
           "Contact Number": "9826012345",
-          "Insurance Company": "Bajaj Allianz General Insurance",
-          "Policy Type": "Standard Fire & Special Perils",
+          "Contact Person Name": "ANAND SONI",
+          "Insurance Company": "Bajaj Allianz General Insurance Company Limited",
+          "Policy Type": "Warehouse Policy",
           "Expiry Date": "2026-11-15",
-          "Gross Premium": 18250,
+          "Gross Premium": 38250,
+          "Sum Insured Description": "Stock & Building SI: 3 Cr",
+          "Vehicle / Risk": "Plot 12 Mandideep",
           "Registration Number": "",
           "Make / Model": "",
-          Quote: "17500",
+          Quote: "36000",
           Remark: "Stock valuation submitted",
           Status: "ACTIVE",
         },
@@ -432,10 +447,13 @@ export async function GET(request) {
           "Policy Number": "10003/28/25/123456",
           "Insured Name": "RAJESH SHARMA",
           "Contact Number": "9425098765",
-          "Insurance Company": "ICICI Lombard General Insurance",
+          "Contact Person Name": "RAJESH SHARMA",
+          "Insurance Company": "ICICI Lombard General Insurance Company Limited",
           "Policy Type": "Family Health Optima",
           "Expiry Date": "2026-11-28",
           "Gross Premium": 24500,
+          "Sum Insured Description": "Floater SI: 10 Lakhs (2A + 2C)",
+          "Vehicle / Risk": "",
           "Registration Number": "",
           "Make / Model": "",
           Quote: "",
@@ -456,20 +474,55 @@ export async function GET(request) {
     }
 
     const worksheet = XLSX.utils.json_to_sheet(sampleRows);
-    worksheet["!cols"] = [
-      { wch: 28 }, // Policy Number
-      { wch: 34 }, // Insured Name
-      { wch: 18 }, // Contact Number
-      { wch: 38 }, // Insurance Company
-      { wch: 28 }, // Policy Type
-      { wch: 16 }, // Expiry Date (YYYY-MM-DD or DD/MM/YYYY)
-      { wch: 16 }, // Gross Premium
-      { wch: 22 }, // Registration Number
-      { wch: 22 }, // Make / Model
-      { wch: 14 }, // Quote
-      { wch: 34 }, // Remark
-      { wch: 12 }, // Status
-    ];
+    if (category === "warehouse" || category === "fire" || category === "nonmotor") {
+      worksheet["!cols"] = [
+        { wch: 28 }, // Policy Type
+        { wch: 16 }, // Contact No.
+        { wch: 24 }, // Contact Person Name
+        { wch: 28 }, // Policy No.
+        { wch: 34 }, // Insured Name
+        { wch: 34 }, // Sum Insured Description
+        { wch: 16 }, // Premium
+        { wch: 16 }, // Expiry Date
+        { wch: 38 }, // Insurance Company
+        { wch: 12 }, // Status
+        { wch: 32 }, // Remark
+      ];
+    } else if (category === "motor") {
+      worksheet["!cols"] = [
+        { wch: 34 }, // Policyholder
+        { wch: 28 }, // Policy Number
+        { wch: 22 }, // Policy Type
+        { wch: 28 }, // Vehicle / Risk
+        { wch: 18 }, // Registration Number
+        { wch: 22 }, // Make / Model
+        { wch: 16 }, // Expiry Date
+        { wch: 18 }, // Renewal Mobile
+        { wch: 16 }, // Gross Premium
+        { wch: 38 }, // Insurance Company
+        { wch: 12 }, // Status
+        { wch: 14 }, // Quote
+        { wch: 32 }, // Remark
+      ];
+    } else {
+      worksheet["!cols"] = [
+        { wch: 28 }, // Policy Number
+        { wch: 34 }, // Insured Name
+        { wch: 18 }, // Contact Number
+        { wch: 24 }, // Contact Person Name
+        { wch: 38 }, // Insurance Company
+        { wch: 28 }, // Policy Type
+        { wch: 16 }, // Expiry Date
+        { wch: 16 }, // Gross Premium
+        { wch: 34 }, // Sum Insured Description
+        { wch: 28 }, // Vehicle / Risk
+        { wch: 20 }, // Registration Number
+        { wch: 20 }, // Make / Model
+        { wch: 14 }, // Quote
+        { wch: 32 }, // Remark
+        { wch: 12 }, // Status
+      ];
+    }
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Renewal Template");
@@ -673,7 +726,10 @@ export async function POST(request) {
 
         payload.premium = payload.premium || payload.totalPremium || payload.netPremium || "";
         payload.totalPremium = payload.totalPremium || payload.premium || "";
-        payload.sumInsured = payload.sumInsured || payload.idv || "";
+        payload.sumInsured = payload.sumInsured || payload.sumInsuredDescription || payload.idv || "";
+        payload.sumInsuredDescription = payload.sumInsuredDescription || payload.sumInsured || "";
+        payload.contactPersonName = payload.contactPersonName || payload.contactPerson || "";
+        payload.contactPerson = payload.contactPerson || payload.contactPersonName || "";
         payload.customerMobile = payload.customerMobile || payload.contactNumber || "";
         payload.contactNumber = payload.contactNumber || payload.customerMobile || "";
         payload.insuranceCompany = normalizeRenewalInsuranceCompany(
