@@ -78,6 +78,24 @@ const TEMPLATE_CATEGORIES = [
   { id: "nonmotor", label: "Non-Motor & Marine (Cargo, WC, Liability)" },
 ];
 
+const RENEWAL_MONTHS = [
+  { value: "auto", label: "Auto (From Dates)" },
+  { value: "1", label: "January (01)" },
+  { value: "2", label: "February (02)" },
+  { value: "3", label: "March (03)" },
+  { value: "4", label: "April (04)" },
+  { value: "5", label: "May (05)" },
+  { value: "6", label: "June (06)" },
+  { value: "7", label: "July (07)" },
+  { value: "8", label: "August (08)" },
+  { value: "9", label: "September (09)" },
+  { value: "10", label: "October (10)" },
+  { value: "11", label: "November (11)" },
+  { value: "12", label: "December (12)" },
+];
+
+const MONTH_SHORT_NAMES = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 function getDefaultPolicyTypeForCategory(cat) {
   switch (cat) {
     case "motor":
@@ -93,7 +111,12 @@ function getDefaultPolicyTypeForCategory(cat) {
   }
 }
 
-function createBlankRow(category = "all") {
+function createBlankRow(category = "all", month = "auto") {
+  const defaultDate =
+    month !== "auto" && parseInt(month, 10) >= 1 && parseInt(month, 10) <= 12
+      ? `2026-${String(parseInt(month, 10)).padStart(2, "0")}-28`
+      : "";
+
   return {
     id: `rn-row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     policyNumber: "",
@@ -101,7 +124,7 @@ function createBlankRow(category = "all") {
     contactNumber: "",
     insuranceCompany: "",
     policyType: getDefaultPolicyTypeForCategory(category),
-    expiryDate: "",
+    expiryDate: defaultDate,
     grossPremium: "",
     registrationNumber: "",
     makeModel: "",
@@ -116,7 +139,7 @@ function normalizeRawValue(val) {
   return String(val).trim();
 }
 
-function parseRowData(raw, index = 0, defaultCategory = "all") {
+function parseRowData(raw, index = 0, defaultCategory = "all", defaultMonth = "auto") {
   const row = {};
   for (const [k, v] of Object.entries(raw || {})) {
     const cleanKey = k.trim().toLowerCase().replace(/[\s_#.]+/g, "");
@@ -147,6 +170,13 @@ function parseRowData(raw, index = 0, defaultCategory = "all") {
 
   let rawExpiry = row.expirydate || row.policyexpirydate || row.enddate || row.renewaldate || "";
   let expiryDate = excelDateToString(rawExpiry);
+
+  if (!expiryDate && defaultMonth !== "auto") {
+    const monthNum = parseInt(defaultMonth, 10);
+    if (monthNum >= 1 && monthNum <= 12) {
+      expiryDate = `2026-${String(monthNum).padStart(2, "0")}-28`;
+    }
+  }
 
   let grossPremium = normalizeRawValue(
     row.grosspremium || row.premium || row.totalpremium || row.netpremium || ""
@@ -181,7 +211,7 @@ function parseRowData(raw, index = 0, defaultCategory = "all") {
   };
 }
 
-function parseTabularText(text, defaultCategory = "all") {
+function parseTabularText(text, defaultCategory = "all", defaultMonth = "auto") {
   if (!text || !text.trim()) return [];
 
   const lines = text.trim().split(/\r?\n/).filter((l) => l.trim().length > 0);
@@ -248,7 +278,7 @@ function parseTabularText(text, defaultCategory = "all") {
           obj[col] = tokens[cIdx] || "";
         });
       }
-      return parseRowData(obj, idx, defaultCategory);
+      return parseRowData(obj, idx, defaultCategory, defaultMonth);
     });
 }
 
@@ -272,9 +302,14 @@ function validateRow(row) {
   };
 }
 
-export default function RenewalImportStudioModal({ isOpen, onClose, onImportSuccess }) {
+export default function RenewalImportStudioModal({ isOpen, onClose, onImportSuccess, initialMonth }) {
   const [rows, setRows] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedMonth, setSelectedMonth] = useState(
+    initialMonth && initialMonth !== "All" && parseInt(initialMonth, 10) >= 1 && parseInt(initialMonth, 10) <= 12
+      ? String(parseInt(initialMonth, 10))
+      : "auto"
+  );
   const [loadedFileName, setLoadedFileName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterMode, setFilterMode] = useState("all"); // "all" | "ready" | "issues"
@@ -289,6 +324,15 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
   const [pasteMode, setPasteMode] = useState("append"); // "append" | "replace"
 
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (initialMonth && initialMonth !== "All") {
+      const num = parseInt(initialMonth, 10);
+      if (num >= 1 && num <= 12) {
+        setSelectedMonth(String(num));
+      }
+    }
+  }, [initialMonth]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -314,7 +358,7 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
       const clipboardText = e.clipboardData?.getData("text");
       if (clipboardText && clipboardText.includes("\t")) {
         e.preventDefault();
-        const parsed = parseTabularText(clipboardText, selectedCategory);
+        const parsed = parseTabularText(clipboardText, selectedCategory, selectedMonth);
         if (parsed.length > 0) {
           setRows((prev) => [...prev, ...parsed]);
           showToast(`Pasted ${parsed.length} row${parsed.length === 1 ? "" : "s"} from clipboard!`, "success");
@@ -324,26 +368,28 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
 
     window.addEventListener("paste", handleWindowPaste);
     return () => window.removeEventListener("paste", handleWindowPaste);
-  }, [isOpen, selectedCategory]);
+  }, [isOpen, selectedCategory, selectedMonth]);
 
   const handleDownloadTemplate = async (format = "xlsx") => {
     try {
       setDownloadingFormat(format);
       const categoryParam = selectedCategory && selectedCategory !== "all" ? `&category=${selectedCategory}` : "";
-      const res = await fetch(`/api/renewals/import?template=true&format=${format}${categoryParam}`);
+      const monthParam = selectedMonth !== "auto" ? `&month=${selectedMonth}` : "";
+      const res = await fetch(`/api/renewals/import?template=true&format=${format}${categoryParam}${monthParam}`);
       if (!res.ok) throw new Error(`Failed to download ${format.toUpperCase()} template`);
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       const fileSuffix = selectedCategory && selectedCategory !== "all" ? `_${selectedCategory}` : "";
-      a.download = `renewal_import_template${fileSuffix}.${format}`;
+      const monthSuffix = selectedMonth !== "auto" ? `_month_${selectedMonth}` : "";
+      a.download = `renewal_import_template${fileSuffix}${monthSuffix}.${format}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       showToast(
-        `Downloaded ${format.toUpperCase()} template (${TEMPLATE_CATEGORIES.find((c) => c.id === selectedCategory)?.label || "Master"})!`,
+        `Downloaded ${format.toUpperCase()} template (${TEMPLATE_CATEGORIES.find((c) => c.id === selectedCategory)?.label || "Master"}${selectedMonth !== "auto" ? ` • Month ${selectedMonth}` : ""})!`,
         "success"
       );
     } catch (err) {
@@ -368,7 +414,7 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
         throw new Error("No data rows found in this sheet.");
       }
 
-      const parsed = rawJson.map((r, i) => parseRowData(r, i, selectedCategory));
+      const parsed = rawJson.map((r, i) => parseRowData(r, i, selectedCategory, selectedMonth));
       setRows(parsed);
       setLoadedFileName(file.name);
       setImportError("");
@@ -405,15 +451,15 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
 
   const parsedPreviewCount = useMemo(() => {
     if (!pastedRawText.trim()) return 0;
-    return parseTabularText(pastedRawText, selectedCategory).length;
-  }, [pastedRawText, selectedCategory]);
+    return parseTabularText(pastedRawText, selectedCategory, selectedMonth).length;
+  }, [pastedRawText, selectedCategory, selectedMonth]);
 
   const handleProcessPastedData = () => {
     if (!pastedRawText.trim()) {
       showToast("Please paste tabular data first.", "error");
       return;
     }
-    const parsed = parseTabularText(pastedRawText, selectedCategory);
+    const parsed = parseTabularText(pastedRawText, selectedCategory, selectedMonth);
     if (!parsed.length) {
       showToast("Could not recognize any valid rows. Ensure data is tab or comma delimited.", "error");
       return;
@@ -444,7 +490,7 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
   };
 
   const handleAddRow = () => {
-    const newRow = createBlankRow(selectedCategory);
+    const newRow = createBlankRow(selectedCategory, selectedMonth);
     setRows((prev) => [newRow, ...prev]);
   };
 
@@ -460,6 +506,40 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
       setImportSuccess(null);
       setImportError("");
     }
+  };
+
+  const handleFillBlankDatesWithTargetMonth = () => {
+    if (selectedMonth === "auto") return;
+    const pad = String(selectedMonth).padStart(2, "0");
+    const defaultDate = `2026-${pad}-28`;
+    setRows((prev) =>
+      prev.map((r) => (!r.expiryDate ? { ...r, expiryDate: defaultDate } : r))
+    );
+    showToast(`Applied ${MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]} 2026 to blank dates!`, "success");
+  };
+
+  const handleAlignAllDatesToTargetMonth = () => {
+    if (selectedMonth === "auto") return;
+    const pad = String(selectedMonth).padStart(2, "0");
+    const targetMonthNum = parseInt(selectedMonth, 10);
+    setRows((prev) =>
+      prev.map((r) => {
+        if (!r.expiryDate) {
+          return { ...r, expiryDate: `2026-${pad}-28` };
+        }
+        const parts = r.expiryDate.split("-");
+        if (parts.length === 3) {
+          const yr = parts[0] || "2026";
+          let day = parseInt(parts[2], 10) || 28;
+          const maxDays = new Date(parseInt(yr, 10), targetMonthNum, 0).getDate();
+          if (day > maxDays) day = maxDays;
+          const padDay = String(day).padStart(2, "0");
+          return { ...r, expiryDate: `${yr}-${pad}-${padDay}` };
+        }
+        return { ...r, expiryDate: `2026-${pad}-28` };
+      })
+    );
+    showToast(`Aligned all expiry dates to ${MONTH_SHORT_NAMES[targetMonthNum]}!`, "success");
   };
 
   // Row validation map
@@ -480,6 +560,17 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
   }, [rowValidations]);
 
   const issuesCount = rows.length - readyCount;
+
+  // Count rows with mismatched expiry month
+  const mismatchedMonthCount = useMemo(() => {
+    if (selectedMonth === "auto") return 0;
+    const targetNum = parseInt(selectedMonth, 10);
+    return rows.filter((r) => {
+      if (!r.expiryDate) return false;
+      const m = parseInt(r.expiryDate.split("-")[1], 10);
+      return m && m !== targetNum;
+    }).length;
+  }, [rows, selectedMonth]);
 
   // Filtered rows for search & mode
   const displayedRows = useMemo(() => {
@@ -527,6 +618,7 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
           records: rows,
           sourceFileName: loadedFileName || "spreadsheet_studio_renewals.xlsx",
           category: selectedCategory,
+          targetMonth: selectedMonth !== "auto" ? selectedMonth : null,
         }),
       });
 
@@ -539,7 +631,7 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
       showToast(data.message || `Successfully imported ${data.insertedCount} renewals!`, "success");
 
       if (onImportSuccess) {
-        onImportSuccess(data);
+        onImportSuccess(data, selectedMonth);
       }
     } catch (err) {
       setImportError(err.message || "Failed to import rows to database.");
@@ -639,10 +731,10 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
               </div>
             </div>
 
-            {/* Header Right: Category Selector + Templates + Close */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            {/* Header Right: Category Selector + Month Selector + Templates + Close */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
               {/* Category Picker */}
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                 <span style={{ fontSize: "11px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   Category:
                 </span>
@@ -660,6 +752,25 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                 </select>
               </div>
 
+              {/* Renewal Target Month Picker */}
+              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                <span style={{ fontSize: "11px", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  Month:
+                </span>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="rn-category-dropdown"
+                  title="Target renewal month for data accuracy and filtering"
+                >
+                  {RENEWAL_MONTHS.map((m) => (
+                    <option key={m.value} value={m.value}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Templates */}
               <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                 <button
@@ -667,17 +778,17 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                   onClick={() => handleDownloadTemplate("xlsx")}
                   disabled={downloadingFormat === "xlsx" || importing}
                   style={topTemplateBtnStyle}
-                  title={`Download Excel template optimized for ${selectedCategory.toUpperCase()}`}
+                  title={`Download Excel template (${selectedCategory.toUpperCase()}${selectedMonth !== "auto" ? ` • Month ${selectedMonth}` : ""})`}
                 >
                   <FileSpreadsheet size={13} style={{ color: "#2563eb" }} />
-                  {downloadingFormat === "xlsx" ? "Downloading..." : "Excel Template"}
+                  {downloadingFormat === "xlsx" ? "Downloading..." : "Excel"}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDownloadTemplate("csv")}
                   disabled={downloadingFormat === "csv" || importing}
                   style={topTemplateBtnStyle}
-                  title={`Download CSV template optimized for ${selectedCategory.toUpperCase()}`}
+                  title={`Download CSV template (${selectedCategory.toUpperCase()}${selectedMonth !== "auto" ? ` • Month ${selectedMonth}` : ""})`}
                 >
                   <FileText size={13} style={{ color: "#475569" }} />
                   {downloadingFormat === "csv" ? "Downloading..." : "CSV"}
@@ -787,6 +898,30 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                   </span>
                   <span style={{ fontSize: "11px", color: "#64748b" }}>({rows.length} rows)</span>
                 </div>
+              )}
+
+              {/* Target Month quick helper */}
+              {selectedMonth !== "auto" && rows.some((r) => !r.expiryDate) && (
+                <button
+                  type="button"
+                  onClick={handleFillBlankDatesWithTargetMonth}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    padding: "4px 8px",
+                    fontSize: "11px",
+                    fontWeight: "600",
+                    color: "#2563eb",
+                    backgroundColor: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
+                  title={`Apply ${MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]} 2026 to rows missing expiry dates`}
+                >
+                  Set blank dates to {MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]}
+                </button>
               )}
 
               {/* Filter Tabs */}
@@ -937,7 +1072,47 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
             </div>
           </div>
 
-          {/* Feedback alerts */}
+          {/* Feedback alerts & Month mismatch warning */}
+          {selectedMonth !== "auto" && mismatchedMonthCount > 0 && (
+            <div
+              style={{
+                padding: "6px 20px",
+                backgroundColor: "#fffbeb",
+                borderBottom: "1px solid #fef3c7",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                fontSize: "11.5px",
+                gap: "10px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#92400e" }}>
+                <AlertTriangle size={13} style={{ color: "#d97706" }} />
+                <span>
+                  <strong>Notice:</strong> {mismatchedMonthCount} row{mismatchedMonthCount === 1 ? "" : "s"} have expiry dates outside <strong>{MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]}</strong>. Check highlighted pills below.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleAlignAllDatesToTargetMonth}
+                style={{
+                  padding: "3px 9px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  color: "#92400e",
+                  backgroundColor: "#fef3c7",
+                  border: "1px solid #fde68a",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+                title={`Change month of ${mismatchedMonthCount} dates to ${MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]}`}
+              >
+                Align all to {MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]}
+              </button>
+            </div>
+          )}
+
           {importError && (
             <div
               style={{
@@ -1165,7 +1340,7 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                     <th style={{ ...thStyle, width: "155px" }}>Contact (10-Digit)</th>
                     <th style={{ ...thStyle, width: "220px" }}>Insurance Company</th>
                     <th style={{ ...thStyle, width: "160px" }}>Policy Type</th>
-                    <th style={{ ...thStyle, width: "130px" }}>Expiry Date *</th>
+                    <th style={{ ...thStyle, width: "145px" }}>Expiry Date *</th>
                     <th style={{ ...thStyle, width: "120px", textAlign: "right" }}>Gross Premium</th>
                     <th style={{ ...thStyle, width: "135px" }}>Registration No.</th>
                     <th style={{ ...thStyle, width: "150px" }}>Make / Model</th>
@@ -1181,6 +1356,9 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                     const validation = rowValidations.get(row.id) || { isValid: true, issues: [] };
                     const contactDigits = (row.contactNumber || "").replace(/\D/g, "");
                     const is10Digits = contactDigits.length === 10;
+
+                    const rowExpiryMonth = row.expiryDate ? parseInt(row.expiryDate.split("-")[1], 10) : null;
+                    const isMonthMismatch = selectedMonth !== "auto" && rowExpiryMonth && rowExpiryMonth !== parseInt(selectedMonth, 10);
 
                     return (
                       <tr
@@ -1338,19 +1516,39 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                           />
                         </td>
 
-                        {/* Expiry Date */}
+                        {/* Expiry Date (with target month mismatch indicator) */}
                         <td style={tdStyle}>
-                          <input
-                            type="date"
-                            value={row.expiryDate}
-                            onChange={(e) => handleCellChange(row.id, "expiryDate", e.target.value)}
-                            className="rn-sheet-cell-input"
-                            style={{
-                              ...cellInputStyle,
-                              fontSize: "11px",
-                              fontFamily: "ui-monospace, monospace",
-                            }}
-                          />
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <input
+                              type="date"
+                              value={row.expiryDate}
+                              onChange={(e) => handleCellChange(row.id, "expiryDate", e.target.value)}
+                              className="rn-sheet-cell-input"
+                              style={{
+                                ...cellInputStyle,
+                                fontSize: "11px",
+                                fontFamily: "ui-monospace, monospace",
+                              }}
+                            />
+                            {isMonthMismatch && (
+                              <span
+                                title={`Expiry month (${MONTH_SHORT_NAMES[rowExpiryMonth]}) differs from target month (${MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]})`}
+                                style={{
+                                  fontSize: "10px",
+                                  fontWeight: "700",
+                                  color: "#b45309",
+                                  backgroundColor: "#fffbeb",
+                                  border: "1px solid #fef3c7",
+                                  padding: "1px 4px",
+                                  borderRadius: "4px",
+                                  whiteSpace: "nowrap",
+                                  cursor: "help",
+                                }}
+                              >
+                                {MONTH_SHORT_NAMES[rowExpiryMonth]}
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         {/* Gross Premium */}

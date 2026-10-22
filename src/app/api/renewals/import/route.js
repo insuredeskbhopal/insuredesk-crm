@@ -205,6 +205,10 @@ export async function GET(request) {
     const url = request.url ? new URL(request.url) : null;
     const format = (url?.searchParams.get("format") || "xlsx").toLowerCase();
     const category = (url?.searchParams.get("category") || "all").toLowerCase().trim();
+    const monthParam = url?.searchParams.get("month") || "";
+    const targetMonthNum = parseInt(monthParam, 10);
+    const hasSpecificMonth = Number.isInteger(targetMonthNum) && targetMonthNum >= 1 && targetMonthNum <= 12;
+    const padMonth = hasSpecificMonth ? String(targetMonthNum).padStart(2, "0") : null;
 
     let sampleRows = [];
     let filenamePrefix = "renewal_import_template";
@@ -441,6 +445,16 @@ export async function GET(request) {
       ];
     }
 
+    if (padMonth) {
+      sampleRows = sampleRows.map((r, i) => {
+        const day = String(((i * 10 + 5) % 27) + 1).padStart(2, "0");
+        return {
+          ...r,
+          "Expiry Date": `2026-${padMonth}-${day}`,
+        };
+      });
+    }
+
     const worksheet = XLSX.utils.json_to_sheet(sampleRows);
     worksheet["!cols"] = [
       { wch: 28 }, // Policy Number
@@ -510,6 +524,7 @@ export async function POST(request) {
     const contentType = request.headers.get("content-type") || "";
     let rawRows = [];
     let sourceFileName = "imported_renewals.xlsx";
+    let targetMonth = null;
 
     if (contentType.includes("application/json")) {
       const jsonBody = await request.json();
@@ -518,6 +533,7 @@ export async function POST(request) {
       }
       rawRows = jsonBody.records;
       sourceFileName = jsonBody.sourceFileName || "spreadsheet_studio_renewals.xlsx";
+      targetMonth = jsonBody.targetMonth || null;
     } else {
       const formData = await request.formData();
       const file = formData.get("file");
@@ -664,6 +680,14 @@ export async function POST(request) {
           payload.insuranceCompany || payload.companyName,
         );
         payload.companyName = payload.insuranceCompany;
+
+        if (targetMonth) {
+          payload.targetRenewalMonth = String(targetMonth);
+          if (!payload.expiryDate) {
+            const pad = String(targetMonth).padStart(2, "0");
+            payload.expiryDate = `2026-${pad}-28`;
+          }
+        }
 
         const name = payload.insuredName || "";
         const policyNo = payload.policyNumber || "";

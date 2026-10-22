@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
@@ -22,7 +22,9 @@ import "@/app/ui/renewals-redesign.css";
 export default function RenewalsLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [showImportModal, setShowImportModal] = useState(false);
+  const initialMonth = searchParams?.get("month") || "";
 
   useEffect(() => {
     const handleOpen = () => setShowImportModal(true);
@@ -125,9 +127,14 @@ export default function RenewalsLayout({ children }) {
       {/* Spreadsheet Studio Modal */}
       <RenewalImportStudioModal
         isOpen={showImportModal}
+        initialMonth={initialMonth}
         onClose={() => setShowImportModal(false)}
-        onImportSuccess={() => {
-          router.refresh();
+        onImportSuccess={(_data, targetMonth) => {
+          if (targetMonth && targetMonth !== "auto") {
+            router.push(`/dashboard/renewals/policies?month=${targetMonth}&view=policy`);
+          } else {
+            router.refresh();
+          }
         }}
       />
     </div>

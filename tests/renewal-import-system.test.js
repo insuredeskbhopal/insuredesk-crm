@@ -222,5 +222,64 @@ describe("Renewal Import System", () => {
       expect(createCall.data.renewalStatus).toBe("ACTIVE");
       expect(createCall.data.isActivePolicy).toBe(true);
     });
+
+    it("applies targetMonth to missing expiry dates and records targetRenewalMonth", async () => {
+      const recordsWithoutExpiry = [
+        {
+          policyNumber: "45140031250100009999",
+          insuredName: "ANIL ENTERPRISES",
+          contactNumber: "9826011223",
+          insuranceCompany: "Tata AIG General Insurance Company Limited",
+          policyType: "Commercial Vehicle",
+          expiryDate: "",
+          grossPremium: "25000",
+          registrationNumber: "MP04HE5555",
+          makeModel: "Ashok Leyland",
+          quote: "",
+          remark: "November pipeline renewal",
+          status: "ACTIVE",
+        },
+      ];
+
+      const mockRequest = {
+        headers: {
+          get: (header) => (header === "content-type" ? "application/json" : null),
+        },
+        cookies: {
+          get: (name) => (name === "token" ? { value: "valid-jwt-token" } : null),
+        },
+        json: async () => ({
+          records: recordsWithoutExpiry,
+          sourceFileName: "nov_renewals_raw.xlsx",
+          targetMonth: "11",
+        }),
+      };
+
+      const response = await POST(mockRequest);
+      expect(response.status).toBe(200);
+
+      const result = await response.json();
+      expect(result.success).toBe(true);
+      expect(result.insertedCount).toBe(1);
+
+      const createCall = prismaMock.policyRecord.create.mock.calls[0][0];
+      expect(createCall.data.data.targetRenewalMonth).toBe("11");
+      expect(createCall.data.data.expiryDate).toBe("2026-11-28");
+    });
+  });
+
+  describe("Month Option Handling in Templates", () => {
+    it("generates templates with expiry dates tailored to target month", async () => {
+      const monthReq = {
+        url: "http://localhost:3000/api/renewals/import?template=true&format=csv&category=motor&month=11",
+        cookies: {
+          get: (name) => (name === "token" ? { value: "valid-jwt-token" } : null),
+        },
+      };
+      const monthRes = await GET(monthReq);
+      expect(monthRes.status).toBe(200);
+      const csvText = await monthRes.text();
+      expect(csvText).toContain("2026-11-");
+    });
   });
 });
