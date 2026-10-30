@@ -564,6 +564,15 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
     setRows((prev) => [newRow, ...prev]);
   };
 
+  const handleStartWithEmptyRows = (count = 5) => {
+    const newRows = Array.from({ length: count }).map(() =>
+      createBlankRow(selectedCategory, selectedMonth)
+    );
+    setRows(newRows);
+    setLoadedFileName("");
+    showToast(`Loaded ${count} blank spreadsheet rows!`, "success");
+  };
+
   const handleDeleteRow = (id) => {
     setRows((prev) => prev.filter((r) => r.id !== id));
   };
@@ -855,112 +864,115 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
             </div>
           </div>
 
-          {/* Action Command Toolbar */}
-          <div
-            style={{
-              padding: "8px 20px",
-              backgroundColor: "#f8fafc",
-              borderBottom: "1px solid #e2e8f0",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: "10px",
-            }}
-          >
-            {/* Left: Upload file trigger + Paste Sheets + Active file pill + Filter tabs */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-              <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                accept=".xlsx, .xls, .csv"
-                onChange={handleFileInputChange}
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={importing}
-                style={toolActionBtnStyle}
-                title="Browse and upload an Excel or CSV file"
-              >
-                <Upload size={13} style={{ color: "#2563eb" }} />
-                {loadedFileName ? "Upload Different File" : "Upload File (.xlsx, .csv)"}
-              </button>
+          {/* Hidden file input always available */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            accept=".xlsx, .xls, .csv"
+            onChange={handleFileInputChange}
+          />
 
-              {/* Paste from Sheets / Clipboard button */}
-              <button
-                type="button"
-                onClick={() => setShowPasteModal(true)}
-                disabled={importing}
-                style={{
-                  ...toolActionBtnStyle,
-                  borderColor: "#cbd5e1",
-                  backgroundColor: "#ffffff",
-                }}
-                title="Paste copied rows from Google Sheets or Excel (Ctrl+V)"
-              >
-                <ClipboardCopy size={13} style={{ color: "#475569" }} />
-                Paste from Sheets / Table
-              </button>
-
-              {loadedFileName && (
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "4px 9px",
-                    fontSize: "11px",
-                    fontWeight: "500",
-                    color: "#334155",
-                    backgroundColor: "#f1f5f9",
-                    borderRadius: "6px",
-                    border: "1px solid #e2e8f0",
-                  }}
-                >
-                  <FileSpreadsheet size={12} style={{ color: "#2563eb" }} />
-                  <span style={{ maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {loadedFileName}
-                  </span>
-                  <span style={{ fontSize: "11px", color: "#64748b" }}>({rows.length} rows)</span>
-                </div>
-              )}
-
-              {/* Target Month quick helper */}
-              {selectedMonth !== "auto" && rows.some((r) => !r.expiryDate) && (
+          {/* Action Command Toolbar - Active only when records are loaded in the grid */}
+          {rows.length > 0 && (
+            <div
+              style={{
+                padding: "8px 20px",
+                backgroundColor: "#ffffff",
+                borderBottom: "1px solid #e2e8f0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "10px",
+              }}
+            >
+              {/* Left: Upload file trigger + Paste Sheets + Active file pill + Filter tabs */}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                 <button
                   type="button"
-                  onClick={handleFillBlankDatesWithTargetMonth}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    padding: "4px 8px",
-                    fontSize: "11px",
-                    fontWeight: "600",
-                    color: "#2563eb",
-                    backgroundColor: "#eff6ff",
-                    border: "1px solid #bfdbfe",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                  }}
-                  title={`Apply ${MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]} 2026 to rows missing expiry dates`}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={importing}
+                  style={toolActionBtnStyle}
+                  title="Browse and upload an Excel or CSV file"
                 >
-                  Set blank dates to {MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]}
+                  <Upload size={13} style={{ color: "#2563eb" }} />
+                  {loadedFileName ? "Upload Different File" : "Upload File (.xlsx, .csv)"}
                 </button>
-              )}
 
-              {/* Filter Tabs */}
-              {rows.length > 0 && (
+                {/* Paste from Sheets / Clipboard button */}
+                <button
+                  type="button"
+                  onClick={() => setShowPasteModal(true)}
+                  disabled={importing}
+                  style={{
+                    ...toolActionBtnStyle,
+                    borderColor: "#cbd5e1",
+                    backgroundColor: "#ffffff",
+                  }}
+                  title="Paste copied rows from Google Sheets or Excel (Ctrl+V)"
+                >
+                  <ClipboardCopy size={13} style={{ color: "#475569" }} />
+                  Paste from Sheets / Table
+                </button>
+
+                {loadedFileName && (
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "4px 9px",
+                      fontSize: "11px",
+                      fontWeight: "500",
+                      color: "#334155",
+                      backgroundColor: "#f1f5f9",
+                      borderRadius: "6px",
+                      border: "1px solid #e2e8f0",
+                    }}
+                  >
+                    <FileSpreadsheet size={12} style={{ color: "#2563eb" }} />
+                    <span style={{ maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {loadedFileName}
+                    </span>
+                    <span style={{ fontSize: "11px", color: "#64748b" }}>({rows.length} rows)</span>
+                  </div>
+                )}
+
+                {/* Target Month quick helper */}
+                {selectedMonth !== "auto" && rows.some((r) => !r.expiryDate) && (
+                  <button
+                    type="button"
+                    onClick={handleFillBlankDatesWithTargetMonth}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      padding: "4px 8px",
+                      fontSize: "11px",
+                      fontWeight: "600",
+                      color: "#2563eb",
+                      backgroundColor: "#eff6ff",
+                      border: "1px solid #bfdbfe",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                    }}
+                    title={`Apply ${MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]} 2026 to rows missing expiry dates`}
+                  >
+                    Set blank dates to {MONTH_SHORT_NAMES[parseInt(selectedMonth, 10)]}
+                  </button>
+                )}
+
+                {/* Filter Tabs */}
                 <div
                   style={{
                     display: "inline-flex",
-                    backgroundColor: "#e2e8f0",
+                    backgroundColor: "#f1f5f9",
                     padding: "2px",
                     borderRadius: "7px",
                     gap: "2px",
                     marginLeft: "4px",
+                    border: "1px solid #e2e8f0",
                   }}
                 >
                   <button
@@ -989,12 +1001,10 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                     </button>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* Right: Search + Add Row + Clear */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              {rows.length > 0 && (
+              {/* Right: Search + Add Row + Clear */}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <div style={{ position: "relative", width: "220px" }}>
                   <Search
                     size={13}
@@ -1044,33 +1054,31 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                     </button>
                   )}
                 </div>
-              )}
 
-              <button
-                type="button"
-                onClick={handleAddRow}
-                disabled={importing}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "5px",
-                  padding: "5px 12px",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  backgroundColor: "#0f172a",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  height: "28px",
-                  boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
-                }}
-              >
-                <Plus size={13} />
-                Add Row
-              </button>
+                <button
+                  type="button"
+                  onClick={handleAddRow}
+                  disabled={importing}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    padding: "5px 12px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    backgroundColor: "#0f172a",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    height: "28px",
+                    boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
+                  }}
+                >
+                  <Plus size={13} />
+                  Add Row
+                </button>
 
-              {rows.length > 0 && (
                 <button
                   type="button"
                   onClick={handleClearAll}
@@ -1095,9 +1103,9 @@ export default function RenewalImportStudioModal({ isOpen, onClose, onImportSucc
                   <Trash2 size={13} />
                   Clear
                 </button>
-              )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Feedback alerts & Month mismatch warning */}
           {selectedMonth !== "auto" && mismatchedMonthCount > 0 && (

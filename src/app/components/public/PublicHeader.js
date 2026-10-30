@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import BrandLogo from "@/app/components/brand/BrandLogo";
 import Breadcrumbs from "@/app/components/public/Breadcrumbs";
 import AppDownloadModal from "@/app/components/public/AppDownloadModal";
 import { BUSINESS_DETAILS } from "@/lib/seo/site";
+import { DIWALI_THEME_ENABLED } from "@/content/seasonalTheme";
 import { Smartphone } from "lucide-react";
 
 const navItems = [
@@ -25,10 +26,14 @@ export default function PublicHeader() {
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
   const pathname = usePathname();
   const menuTitleId = useId();
+  const navRef = useRef(null);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    navRef.current
+      ?.closest(".landing-shell")
+      ?.classList.toggle("diwali-theme", DIWALI_THEME_ENABLED);
+  }, [pathname]);
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -181,6 +186,7 @@ export default function PublicHeader() {
         }}
       />
       <nav
+        ref={navRef}
         className="landing-premium-nav"
         id="mainNav"
         aria-label="Primary navigation"

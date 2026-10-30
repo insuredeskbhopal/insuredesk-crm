@@ -1,0 +1,250 @@
+/* Seasonal homepage layer. Toggle with DIWALI_THEME_ENABLED in content/seasonalTheme.js. */
+.landing-shell.diwali-theme {
+  --diwali-gold: #c98924;
+  --diwali-gold-soft: #e7bd70;
+  --diwali-ivory: #fffaf0;
+  --diwali-nav-spacer: 90px;
+  background-color: var(--diwali-ivory) !important;
+}
+
+.landing-shell.diwali-theme nav#mainNav.landing-premium-nav:not(.scrolled) {
+  background: rgba(255, 250, 239, 0.97) !important;
+  border-bottom: 1px solid rgba(201, 137, 36, 0.16) !important;
+  box-shadow: 0 6px 20px rgba(3, 22, 56, 0.07) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.1) !important;
+  backdrop-filter: blur(16px) saturate(1.1) !important;
+}
+
+.landing-shell.diwali-homepage nav#mainNav.landing-premium-nav:not(.scrolled) {
+  background: transparent !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.landing-shell.diwali-theme nav#mainNav.landing-premium-nav.scrolled {
+  background: rgba(255, 250, 239, 0.97) !important;
+  border-bottom: 0 !important;
+  box-shadow: 0 8px 24px rgba(3, 22, 56, 0.12) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.1) !important;
+  backdrop-filter: blur(16px) saturate(1.1) !important;
+}
+
+.landing-shell.diwali-theme .landing-nav-links {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.landing-shell.diwali-homepage .landing-nav-spacer {
+  background-image:
+    linear-gradient(90deg, rgba(255, 250, 239, 0.88) 0%, rgba(255, 250, 239, 0.76) 34%, rgba(255, 250, 239, 0.34) 52%, rgba(255, 250, 239, 0.04) 72%, rgba(255, 250, 239, 0) 100%),
+    url("/brand/warm-diwali-family-celebration.png") !important;
+  background-position: center, center top !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+
+.landing-shell.diwali-theme .landing-nav-link.active {
+  box-shadow: inset 0 -2px 0 var(--diwali-gold-soft) !important;
+}
+
+.landing-shell.diwali-theme .landing-nav-cta,
+.landing-shell.diwali-theme .landing-floating-consultation {
+  box-shadow: 0 10px 28px rgba(120, 75, 16, 0.24), 0 0 0 1px rgba(231, 189, 112, 0.42) !important;
+}
+
+.landing-shell.diwali-homepage #hero {
+  background-image:
+    linear-gradient(90deg, rgba(255, 250, 239, 0.88) 0%, rgba(255, 250, 239, 0.76) 34%, rgba(255, 250, 239, 0.34) 52%, rgba(255, 250, 239, 0.04) 72%, rgba(255, 250, 239, 0) 100%),
+    linear-gradient(180deg, transparent 0%, transparent 72%, rgba(255, 250, 239, 0.76) 100%),
+    url("/brand/warm-diwali-family-celebration.png") !important;
+  background-position: center, center, center calc(0px - var(--diwali-nav-spacer)) !important;
+}
+
+.landing-shell.diwali-homepage #hero::after {
+  background: linear-gradient(180deg, rgba(255, 250, 239, 0), var(--diwali-ivory)) !important;
+}
+
+.landing-shell.diwali-theme .hero-badge-pill {
+  border-color: rgba(201, 137, 36, 0.28) !important;
+  box-shadow: 0 5px 18px rgba(126, 81, 19, 0.08) !important;
+}
+
+.landing-shell.diwali-theme .hero-badge-dot {
+  box-shadow: 0 0 0 4px rgba(201, 137, 36, 0.12) !important;
+}
+
+.landing-shell.diwali-theme .hero-shimmer-text {
+  background-image: linear-gradient(115deg, #031638 0%, #1d4ed8 42%, #b87916 74%, #031638 100%) !important;
+}
+
+.landing-shell.diwali-theme .hero-btn-primary,
+.landing-shell.diwali-theme .home-cta-action-card a,
+.landing-shell.diwali-theme .company-overview-cta {
+  box-shadow: 0 10px 24px rgba(111, 73, 18, 0.16) !important;
+}
+
+.landing-shell.diwali-theme .hero-btn-secondary {
+  border-color: rgba(28, 108, 57, 0.72) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+}
+
+.landing-shell.diwali-theme .service-card-btn,
+.landing-shell.diwali-theme .claims-process-cta,
+.landing-shell.diwali-theme .home-faq-view-all,
+.landing-shell.diwali-theme .home-faq-advisor-btn-call,
+.landing-shell.diwali-theme .home-faq-advisor-btn-contact,
+.landing-shell.diwali-theme .home-apk-download-btn,
+.landing-shell.diwali-theme .home-apk-share-btn {
+  box-shadow: 0 0 0 1px rgba(201, 137, 36, 0.24), 0 6px 18px rgba(111, 73, 18, 0.08) !important;
+}
+
+.landing-shell.diwali-theme .service-card-btn .material-symbols-outlined,
+.landing-shell.diwali-theme .claims-process-cta .material-symbols-outlined,
+.landing-shell.diwali-theme .home-faq-view-all .material-symbols-outlined {
+  color: var(--diwali-gold) !important;
+}
+
+.landing-shell.diwali-theme #partners {
+  background: linear-gradient(180deg, #fffaf0, #fffdf8) !important;
+  border-top: 1px solid rgba(201, 137, 36, 0.14) !important;
+  border-bottom: 1px solid rgba(201, 137, 36, 0.14) !important;
+}
+
+.landing-shell.diwali-theme #solutions {
+  background: linear-gradient(180deg, #fffdf8 0%, #fff8e9 48%, #fffdf8 100%) !important;
+}
+
+.landing-shell.diwali-theme .services-section-texture {
+  background-image:
+    radial-gradient(circle, rgba(201, 137, 36, 0.13) 1px, transparent 1.5px),
+    linear-gradient(rgba(3, 22, 56, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(3, 22, 56, 0.025) 1px, transparent 1px) !important;
+  background-size: 34px 34px, 42px 42px, 42px 42px !important;
+}
+
+.landing-shell.diwali-theme .service-card,
+.landing-shell.diwali-theme .sh-service-card,
+.landing-shell.diwali-theme .sh-protocol-card,
+.landing-shell.diwali-theme .service-overview-card,
+.landing-shell.diwali-theme .service-full-section-card,
+.landing-shell.diwali-theme .service-faqs-card,
+.landing-shell.diwali-theme .service-advisor-card,
+.landing-shell.diwali-theme .service-coverage-card,
+.landing-shell.diwali-theme .service-geo-card,
+.landing-shell.diwali-theme .service-related-card,
+.landing-shell.diwali-theme .service-trust-card,
+.landing-shell.diwali-theme .company-overview-item,
+.landing-shell.diwali-theme .home-faq-card,
+.landing-shell.diwali-theme .home-cta-action-card,
+.landing-shell.diwali-theme .contact-info-card,
+.landing-shell.diwali-theme .contact-form-card,
+.landing-shell.diwali-theme .about-pillar-card,
+.landing-shell.diwali-theme .leadership-card,
+.landing-shell.diwali-theme .about-statutory-card,
+.landing-shell.diwali-theme .blog-featured-card,
+.landing-shell.diwali-theme .blog-card,
+.landing-shell.diwali-theme .corp-faq-card,
+.landing-shell.diwali-theme .disclaimer-card,
+.landing-shell.diwali-theme .terms-card,
+.landing-shell.diwali-theme .policy-card {
+  border-color: rgba(201, 137, 36, 0.2) !important;
+  box-shadow: 0 12px 32px rgba(92, 64, 22, 0.07), 0 2px 8px rgba(3, 22, 56, 0.025) !important;
+}
+
+.landing-shell.diwali-theme .sh-card-cta-btn,
+.landing-shell.diwali-theme .service-hero-btn-primary,
+.landing-shell.diwali-theme .service-bottom-btn-primary,
+.landing-shell.diwali-theme .service-advisor-btn-call,
+.landing-shell.diwali-theme .service-advisor-btn-whatsapp,
+.landing-shell.diwali-theme .service-advisor-btn-callback,
+.landing-shell.diwali-theme .contact-submit-button,
+.landing-shell.diwali-theme .corp-card-btn,
+.landing-shell.diwali-theme .btn-green {
+  box-shadow: 0 0 0 1px rgba(201, 137, 36, 0.24), 0 8px 20px rgba(111, 73, 18, 0.1) !important;
+}
+
+.landing-shell.diwali-theme .service-card:hover,
+.landing-shell.diwali-theme .company-overview-item:hover,
+.landing-shell.diwali-theme .home-faq-card:hover {
+  border-color: rgba(201, 137, 36, 0.48) !important;
+  box-shadow: 0 16px 36px rgba(92, 64, 22, 0.11) !important;
+}
+
+.landing-shell.diwali-theme .claims-process {
+  background: linear-gradient(180deg, rgba(255, 250, 239, 0.55), rgba(255, 255, 255, 0)) !important;
+}
+
+.landing-shell.diwali-theme .claims-process-number,
+.landing-shell.diwali-theme .home-faq-icon-bubble,
+.landing-shell.diwali-theme .home-faq-advisor-avatar {
+  border-color: rgba(201, 137, 36, 0.24) !important;
+}
+
+.landing-shell.diwali-theme #mobile-app > div {
+  box-shadow: 0 22px 54px rgba(120, 75, 16, 0.16) !important;
+}
+
+.landing-shell.diwali-theme #cta-banner > div {
+  border-color: rgba(231, 189, 112, 0.46) !important;
+  box-shadow: 0 24px 58px rgba(84, 56, 15, 0.14) !important;
+}
+
+.landing-shell.diwali-theme .public-footer {
+  border-top-color: var(--diwali-gold-soft) !important;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(201, 137, 36, 0.2) 0%, transparent 42%),
+    radial-gradient(circle at 85% 85%, rgba(28, 108, 57, 0.12) 0%, transparent 50%),
+    #05183d !important;
+}
+
+.landing-shell.diwali-theme .footer-brand-badge,
+.landing-shell.diwali-theme .footer-chip:nth-child(3) {
+  border-color: rgba(231, 189, 112, 0.34) !important;
+}
+
+.landing-shell.diwali-theme .public-footer-eyebrow,
+.landing-shell.diwali-theme .public-footer-nav h5 {
+  color: #f0c979 !important;
+}
+
+@media (max-width: 768px) {
+  .landing-shell.diwali-theme {
+    --diwali-nav-spacer: 72px;
+  }
+
+  .landing-shell.diwali-homepage #hero {
+    background-image:
+      linear-gradient(180deg, rgba(255, 250, 239, 0.92) 0%, rgba(255, 250, 239, 0.72) 58%, rgba(255, 250, 239, 0.46) 100%),
+      linear-gradient(90deg, rgba(255, 250, 239, 0.8), rgba(255, 250, 239, 0.12)),
+      url("/brand/warm-diwali-family-celebration.png") !important;
+    background-position: center, center, 67% calc(0px - var(--diwali-nav-spacer)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-shell.diwali-theme {
+    --diwali-nav-spacer: 60px;
+  }
+}
+
+@media (max-width: 380px) {
+  .landing-shell.diwali-theme {
+    --diwali-nav-spacer: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-shell.diwali-theme *,
+  .landing-shell.diwali-theme *::before,
+  .landing-shell.diwali-theme *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

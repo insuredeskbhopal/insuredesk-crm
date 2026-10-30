@@ -9,6 +9,7 @@ import { INSURER_LOGOS } from "@/app/components/brand/logoAssets";
 import { BUSINESS_DETAILS, SITE_URL } from "@/lib/seo/site";
 import { HOMEPAGE_CONTENT, SERVICE_CARD_META } from "@/content/homepage";
 import { SERVICES } from "@/content/services";
+import { DIWALI_THEME_ENABLED } from "@/content/seasonalTheme";
 
 const homepageFaqs = HOMEPAGE_CONTENT.faqSection.faqs.slice(0, 6);
 
@@ -550,7 +551,11 @@ export default function RootPage() {
 
       <LandingEffects />
 
-      <div className="landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen">
+      <div
+        className={`landing-shell bg-background text-on-background font-body-md overflow-x-hidden min-h-screen${
+          DIWALI_THEME_ENABLED ? " diwali-theme diwali-homepage" : ""
+        }`}
+      >
         <PublicHeader />
         <main>
           <header
