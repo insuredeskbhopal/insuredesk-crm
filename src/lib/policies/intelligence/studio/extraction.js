@@ -1,5 +1,5 @@
 export function clean(value) {
-    return value.replace(/^[\s:|=.()\[\]\-–—]+|[\s:|=\-–—]+$/g, '').replace(/\s+/g, ' ').trim();
+    return value.replace(/^[\s:|=.()[\]-–—]+|[\s:|=\-–—]+$/g, '').replace(/\s+/g, ' ').trim();
 }
 export function anchorPattern(anchor) {
     const parts = anchor.match(/[\p{L}\p{N}#]+/gu);
@@ -393,14 +393,14 @@ export function validValue(value, kind) {
     }
     if (kind === 'phone') {
         const digits = v.replace(/\D/g, '');
-        return digits.length >= 7 && digits.length <= 15 && /^[+\d\s()\-]+$/.test(v);
+        return digits.length >= 7 && digits.length <= 15 && /^[+\d\s()-]+$/.test(v);
     }
     if (kind === 'email') {
         return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
     }
     if (kind === 'date') {
         let day = 0, month = 0, year = 0;
-        let m = /^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})$/.exec(v);
+        let m = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})$/.exec(v);
         if (m) {
             day = Number(m[1]);
             month = Number(m[2]);
@@ -413,7 +413,7 @@ export function validValue(value, kind) {
             month = Number(m[2]);
             day = Number(m[3]);
         }
-        else if ((m = /^(\d{1,2})[\s/\-]([A-Za-z]+)[\s/\-,]+(\d{2,4})$/.exec(v))) {
+        else if ((m = /^(\d{1,2})[\s/-]([A-Za-z]+)[\s/\-,]+(\d{2,4})$/.exec(v))) {
             day = Number(m[1]);
             month = parseMonthToken(m[2]);
             year = Number(m[3]);
@@ -469,12 +469,12 @@ function lineLooksLikeNewField(text, stops) {
         return true;
     }
     // Colon label pattern like "Address :" or "Vehicle Model:"
-    if (/^[A-Za-z][A-Za-z0-9 &/().\-]{1,42}\s*:/.test(t))
+    if (/^[A-Za-z][A-Za-z0-9 &/().-]{1,42}\s*:/.test(t))
         return true;
     return false;
 }
 function extractAllDateTokens(text) {
-    const re = /(?<![\d:])(?:\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4}|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}[\s/\-][A-Za-z]{3,9}[\s/\-,]+\d{2,4}|[A-Za-z]{3,9}\s+\d{1,2},?\s*\d{4})(?!\d)/g;
+    const re = /(?<![\d:])(?:\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}[\s/-][A-Za-z]{3,9}[\s/\-,]+\d{2,4}|[A-Za-z]{3,9}\s+\d{1,2},?\s*\d{4})(?!\d)/g;
     const out = [];
     for (const m of text.matchAll(re)) {
         const cand = clean(m[0]);
@@ -539,9 +539,9 @@ function trimByInlineAndStops(rawText, rule, stops, field, matchedAnchor) {
             cutIndices.push(m.index);
     }
     // Also cut before an embedded "Label :" if it's clearly a second field on the same line (not time like 12:30 and not spanning a date like "Hours of 15/06/2026 To :").
-    const colonLabelRe = /\s+([A-Za-z][A-Za-z0-9 &().\-]{1,35}(?:\s+\d)?\s*:(?!\d))/g;
+    const colonLabelRe = /\s+([A-Za-z][A-Za-z0-9 &().-]{1,35}(?:\s+\d)?\s*:(?!\d))/g;
     for (const colonMatch of value.matchAll(colonLabelRe)) {
-        if (colonMatch.index !== undefined && colonMatch.index > 0 && !/\d{1,2}[/.\-]\d{1,2}/.test(colonMatch[1])) {
+        if (colonMatch.index !== undefined && colonMatch.index > 0 && !/\d{1,2}[/.-]\d{1,2}/.test(colonMatch[1])) {
             cutIndices.push(colonMatch.index);
             break;
         }
@@ -652,7 +652,7 @@ function lineVerticalGap(page, prevLine, nextLine) {
 }
 function extractHeaderInsurerCandidates(page, isLearned, fullScan = false) {
     const candidates = [];
-    const insurerRe = /(?:\bFor\s+(?:&\s+On\s+Behalf\s+of\s+)?)?([A-Z][A-Za-z&.,' \-]{2,60}?\b(?:General|Health|Life|Motor)?\s*(?:Insurance|Assurance)\b(?:\s+(?:Company|Co\.?|Corporation|Corp\.?))?(?:\s+(?:Ltd\.?|Limited|Pvt\.?\s*Ltd\.?))?)/i;
+    const insurerRe = /(?:\bFor\s+(?:&\s+On\s+Behalf\s+of\s+)?)?([A-Z][A-Za-z&.,' -]{2,60}?\b(?:General|Health|Life|Motor)?\s*(?:Insurance|Assurance)\b(?:\s+(?:Company|Co\.?|Corporation|Corp\.?))?(?:\s+(?:Ltd\.?|Limited|Pvt\.?\s*Ltd\.?))?)/i;
     const maxLines = fullScan ? page.lines.length : Math.min(5, page.lines.length);
     for (let i = 0; i < maxLines; i++) {
         const line = page.lines[i];
@@ -823,13 +823,13 @@ function evaluateRuleOnPage(page, field, anchor, rule, stops, isLearned) {
             const anchorEndChar = m.index + m[0].length;
             let effectiveAnchor = anchor;
             let afterSegRaw = clean(seg.text.slice(anchorEndChar));
-            const hadHeaderTail = /^(?:&\s*Time|\/\s*Time|\([DdMmYy/\-]+\)|&|&\s*No\.?|&\s*Place)$/i.test(afterSegRaw);
+            const hadHeaderTail = /^(?:&\s*Time|\/\s*Time|\([DdMmYy/-]+\)|&|&\s*No\.?|&\s*Place)$/i.test(afterSegRaw);
             if (hadHeaderTail) {
                 afterSegRaw = '';
             }
             // Handle combined slash/ampersand labels like "Chassis no./Engine no.:" or "Engine No. & Chassis No."
             if (afterSegRaw.startsWith('/') || afterSegRaw.startsWith('&')) {
-                const afterColon = /^[\/&][^:]{1,40}:(.*)$/.exec(afterSegRaw);
+                const afterColon = /^[/&][^:]{1,40}:(.*)$/.exec(afterSegRaw);
                 if (afterColon) {
                     const labelSpan = seg.text.slice(m.index, seg.text.indexOf(':', anchorEndChar));
                     effectiveAnchor = clean(labelSpan);
@@ -840,10 +840,10 @@ function evaluateRuleOnPage(page, field, anchor, rule, stops, isLearned) {
                     afterSegRaw = '';
                 }
             }
-            else if (/[\/&]$/.test(seg.text.slice(0, m.index).trim())) {
+            else if (/[/&]$/.test(seg.text.slice(0, m.index).trim())) {
                 effectiveAnchor = clean(seg.text.slice(0, anchorEndChar));
             }
-            else if (!afterSegRaw && /[\/&]/.test(seg.text) && looksLikeLabelText(seg.text)) {
+            else if (!afterSegRaw && /[/&]/.test(seg.text) && looksLikeLabelText(seg.text)) {
                 effectiveAnchor = clean(seg.text);
             }
             let value = '';
@@ -1095,7 +1095,7 @@ export function extract(pages, fields, mappings) {
 function normalizeDateIso(value) {
     const v = clean(value);
     let d = 0, m = 0, y = 0;
-    let match = /^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})$/.exec(v);
+    let match = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})$/.exec(v);
     if (match) {
         d = Number(match[1]);
         m = Number(match[2]);
@@ -1108,7 +1108,7 @@ function normalizeDateIso(value) {
         m = Number(match[2]);
         d = Number(match[3]);
     }
-    else if ((match = /^(\d{1,2})[\s/\-]([A-Za-z]+)[\s/\-,]+(\d{2,4})$/.exec(v))) {
+    else if ((match = /^(\d{1,2})[\s/-]([A-Za-z]+)[\s/\-,]+(\d{2,4})$/.exec(v))) {
         d = Number(match[1]);
         m = parseMonthToken(match[2]);
         y = Number(match[3]);
@@ -1131,8 +1131,8 @@ export function valuesEquivalent(a, b, kind) {
     if (kind === 'date')
         return normalizeDateIso(ca) === normalizeDateIso(cb);
     if (kind === 'currency' || kind === 'number') {
-        const na = Number(ca.replace(/[^\d.\-]/g, ''));
-        const nb = Number(cb.replace(/[^\d.\-]/g, ''));
+        const na = Number(ca.replace(/[^\d.-]/g, ''));
+        const nb = Number(cb.replace(/[^\d.-]/g, ''));
         return Number.isFinite(na) && Number.isFinite(nb) && Math.abs(na - nb) < 0.01;
     }
     if (kind === 'registration' || kind === 'policy_number') {
