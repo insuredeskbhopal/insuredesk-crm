@@ -103,4 +103,7 @@ prisma/schema.current.prisma
 *.apk
 public/downloads/*.apk
 
+# standalone dev module (compiled natively under src/lib/policies/intelligence/studio)
+/policy-intelligence-module/
+
 

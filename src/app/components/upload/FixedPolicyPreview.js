@@ -1,4 +1,5 @@
-import { AlertTriangle, CheckCircle, FileText, Layers, LoaderCircle, ShieldCheck, Trash2, X, Zap } from "lucide-react";
+import Link from "next/link";
+import { AlertTriangle, CheckCircle, FileText, Layers, LoaderCircle, ShieldCheck, Sparkles, Trash2, X, Zap } from "lucide-react";
 import { normalizeUploadStatus, UPLOAD_STATUS } from "@/lib/uploads/status";
 import PreviewField from "../shared/PreviewField";
 import { applyAiSuggestionToReviewField, getEligibleAiSuggestion } from "./aiSuggestionHelpers";
@@ -290,6 +291,16 @@ export default function FixedPolicyPreview({
               <span className="sub-meta-pill" title={upload.extractionMethod}>
                 <Zap size={12} /> <span>{upload.extractionMethod || "standard"}</span>
               </span>
+              {(displayedMissingRequired.length > 0 || uploadStatus === UPLOAD_STATUS.FAILED) && upload?.id ? (
+                <Link
+                  href={`/operations/pdf-training?uploadId=${encodeURIComponent(upload.id)}`}
+                  className="sub-meta-pill"
+                  prefetch={false}
+                  title="Open this PDF in Training Studio to teach missing fields"
+                >
+                  <Sparkles size={12} /> <span>Train Layout</span>
+                </Link>
+              ) : null}
             </div>
 
             {displayedMissingRequired.length ? (

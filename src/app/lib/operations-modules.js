@@ -183,6 +183,23 @@ export const OPERATIONS_MODULES = [
       "Daily duty hours audit",
     ],
   },
+  {
+    id: "pdf-training",
+    name: "PDF Training Studio",
+    description:
+      "Train policy extraction visually on unseen layouts with click-to-teach bounding boxes, 95% held-out benchmarks, and CRM rule sync.",
+    route: "/operations/pdf-training",
+    buttonLabel: "Open Training Studio",
+    accent: "green",
+    functions: [
+      "Click-to-teach PDF word canvas",
+      "CRM failed-upload training queue",
+      "Held-out 95% accuracy gate",
+      "Profile versioning & rollback",
+      "Sync learned anchors to CRM",
+      "Zero impact on Bulk Upload",
+    ],
+  },
 ];
 
 export const FUTURE_OPERATIONS_MODULES = [

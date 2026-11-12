@@ -46,7 +46,7 @@ describe("Bajaj warehouse extraction", () => {
 
     expect(result.policySubType).toBe("WAREHOUSE_FIRE_POLICY");
     expect(result.warehousePolicySubType).toBe("WAREHOUSE_FIRE_POLICY");
-    expect(result.extractionTrainingVersion).toBe("BAJAJ_ALLIANZ_FIRE_V1");
+    expect(result.extractionTrainingVersion).toBe("BAJAJ_ALLIANZ_WAREHOUSE_TRAINING_V1");
     expect(result.addressEntity).toMatchObject({
       village: "BAHORIBAND",
       tehsil: "HUZUR",

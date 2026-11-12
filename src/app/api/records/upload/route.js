@@ -62,6 +62,7 @@ export async function POST(request) {
         const extraction = await extractPolicyDataFromTextResult({
           textResult,
           sourceFile: file.name || "",
+          pdfBuffer: buffer,
         });
         const data = { ...sanitizeRecordPayload(extraction.data), clientId: "" };
         const validation = getReviewValidation({

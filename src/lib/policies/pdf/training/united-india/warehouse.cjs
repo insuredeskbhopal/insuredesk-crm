@@ -96,6 +96,7 @@ function train({ text = "", result = {} }) {
     matchGroup(rawLocationAddress, /(?:Pin-?|pincode:?\s*)(\d{6})\b/i) ||
     matchGroup(rawLocationAddress, /\b(\d{6})\b/) ||
     matchGroup(text, /(?:Pin-?|Pin\s*Code\s*\n?\s*)(\d{6})\b/i) ||
+    matchGroup(text, /\b([1-9]\d{5})\b/) ||
     result.pincode ||
     "";
 

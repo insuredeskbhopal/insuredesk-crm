@@ -1,4 +1,5 @@
 const iciciLombardMotor = require("./icici-lombard/motor.cjs");
+const iciciLombardWarehouse = require("./icici-lombard/warehouse.cjs");
 const iciciLombardWc = require("./icici-lombard/wc.cjs");
 const iciciLombardPublicLiability = require("./icici-lombard/public-liability.cjs");
 const iciciLombardFire = require("./icici-lombard/fire.cjs");
@@ -10,11 +11,13 @@ const unitedIndiaHealth = require("./united-india/health.cjs");
 const tataAigHealth = require("./tata-aig/health.cjs");
 const careHealthHealth = require("./care-health/health.cjs");
 const iffcoTokioMotor = require("./iffco-tokio/motor.cjs");
+const iffcoTokioWarehouse = require("./iffco-tokio/warehouse.cjs");
 const tataAigMotor = require("./tata-aig/motor.cjs");
 const libertyMotor = require("./liberty/motor.cjs");
 const goDigitMotor = require("./go-digit/motor.cjs");
 const newIndiaMotor = require("./new-india/motor.cjs");
 const bajajAllianzMotor = require("./bajaj-allianz/motor.cjs");
+const bajajAllianzWarehouse = require("./bajaj-allianz/warehouse.cjs");
 const royalSundaramMotor = require("./royal-sundaram/motor.cjs");
 const futureGeneraliMotor = require("./future-generali/motor.cjs");
 const unitedIndiaWarehouse = require("./united-india/warehouse.cjs");
@@ -35,6 +38,7 @@ const bajajAllianzHealth = require("./bajaj-allianz/health.cjs");
 
 const trainers = [
   iciciLombardMotor,
+  iciciLombardWarehouse,
   iciciLombardFire,
   iciciLombardWc,
   iciciLombardPublicLiability,
@@ -56,6 +60,7 @@ const trainers = [
   tataAigHealth,
   careHealthHealth,
   iffcoTokioMotor,
+  iffcoTokioWarehouse,
   iffcoTokioNonMotor,
   tataAigMotor,
   libertyMotor,
@@ -63,6 +68,7 @@ const trainers = [
   newIndiaMotor,
   newIndiaNonMotor,
   bajajAllianzMotor,
+  bajajAllianzWarehouse,
   bajajAllianzFire,
   bajajAllianzHealth,
   royalSundaramMotor,
@@ -121,13 +127,26 @@ function slug(value = "") {
     .replace(/^-|-$/g, "");
 }
 
+function isIciciLombardWarehouse(result = {}, context = {}) {
+  const text = String(context.text || result.sourceText || "");
+  if (!/ICICI\s+Lombard/i.test(text)) return false;
+  if (/Private\s+Car|Two\s+Wheeler|Commercial\s+Vehicle|Goods\s+Carrying|Total\s+IDV/i.test(text)) return false;
+  if (/1030\/|1015\//.test(text) && /MSME\s+Suraksha\s+Kavach/i.test(text)) return true;
+  if (/EMPLOYEE'?S\s+COMPENSATION|Public\s+Liability\s+Insurance\s*\(Industrial\s+Risks\)|IRDAN115CP0015V01201920|Product\s+Code:\s*4008|\b10008\d{7}\b|Contractors?\s+Plant\s+and\s+Machinery|Marine\s+Cargo|Group\s+Personal\s+Accident/i.test(text)) return false;
+  return (
+    /MSME\s+Suraksha\s+Kavach/i.test(text) ||
+    (/1030\/|1015\//.test(text) && /\b(?:WAREHOUSE|GODOWN|MPWLC|WAREHOUSING|BHANDARAN|godown\s+or\s+warehouse)\b/i.test(text))
+  );
+}
+
 function isIciciLombardFire(result = {}, context = {}) {
+  if (isIciciLombardWarehouse(result, context)) return false;
   const text = String(context.text || result.sourceText || "");
   if (!/ICICI\s+Lombard/i.test(text)) return false;
   if (/Private\s+Car|Two\s+Wheeler|Commercial\s+Vehicle|Goods\s+Carrying|Total\s+IDV/i.test(text)) return false;
   return (
-    /\b1030\/|\b1015\//.test(text) ||
-    /MSME\s+Suraksha\s+Kavach\s+Package\s+Policy|Bharat\s+Sookshma\s+Udyam|Standard\s+Fire\s+and\s+Special\s+Perils/i.test(text)
+    /1030\/|1015\//.test(text) ||
+    /Bharat\s+Sookshma\s+Udyam|Standard\s+Fire\s+and\s+Special\s+Perils/i.test(text)
   );
 }
 
@@ -146,7 +165,7 @@ function isIciciLombardPublicLiability(result = {}, context = {}) {
   const text = String(context.text || result.sourceText || "");
   if (!/ICICI\s+Lombard/i.test(text)) return false;
   if (/Private\s+Car|Two\s+Wheeler|Commercial\s+Vehicle|Goods\s+Carrying|Total\s+IDV/i.test(text)) return false;
-  if (/\b1030\/|\b1015\//.test(text)) return false;
+  if (/1030\/|1015\//.test(text)) return false;
   return (
     /Public\s+Liability\s+Insurance\s*\(Industrial\s+Risks\)|IRDAN115CP0015V01201920|Product\s+Code:\s*4008/i.test(text) ||
     (/\b10008\d{7}\b/.test(text) && /Aggregate\s+One\s+Year\s*\(AOY\)/i.test(text))
@@ -225,7 +244,19 @@ function isUnitedIndiaFidelity(result = {}, context = {}) {
   return /FIDELITY\s*[-–]\s*GROUP\s+UNNAMED\s+POLICY|FIDELITY\s+GUARANTEE/i.test(text);
 }
 
+function isIffcoTokioWarehouse(result = {}, context = {}) {
+  const text = String(context.text || result.sourceText || "");
+  if (!/IFFCO\s*[- ]?\s*TOKIO/i.test(text)) return false;
+  if (/Private\s+Car|Two\s+Wheeler|Goods\s+Carrying\s+Commercial|Passenger\s+Carrying/i.test(text)) return false;
+  const hasProduct =
+    /FLEXI\s+PROPERTY\s+PROTECTOR|BURGLARY\s+AND\s+HOUSE\s+BREAKING|BURGLARY\s+FIRST\s+LOSS|Fidelity\s+Guarantee/i.test(text);
+  const hasWarehouseSignal =
+    /\b(?:WAREHOUSE|GODOWN|MPWLC|WAREHOUSING|BHANDARAN|Godowns\s*&\s*Silos)\b/i.test(text);
+  return hasProduct && hasWarehouseSignal;
+}
+
 function isIffcoTokioNonMotor(result = {}, context = {}) {
+  if (isIffcoTokioWarehouse(result, context)) return false;
   const text = String(context.text || result.sourceText || "");
   if (!/IFFCO\s*[- ]?\s*TOKIO/i.test(text)) return false;
   if (/Private\s+Car|Two\s+Wheeler|Goods\s+Carrying\s+Commercial|Passenger\s+Carrying/i.test(text)) return false;
@@ -273,7 +304,20 @@ function isNewIndiaNonMotor(result = {}, context = {}) {
   return /Bharat\s+Flexi\s+Griha\s+Raksha|Griha\s+Raksha|PACKAGE\s+INSURANCE\s+POLICY/i.test(text);
 }
 
+function isBajajAllianzWarehouse(result = {}, context = {}) {
+  const text = String(context.text || result.sourceText || "");
+  if (!/BAJAJ\s*(?:ALLIANZ|GENERAL)/i.test(text)) return false;
+  if (/Private\s+Car|Two\s+Wheeler|Two-Wheeler|Commercial\s+Vehicle|Goods\s+Carrying|Passenger\s+Carrying|Motor\s+Package|Motor\s+Policy|Drive\s*Smart|Drive\s*Assure/i.test(text)) return false;
+  if (/\b(?:Engine\s+No|Chassis\s+No|Vehicle\s+Make|Vehicle\s+Model)\b|(?<!IRDAI\s+)Registration\s+No/i.test(text)) return false;
+  const hasProduct =
+    /FLEXI\s+COMMERCIAL\s+PROPERTY\s+GUARD|BURGLARY\s+INSURANCE\s+POLICY|FIDELITY\s*GUARANTEE\s*INSURANCE\s*POLICY/i.test(text);
+  const hasWarehouseSignal =
+    /(?:WAREHOUSE|MPWLC|GODOWN|WAREHOUSING|Storage\s+of\s+Non[-\s]?hazardous)/i.test(text);
+  return hasProduct && hasWarehouseSignal;
+}
+
 function isBajajAllianzFire(result = {}, context = {}) {
+  if (isBajajAllianzWarehouse(result, context)) return false;
   const text = String(context.text || result.sourceText || "");
   if (!/BAJAJ\s*(?:ALLIANZ|GENERAL)/i.test(text)) return false;
   if (/Private\s+Car|Two\s+Wheeler|Commercial\s+Vehicle|Goods\s+Carrying|Passenger\s+Carrying|Motor\s+Package|Motor\s+Policy|Drive\s*Smart/i.test(text)) return false;
@@ -471,6 +515,9 @@ function isFutureGeneraliMotor(result = {}, context = {}) {
 }
 
 function deriveTrainingScope(result = {}, context = {}) {
+  if (isIciciLombardWarehouse(result, context)) {
+    return { insurer: "icici-lombard", category: "warehouse" };
+  }
   if (isIciciLombardFire(result, context)) {
     return { insurer: "icici-lombard", category: "fire" };
   }
@@ -495,6 +542,9 @@ function deriveTrainingScope(result = {}, context = {}) {
   if (isNewIndiaNonMotor(result, context)) {
     return { insurer: "new-india", category: "fire" };
   }
+  if (isBajajAllianzWarehouse(result, context)) {
+    return { insurer: "bajaj-allianz", category: "warehouse" };
+  }
   if (isBajajAllianzFire(result, context)) {
     return { insurer: "bajaj-allianz", category: "fire" };
   }
@@ -506,6 +556,9 @@ function deriveTrainingScope(result = {}, context = {}) {
   }
   if (isUnitedIndiaFidelity(result, context)) {
     return { insurer: "united-india", category: "fidelity" };
+  }
+  if (isIffcoTokioWarehouse(result, context)) {
+    return { insurer: "iffco-tokio", category: "warehouse" };
   }
   if (isIffcoTokioNonMotor(result, context)) {
     return { insurer: "iffco-tokio", category: "fire" };
@@ -575,7 +628,7 @@ function deriveTrainingScope(result = {}, context = {}) {
 }
 
 function establishTrainingIdentity(result = {}, context = {}) {
-  if (isIciciLombardFire(result, context)) {
+  if (isIciciLombardWarehouse(result, context) || isIciciLombardFire(result, context)) {
     return {
       ...result,
       insuranceCompany: "ICICI Lombard General Insurance Company Limited",
@@ -655,6 +708,19 @@ function establishTrainingIdentity(result = {}, context = {}) {
       sourceDocumentType: "NEW_INDIA_NON_MOTOR_V1",
     };
   }
+  if (isBajajAllianzWarehouse(result, context)) {
+    const text = String(context.text || result.sourceText || "");
+    const isFidelity = /FIDELITY\s+GUARANTEE/i.test(text);
+    const fmt = isFidelity ? "BAJAJ_WAREHOUSE_V1" : "BAJAJ_ALLIANZ_FIRE_V1";
+    return {
+      ...result,
+      insuranceCompany: "Bajaj Allianz General Insurance Company Limited",
+      companyName: "Bajaj Allianz General Insurance Company Limited",
+      documentCategory: isFidelity ? "Warehouse Insurance" : "Fire Insurance",
+      documentFormat: fmt,
+      sourceDocumentType: fmt,
+    };
+  }
   if (isBajajAllianzFire(result, context)) {
     return {
       ...result,
@@ -693,6 +759,20 @@ function establishTrainingIdentity(result = {}, context = {}) {
       documentCategory: "Fidelity Insurance",
       documentFormat: "UNITED_INDIA_FIDELITY_V1",
       sourceDocumentType: "UNITED_INDIA_FIDELITY_V1",
+    };
+  }
+  if (isIffcoTokioWarehouse(result, context)) {
+    const text = String(context.text || result.sourceText || "");
+    const category = /BURGLARY\s+AND\s+HOUSE\s+BREAKING|BURGLARY\s+FIRST\s+LOSS/i.test(text)
+      ? "Burglary Insurance"
+      : "Warehouse Insurance";
+    return {
+      ...result,
+      insuranceCompany: "IFFCO Tokio General Insurance Company Limited",
+      companyName: "IFFCO Tokio General Insurance Company Limited",
+      documentCategory: category,
+      documentFormat: "IFFCO_TOKIO_WAREHOUSE_V1",
+      sourceDocumentType: "IFFCO_TOKIO_WAREHOUSE_V1",
     };
   }
   if (isIffcoTokioNonMotor(result, context)) {

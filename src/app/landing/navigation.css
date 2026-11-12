@@ -15,7 +15,7 @@
   margin: 0 !important;
   padding: 12px 0 !important;
   border: 0 !important;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+  border-bottom: 0 !important;
   border-radius: 0 !important;
   background: rgba(255, 255, 255, 0.92) !important;
   box-shadow: 0 4px 20px -2px rgba(3, 22, 56, 0.05) !important;
@@ -498,7 +498,7 @@
     margin: 0 !important;
     padding: 0 16px !important;
     border: 0 !important;
-    border-bottom: 1px solid rgba(226, 232, 240, 0.85) !important;
+    border-bottom: 0 !important;
     border-radius: 0 !important;
     background: rgba(255, 255, 255, 0.92) !important;
     -webkit-backdrop-filter: blur(20px) saturate(1.8) !important;

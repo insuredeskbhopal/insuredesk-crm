@@ -20,6 +20,7 @@ import {
   Cake,
   Smartphone,
   UserCheck,
+  Sparkles,
 } from "lucide-react";
 import PageHeader from "@/app/components/layout/PageHeader";
 import { OPERATIONS_MODULES, FUTURE_OPERATIONS_MODULES } from "@/app/lib/operations-modules";
@@ -37,6 +38,7 @@ const ICONS = {
   "whatsapp-setup": Smartphone,
   "client-management": BadgeCheck,
   presence: UserCheck,
+  "pdf-training": Sparkles,
 };
 
 const DEFAULT_METRICS = {
@@ -284,6 +286,7 @@ function getLastActivityText(id, count, metrics) {
       : "No recent activity";
   }
   if (id === "work-center") return count > 0 ? `${count} open activities` : "No open activities";
+  if (id === "pdf-training") return "Visual Trainer + CRM Sync";
   if (count > 0) return "Last activity available";
   if (["claims-management", "declarations", "endorsements", "service-requests"].includes(id))
     return "Ready for setup";

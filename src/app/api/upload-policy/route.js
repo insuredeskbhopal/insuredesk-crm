@@ -72,6 +72,7 @@ export async function POST(request) {
         const extraction = await extractPolicyDataFromTextResult({
           textResult,
           sourceFile: file.name || "",
+          pdfBuffer: buffer,
         });
         // A value printed on an insurer PDF is not a verified portal Client ID.
         // Keep this field empty until the agent selects or auto-matches an active client.

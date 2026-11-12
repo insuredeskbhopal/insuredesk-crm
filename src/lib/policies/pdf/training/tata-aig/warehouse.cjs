@@ -17,15 +17,34 @@ function extractIncreaseAmount(text, section) {
 function matches({ text = "" }) {
   return (
     /TATA\s*AIG/i.test(text) &&
-    (/Business\s+Guard/i.test(text) || /\bENDORSEMENT\b|change\s+in\s+sum\s+insured/i.test(text))
+    (/Business\s+Guard/i.test(text) || /\bENDORSEMENT\b|change\s+in\s+sum\s+insured/i.test(text.slice(0, 1500)))
   );
 }
 
+function pickClientPincode(text = "") {
+  const found = String(text || "").match(/\b([1-9][0-9]{5})\b/g) || [];
+  return found.find((pin) => pin !== "400013") || "";
+}
+
+function inferAnnualStartFromExpiry(expiryStr = "") {
+  const m = String(expiryStr || "").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return "";
+  const dt = new Date(Date.UTC(Number(m[3]) - 1, Number(m[2]) - 1, Number(m[1])));
+  dt.setUTCDate(dt.getUTCDate() + 1);
+  return `${String(dt.getUTCDate()).padStart(2, "0")}/${String(dt.getUTCMonth() + 1).padStart(2, "0")}/${dt.getUTCFullYear()}`;
+}
+
 function train({ text = "", result = {} }) {
-  const isEndorsement = /\bENDORSEMENT\b|change\s+in\s+sum\s+insured/i.test(text);
+  const header = String(text || "").slice(0, 1500);
+  const isEndorsement = !/\bSCHEDULE\b/i.test(header) && /\bENDORSEMENT\b|change\s+in\s+sum\s+insured/i.test(header);
 
   if (isEndorsement) {
     const policyPeriod = text.match(/(\d{2}\/\d{2}\/\d{4})\s*To\s*(\d{2}\/\d{2}\/\d{4})\s*Policy\s+PeriodFrom/i);
+    const expiryOnly = matchGroup(text, /POLICY\s+NO\.?:?\s*[0-9]{10}(\d{2}\/\d{2}\/\d{4})\s*Expiry\s+Date/i);
+    const resolvedExpiry = normalizeWarehouseDate(policyPeriod?.[2] || expiryOnly || result.expiryDate);
+    const resolvedStart = normalizeWarehouseDate(
+      policyPeriod?.[1] || result.startDate || inferAnnualStartFromExpiry(resolvedExpiry),
+    );
     const insuredName = cleanWarehouseBlock(
       matchGroup(text, /change\s+in\s+sum\s+insured\s+limit\s*\n\s*([^\n]+)/i) ||
         matchGroup(text, /Insured\s*\n\s*([^\n]+)/i) ||
@@ -34,6 +53,16 @@ function train({ text = "", result = {} }) {
     const occupancy = cleanWarehouseBlock(
       matchGroup(text, /Occupancy\s*\n\s*([\s\S]+?)(?=\s*Sr\.No:)/i),
     );
+    const riskBlock = cleanWarehouseBlock(
+      matchGroup(text, /Risk\s+Address\s*:1\s*\n\s*([\s\S]+?)(?=\s*CoverageExisting|\n\s*Coverage)/i) ||
+        result.riskLocation ||
+        "",
+    );
+    const pincode =
+      result.pincode ||
+      pickClientPincode(riskBlock) ||
+      pickClientPincode(result.riskLocation) ||
+      pickClientPincode(header);
     const contentsSumInsured = extractIncreaseAmount(text, "Fire");
     const burglarySumInsured = extractIncreaseAmount(text, "Burglary");
     const fidelitySumInsured = extractIncreaseAmount(text, "Fidelity");
@@ -48,12 +77,14 @@ function train({ text = "", result = {} }) {
 
     return {
       insuredName: result.insuredName || insuredName,
-      mailingAddress: result.mailingAddress || result.riskLocation,
-      communicationAddress: result.communicationAddress || result.riskLocation,
+      mailingAddress: result.mailingAddress || riskBlock || result.riskLocation,
+      communicationAddress: result.communicationAddress || riskBlock || result.riskLocation,
+      riskLocation: result.riskLocation || riskBlock,
+      pincode,
       businessDescription: occupancy || result.businessDescription,
       occupancy: occupancy || result.occupancy,
-      startDate: normalizeWarehouseDate(policyPeriod?.[1] || result.startDate),
-      expiryDate: normalizeWarehouseDate(policyPeriod?.[2] || result.expiryDate),
+      startDate: resolvedStart,
+      expiryDate: resolvedExpiry,
       premiumIncludingGst: premiumIncludingGst || result.premiumIncludingGst,
       premium: premiumIncludingGst || result.premium,
       totalPremium: premiumIncludingGst || result.totalPremium,
@@ -68,9 +99,10 @@ function train({ text = "", result = {} }) {
       isEndorsement: true,
       endorsementNumber:
         matchGroup(text, /\n\s*(\d{1,3})\s*\nEndorsement\s+No\.?/i) ||
-        matchGroup(text, /Endorsement\s+No\.?\s*(\d{1,3})/i),
+        matchGroup(text, /Endorsement\s+No\.?:?\s*(\d{1,3})/i),
       endorsementEffectiveDate: normalizeWarehouseDate(
-        matchGroup(text, /Endorsement\s+Effective\s+Date\s*(\d{2}\/\d{2}\/\d{4})/i),
+        matchGroup(text, /Endorsement\s+Effective\s+Date\s*(\d{2}\/\d{2}\/\d{4})/i) ||
+          matchGroup(text, /Effective\s+Date\s*:?\s*(\d{2}\/\d{2}\/\d{4})/i),
       ),
       extractionTrainingVersion: "TATA_AIG_WAREHOUSE_ENDORSEMENT_V1",
     };

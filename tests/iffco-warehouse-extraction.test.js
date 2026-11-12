@@ -396,7 +396,7 @@ describe("IFFCO Tokio Warehouse Policy extraction", () => {
     expect(result.iffcoFieldConfidence.sumInsured).toBeGreaterThanOrEqual(0.9);
     expect(result.iffcoFieldEvidence.policyNumber).toContain("12A97642");
     expect(result.needsManualReview).toBe(false);
-    expect(result.extractionTrainingVersion).toBe("IFFCO_TOKIO_NON_MOTOR_V1");
+    expect(result.extractionTrainingVersion).toBe("IFFCO_TOKIO_WAREHOUSE_TRAINING_V1");
   });
 
   it("adds IFFCO warehouse training fields for burglary policies", async () => {

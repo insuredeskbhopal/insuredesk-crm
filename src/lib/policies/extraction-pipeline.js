@@ -2,8 +2,13 @@ import { extractPolicyFromText } from "./pdf/extractor.cjs";
 import { buildAiMergePreview } from "./ai/merge-preview.js";
 import { reviewPolicyExtractionPassivelyWithAi } from "./ai/extraction-review.js";
 import { resolveDocumentCategory } from "./category-resolver.cjs";
+import { enrichWithTrainedProfiles } from "./intelligence/trainingStudioClient.js";
 
-export async function extractPolicyDataFromTextResult({ textResult = {}, sourceFile = "" } = {}) {
+export async function extractPolicyDataFromTextResult({
+  textResult = {},
+  sourceFile = "",
+  pdfBuffer = null,
+} = {}) {
   const rawText = textResult.rawText || "";
   const ruleBasedData = extractPolicyFromText(rawText, sourceFile);
   const scannedDocument = shouldUseAiPrimaryExtraction(textResult);
@@ -53,6 +58,27 @@ export async function extractPolicyDataFromTextResult({ textResult = {}, sourceF
     makeModel: autoFilledData.makeModel || ruleBasedData.makeModel || "",
   });
 
+  let trainingStudioEnrichment = { appliedFields: [], source: "none", profile: null };
+  try {
+    trainingStudioEnrichment = await enrichWithTrainedProfiles({
+      rawText,
+      currentData: autoFilledData,
+      sourceFile: autoFilledData.sourceFile || ruleBasedData.sourceFile || sourceFile || "",
+      resolvedCategory,
+      pdfBuffer,
+    });
+    for (const [field, value] of Object.entries(trainingStudioEnrichment?.addedFields || {})) {
+      if (value && isInvalidFieldValue(field, autoFilledData[field])) {
+        autoFilledData[field] = value;
+        if (!autoFilledFields.includes(field)) {
+          autoFilledFields.push(field);
+        }
+      }
+    }
+  } catch {
+    trainingStudioEnrichment = { appliedFields: [], source: "error", profile: null };
+  }
+
   const data = {
     ...autoFilledData,
     documentCategory: resolvedCategory,
@@ -62,6 +88,11 @@ export async function extractPolicyDataFromTextResult({ textResult = {}, sourceF
       aiReview,
       aiMergePreview,
       autoFilledFields,
+      trainingStudio: {
+        source: trainingStudioEnrichment?.source || "none",
+        profile: trainingStudioEnrichment?.profile || null,
+        appliedFields: trainingStudioEnrichment?.appliedFields || [],
+      },
     },
   };
 
