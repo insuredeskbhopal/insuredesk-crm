@@ -487,6 +487,31 @@ function extractFirstDateToken(text) {
     return extractAllDateTokens(text)[0] ?? null;
 }
 function splitCombinedSlashValue(value, anchor, field) {
+    if (field.id === 'engineNumber' || field.id === 'chassisNumber') {
+        const cleaned = String(value || '').trim();
+        const parts = cleaned
+            .replace(/(?:\b(?:chassis|chasis|engine|eng|chas|vin)\b[\s.:#]*|\b(?:no|nos|number|#)\b[\s.:]*)/gi, ' ')
+            .split(/[\s/\\|&,\n\r\t]+/)
+            .map((p) => p.replace(/[^A-Za-z0-9]/g, '').toUpperCase())
+            .filter((p) => p.length >= 5 && p.length <= 25);
+        if (parts.length >= 2) {
+            const [pA, pB] = parts;
+            let chas = '';
+            let eng = '';
+            if (pA.length === 17 && pB.length !== 17) { chas = pA; eng = pB; }
+            else if (pB.length === 17 && pA.length !== 17) { chas = pB; eng = pA; }
+            else if (pA.length > pB.length + 3) { chas = pA; eng = pB; }
+            else if (pB.length > pA.length + 3) { chas = pB; eng = pA; }
+            else {
+                const context = `${anchor || ''} ${value}`.toLowerCase();
+                const engIdx = context.search(/\b(eng|engine)\b/);
+                const chasIdx = context.search(/\b(chas|chassis|vin)\b/);
+                if (engIdx !== -1 && chasIdx !== -1 && engIdx < chasIdx) { eng = pA; chas = pB; }
+                else { chas = pA; eng = pB; }
+            }
+            return field.id === 'chassisNumber' ? chas : eng;
+        }
+    }
     const sep = anchor.includes('/') ? '/' : anchor.includes('&') ? '&' : '';
     if (!sep)
         return value;

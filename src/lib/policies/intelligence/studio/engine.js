@@ -554,6 +554,52 @@ function calculateDurationSafe(startStr, expiryStr) {
   return `${years || 1} Year`;
 }
 
+export function splitEngineAndChassis(rawText, _activeFieldId = "engineNumber", anchorText = "") {
+  if (!rawText || typeof rawText !== "string") return { isSplit: false };
+  const cleaned = rawText.trim();
+  const parts = cleaned
+    .replace(/(?:\b(?:chassis|chasis|engine|eng|chas|vin)\b[\s.:#]*|\b(?:no|nos|number|#)\b[\s.:]*)/gi, " ")
+    .split(/[\s/\\|&,\n\r\t]+/)
+    .map((p) => p.replace(/[^A-Za-z0-9]/g, "").toUpperCase())
+    .filter((p) => p.length >= 5 && p.length <= 25);
+
+  if (parts.length < 2) return { isSplit: false };
+  const [partA, partB] = parts;
+
+  const isVinA = partA.length === 17;
+  const isVinB = partB.length === 17;
+
+  let chassis = "";
+  let engine = "";
+
+  if (isVinA && !isVinB) {
+    chassis = partA;
+    engine = partB;
+  } else if (!isVinA && isVinB) {
+    chassis = partB;
+    engine = partA;
+  } else if (partA.length > partB.length + 3) {
+    chassis = partA;
+    engine = partB;
+  } else if (partB.length > partA.length + 3) {
+    chassis = partB;
+    engine = partA;
+  } else {
+    const context = `${anchorText || ""} ${rawText}`.toLowerCase();
+    const engIdx = context.search(/\b(eng|engine)\b/);
+    const chasIdx = context.search(/\b(chas|chassis|vin)\b/);
+    if (engIdx !== -1 && chasIdx !== -1 && engIdx < chasIdx) {
+      engine = partA;
+      chassis = partB;
+    } else {
+      chassis = partA;
+      engine = partB;
+    }
+  }
+
+  return { isSplit: true, chassisNumber: chassis, engineNumber: engine };
+}
+
 export async function previewStudioMapping(body) {
   const state = await loadState();
   const value = selectionSchema.extend({ documentId: z.string() }).parse(body);
@@ -574,6 +620,16 @@ export async function previewStudioMapping(body) {
       result.example = String(result.example).replace(/[^A-Za-z0-9]/g, "").toUpperCase();
       if (typeof lookupRtoLocation === "function") {
         result.rtoLocation = lookupRtoLocation(result.example) || "";
+      }
+    }
+    if ((field.id === "engineNumber" || field.id === "chassisNumber") && result?.example) {
+      const split = splitEngineAndChassis(result.example, field.id, result.anchor || "");
+      if (split.isSplit) {
+        result.example = field.id === "chassisNumber" ? split.chassisNumber : split.engineNumber;
+        result.companion = {
+          fieldId: field.id === "chassisNumber" ? "engineNumber" : "chassisNumber",
+          value: field.id === "chassisNumber" ? split.engineNumber : split.chassisNumber,
+        };
       }
     }
     return result;
@@ -741,6 +797,29 @@ export async function autoDetectStudioPreview(body) {
         durationResult.valid = true;
         durationResult.status = "confident";
         durationResult.score = 0.98;
+      }
+    }
+
+    const chasRes = hybrid.results.find((r) => r.fieldId === "chassisNumber");
+    const engRes = hybrid.results.find((r) => r.fieldId === "engineNumber");
+    const combinedVal = chasRes?.value || engRes?.value || "";
+    const splitDual = splitEngineAndChassis(combinedVal, "chassisNumber");
+    if (splitDual.isSplit) {
+      if (chasRes) {
+        chasRes.value = splitDual.chassisNumber;
+        chasRes.valid = true;
+        chasRes.status = "confident";
+        chasRes.score = 0.98;
+      }
+      if (engRes) {
+        engRes.value = splitDual.engineNumber;
+        engRes.valid = true;
+        engRes.status = "confident";
+        engRes.score = 0.98;
+        if (!engRes.wordIds?.length && chasRes?.wordIds?.length) {
+          engRes.wordIds = [...chasRes.wordIds];
+          engRes.page = chasRes.page;
+        }
       }
     }
   }

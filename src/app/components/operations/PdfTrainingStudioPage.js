@@ -167,6 +167,52 @@ function calculatePolicyDuration(startStr, expiryStr) {
   return `${years || 1} Year`;
 }
 
+function splitEngineAndChassis(rawText, _activeFieldId = "engineNumber", anchorText = "") {
+  if (!rawText || typeof rawText !== "string") return { isSplit: false };
+  const cleaned = rawText.trim();
+  const parts = cleaned
+    .replace(/(?:\b(?:chassis|chasis|engine|eng|chas|vin)\b[\s.:#]*|\b(?:no|nos|number|#)\b[\s.:]*)/gi, " ")
+    .split(/[\s/\\|&,\n\r\t]+/)
+    .map((p) => p.replace(/[^A-Za-z0-9]/g, "").toUpperCase())
+    .filter((p) => p.length >= 5 && p.length <= 25);
+
+  if (parts.length < 2) return { isSplit: false };
+  const [partA, partB] = parts;
+
+  const isVinA = partA.length === 17;
+  const isVinB = partB.length === 17;
+
+  let chassis = "";
+  let engine = "";
+
+  if (isVinA && !isVinB) {
+    chassis = partA;
+    engine = partB;
+  } else if (!isVinA && isVinB) {
+    chassis = partB;
+    engine = partA;
+  } else if (partA.length > partB.length + 3) {
+    chassis = partA;
+    engine = partB;
+  } else if (partB.length > partA.length + 3) {
+    chassis = partB;
+    engine = partA;
+  } else {
+    const context = `${anchorText || ""} ${rawText}`.toLowerCase();
+    const engIdx = context.search(/\b(eng|engine)\b/);
+    const chasIdx = context.search(/\b(chas|chassis|vin)\b/);
+    if (engIdx !== -1 && chasIdx !== -1 && engIdx < chasIdx) {
+      engine = partA;
+      chassis = partB;
+    } else {
+      chassis = partA;
+      engine = partB;
+    }
+  }
+
+  return { isSplit: true, chassisNumber: chassis, engineNumber: engine };
+}
+
 export default function PdfTrainingStudioPage() {
   const searchParams = useSearchParams();
   const focusUploadId = searchParams.get("uploadId") || "";
@@ -547,6 +593,37 @@ export default function PdfTrainingStudioPage() {
           triggerDurationCalculation(activeFieldId, data.example);
         }
 
+        if (activeFieldId === "engineNumber" || activeFieldId === "chassisNumber") {
+          const split = splitEngineAndChassis(data.example, activeFieldId, data.anchor || "");
+          if (split.isSplit) {
+            const currentVal = activeFieldId === "chassisNumber" ? split.chassisNumber : split.engineNumber;
+            const otherFieldId = activeFieldId === "chassisNumber" ? "engineNumber" : "chassisNumber";
+            const otherVal = activeFieldId === "chassisNumber" ? split.engineNumber : split.chassisNumber;
+
+            data.example = currentVal;
+
+            setSelections((prev) => ({
+              ...prev,
+              [activeFieldId]: { fieldId: activeFieldId, page: currentPage, wordIds: nextWordIds, valueOverride: currentVal },
+              [otherFieldId]: { fieldId: otherFieldId, page: currentPage, wordIds: nextWordIds, valueOverride: otherVal },
+            }));
+
+            setMappingPreviews((prev) => ({
+              ...prev,
+              [activeFieldId]: data,
+              [otherFieldId]: { ...data, fieldId: otherFieldId, example: otherVal },
+            }));
+
+            setRemoveFieldIds((prev) => prev.filter((id) => id !== activeFieldId && id !== otherFieldId));
+
+            showToast(
+              "success",
+              `✨ Auto-split Engine & Chassis! Chassis: ${split.chassisNumber} | Engine: ${split.engineNumber}`,
+            );
+            return;
+          }
+        }
+
         setMappingPreviews((prev) => ({ ...prev, [activeFieldId]: data }));
       } catch (err) {
         showToast("error", err?.message || "Preview request failed.");
@@ -554,6 +631,53 @@ export default function PdfTrainingStudioPage() {
     },
     [activeFieldId, activeDoc, currentPage, showToast, triggerRtoLookup, triggerDurationCalculation],
   );
+
+  const handleSwapEngineChassis = useCallback(() => {
+    const currentChassis =
+      selections.chassisNumber?.valueOverride !== undefined
+        ? selections.chassisNumber.valueOverride
+        : mappingPreviews.chassisNumber?.example || autoResultByField.chassisNumber?.value || "";
+
+    const currentEngine =
+      selections.engineNumber?.valueOverride !== undefined
+        ? selections.engineNumber.valueOverride
+        : mappingPreviews.engineNumber?.example || autoResultByField.engineNumber?.value || "";
+
+    if (!currentChassis && !currentEngine) {
+      showToast("info", "No Chassis or Engine values to swap.");
+      return;
+    }
+
+    setSelections((prev) => {
+      const chassisSel = prev.chassisNumber;
+      const engineSel = prev.engineNumber;
+      return {
+        ...prev,
+        chassisNumber: {
+          fieldId: "chassisNumber",
+          page: engineSel?.page || chassisSel?.page || currentPage,
+          wordIds: engineSel?.wordIds || chassisSel?.wordIds || [],
+          valueOverride: currentEngine,
+        },
+        engineNumber: {
+          fieldId: "engineNumber",
+          page: chassisSel?.page || engineSel?.page || currentPage,
+          wordIds: chassisSel?.wordIds || engineSel?.wordIds || [],
+          valueOverride: currentChassis,
+        },
+      };
+    });
+
+    setMappingPreviews((prev) => ({
+      ...prev,
+      chassisNumber: { ...(prev.chassisNumber || {}), example: currentEngine },
+      engineNumber: { ...(prev.engineNumber || {}), example: currentChassis },
+    }));
+
+    setRemoveFieldIds((prev) => prev.filter((id) => id !== "chassisNumber" && id !== "engineNumber"));
+
+    showToast("info", "⇄ Swapped Engine Number and Chassis Number");
+  }, [selections, mappingPreviews, autoResultByField, currentPage, showToast]);
 
   const handleWordClick = async (word, event) => {
     if (!activeFieldId || !activeDoc) {
@@ -1559,6 +1683,7 @@ export default function PdfTrainingStudioPage() {
                 </div>
                 <ul className="list-disc pl-4 space-y-1 text-slate-700">
                   <li><strong>Multi-word Values:</strong> Drag across words or click start & end words in PDF to map full names (e.g. <em>Gurmit Singh Gujral</em>) or addresses.</li>
+                  <li><strong>Engine & Chassis Auto-Split:</strong> If Engine & Chassis are printed together (e.g. <span className="font-mono font-bold text-emerald-800">MA3.../G12...</span> in New India policies), selecting it auto-splits and fills both fields! Click <strong>Swap</strong> to invert them if needed.</li>
                   <li><strong>Registration No:</strong> Auto-formats to clean uppercase alphanumeric (e.g. <span className="font-mono font-bold text-emerald-800">MP04YF2064</span>).</li>
                   <li><strong>RTO Location:</strong> Automatically fetched from Registration No (e.g. MP04 &rarr; <em>BHOPAL</em>).</li>
                   <li><strong>Duration:</strong> Automatically calculated once Start & Expiry dates are mapped (e.g. <em>1 Year</em>).</li>
@@ -1637,6 +1762,21 @@ export default function PdfTrainingStudioPage() {
                                   {field.label}
                                   {field.required ? <span className="ml-0.5 text-rose-500">*</span> : null}
                                 </span>
+                                {field.id === "chassisNumber" || field.id === "engineNumber" ? (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleSwapEngineChassis();
+                                    }}
+                                    title="Swap Engine & Chassis Numbers"
+                                    className="ml-auto inline-flex items-center gap-1 rounded border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-[#1c6c39] hover:bg-emerald-100"
+                                  >
+                                    <RefreshCw size={10} className="shrink-0" />
+                                    <span>Swap</span>
+                                  </button>
+                                ) : null}
                                 {isActive ? (
                                   <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-[#1c6c39]">
                                     Picking
@@ -1676,6 +1816,45 @@ export default function PdfTrainingStudioPage() {
                                     }
                                     if (field.id === "startDate" || field.id === "expiryDate") {
                                       triggerDurationCalculation(field.id, nextVal);
+                                    }
+                                    if (field.id === "engineNumber" || field.id === "chassisNumber") {
+                                      const split = splitEngineAndChassis(nextVal, field.id);
+                                      if (split.isSplit) {
+                                        const curVal = field.id === "chassisNumber" ? split.chassisNumber : split.engineNumber;
+                                        const othFieldId = field.id === "chassisNumber" ? "engineNumber" : "chassisNumber";
+                                        const othVal = field.id === "chassisNumber" ? split.engineNumber : split.chassisNumber;
+
+                                        setRemoveFieldIds((prev) => prev.filter((id) => id !== field.id && id !== othFieldId));
+                                        setSelections((prev) => {
+                                          const existingCur = prev[field.id];
+                                          const existingOth = prev[othFieldId];
+                                          return {
+                                            ...prev,
+                                            [field.id]: {
+                                              fieldId: field.id,
+                                              page: existingCur?.page || auto?.page || currentPage,
+                                              wordIds: existingCur?.wordIds || auto?.wordIds || [],
+                                              valueOverride: curVal,
+                                            },
+                                            [othFieldId]: {
+                                              fieldId: othFieldId,
+                                              page: existingOth?.page || autoResultByField[othFieldId]?.page || currentPage,
+                                              wordIds: existingOth?.wordIds || autoResultByField[othFieldId]?.wordIds || existingCur?.wordIds || [],
+                                              valueOverride: othVal,
+                                            },
+                                          };
+                                        });
+                                        setMappingPreviews((prev) => ({
+                                          ...prev,
+                                          [field.id]: { ...(prev[field.id] || {}), example: curVal, fieldId: field.id },
+                                          [othFieldId]: { ...(prev[othFieldId] || {}), example: othVal, fieldId: othFieldId },
+                                        }));
+                                        showToast(
+                                          "success",
+                                          `✨ Auto-split Engine & Chassis! Chassis: ${split.chassisNumber} | Engine: ${split.engineNumber}`,
+                                        );
+                                        return;
+                                      }
                                     }
 
                                     setRemoveFieldIds((prev) => prev.filter((id) => id !== field.id));
