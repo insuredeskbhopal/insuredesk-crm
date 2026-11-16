@@ -600,6 +600,173 @@ export function splitEngineAndChassis(rawText, _activeFieldId = "engineNumber", 
   return { isSplit: true, chassisNumber: chassis, engineNumber: engine };
 }
 
+export function autoScanPolicyPages(pages, fields) {
+  const discovered = {};
+  if (!pages?.length || !fields?.length) return discovered;
+
+  const aliasMap = [];
+  for (const field of fields) {
+    const list = [field.label, ...(field.aliases || [])];
+    for (const a of list) {
+      const norm = a.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (norm.length >= 3) {
+        aliasMap.push({ norm, fieldId: field.id, label: a, rawLabel: field.label, kind: field.kind });
+      }
+    }
+  }
+  aliasMap.sort((a, b) => b.norm.length - a.norm.length);
+
+  for (const page of pages) {
+    const segments = page.segments || [];
+    const lines = page.lines || [];
+
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      const segText = seg.text.trim();
+      const segNorm = segText.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+      for (const item of aliasMap) {
+        if (discovered[item.fieldId]?.value) continue;
+
+        const isMatch =
+          segNorm === item.norm ||
+          segNorm.startsWith(item.norm) ||
+          (item.norm.length >= 6 && segNorm.includes(item.norm));
+        if (isMatch) {
+          const colonIdx = segText.indexOf(":");
+          if (colonIdx !== -1) {
+            let after = segText.slice(colonIdx + 1).trim();
+            if (after.length >= 2 && !/^(?:na|n\/a|nil|-)$/i.test(after)) {
+              if (item.kind === "currency") {
+                const num = after.match(/\b\d+(?:,\d+)*(?:\.\d{2})?\b/);
+                if (num) after = num[0].replace(/,/g, "");
+              }
+              const segWords = seg.wordIds.map((id) => page.words[id]).filter(Boolean);
+              const valWords = segWords.filter((w) => after.includes(w.text));
+              discovered[item.fieldId] = {
+                fieldId: item.fieldId,
+                value: after,
+                page: page.number,
+                wordIds: valWords.length ? valWords.map((w) => w.id) : seg.wordIds,
+                anchor: segText.slice(0, colonIdx).trim(),
+                score: 0.95,
+                status: "confident",
+                valid: true,
+              };
+              break;
+            }
+          }
+
+          if (i + 1 < segments.length) {
+            const nextSeg = segments[i + 1];
+            if (nextSeg.line === seg.line) {
+              let nextVal = nextSeg.text.trim().replace(/^[:\-\s]+/, "").trim();
+              const nextNorm = nextVal.toLowerCase().replace(/[^a-z0-9]/g, "");
+              const isNextAField = aliasMap.some(
+                (am) => am.norm === nextNorm || (am.norm.length >= 6 && nextNorm.startsWith(am.norm)),
+              );
+              if (!isNextAField && nextVal.length >= 1 && !/^(?:na|n\/a|nil|-)$/i.test(nextVal)) {
+                if (item.kind === "currency") {
+                  const num = nextVal.match(/\b\d+(?:,\d+)*(?:\.\d{2})?\b/);
+                  if (num) nextVal = num[0].replace(/,/g, "");
+                }
+                discovered[item.fieldId] = {
+                  fieldId: item.fieldId,
+                  value: nextVal,
+                  page: page.number,
+                  wordIds: nextSeg.wordIds,
+                  anchor: segText,
+                  score: 0.94,
+                  status: "confident",
+                  valid: true,
+                };
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    for (let lIdx = 0; lIdx < lines.length; lIdx++) {
+      const line = lines[lIdx];
+      const lineText = line.text.trim();
+      const lineLower = lineText.toLowerCase();
+
+      for (const item of aliasMap) {
+        if (discovered[item.fieldId]?.value) continue;
+
+        const pos = lineLower.indexOf(item.label.toLowerCase());
+        if (pos !== -1) {
+          let after = lineText.slice(pos + item.label.length).replace(/^[:\-\s]+/, "").trim();
+          if (after.length >= 2 && !/^(?:na|n\/a|nil|-)$/i.test(after)) {
+            const nextColon = after.indexOf(":");
+            if (nextColon !== -1) {
+              const beforeNext = after.slice(0, nextColon).trim();
+              const wordsBefore = beforeNext.split(/\s+/);
+              if (wordsBefore.length > 1) {
+                after = wordsBefore.slice(0, -1).join(" ").trim();
+              }
+            }
+            if (item.kind === "currency") {
+              const num = after.match(/\b\d+(?:,\d+)*(?:\.\d{2})?\b/);
+              if (num) after = num[0].replace(/,/g, "");
+            }
+            const lineWords = page.words.filter((w) => w.line === lIdx);
+            const valWords = lineWords.filter((w) => after.includes(w.text));
+            discovered[item.fieldId] = {
+              fieldId: item.fieldId,
+              value: after,
+              page: page.number,
+              wordIds: valWords.length ? valWords.map((w) => w.id) : lineWords.map((w) => w.id),
+              anchor: item.label,
+              score: 0.92,
+              status: "confident",
+              valid: true,
+            };
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  const cVal = discovered.chassisNumber?.value || discovered.engineNumber?.value;
+  if (cVal) {
+    const split = splitEngineAndChassis(cVal, "chassisNumber");
+    if (split.isSplit) {
+      if (!discovered.chassisNumber || !discovered.chassisNumber.valid) {
+        discovered.chassisNumber = {
+          fieldId: "chassisNumber",
+          value: split.chassisNumber,
+          page: discovered.engineNumber?.page || 1,
+          wordIds: discovered.engineNumber?.wordIds || [],
+          score: 0.98,
+          status: "confident",
+          valid: true,
+        };
+      } else {
+        discovered.chassisNumber.value = split.chassisNumber;
+      }
+      if (!discovered.engineNumber || !discovered.engineNumber.valid) {
+        discovered.engineNumber = {
+          fieldId: "engineNumber",
+          value: split.engineNumber,
+          page: discovered.chassisNumber?.page || 1,
+          wordIds: discovered.chassisNumber?.wordIds || [],
+          score: 0.98,
+          status: "confident",
+          valid: true,
+        };
+      } else {
+        discovered.engineNumber.value = split.engineNumber;
+      }
+    }
+  }
+
+  return discovered;
+}
+
 export async function previewStudioMapping(body) {
   const state = await loadState();
   const value = selectionSchema.extend({ documentId: z.string() }).parse(body);
@@ -762,7 +929,20 @@ export async function autoDetectStudioPreview(body) {
     categoryName: type.name,
   });
 
+  const autoScanned = autoScanPolicyPages(pages, type.fields || []);
   if (Array.isArray(hybrid?.results)) {
+    for (const r of hybrid.results) {
+      if ((!r.value || !r.valid || r.status === "missing") && autoScanned[r.fieldId]) {
+        const found = autoScanned[r.fieldId];
+        r.value = found.value;
+        r.valid = true;
+        r.status = "confident";
+        r.score = found.score || 0.94;
+        r.page = found.page || 1;
+        r.wordIds = found.wordIds || [];
+        r.anchor = found.anchor || "";
+      }
+    }
     let regVal = "";
     let startVal = "";
     let expiryVal = "";

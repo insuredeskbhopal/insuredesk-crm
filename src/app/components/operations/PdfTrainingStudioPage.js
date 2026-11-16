@@ -232,7 +232,8 @@ export default function PdfTrainingStudioPage() {
   const [activeDoc, setActiveDoc] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(1);
-  const [showWordBoxes, setShowWordBoxes] = useState(true);
+  const [showWordBoxes, setShowWordBoxes] = useState(false);
+  const [fieldFilter, setFieldFilter] = useState("all");
   const [wordSearch, setWordSearch] = useState("");
 
   const [leftTab, setLeftTab] = useState(focusUploadId ? "crm-queue" : "documents");
@@ -681,7 +682,25 @@ export default function PdfTrainingStudioPage() {
 
   const handleWordClick = async (word, event) => {
     if (!activeFieldId || !activeDoc) {
-      showToast("info", "Select a field using 'Select in PDF' on the right panel first, then click its value in the PDF.");
+      if (activeDoc) {
+        for (const [fId, sel] of Object.entries(selections)) {
+          if (sel.page === currentPage && sel.wordIds?.includes(word.id)) {
+            setActiveFieldId(fId);
+            const lbl = currentType?.fields?.find((f) => f.id === fId)?.label || fId;
+            showToast("info", `Selected field: ${lbl}`);
+            return;
+          }
+        }
+        for (const r of autoDetected?.results || []) {
+          if (r.page === currentPage && r.wordIds?.includes(word.id)) {
+            setActiveFieldId(r.fieldId);
+            const lbl = currentType?.fields?.find((f) => f.id === r.fieldId)?.label || r.fieldId;
+            showToast("info", `Selected field: ${lbl}`);
+            return;
+          }
+        }
+      }
+      showToast("info", "Click a field on the right panel first, then click or drag its value in the PDF.");
       return;
     }
     if (activeDoc.role !== "training") {
@@ -1532,11 +1551,11 @@ export default function PdfTrainingStudioPage() {
                 className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold ${
                   showWordBoxes
                     ? "border-emerald-300 bg-emerald-50 text-[#1c6c39]"
-                    : "border-slate-200 text-slate-600"
+                    : "border-slate-200 text-slate-600 bg-white"
                 }`}
               >
                 <Eye size={14} />
-                <span>Word Boxes</span>
+                <span>Word Boxes {showWordBoxes ? "(On)" : "(Clean)"}</span>
               </button>
             </div>
           </div>
@@ -1563,7 +1582,7 @@ export default function PdfTrainingStudioPage() {
                   <div className="p-6 text-center text-sm text-rose-600">{pdfRenderError}</div>
                 ) : null}
 
-                {showWordBoxes && activePageData ? (
+                {activePageData ? (
                   <div
                     className="absolute inset-0 select-none"
                     onMouseLeave={() => {
@@ -1585,11 +1604,18 @@ export default function PdfTrainingStudioPage() {
                       const isAuto = highlightedWordIds.autoSet.has(word.id);
                       const isMatch = searchLower && word.text.toLowerCase().includes(searchLower);
 
-                      let cls = "border-transparent hover:border-[#1c6c39] hover:bg-emerald-500/15";
-                      if (isDrag) cls = "border-[#1c6c39] bg-emerald-600/40 ring-2 ring-[#1c6c39] z-10";
-                      else if (isSel) cls = "border-[#1c6c39] bg-emerald-600/30 ring-1 ring-[#1c6c39]";
-                      else if (isMatch) cls = "border-amber-500 bg-amber-400/35";
-                      else if (isAuto) cls = "border-emerald-500/80 bg-emerald-400/20";
+                      let cls = "border-transparent bg-transparent hover:border-[#1c6c39] hover:bg-emerald-500/15";
+                      if (isDrag) {
+                        cls = "border-[#1c6c39] bg-emerald-600/40 ring-2 ring-[#1c6c39] z-10";
+                      } else if (isSel) {
+                        cls = "border-emerald-600/70 bg-emerald-500/25 ring-1 ring-emerald-500";
+                      } else if (isMatch) {
+                        cls = "border-amber-500 bg-amber-400/35";
+                      } else if (isAuto) {
+                        cls = "border-emerald-500/50 bg-emerald-400/15";
+                      } else if (showWordBoxes) {
+                        cls = "border-slate-300/50 bg-slate-100/10 hover:border-[#1c6c39] hover:bg-emerald-500/15";
+                      }
 
                       return (
                         <button
@@ -1694,6 +1720,21 @@ export default function PdfTrainingStudioPage() {
               <div className="max-h-[540px] space-y-3.5 overflow-y-auto pr-1">
                 {(() => {
                   const allFields = currentType?.fields || [];
+                  let mappedCount = 0;
+                  let missingCount = 0;
+                  for (const f of allFields) {
+                    const rawOverride = selections[f.id]?.valueOverride;
+                    const auto = autoResultByField[f.id];
+                    const removed = removeFieldIds.includes(f.id);
+                    const manualPreview = mappingPreviews[f.id];
+                    const val =
+                      rawOverride !== undefined
+                        ? rawOverride
+                        : manualPreview?.example || (!removed ? auto?.value : "") || "";
+                    if (val && String(val).trim()) mappedCount++;
+                    else missingCount++;
+                  }
+
                   const coreIds = new Set([
                     "insuredName",
                     "insuranceCompany",
@@ -1727,169 +1768,252 @@ export default function PdfTrainingStudioPage() {
                     },
                   ].filter((s) => s.fields.length > 0);
 
-                  return sections.map((section) => (
-                    <fieldset key={section.title} className="preview-fieldset">
-                      <legend className="preview-legend">{section.title}</legend>
-                      <div className="grid grid-cols-1 gap-x-3 gap-y-3 sm:grid-cols-2">
-                        {section.fields.map((field) => {
+                  return (
+                    <>
+                      <div className="flex items-center gap-1.5 rounded-xl bg-slate-100 p-1 text-xs font-bold text-slate-600">
+                        <button
+                          type="button"
+                          onClick={() => setFieldFilter("all")}
+                          className={`flex-1 rounded-lg px-2 py-1.5 text-center transition ${
+                            fieldFilter === "all" ? "bg-white text-slate-900 shadow-2xs font-black" : "hover:text-slate-900"
+                          }`}
+                        >
+                          All ({allFields.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFieldFilter("mapped")}
+                          className={`inline-flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-center transition ${
+                            fieldFilter === "mapped" ? "bg-white text-[#1c6c39] shadow-2xs font-black" : "hover:text-slate-900"
+                          }`}
+                        >
+                          <CheckCircle2 size={13} className="text-[#1c6c39]" />
+                          <span>Mapped ({mappedCount})</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFieldFilter("missing")}
+                          className={`inline-flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-center transition ${
+                            fieldFilter === "missing" ? "bg-white text-amber-700 shadow-2xs font-black" : "hover:text-slate-900"
+                          }`}
+                        >
+                          <AlertCircle size={13} className="text-amber-600" />
+                          <span>Missing ({missingCount})</span>
+                        </button>
+                      </div>
+
+                      {sections.map((section) => {
+                        const visibleFields = section.fields.filter((field) => {
                           const manualPreview = mappingPreviews[field.id];
                           const auto = autoResultByField[field.id];
-                          const isActive = activeFieldId === field.id;
                           const removed = removeFieldIds.includes(field.id);
                           const rawOverride = selections[field.id]?.valueOverride;
                           const displayValue =
                             rawOverride !== undefined
                               ? rawOverride
                               : manualPreview?.example || (!removed ? auto?.value : "") || "";
-                          const anchorText = manualPreview?.anchor || auto?.anchor || "";
-                          const isWideField =
-                            /name|company|address|location|description|occupancy|makeModel|variant|remarks/i.test(
-                              field.id,
-                            ) || String(displayValue).length > 28;
+                          const isMapped = Boolean(displayValue && String(displayValue).trim());
+                          if (fieldFilter === "mapped") return isMapped;
+                          if (fieldFilter === "missing") return !isMapped;
+                          return true;
+                        });
 
-                          return (
-                            <div
-                              key={field.id}
-                              className={isWideField ? "min-w-0 sm:col-span-2" : "min-w-0"}
-                              title={
-                                anchorText
-                                  ? `Anchor: ${anchorText}${manualPreview?.relation ? ` (${manualPreview.relation})` : ""}`
-                                  : `Click input then click value in PDF to map ${field.label}`
-                              }
-                            >
-                              <label htmlFor={`studio-field-${field.id}`} className="studio-field-label">
-                                <span className="truncate">
-                                  {field.label}
-                                  {field.required ? <span className="ml-0.5 text-rose-500">*</span> : null}
-                                </span>
-                                {field.id === "chassisNumber" || field.id === "engineNumber" ? (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleSwapEngineChassis();
-                                    }}
-                                    title="Swap Engine & Chassis Numbers"
-                                    className="ml-auto inline-flex items-center gap-1 rounded border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-[#1c6c39] hover:bg-emerald-100"
+                        if (!visibleFields.length) return null;
+
+                        return (
+                          <fieldset key={section.title} className="preview-fieldset">
+                            <legend className="preview-legend">{section.title}</legend>
+                            <div className="grid grid-cols-1 gap-x-3 gap-y-3 sm:grid-cols-2">
+                              {visibleFields.map((field) => {
+                                const manualPreview = mappingPreviews[field.id];
+                                const auto = autoResultByField[field.id];
+                                const isActive = activeFieldId === field.id;
+                                const removed = removeFieldIds.includes(field.id);
+                                const rawOverride = selections[field.id]?.valueOverride;
+                                const displayValue =
+                                  rawOverride !== undefined
+                                    ? rawOverride
+                                    : manualPreview?.example || (!removed ? auto?.value : "") || "";
+                                const isMapped = Boolean(displayValue && String(displayValue).trim());
+                                const anchorText = manualPreview?.anchor || auto?.anchor || "";
+                                const isWideField =
+                                  /name|company|address|location|description|occupancy|makeModel|variant|remarks/i.test(
+                                    field.id,
+                                  ) || String(displayValue).length > 28;
+
+                                return (
+                                  <div
+                                    key={field.id}
+                                    className={isWideField ? "min-w-0 sm:col-span-2" : "min-w-0"}
+                                    title={
+                                      anchorText
+                                        ? `Anchor: ${anchorText}${manualPreview?.relation ? ` (${manualPreview.relation})` : ""}`
+                                        : `Click input then click value in PDF to map ${field.label}`
+                                    }
                                   >
-                                    <RefreshCw size={10} className="shrink-0" />
-                                    <span>Swap</span>
-                                  </button>
-                                ) : null}
-                                {isActive ? (
-                                  <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-[#1c6c39]">
-                                    Picking
-                                  </span>
-                                ) : null}
-                              </label>
+                                    <label htmlFor={`studio-field-${field.id}`} className="studio-field-label">
+                                      <span className="truncate inline-flex items-center gap-1">
+                                        {isMapped ? (
+                                          <CheckCircle2 size={12} className="text-[#1c6c39] shrink-0" />
+                                        ) : null}
+                                        <span>{field.label}</span>
+                                        {field.required ? <span className="ml-0.5 text-rose-500">*</span> : null}
+                                      </span>
+                                      {field.id === "chassisNumber" || field.id === "engineNumber" ? (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleSwapEngineChassis();
+                                          }}
+                                          title="Swap Engine & Chassis Numbers"
+                                          className="ml-auto inline-flex items-center gap-1 rounded border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-[#1c6c39] hover:bg-emerald-100"
+                                        >
+                                          <RefreshCw size={10} className="shrink-0" />
+                                          <span>Swap</span>
+                                        </button>
+                                      ) : null}
+                                      {isActive ? (
+                                        <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-[#1c6c39]">
+                                          Picking
+                                        </span>
+                                      ) : null}
+                                    </label>
 
-                              <div className="relative">
-                                <input
-                                  id={`studio-field-${field.id}`}
-                                  type="text"
-                                  value={displayValue}
-                                  placeholder={isActive ? "Click value in PDF..." : ""}
-                                  onFocus={() => {
-                                    if (activeDoc?.role === "training") setActiveFieldId(field.id);
-                                  }}
-                                  onChange={(e) => {
-                                    let nextVal = e.target.value;
-                                    if (!nextVal) {
-                                      setSelections((prev) => {
-                                        const copy = { ...prev };
-                                        delete copy[field.id];
-                                        return copy;
-                                      });
-                                      setMappingPreviews((prev) => {
-                                        const copy = { ...prev };
-                                        delete copy[field.id];
-                                        return copy;
-                                      });
-                                      setRemoveFieldIds((prev) => [...new Set([...prev, field.id])]);
-                                      return;
-                                    }
+                                    <div className="relative">
+                                      <input
+                                        id={`studio-field-${field.id}`}
+                                        type="text"
+                                        value={displayValue}
+                                        placeholder={isActive ? "Click value in PDF..." : ""}
+                                        onFocus={() => {
+                                          if (activeDoc?.role === "training") setActiveFieldId(field.id);
+                                          const targetPage = selections[field.id]?.page || auto?.page;
+                                          if (targetPage && targetPage !== currentPage) {
+                                            setCurrentPage(targetPage);
+                                          }
+                                        }}
+                                        onChange={(e) => {
+                                          let nextVal = e.target.value;
+                                          if (!nextVal) {
+                                            setSelections((prev) => {
+                                              const copy = { ...prev };
+                                              delete copy[field.id];
+                                              return copy;
+                                            });
+                                            setMappingPreviews((prev) => {
+                                              const copy = { ...prev };
+                                              delete copy[field.id];
+                                              return copy;
+                                            });
+                                            setRemoveFieldIds((prev) => [...new Set([...prev, field.id])]);
+                                            return;
+                                          }
 
-                                    if (field.id === "registrationNumber" || field.id === "vehicleNumber") {
-                                      nextVal = normalizeRegistration(nextVal);
-                                      triggerRtoLookup(nextVal);
-                                    }
-                                    if (field.id === "startDate" || field.id === "expiryDate") {
-                                      triggerDurationCalculation(field.id, nextVal);
-                                    }
-                                    if (field.id === "engineNumber" || field.id === "chassisNumber") {
-                                      const split = splitEngineAndChassis(nextVal, field.id);
-                                      if (split.isSplit) {
-                                        const curVal = field.id === "chassisNumber" ? split.chassisNumber : split.engineNumber;
-                                        const othFieldId = field.id === "chassisNumber" ? "engineNumber" : "chassisNumber";
-                                        const othVal = field.id === "chassisNumber" ? split.engineNumber : split.chassisNumber;
+                                          if (field.id === "registrationNumber" || field.id === "vehicleNumber") {
+                                            nextVal = normalizeRegistration(nextVal);
+                                            triggerRtoLookup(nextVal);
+                                          }
+                                          if (field.id === "startDate" || field.id === "expiryDate") {
+                                            triggerDurationCalculation(field.id, nextVal);
+                                          }
+                                          if (field.id === "engineNumber" || field.id === "chassisNumber") {
+                                            const split = splitEngineAndChassis(nextVal, field.id);
+                                            if (split.isSplit) {
+                                              const curVal =
+                                                field.id === "chassisNumber" ? split.chassisNumber : split.engineNumber;
+                                              const othFieldId =
+                                                field.id === "chassisNumber" ? "engineNumber" : "chassisNumber";
+                                              const othVal =
+                                                field.id === "chassisNumber" ? split.engineNumber : split.chassisNumber;
 
-                                        setRemoveFieldIds((prev) => prev.filter((id) => id !== field.id && id !== othFieldId));
-                                        setSelections((prev) => {
-                                          const existingCur = prev[field.id];
-                                          const existingOth = prev[othFieldId];
-                                          return {
-                                            ...prev,
-                                            [field.id]: {
-                                              fieldId: field.id,
-                                              page: existingCur?.page || auto?.page || currentPage,
-                                              wordIds: existingCur?.wordIds || auto?.wordIds || [],
-                                              valueOverride: curVal,
-                                            },
-                                            [othFieldId]: {
-                                              fieldId: othFieldId,
-                                              page: existingOth?.page || autoResultByField[othFieldId]?.page || currentPage,
-                                              wordIds: existingOth?.wordIds || autoResultByField[othFieldId]?.wordIds || existingCur?.wordIds || [],
-                                              valueOverride: othVal,
-                                            },
-                                          };
-                                        });
-                                        setMappingPreviews((prev) => ({
-                                          ...prev,
-                                          [field.id]: { ...(prev[field.id] || {}), example: curVal, fieldId: field.id },
-                                          [othFieldId]: { ...(prev[othFieldId] || {}), example: othVal, fieldId: othFieldId },
-                                        }));
-                                        showToast(
-                                          "success",
-                                          `✨ Auto-split Engine & Chassis! Chassis: ${split.chassisNumber} | Engine: ${split.engineNumber}`,
-                                        );
-                                        return;
-                                      }
-                                    }
+                                              setRemoveFieldIds((prev) =>
+                                                prev.filter((id) => id !== field.id && id !== othFieldId),
+                                              );
+                                              setSelections((prev) => {
+                                                const existingCur = prev[field.id];
+                                                const existingOth = prev[othFieldId];
+                                                return {
+                                                  ...prev,
+                                                  [field.id]: {
+                                                    fieldId: field.id,
+                                                    page: existingCur?.page || auto?.page || currentPage,
+                                                    wordIds: existingCur?.wordIds || auto?.wordIds || [],
+                                                    valueOverride: curVal,
+                                                  },
+                                                  [othFieldId]: {
+                                                    fieldId: othFieldId,
+                                                    page:
+                                                      existingOth?.page ||
+                                                      autoResultByField[othFieldId]?.page ||
+                                                      currentPage,
+                                                    wordIds:
+                                                      existingOth?.wordIds ||
+                                                      autoResultByField[othFieldId]?.wordIds ||
+                                                      existingCur?.wordIds ||
+                                                      [],
+                                                    valueOverride: othVal,
+                                                  },
+                                                };
+                                              });
+                                              setMappingPreviews((prev) => ({
+                                                ...prev,
+                                                [field.id]: {
+                                                  ...(prev[field.id] || {}),
+                                                  example: curVal,
+                                                  fieldId: field.id,
+                                                },
+                                                [othFieldId]: {
+                                                  ...(prev[othFieldId] || {}),
+                                                  example: othVal,
+                                                  fieldId: othFieldId,
+                                                },
+                                              }));
+                                              showToast(
+                                                "success",
+                                                `✨ Auto-split Engine & Chassis! Chassis: ${split.chassisNumber} | Engine: ${split.engineNumber}`,
+                                              );
+                                              return;
+                                            }
+                                          }
 
-                                    setRemoveFieldIds((prev) => prev.filter((id) => id !== field.id));
-                                    setSelections((prev) => {
-                                      const existing = prev[field.id];
-                                      return {
-                                        ...prev,
-                                        [field.id]: {
-                                          fieldId: field.id,
-                                          page: existing?.page || auto?.page || currentPage,
-                                          wordIds: existing?.wordIds || auto?.wordIds || [],
-                                          valueOverride: nextVal,
-                                        },
-                                      };
-                                    });
-                                  }}
-                                  className={`studio-form-input w-full ${isActive ? "studio-form-input-active" : ""}`}
-                                />
-                                {isActive ? (
-                                  <button
-                                    type="button"
-                                    title="Done mapping"
-                                    onClick={() => setActiveFieldId("")}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[#1c6c39] hover:opacity-75"
-                                  >
-                                    <Check size={14} />
-                                  </button>
-                                ) : null}
-                              </div>
+                                          setRemoveFieldIds((prev) => prev.filter((id) => id !== field.id));
+                                          setSelections((prev) => {
+                                            const existing = prev[field.id];
+                                            return {
+                                              ...prev,
+                                              [field.id]: {
+                                                fieldId: field.id,
+                                                page: existing?.page || auto?.page || currentPage,
+                                                wordIds: existing?.wordIds || auto?.wordIds || [],
+                                                valueOverride: nextVal,
+                                              },
+                                            };
+                                          });
+                                        }}
+                                        className={`studio-form-input w-full ${isActive ? "studio-form-input-active" : ""}`}
+                                      />
+                                      {isActive ? (
+                                        <button
+                                          type="button"
+                                          title="Done mapping"
+                                          onClick={() => setActiveFieldId("")}
+                                          className="absolute right-2 top-1/2 -translate-y-1/2 text-[#1c6c39] hover:opacity-75"
+                                        >
+                                          <Check size={14} />
+                                        </button>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
-                          );
-                        })}
-                      </div>
-                    </fieldset>
-                  ));
+                          </fieldset>
+                        );
+                      })}
+                    </>
+                  );
                 })()}
               </div>
 
