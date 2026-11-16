@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
@@ -12,10 +13,13 @@ import { extractHybrid } from "./crm-trainers.js";
 import { ocrAvailable, parsePdf } from "./pdf.js";
 import seedData from "./seed-data.json";
 
-const STUDIO_DIR = path.join(process.cwd(), "storage", "training-studio");
-const STATE_FILE = path.join(STUDIO_DIR, "studio-state.json");
-const PAGES_DIR = path.join(STUDIO_DIR, "pages");
-const DOCS_DIR = path.join(STUDIO_DIR, "documents");
+const BASE_DIR = process.env.VERCEL
+  ? path.join(os.tmpdir(), "bhq-training-studio")
+  : path.join(process.cwd(), "storage", "training-studio");
+const STUDIO_DIR = BASE_DIR;
+const STATE_FILE = path.join(process.cwd(), "storage", "training-studio", "studio-state.json");
+const PAGES_DIR = path.join(BASE_DIR, "pages");
+const DOCS_DIR = path.join(BASE_DIR, "documents");
 
 export class StudioError extends Error {
   constructor(status, message) {
@@ -70,41 +74,55 @@ function defaultSeedState() {
 }
 
 async function loadState() {
-  try {
-    const stat = await fsp.stat(STATE_FILE);
-    if (STATE_MEM.state && STATE_MEM.mtimeMs === stat.mtimeMs) {
-      return STATE_MEM.state;
-    }
-    const raw = await fsp.readFile(STATE_FILE, "utf8");
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed?.types) && parsed.types.length) {
-      STATE_MEM.state = parsed;
-      STATE_MEM.mtimeMs = stat.mtimeMs;
-      return STATE_MEM.state;
-    }
-  } catch {
-    if (STATE_MEM.state) return STATE_MEM.state;
+  if (STATE_MEM.state) {
+    return STATE_MEM.state;
   }
 
+  let dbState = null;
   try {
     const snap = await prisma.auditLog.findFirst({
       where: { entityType: "TrainingStudio", entityId: "studio-v1", action: "TRAINING_STUDIO_STATE" },
       orderBy: { createdAt: "desc" },
       select: { metadata: true },
     });
-    if (snap?.metadata && Array.isArray(snap.metadata.types) && snap.metadata.types.length) {
-      STATE_MEM.state = snap.metadata;
-      return STATE_MEM.state;
+    if (snap?.metadata && typeof snap.metadata === "object") {
+      dbState = snap.metadata;
     }
-  } catch {
-    // Non-fatal DB fallback
+  } catch (err) {
+    console.warn("[TrainingStudio] loadState DB query failed:", err?.message);
   }
 
-  STATE_MEM.state = defaultSeedState();
+  let diskState = null;
+  try {
+    const raw = await fsp.readFile(STATE_FILE, "utf8");
+    diskState = JSON.parse(raw);
+  } catch {
+    // static file might not be readable in all envs
+  }
+
+  const base = diskState && Array.isArray(diskState.types) ? diskState : defaultSeedState();
+
+  if (dbState && Array.isArray(dbState.types) && dbState.types.length) {
+    const mergedTypes = Array.isArray(dbState.types) && dbState.types.length ? dbState.types : base.types;
+    const mergedProfiles = Array.isArray(dbState.profiles) && dbState.profiles.length ? dbState.profiles : base.profiles;
+    const mergedDocuments = Array.isArray(dbState.documents) ? dbState.documents : (base.documents || []);
+    const mergedRuns = Array.isArray(dbState.runs) ? dbState.runs : (base.runs || []);
+
+    STATE_MEM.state = {
+      types: mergedTypes,
+      profiles: mergedProfiles,
+      documents: mergedDocuments,
+      runs: mergedRuns,
+      updatedAt: dbState.updatedAt || new Date().toISOString(),
+    };
+    return STATE_MEM.state;
+  }
+
+  STATE_MEM.state = base;
   return STATE_MEM.state;
 }
 
-async function saveState(state, { persistSnapshot = false } = {}) {
+async function saveState(state, { persistSnapshot = true } = {}) {
   state.updatedAt = new Date().toISOString();
   STATE_MEM.state = state;
 
@@ -135,8 +153,8 @@ async function saveState(state, { persistSnapshot = false } = {}) {
           },
         },
       });
-    } catch {
-      // Non-blocking cloud backup
+    } catch (err) {
+      console.warn("[TrainingStudio] Snapshot creation failed:", err?.message);
     }
   }
 }
@@ -171,22 +189,60 @@ async function loadDocumentPages(doc) {
 
 async function getDocumentBuffer(doc) {
   const candidates = [
-    doc.localPdfPath ? path.resolve(process.cwd(), doc.localPdfPath) : "",
+    doc.localPdfPath,
     path.join(DOCS_DIR, `${doc.id}.pdf`),
+    path.join(process.cwd(), "storage", "training-studio", "documents", `${doc.id}.pdf`),
     path.join(process.cwd(), "policy-intelligence-module", "data", "documents", `${doc.id}.pdf`),
   ].filter(Boolean);
 
   for (const filePath of candidates) {
-    if (fs.existsSync(filePath)) {
-      return fsp.readFile(filePath);
+    try {
+      if (fs.existsSync(filePath)) {
+        return await fsp.readFile(filePath);
+      }
+    } catch {}
+  }
+
+  // 1. Fetch from PostgreSQL UploadedFile by uploadedFileId
+  if (doc.uploadedFileId) {
+    try {
+      const rec = await prisma.uploadedFile.findUnique({
+        where: { id: doc.uploadedFileId },
+        select: { pdfBytes: true, storagePath: true, storageProvider: true },
+      });
+      if (rec?.pdfBytes) return Buffer.from(rec.pdfBytes);
+      if (rec?.storageProvider === "google_drive" && rec?.storagePath) {
+        return await downloadGoogleDriveFile(rec.storagePath);
+      }
+      if (rec?.storagePath) {
+        const physical = getLocalPhysicalPath(rec.storagePath);
+        if (fs.existsSync(physical)) return await fsp.readFile(physical);
+      }
+    } catch (err) {
+      console.warn("[TrainingStudio] DB buffer retrieval failed:", err?.message);
     }
+  }
+
+  // Fallback: check if an UploadedFile exists with matching file name
+  if (doc.name) {
+    try {
+      const rec = await prisma.uploadedFile.findFirst({
+        where: { sourceFile: doc.name, pdfBytes: { not: null } },
+        orderBy: { createdAt: "desc" },
+        select: { pdfBytes: true },
+      });
+      if (rec?.pdfBytes) return Buffer.from(rec.pdfBytes);
+    } catch {}
   }
 
   if (doc.storageProvider === "google_drive" && doc.storagePath) {
     return downloadGoogleDriveFile(doc.storagePath);
   }
   if (doc.storagePath) {
-    return fsp.readFile(getLocalPhysicalPath(doc.storagePath));
+    const physical = getLocalPhysicalPath(doc.storagePath);
+    if (fs.existsSync(physical)) {
+      return fsp.readFile(physical);
+    }
   }
   throw new StudioError(404, "PDF binary not found in storage.");
 }
@@ -259,7 +315,14 @@ export async function getStudioDocumentFile(id) {
   return { name: doc.name, bytes };
 }
 
-export async function uploadStudioDocumentBuffer({ buffer, fileName, typeId, role = "training", allowReuse = false }) {
+export async function uploadStudioDocumentBuffer({
+  buffer,
+  fileName,
+  typeId,
+  role = "training",
+  allowReuse = false,
+  uploadedFileId = null,
+}) {
   const state = await loadState();
   if (!typeId || !state.types.some((t) => t.id === typeId)) {
     throw new StudioError(422, "Choose an existing policy category first.");
@@ -297,31 +360,50 @@ export async function uploadStudioDocumentBuffer({ buffer, fileName, typeId, rol
   let localPdfPath = "";
   let storageProvider = "";
   let storagePath = "";
+  let dbUploadedFileId = uploadedFileId;
 
   try {
     await fsp.mkdir(DOCS_DIR, { recursive: true });
     await fsp.mkdir(PAGES_DIR, { recursive: true });
     await fsp.writeFile(path.join(DOCS_DIR, `${id}.pdf`), bytes);
     await fsp.writeFile(path.join(PAGES_DIR, `${id}.json`), JSON.stringify(pages), "utf8");
-    localPdfPath = `storage/training-studio/documents/${id}.pdf`;
+    localPdfPath = path.join(DOCS_DIR, `${id}.pdf`);
   } catch {
-    // Ephemeral disk; save via CRM storage below
-  }
-
-  try {
-    const uploaded = await uploadFile(Buffer.from(bytes), "application/pdf", fileName || `${id}.pdf`);
-    storageProvider = uploaded.storageProvider || "";
-    storagePath = uploaded.storagePath || "";
-  } catch {
-    if (!localPdfPath) {
-      throw new StudioError(500, "Failed to persist PDF file to storage.");
-    }
+    // Ephemeral disk; save via CRM storage or DB below
   }
 
   const safeName = String(fileName || "policy.pdf")
     .split(/[/\\]/)
     .at(-1)
     .slice(0, 200);
+
+  // Guarantee persistence in serverless environments by saving to PostgreSQL UploadedFile
+  if (!dbUploadedFileId) {
+    try {
+      const uploadRecord = await prisma.uploadedFile.create({
+        data: {
+          sourceFile: safeName,
+          mimeType: "application/pdf",
+          sizeBytes: bytes.byteLength,
+          pdfBytes: Buffer.from(bytes),
+          status: "PROCESSED",
+          extractionMethod: "training-studio",
+        },
+        select: { id: true },
+      });
+      dbUploadedFileId = uploadRecord.id;
+    } catch (dbErr) {
+      console.warn("[TrainingStudio] UploadedFile create skipped:", dbErr?.message);
+    }
+  }
+
+  try {
+    const uploaded = await uploadFile(Buffer.from(bytes), "application/pdf", safeName);
+    storageProvider = uploaded.storageProvider || "";
+    storagePath = uploaded.storagePath || "";
+  } catch {
+    // Non-fatal if DB or local disk has the binary
+  }
 
   const doc = {
     id,
@@ -333,6 +415,7 @@ export async function uploadStudioDocumentBuffer({ buffer, fileName, typeId, rol
     localPdfPath,
     storageProvider,
     storagePath,
+    uploadedFileId: dbUploadedFileId,
     createdAt: new Date().toISOString(),
   };
 

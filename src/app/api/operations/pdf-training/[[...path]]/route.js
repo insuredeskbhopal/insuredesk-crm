@@ -324,6 +324,7 @@ async function handleWrite(request, context, method) {
         typeId,
         role,
         allowReuse,
+        uploadedFileId: upload.id,
       });
 
       await writeTrainingAudit(request, session, "IMPORT_UPLOAD_TO_TRAINING", created?.id || uploadedFileId, {

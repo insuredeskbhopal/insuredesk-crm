@@ -416,6 +416,7 @@ export default function PdfTrainingStudioPage() {
         return;
       }
       showToast("success", `"${data.name}" added to ${data.role} dataset.`);
+      setDocuments((prev) => [data, ...prev.filter((d) => d.id !== data.id)]);
       setSelectedDocId(data.id);
       setLeftTab("documents");
       await loadWorkspace();
@@ -445,6 +446,7 @@ export default function PdfTrainingStudioPage() {
         return;
       }
       showToast("success", `Imported "${uploadItem.sourceFile}" into the ${role} dataset.`);
+      setDocuments((prev) => [data, ...prev.filter((d) => d.id !== data.id)]);
       setSelectedDocId(data.id);
       setLeftTab("documents");
       await loadWorkspace();
