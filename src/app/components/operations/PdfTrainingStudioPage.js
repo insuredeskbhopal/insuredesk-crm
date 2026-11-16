@@ -148,9 +148,21 @@ function normalizeRegistration(text) {
 function calculatePolicyDuration(startStr, expiryStr) {
   if (!startStr || !expiryStr) return "";
   const parse = (s) => {
-    const m = String(s).trim().match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
-    if (m) return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
-    const iso = Date.parse(s);
+    if (!s) return null;
+    const str = String(s).trim();
+    // Match date anywhere in string: DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY, DD-Mon-YYYY
+    const m = str.match(/(\d{1,2})[./-](\d{1,2}|[A-Za-z]{3})[./-](\d{4})/);
+    if (m) {
+      const day = parseInt(m[1], 10);
+      let month = parseInt(m[2], 10) - 1;
+      if (isNaN(month)) {
+        const monMap = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+        month = monMap[m[2].toLowerCase().slice(0, 3)] ?? 0;
+      }
+      const year = parseInt(m[3], 10);
+      return new Date(year, month, day);
+    }
+    const iso = Date.parse(str);
     return isNaN(iso) ? null : new Date(iso);
   };
   const d1 = parse(startStr);
@@ -158,7 +170,7 @@ function calculatePolicyDuration(startStr, expiryStr) {
   if (!d1 || !d2 || d2 < d1) return "";
   const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
   const years = Math.round(diffDays / 365);
-  if (years >= 1 && Math.abs(diffDays - years * 365) <= 5) {
+  if (years >= 1 && Math.abs(diffDays - years * 365) <= 15) {
     return years === 1 ? "1 Year" : `${years} Years`;
   }
   const months = Math.round(diffDays / 30);
@@ -173,7 +185,7 @@ function splitEngineAndChassis(rawText, _activeFieldId = "engineNumber", anchorT
   const cleaned = rawText.trim();
   const parts = cleaned
     .replace(/(?:\b(?:chassis|chasis|engine|eng|chas|vin)\b[\s.:#]*|\b(?:no|nos|number|#)\b[\s.:]*)/gi, " ")
-    .split(/[\s/\\|&,\n\r\t]+/)
+    .split(/[\s/\\|&,;\n\r\t]+|\s*[-–—]\s*/)
     .map((p) => p.replace(/[^A-Za-z0-9]/g, "").toUpperCase())
     .filter((p) => p.length >= 5 && p.length <= 25);
 
@@ -267,6 +279,13 @@ export default function PdfTrainingStudioPage() {
   const isMouseDownRef = useRef(false);
   const dragAnchorWordRef = useRef(null);
   const [dragHoverWordIds, setDragHoverWordIds] = useState([]);
+  const [autoAdvance, setAutoAdvance] = useState(true);
+  const [hoveredFieldId, setHoveredFieldId] = useState("");
+  const [quickAssignModal, setQuickAssignModal] = useState(null);
+  const [lastMappedFeedback, setLastMappedFeedback] = useState(null);
+  const canvasContainerRef = useRef(null);
+  const dragStartPosRef = useRef(null);
+  const [dragRect, setDragRect] = useState(null);
 
   const showToast = useCallback((type, text) => {
     setBanner({ type, text, id: Date.now() });
@@ -353,6 +372,21 @@ export default function PdfTrainingStudioPage() {
       setSelectedDocId(preferred?.id || "");
     }
   }, [currentType, typeProfiles, typeDocuments, selectedDocId]);
+
+  const prevTypeIdRef = useRef(selectedTypeId);
+  useEffect(() => {
+    if (prevTypeIdRef.current && prevTypeIdRef.current !== selectedTypeId) {
+      setSelections({});
+      setMappingPreviews({});
+      setRemoveFieldIds([]);
+      setActiveFieldId("");
+      setAutoDetected(null);
+      setTruthDraft({});
+      setLastMappedFeedback(null);
+      setProfileName("");
+    }
+    prevTypeIdRef.current = selectedTypeId;
+  }, [selectedTypeId]);
 
   const runAutoDetect = useCallback(async (docObj, profileId) => {
     if (!docObj?.id || !docObj?.typeId) return;
@@ -527,7 +561,7 @@ export default function PdfTrainingStudioPage() {
           setRemoveFieldIds((prev) => prev.filter((id) => id !== "rtoLocation"));
         }
       }
-    } catch {}
+    } catch { }
   }, [currentPage]);
 
   const triggerDurationCalculation = useCallback(
@@ -536,16 +570,16 @@ export default function PdfTrainingStudioPage() {
         changedFieldId === "startDate"
           ? changedValue
           : selections.startDate?.valueOverride ||
-            mappingPreviews.startDate?.example ||
-            autoResultByField.startDate?.value ||
-            "";
+          mappingPreviews.startDate?.example ||
+          autoResultByField.startDate?.value ||
+          "";
       const expiryVal =
         changedFieldId === "expiryDate"
           ? changedValue
           : selections.expiryDate?.valueOverride ||
-            mappingPreviews.expiryDate?.example ||
-            autoResultByField.expiryDate?.value ||
-            "";
+          mappingPreviews.expiryDate?.example ||
+          autoResultByField.expiryDate?.value ||
+          "";
 
       if (startVal && expiryVal) {
         const calcDur = calculatePolicyDuration(startVal, expiryVal);
@@ -562,78 +596,121 @@ export default function PdfTrainingStudioPage() {
   );
 
   const applySelectedWordIds = useCallback(
-    async (nextWordIds) => {
-      if (!activeFieldId || !activeDoc || !nextWordIds?.length) return;
-      const nextSel = { fieldId: activeFieldId, page: currentPage, wordIds: nextWordIds };
-      setSelections((prev) => ({ ...prev, [activeFieldId]: nextSel }));
-      setRemoveFieldIds((prev) => prev.filter((id) => id !== activeFieldId));
+    async (nextWordIds, targetFieldId = null, overrideText = null) => {
+      const fieldId = targetFieldId || activeFieldId;
+      if (!fieldId || !activeDoc || !nextWordIds?.length) return;
 
+      // Extract immediate text from in-memory words for 0ms lag-free response
+      const wordsById = new Map((activePageData?.words || []).map((w) => [w.id, w]));
+      const selectedWords = nextWordIds.map((id) => wordsById.get(id)).filter(Boolean);
+      let immediateValue = overrideText || selectedWords.map((w) => w.text).join(" ");
+
+      if (fieldId === "registrationNumber" || fieldId === "vehicleNumber") {
+        immediateValue = normalizeRegistration(immediateValue);
+        triggerRtoLookup(immediateValue);
+      } else if (fieldId === "startDate" || fieldId === "expiryDate") {
+        triggerDurationCalculation(fieldId, immediateValue);
+      } else if (fieldId === "engineNumber" || fieldId === "chassisNumber") {
+        const split = splitEngineAndChassis(immediateValue, fieldId);
+        if (split.isSplit) {
+          const curVal = fieldId === "chassisNumber" ? split.chassisNumber : split.engineNumber;
+          const othFieldId = fieldId === "chassisNumber" ? "engineNumber" : "chassisNumber";
+          const othVal = fieldId === "chassisNumber" ? split.engineNumber : split.chassisNumber;
+
+          setSelections((prev) => ({
+            ...prev,
+            [fieldId]: { fieldId, page: currentPage, wordIds: nextWordIds, valueOverride: curVal },
+            [othFieldId]: { fieldId: othFieldId, page: currentPage, wordIds: nextWordIds, valueOverride: othVal },
+          }));
+          setMappingPreviews((prev) => ({
+            ...prev,
+            [fieldId]: { fieldId, example: curVal, page: currentPage },
+            [othFieldId]: { fieldId: othFieldId, example: othVal, page: currentPage },
+          }));
+          setRemoveFieldIds((prev) => prev.filter((id) => id !== fieldId && id !== othFieldId));
+          showToast(
+            "success",
+            `✨ Auto-split Engine & Chassis! Chassis: ${split.chassisNumber} | Engine: ${split.engineNumber}`,
+          );
+          return;
+        }
+      }
+
+      // Synchronous optimistic update: instant feedback in form inspector
+      setSelections((prev) => ({
+        ...prev,
+        [fieldId]: { fieldId, page: currentPage, wordIds: nextWordIds, valueOverride: immediateValue },
+      }));
+      setMappingPreviews((prev) => ({
+        ...prev,
+        [fieldId]: { fieldId, example: immediateValue, page: currentPage },
+      }));
+      setRemoveFieldIds((prev) => prev.filter((id) => id !== fieldId));
+
+      // Calculate next unmapped field for seamless auto-advance
+      const allFields = currentType?.fields || [];
+      const currentIdx = allFields.findIndex((f) => f.id === fieldId);
+      let nextField = allFields.slice(currentIdx + 1).find((f) => {
+        const v = selections[f.id]?.valueOverride;
+        return !v || !String(v).trim();
+      });
+      if (!nextField) {
+        nextField = allFields.slice(0, currentIdx).find((f) => {
+          const v = selections[f.id]?.valueOverride;
+          return !v || !String(v).trim();
+        });
+      }
+
+      const currentLabel = allFields.find((f) => f.id === fieldId)?.label || fieldId;
+      setLastMappedFeedback({
+        fieldId,
+        fieldLabel: currentLabel,
+        value: immediateValue,
+        nextFieldId: nextField?.id || "",
+        nextFieldLabel: nextField?.label || "",
+      });
+
+      if (autoAdvance && nextField) {
+        setTimeout(() => {
+          setActiveFieldId(nextField.id);
+        }, 250);
+      }
+
+      // Asynchronous background anchor preview
       try {
         const res = await fetch("/api/operations/pdf-training/mappings/preview", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             documentId: activeDoc.id,
-            fieldId: activeFieldId,
+            fieldId,
             page: currentPage,
             wordIds: nextWordIds,
           }),
         });
         const data = await res.json();
-        if (!res.ok) {
-          showToast("error", data?.error || "Anchor preview failed.");
-          return;
+        if (res.ok && data) {
+          setMappingPreviews((prev) => ({
+            ...prev,
+            [fieldId]: { ...data, example: immediateValue, fieldId },
+          }));
         }
-
-        if (activeFieldId === "registrationNumber" || activeFieldId === "vehicleNumber") {
-          const norm = normalizeRegistration(data.example);
-          if (norm) {
-            data.example = norm;
-            triggerRtoLookup(norm);
-          }
-        }
-
-        if (activeFieldId === "startDate" || activeFieldId === "expiryDate") {
-          triggerDurationCalculation(activeFieldId, data.example);
-        }
-
-        if (activeFieldId === "engineNumber" || activeFieldId === "chassisNumber") {
-          const split = splitEngineAndChassis(data.example, activeFieldId, data.anchor || "");
-          if (split.isSplit) {
-            const currentVal = activeFieldId === "chassisNumber" ? split.chassisNumber : split.engineNumber;
-            const otherFieldId = activeFieldId === "chassisNumber" ? "engineNumber" : "chassisNumber";
-            const otherVal = activeFieldId === "chassisNumber" ? split.engineNumber : split.chassisNumber;
-
-            data.example = currentVal;
-
-            setSelections((prev) => ({
-              ...prev,
-              [activeFieldId]: { fieldId: activeFieldId, page: currentPage, wordIds: nextWordIds, valueOverride: currentVal },
-              [otherFieldId]: { fieldId: otherFieldId, page: currentPage, wordIds: nextWordIds, valueOverride: otherVal },
-            }));
-
-            setMappingPreviews((prev) => ({
-              ...prev,
-              [activeFieldId]: data,
-              [otherFieldId]: { ...data, fieldId: otherFieldId, example: otherVal },
-            }));
-
-            setRemoveFieldIds((prev) => prev.filter((id) => id !== activeFieldId && id !== otherFieldId));
-
-            showToast(
-              "success",
-              `✨ Auto-split Engine & Chassis! Chassis: ${split.chassisNumber} | Engine: ${split.engineNumber}`,
-            );
-            return;
-          }
-        }
-
-        setMappingPreviews((prev) => ({ ...prev, [activeFieldId]: data }));
-      } catch (err) {
-        showToast("error", err?.message || "Preview request failed.");
+      } catch {
+        // Fallback already satisfied by optimistic state
       }
     },
-    [activeFieldId, activeDoc, currentPage, showToast, triggerRtoLookup, triggerDurationCalculation],
+    [
+      activeFieldId,
+      activeDoc,
+      currentPage,
+      activePageData,
+      currentType,
+      selections,
+      autoAdvance,
+      triggerRtoLookup,
+      triggerDurationCalculation,
+      showToast,
+    ],
   );
 
   const handleSwapEngineChassis = useCallback(() => {
@@ -683,31 +760,68 @@ export default function PdfTrainingStudioPage() {
     showToast("info", "⇄ Swapped Engine Number and Chassis Number");
   }, [selections, mappingPreviews, autoResultByField, currentPage, showToast]);
 
-  const handleWordClick = async (word, event) => {
-    if (!activeFieldId || !activeDoc) {
-      if (activeDoc) {
-        for (const [fId, sel] of Object.entries(selections)) {
-          if (sel.page === currentPage && sel.wordIds?.includes(word.id)) {
-            setActiveFieldId(fId);
-            const lbl = currentType?.fields?.find((f) => f.id === fId)?.label || fId;
-            showToast("info", `Selected field: ${lbl}`);
-            return;
-          }
-        }
-        for (const r of autoDetected?.results || []) {
-          if (r.page === currentPage && r.wordIds?.includes(word.id)) {
-            setActiveFieldId(r.fieldId);
-            const lbl = currentType?.fields?.find((f) => f.id === r.fieldId)?.label || r.fieldId;
-            showToast("info", `Selected field: ${lbl}`);
-            return;
-          }
-        }
+  const handleWordDoubleClick = useCallback(
+    (word, e) => {
+      e?.preventDefault();
+      e?.stopPropagation();
+      if (!activeDoc || !activePageData) return;
+
+      // Select entire phrase on the same line that belongs to the same segment or has small horizontal gaps
+      const lineWords = (activePageData.words || [])
+        .filter((w) => w.line === word.line)
+        .sort((a, b) => a.id - b.id);
+
+      let targetWords = lineWords;
+      if (word.segment !== undefined) {
+        const segWords = lineWords.filter((w) => w.segment === word.segment);
+        if (segWords.length) targetWords = segWords;
       }
-      showToast("info", "Click a field on the right panel first, then click or drag its value in the PDF.");
-      return;
+      const phraseIds = targetWords.map((w) => w.id);
+      const phraseText = targetWords.map((w) => w.text).join(" ");
+
+      if (!activeFieldId) {
+        setQuickAssignModal({
+          wordIds: phraseIds,
+          text: phraseText,
+          x: e?.clientX || 400,
+          y: e?.clientY || 300,
+        });
+        return;
+      }
+      applySelectedWordIds(phraseIds, null, phraseText);
+    },
+    [activeDoc, activePageData, activeFieldId, applySelectedWordIds],
+  );
+
+  const handleWordClick = async (word, event) => {
+    if (!activeDoc) return;
+
+    // Check if word is already part of an existing mapped field
+    for (const [fId, sel] of Object.entries(selections)) {
+      if (sel.page === currentPage && sel.wordIds?.includes(word.id)) {
+        setActiveFieldId(fId);
+        const lbl = currentType?.fields?.find((f) => f.id === fId)?.label || fId;
+        showToast("info", `Selected field: ${lbl}`);
+        return;
+      }
     }
-    if (activeDoc.role !== "training") {
-      showToast("error", "Held-out test documents cannot be used for training. Switch to a Training role PDF.");
+    for (const r of autoDetected?.results || []) {
+      if (r.page === currentPage && r.wordIds?.includes(word.id)) {
+        setActiveFieldId(r.fieldId);
+        const lbl = currentType?.fields?.find((f) => f.id === r.fieldId)?.label || r.fieldId;
+        showToast("info", `Selected field: ${lbl}`);
+        return;
+      }
+    }
+
+    // If no field is selected, offer a Quick-Assign popover right at the cursor
+    if (!activeFieldId) {
+      setQuickAssignModal({
+        wordIds: [word.id],
+        text: word.text,
+        x: event?.clientX || 400,
+        y: event?.clientY || 300,
+      });
       return;
     }
 
@@ -762,45 +876,119 @@ export default function PdfTrainingStudioPage() {
     await applySelectedWordIds(nextWordIds);
   };
 
-  const handleWordMouseDown = (word, e) => {
-    if (!activeFieldId || !activeDoc || activeDoc.role !== "training") return;
-    if (e.button !== 0) return;
+  const handleCanvasMouseDown = (e) => {
+    if (e.button !== 0 || !activeDoc) return;
+    const rect = canvasContainerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const startX = e.clientX - rect.left + (canvasContainerRef.current.scrollLeft || 0);
+    const startY = e.clientY - rect.top + (canvasContainerRef.current.scrollTop || 0);
+    dragStartPosRef.current = { x: startX, y: startY, clientX: e.clientX, clientY: e.clientY };
     isMouseDownRef.current = true;
-    dragAnchorWordRef.current = word;
-    setDragHoverWordIds([word.id]);
   };
 
-  const handleWordMouseEnter = (word) => {
-    if (isMouseDownRef.current && dragAnchorWordRef.current) {
-      const lo = Math.min(dragAnchorWordRef.current.id, word.id);
-      const hi = Math.max(dragAnchorWordRef.current.id, word.id);
-      const range = (activePageData?.words || [])
-        .filter((w) => w.id >= lo && w.id <= hi)
-        .map((w) => w.id);
-      setDragHoverWordIds(range);
-    }
-  };
+  const handleCanvasMouseMove = (e) => {
+    if (!isMouseDownRef.current || !dragStartPosRef.current || !activePageData) return;
+    const rect = canvasContainerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const curX = e.clientX - rect.left + (canvasContainerRef.current.scrollLeft || 0);
+    const curY = e.clientY - rect.top + (canvasContainerRef.current.scrollTop || 0);
 
-  const handleWordMouseUp = (word, e) => {
-    if (isMouseDownRef.current && dragAnchorWordRef.current) {
-      const lo = Math.min(dragAnchorWordRef.current.id, word.id);
-      const hi = Math.max(dragAnchorWordRef.current.id, word.id);
-      isMouseDownRef.current = false;
-      dragAnchorWordRef.current = null;
-      setDragHoverWordIds([]);
+    const minX = Math.min(dragStartPosRef.current.x, curX);
+    const maxX = Math.max(dragStartPosRef.current.x, curX);
+    const minY = Math.min(dragStartPosRef.current.y, curY);
+    const maxY = Math.max(dragStartPosRef.current.y, curY);
 
-      if (lo !== hi) {
-        const rangeIds = (activePageData?.words || [])
-          .filter((w) => w.id >= lo && w.id <= hi)
-          .map((w) => w.id);
-        if (rangeIds.length && rangeIds.length <= 40) {
-          applySelectedWordIds(rangeIds);
-          return;
+    const dist = Math.hypot(curX - dragStartPosRef.current.x, curY - dragStartPosRef.current.y);
+    if (dist > 8) {
+      setDragRect({ left: minX, top: minY, width: maxX - minX, height: maxY - minY });
+
+      const canvasEl = canvasRef.current;
+      if (canvasEl) {
+        const cw = parseFloat(canvasEl.style.width) || canvasEl.width;
+        const ch = parseFloat(canvasEl.style.height) || canvasEl.height;
+
+        const intersectingIds = [];
+        for (const w of activePageData.words || []) {
+          const [wx0, wy0, wx1, wy1] = w.box;
+          const wLeft = (wx0 / activePageData.width) * cw;
+          const wTop = (wy0 / activePageData.height) * ch;
+          const wRight = (wx1 / activePageData.width) * cw;
+          const wBottom = (wy1 / activePageData.height) * ch;
+
+          if (minX <= wRight && maxX >= wLeft && minY <= wBottom && maxY >= wTop) {
+            intersectingIds.push(w.id);
+          }
         }
+        setDragHoverWordIds(intersectingIds);
       }
     }
-    handleWordClick(word, e);
   };
+
+  const handleCanvasMouseUp = useCallback(
+    (e) => {
+      if (!isMouseDownRef.current) return;
+      isMouseDownRef.current = false;
+      const hadDrag = dragRect && (dragRect.width > 12 || dragRect.height > 12);
+      const selectedIds = [...dragHoverWordIds];
+      dragStartPosRef.current = null;
+      dragAnchorWordRef.current = null;
+      setDragRect(null);
+      setDragHoverWordIds([]);
+
+      if (hadDrag && selectedIds.length) {
+        const text = (activePageData?.words || [])
+          .filter((w) => selectedIds.includes(w.id))
+          .sort((a, b) => a.id - b.id)
+          .map((w) => w.text)
+          .join(" ");
+
+        if (!activeFieldId) {
+          setQuickAssignModal({
+            wordIds: selectedIds,
+            text,
+            x: e?.clientX || 400,
+            y: e?.clientY || 300,
+          });
+          return;
+        }
+        applySelectedWordIds(selectedIds, null, text);
+      }
+    },
+    [dragRect, dragHoverWordIds, activePageData, activeFieldId, applySelectedWordIds],
+  );
+
+  useEffect(() => {
+    const onGlobalUp = (e) => {
+      if (isMouseDownRef.current) {
+        handleCanvasMouseUp(e);
+      }
+    };
+    window.addEventListener("mouseup", onGlobalUp);
+    return () => window.removeEventListener("mouseup", onGlobalUp);
+  }, [handleCanvasMouseUp]);
+
+  // Global Keyboard Shortcuts (Enter / Tab to advance, Esc to clear)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") return;
+      if (e.key === "Escape") {
+        setActiveFieldId("");
+        setQuickAssignModal(null);
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        if (activeFieldId) {
+          e.preventDefault();
+          const allFields = currentType?.fields || [];
+          const curIdx = allFields.findIndex((f) => f.id === activeFieldId);
+          const next =
+            allFields.slice(curIdx + 1).find((f) => !selections[f.id]?.valueOverride) ||
+            allFields.find((f) => !selections[f.id]?.valueOverride);
+          if (next) setActiveFieldId(next.id);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeFieldId, currentType, selections]);
 
   const handleUploadPdf = async (file) => {
     if (!file || !currentType) return;
@@ -1089,15 +1277,15 @@ export default function PdfTrainingStudioPage() {
 
       const templateFields = currentType?.fields?.length
         ? currentType.fields.filter((f) =>
-            ["insuredName", "insuranceCompany", "policyNumber", "startDate", "expiryDate", "sumInsured", "netPremium", "totalPremium"].includes(f.id),
-          )
+          ["insuredName", "insuranceCompany", "policyNumber", "startDate", "expiryDate", "sumInsured", "netPremium", "totalPremium"].includes(f.id),
+        )
         : [
-            { id: "insuredName", label: "Insured Name", kind: "text", required: true, aliases: ["Insured Name", "Proposer Name"] },
-            { id: "insuranceCompany", label: "Insurance Company", kind: "text", required: true, aliases: ["Insurance Company", "Insurer"] },
-            { id: "policyNumber", label: "Policy Number", kind: "policy_number", required: true, aliases: ["Policy Number", "Policy No"] },
-            { id: "startDate", label: "Start Date", kind: "date", required: true, aliases: ["From", "Start Date"] },
-            { id: "expiryDate", label: "Expiry Date", kind: "date", required: true, aliases: ["To", "Expiry Date"] },
-          ];
+          { id: "insuredName", label: "Insured Name", kind: "text", required: true, aliases: ["Insured Name", "Proposer Name"] },
+          { id: "insuranceCompany", label: "Insurance Company", kind: "text", required: true, aliases: ["Insurance Company", "Insurer"] },
+          { id: "policyNumber", label: "Policy Number", kind: "policy_number", required: true, aliases: ["Policy Number", "Policy No"] },
+          { id: "startDate", label: "Start Date", kind: "date", required: true, aliases: ["From", "Start Date"] },
+          { id: "expiryDate", label: "Expiry Date", kind: "date", required: true, aliases: ["To", "Expiry Date"] },
+        ];
 
       const res = await fetch("/api/operations/pdf-training/types", {
         method: "POST",
@@ -1197,22 +1385,20 @@ export default function PdfTrainingStudioPage() {
                     setLeftTab(item.target.left);
                     setRightTab(item.target.right);
                   }}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs transition-colors ${
-                    isCurrent
-                      ? "bg-white text-slate-900 shadow-2xs font-bold"
-                      : isDone
-                        ? "text-emerald-700 hover:text-emerald-900"
-                        : "text-slate-500 hover:text-slate-800"
-                  }`}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs transition-colors ${isCurrent
+                    ? "bg-white text-slate-900 shadow-2xs font-bold"
+                    : isDone
+                      ? "text-emerald-700 hover:text-emerald-900"
+                      : "text-slate-500 hover:text-slate-800"
+                    }`}
                 >
                   <span
-                    className={`grid h-4 w-4 place-items-center rounded-full text-[10px] font-bold ${
-                      isCurrent
-                        ? "bg-[#1c6c39] text-white"
-                        : isDone
-                          ? "bg-emerald-100 text-[#1c6c39]"
-                          : "bg-slate-200 text-slate-600"
-                    }`}
+                    className={`grid h-4 w-4 place-items-center rounded-full text-[10px] font-bold ${isCurrent
+                      ? "bg-[#1c6c39] text-white"
+                      : isDone
+                        ? "bg-emerald-100 text-[#1c6c39]"
+                        : "bg-slate-200 text-slate-600"
+                      }`}
                   >
                     {isDone ? <Check size={10} /> : item.step}
                   </span>
@@ -1265,13 +1451,12 @@ export default function PdfTrainingStudioPage() {
 
         {banner ? (
           <div
-            className={`mt-3 flex items-center justify-between gap-3 rounded-xl border px-3.5 py-2 text-xs font-medium ${
-              banner.type === "error"
-                ? "border-rose-200 bg-rose-50 text-rose-800"
-                : banner.type === "success"
-                  ? "border-emerald-200 bg-emerald-50 text-[#1c6c39]"
-                  : "border-slate-200 bg-slate-50 text-slate-800"
-            }`}
+            className={`mt-3 flex items-center justify-between gap-3 rounded-xl border px-3.5 py-2 text-xs font-medium ${banner.type === "error"
+              ? "border-rose-200 bg-rose-50 text-rose-800"
+              : banner.type === "success"
+                ? "border-emerald-200 bg-emerald-50 text-[#1c6c39]"
+                : "border-slate-200 bg-slate-50 text-slate-800"
+              }`}
           >
             <div className="flex items-center gap-2">
               {banner.type === "error" ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />}
@@ -1292,18 +1477,16 @@ export default function PdfTrainingStudioPage() {
             <button
               type="button"
               onClick={() => setLeftTab("documents")}
-              className={`h-8 rounded-lg px-2 transition-colors ${
-                leftTab === "documents" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`h-8 rounded-lg px-2 transition-colors ${leftTab === "documents" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               Studio PDFs ({typeDocuments.length})
             </button>
             <button
               type="button"
               onClick={() => setLeftTab("crm-queue")}
-              className={`h-8 rounded-lg px-2 transition-colors ${
-                leftTab === "crm-queue" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`h-8 rounded-lg px-2 transition-colors ${leftTab === "crm-queue" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               CRM Queue ({crmQueue.uploads.length})
             </button>
@@ -1348,11 +1531,10 @@ export default function PdfTrainingStudioPage() {
                         key={role}
                         type="button"
                         onClick={() => setUploadRole(role)}
-                        className={`rounded-md px-2.5 py-1 text-xs font-bold capitalize transition-colors ${
-                          uploadRole === role
-                            ? "studio-pill-active bg-[#1c6c39] text-white"
-                            : "text-slate-600 hover:text-slate-900"
-                        }`}
+                        className={`rounded-md px-2.5 py-1 text-xs font-bold capitalize transition-colors ${uploadRole === role
+                          ? "studio-pill-active bg-[#1c6c39] text-white"
+                          : "text-slate-600 hover:text-slate-900"
+                          }`}
                       >
                         {role === "training" ? "Training" : "Held-Out"}
                       </button>
@@ -1382,11 +1564,10 @@ export default function PdfTrainingStudioPage() {
                   return (
                     <div
                       key={doc.id}
-                      className={`group flex items-center justify-between gap-2 rounded-xl border p-2.5 transition-colors ${
-                        active
-                          ? "border-[#1c6c39] bg-emerald-50/70"
-                          : "border-slate-200 bg-white hover:border-slate-300"
-                      }`}
+                      className={`group flex items-center justify-between gap-2 rounded-xl border p-2.5 transition-colors ${active
+                        ? "border-[#1c6c39] bg-emerald-50/70"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                        }`}
                     >
                       <button
                         type="button"
@@ -1396,11 +1577,10 @@ export default function PdfTrainingStudioPage() {
                         <div className="truncate text-sm font-bold text-slate-900">{doc.name}</div>
                         <div className="mt-1 flex items-center gap-2 text-xs text-slate-600">
                           <span
-                            className={`rounded-md px-2 py-0.5 font-semibold capitalize ${
-                              doc.role === "training"
-                                ? "bg-emerald-100 text-[#1c6c39]"
-                                : "bg-slate-100 text-slate-700"
-                            }`}
+                            className={`rounded-md px-2 py-0.5 font-semibold capitalize ${doc.role === "training"
+                              ? "bg-emerald-100 text-[#1c6c39]"
+                              : "bg-slate-100 text-slate-700"
+                              }`}
                           >
                             {doc.role === "training" ? "Training" : "Held-Out"}
                           </span>
@@ -1433,11 +1613,11 @@ export default function PdfTrainingStudioPage() {
                     </div>
                   );
                 })}
-              {!typeDocuments.length ? (
-                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-3 py-4 text-center text-xs leading-relaxed text-slate-500">
-                  No new PDFs uploaded in this category yet. Upload a PDF above or import from CRM Queue.
-                </div>
-              ) : null}
+                {!typeDocuments.length ? (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-3 py-4 text-center text-xs leading-relaxed text-slate-500">
+                    No new PDFs uploaded in this category yet. Upload a PDF above or import from CRM Queue.
+                  </div>
+                ) : null}
               </div>
 
               <div className="border-t border-slate-100 pt-3">
@@ -1452,9 +1632,8 @@ export default function PdfTrainingStudioPage() {
                         setSelectedProfileId(p.id);
                         setProfileName(p.name);
                       }}
-                      className={`studio-block-btn px-3 py-2 transition-colors ${
-                        baseProfileId === p.id ? "is-selected" : "bg-white hover:bg-slate-50"
-                      }`}
+                      className={`studio-block-btn px-3 py-2 transition-colors ${baseProfileId === p.id ? "is-selected" : "bg-white hover:bg-slate-50"
+                        }`}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate text-sm font-bold text-slate-900">{p.name}</span>
@@ -1480,9 +1659,8 @@ export default function PdfTrainingStudioPage() {
                 return (
                   <div
                     key={u.id}
-                    className={`rounded-xl border p-3 ${
-                      highlighted ? "border-[#1c6c39] bg-emerald-50/70" : "border-slate-200 bg-white"
-                    }`}
+                    className={`rounded-xl border p-3 ${highlighted ? "border-[#1c6c39] bg-emerald-50/70" : "border-slate-200 bg-white"
+                      }`}
                   >
                     <div className="break-words text-sm font-bold text-slate-900">{u.sourceFile}</div>
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
@@ -1571,6 +1749,19 @@ export default function PdfTrainingStudioPage() {
               </select>
               <button
                 type="button"
+                onClick={() => setAutoAdvance((v) => !v)}
+                title="Automatically advance to the next unmapped field after selection"
+                className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition ${
+                  autoAdvance
+                    ? "border-emerald-300 bg-emerald-50 text-[#1c6c39]"
+                    : "border-slate-200 text-slate-500 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <Sparkles size={13} />
+                <span>Auto-Advance {autoAdvance ? "(On)" : "(Off)"}</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowWordBoxes((v) => !v)}
                 className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold ${
                   showWordBoxes
@@ -1588,25 +1779,62 @@ export default function PdfTrainingStudioPage() {
             <div className="flex items-center justify-between rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-medium text-white shadow-md transition-all">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="text-slate-400 text-[11px] shrink-0">Mapping Target:</span>
+                <span className="text-slate-400 text-[11px] shrink-0">Target:</span>
                 <span className="font-bold text-white bg-white/10 px-2 py-0.5 rounded-md truncate max-w-[200px]">
                   {currentType?.fields?.find((f) => f.id === activeFieldId)?.label || activeFieldId}
                 </span>
                 <span className="text-slate-400 hidden sm:inline text-[11px]">
-                  — Click or drag words in PDF to map
+                  — Click or drag words in PDF (Double-click selects full phrase)
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => setActiveFieldId("")}
-                className="shrink-0 rounded-lg bg-[#1c6c39] px-3 py-1 text-xs font-bold text-white hover:bg-emerald-600 transition-colors shadow-xs"
-              >
-                Done
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const allFields = currentType?.fields || [];
+                    const curIdx = allFields.findIndex((f) => f.id === activeFieldId);
+                    const next =
+                      allFields.slice(curIdx + 1).find((f) => !selections[f.id]?.valueOverride) ||
+                      allFields.find((f) => !selections[f.id]?.valueOverride);
+                    if (next) setActiveFieldId(next.id);
+                  }}
+                  className="rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                >
+                  Skip Next →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveFieldId("")}
+                  className="rounded-lg bg-[#1c6c39] px-3 py-1 text-xs font-bold text-white hover:bg-emerald-600 transition-colors shadow-xs"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          ) : lastMappedFeedback ? (
+            <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs text-[#1c6c39]">
+              <span className="truncate">
+                ✓ Mapped <strong>{lastMappedFeedback.fieldLabel}</strong>: "{lastMappedFeedback.value}"
+              </span>
+              {lastMappedFeedback.nextFieldId ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveFieldId(lastMappedFeedback.nextFieldId)}
+                  className="font-bold underline ml-2 shrink-0 hover:text-emerald-800"
+                >
+                  Map {lastMappedFeedback.nextFieldLabel} →
+                </button>
+              ) : null}
             </div>
           ) : null}
 
-          <div className="relative flex-1 overflow-auto rounded-xl border border-slate-200 bg-slate-100 p-3 min-h-[540px] max-h-[700px]">
+          <div
+            ref={canvasContainerRef}
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseUp={handleCanvasMouseUp}
+            className="relative flex-1 overflow-auto rounded-xl border border-slate-200 bg-slate-100 p-3 min-h-[540px] max-h-[700px] select-none"
+          >
             {activeDoc ? (
               <div className="relative mx-auto inline-block bg-white shadow">
                 <canvas ref={canvasRef} className="block" />
@@ -1614,17 +1842,54 @@ export default function PdfTrainingStudioPage() {
                   <div className="p-6 text-center text-sm text-rose-600">{pdfRenderError}</div>
                 ) : null}
 
-                {activePageData ? (
+                {/* Spatial Drag Rectangle Overlay */}
+                {dragRect ? (
                   <div
-                    className="absolute inset-0 select-none"
-                    onMouseLeave={() => {
-                      if (isMouseDownRef.current) {
-                        isMouseDownRef.current = false;
-                        dragAnchorWordRef.current = null;
-                        setDragHoverWordIds([]);
-                      }
+                    style={{
+                      position: "absolute",
+                      left: dragRect.left,
+                      top: dragRect.top,
+                      width: dragRect.width,
+                      height: dragRect.height,
+                      pointerEvents: "none",
                     }}
-                  >
+                    className="z-30 rounded border border-emerald-500 bg-emerald-500/20"
+                  />
+                ) : null}
+
+                {/* Canvas Mapped Field Tags */}
+                {Object.entries(selections).map(([fId, sel]) => {
+                  if (sel.page !== currentPage || !sel.wordIds?.length) return null;
+                  const firstWordId = sel.wordIds[0];
+                  const word = activePageData?.words?.find((w) => w.id === firstWordId);
+                  if (!word) return null;
+                  const [x0, y0] = word.box;
+                  const left = `${(x0 / activePageData.width) * 100}%`;
+                  const top = `${(y0 / activePageData.height) * 100}%`;
+                  const label = currentType?.fields?.find((f) => f.id === fId)?.label || fId;
+                  const isHovered = hoveredFieldId === fId;
+
+                  return (
+                    <div
+                      key={`tag-${fId}`}
+                      style={{ left, top }}
+                      className={`pointer-events-none absolute -translate-y-full pb-0.5 transition-all z-20 ${
+                        isHovered ? "scale-105" : ""
+                      }`}
+                    >
+                      <span
+                        className={`inline-block rounded px-1.5 py-0.2 text-[8px] font-black uppercase tracking-wider text-white shadow-xs ${
+                          isHovered ? "bg-emerald-600 ring-2 ring-emerald-300" : "bg-[#1c6c39]"
+                        }`}
+                      >
+                        {label}
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {activePageData ? (
+                  <div className="absolute inset-0 select-none">
                     {activePageData.words.map((word) => {
                       const [x0, y0, x1, y1] = word.box;
                       const left = `${(x0 / activePageData.width) * 100}%`;
@@ -1654,9 +1919,8 @@ export default function PdfTrainingStudioPage() {
                           key={word.id}
                           type="button"
                           title={word.text}
-                          onMouseDown={(e) => handleWordMouseDown(word, e)}
-                          onMouseEnter={() => handleWordMouseEnter(word)}
-                          onMouseUp={(e) => handleWordMouseUp(word, e)}
+                          onClick={(e) => handleWordClick(word, e)}
+                          onDoubleClick={(e) => handleWordDoubleClick(word, e)}
                           style={{ left, top, width, height }}
                           className={`studio-word-box absolute cursor-crosshair rounded-[2px] border transition ${cls}`}
                         />
@@ -1683,27 +1947,24 @@ export default function PdfTrainingStudioPage() {
             <button
               type="button"
               onClick={() => setRightTab("trainer")}
-              className={`h-8 rounded-lg px-2 transition-colors ${
-                rightTab === "trainer" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`h-8 rounded-lg px-2 transition-colors ${rightTab === "trainer" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               Field Trainer
             </button>
             <button
               type="button"
               onClick={() => setRightTab("simulator")}
-              className={`h-8 rounded-lg px-2 transition-colors ${
-                rightTab === "simulator" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`h-8 rounded-lg px-2 transition-colors ${rightTab === "simulator" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               Unseen Test
             </button>
             <button
               type="button"
               onClick={() => setRightTab("benchmark")}
-              className={`h-8 rounded-lg px-2 transition-colors ${
-                rightTab === "benchmark" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`h-8 rounded-lg px-2 transition-colors ${rightTab === "benchmark" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               Accuracy Gate
             </button>
@@ -1718,7 +1979,7 @@ export default function PdfTrainingStudioPage() {
                       <CheckCircle2 size={12} /> Rule Active:{" "}
                       {typeof autoDetected.scope === "object" && autoDetected.scope !== null
                         ? [autoDetected.scope.category, autoDetected.scope.insurer].filter(Boolean).join(" / ") ||
-                          "matched"
+                        "matched"
                         : autoDetected.scope || "matched"}
                     </span>
                   ) : (
@@ -1803,18 +2064,16 @@ export default function PdfTrainingStudioPage() {
                         <button
                           type="button"
                           onClick={() => setFieldFilter("all")}
-                          className={`flex-1 rounded-lg px-2 py-1.5 text-center transition ${
-                            fieldFilter === "all" ? "bg-white text-slate-900 shadow-2xs font-black" : "hover:text-slate-900"
-                          }`}
+                          className={`flex-1 rounded-lg px-2 py-1.5 text-center transition ${fieldFilter === "all" ? "bg-white text-slate-900 shadow-2xs font-black" : "hover:text-slate-900"
+                            }`}
                         >
                           All ({allFields.length})
                         </button>
                         <button
                           type="button"
                           onClick={() => setFieldFilter("mapped")}
-                          className={`inline-flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-center transition ${
-                            fieldFilter === "mapped" ? "bg-white text-[#1c6c39] shadow-2xs font-black" : "hover:text-slate-900"
-                          }`}
+                          className={`inline-flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-center transition ${fieldFilter === "mapped" ? "bg-white text-[#1c6c39] shadow-2xs font-black" : "hover:text-slate-900"
+                            }`}
                         >
                           <CheckCircle2 size={13} className="text-[#1c6c39]" />
                           <span>Mapped ({mappedCount})</span>
@@ -1822,9 +2081,8 @@ export default function PdfTrainingStudioPage() {
                         <button
                           type="button"
                           onClick={() => setFieldFilter("missing")}
-                          className={`inline-flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-center transition ${
-                            fieldFilter === "missing" ? "bg-white text-amber-700 shadow-2xs font-black" : "hover:text-slate-900"
-                          }`}
+                          className={`inline-flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-center transition ${fieldFilter === "missing" ? "bg-white text-amber-700 shadow-2xs font-black" : "hover:text-slate-900"
+                            }`}
                         >
                           <AlertCircle size={13} className="text-amber-600" />
                           <span>Missing ({missingCount})</span>
@@ -1914,6 +2172,8 @@ export default function PdfTrainingStudioPage() {
                                 return (
                                   <div
                                     key={field.id}
+                                    onMouseEnter={() => setHoveredFieldId(field.id)}
+                                    onMouseLeave={() => setHoveredFieldId("")}
                                     className={isWideField ? "min-w-0 sm:col-span-2" : "min-w-0"}
                                     title={
                                       anchorText
@@ -1924,13 +2184,31 @@ export default function PdfTrainingStudioPage() {
                                     <label htmlFor={`studio-field-${field.id}`} className="studio-field-label">
                                       <span className="truncate inline-flex items-center gap-1.5">
                                         <span
-                                          className={`h-1.5 w-1.5 rounded-full shrink-0 ${
-                                            isMapped ? "bg-[#1c6c39]" : "bg-slate-300"
-                                          }`}
+                                          className={`h-1.5 w-1.5 rounded-full shrink-0 ${isMapped ? "bg-[#1c6c39]" : "bg-slate-300"
+                                            }`}
                                         />
                                         <span>{field.label}</span>
                                         {field.required ? <span className="text-rose-500">*</span> : null}
                                       </span>
+                                      {isMapped && (selections[field.id]?.page || auto?.page) ? (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            const pNo = selections[field.id]?.page || auto?.page;
+                                            if (pNo) setCurrentPage(pNo);
+                                          }}
+                                          title={`Mapped on Page ${selections[field.id]?.page || auto?.page}. Click to jump to page.`}
+                                          className={`ml-1.5 rounded px-1.5 py-0.2 text-[9px] font-mono font-bold transition ${
+                                            (selections[field.id]?.page || auto?.page) === currentPage
+                                              ? "bg-emerald-100 text-[#1c6c39]"
+                                              : "bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800"
+                                          }`}
+                                        >
+                                          p.{selections[field.id]?.page || auto?.page}
+                                        </button>
+                                      ) : null}
                                       {field.id === "chassisNumber" || field.id === "engineNumber" ? (
                                         <button
                                           type="button"
@@ -2064,9 +2342,8 @@ export default function PdfTrainingStudioPage() {
                                             };
                                           });
                                         }}
-                                        className={`studio-form-input w-full ${isMonospace ? "font-mono font-semibold text-slate-800" : "font-sans"} ${
-                                          isActive ? "studio-form-input-active" : ""
-                                        }`}
+                                        className={`studio-form-input w-full ${isMonospace ? "font-mono font-semibold text-slate-800" : "font-sans"} ${isActive ? "studio-form-input-active" : ""
+                                          }`}
                                       />
                                       {isActive ? (
                                         <button
@@ -2265,9 +2542,8 @@ export default function PdfTrainingStudioPage() {
                         </div>
                       </div>
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-black ${
-                          b.ready ? "bg-emerald-100 text-[#1c6c39]" : "bg-amber-100 text-amber-800"
-                        }`}
+                        className={`rounded-full px-3 py-1 text-xs font-black ${b.ready ? "bg-emerald-100 text-[#1c6c39]" : "bg-amber-100 text-amber-800"
+                          }`}
                       >
                         {b.accuracy ?? 0}% {b.ready ? "READY" : ""}
                       </span>
@@ -2404,6 +2680,83 @@ export default function PdfTrainingStudioPage() {
                   className="h-9 rounded-xl bg-[#1c6c39] px-5 text-xs font-bold text-white hover:bg-[#16582e]"
                 >
                   Got It
+                </button>
+              </div>
+            </div>
+          </div>
+        </ModalPortal>
+      ) : null}
+
+      {quickAssignModal ? (
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-md">
+            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-emerald-50 text-[#1c6c39]">
+                    <Sparkles size={14} />
+                  </span>
+                  <div>
+                    <h3 className="m-0 text-sm font-bold text-slate-900">Quick Assign Field</h3>
+                    <p className="m-0 text-[11px] text-slate-500">Assign selected text directly to a field</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQuickAssignModal(null)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Selected Value:</span>
+                <div className="mt-1 font-mono text-xs font-semibold text-slate-900 break-words">
+                  "{quickAssignModal.text}"
+                </div>
+              </div>
+
+              <div className="mt-3.5 space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Assign to Field:</span>
+                <div className="grid grid-cols-2 gap-1.5 max-h-[220px] overflow-y-auto pr-1">
+                  {(currentType?.fields || []).map((f) => {
+                    const isMapped = Boolean(selections[f.id]?.valueOverride);
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => {
+                          const targetFieldId = f.id;
+                          setQuickAssignModal(null);
+                          setActiveFieldId(targetFieldId);
+                          applySelectedWordIds(quickAssignModal.wordIds, targetFieldId, quickAssignModal.text);
+                        }}
+                        className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-left text-xs font-medium transition ${
+                          isMapped
+                            ? "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
+                            : "border-slate-200 bg-white text-slate-900 hover:border-[#1c6c39] hover:bg-emerald-50/50"
+                        }`}
+                      >
+                        <span className="truncate">{f.label}</span>
+                        {isMapped ? (
+                          <span className="text-[9px] text-emerald-600 font-bold shrink-0">Mapped</span>
+                        ) : f.required ? (
+                          <span className="text-rose-500 font-bold shrink-0">*</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setQuickAssignModal(null)}
+                  className="h-8 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
                 </button>
               </div>
             </div>
