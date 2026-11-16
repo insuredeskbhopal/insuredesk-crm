@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import locations from "@/lib/policies/pdf/utils/locations.cjs";
+const { lookupRtoLocation } = locations || {};
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { getTenantFilter } from "@/lib/auth/rbac";
@@ -210,6 +212,13 @@ export async function GET(request, context) {
           "Content-Disposition": `attachment; filename="bimaheadquarter-pdf-training-backup.json"`,
         },
       });
+    }
+
+    if (subPath === "rto-lookup") {
+      const { searchParams } = new URL(request.url);
+      const q = searchParams.get("q") || "";
+      const location = typeof lookupRtoLocation === "function" ? lookupRtoLocation(q) : "";
+      return NextResponse.json({ rtoLocation: location || "" });
     }
 
     if (subPath === "crm-queue") {

@@ -12,6 +12,8 @@ import { learnMapping, locateValueWordsInPages, mergeMapping } from "./extractio
 import { extractHybrid } from "./crm-trainers.js";
 import { ocrAvailable, parsePdf } from "./pdf.js";
 import seedData from "./seed-data.json";
+import locations from "@/lib/policies/pdf/utils/locations.cjs";
+const { lookupRtoLocation } = locations || {};
 
 const BASE_DIR = process.env.VERCEL
   ? path.join(os.tmpdir(), "bhq-training-studio")
@@ -51,7 +53,7 @@ const policySchema = z
 const selectionSchema = z.object({
   fieldId: z.string().min(1),
   page: z.number().int().min(1),
-  wordIds: z.array(z.number().int().min(0)).min(1).max(2000),
+  wordIds: z.array(z.number().int().min(0)).max(2000).default([]),
   anchor: z.string().max(500).optional(),
   semanticHint: z.string().max(500).optional(),
   multiline: z.boolean().optional(),
@@ -529,6 +531,29 @@ export async function deleteStudioDocument(id) {
   return { deleted: true, id };
 }
 
+function calculateDurationSafe(startStr, expiryStr) {
+  if (!startStr || !expiryStr) return "";
+  const parse = (s) => {
+    const m = String(s).trim().match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+    if (m) return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+    const iso = Date.parse(s);
+    return isNaN(iso) ? null : new Date(iso);
+  };
+  const d1 = parse(startStr);
+  const d2 = parse(expiryStr);
+  if (!d1 || !d2 || d2 < d1) return "";
+  const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+  const years = Math.round(diffDays / 365);
+  if (years >= 1 && Math.abs(diffDays - years * 365) <= 5) {
+    return years === 1 ? "1 Year" : `${years} Years`;
+  }
+  const months = Math.round(diffDays / 30);
+  if (months < 12 && months > 0) {
+    return months === 1 ? "1 Month" : `${months} Months`;
+  }
+  return `${years || 1} Year`;
+}
+
 export async function previewStudioMapping(body) {
   const state = await loadState();
   const value = selectionSchema.extend({ documentId: z.string() }).parse(body);
@@ -544,7 +569,14 @@ export async function previewStudioMapping(body) {
   const page = pages[value.page - 1];
   if (!field || !page) throw new StudioError(422, "Choose a valid field and PDF page.");
   try {
-    return learnMapping(page, value, field, doc.id);
+    const result = learnMapping(page, value, field, doc.id);
+    if ((field.id === "registrationNumber" || field.id === "vehicleNumber") && result?.example) {
+      result.example = String(result.example).replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      if (typeof lookupRtoLocation === "function") {
+        result.rtoLocation = lookupRtoLocation(result.example) || "";
+      }
+    }
+    return result;
   } catch (err) {
     throw new StudioError(422, err?.message || "Could not learn mapping for selected words.");
   }
@@ -573,6 +605,8 @@ export async function saveStudioProfile(body) {
   if (!doc || doc.role !== "training" || doc.typeId !== value.typeId) {
     throw new StudioError(409, "Choose a training PDF inside the selected category.");
   }
+  const type = state.types.find((t) => t.id === value.typeId);
+  if (!type) throw new StudioError(404, "Policy category not found.");
 
   const mappings = {};
   const exampleDocumentIds = new Set([doc.id]);
@@ -599,6 +633,16 @@ export async function saveStudioProfile(body) {
   }
 
   for (const selection of value.selections) {
+    if (!selection.wordIds?.length && selection.valueOverride) {
+      mappings[selection.fieldId] = {
+        anchor: selection.fieldId,
+        relation: "same-line",
+        example: selection.valueOverride,
+        valueOverride: selection.valueOverride,
+        fieldLabel: (type.fields || []).find((f) => f.id === selection.fieldId)?.label || selection.fieldId,
+      };
+      continue;
+    }
     const learned = await previewStudioMapping({ ...selection, documentId: doc.id });
     mappings[selection.fieldId] = mergeMapping(mappings[selection.fieldId], learned);
   }
@@ -657,10 +701,51 @@ export async function autoDetectStudioPreview(body) {
   if (chosen) mappings = chosen.mappings || {};
 
   const pages = await loadDocumentPages(doc);
-  return extractHybrid(pages, type.fields || [], mappings, {
+  const hybrid = extractHybrid(pages, type.fields || [], mappings, {
     fileName: doc.name,
     categoryName: type.name,
   });
+
+  if (Array.isArray(hybrid?.results)) {
+    let regVal = "";
+    let startVal = "";
+    let expiryVal = "";
+    let rtoResult = null;
+    let durationResult = null;
+
+    for (const r of hybrid.results) {
+      if ((r.fieldId === "registrationNumber" || r.fieldId === "vehicleNumber") && r.value) {
+        r.value = String(r.value).replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+        if (!regVal) regVal = r.value;
+      }
+      if (r.fieldId === "startDate" && r.value) startVal = r.value;
+      if (r.fieldId === "expiryDate" && r.value) expiryVal = r.value;
+      if (r.fieldId === "rtoLocation") rtoResult = r;
+      if (r.fieldId === "duration") durationResult = r;
+    }
+
+    if (regVal && rtoResult && (!rtoResult.value || !rtoResult.valid)) {
+      const loc = typeof lookupRtoLocation === "function" ? lookupRtoLocation(regVal) : "";
+      if (loc) {
+        rtoResult.value = loc;
+        rtoResult.valid = true;
+        rtoResult.status = "confident";
+        rtoResult.score = 0.98;
+      }
+    }
+
+    if (startVal && expiryVal && durationResult && (!durationResult.value || !durationResult.valid)) {
+      const calcDur = calculateDurationSafe(startVal, expiryVal);
+      if (calcDur) {
+        durationResult.value = calcDur;
+        durationResult.valid = true;
+        durationResult.status = "confident";
+        durationResult.score = 0.98;
+      }
+    }
+  }
+
+  return hybrid;
 }
 
 export async function getStudioRuns() {

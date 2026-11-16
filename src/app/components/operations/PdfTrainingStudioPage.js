@@ -73,6 +73,100 @@ function statusTone(status) {
   };
 }
 
+const QUICK_RTO_MAP = {
+  MP01: "BHOPAL",
+  MP02: "BERASIA",
+  MP03: "GUNA",
+  MP04: "BHOPAL",
+  MP05: "HOSHANGABAD",
+  MP06: "HARDA",
+  MP07: "GWALIOR",
+  MP08: "GUNA",
+  MP09: "INDORE",
+  MP10: "KHARGONE",
+  MP11: "DHAR",
+  MP12: "KHANDWA",
+  MP13: "UJJAIN",
+  MP14: "MANDSAUR",
+  MP15: "SAGAR",
+  MP16: "DAMOH",
+  MP17: "REWA",
+  MP18: "SHAHDOL",
+  MP19: "SATNA",
+  MP20: "JABALPUR",
+  MP21: "KATNI",
+  MP22: "SEONI",
+  MP28: "CHHINDWARA",
+  MP37: "SEHORE",
+  MP38: "RAISEN",
+  MP39: "RAJGARH",
+  MP40: "VIDISHA",
+  MP41: "DEWAS",
+  MP43: "RATLAM",
+  MP44: "NEEMUCH",
+  MH01: "MUMBAI SOUTH",
+  MH02: "MUMBAI WEST",
+  MH03: "MUMBAI EAST",
+  MH04: "THANE",
+  MH12: "PUNE",
+  MH14: "PIMPRI CHINCHWAD",
+  DL01: "DELHI NORTH",
+  DL02: "DELHI NEW DELHI",
+  DL03: "DELHI SOUTH",
+  DL04: "DELHI WEST",
+  DL05: "DELHI NORTH EAST",
+  DL06: "DELHI CENTRAL",
+  DL07: "DELHI EAST",
+  DL08: "DELHI NORTH WEST",
+  DL09: "DELHI SOUTH WEST",
+  GJ01: "AHMEDABAD",
+  GJ02: "MEHSANA",
+  GJ03: "RAJKOT",
+  GJ05: "SURAT",
+  GJ06: "VADODARA",
+  RJ14: "JAIPUR",
+  RJ02: "ALWAR",
+  RJ19: "JODHPUR",
+  UP32: "LUCKNOW",
+  UP14: "GHAZIABAD",
+  UP16: "NOIDA",
+  UP78: "KANPUR",
+  HR26: "GURGAON",
+  HR51: "FARIDABAD",
+  KA01: "BENGALURU CENTRAL",
+  KA03: "BENGALURU EAST",
+  KA04: "BENGALURU NORTH",
+  KA05: "BENGALURU SOUTH",
+};
+
+function normalizeRegistration(text) {
+  if (!text) return "";
+  return String(text).replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+}
+
+function calculatePolicyDuration(startStr, expiryStr) {
+  if (!startStr || !expiryStr) return "";
+  const parse = (s) => {
+    const m = String(s).trim().match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+    if (m) return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+    const iso = Date.parse(s);
+    return isNaN(iso) ? null : new Date(iso);
+  };
+  const d1 = parse(startStr);
+  const d2 = parse(expiryStr);
+  if (!d1 || !d2 || d2 < d1) return "";
+  const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+  const years = Math.round(diffDays / 365);
+  if (years >= 1 && Math.abs(diffDays - years * 365) <= 5) {
+    return years === 1 ? "1 Year" : `${years} Years`;
+  }
+  const months = Math.round(diffDays / 30);
+  if (months < 12 && months > 0) {
+    return months === 1 ? "1 Month" : `${months} Months`;
+  }
+  return `${years || 1} Year`;
+}
+
 export default function PdfTrainingStudioPage() {
   const searchParams = useSearchParams();
   const focusUploadId = searchParams.get("uploadId") || "";
@@ -119,6 +213,10 @@ export default function PdfTrainingStudioPage() {
   const renderTaskRef = useRef(null);
   const [pdfRenderError, setPdfRenderError] = useState("");
   const [numRenderedPages, setNumRenderedPages] = useState(0);
+
+  const isMouseDownRef = useRef(false);
+  const dragAnchorWordRef = useRef(null);
+  const [dragHoverWordIds, setDragHoverWordIds] = useState([]);
 
   const showToast = useCallback((type, text) => {
     setBanner({ type, text, id: Date.now() });
@@ -351,6 +449,112 @@ export default function PdfTrainingStudioPage() {
     return 1;
   }, [overview?.portableStore?.updatedAt, rightTab, activeRun, activeDoc, selections, activeFieldId]);
 
+  const triggerRtoLookup = useCallback(async (cleanReg) => {
+    if (!cleanReg) return;
+    const codeMatch = cleanReg.match(/^([A-Z]{2}\d{1,2})/);
+    if (!codeMatch) return;
+    const rtoCode = codeMatch[1].toUpperCase();
+
+    const quickRto = QUICK_RTO_MAP[rtoCode];
+    if (quickRto) {
+      setSelections((prev) => ({
+        ...prev,
+        rtoLocation: { fieldId: "rtoLocation", page: currentPage, wordIds: [], valueOverride: quickRto },
+      }));
+      setRemoveFieldIds((prev) => prev.filter((id) => id !== "rtoLocation"));
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/operations/pdf-training/rto-lookup?q=${encodeURIComponent(cleanReg)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.rtoLocation) {
+          setSelections((prev) => ({
+            ...prev,
+            rtoLocation: { fieldId: "rtoLocation", page: currentPage, wordIds: [], valueOverride: data.rtoLocation },
+          }));
+          setRemoveFieldIds((prev) => prev.filter((id) => id !== "rtoLocation"));
+        }
+      }
+    } catch {}
+  }, [currentPage]);
+
+  const triggerDurationCalculation = useCallback(
+    (changedFieldId, changedValue) => {
+      const startVal =
+        changedFieldId === "startDate"
+          ? changedValue
+          : selections.startDate?.valueOverride ||
+            mappingPreviews.startDate?.example ||
+            autoResultByField.startDate?.value ||
+            "";
+      const expiryVal =
+        changedFieldId === "expiryDate"
+          ? changedValue
+          : selections.expiryDate?.valueOverride ||
+            mappingPreviews.expiryDate?.example ||
+            autoResultByField.expiryDate?.value ||
+            "";
+
+      if (startVal && expiryVal) {
+        const calcDur = calculatePolicyDuration(startVal, expiryVal);
+        if (calcDur) {
+          setSelections((prev) => ({
+            ...prev,
+            duration: { fieldId: "duration", page: currentPage, wordIds: [], valueOverride: calcDur },
+          }));
+          setRemoveFieldIds((prev) => prev.filter((id) => id !== "duration"));
+        }
+      }
+    },
+    [selections, mappingPreviews, autoResultByField, currentPage],
+  );
+
+  const applySelectedWordIds = useCallback(
+    async (nextWordIds) => {
+      if (!activeFieldId || !activeDoc || !nextWordIds?.length) return;
+      const nextSel = { fieldId: activeFieldId, page: currentPage, wordIds: nextWordIds };
+      setSelections((prev) => ({ ...prev, [activeFieldId]: nextSel }));
+      setRemoveFieldIds((prev) => prev.filter((id) => id !== activeFieldId));
+
+      try {
+        const res = await fetch("/api/operations/pdf-training/mappings/preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            documentId: activeDoc.id,
+            fieldId: activeFieldId,
+            page: currentPage,
+            wordIds: nextWordIds,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast("error", data?.error || "Anchor preview failed.");
+          return;
+        }
+
+        if (activeFieldId === "registrationNumber" || activeFieldId === "vehicleNumber") {
+          const norm = normalizeRegistration(data.example);
+          if (norm) {
+            data.example = norm;
+            triggerRtoLookup(norm);
+          }
+        }
+
+        if (activeFieldId === "startDate" || activeFieldId === "expiryDate") {
+          triggerDurationCalculation(activeFieldId, data.example);
+        }
+
+        setMappingPreviews((prev) => ({ ...prev, [activeFieldId]: data }));
+      } catch (err) {
+        showToast("error", err?.message || "Preview request failed.");
+      }
+    },
+    [activeFieldId, activeDoc, currentPage, showToast, triggerRtoLookup, triggerDurationCalculation],
+  );
+
   const handleWordClick = async (word, event) => {
     if (!activeFieldId || !activeDoc) {
       showToast("info", "Select a field using 'Select in PDF' on the right panel first, then click its value in the PDF.");
@@ -364,48 +568,92 @@ export default function PdfTrainingStudioPage() {
     const existing = selections[activeFieldId];
     let nextWordIds = [word.id];
 
-    if (event.shiftKey && existing && existing.page === currentPage && existing.wordIds?.length) {
+    if (event?.shiftKey && existing && existing.page === currentPage && existing.wordIds?.length) {
       const anchorId = existing.wordIds[existing.wordIds.length - 1];
       const lo = Math.min(anchorId, word.id);
       const hi = Math.max(anchorId, word.id);
       const rangeIds = (activePageData?.words || [])
         .filter((w) => w.id >= lo && w.id <= hi)
         .map((w) => w.id);
-      if (rangeIds.length && rangeIds.length <= 25) {
+      if (rangeIds.length && rangeIds.length <= 40) {
         nextWordIds = rangeIds;
       }
-    } else if ((event.ctrlKey || event.metaKey) && existing && existing.page === currentPage) {
+    } else if ((event?.ctrlKey || event?.metaKey) && existing && existing.page === currentPage) {
       const set = new Set(existing.wordIds || []);
       if (set.has(word.id)) set.delete(word.id);
       else set.add(word.id);
       nextWordIds = [...set].sort((a, b) => a - b);
-    }
+    } else if (existing && existing.page === currentPage && existing.wordIds?.length) {
+      const currentIds = existing.wordIds;
+      const minId = Math.min(...currentIds);
+      const maxId = Math.max(...currentIds);
 
-    if (!nextWordIds.length) return;
-    const nextSel = { fieldId: activeFieldId, page: currentPage, wordIds: nextWordIds };
-    setSelections((prev) => ({ ...prev, [activeFieldId]: nextSel }));
-    setRemoveFieldIds((prev) => prev.filter((id) => id !== activeFieldId));
-
-    try {
-      const res = await fetch("/api/operations/pdf-training/mappings/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          documentId: activeDoc.id,
-          fieldId: activeFieldId,
-          page: currentPage,
-          wordIds: nextWordIds,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast("error", data?.error || "Anchor preview failed.");
-        return;
+      if (currentIds.length === 1 && currentIds[0] === word.id) {
+        nextWordIds = [];
+      } else if (Math.abs(word.id - minId) <= 30 || Math.abs(word.id - maxId) <= 30) {
+        const lo = Math.min(minId, word.id);
+        const hi = Math.max(maxId, word.id);
+        const rangeIds = (activePageData?.words || [])
+          .filter((w) => w.id >= lo && w.id <= hi)
+          .map((w) => w.id);
+        if (rangeIds.length && rangeIds.length <= 40) {
+          nextWordIds = rangeIds;
+        }
+      } else {
+        nextWordIds = [word.id];
       }
-      setMappingPreviews((prev) => ({ ...prev, [activeFieldId]: data }));
-    } catch (err) {
-      showToast("error", err?.message || "Preview request failed.");
     }
+
+    if (!nextWordIds.length) {
+      setSelections((prev) => {
+        const copy = { ...prev };
+        delete copy[activeFieldId];
+        return copy;
+      });
+      return;
+    }
+
+    await applySelectedWordIds(nextWordIds);
+  };
+
+  const handleWordMouseDown = (word, e) => {
+    if (!activeFieldId || !activeDoc || activeDoc.role !== "training") return;
+    if (e.button !== 0) return;
+    isMouseDownRef.current = true;
+    dragAnchorWordRef.current = word;
+    setDragHoverWordIds([word.id]);
+  };
+
+  const handleWordMouseEnter = (word) => {
+    if (isMouseDownRef.current && dragAnchorWordRef.current) {
+      const lo = Math.min(dragAnchorWordRef.current.id, word.id);
+      const hi = Math.max(dragAnchorWordRef.current.id, word.id);
+      const range = (activePageData?.words || [])
+        .filter((w) => w.id >= lo && w.id <= hi)
+        .map((w) => w.id);
+      setDragHoverWordIds(range);
+    }
+  };
+
+  const handleWordMouseUp = (word, e) => {
+    if (isMouseDownRef.current && dragAnchorWordRef.current) {
+      const lo = Math.min(dragAnchorWordRef.current.id, word.id);
+      const hi = Math.max(dragAnchorWordRef.current.id, word.id);
+      isMouseDownRef.current = false;
+      dragAnchorWordRef.current = null;
+      setDragHoverWordIds([]);
+
+      if (lo !== hi) {
+        const rangeIds = (activePageData?.words || [])
+          .filter((w) => w.id >= lo && w.id <= hi)
+          .map((w) => w.id);
+        if (rangeIds.length && rangeIds.length <= 40) {
+          applySelectedWordIds(rangeIds);
+          return;
+        }
+      }
+    }
+    handleWordClick(word, e);
   };
 
   const handleUploadPdf = async (file) => {
@@ -729,6 +977,7 @@ export default function PdfTrainingStudioPage() {
   const highlightedWordIds = useMemo(() => {
     const selectedSet = new Set();
     const autoSet = new Set();
+    const dragSet = new Set(dragHoverWordIds);
     for (const sel of Object.values(selections)) {
       if (sel.page === currentPage) {
         (sel.wordIds || []).forEach((id) => selectedSet.add(id));
@@ -739,8 +988,8 @@ export default function PdfTrainingStudioPage() {
         (r.wordIds || []).forEach((id) => autoSet.add(id));
       }
     }
-    return { selectedSet, autoSet };
-  }, [selections, autoDetected, currentPage, removeFieldIds]);
+    return { selectedSet, autoSet, dragSet };
+  }, [selections, autoDetected, currentPage, removeFieldIds, dragHoverWordIds]);
 
   const searchLower = wordSearch.trim().toLowerCase();
 
@@ -1169,13 +1418,14 @@ export default function PdfTrainingStudioPage() {
           </div>
 
           {activeFieldId ? (
-            <div className="studio-banner-active flex items-center justify-between rounded-xl bg-[#1c6c39] px-4 py-2.5 text-xs font-semibold text-white">
-              <span>
+            <div className="studio-banner-active flex items-center justify-between rounded-xl bg-[#1c6c39] px-4 py-2.5 text-xs font-semibold text-white shadow-sm">
+              <span className="flex items-center gap-1.5 flex-wrap">
+                <Sparkles size={14} className="text-emerald-200" />
                 Mapping Active:{" "}
-                <strong>{currentType?.fields?.find((f) => f.id === activeFieldId)?.label || activeFieldId}</strong> —
-                Click the value word in the PDF (hold Shift to select a range)
+                <strong className="underline underline-offset-2">{currentType?.fields?.find((f) => f.id === activeFieldId)?.label || activeFieldId}</strong> —
+                <span>Click words or hold & drag across text in PDF to select (e.g. multi-word names). You can also type directly in the field.</span>
               </span>
-              <button type="button" onClick={() => setActiveFieldId("")} className="font-bold underline">
+              <button type="button" onClick={() => setActiveFieldId("")} className="font-bold underline ml-2 shrink-0 hover:text-emerald-200">
                 Done
               </button>
             </div>
@@ -1190,19 +1440,30 @@ export default function PdfTrainingStudioPage() {
                 ) : null}
 
                 {showWordBoxes && activePageData ? (
-                  <div className="absolute inset-0">
+                  <div
+                    className="absolute inset-0 select-none"
+                    onMouseLeave={() => {
+                      if (isMouseDownRef.current) {
+                        isMouseDownRef.current = false;
+                        dragAnchorWordRef.current = null;
+                        setDragHoverWordIds([]);
+                      }
+                    }}
+                  >
                     {activePageData.words.map((word) => {
                       const [x0, y0, x1, y1] = word.box;
                       const left = `${(x0 / activePageData.width) * 100}%`;
                       const top = `${(y0 / activePageData.height) * 100}%`;
                       const width = `${Math.max(0.4, ((x1 - x0) / activePageData.width) * 100)}%`;
                       const height = `${Math.max(0.8, ((y1 - y0) / activePageData.height) * 100)}%`;
+                      const isDrag = highlightedWordIds.dragSet?.has(word.id);
                       const isSel = highlightedWordIds.selectedSet.has(word.id);
                       const isAuto = highlightedWordIds.autoSet.has(word.id);
                       const isMatch = searchLower && word.text.toLowerCase().includes(searchLower);
 
                       let cls = "border-transparent hover:border-[#1c6c39] hover:bg-emerald-500/15";
-                      if (isSel) cls = "border-[#1c6c39] bg-emerald-600/30 ring-1 ring-[#1c6c39]";
+                      if (isDrag) cls = "border-[#1c6c39] bg-emerald-600/40 ring-2 ring-[#1c6c39] z-10";
+                      else if (isSel) cls = "border-[#1c6c39] bg-emerald-600/30 ring-1 ring-[#1c6c39]";
                       else if (isMatch) cls = "border-amber-500 bg-amber-400/35";
                       else if (isAuto) cls = "border-emerald-500/80 bg-emerald-400/20";
 
@@ -1211,7 +1472,9 @@ export default function PdfTrainingStudioPage() {
                           key={word.id}
                           type="button"
                           title={word.text}
-                          onClick={(e) => handleWordClick(word, e)}
+                          onMouseDown={(e) => handleWordMouseDown(word, e)}
+                          onMouseEnter={() => handleWordMouseEnter(word)}
+                          onMouseUp={(e) => handleWordMouseUp(word, e)}
                           style={{ left, top, width, height }}
                           className={`studio-word-box absolute cursor-crosshair rounded-[2px] border transition ${cls}`}
                         />
@@ -1288,6 +1551,19 @@ export default function PdfTrainingStudioPage() {
                 >
                   <Wand2 size={13} /> Auto-Detect
                 </button>
+              </div>
+
+              <div className="rounded-xl bg-emerald-50/80 p-3 text-[11px] leading-relaxed text-emerald-950 border border-emerald-200/80 shadow-2xs">
+                <div className="font-bold flex items-center gap-1.5 text-[#1c6c39] mb-1.5">
+                  <Sparkles size={14} /> Training & Extraction Guide
+                </div>
+                <ul className="list-disc pl-4 space-y-1 text-slate-700">
+                  <li><strong>Multi-word Values:</strong> Drag across words or click start & end words in PDF to map full names (e.g. <em>Gurmit Singh Gujral</em>) or addresses.</li>
+                  <li><strong>Registration No:</strong> Auto-formats to clean uppercase alphanumeric (e.g. <span className="font-mono font-bold text-emerald-800">MP04YF2064</span>).</li>
+                  <li><strong>RTO Location:</strong> Automatically fetched from Registration No (e.g. MP04 &rarr; <em>BHOPAL</em>).</li>
+                  <li><strong>Duration:</strong> Automatically calculated once Start & Expiry dates are mapped (e.g. <em>1 Year</em>).</li>
+                  <li><strong>Manual Typing:</strong> You can directly edit or type any field below if PDF text is unclear.</li>
+                </ul>
               </div>
 
               <div className="max-h-[540px] space-y-3.5 overflow-y-auto pr-1">
@@ -1378,7 +1654,7 @@ export default function PdfTrainingStudioPage() {
                                     if (activeDoc?.role === "training") setActiveFieldId(field.id);
                                   }}
                                   onChange={(e) => {
-                                    const nextVal = e.target.value;
+                                    let nextVal = e.target.value;
                                     if (!nextVal) {
                                       setSelections((prev) => {
                                         const copy = { ...prev };
@@ -1393,24 +1669,27 @@ export default function PdfTrainingStudioPage() {
                                       setRemoveFieldIds((prev) => [...new Set([...prev, field.id])]);
                                       return;
                                     }
+
+                                    if (field.id === "registrationNumber" || field.id === "vehicleNumber") {
+                                      nextVal = normalizeRegistration(nextVal);
+                                      triggerRtoLookup(nextVal);
+                                    }
+                                    if (field.id === "startDate" || field.id === "expiryDate") {
+                                      triggerDurationCalculation(field.id, nextVal);
+                                    }
+
                                     setRemoveFieldIds((prev) => prev.filter((id) => id !== field.id));
                                     setSelections((prev) => {
                                       const existing = prev[field.id];
-                                      if (existing) {
-                                        return { ...prev, [field.id]: { ...existing, valueOverride: nextVal } };
-                                      }
-                                      if (auto?.wordIds?.length && auto?.page) {
-                                        return {
-                                          ...prev,
-                                          [field.id]: {
-                                            fieldId: field.id,
-                                            page: auto.page,
-                                            wordIds: auto.wordIds,
-                                            valueOverride: nextVal,
-                                          },
-                                        };
-                                      }
-                                      return prev;
+                                      return {
+                                        ...prev,
+                                        [field.id]: {
+                                          fieldId: field.id,
+                                          page: existing?.page || auto?.page || currentPage,
+                                          wordIds: existing?.wordIds || auto?.wordIds || [],
+                                          valueOverride: nextVal,
+                                        },
+                                      };
                                     });
                                   }}
                                   className={`studio-form-input w-full ${isActive ? "studio-form-input-active" : ""}`}
