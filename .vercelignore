@@ -15,6 +15,7 @@
 /storage
 /tests
 /whatsapp-gateway
+/policy-intelligence-module
 /*.docx
 /*.traineddata
 /*.tsbuildinfo
