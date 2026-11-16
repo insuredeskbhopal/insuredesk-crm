@@ -73,8 +73,9 @@ function defaultSeedState() {
   };
 }
 
-async function loadState() {
-  if (STATE_MEM.state) {
+async function loadState({ fresh = false } = {}) {
+  const now = Date.now();
+  if (!fresh && STATE_MEM.state && (now - (STATE_MEM.fetchedAt || 0) < 2000)) {
     return STATE_MEM.state;
   }
 
@@ -125,6 +126,7 @@ async function loadState() {
 async function saveState(state, { persistSnapshot = true } = {}) {
   state.updatedAt = new Date().toISOString();
   STATE_MEM.state = state;
+  STATE_MEM.fetchedAt = Date.now();
 
   try {
     await fsp.mkdir(STUDIO_DIR, { recursive: true });
@@ -421,7 +423,7 @@ export async function uploadStudioDocumentBuffer({
 
   state.documents.unshift(doc);
   await saveState(state, { persistSnapshot: true });
-  return doc;
+  return { ...doc, pages };
 }
 
 export async function deleteStudioDocument(id) {
