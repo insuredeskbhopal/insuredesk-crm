@@ -152,7 +152,15 @@ export default function PdfTrainingStudioPage() {
       setOverview(statusData);
       setCrmQueue(queueData);
       setTypes(Array.isArray(tData) ? tData : []);
-      setDocuments(Array.isArray(dData) ? dData : []);
+      setDocuments((prev) => {
+        const serverDocs = Array.isArray(dData) ? dData : [];
+        if (!serverDocs.length && prev.length) return prev;
+        const map = new Map();
+        for (const doc of [...serverDocs, ...prev]) {
+          if (!map.has(doc.id)) map.set(doc.id, doc);
+        }
+        return Array.from(map.values());
+      });
       setProfiles(Array.isArray(pData) ? pData : []);
       setRuns(Array.isArray(rData) ? rData : []);
 
@@ -189,7 +197,10 @@ export default function PdfTrainingStudioPage() {
     const latestProfile = typeProfiles[0];
     setBaseProfileId(latestProfile?.id || "");
     setSelectedProfileId(latestProfile?.id || "");
-    if (!typeDocuments.some((d) => d.id === selectedDocId)) {
+    if (selectedDocId && !typeDocuments.some((d) => d.id === selectedDocId)) {
+      const preferred = typeDocuments.find((d) => d.role === "training") || typeDocuments[0];
+      if (preferred) setSelectedDocId(preferred.id);
+    } else if (!selectedDocId && typeDocuments.length) {
       const preferred = typeDocuments.find((d) => d.role === "training") || typeDocuments[0];
       setSelectedDocId(preferred?.id || "");
     }

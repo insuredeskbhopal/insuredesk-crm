@@ -61,6 +61,23 @@ const selectionSchema = z.object({
 const STATE_MEM = globalThis.__bhqStudioStateCache || { state: null, mtimeMs: 0 };
 globalThis.__bhqStudioStateCache = STATE_MEM;
 
+function stripNullBytes(obj) {
+  if (typeof obj === "string") {
+    return obj.replace(/\u0000/g, "");
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(stripNullBytes);
+  }
+  if (obj !== null && typeof obj === "object") {
+    const clean = {};
+    for (const [key, val] of Object.entries(obj)) {
+      clean[key] = stripNullBytes(val);
+    }
+    return clean;
+  }
+  return obj;
+}
+
 function defaultSeedState() {
   const types = Array.isArray(seedData?.types) && seedData.types.length ? seedData.types : defaultCategories;
   const profiles = Array.isArray(seedData?.profiles) ? seedData.profiles : [];
@@ -139,6 +156,14 @@ async function saveState(state, { persistSnapshot = true } = {}) {
 
   if (persistSnapshot) {
     try {
+      const sanitizedMetadata = stripNullBytes({
+        types: state.types,
+        profiles: state.profiles,
+        documents: state.documents,
+        runs: state.runs.slice(0, 100),
+        updatedAt: state.updatedAt,
+      });
+
       await prisma.auditLog.create({
         data: {
           action: "TRAINING_STUDIO_STATE",
@@ -146,17 +171,11 @@ async function saveState(state, { persistSnapshot = true } = {}) {
           entityId: "studio-v1",
           severity: "INFO",
           source: "SYSTEM",
-          metadata: {
-            types: state.types,
-            profiles: state.profiles,
-            documents: state.documents,
-            runs: state.runs.slice(0, 100),
-            updatedAt: state.updatedAt,
-          },
+          metadata: sanitizedMetadata,
         },
       });
     } catch (err) {
-      console.warn("[TrainingStudio] Snapshot creation failed:", err?.message);
+      console.error("[TrainingStudio] Snapshot creation failed:", err?.message);
     }
   }
 }
@@ -298,12 +317,65 @@ export async function saveStudioType(body, id = null) {
 
 export async function getStudioDocuments() {
   const state = await loadState();
+  try {
+    const dbFiles = await prisma.uploadedFile.findMany({
+      where: { extractionMethod: "training-studio", deletedAt: null },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      select: { id: true, sourceFile: true, createdAt: true, status: true, storagePath: true, storageProvider: true },
+    });
+    if (dbFiles?.length) {
+      const knownIds = new Set(state.documents.map((d) => d.uploadedFileId || d.id));
+      for (const file of dbFiles) {
+        if (!knownIds.has(file.id)) {
+          state.documents.push({
+            id: file.id,
+            name: file.sourceFile,
+            typeId: state.types[0]?.id || "motor-insurance",
+            sha256: "",
+            role: "training",
+            pageCount: 1,
+            localPdfPath: "",
+            storageProvider: file.storageProvider || "",
+            storagePath: file.storagePath || "",
+            uploadedFileId: file.id,
+            createdAt: file.createdAt?.toISOString?.() || new Date().toISOString(),
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[TrainingStudio] getStudioDocuments db enrichment skipped:", err?.message);
+  }
   return state.documents;
 }
 
 export async function getStudioDocument(id) {
   const state = await loadState();
-  const doc = state.documents.find((d) => d.id === id);
+  let doc = state.documents.find((d) => d.id === id);
+  if (!doc) {
+    try {
+      const rec = await prisma.uploadedFile.findUnique({
+        where: { id },
+        select: { id: true, sourceFile: true, pdfBytes: true, storagePath: true, storageProvider: true, createdAt: true },
+      });
+      if (rec) {
+        doc = {
+          id: rec.id,
+          name: rec.sourceFile,
+          typeId: state.types[0]?.id || "motor-insurance",
+          sha256: "",
+          role: "training",
+          pageCount: 1,
+          localPdfPath: "",
+          storageProvider: rec.storageProvider || "",
+          storagePath: rec.storagePath || "",
+          uploadedFileId: rec.id,
+          createdAt: rec.createdAt?.toISOString?.() || new Date().toISOString(),
+        };
+      }
+    } catch {}
+  }
   if (!doc) throw new StudioError(404, "PDF document not found.");
   const pages = await loadDocumentPages(doc);
   return { ...doc, pages };
@@ -311,7 +383,26 @@ export async function getStudioDocument(id) {
 
 export async function getStudioDocumentFile(id) {
   const state = await loadState();
-  const doc = state.documents.find((d) => d.id === id);
+  let doc = state.documents.find((d) => d.id === id);
+  if (!doc) {
+    try {
+      const rec = await prisma.uploadedFile.findUnique({
+        where: { id },
+        select: { id: true, sourceFile: true, pdfBytes: true, storagePath: true, storageProvider: true },
+      });
+      if (rec) {
+        let bytes = null;
+        if (rec.pdfBytes) bytes = Buffer.from(rec.pdfBytes);
+        else if (rec.storageProvider === "google_drive" && rec.storagePath) {
+          bytes = await downloadGoogleDriveFile(rec.storagePath);
+        } else if (rec.storagePath) {
+          const physical = getLocalPhysicalPath(rec.storagePath);
+          if (fs.existsSync(physical)) bytes = await fsp.readFile(physical);
+        }
+        if (bytes) return { name: rec.sourceFile, bytes };
+      }
+    } catch {}
+  }
   if (!doc) throw new StudioError(404, "PDF document not found.");
   const bytes = await getDocumentBuffer(doc);
   return { name: doc.name, bytes };
@@ -388,7 +479,7 @@ export async function uploadStudioDocumentBuffer({
           mimeType: "application/pdf",
           sizeBytes: bytes.byteLength,
           pdfBytes: Buffer.from(bytes),
-          status: "PROCESSED",
+          status: "EXTRACTED",
           extractionMethod: "training-studio",
         },
         select: { id: true },
