@@ -13,6 +13,7 @@ import {
   Eye,
   FileCheck2,
   FilePlus2,
+  HelpCircle,
   Plus,
   RefreshCw,
   Search,
@@ -247,12 +248,14 @@ export default function PdfTrainingStudioPage() {
   const [profileName, setProfileName] = useState("");
   const [baseProfileId, setBaseProfileId] = useState("");
   const [removeFieldIds, setRemoveFieldIds] = useState([]);
+  const [fieldSearch, setFieldSearch] = useState("");
 
   const [selectedProfileId, setSelectedProfileId] = useState("");
   const [activeRun, setActiveRun] = useState(null);
   const [truthDraft, setTruthDraft] = useState({});
 
   const [showNewTypeModal, setShowNewTypeModal] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
   const [newTypeForm, setNewTypeForm] = useState({ name: "", description: "", extraFields: "" });
 
   const canvasRef = useRef(null);
@@ -1164,111 +1167,105 @@ export default function PdfTrainingStudioPage() {
 
   return (
     <div className="operations-module-page pdf-studio-root space-y-5">
-      {/* Unified BimaHeadquarter Operations Header */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-2.5">
-            <div className="flex flex-wrap items-center gap-3">
-              <OperationsBackLink />
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-[#1c6c39]">
-                <span className="h-2 w-2 rounded-full bg-[#1c6c39]" />
-                Built-in Training Engine Active
+      {/* Sleek Enterprise Studio Topbar */}
+      <div className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-xs">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3">
+            <OperationsBackLink />
+            <div className="h-4 w-px bg-slate-200" />
+            <div className="flex items-center gap-2">
+              <h1 className="m-0 text-base font-bold text-slate-900 tracking-tight">
+                PDF Training Studio
+              </h1>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-[#1c6c39]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#1c6c39] animate-pulse" />
+                Live Engine
               </span>
-            </div>
-
-            <div className="flex items-start gap-3.5">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-emerald-200 bg-emerald-50 text-[#1c6c39]">
-                <Sparkles size={22} />
-              </span>
-              <div>
-                <h1 className="m-0 text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
-                  PDF Training Studio
-                </h1>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                  Teach new insurance policy formats visually, verify on unseen schedules, and publish extraction rules to CRM without affecting Bulk Upload or Motor parsing.
-                </p>
-              </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white p-0.5 shadow-2xs">
-              <button
-                type="button"
-                onClick={loadWorkspace}
-                disabled={loading}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
-              >
-                <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-                <span>Refresh</span>
-              </button>
-              <div className="h-4 w-px bg-slate-200" />
-              <a
-                href="/api/operations/pdf-training/backup"
-                download="bimaheadquarter-pdf-training-backup.json"
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
-              >
-                <Download size={14} />
-                <span>Backup JSON</span>
-              </a>
-            </div>
+          {/* Compact Stepper Track */}
+          <div className="hidden md:flex items-center gap-1 rounded-xl bg-slate-100 p-1 text-xs font-semibold text-slate-600">
+            {WORKFLOW_STEPS.map((item) => {
+              const isCurrent = currentWorkflowStep === item.step;
+              const isDone = currentWorkflowStep > item.step;
+              return (
+                <button
+                  key={item.step}
+                  type="button"
+                  onClick={() => {
+                    setLeftTab(item.target.left);
+                    setRightTab(item.target.right);
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs transition-colors ${
+                    isCurrent
+                      ? "bg-white text-slate-900 shadow-2xs font-bold"
+                      : isDone
+                        ? "text-emerald-700 hover:text-emerald-900"
+                        : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <span
+                    className={`grid h-4 w-4 place-items-center rounded-full text-[10px] font-bold ${
+                      isCurrent
+                        ? "bg-[#1c6c39] text-white"
+                        : isDone
+                          ? "bg-emerald-100 text-[#1c6c39]"
+                          : "bg-slate-200 text-slate-600"
+                    }`}
+                  >
+                    {isDone ? <Check size={10} /> : item.step}
+                  </span>
+                  <span>{item.title}</span>
+                </button>
+              );
+            })}
+          </div>
 
+          {/* Action Tools */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowGuideModal(true)}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              title="Training & Shortcut Guide"
+            >
+              <HelpCircle size={14} className="text-emerald-700" />
+              <span>Guide</span>
+            </button>
+            <a
+              href="/api/operations/pdf-training/backup"
+              download="bimaheadquarter-pdf-training-backup.json"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              title="Download Backup JSON"
+            >
+              <Download size={14} />
+              <span className="hidden sm:inline">Backup</span>
+            </a>
+            <button
+              type="button"
+              onClick={loadWorkspace}
+              disabled={loading}
+              className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-50 disabled:opacity-40"
+              title="Refresh Workspace"
+            >
+              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            </button>
             <button
               type="button"
               onClick={handleSyncToCrm}
               disabled={busyAction === "sync"}
-              className="studio-btn-primary inline-flex h-9 items-center gap-2 rounded-xl bg-[#1c6c39] px-4 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#16582e] disabled:opacity-60"
+              className="studio-btn-primary inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#1c6c39] px-3.5 text-xs font-bold text-white shadow-2xs transition hover:bg-[#16582e] disabled:opacity-60"
             >
-              {busyAction === "sync" ? <LoaderCircle size={15} className="animate-spin" /> : <Database size={15} />}
+              {busyAction === "sync" ? <LoaderCircle size={13} className="animate-spin" /> : <Database size={13} />}
               <span>Sync Rules to CRM</span>
             </button>
           </div>
         </div>
 
-        {/* Guided 4-Step Training Workflow */}
-        <div className="mt-5 grid grid-cols-1 gap-2.5 border-t border-slate-100 pt-4 sm:grid-cols-2 xl:grid-cols-4">
-          {WORKFLOW_STEPS.map((item) => {
-            const isCurrent = currentWorkflowStep === item.step;
-            const isDone = currentWorkflowStep > item.step;
-            return (
-              <button
-                key={item.step}
-                type="button"
-                onClick={() => {
-                  setLeftTab(item.target.left);
-                  setRightTab(item.target.right);
-                }}
-                className={`studio-card-btn items-start gap-3 rounded-xl border p-3 transition-all ${
-                  isCurrent
-                    ? "border-[#1c6c39] bg-emerald-50/70 shadow-2xs"
-                    : isDone
-                      ? "border-emerald-200 bg-white hover:border-emerald-300"
-                      : "border-slate-200 bg-slate-50/60 hover:bg-white"
-                }`}
-              >
-                <span
-                  className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-extrabold ${
-                    isCurrent
-                      ? "studio-step-active bg-[#1c6c39] text-white"
-                      : isDone
-                        ? "bg-emerald-100 text-[#1c6c39]"
-                        : "bg-slate-200 text-slate-700"
-                  }`}
-                >
-                  {isDone ? <Check size={14} /> : item.step}
-                </span>
-                <div className="min-w-0">
-                  <div className="text-sm font-bold leading-snug text-slate-900">{item.title}</div>
-                  <div className="mt-0.5 text-xs leading-normal text-slate-600">{item.hint}</div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
         {banner ? (
           <div
-            className={`mt-4 flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm font-medium ${
+            className={`mt-3 flex items-center justify-between gap-3 rounded-xl border px-3.5 py-2 text-xs font-medium ${
               banner.type === "error"
                 ? "border-rose-200 bg-rose-50 text-rose-800"
                 : banner.type === "success"
@@ -1276,12 +1273,12 @@ export default function PdfTrainingStudioPage() {
                   : "border-slate-200 bg-slate-50 text-slate-800"
             }`}
           >
-            <div className="flex items-center gap-2.5">
-              {banner.type === "error" ? <AlertCircle size={17} /> : <CheckCircle2 size={17} />}
+            <div className="flex items-center gap-2">
+              {banner.type === "error" ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />}
               <span>{banner.text}</span>
             </div>
-            <button type="button" onClick={() => setBanner(null)} className="rounded p-1 opacity-70 hover:opacity-100">
-              <X size={16} />
+            <button type="button" onClick={() => setBanner(null)} className="rounded p-0.5 opacity-70 hover:opacity-100">
+              <X size={14} />
             </button>
           </div>
         ) : null}
@@ -1588,14 +1585,22 @@ export default function PdfTrainingStudioPage() {
           </div>
 
           {activeFieldId ? (
-            <div className="studio-banner-active flex items-center justify-between rounded-xl bg-[#1c6c39] px-4 py-2.5 text-xs font-semibold text-white shadow-sm">
-              <span className="flex items-center gap-1.5 flex-wrap">
-                <Sparkles size={14} className="text-emerald-200" />
-                Mapping Active:{" "}
-                <strong className="underline underline-offset-2">{currentType?.fields?.find((f) => f.id === activeFieldId)?.label || activeFieldId}</strong> —
-                <span>Click words or hold & drag across text in PDF to select (e.g. multi-word names). You can also type directly in the field.</span>
-              </span>
-              <button type="button" onClick={() => setActiveFieldId("")} className="font-bold underline ml-2 shrink-0 hover:text-emerald-200">
+            <div className="flex items-center justify-between rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-medium text-white shadow-md transition-all">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="text-slate-400 text-[11px] shrink-0">Mapping Target:</span>
+                <span className="font-bold text-white bg-white/10 px-2 py-0.5 rounded-md truncate max-w-[200px]">
+                  {currentType?.fields?.find((f) => f.id === activeFieldId)?.label || activeFieldId}
+                </span>
+                <span className="text-slate-400 hidden sm:inline text-[11px]">
+                  — Click or drag words in PDF to map
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveFieldId("")}
+                className="shrink-0 rounded-lg bg-[#1c6c39] px-3 py-1 text-xs font-bold text-white hover:bg-emerald-600 transition-colors shadow-xs"
+              >
                 Done
               </button>
             </div>
@@ -1709,42 +1714,39 @@ export default function PdfTrainingStudioPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="text-xs font-medium text-slate-600">
                   {autoDetected?.crmMatched ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-[#1c6c39]">
-                      <CheckCircle2 size={13} /> CRM Rule Active:{" "}
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-[#1c6c39] border border-emerald-200/70">
+                      <CheckCircle2 size={12} /> Rule Active:{" "}
                       {typeof autoDetected.scope === "object" && autoDetected.scope !== null
                         ? [autoDetected.scope.category, autoDetected.scope.insurer].filter(Boolean).join(" / ") ||
                           "matched"
                         : autoDetected.scope || "matched"}
                     </span>
                   ) : (
-                    <span>Click any field below and select its value in the PDF</span>
+                    <span className="text-[11px] text-slate-500">Click field to select text in PDF or edit directly</span>
                   )}
                 </div>
-                <button
-                  type="button"
-                  disabled={!activeDoc}
-                  onClick={() => runAutoDetect(activeDoc, baseProfileId)}
-                  className="studio-btn-soft inline-flex items-center gap-1.5 disabled:opacity-40"
-                >
-                  <Wand2 size={13} /> Auto-Detect
-                </button>
-              </div>
-
-              <div className="rounded-xl bg-emerald-50/80 p-3 text-[11px] leading-relaxed text-emerald-950 border border-emerald-200/80 shadow-2xs">
-                <div className="font-bold flex items-center gap-1.5 text-[#1c6c39] mb-1.5">
-                  <Sparkles size={14} /> Training & Extraction Guide
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowGuideModal(true)}
+                    className="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
+                    title="Shortcuts Guide"
+                  >
+                    <HelpCircle size={12} />
+                    <span>Guide</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!activeDoc}
+                    onClick={() => runAutoDetect(activeDoc, baseProfileId)}
+                    className="studio-btn-soft inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-[11px] font-bold disabled:opacity-40"
+                  >
+                    <Wand2 size={12} /> Auto-Detect
+                  </button>
                 </div>
-                <ul className="list-disc pl-4 space-y-1 text-slate-700">
-                  <li><strong>Multi-word Values:</strong> Drag across words or click start & end words in PDF to map full names (e.g. <em>Gurmit Singh Gujral</em>) or addresses.</li>
-                  <li><strong>Engine & Chassis Auto-Split:</strong> If Engine & Chassis are printed together (e.g. <span className="font-mono font-bold text-emerald-800">MA3.../G12...</span> in New India policies), selecting it auto-splits and fills both fields! Click <strong>Swap</strong> to invert them if needed.</li>
-                  <li><strong>Registration No:</strong> Auto-formats to clean uppercase alphanumeric (e.g. <span className="font-mono font-bold text-emerald-800">MP04YF2064</span>).</li>
-                  <li><strong>RTO Location:</strong> Automatically fetched from Registration No (e.g. MP04 &rarr; <em>BHOPAL</em>).</li>
-                  <li><strong>Duration:</strong> Automatically calculated once Start & Expiry dates are mapped (e.g. <em>1 Year</em>).</li>
-                  <li><strong>Manual Typing:</strong> You can directly edit or type any field below if PDF text is unclear.</li>
-                </ul>
               </div>
 
-              <div className="max-h-[540px] space-y-3.5 overflow-y-auto pr-1">
+              <div className="min-h-[560px] max-h-[calc(100vh-260px)] space-y-3.5 overflow-y-auto pr-1">
                 {(() => {
                   const allFields = currentType?.fields || [];
                   let mappedCount = 0;
@@ -1829,8 +1831,32 @@ export default function PdfTrainingStudioPage() {
                         </button>
                       </div>
 
+                      <div className="relative">
+                        <Search size={13} className="pointer-events-none absolute left-2.5 top-2.5 text-slate-400" />
+                        <input
+                          type="text"
+                          value={fieldSearch}
+                          onChange={(e) => setFieldSearch(e.target.value)}
+                          placeholder="Filter fields by name (e.g. chassis, premium)..."
+                          className="h-8 w-full rounded-lg border border-slate-200 bg-slate-50/70 pl-8 pr-7 text-xs font-medium text-slate-800 placeholder-slate-400 transition focus:border-[#1c6c39] focus:bg-white focus:outline-none"
+                        />
+                        {fieldSearch ? (
+                          <button
+                            type="button"
+                            onClick={() => setFieldSearch("")}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                          >
+                            <X size={12} />
+                          </button>
+                        ) : null}
+                      </div>
+
                       {sections.map((section) => {
                         const visibleFields = section.fields.filter((field) => {
+                          const s = fieldSearch.trim().toLowerCase();
+                          if (s && !field.label.toLowerCase().includes(s) && !field.id.toLowerCase().includes(s)) {
+                            return false;
+                          }
                           const manualPreview = mappingPreviews[field.id];
                           const auto = autoResultByField[field.id];
                           const removed = removeFieldIds.includes(field.id);
@@ -1848,9 +1874,24 @@ export default function PdfTrainingStudioPage() {
                         if (!visibleFields.length) return null;
 
                         return (
-                          <fieldset key={section.title} className="preview-fieldset">
-                            <legend className="preview-legend">{section.title}</legend>
-                            <div className="grid grid-cols-1 gap-x-3 gap-y-3 sm:grid-cols-2">
+                          <div key={section.title} className="space-y-2.5">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-1 pt-1.5">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                {section.title}
+                              </span>
+                              <span className="text-[10px] font-semibold text-slate-400">
+                                {visibleFields.filter((f) => {
+                                  const raw = selections[f.id]?.valueOverride;
+                                  const auto = autoResultByField[f.id];
+                                  const removed = removeFieldIds.includes(f.id);
+                                  const manual = mappingPreviews[f.id];
+                                  const v = raw !== undefined ? raw : manual?.example || (!removed ? auto?.value : "") || "";
+                                  return Boolean(v && String(v).trim());
+                                }).length}{" "}
+                                / {visibleFields.length} mapped
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                               {visibleFields.map((field) => {
                                 const manualPreview = mappingPreviews[field.id];
                                 const auto = autoResultByField[field.id];
@@ -1867,6 +1908,8 @@ export default function PdfTrainingStudioPage() {
                                   /name|company|address|location|description|occupancy|makeModel|variant|remarks/i.test(
                                     field.id,
                                   ) || String(displayValue).length > 28;
+                                const isMonospace =
+                                  /number|date|premium|suminsured|idv|year|gstin|cubic|capacity|ncb/i.test(field.id);
 
                                 return (
                                   <div
@@ -1879,12 +1922,14 @@ export default function PdfTrainingStudioPage() {
                                     }
                                   >
                                     <label htmlFor={`studio-field-${field.id}`} className="studio-field-label">
-                                      <span className="truncate inline-flex items-center gap-1">
-                                        {isMapped ? (
-                                          <CheckCircle2 size={12} className="text-[#1c6c39] shrink-0" />
-                                        ) : null}
+                                      <span className="truncate inline-flex items-center gap-1.5">
+                                        <span
+                                          className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                                            isMapped ? "bg-[#1c6c39]" : "bg-slate-300"
+                                          }`}
+                                        />
                                         <span>{field.label}</span>
-                                        {field.required ? <span className="ml-0.5 text-rose-500">*</span> : null}
+                                        {field.required ? <span className="text-rose-500">*</span> : null}
                                       </span>
                                       {field.id === "chassisNumber" || field.id === "engineNumber" ? (
                                         <button
@@ -1895,14 +1940,14 @@ export default function PdfTrainingStudioPage() {
                                             handleSwapEngineChassis();
                                           }}
                                           title="Swap Engine & Chassis Numbers"
-                                          className="ml-auto inline-flex items-center gap-1 rounded border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-[#1c6c39] hover:bg-emerald-100"
+                                          className="ml-auto inline-flex items-center gap-1 rounded border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-[#1c6c39] hover:bg-emerald-100"
                                         >
-                                          <RefreshCw size={10} className="shrink-0" />
+                                          <RefreshCw size={9} className="shrink-0" />
                                           <span>Swap</span>
                                         </button>
                                       ) : null}
                                       {isActive ? (
-                                        <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-[#1c6c39]">
+                                        <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-[#1c6c39]">
                                           Picking
                                         </span>
                                       ) : null}
@@ -2019,7 +2064,9 @@ export default function PdfTrainingStudioPage() {
                                             };
                                           });
                                         }}
-                                        className={`studio-form-input w-full ${isActive ? "studio-form-input-active" : ""}`}
+                                        className={`studio-form-input w-full ${isMonospace ? "font-mono font-semibold text-slate-800" : "font-sans"} ${
+                                          isActive ? "studio-form-input-active" : ""
+                                        }`}
                                       />
                                       {isActive ? (
                                         <button
@@ -2030,13 +2077,35 @@ export default function PdfTrainingStudioPage() {
                                         >
                                           <Check size={14} />
                                         </button>
+                                      ) : displayValue ? (
+                                        <button
+                                          type="button"
+                                          title="Clear field value"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelections((prev) => {
+                                              const copy = { ...prev };
+                                              delete copy[field.id];
+                                              return copy;
+                                            });
+                                            setMappingPreviews((prev) => {
+                                              const copy = { ...prev };
+                                              delete copy[field.id];
+                                              return copy;
+                                            });
+                                            setRemoveFieldIds((prev) => [...new Set([...prev, field.id])]);
+                                          }}
+                                          className="absolute right-2 top-1/2 -translate-y-1/2 grid h-4 w-4 place-items-center rounded-full text-slate-300 opacity-60 hover:text-slate-600 hover:opacity-100"
+                                        >
+                                          <X size={11} />
+                                        </button>
                                       ) : null}
                                     </div>
                                   </div>
                                 );
                               })}
                             </div>
-                          </fieldset>
+                          </div>
                         );
                       })}
                     </>
@@ -2054,8 +2123,9 @@ export default function PdfTrainingStudioPage() {
                 />
                 <button
                   type="button"
-                  disabled={!activeDoc || activeDoc.role !== "training" || busyAction === "save-profile"}
+                  disabled={!activeDoc || busyAction === "save-profile"}
                   onClick={handleSaveProfile}
+                  title={!activeDoc ? "Select or upload a PDF to save a profile" : "Save current field mappings as a new profile version"}
                   className="studio-btn-primary flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#1c6c39] px-4 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#16582e] disabled:opacity-50"
                 >
                   {busyAction === "save-profile" ? (
@@ -2281,6 +2351,62 @@ export default function PdfTrainingStudioPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </ModalPortal>
+      ) : null}
+
+      {showGuideModal ? (
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-md">
+            <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-50 text-[#1c6c39]">
+                    <Sparkles size={16} />
+                  </span>
+                  <div>
+                    <h3 className="m-0 text-base font-bold text-slate-900">Training Studio Guide</h3>
+                    <p className="m-0 text-xs text-slate-500">Visual mapping and layout extraction capabilities</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowGuideModal(false)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="mt-4 space-y-3 text-xs text-slate-600">
+                <div className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                  <span className="font-bold text-slate-900 shrink-0 w-28">Multi-Word Values</span>
+                  <span>Drag across text in the PDF canvas or hold Shift and click words to capture full names (e.g. <em>Gurmit Singh Gujral</em>) or multi-line addresses.</span>
+                </div>
+                <div className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                  <span className="font-bold text-slate-900 shrink-0 w-28">Engine & Chassis</span>
+                  <span>If Engine & Chassis are printed together with a slash (e.g. <code>MA3.../G12...</code>), selecting it automatically splits both fields. Use the <strong>⇄ Swap</strong> button anytime to invert them.</span>
+                </div>
+                <div className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                  <span className="font-bold text-slate-900 shrink-0 w-28">Auto-Enrichment</span>
+                  <span>Registration numbers are auto-cleaned to uppercase alphanumeric (<code>MP04YF2064</code>), and RTO Location (<code>BHOPAL</code>) is auto-fetched. Duration is auto-calculated from Start and Expiry dates.</span>
+                </div>
+                <div className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                  <span className="font-bold text-slate-900 shrink-0 w-28">Direct Editing</span>
+                  <span>You can directly click and edit any field on the right panel anytime. Manual values are saved with 100% fidelity.</span>
+                </div>
+              </div>
+
+              <div className="mt-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowGuideModal(false)}
+                  className="h-9 rounded-xl bg-[#1c6c39] px-5 text-xs font-bold text-white hover:bg-[#16582e]"
+                >
+                  Got It
+                </button>
+              </div>
+            </div>
           </div>
         </ModalPortal>
       ) : null}
