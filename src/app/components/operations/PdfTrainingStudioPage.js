@@ -338,8 +338,8 @@ export default function PdfTrainingStudioPage() {
 
   useEffect(() => {
     if (!currentType) return;
-    setProfileName((prev) => prev || `${currentType.name} Layout Profile`);
     const latestProfile = typeProfiles[0];
+    setProfileName((prev) => prev || latestProfile?.name || `${currentType.name} Layout Profile`);
     setBaseProfileId(latestProfile?.id || "");
     setSelectedProfileId(latestProfile?.id || "");
     if (selectedDocId && !typeDocuments.some((d) => d.id === selectedDocId)) {
@@ -865,17 +865,41 @@ export default function PdfTrainingStudioPage() {
     if (!activeDoc || !currentType) return;
     const selectionList = Object.values(selections);
     const autoSelections = [];
+
+    // 1. Gather confident or populated auto-detected results
     for (const r of autoDetected?.results || []) {
       if (
-        r.status === "confident" &&
-        r.wordIds?.length &&
+        (r.status === "confident" || (r.value && String(r.value).trim())) &&
         r.page &&
         !selections[r.fieldId] &&
         !removeFieldIds.includes(r.fieldId)
       ) {
-        autoSelections.push({ fieldId: r.fieldId, page: r.page, wordIds: r.wordIds });
+        autoSelections.push({
+          fieldId: r.fieldId,
+          page: r.page,
+          wordIds: r.wordIds || [],
+          valueOverride: r.value ? String(r.value).trim() : "",
+        });
       }
     }
+
+    // 2. Also ensure any field with a visible value in the right panel is included
+    for (const f of currentType?.fields || []) {
+      if (!selections[f.id] && !autoSelections.some((s) => s.fieldId === f.id) && !removeFieldIds.includes(f.id)) {
+        const auto = autoResultByField[f.id];
+        const manual = mappingPreviews[f.id];
+        const val = manual?.example || auto?.value;
+        if (val && String(val).trim()) {
+          autoSelections.push({
+            fieldId: f.id,
+            page: auto?.page || currentPage,
+            wordIds: auto?.wordIds || [],
+            valueOverride: String(val).trim(),
+          });
+        }
+      }
+    }
+
     if (!selectionList.length && !autoSelections.length && !baseProfileId) {
       showToast("error", "Map at least one field in the PDF or run Auto-Detect before saving.");
       return;
@@ -901,9 +925,11 @@ export default function PdfTrainingStudioPage() {
         showToast("error", data?.error || "Profile save failed.");
         return;
       }
-      showToast("success", `Saved "${data.name}" (v${data.version}). Proceed to Step 3 or Sync Rules to CRM.`);
+      const mappedCount = Object.keys(data.mappings || {}).length;
+      showToast("success", `Saved "${data.name}" (v${data.version}). ${mappedCount} fields mapped!`);
       setBaseProfileId(data.id);
       setSelectedProfileId(data.id);
+      setProfileName(data.name);
       await loadWorkspace();
     } catch (err) {
       showToast("error", err?.message || "Failed to save profile.");
@@ -1427,6 +1453,7 @@ export default function PdfTrainingStudioPage() {
                       onClick={() => {
                         setBaseProfileId(p.id);
                         setSelectedProfileId(p.id);
+                        setProfileName(p.name);
                       }}
                       className={`studio-block-btn px-3 py-2 transition-colors ${
                         baseProfileId === p.id ? "is-selected" : "bg-white hover:bg-slate-50"

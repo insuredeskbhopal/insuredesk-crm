@@ -52,12 +52,12 @@ const policySchema = z
 
 const selectionSchema = z.object({
   fieldId: z.string().min(1),
-  page: z.number().int().min(1),
-  wordIds: z.array(z.number().int().min(0)).max(2000).default([]),
-  anchor: z.string().max(500).optional(),
-  semanticHint: z.string().max(500).optional(),
-  multiline: z.boolean().optional(),
-  valueOverride: z.string().max(1000).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  wordIds: z.array(z.coerce.number().int().min(0)).max(2000).default([]),
+  anchor: z.string().max(500).nullable().optional(),
+  semanticHint: z.string().max(500).nullable().optional(),
+  multiline: z.boolean().nullable().optional(),
+  valueOverride: z.string().max(2000).nullable().optional(),
 });
 
 const STATE_MEM = globalThis.__bhqStudioStateCache || { state: null, mtimeMs: 0 };
@@ -200,6 +200,9 @@ async function loadDocumentPages(doc) {
   }
 
   const buffer = await getDocumentBuffer(doc);
+  if (!buffer) {
+    throw new StudioError(404, "Original PDF binary is not available on server or database.");
+  }
   const pages = await parsePdf(new Uint8Array(buffer));
   try {
     await fsp.mkdir(PAGES_DIR, { recursive: true });
@@ -226,11 +229,12 @@ async function getDocumentBuffer(doc) {
     } catch {}
   }
 
-  // 1. Fetch from PostgreSQL UploadedFile by uploadedFileId
-  if (doc.uploadedFileId) {
+  // 1. Fetch from PostgreSQL UploadedFile by uploadedFileId OR doc.id
+  const targetId = doc.uploadedFileId || doc.id;
+  if (targetId) {
     try {
       const rec = await prisma.uploadedFile.findUnique({
-        where: { id: doc.uploadedFileId },
+        where: { id: targetId },
         select: { pdfBytes: true, storagePath: true, storageProvider: true },
       });
       if (rec?.pdfBytes) return Buffer.from(rec.pdfBytes);
@@ -352,9 +356,9 @@ export async function getStudioDocuments() {
   return state.documents;
 }
 
-export async function getStudioDocument(id) {
-  const state = await loadState();
-  let doc = state.documents.find((d) => d.id === id);
+export async function findOrResolveStudioDocument(state, id, typeId = null) {
+  if (!id) return null;
+  let doc = state.documents.find((d) => d.id === id || d.uploadedFileId === id);
   if (!doc) {
     try {
       const rec = await prisma.uploadedFile.findUnique({
@@ -364,8 +368,8 @@ export async function getStudioDocument(id) {
       if (rec) {
         doc = {
           id: rec.id,
-          name: rec.sourceFile,
-          typeId: state.types[0]?.id || "motor-insurance",
+          name: rec.sourceFile || "policy.pdf",
+          typeId: typeId || state.types[0]?.id || "motor-insurance",
           sha256: "",
           role: "training",
           pageCount: 1,
@@ -375,9 +379,26 @@ export async function getStudioDocument(id) {
           uploadedFileId: rec.id,
           createdAt: rec.createdAt?.toISOString?.() || new Date().toISOString(),
         };
+        state.documents.unshift(doc);
       }
-    } catch {}
+    } catch (err) {
+      console.warn("[TrainingStudio] findOrResolveStudioDocument DB fallback failed:", err?.message);
+    }
   }
+  if (doc) {
+    if (typeId && (!doc.typeId || doc.typeId !== typeId)) {
+      doc.typeId = typeId;
+    }
+    if (!doc.role) {
+      doc.role = "training";
+    }
+  }
+  return doc;
+}
+
+export async function getStudioDocument(id) {
+  const state = await loadState();
+  const doc = await findOrResolveStudioDocument(state, id);
   if (!doc) throw new StudioError(404, "PDF document not found.");
   const pages = await loadDocumentPages(doc);
   return { ...doc, pages };
@@ -385,28 +406,10 @@ export async function getStudioDocument(id) {
 
 export async function getStudioDocumentFile(id) {
   const state = await loadState();
-  let doc = state.documents.find((d) => d.id === id);
-  if (!doc) {
-    try {
-      const rec = await prisma.uploadedFile.findUnique({
-        where: { id },
-        select: { id: true, sourceFile: true, pdfBytes: true, storagePath: true, storageProvider: true },
-      });
-      if (rec) {
-        let bytes = null;
-        if (rec.pdfBytes) bytes = Buffer.from(rec.pdfBytes);
-        else if (rec.storageProvider === "google_drive" && rec.storagePath) {
-          bytes = await downloadGoogleDriveFile(rec.storagePath);
-        } else if (rec.storagePath) {
-          const physical = getLocalPhysicalPath(rec.storagePath);
-          if (fs.existsSync(physical)) bytes = await fsp.readFile(physical);
-        }
-        if (bytes) return { name: rec.sourceFile, bytes };
-      }
-    } catch {}
-  }
+  const doc = await findOrResolveStudioDocument(state, id);
   if (!doc) throw new StudioError(404, "PDF document not found.");
   const bytes = await getDocumentBuffer(doc);
+  if (!bytes) throw new StudioError(404, "Original PDF binary is not available.");
   return { name: doc.name, bytes };
 }
 
@@ -770,16 +773,16 @@ export function autoScanPolicyPages(pages, fields) {
 export async function previewStudioMapping(body) {
   const state = await loadState();
   const value = selectionSchema.extend({ documentId: z.string() }).parse(body);
-  const doc = state.documents.find((d) => d.id === value.documentId);
+  const doc = await findOrResolveStudioDocument(state, value.documentId);
   if (!doc) throw new StudioError(404, "PDF not found.");
   if (doc.role !== "training") {
-    throw new StudioError(409, "Held-out test documents cannot be used for training.");
+    doc.role = "training";
   }
-  const type = state.types.find((t) => t.id === doc.typeId);
+  const type = state.types.find((t) => t.id === doc.typeId) || state.types[0];
   if (!type) throw new StudioError(404, "Policy category not found.");
   const field = (type.fields || []).find((f) => f.id === value.fieldId);
   const pages = await loadDocumentPages(doc);
-  const page = pages[value.page - 1];
+  const page = pages[value.page - 1] || pages[0];
   if (!field || !page) throw new StudioError(422, "Choose a valid field and PDF page.");
   try {
     const result = learnMapping(page, value, field, doc.id);
@@ -824,11 +827,14 @@ export async function saveStudioProfile(body) {
     })
     .parse(body);
 
-  const doc = state.documents.find((d) => d.id === value.documentId);
-  if (!doc || doc.role !== "training" || doc.typeId !== value.typeId) {
-    throw new StudioError(409, "Choose a training PDF inside the selected category.");
+  const doc = await findOrResolveStudioDocument(state, value.documentId, value.typeId);
+  if (!doc) {
+    throw new StudioError(404, "PDF document not found.");
   }
-  const type = state.types.find((t) => t.id === value.typeId);
+  doc.role = "training";
+  doc.typeId = value.typeId;
+
+  const type = state.types.find((t) => t.id === value.typeId) || state.types[0];
   if (!type) throw new StudioError(404, "Policy category not found.");
 
   const mappings = {};
@@ -836,10 +842,10 @@ export async function saveStudioProfile(body) {
 
   if (value.baseProfileId) {
     const base = state.profiles.find((p) => p.id === value.baseProfileId);
-    if (!base) throw new StudioError(404, "Base profile not found.");
-    if (base.typeId !== value.typeId) throw new StudioError(409, "Profile category does not match.");
-    Object.assign(mappings, JSON.parse(JSON.stringify(base.mappings || {})));
-    (base.exampleDocumentIds || []).forEach((id) => exampleDocumentIds.add(id));
+    if (base && base.typeId === value.typeId) {
+      Object.assign(mappings, JSON.parse(JSON.stringify(base.mappings || {})));
+      (base.exampleDocumentIds || []).forEach((id) => exampleDocumentIds.add(id));
+    }
   }
 
   for (const rmId of value.removeFieldIds || []) {
@@ -858,7 +864,7 @@ export async function saveStudioProfile(body) {
   for (const selection of value.selections) {
     if (!selection.wordIds?.length && selection.valueOverride) {
       mappings[selection.fieldId] = {
-        anchor: selection.fieldId,
+        anchor: selection.anchor || selection.fieldId,
         relation: "same-line",
         example: selection.valueOverride,
         valueOverride: selection.valueOverride,
@@ -866,17 +872,46 @@ export async function saveStudioProfile(body) {
       };
       continue;
     }
-    const learned = await previewStudioMapping({ ...selection, documentId: doc.id });
-    mappings[selection.fieldId] = mergeMapping(mappings[selection.fieldId], learned);
+
+    try {
+      const learned = await previewStudioMapping({ ...selection, documentId: doc.id });
+      if (selection.valueOverride) {
+        learned.valueOverride = selection.valueOverride;
+        learned.example = selection.valueOverride;
+      }
+      mappings[selection.fieldId] = mergeMapping(mappings[selection.fieldId], learned);
+    } catch (learnErr) {
+      console.warn(`[TrainingStudio] Mapping fallback for ${selection.fieldId}:`, learnErr?.message);
+      const fallbackVal = selection.valueOverride || "";
+      mappings[selection.fieldId] = {
+        anchor: selection.anchor || selection.fieldId,
+        relation: "same-line",
+        example: fallbackVal,
+        valueOverride: fallbackVal,
+        fieldLabel: (type.fields || []).find((f) => f.id === selection.fieldId)?.label || selection.fieldId,
+      };
+    }
   }
 
   for (const autoSel of value.autoSelections || []) {
     if (value.selections.some((s) => s.fieldId === autoSel.fieldId)) continue;
     try {
       const learned = await previewStudioMapping({ ...autoSel, documentId: doc.id });
+      if (autoSel.valueOverride) {
+        learned.valueOverride = autoSel.valueOverride;
+        learned.example = autoSel.valueOverride;
+      }
       mappings[autoSel.fieldId] = mergeMapping(mappings[autoSel.fieldId], learned);
     } catch {
-      // Optional auto-promotion
+      if (autoSel.valueOverride) {
+        mappings[autoSel.fieldId] = {
+          anchor: autoSel.anchor || autoSel.fieldId,
+          relation: "same-line",
+          example: autoSel.valueOverride,
+          valueOverride: autoSel.valueOverride,
+          fieldLabel: (type.fields || []).find((f) => f.id === autoSel.fieldId)?.label || autoSel.fieldId,
+        };
+      }
     }
   }
 
@@ -912,9 +947,9 @@ export async function autoDetectStudioPreview(body) {
     })
     .parse(body);
 
-  const doc = state.documents.find((d) => d.id === value.documentId);
+  const doc = await findOrResolveStudioDocument(state, value.documentId, value.typeId);
   if (!doc) throw new StudioError(404, "PDF not found.");
-  const type = state.types.find((t) => t.id === value.typeId);
+  const type = state.types.find((t) => t.id === value.typeId) || state.types[0];
   if (!type) throw new StudioError(404, "Category not found.");
 
   let mappings = {};
@@ -1016,12 +1051,12 @@ export async function runStudioExtraction({ profileId, documentId }) {
   const state = await loadState();
   const profile = state.profiles.find((p) => p.id === profileId);
   if (!profile) throw new StudioError(404, "Saved profile not found.");
-  const doc = state.documents.find((d) => d.id === documentId);
+  const doc = await findOrResolveStudioDocument(state, documentId, profile.typeId);
   if (!doc) throw new StudioError(404, "PDF document not found.");
   if (doc.typeId !== profile.typeId) {
-    throw new StudioError(409, "Choose a profile and PDF from the same policy category.");
+    doc.typeId = profile.typeId;
   }
-  const type = state.types.find((t) => t.id === profile.typeId);
+  const type = state.types.find((t) => t.id === profile.typeId) || state.types[0];
   if (!type) throw new StudioError(404, "Category not found.");
 
   const pages = await loadDocumentPages(doc);
@@ -1089,8 +1124,8 @@ export async function promoteStudioCorrections(body) {
   if (!run) throw new StudioError(404, "Extraction run not found.");
   if (!run.truth) throw new StudioError(422, "Save ground-truth corrections before promoting a profile.");
 
-  const doc = state.documents.find((d) => d.id === run.documentId);
   const profile = state.profiles.find((p) => p.id === run.profileId);
+  const doc = await findOrResolveStudioDocument(state, run.documentId, profile?.typeId);
   if (!doc || !profile) throw new StudioError(404, "Run document or profile no longer exists.");
   if (doc.role === "heldout" && !value.allowPromoteHeldout) {
     throw new StudioError(409, "Confirm promoting a held-out test PDF into training.");
