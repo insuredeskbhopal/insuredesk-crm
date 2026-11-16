@@ -96,6 +96,13 @@ async function runOcrFallback(buffer) {
 }
 
 async function renderPdfPagesToPng(buffer) {
+  if (!globalThis.pdfjsWorker) {
+    try {
+      globalThis.pdfjsWorker = await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
+    } catch {
+      // In environments where pdf.worker.mjs is loaded externally
+    }
+  }
   const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const maxPages = Number(process.env.OCR_MAX_PAGES || 2);
   const images = [];

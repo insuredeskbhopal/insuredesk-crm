@@ -116,6 +116,13 @@ export function organizePage(raw, number, width, height, source, warning) {
 export async function parsePdf(buffer) {
     const canvas = await import('@napi-rs/canvas');
     Object.assign(globalThis, { DOMMatrix: canvas.DOMMatrix, ImageData: canvas.ImageData, Path2D: canvas.Path2D });
+    if (!globalThis.pdfjsWorker) {
+        try {
+            globalThis.pdfjsWorker = await import('pdfjs-dist/legacy/build/pdf.worker.mjs');
+        } catch {
+            // In environments where pdf.worker.mjs is bundled or loaded externally
+        }
+    }
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
     const pdfRoot = join(process.cwd(), 'node_modules', 'pdfjs-dist');
     const task = pdfjs.getDocument({
