@@ -116,7 +116,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> loginWithCredentials(String clientId, String mpin) async {
     state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
 
-    final cleanId = clientId.trim();
+    String cleanId = clientId.trim();
+    final digitsOnly = cleanId.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digitsOnly.length >= 10 && (cleanId.startsWith('+91') || cleanId.startsWith('91') || cleanId.startsWith('0'))) {
+      cleanId = digitsOnly.substring(digitsOnly.length - 10);
+    }
     final cleanMpin = mpin.trim();
 
     if (cleanId.isEmpty) {
@@ -130,7 +134,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (cleanMpin.length < 4 || cleanMpin.length > 6) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Client MPIN must be a 6-digit numeric code.',
+        errorMessage: 'Client MPIN must be a 4 to 6-digit numeric code.',
       );
       return false;
     }
@@ -160,7 +164,49 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (err) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: err.toString().replaceAll('Exception:', '').trim(),
+        errorMessage: _formatAuthError(err),
+      );
+      return false;
+    }
+  }
+
+  /// Authenticate and set MPIN using OTP verification
+  Future<bool> loginWithOtpAndMpin({
+    required String phone,
+    required String otp,
+    required String newMpin,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
+    try {
+      final response = await ApiService.verifyOtpAndSetMpin(
+        phone: phone,
+        otp: otp,
+        newMpin: newMpin,
+      );
+      final userMap = response['user'] as Map<String, dynamic>? ?? {};
+      final name = userMap['name'] ?? 'Client';
+      final initials = name.toString().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+
+      final authenticatedUser = AuthUser(
+        clientId: userMap['customerId'] ?? userMap['id'] ?? phone,
+        name: name,
+        email: userMap['email'] ?? '',
+        accountNo: userMap['customerId'] ?? userMap['id'] ?? phone,
+        avatarInitials: initials.isEmpty ? 'CL' : initials,
+        isGoogleLinked: false,
+      );
+
+      state = state.copyWith(
+        isLoading: false,
+        isAuthenticated: true,
+        user: authenticatedUser,
+        successMessage: 'Account verified and MPIN set! Redirecting...',
+      );
+      return true;
+    } catch (err) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: _formatAuthError(err),
       );
       return false;
     }
@@ -182,7 +228,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> linkAndAuthenticateGoogle(String clientId, String mpin) async {
     state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
 
-    final cleanId = clientId.trim();
+    String cleanId = clientId.trim();
+    final digitsOnly = cleanId.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digitsOnly.length >= 10 && (cleanId.startsWith('+91') || cleanId.startsWith('91') || cleanId.startsWith('0'))) {
+      cleanId = digitsOnly.substring(digitsOnly.length - 10);
+    }
     final cleanMpin = mpin.trim();
 
     if (cleanId.isEmpty) {
@@ -196,7 +246,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (cleanMpin.length < 4 || cleanMpin.length > 6) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Client MPIN must be a 6-digit numeric code.',
+        errorMessage: 'Client MPIN must be a 4 to 6-digit numeric code.',
       );
       return false;
     }
@@ -231,7 +281,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (err) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: err.toString().replaceAll('Exception:', '').trim(),
+        errorMessage: _formatAuthError(err),
       );
       return false;
     }
@@ -242,6 +292,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
     ApiService.clearSession();
     state = const AuthState();
   }
+}
+
+String _formatAuthError(Object err) {
+  final msg = err.toString().replaceAll('Exception:', '').trim();
+  if (msg.contains('SocketException') ||
+      msg.contains('Connection refused') ||
+      msg.contains('ClientException') ||
+      msg.contains('Failed to fetch') ||
+      msg.contains('errno = 111') ||
+      msg.contains('Failed host lookup')) {
+    return 'Unable to reach the server. Please check your connection and try again.';
+  }
+  if (msg.contains('TimeoutException') || msg.contains('timed out')) {
+    return 'Connection timed out. Please try again.';
+  }
+  return msg;
 }
 
 /// Riverpod Auth Provider

@@ -585,6 +585,24 @@ export function buildCanonicalFields(sourceData = {}, options = {}) {
     ""
   ) || null;
 
+  const rawContactMobile = String(
+    sourceData.contactPersonPhone ||
+    sourceData.contactPersonMobile ||
+    sourceData.contactNumber ||
+    sourceData.customerMobile ||
+    sourceData.customerPhone ||
+    sourceData.mobileNumber ||
+    sourceData.phone ||
+    sourceData.mobile ||
+    options.contactPersonPhone ||
+    options.contactPersonMobile ||
+    options.contactNumber ||
+    options.customerMobile ||
+    ""
+  ).replace(/\D/g, "");
+
+  const contactPersonMobile = rawContactMobile.length >= 10 ? rawContactMobile.slice(-10) : null;
+
   return {
     policyNumber,
     normalizedPolicyNumber,
@@ -598,6 +616,7 @@ export function buildCanonicalFields(sourceData = {}, options = {}) {
     vehicleRegistrationNumber,
     makeModel,
     policyCategory,
+    contactPersonMobile,
   };
 }
 

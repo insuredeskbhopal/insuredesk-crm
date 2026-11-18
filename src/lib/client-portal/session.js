@@ -66,13 +66,9 @@ export async function getOwnedPolicy({
           SELECT id FROM pdf_records
           WHERE id = ${policyId}::uuid AND deleted_at IS NULL
             AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-            AND (
-              (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
-              AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
-              AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
-              AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
-              AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
-            )
+            AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+            AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+            AND COALESCE(NULLIF(reviewed_data->>'policyNumber', ''), data->>'policyNumber', '') != ''
             AND (
               LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
               OR (
@@ -93,6 +89,12 @@ export async function getOwnedPolicy({
                    AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                   OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
                    AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerPhone', ''), data->>'customerPhone', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerPhone', ''), data->>'customerPhone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactPersonPhone', ''), data->>'contactPersonPhone', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactPersonPhone', ''), data->>'contactPersonPhone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                   OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
                    AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                 )
@@ -103,13 +105,9 @@ export async function getOwnedPolicy({
           SELECT id FROM pdf_records
           WHERE deleted_at IS NULL
             AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-            AND (
-              (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
-              AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
-              AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
-              AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
-              AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
-            )
+            AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+            AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+            AND COALESCE(NULLIF(reviewed_data->>'policyNumber', ''), data->>'policyNumber', '') != ''
             AND (
               reviewed_data->>'policyNumber' = ${policyId}
               OR data->>'policyNumber' = ${policyId}
@@ -135,6 +133,12 @@ export async function getOwnedPolicy({
                    AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                   OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
                    AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerPhone', ''), data->>'customerPhone', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerPhone', ''), data->>'customerPhone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                  OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactPersonPhone', ''), data->>'contactPersonPhone', ''), '[^0-9]', '', 'g')) >= 10
+                   AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactPersonPhone', ''), data->>'contactPersonPhone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                   OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
                    AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                 )
@@ -145,13 +149,9 @@ export async function getOwnedPolicy({
         SELECT id FROM pdf_records
         WHERE deleted_at IS NULL
           AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-          AND (
-            (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
-            AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
-            AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
-            AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
-            AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
-          )
+          AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+          AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+          AND COALESCE(NULLIF(reviewed_data->>'policyNumber', ''), data->>'policyNumber', '') != ''
           AND (reviewed_data->>'policyNumber' = ${policyNo} OR data->>'policyNumber' = ${policyNo})
           AND (
             LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
@@ -173,6 +173,12 @@ export async function getOwnedPolicy({
                  AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                 OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
                  AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerPhone', ''), data->>'customerPhone', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerPhone', ''), data->>'customerPhone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactPersonPhone', ''), data->>'contactPersonPhone', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactPersonPhone', ''), data->>'contactPersonPhone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                 OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
                  AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
               )
@@ -195,13 +201,9 @@ export async function getClientOwnedPolicyIds({
     FROM pdf_records
     WHERE deleted_at IS NULL
       AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-      AND (
-        (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
-        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
-        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
-        AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
-        AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
-      )
+      AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+      AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+      AND COALESCE(NULLIF(reviewed_data->>'policyNumber', ''), data->>'policyNumber', '') != ''
       AND (
         LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
         OR (
@@ -250,13 +252,9 @@ export async function getClientOwnedPolicyRows({
         WHERE id = ${policyId}::uuid
           AND deleted_at IS NULL
           AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-          AND (
-            (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
-            AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
-            AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
-            AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
-            AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
-          )
+          AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+          AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+          AND COALESCE(NULLIF(reviewed_data->>'policyNumber', ''), data->>'policyNumber', '') != ''
           AND (
             LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
             OR (
@@ -277,6 +275,12 @@ export async function getClientOwnedPolicyRows({
                  AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                 OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
                  AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerPhone', ''), data->>'customerPhone', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerPhone', ''), data->>'customerPhone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
+                OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactPersonPhone', ''), data->>'contactPersonPhone', ''), '[^0-9]', '', 'g')) >= 10
+                 AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactPersonPhone', ''), data->>'contactPersonPhone', ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
                 OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
                  AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${clientPhone})
               )
@@ -292,13 +296,9 @@ export async function getClientOwnedPolicyRows({
       WHERE id = ${policyId}::uuid
         AND deleted_at IS NULL
         AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-        AND (
-          (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
-          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
-          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
-          AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
-          AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
-        )
+        AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+        AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+        AND COALESCE(NULLIF(reviewed_data->>'policyNumber', ''), data->>'policyNumber', '') != ''
         AND (
           LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
           OR (
@@ -334,13 +334,9 @@ export async function getClientOwnedPolicyRows({
       FROM pdf_records
       WHERE deleted_at IS NULL
         AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-        AND (
-          (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
-          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
-          AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
-          AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
-          AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
-        )
+        AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+        AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+        AND COALESCE(NULLIF(reviewed_data->>'policyNumber', ''), data->>'policyNumber', '') != ''
         AND (
           LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
           OR (
@@ -376,13 +372,9 @@ export async function getClientOwnedPolicyRows({
     FROM pdf_records
     WHERE deleted_at IS NULL
       AND organization_id IS NOT DISTINCT FROM ${organizationId}::uuid
-      AND (
-        (uploaded_file_id IS NOT NULL OR (pdf_bytes IS NOT NULL AND length(pdf_bytes) > 0))
-        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xlsx'
-        AND LOWER(COALESCE(pdf_file_name, '')) NOT LIKE '%.xls'
-        AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
-        AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
-      )
+      AND COALESCE(pdf_file_name, '') != 'generic_renewal_template.xlsx'
+      AND COALESCE(source_file, '') != 'generic_renewal_template.xlsx'
+      AND COALESCE(NULLIF(reviewed_data->>'policyNumber', ''), data->>'policyNumber', '') != ''
       AND (
         LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId')) = LOWER(${customerId})
         OR (

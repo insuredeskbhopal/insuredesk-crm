@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "BimaHeadquarter (Chrome - Live Production Backend)",
+      "cwd": "BHQ",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "-d",
+        "chrome",
+        "--web-browser-flag=--disable-web-security",
+        "--web-browser-flag=--user-data-dir=C:/temp/bhq_chrome_dev"
+      ]
+    },
+    {
+      "name": "BimaHeadquarter (Android Native)",
+      "cwd": "BHQ",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "-d",
+        "android"
+      ]
+    }
+  ]
+}

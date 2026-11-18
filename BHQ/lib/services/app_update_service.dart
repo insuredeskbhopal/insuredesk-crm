@@ -53,8 +53,8 @@ class AppUpdateInfo {
 
 class AppUpdateService {
   // Current installed version in the app
-  static const String currentVersion = '1.0.0';
-  static const int currentVersionCode = 1;
+  static const String currentVersion = '1.0.1';
+  static const int currentVersionCode = 3;
 
   static bool _hasPromptedThisSession = false;
 

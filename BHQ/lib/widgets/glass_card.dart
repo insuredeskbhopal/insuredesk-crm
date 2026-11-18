@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 
 class GlassCard extends StatelessWidget {
   final Widget child;
@@ -14,52 +13,76 @@ class GlassCard extends StatelessWidget {
   const GlassCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding = const EdgeInsets.all(18),
     this.borderRadius = 20,
     this.onTap,
     this.backgroundColor,
     this.borderColor,
-    this.blur = 10,
+    this.blur = 20,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final defaultBg = backgroundColor ??
-        (isDark ? AppColors.cardDark : AppColors.cardLight);
+    final defaultGradient = backgroundColor != null
+        ? LinearGradient(colors: [backgroundColor!, backgroundColor!])
+        : LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    const Color(0xFF1E293B).withValues(alpha: 0.82),
+                    const Color(0xFF0F172A).withValues(alpha: 0.72),
+                  ]
+                : [
+                    Colors.white.withValues(alpha: 0.88),
+                    Colors.white.withValues(alpha: 0.70),
+                  ],
+          );
 
-    final defaultBorder = borderColor ??
-        (isDark ? AppColors.glassBorderDark : AppColors.glassBorderLight);
+    final defaultBorderColor = borderColor ??
+        (isDark
+            ? Colors.white.withValues(alpha: 0.16)
+            : Colors.white.withValues(alpha: 0.80));
 
     Widget content = Container(
-      padding: padding,
       decoration: BoxDecoration(
-        color: defaultBg,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: defaultBorder, width: 1),
         boxShadow: [
+          // Ambient soft colored glow
           BoxShadow(
-            color: isDark
-                ? Colors.black.withAlpha(80)
-                : const Color(0xFF64748B).withAlpha(18),
+            color: const Color(0xFF007AFF).withValues(alpha: isDark ? 0.08 : 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+          // Occlusion shadow
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.07),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: child,
-    );
-
-    if (blur > 0) {
-      content = ClipRRect(
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: content,
+          child: Container(
+            padding: padding,
+            decoration: BoxDecoration(
+              gradient: defaultGradient,
+              borderRadius: BorderRadius.circular(borderRadius),
+              border: Border.all(
+                color: defaultBorderColor,
+                width: 1.0,
+              ),
+            ),
+            child: child,
+          ),
         ),
-      );
-    }
+      ),
+    );
 
     if (onTap != null) {
       return Material(

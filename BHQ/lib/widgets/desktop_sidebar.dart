@@ -59,9 +59,6 @@ class DesktopSidebar extends ConsumerWidget {
         icon: Icons.verified_user_outlined,
         badge: claimsCount,
       ),
-      const SidebarItemData(label: 'Documents', icon: Icons.folder_outlined),
-      const SidebarItemData(label: 'Payments', icon: Icons.credit_card_outlined),
-      const SidebarItemData(label: 'Family & Assets', icon: Icons.family_restroom_outlined),
       const SidebarItemData(label: 'Support', icon: Icons.help_outline_rounded),
     ];
 

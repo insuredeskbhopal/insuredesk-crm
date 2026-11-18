@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 import { jsPDF } from "jspdf";
 import fs from "fs/promises";
 import { prisma } from "@/lib/db/prisma";
@@ -64,9 +65,70 @@ export async function HEAD(request, { params }) {
   }
 }
 
-export async function GET(request, { params }) {
+export async function POST(request, { params }) {
   try {
     const auth = await requireClient(request);
+    if (auth.error) return auth.error;
+
+    const { id } = await params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id || "");
+
+    const owned = await getOwnedPolicy({
+      customerId: auth.customer.id,
+      organizationId: auth.organizationId,
+      customer: auth.customer,
+      policyId: isUuid ? id : undefined,
+      policyNo: !isUuid ? id : undefined,
+    });
+    if (!owned) return NextResponse.json({ success: false, error: "Policy not found" }, { status: 404 });
+
+    const ticket = randomUUID();
+    await prisma.task.create({
+      data: {
+        title: `Download Ticket ${ticket}`,
+        type: "SERVICE_REQUEST",
+        status: "OPEN",
+        priority: "LOW",
+        module: "CLIENT_PORTAL_SECURITY",
+        sourceKey: `download-ticket:${ticket}`,
+        organizationId: auth.organizationId,
+        metadata: {
+          ticket,
+          policyId: owned.id,
+          customerId: auth.customer.id,
+          expiresAt: new Date(Date.now() + 60 * 1000).toISOString(),
+        },
+      },
+    });
+
+    return NextResponse.json({ success: true, ticket });
+  } catch (error) {
+    console.error("Client policy document ticket error:", error);
+    return NextResponse.json({ success: false, error: "Failed to generate download ticket" }, { status: 500 });
+  }
+}
+
+export async function GET(request, { params }) {
+  try {
+    let auth = await requireClient(request);
+    if (auth.error) {
+      const ticket = new URL(request.url).searchParams.get("ticket");
+      if (ticket) {
+        const ticketTask = await prisma.task.findUnique({
+          where: { sourceKey: `download-ticket:${ticket}` },
+        });
+        if (ticketTask && ticketTask.metadata?.expiresAt && new Date(ticketTask.metadata.expiresAt).getTime() > Date.now()) {
+          const customer = await prisma.clientAccount.findUnique({
+            where: { id: ticketTask.metadata.customerId },
+            select: { id: true, name: true, phone: true, email: true, organizationId: true },
+          });
+          if (customer) {
+            auth = { customer, organizationId: customer.organizationId };
+            await prisma.task.delete({ where: { id: ticketTask.id } }).catch(() => {});
+          }
+        }
+      }
+    }
     if (auth.error) return auth.error;
 
     const { id } = await params;

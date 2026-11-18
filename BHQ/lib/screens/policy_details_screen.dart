@@ -6,16 +6,12 @@ import '../models/policy.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common_dialogs.dart';
+import 'contact_bimaheadquarter_screen.dart';
 
 class PolicyDetailsScreen extends StatelessWidget {
   final Policy policy;
 
-  const PolicyDetailsScreen({
-    super.key,
-    required this.policy,
-  });
-
-
+  const PolicyDetailsScreen({super.key, required this.policy});
 
   String _formatDate(String? raw) {
     if (raw == null || raw.trim().isEmpty) return 'Not Specified';
@@ -23,14 +19,40 @@ class PolicyDetailsScreen extends StatelessWidget {
     try {
       final dt = DateTime.tryParse(s);
       if (dt != null) {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const months = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec',
+        ];
         return '${dt.day.toString().padLeft(2, '0')} ${months[dt.month - 1]} ${dt.year}';
       }
     } catch (_) {}
 
     final parts = s.split(RegExp(r'[-/]'));
     if (parts.length == 3) {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
       if (parts[0].length == 4) {
         final m = int.tryParse(parts[1]) ?? 1;
         return '${parts[2].padLeft(2, '0')} ${months[(m - 1).clamp(0, 11)]} ${parts[0]}';
@@ -52,7 +74,10 @@ class PolicyDetailsScreen extends StatelessWidget {
     if (str.length <= 3) return '₹$str';
     final last3 = str.substring(str.length - 3);
     final rest = str.substring(0, str.length - 3);
-    final formattedRest = rest.replaceAllMapped(RegExp(r'(\d)(?=(\d\d)+$)'), (m) => '${m[1]},');
+    final formattedRest = rest.replaceAllMapped(
+      RegExp(r'(\d)(?=(\d\d)+$)'),
+      (m) => '${m[1]},',
+    );
     return '₹$formattedRest,$last3';
   }
 
@@ -62,7 +87,11 @@ class PolicyDetailsScreen extends StatelessWidget {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 16),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.white,
+              size: 16,
+            ),
             const Gap(8),
             Text('$label copied to clipboard!'),
           ],
@@ -98,33 +127,44 @@ class PolicyDetailsScreen extends StatelessWidget {
     final isSmall = screenWidth < 480;
 
     final isExpired = policy.status.toLowerCase().contains('expired');
-    final isDue = policy.status.toLowerCase().contains('due') || policy.status.toLowerCase().contains('pending');
+    final isDue =
+        policy.status.toLowerCase().contains('due') ||
+        policy.status.toLowerCase().contains('pending');
 
     final statusColor = isExpired
         ? (isDark ? Colors.redAccent.shade100 : Colors.red.shade700)
         : isDue
-            ? (isDark ? Colors.amber.shade300 : Colors.amber.shade800)
-            : (isDark ? const Color(0xFF34D399) : const Color(0xFF059669));
+        ? (isDark ? Colors.amber.shade300 : Colors.amber.shade800)
+        : (isDark ? const Color(0xFF34D399) : const Color(0xFF059669));
 
-    final hasVehicleNumber = policy.vehicleNumber != null && policy.vehicleNumber!.trim().isNotEmpty;
-    final hasMakeModel = policy.makeModel != null && policy.makeModel!.trim().isNotEmpty;
-    final hasSumInsured = policy.sumInsured != null && policy.sumInsured!.trim().isNotEmpty;
-    final hasExpiry = policy.expiryDate != null && policy.expiryDate!.trim().isNotEmpty;
-    final hasStart = policy.startDate != null && policy.startDate!.trim().isNotEmpty;
-    final hasNetPremium = policy.netPremium != null && policy.netPremium!.trim().isNotEmpty;
-    final hasContactNumber = policy.contactNumber != null && policy.contactNumber!.trim().isNotEmpty;
+    final hasVehicleNumber =
+        policy.vehicleNumber != null && policy.vehicleNumber!.trim().isNotEmpty;
+    final hasMakeModel =
+        policy.makeModel != null && policy.makeModel!.trim().isNotEmpty;
+    final hasSumInsured =
+        policy.sumInsured != null && policy.sumInsured!.trim().isNotEmpty;
+    final hasExpiry =
+        policy.expiryDate != null && policy.expiryDate!.trim().isNotEmpty;
+    final hasStart =
+        policy.startDate != null && policy.startDate!.trim().isNotEmpty;
+    final hasNetPremium =
+        policy.netPremium != null && policy.netPremium!.trim().isNotEmpty;
+    final hasContactNumber =
+        policy.contactNumber != null && policy.contactNumber!.trim().isNotEmpty;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark
+          ? const Color(0xFF000000)
+          : const Color(0xFFF2F2F7),
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+        backgroundColor: isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
         elevation: 0,
         scrolledUnderElevation: 1,
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             size: 18,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: isDark ? Colors.white : const Color(0xFF000000),
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -133,38 +173,43 @@ class PolicyDetailsScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: isDark ? Colors.white : const Color(0xFF000000),
           ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_outlined, size: 20),
-            tooltip: 'Share Details',
-            onPressed: () {
-              final shareText = '''
-BimaHeadquarter Policy Summary:
-Insured Name: ${policy.insuredName.isNotEmpty ? policy.insuredName : 'Valued Client'}
-Company: ${policy.companyName.isNotEmpty ? policy.companyName : policy.name}
-Category: ${policy.policyCategory}
-Policy No: ${policy.policyNumber ?? policy.id}
-${hasVehicleNumber ? 'Vehicle No: ${policy.vehicleNumber}\n' : ''}Valid Till: ${_formatDate(policy.expiryDate)}
-Premium: ${policy.price}
-Status: ${policy.status}
-''';
-              _copyToClipboard(context, shareText, 'Policy summary');
-            },
+            icon: const Icon(Icons.share_rounded, size: 20),
+            tooltip: 'Share via WhatsApp',
+            onPressed: () =>
+                CommonDialogs.showWhatsAppShareSheet(context, policy),
           ),
           IconButton(
-            icon: const Icon(Icons.download_rounded, size: 22),
-            tooltip: 'Download PDF',
+            icon: Icon(
+              policy.hasPdf
+                  ? Icons.download_rounded
+                  : Icons.support_agent_rounded,
+              size: 22,
+            ),
+            tooltip: policy.hasPdf
+                ? 'Download PDF'
+                : 'Contact BimaHeadquarter',
             onPressed: () {
-              ApiService.downloadDocument(
-                context,
-                policy.id,
-                kind: 'policy',
-                title: policy.policyNumber ?? policy.name,
-              );
+              if (policy.hasPdf) {
+                ApiService.downloadDocument(
+                  context,
+                  policy.id,
+                  kind: 'policy',
+                  title: policy.policyNumber ?? policy.name,
+                );
+              } else {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ContactBimaheadquarterScreen(policy: policy),
+                  ),
+                );
+              }
             },
           ),
           const Gap(4),
@@ -176,7 +221,12 @@ Status: ${policy.status}
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(isSmall ? 14 : 18, 16, isSmall ? 14 : 18, 24),
+                padding: EdgeInsets.fromLTRB(
+                  isSmall ? 14 : 18,
+                  16,
+                  isSmall ? 14 : 18,
+                  24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -190,20 +240,20 @@ Status: ${policy.status}
                           end: Alignment.bottomRight,
                           colors: isDark
                               ? [
-                                  const Color(0xFF1E293B),
-                                  const Color(0xFF0F172A),
+                                  const Color(0xFF1C1C1E),
+                                  const Color(0xFF2C2C2E),
                                 ]
                               : [
-                                  const Color(0xFF1E3A8A),
-                                  const Color(0xFF1D4ED8),
+                                  const Color(0xFF0F172A),
+                                  const Color(0xFF1E293B),
                                 ],
                         ),
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF1D4ED8).withAlpha(isDark ? 50 : 70),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+                            color: Colors.black.withAlpha(isDark ? 40 : 20),
+                            blurRadius: 18,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                         border: Border.all(
@@ -219,11 +269,17 @@ Status: ${policy.status}
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withAlpha(35),
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.white30, width: 0.8),
+                                  border: Border.all(
+                                    color: Colors.white30,
+                                    width: 0.8,
+                                  ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -247,11 +303,17 @@ Status: ${policy.status}
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: statusColor.withAlpha(45),
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: statusColor, width: 1),
+                                  border: Border.all(
+                                    color: statusColor,
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -268,7 +330,9 @@ Status: ${policy.status}
                                     Text(
                                       policy.status.toUpperCase(),
                                       style: TextStyle(
-                                        color: isDark ? Colors.white : Colors.white,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.white,
                                         fontSize: 10,
                                         fontWeight: FontWeight.w900,
                                         letterSpacing: 0.4,
@@ -284,7 +348,9 @@ Status: ${policy.status}
 
                           // Insurer Company Name
                           Text(
-                            policy.companyName.isNotEmpty ? policy.companyName : policy.name,
+                            policy.companyName.isNotEmpty
+                                ? policy.companyName
+                                : policy.name,
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 12.5,
@@ -296,7 +362,9 @@ Status: ${policy.status}
 
                           // Insured Name
                           Text(
-                            policy.insuredName.isNotEmpty ? policy.insuredName : 'Insured Policyholder',
+                            policy.insuredName.isNotEmpty
+                                ? policy.insuredName
+                                : 'Insured Policyholder',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: isSmall ? 20 : 22,
@@ -316,16 +384,26 @@ Status: ${policy.status}
                             },
                             borderRadius: BorderRadius.circular(8),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.black.withAlpha(50),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.white24, width: 0.8),
+                                border: Border.all(
+                                  color: Colors.white24,
+                                  width: 0.8,
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.tag_rounded, size: 14, color: Colors.white70),
+                                  const Icon(
+                                    Icons.tag_rounded,
+                                    size: 14,
+                                    color: Colors.white70,
+                                  ),
                                   const Gap(4),
                                   Text(
                                     policy.policyNumber ?? policy.id,
@@ -338,7 +416,11 @@ Status: ${policy.status}
                                     ),
                                   ),
                                   const Gap(8),
-                                  const Icon(Icons.copy_rounded, size: 12, color: Colors.white60),
+                                  const Icon(
+                                    Icons.copy_rounded,
+                                    size: 12,
+                                    color: Colors.white60,
+                                  ),
                                 ],
                               ),
                             ),
@@ -347,43 +429,10 @@ Status: ${policy.status}
                           // Vehicle Plate Badge if vehicle exists
                           if (hasVehicleNumber) ...[
                             const Gap(12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFEF08A), // Indian Yellow Plate
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: const Color(0xFFCA8A04), width: 1.2),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF1E3A8A),
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                    child: const Text(
-                                      'IND',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                  ),
-                                  const Gap(7),
-                                  Text(
-                                    policy.vehicleNumber!,
-                                    style: const TextStyle(
-                                      color: Color(0xFF0F172A),
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            CommonDialogs.buildHsrpPlate(
+                              policy.vehicleNumber!,
+                              isDark: isDark,
+                              height: 25.0,
                             ),
                           ],
                         ],
@@ -394,12 +443,17 @@ Status: ${policy.status}
 
                     // ─── 2. 3-COLUMN METRICS STATS BOX ───
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 16,
+                      ),
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF1E293B) : Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFE2E8F0),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -421,17 +475,23 @@ Status: ${policy.status}
                                   style: TextStyle(
                                     fontSize: 9.5,
                                     fontWeight: FontWeight.w700,
-                                    color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                    color: isDark
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.textSecondary,
                                     letterSpacing: 0.5,
                                   ),
                                 ),
                                 const Gap(4),
                                 Text(
-                                  hasSumInsured ? _formatAmount(policy.sumInsured) : 'Covered',
+                                  hasSumInsured
+                                      ? _formatAmount(policy.sumInsured)
+                                      : 'Covered',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w800,
-                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF0F172A),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -440,12 +500,18 @@ Status: ${policy.status}
                             ),
                           ),
 
-                          Container(height: 32, width: 1, color: isDark ? Colors.white12 : Colors.black12),
+                          Container(
+                            height: 32,
+                            width: 1,
+                            color: isDark ? Colors.white12 : Colors.black12,
+                          ),
 
                           // Valid Till
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -454,17 +520,25 @@ Status: ${policy.status}
                                     style: TextStyle(
                                       fontSize: 9.5,
                                       fontWeight: FontWeight.w700,
-                                      color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                      color: isDark
+                                          ? AppColors.darkTextSecondary
+                                          : AppColors.textSecondary,
                                       letterSpacing: 0.5,
                                     ),
                                   ),
                                   const Gap(4),
                                   Text(
-                                    hasExpiry ? _formatDate(policy.expiryDate) : 'Ongoing',
+                                    hasExpiry
+                                        ? _formatDate(policy.expiryDate)
+                                        : 'Ongoing',
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w800,
-                                      color: isDue ? statusColor : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                                      color: isDue
+                                          ? statusColor
+                                          : (isDark
+                                                ? Colors.white
+                                                : const Color(0xFF0F172A)),
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -474,7 +548,11 @@ Status: ${policy.status}
                             ),
                           ),
 
-                          Container(height: 32, width: 1, color: isDark ? Colors.white12 : Colors.black12),
+                          Container(
+                            height: 32,
+                            width: 1,
+                            color: isDark ? Colors.white12 : Colors.black12,
+                          ),
 
                           // Premium
                           Expanded(
@@ -488,7 +566,9 @@ Status: ${policy.status}
                                     style: TextStyle(
                                       fontSize: 9.5,
                                       fontWeight: FontWeight.w700,
-                                      color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                      color: isDark
+                                          ? AppColors.darkTextSecondary
+                                          : AppColors.textSecondary,
                                       letterSpacing: 0.5,
                                     ),
                                   ),
@@ -514,81 +594,188 @@ Status: ${policy.status}
                     const Gap(18),
 
                     // ─── 3. SECTION: COVERAGE & ASSET SPECIFICATIONS ───
-                    _buildSectionHeader(context, 'Coverage & Asset Specifications', Icons.shield_outlined, isDark),
+                    _buildSectionHeader(
+                      context,
+                      'Coverage & Asset Specifications',
+                      Icons.shield_outlined,
+                      isDark,
+                    ),
                     const Gap(8),
                     _buildCardGroup(
                       isDark: isDark,
                       items: [
-                        _buildDetailItem('Policy Category', policy.policyCategory, isDark, icon: Icons.category_outlined),
-                        _buildDetailItem('Policy Type', policy.policyType, isDark, icon: Icons.description_outlined),
+                        _buildDetailItem(
+                          'Policy Category',
+                          policy.policyCategory,
+                          isDark,
+                          icon: Icons.category_outlined,
+                        ),
+                        _buildDetailItem(
+                          'Policy Type',
+                          policy.policyType,
+                          isDark,
+                          icon: Icons.description_outlined,
+                        ),
                         if (hasVehicleNumber)
-                          _buildDetailItem('Vehicle / Asset Reg No.', policy.vehicleNumber!, isDark, icon: Icons.directions_car_outlined),
+                          _buildDetailItem(
+                            'Vehicle / Asset Reg No.',
+                            policy.vehicleNumber!,
+                            isDark,
+                            icon: Icons.directions_car_outlined,
+                          ),
                         if (hasMakeModel)
-                          _buildDetailItem('Make & Model', policy.makeModel!, isDark, icon: Icons.speed_outlined),
+                          _buildDetailItem(
+                            'Make & Model',
+                            policy.makeModel!,
+                            isDark,
+                            icon: Icons.speed_outlined,
+                          ),
                         if (hasSumInsured)
-                          _buildDetailItem('Total IDV / Sum Insured', _formatAmount(policy.sumInsured), isDark, icon: Icons.monetization_on_outlined),
+                          _buildDetailItem(
+                            'Total IDV / Sum Insured',
+                            _formatAmount(policy.sumInsured),
+                            isDark,
+                            icon: Icons.monetization_on_outlined,
+                          ),
                       ],
                     ),
 
                     const Gap(18),
 
                     // ─── 4. SECTION: SCHEDULE & VALIDITY ───
-                    _buildSectionHeader(context, 'Schedule & Validity Period', Icons.date_range_outlined, isDark),
+                    _buildSectionHeader(
+                      context,
+                      'Schedule & Validity Period',
+                      Icons.date_range_outlined,
+                      isDark,
+                    ),
                     const Gap(8),
                     _buildCardGroup(
                       isDark: isDark,
                       items: [
                         if (hasStart)
-                          _buildDetailItem('Policy Start Date', _formatDate(policy.startDate), isDark, icon: Icons.event_available_outlined),
-                        _buildDetailItem('Policy Expiry Date', _formatDate(policy.expiryDate), isDark, icon: Icons.event_busy_outlined),
-                        _buildDetailItem('Current Status', policy.status, isDark, icon: Icons.info_outline, highlightColor: statusColor),
+                          _buildDetailItem(
+                            'Policy Start Date',
+                            _formatDate(policy.startDate),
+                            isDark,
+                            icon: Icons.event_available_outlined,
+                          ),
+                        _buildDetailItem(
+                          'Policy Expiry Date',
+                          _formatDate(policy.expiryDate),
+                          isDark,
+                          icon: Icons.event_busy_outlined,
+                        ),
+                        _buildDetailItem(
+                          'Current Status',
+                          policy.status,
+                          isDark,
+                          icon: Icons.info_outline,
+                          highlightColor: statusColor,
+                        ),
                       ],
                     ),
 
                     const Gap(18),
 
                     // ─── 5. SECTION: FINANCIALS & PREMIUM BREAKDOWN ───
-                    _buildSectionHeader(context, 'Financials & Premium Breakdown', Icons.receipt_long_outlined, isDark),
+                    _buildSectionHeader(
+                      context,
+                      'Financials & Premium Breakdown',
+                      Icons.receipt_long_outlined,
+                      isDark,
+                    ),
                     const Gap(8),
                     _buildCardGroup(
                       isDark: isDark,
                       items: [
                         if (hasNetPremium)
-                          _buildDetailItem('Net Premium (Excl. GST)', _formatAmount(policy.netPremium), isDark, icon: Icons.account_balance_wallet_outlined),
-                        _buildDetailItem('Total Gross Premium (Paid)', policy.price.replaceAll('/yr', ''), isDark, icon: Icons.payments_outlined, isBold: true),
-                        _buildDetailItem('Verification Source', 'CRM Verified Document Extraction', isDark, icon: Icons.verified_outlined),
+                          _buildDetailItem(
+                            'Net Premium (Excl. GST)',
+                            _formatAmount(policy.netPremium),
+                            isDark,
+                            icon: Icons.account_balance_wallet_outlined,
+                          ),
+                        _buildDetailItem(
+                          'Total Gross Premium (Paid)',
+                          policy.price.replaceAll('/yr', ''),
+                          isDark,
+                          icon: Icons.payments_outlined,
+                          isBold: true,
+                        ),
+                        _buildDetailItem(
+                          'Verification Source',
+                          policy.hasPdf
+                              ? 'Verified Policy Document (PDF)'
+                              : 'Policy Schedule in BimaHeadquarter Records',
+                          isDark,
+                          icon: policy.hasPdf
+                              ? Icons.verified_outlined
+                              : Icons.folder_special_outlined,
+                        ),
                       ],
                     ),
 
                     // ─── 6. SECTION: CONTACT & ADVISOR SUPPORT ───
                     if (policy.insuredName.isNotEmpty || hasContactNumber) ...[
                       const Gap(18),
-                      _buildSectionHeader(context, 'Policyholder & Contact Assistance', Icons.support_agent_outlined, isDark),
+                      _buildSectionHeader(
+                        context,
+                        'Policyholder & Contact Assistance',
+                        Icons.support_agent_outlined,
+                        isDark,
+                      ),
                       const Gap(8),
                       _buildCardGroup(
                         isDark: isDark,
                         items: [
-                          _buildDetailItem('Primary Insured', policy.insuredName.isNotEmpty ? policy.insuredName : 'Policyholder', isDark, icon: Icons.person_outline),
-                          if (policy.contactPerson != null && policy.contactPerson!.isNotEmpty)
-                            _buildDetailItem('Contact Person', policy.contactPerson!, isDark, icon: Icons.badge_outlined),
+                          _buildDetailItem(
+                            'Primary Insured',
+                            policy.insuredName.isNotEmpty
+                                ? policy.insuredName
+                                : 'Policyholder',
+                            isDark,
+                            icon: Icons.person_outline,
+                          ),
+                          if (policy.contactPerson != null &&
+                              policy.contactPerson!.isNotEmpty)
+                            _buildDetailItem(
+                              'Contact Person',
+                              policy.contactPerson!,
+                              isDark,
+                              icon: Icons.badge_outlined,
+                            ),
                           if (hasContactNumber)
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.phone_outlined, size: 18, color: isDark ? Colors.white60 : const Color(0xFF64748B)),
+                                      Icon(
+                                        Icons.phone_outlined,
+                                        size: 18,
+                                        color: isDark
+                                            ? Colors.white60
+                                            : const Color(0xFF64748B),
+                                      ),
                                       const Gap(10),
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Registered Mobile',
                                             style: TextStyle(
                                               fontSize: 11,
-                                              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                              color: isDark
+                                                  ? AppColors.darkTextSecondary
+                                                  : AppColors.textSecondary,
                                             ),
                                           ),
                                           const Gap(2),
@@ -597,7 +784,9 @@ Status: ${policy.status}
                                             style: TextStyle(
                                               fontSize: 13.5,
                                               fontWeight: FontWeight.w700,
-                                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : const Color(0xFF0F172A),
                                             ),
                                           ),
                                         ],
@@ -607,13 +796,25 @@ Status: ${policy.status}
                                   Row(
                                     children: [
                                       IconButton(
-                                        icon: const Icon(Icons.phone, color: Color(0xFF10B981), size: 20),
-                                        onPressed: () => _makePhoneCall(policy.contactNumber!),
+                                        icon: const Icon(
+                                          Icons.phone,
+                                          color: Color(0xFF10B981),
+                                          size: 20,
+                                        ),
+                                        onPressed: () => _makePhoneCall(
+                                          policy.contactNumber!,
+                                        ),
                                         tooltip: 'Call',
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF2563EB), size: 20),
-                                        onPressed: () => _openWhatsApp(policy.contactNumber!),
+                                        icon: const Icon(
+                                          Icons.chat_bubble_outline_rounded,
+                                          color: Color(0xFF2563EB),
+                                          size: 20,
+                                        ),
+                                        onPressed: () => _openWhatsApp(
+                                          policy.contactNumber!,
+                                        ),
                                         tooltip: 'WhatsApp',
                                       ),
                                     ],
@@ -625,33 +826,92 @@ Status: ${policy.status}
                       ),
                     ],
 
+                    // ─── 7. SECTION: DIGITAL DOCUMENT VAULT ───
+                    const Gap(18),
+                    _buildSectionHeader(
+                      context,
+                      'Digital Document Vault',
+                      Icons.folder_shared_outlined,
+                      isDark,
+                    ),
+                    const Gap(8),
+                    _buildCardGroup(
+                      isDark: isDark,
+                      items: [
+                        _buildDetailItem(
+                          'Policy Schedule (PDF)',
+                          policy.hasPdf
+                              ? 'Verified Digital Contract (Ready to Download)'
+                              : 'Policy Schedule on File',
+                          isDark,
+                          icon: Icons.picture_as_pdf_outlined,
+                        ),
+                        if (hasVehicleNumber) ...[
+                          _buildDetailItem(
+                            'Registration Certificate (RC)',
+                            policy.cleanVehiclePlate.isNotEmpty
+                                ? policy.cleanVehiclePlate
+                                : policy.vehicleNumber!,
+                            isDark,
+                            icon: Icons.directions_car_outlined,
+                          ),
+                          _buildDetailItem(
+                            'Pollution Under Control (PUC)',
+                            'Active & Emission Compliant',
+                            isDark,
+                            icon: Icons.eco_outlined,
+                          ),
+                          _buildDetailItem(
+                            'Commercial Fitness / RTO Permit',
+                            'Verified Transport Authority Record',
+                            isDark,
+                            icon: Icons.verified_outlined,
+                          ),
+                        ],
+                      ],
+                    ),
+
                     const Gap(20),
 
-                    // ─── 7. QUICK ACTION CARDS (Claim & Renewal) ───
+                    // ─── 8. QUICK ACTION CARDS (4-Pill Grid) ───
                     Row(
                       children: [
                         Expanded(
                           child: InkWell(
-                            onTap: () => CommonDialogs.showRegisterClaimModal(context),
+                            onTap: () => CommonDialogs.showRegisterClaimModal(
+                              context,
+                              preselectedPolicy: policy,
+                            ),
                             borderRadius: BorderRadius.circular(14),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 10,
+                              ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFDC2626).withAlpha(isDark ? 35 : 12),
+                                color: const Color(
+                                  0xFFDC2626,
+                                ).withAlpha(isDark ? 35 : 12),
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color: const Color(0xFFDC2626).withAlpha(isDark ? 80 : 30),
+                                  color: const Color(
+                                    0xFFDC2626,
+                                  ).withAlpha(isDark ? 80 : 30),
                                 ),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: const [
-                                  Icon(Icons.report_problem_outlined, size: 16, color: Color(0xFFDC2626)),
+                                  Icon(
+                                    Icons.report_problem_outlined,
+                                    size: 16,
+                                    color: Color(0xFFDC2626),
+                                  ),
                                   Gap(6),
                                   Text(
                                     'Raise Claim',
                                     style: TextStyle(
-                                      fontSize: 12.5,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w700,
                                       color: Color(0xFFDC2626),
                                     ),
@@ -664,28 +924,140 @@ Status: ${policy.status}
                         const Gap(10),
                         Expanded(
                           child: InkWell(
-                            onTap: () => CommonDialogs.showPayPremiumModal(context),
+                            onTap: () =>
+                                CommonDialogs.showPayPremiumModal(context),
                             borderRadius: BorderRadius.circular(14),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 10,
+                              ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFD97706).withAlpha(isDark ? 35 : 12),
+                                color: const Color(
+                                  0xFFD97706,
+                                ).withAlpha(isDark ? 35 : 12),
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color: const Color(0xFFD97706).withAlpha(isDark ? 80 : 30),
+                                  color: const Color(
+                                    0xFFD97706,
+                                  ).withAlpha(isDark ? 80 : 30),
                                 ),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: const [
-                                  Icon(Icons.autorenew_rounded, size: 16, color: Color(0xFFD97706)),
+                                  Icon(
+                                    Icons.autorenew_rounded,
+                                    size: 16,
+                                    color: Color(0xFFD97706),
+                                  ),
                                   Gap(6),
                                   Text(
                                     'Renew Policy',
                                     style: TextStyle(
-                                      fontSize: 12.5,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w700,
                                       color: Color(0xFFD97706),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Gap(10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => CommonDialogs.showCashlessNetworkModal(
+                              context,
+                              policy,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFF059669,
+                                ).withAlpha(isDark ? 35 : 12),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: const Color(
+                                    0xFF059669,
+                                  ).withAlpha(isDark ? 80 : 30),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    policy.isHealth
+                                        ? Icons.local_hospital_outlined
+                                        : Icons.build_circle_outlined,
+                                    size: 16,
+                                    color: const Color(0xFF059669),
+                                  ),
+                                  const Gap(6),
+                                  Text(
+                                    policy.isHealth
+                                        ? 'Cashless Hospitals'
+                                        : 'Cashless Garages',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF059669),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Gap(10),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => CommonDialogs.showDocumentVaultModal(
+                              context,
+                              policy,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFF2563EB,
+                                ).withAlpha(isDark ? 35 : 12),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: const Color(
+                                    0xFF2563EB,
+                                  ).withAlpha(isDark ? 80 : 30),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(
+                                    Icons.folder_shared_outlined,
+                                    size: 16,
+                                    color: Color(0xFF2563EB),
+                                  ),
+                                  Gap(6),
+                                  Text(
+                                    'Doc Vault',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF2563EB),
                                     ),
                                   ),
                                 ],
@@ -719,7 +1091,9 @@ Status: ${policy.status}
                 ],
                 border: Border(
                   top: BorderSide(
-                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                    color: isDark
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFE2E8F0),
                     width: 1,
                   ),
                 ),
@@ -736,22 +1110,38 @@ Status: ${policy.status}
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  icon: const Icon(Icons.download_rounded, size: 20),
-                  label: const Text(
-                    'Download Official Policy PDF',
-                    style: TextStyle(
+                  icon: Icon(
+                    policy.hasPdf
+                        ? Icons.download_rounded
+                        : Icons.support_agent_rounded,
+                    size: 20,
+                  ),
+                  label: Text(
+                    policy.hasPdf
+                        ? 'Download Official Policy PDF'
+                        : 'Contact BimaHeadquarter (Get Policy PDF)',
+                    style: const TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.2,
                     ),
                   ),
                   onPressed: () {
-                    ApiService.downloadDocument(
-                      context,
-                      policy.id,
-                      kind: 'policy',
-                      title: policy.policyNumber ?? policy.name,
-                    );
+                    if (policy.hasPdf) {
+                      ApiService.downloadDocument(
+                        context,
+                        policy.id,
+                        kind: 'policy',
+                        title: policy.policyNumber ?? policy.name,
+                      );
+                    } else {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ContactBimaheadquarterScreen(policy: policy),
+                        ),
+                      );
+                    }
                   },
                 ),
               ),
@@ -762,7 +1152,12 @@ Status: ${policy.status}
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, IconData icon, bool isDark) {
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String title,
+    IconData icon,
+    bool isDark,
+  ) {
     return Row(
       children: [
         Icon(icon, size: 16, color: const Color(0xFF2563EB)),
@@ -818,7 +1213,11 @@ Status: ${policy.status}
       child: Row(
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 17, color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+            Icon(
+              icon,
+              size: 17,
+              color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+            ),
             const Gap(10),
           ],
           Expanded(
@@ -826,7 +1225,9 @@ Status: ${policy.status}
               label,
               style: TextStyle(
                 fontSize: 12.5,
-                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
               ),
             ),
           ),
@@ -838,7 +1239,9 @@ Status: ${policy.status}
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
-                color: highlightColor ?? (isDark ? Colors.white : const Color(0xFF0F172A)),
+                color:
+                    highlightColor ??
+                    (isDark ? Colors.white : const Color(0xFF0F172A)),
               ),
             ),
           ),

@@ -960,7 +960,7 @@ export default function ClientPortal() {
                       <div className="bg-white/75 backdrop-blur-md border-2 border-emerald-500/30 rounded-2xl p-5 shadow-md space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                           <div>
-                            <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Live CRM Tracking Desk</span>
+                            <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Live Claim Tracking Desk</span>
                             <h3 className="text-sm font-bold text-slate-800">Claim File: {activeClaim.claimNo}</h3>
                           </div>
                           <button
@@ -994,9 +994,9 @@ export default function ClientPortal() {
                         </div>
 
                         <div className="bg-slate-50 border border-slate-200/50 p-4 rounded-xl space-y-1.5">
-                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Latest Desk Remark / CRM Status Updates</span>
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Latest Desk Remark / Status Updates</span>
                           <p className="text-xs text-slate-700 leading-relaxed font-semibold">
-                            {activeClaim.currentRemark || "Your claim is currently undergoing document verification by our backend office. No remarks updated yet."}
+                            {activeClaim.currentRemark || "Your claim is currently undergoing document verification by our operations team. No remarks updated yet."}
                           </p>
                         </div>
                         <ClaimDocumentManager claim={activeClaim} onUpdated={refreshClaims} />

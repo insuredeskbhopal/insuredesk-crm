@@ -15,7 +15,13 @@ const { prismaMock, verifyJWTMock } = vi.hoisted(() => ({
 vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
 vi.mock("@/lib/auth", () => ({ verifyJWT: verifyJWTMock }));
 vi.mock("@/lib/audit", () => ({ logAudit: vi.fn(), getAuditMetadata: () => ({}) }));
-vi.mock("@/lib/records", () => ({ normalizeRecord: (record) => record }));
+vi.mock("@/lib/records", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    normalizeRecord: (record) => record,
+  };
+});
 vi.mock("@/app/lib/dashboard-helpers", () => ({
   formatReviewValidationError: () => "Review incomplete",
   getReviewValidation: () => ({ valid: true, contactErrors: [], missingRequired: [] }),
@@ -162,6 +168,57 @@ describe("policy Client ID update authorization", () => {
       error: "This policy changed while you were editing it. Reload and try again.",
     });
     expect(prismaMock.policyRecord.update).not.toHaveBeenCalled();
+  });
+
+  it("allows a manager or admin to change Client ID even when an active request exists, and auto-resolves it", async () => {
+    verifyJWTMock.mockResolvedValueOnce({
+      id: "admin-1",
+      userId: "admin-1",
+      role: "SUPER_ADMIN",
+      organizationId: ORGANIZATION_ID,
+    });
+    prismaMock.policyRecord.findFirst.mockResolvedValue(existingPolicy({
+      reviewedData: policyData(OTHER_CLIENT_ID),
+      data: policyData(OTHER_CLIENT_ID),
+      clientIdRequestId: REQUEST_ID,
+      clientIdPending: true,
+    }));
+    prismaMock.task.findFirst.mockResolvedValueOnce({
+      id: REQUEST_ID,
+      module: "CLIENT_ID_REQUEST",
+      status: "OPEN",
+    });
+    prismaMock.task.updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    prismaMock.policyRecord.updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    prismaMock.clientAccount.findFirst.mockResolvedValue({
+      id: CLIENT_ID,
+      name: "Vijay Kumar Mishra",
+      phone: "9876543210",
+      email: null,
+      organizationId: ORGANIZATION_ID,
+    });
+    const { PUT } = await import("../src/app/api/policy-records/[id]/route.js");
+
+    const response = await PUT(updateRequest(policyData(CLIENT_ID)), {
+      params: Promise.resolve({ id: POLICY_ID }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.policyRecord.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          clientIdPending: false,
+          clientIdStatus: "LINKED",
+          reviewedData: expect.objectContaining({ clientId: CLIENT_ID }),
+        }),
+      }),
+    );
+    expect(prismaMock.task.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: REQUEST_ID }),
+        data: expect.objectContaining({ status: "COMPLETED", recordId: CLIENT_ID }),
+      }),
+    );
   });
 });
 

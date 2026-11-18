@@ -10,6 +10,7 @@ import {
 const REQUEST_TYPES = {
   NEW_POLICY_QUOTE: { type: "SERVICE_REQUEST", title: "New policy quotation request", priority: "HIGH" },
   RENEWAL_QUOTE: { type: "RENEWAL", title: "Renewal quotation request", priority: "HIGH" },
+  POLICY_RENEWAL: { type: "RENEWAL", title: "Policy renewal request", priority: "HIGH" },
   SUPPORT: { type: "SERVICE_REQUEST", title: "Client support ticket", priority: "MEDIUM" },
   VEHICLE_CORRECTION: { type: "ENDORSEMENT", title: "Vehicle details correction", priority: "MEDIUM" },
   NOMINEE_CHANGE: { type: "ENDORSEMENT", title: "Nominee change request", priority: "MEDIUM" },
@@ -156,6 +157,24 @@ export async function POST(request) {
       );
     }
     const task = createResult.task;
+
+    // Trigger instant alert in CRM for staff
+    try {
+      await prisma.notification.create({
+        data: {
+          organizationId: auth.organizationId,
+          category: config.type === "RENEWAL" ? "RENEWAL" : "SERVICE_REQUEST",
+          severity: config.priority === "HIGH" ? "WARNING" : "INFO",
+          title: `${config.title}: ${policyNo || task.customerName}`,
+          message: `${task.customerName} submitted a ${config.title.toLowerCase()}${policyNo ? ` for policy #${policyNo}` : ""}.`,
+          module: config.type === "RENEWAL" ? "RENEWALS" : "CLIENT_PORTAL",
+          recordId: task.id,
+          recordLabel: task.title,
+          actionUrl: config.type === "RENEWAL" ? `/renewals?q=${encodeURIComponent(policyNo || task.customerName)}` : `/operations/client-management`,
+          sourceKey: `client-req:${task.id}`,
+        },
+      });
+    } catch (_) {}
 
     return NextResponse.json({ success: true, request: task });
   } catch (error) {

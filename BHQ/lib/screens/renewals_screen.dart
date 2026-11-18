@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import '../widgets/app_loader.dart';
 import '../widgets/common_dialogs.dart';
+import '../widgets/policy_card.dart';
 import '../services/crm_data_provider.dart';
 
 class RenewalsScreen extends ConsumerWidget {
@@ -24,47 +26,107 @@ class RenewalsScreen extends ConsumerWidget {
           children: [
             Text(
               'Renewals',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 22,
-                    letterSpacing: -0.5,
-                  ),
-            ),
-            const Gap(2),
-            Text(
-              'Policies tracked live from CRM database',
               style: TextStyle(
-                color: isDark ? Colors.white60 : const Color(0xFF64748B),
-                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                fontSize: 26,
+                letterSpacing: -0.6,
+                color: isDark ? Colors.white : const Color(0xFF000000),
               ),
             ),
-            const Gap(20),
+            const Gap(3),
+            Text(
+              'Track expiry dates and manage policy renewals',
+              style: TextStyle(
+                color: isDark ? const Color(0xFF8E8E93) : const Color(0xFF8E8E93),
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const Gap(18),
             policiesAsync.when(
               data: (allPolicies) {
                 final upcomingRenewals = allPolicies.where((p) {
                   final s = p.status.toLowerCase();
-                  return s.contains('due') || s.contains('renewal') || s.contains('pending');
+                  return s.contains('due') || s.contains('renewal') || s.contains('expired') || s.contains('pending');
                 }).toList();
 
-                final displayList = upcomingRenewals.isNotEmpty ? upcomingRenewals : allPolicies;
-
-                if (displayList.isEmpty) {
+                if (upcomingRenewals.isEmpty) {
                   return Container(
-                    padding: const EdgeInsets.all(32),
-                    alignment: Alignment.center,
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.check_circle_outline_rounded,
-                          size: 40,
-                          color: isDark ? Colors.white30 : const Color(0xFFCBD5E1),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E5EA),
+                        width: 0.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(isDark ? 25 : 6),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
                         ),
-                        const Gap(12),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF34C759).withAlpha(isDark ? 40 : 25),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check_circle_rounded,
+                            size: 28,
+                            color: Color(0xFF34C759),
+                          ),
+                        ),
+                        const Gap(16),
                         Text(
-                          'No policies currently due for renewal.',
+                          'All Policies Are Active',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 13.5,
-                            color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                            color: isDark ? Colors.white : const Color(0xFF000000),
+                          ),
+                        ),
+                        const Gap(6),
+                        Text(
+                          'None of your ${allPolicies.length} tracked policies are currently due for renewal. We monitor your coverage 24x7 and will notify you 30 days prior to expiry.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            height: 1.45,
+                            color: isDark ? const Color(0xFF8E8E93) : const Color(0xFF8E8E93),
+                          ),
+                        ),
+                        const Gap(18),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.shield_rounded, size: 14, color: Color(0xFF007AFF)),
+                              const Gap(6),
+                              Text(
+                                '${allPolicies.length} Policies Monitored',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -75,159 +137,75 @@ class RenewalsScreen extends ConsumerWidget {
                 return ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: displayList.length,
-                  separatorBuilder: (context, index) => const Gap(16),
+                  itemCount: upcomingRenewals.length,
+                  separatorBuilder: (context, index) => const Gap(14),
                   itemBuilder: (context, idx) {
-                    final policy = displayList[idx];
-                    final isDue = policy.status.toLowerCase().contains('due') || policy.status.toLowerCase().contains('renewal');
-
-                    return Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                    final policy = upcomingRenewals[idx];
+                    return Column(
+                      children: [
+                        PolicyCard(policy: policy),
+                        const Gap(8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () => CommonDialogs.showPayPremiumModal(context),
+                            icon: const Icon(Icons.credit_card_rounded, size: 15),
+                            label: Text('Instant Renewal (${policy.price})'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF007AFF),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      policy.name,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14.5,
-                                      ),
-                                    ),
-                                    const Gap(3),
-                                    Text(
-                                      policy.subtitle,
-                                      style: TextStyle(
-                                        fontSize: 11.5,
-                                        color: isDark ? Colors.white60 : const Color(0xFF64748B),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Gap(8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: (isDue ? const Color(0xFFD97706) : const Color(0xFF10B981)).withAlpha(20),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  policy.expiryDate?.isNotEmpty == true ? 'Expiry: ${policy.expiryDate}' : policy.status,
-                                  style: TextStyle(
-                                    color: isDue ? const Color(0xFFD97706) : const Color(0xFF10B981),
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Gap(12),
-                          const Divider(height: 1),
-                          const Gap(12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Renewal Premium',
-                                    style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
-                                  ),
-                                  Text(
-                                    policy.price,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF1D4ED8),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF10B981).withAlpha(15),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.shield_rounded, size: 12, color: Color(0xFF10B981)),
-                                    Gap(4),
-                                    Text(
-                                      'Synced with CRM',
-                                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF059669)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Gap(14),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: () {
-                                    CommonDialogs.showDownloadPolicyModal(context);
-                                  },
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 9),
-                                    side: const BorderSide(color: Color(0xFFCBD5E1)),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: const Text('Download Policy', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
-                                ),
-                              ),
-                              const Gap(8),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () => CommonDialogs.showPayPremiumModal(context),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1D4ED8),
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(vertical: 9),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: const Text('Renew Policy', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                      ],
                     );
                   },
                 );
               },
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: CircularProgressIndicator(),
-                ),
-              ),
+              loading: () => const AppPolicySkeleton(count: 2),
               error: (err, stack) => Center(
-                child: Text('Unable to load renewals: $err'),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.cloud_off_rounded, size: 36, color: Color(0xFF94A3B8)),
+                      const Gap(12),
+                      Text(
+                        'Unable to load renewals',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+                      ),
+                      const Gap(4),
+                      Text(
+                        'Please check your internet connection or try again.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : const Color(0xFF64748B)),
+                      ),
+                      const Gap(16),
+                      ElevatedButton.icon(
+                        onPressed: () => ref.refresh(livePoliciesProvider),
+                        icon: const Icon(Icons.refresh_rounded, size: 16),
+                        label: const Text('Retry Connection'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1D4ED8),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],

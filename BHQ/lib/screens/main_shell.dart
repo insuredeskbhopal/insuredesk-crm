@@ -10,9 +10,6 @@ import '../services/crm_data_provider.dart';
 import '../services/app_update_service.dart';
 import 'claims_screen.dart';
 import 'dashboard_screen.dart';
-import 'documents_screen.dart';
-import 'family_assets_screen.dart';
-import 'payments_screen.dart';
 import 'policies_screen.dart';
 import 'renewals_screen.dart';
 import 'support_screen.dart';
@@ -24,7 +21,8 @@ class MainShell extends ConsumerStatefulWidget {
   ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserver {
+class _MainShellState extends ConsumerState<MainShell>
+    with WidgetsBindingObserver {
   int _currentIndex = 0;
   bool _showCommandPalette = false;
 
@@ -73,12 +71,6 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
       case 3:
         return const ClaimsScreen();
       case 4:
-        return const DocumentsScreen();
-      case 5:
-        return const PaymentsScreen();
-      case 6:
-        return const FamilyAssetsScreen();
-      case 7:
       default:
         return const SupportScreen();
     }
@@ -94,9 +86,23 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isDesktop = MediaQuery.of(context).size.width >= 1024;
 
-    return Shortcuts(
+    return PopScope(
+      canPop: !_showCommandPalette && _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_showCommandPalette) {
+          _closeCommandPalette();
+          return;
+        }
+        if (_currentIndex != 0) {
+          setState(() => _currentIndex = 0);
+          return;
+        }
+      },
+      child: Shortcuts(
       shortcuts: <LogicalKeySet, Intent>{
         LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyK):
             const _OpenCommandIntent(),
@@ -110,8 +116,73 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
           ),
         },
         child: Scaffold(
+          backgroundColor: isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
           body: Stack(
             children: [
+              // ── Ambient Glassmorphic Color Orbs Background ──
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Stack(
+                    children: [
+                      // Top Right Soft Blue Orb
+                      Positioned(
+                        top: -100,
+                        right: -100,
+                        child: Container(
+                          width: 380,
+                          height: 380,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFF007AFF).withValues(alpha: isDark ? 0.18 : 0.09),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Mid Left Soft Emerald Orb
+                      Positioned(
+                        top: 280,
+                        left: -120,
+                        child: Container(
+                          width: 340,
+                          height: 340,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFF34C759).withValues(alpha: isDark ? 0.14 : 0.07),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Bottom Right Soft Indigo Orb
+                      Positioned(
+                        bottom: 60,
+                        right: -80,
+                        child: Container(
+                          width: 360,
+                          height: 360,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFF5856D6).withValues(alpha: isDark ? 0.16 : 0.07),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               Row(
                 children: [
                   // Sidebar on Desktop
@@ -133,9 +204,7 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
                             CommonDialogs.showNotificationsDialog(context);
                           },
                         ),
-                        Expanded(
-                          child: _buildBody(_currentIndex),
-                        ),
+                        Expanded(child: _buildBody(_currentIndex)),
                       ],
                     ),
                   ),
@@ -171,7 +240,8 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }
 

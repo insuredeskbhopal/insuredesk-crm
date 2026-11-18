@@ -310,6 +310,29 @@ export default function FixedPolicyPreview({
                 <span className="warning-bar-list">{displayedMissingRequired.join(", ")}</span>
               </div>
             ) : null}
+
+            {/[xX*•]/.test(getPreviewValue("contactNumber")) ? (
+              <div
+                style={{
+                  margin: "8px 16px 0",
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  backgroundColor: "#fff7ed",
+                  border: "1px solid #fed7aa",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "12px",
+                  color: "#9a3412",
+                  fontWeight: "600",
+                }}
+              >
+                <span>⚠️</span>
+                <span>
+                  <strong>Masked Contact Number:</strong> The PDF extracted a masked mobile number (<code>{getPreviewValue("contactNumber")}</code>). Please enter the customer's actual 10-digit number before saving so they can access their policy in the Mobile App.
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <div className="preview-body">

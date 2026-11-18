@@ -2,32 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  // Brand Colors
-  static const Color primary = Color(0xFF0F172A); // Slate 900
-  static const Color primaryLight = Color(0xFF1E293B);
+  // Apple iOS System Colors & Brand Colors
+  static const Color primary = Color(0xFF007AFF); // Apple System Blue
+  static const Color primaryLight = Color(0xFF389BFF);
   
-  // Vibrant Blue for high-contrast actions (Download Policy, Primary Actions)
-  static const Color primaryBlue = Color(0xFF2563EB); // Blue 600
-  static const Color primaryBlueDark = Color(0xFF60A5FA); // Blue 400
+  // Vibrant iOS Blue for actions & primary highlights
+  static const Color primaryBlue = Color(0xFF007AFF); // Apple System Blue
+  static const Color primaryBlueDark = Color(0xFF0A84FF); // iOS Dark Mode Blue
 
-  static const Color accent = Color(0xFF0D9488); // Teal 600
-  static const Color accentLight = Color(0xFF14B8A6); // Teal 500
-  static const Color amber = Color(0xFFD97706); // Amber 600
-  static const Color amberLight = Color(0xFFF59E0B); // Amber 500
-  static const Color purple = Color(0xFF7C3AED); // Purple 600
-  static const Color purpleDark = Color(0xFFA78BFA); // Purple 400
+  static const Color accent = Color(0xFF34C759); // Apple System Green
+  static const Color accentLight = Color(0xFF30D158); // iOS Dark Mode Green
+  static const Color amber = Color(0xFFFF9500); // Apple System Orange
+  static const Color amberLight = Color(0xFFFF9F0A); // iOS Dark Mode Orange
+  static const Color purple = Color(0xFF5856D6); // Apple System Indigo
+  static const Color purpleDark = Color(0xFF5E5CE6); // iOS Dark Mode Indigo
+  static const Color appleRed = Color(0xFFFF3B30); // Apple System Red
 
-  // Backgrounds
-  static const Color background = Color(0xFFF8FAFC); // Slate 50
-  static const Color darkBackground = Color(0xFF0F172A); // Slate 900
-  static const Color cardLight = Color(0xFFFFFFFF);
-  static const Color cardDark = Color(0xFF1E293B); // Slate 800
+  // iOS Native Grouped Backgrounds
+  static const Color background = Color(0xFFF2F2F7); // Apple iOS Grouped Canvas
+  static const Color darkBackground = Color(0xFF000000); // Apple iOS Pure Black Canvas
+  static const Color cardLight = Color(0xFFFFFFFF); // Apple Inset Card Light
+  static const Color cardDark = Color(0xFF1C1C1E); // Apple Inset Card Dark
 
-  // Glass & Borders
-  static const Color glassBorderLight = Color(0xFFE2E8F0); // Slate 200
-  static const Color glassBorderDark = Color(0xFF334155); // Slate 700
-  static const Color glassBgLight = Color(0xEEFFFFFF);
-  static const Color glassBgDark = Color(0xEE1E293B);
+  // Glass & Hairline Borders
+  static const Color glassBorderLight = Color(0xFFE5E5EA); // iOS Hairline Light
+  static const Color glassBorderDark = Color(0xFF2C2C2E); // iOS Hairline Dark
+  static const Color glassBgLight = Color(0xD8FFFFFF); // 85% translucent
+  static const Color glassBgDark = Color(0xD81C1C1E);
 
   // Text Colors
   static const Color textPrimary = Color(0xFF0F172A); // Slate 900

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -6,11 +7,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ApiService {
+  /// The official Bima Headquarter production backend
   static const String defaultBaseUrl = String.fromEnvironment(
     'BHQ_API_BASE_URL',
     defaultValue: 'https://www.bimaheadquarter.com',
   );
   static String baseUrl = defaultBaseUrl;
+
+  /// Ensures the API base URL is initialized to the official production server or local dev
+  static Future<void> ensureReachableHost() async {
+    if (baseUrl.trim().isEmpty) {
+      baseUrl = defaultBaseUrl;
+    }
+    // When running Flutter web locally, route to active dev server at 127.0.0.1:3000
+    if (kIsWeb) {
+      if (Uri.base.host == 'localhost' || Uri.base.host == '127.0.0.1') {
+        baseUrl = 'http://127.0.0.1:3000';
+      } else if (Uri.base.host.endsWith('bimaheadquarter.com')) {
+        baseUrl = Uri.base.origin;
+      }
+    }
+  }
 
   static const String _tokenKey = 'bhq_auth_token';
   static const String _userKey = 'bhq_auth_user';
@@ -28,6 +45,7 @@ class ApiService {
     required Map<String, dynamic> user,
     String? customerId,
   }) async {
+    // Encrypted hardware keystore / keychain (Banking & IRDAI Grade)
     try {
       await _secureStorage.write(key: _tokenKey, value: token);
       if (customerId != null && customerId.isNotEmpty) {
@@ -35,8 +53,8 @@ class ApiService {
       }
     } catch (_) {}
 
+    // Only non-sensitive display profile is cached for offline header
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
     await prefs.setString(_userKey, jsonEncode(user));
     if (customerId != null && customerId.isNotEmpty) {
       await prefs.setString(_customerIdKey, customerId);
@@ -48,9 +66,7 @@ class ApiService {
       final secureToken = await _secureStorage.read(key: _tokenKey);
       if (secureToken != null && secureToken.isNotEmpty) return secureToken;
     } catch (_) {}
-
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+    return null;
   }
 
   static Future<Map<String, dynamic>?> getUser() async {
@@ -115,6 +131,7 @@ class ApiService {
     required String customerId,
     required String mpin,
   }) async {
+    await ensureReachableHost();
     final uri = _buildUri('/api/auth/client/login');
     final response = await http.post(
       uri,
@@ -135,6 +152,53 @@ class ApiService {
       return data;
     } else {
       throw Exception(data['error'] ?? 'Invalid Client ID or MPIN.');
+    }
+  }
+
+  /// Request verification OTP for self-service MPIN setup / reset
+  static Future<Map<String, dynamic>> sendClientOtp(String phone) async {
+    final uri = _buildUri('/api/auth/client/otp/send');
+    final response = await http.post(
+      uri,
+      headers: await _getHeaders(requireAuth: false),
+      body: jsonEncode({'phone': phone.trim()}),
+    );
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode == 200 && data['success'] == true) {
+      return data;
+    } else {
+      throw Exception(data['error'] ?? 'Failed to send verification code.');
+    }
+  }
+
+  /// Verify OTP and set new 4 to 6-digit MPIN securely
+  static Future<Map<String, dynamic>> verifyOtpAndSetMpin({
+    required String phone,
+    required String otp,
+    required String newMpin,
+  }) async {
+    final uri = _buildUri('/api/auth/client/otp/verify');
+    final response = await http.post(
+      uri,
+      headers: await _getHeaders(requireAuth: false),
+      body: jsonEncode({
+        'phone': phone.trim(),
+        'otp': otp.trim(),
+        'newMpin': newMpin.trim(),
+      }),
+    );
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode == 200 && data['success'] == true) {
+      final token = data['token'] as String? ?? '';
+      final user = data['user'] as Map<String, dynamic>? ?? {};
+      if (token.isNotEmpty) {
+        await saveSession(token: token, user: user, customerId: phone.trim());
+      }
+      return data;
+    } else {
+      throw Exception(data['error'] ?? 'Verification failed.');
     }
   }
 
@@ -216,7 +280,7 @@ class ApiService {
     } else if (response.statusCode == 401) {
       throw Exception('Session expired. Please log in again.');
     } else {
-      throw Exception('Unable to load policies from CRM server.');
+      throw Exception('Unable to load policies. Please try again.');
     }
   }
 
@@ -234,17 +298,27 @@ class ApiService {
     } else if (response.statusCode == 401) {
       throw Exception('Session expired. Please log in again.');
     } else {
-      throw Exception('Unable to load claims from CRM server.');
+      throw Exception('Unable to load claims. Please try again.');
     }
   }
 
-  /// Files a new claim directly into CRM database
+  /// Files a new claim directly into CRM database with optional damage photos/documents
   static Future<Map<String, dynamic>> fileClaim({
     required String policyNumber,
     required double claimAmount,
     String? garageOrHospital,
     String? remarks,
+    List<Map<String, dynamic>>? attachments,
   }) async {
+    final descParts = <String>[];
+    if (remarks != null && remarks.trim().isNotEmpty) descParts.add(remarks.trim());
+    if (claimAmount > 0) descParts.add('Estimated Amount: ₹${claimAmount.toStringAsFixed(0)}');
+    if (garageOrHospital != null && garageOrHospital.trim().isNotEmpty) descParts.add('Hospital/Workshop: ${garageOrHospital.trim()}');
+
+    final fullDescription = descParts.isNotEmpty
+        ? descParts.join(' • ')
+        : 'Claim filed from BimaHQ Mobile Portal';
+
     final uri = _buildUri('/api/client/claims');
     final response = await http.post(
       uri,
@@ -252,10 +326,9 @@ class ApiService {
       body: jsonEncode({
         'policyNo': policyNumber.trim(),
         'claimType': 'Comprehensive Claim',
-        'claimDescription': remarks?.trim().isNotEmpty == true
-            ? remarks!.trim()
-            : 'Claim filed from BimaHQ Mobile Portal',
+        'claimDescription': fullDescription,
         'hospitalOrWorkshop': garageOrHospital?.trim() ?? '',
+        if (attachments != null && attachments.isNotEmpty) 'attachments': attachments,
       }),
     );
 
@@ -418,9 +491,24 @@ class ApiService {
     }
   }
 
-  /// Downloads or opens a policy PDF, certificate, or receipt.
-  /// Pre-checks document availability before launching browser to avoid
-  /// showing raw JSON errors when no PDF is uploaded for the policy.
+  /// Fetches raw bytes of policy document using authenticated Bearer header.
+  static Future<Uint8List> fetchPolicyDocumentBytes(String policyId, {String kind = 'policy'}) async {
+    final uri = _buildUri('/api/client/policies/$policyId/document', {'kind': kind});
+    final headers = await _getHeaders(requireAuth: true);
+    final response = await http.get(uri, headers: headers);
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    } else if (response.statusCode == 404) {
+      throw Exception('DOCUMENT_NOT_FOUND');
+    } else if (response.statusCode == 401) {
+      throw Exception('UNAUTHORIZED');
+    } else {
+      throw Exception('Failed to load document (${response.statusCode})');
+    }
+  }
+
+  /// Downloads or opens a policy PDF, certificate, or receipt securely.
+  /// Fetches document bytes with Bearer authentication and displays in-app.
   static Future<void> downloadDocument(
     BuildContext context,
     String policyId, {
@@ -430,89 +518,100 @@ class ApiService {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final url = await getPolicyDocumentUrl(policyId, kind: kind);
-      final uri = Uri.parse(url);
-
-      // Pre-check: verify the document exists before launching browser
       messenger.showSnackBar(
         const SnackBar(
           content: Row(
             children: [
               SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
               SizedBox(width: 12),
-              Text('Checking document availability...'),
+              Text('Fetching secured policy document...'),
             ],
           ),
-          duration: Duration(seconds: 10),
+          duration: Duration(seconds: 15),
           backgroundColor: Color(0xFF1D4ED8),
         ),
       );
 
-      final checkResponse = await http.head(uri);
-      messenger.hideCurrentSnackBar();
-
-      if (checkResponse.statusCode == 404) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              title != null
-                  ? 'No PDF uploaded yet for policy $title. Please contact your agent.'
-                  : 'No PDF document uploaded for this policy yet. Please contact your agent.',
-            ),
-            backgroundColor: const Color(0xFFD97706),
-            duration: const Duration(seconds: 4),
-          ),
-        );
-        return;
-      }
-
-      if (checkResponse.statusCode == 401) {
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Session expired. Please log in again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      if (checkResponse.statusCode != 200) {
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Document is not available right now. Please try again later.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      // Document exists — launch browser to download
       bool launched = false;
+
+      // 1. Try single-use 60-second secured download ticket
       try {
-        launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        final ticketUri = _buildUri('/api/client/policies/$policyId/document');
+        final ticketRes = await http.post(ticketUri, headers: await _getHeaders(requireAuth: true));
+        if (ticketRes.statusCode == 200) {
+          final ticketData = jsonDecode(ticketRes.body) as Map<String, dynamic>;
+          final ticket = ticketData['ticket'] as String?;
+          if (ticket != null && ticket.isNotEmpty) {
+            final viewUri = _buildUri('/api/client/policies/$policyId/document', {'ticket': ticket, 'kind': kind});
+            launched = await launchUrl(viewUri, mode: LaunchMode.externalApplication);
+            if (!launched) {
+              launched = await launchUrl(viewUri, mode: LaunchMode.platformDefault);
+            }
+          }
+        }
       } catch (_) {}
 
+      // 2. Fallback: stream authenticated raw bytes into in-memory data URI
       if (!launched) {
-        try {
-          launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
-        } catch (_) {}
+        final bytes = await fetchPolicyDocumentBytes(policyId, kind: kind);
+        if (bytes.isNotEmpty) {
+          final dataUri = Uri.dataFromBytes(bytes, mimeType: 'application/pdf');
+          try {
+            launched = await launchUrl(dataUri, mode: LaunchMode.externalApplication);
+          } catch (_) {}
+          if (!launched) {
+            try {
+              launched = await launchUrl(dataUri, mode: LaunchMode.platformDefault);
+            } catch (_) {}
+          }
+        }
       }
 
-      if (!launched && context.mounted) {
+      messenger.hideCurrentSnackBar();
+
+      if (launched && context.mounted) {
         messenger.showSnackBar(
           const SnackBar(
-            content: Text('Could not open browser to download the document. Please try again.'),
+            content: Text('Document opened securely.'),
+            backgroundColor: Color(0xFF059669),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else if (!launched && context.mounted) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Could not open document viewer on this device.'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
       messenger.hideCurrentSnackBar();
-      if (context.mounted) {
-        final msg = e.toString().replaceAll('Exception:', '').trim();
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (!context.mounted) return;
+      final msg = e.toString().replaceAll('Exception:', '').trim();
+      if (msg == 'DOCUMENT_NOT_FOUND') {
+        messenger.showSnackBar(
           SnackBar(
-            content: Text(msg.contains('authenticated') ? 'Please log in again to download.' : 'Download failed. Please try again.'),
+            content: Text(
+              title != null
+                  ? 'No PDF uploaded yet for policy $title. Please contact your advisor.'
+                  : 'No PDF document uploaded for this policy yet. Please contact your advisor.',
+            ),
+            backgroundColor: const Color(0xFFD97706),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      } else if (msg == 'UNAUTHORIZED') {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Session expired. Please log in again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Could not load document: $msg'),
             backgroundColor: Colors.red,
           ),
         );

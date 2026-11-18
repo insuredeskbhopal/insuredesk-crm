@@ -36,7 +36,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         final authState = ref.read(authProvider);
         final clientName = authState.user?.name ?? 'Valued Client';
 
-        String reply = 'I scanned your CRM policy records for $clientName. You currently have ${policies.length} registered policy records and ${claims.length} claim files in your portfolio.';
+        String reply = 'I reviewed your insurance records for $clientName. You currently have ${policies.length} active policies and ${claims.length} claim records in your portfolio.';
         final lower = text.toLowerCase();
         if (lower.contains('motor') || lower.contains('car') || lower.contains('expire')) {
           final expiring = policies.where((p) => p.status.toLowerCase().contains('due') || p.status.toLowerCase().contains('renew')).toList();

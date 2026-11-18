@@ -118,6 +118,47 @@ export default function PreviewField({
           disabled={disabled}
         />
       ) : null}
+      {isContactNumber && /[xX*•]/.test(String(value || "")) ? (
+        <div
+          style={{
+            marginTop: "6px",
+            padding: "6px 10px",
+            borderRadius: "6px",
+            backgroundColor: "#fff7ed",
+            border: "1px solid #fdba74",
+            color: "#c2410c",
+            fontSize: "11px",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
+          <span style={{ fontSize: "13px" }}>⚠️</span>
+          <span>
+            Masked from PDF. Enter real 10-digit number to enable Mobile App access.
+          </span>
+        </div>
+      ) : null}
+      {isContactNumber && /^[6-9]\d{9}$/.test(String(value || "").replace(/\D/g, "")) && !/[xX*•]/.test(String(value || "")) ? (
+        <div
+          style={{
+            marginTop: "4px",
+            padding: "3px 8px",
+            borderRadius: "4px",
+            backgroundColor: "#f0fdf4",
+            border: "1px solid #bbf7d0",
+            color: "#15803d",
+            fontSize: "10.5px",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+          }}
+        >
+          <span>✓ Ready for Mobile App & Portal</span>
+        </div>
+      ) : null}
       {hasSuggestion ? (
         <div className="ai-suggestion-card">
           <div>
@@ -668,16 +709,12 @@ function ClientIdSearch({
                       overflow: "hidden",
                     }}
                     onClick={() => {
-                      if (clientIdRequest?.id && clientIdRequest.status !== "COMPLETED") {
-                        setRequestError(
-                          "A Client ID request is already active. Resolve it from Client Management to keep every attached policy in sync.",
-                        );
-                        return;
-                      }
+                      setRequestError("");
                       autoMatchSuppressedKey.current = "";
                       onChange(profile.id);
                       notifiedRequestId.current = "";
                       onClientIdRequestChange?.("");
+                      setClientIdRequest(null);
                       setSelectedClientName(profile.name);
                       setShowSearch(false);
                       setQuery("");
@@ -750,7 +787,7 @@ function ClientIdSearch({
               {requesting ? "Sending request..." : "No match found — Request Client ID"}
             </button>
           )}
-          {clientIdRequest && clientIdRequest.status !== "COMPLETED" && (
+          {!value && clientIdRequest && clientIdRequest.status !== "COMPLETED" && (
             <div role={clientIdRequest.status === "WAITING_DOCUMENTS" ? "alert" : "status"} aria-live="polite" style={{ marginTop: "8px", padding: "7px 9px", borderRadius: "6px", background: clientIdRequest.status === "WAITING_DOCUMENTS" ? "#fff1f2" : "#fffbeb", color: clientIdRequest.status === "WAITING_DOCUMENTS" ? "#9f1239" : "#92400e", fontSize: "10.5px", fontWeight: "650" }}>
               {clientIdRequest.status === "WAITING_DOCUMENTS" ? (
                 <>

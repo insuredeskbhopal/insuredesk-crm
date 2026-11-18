@@ -172,7 +172,8 @@ export default function ClientLoginPage() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         html, body {
           margin: 0 !important;
           padding: 0 !important;
@@ -485,7 +486,7 @@ export default function ClientLoginPage() {
                   <label className="client-form-label" htmlFor="client-id">Client ID</label>
                   <div className="client-input-wrap">
                     <Mail className="client-input-icon" size={17} />
-                    <input id="client-id" className="client-form-control" type="text" autoComplete="username" placeholder="Enter your Client ID" value={regularCustomerId} onChange={(event) => setRegularCustomerId(event.target.value)} disabled={loading} required />
+                    <input id="client-id" className="client-form-control" type="text" autoComplete="username" placeholder="Enter Mobile Number or Client ID" value={regularCustomerId} onChange={(event) => setRegularCustomerId(event.target.value)} disabled={loading} required />
                   </div>
                 </div>
 
@@ -493,7 +494,7 @@ export default function ClientLoginPage() {
                   <label className="client-form-label" htmlFor="client-mpin">Client MPIN</label>
                   <div className="client-input-wrap">
                     <KeyRound className="client-input-icon" size={17} />
-                    <input id="client-mpin" className="client-form-control" type={showMpin ? "text" : "password"} inputMode="numeric" maxLength={4} autoComplete="current-password" placeholder="Enter your MPIN" value={regularMpin} onChange={(event) => setRegularMpin(event.target.value)} disabled={loading} required />
+                    <input id="client-mpin" className="client-form-control" type={showMpin ? "text" : "password"} inputMode="numeric" maxLength={6} autoComplete="current-password" placeholder="4 to 6-digit MPIN" value={regularMpin} onChange={(event) => setRegularMpin(event.target.value)} disabled={loading} required />
                     <button className="client-toggle-mpin" type="button" aria-label={showMpin ? "Hide MPIN" : "Show MPIN"} onClick={() => setShowMpin((visible) => !visible)}>
                       {showMpin ? <EyeOff size={17} /> : <Eye size={17} />}
                     </button>

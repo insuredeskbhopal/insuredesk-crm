@@ -1,46 +1,158 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Bima Headquarter - Executive Client Insurance Portal">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="bimaheadquarter_app">
+  <meta name="apple-mobile-web-app-title" content="Bima Headquarter">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>bimaheadquarter_app</title>
+  <title>Bima Headquarter • Client Portal</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* Clean Minimalist Startup Buffering Screen */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #0A0F1D;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #bhq-splash-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #0A0F1D;
+      z-index: 999999;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .loader-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .app-icon {
+      width: 54px;
+      height: 54px;
+      background: linear-gradient(135deg, #007AFF 0%, #0056D2 100%);
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(0, 122, 255, 0.35);
+    }
+
+    .app-icon svg {
+      width: 28px;
+      height: 28px;
+      fill: #ffffff;
+    }
+
+    /* Normal Smooth Circular Buffering Spinner */
+    .buffering-spinner {
+      width: 28px;
+      height: 28px;
+      border: 2.5px solid rgba(255, 255, 255, 0.12);
+      border-top-color: #007AFF;
+      border-radius: 50%;
+      animation: buffer-spin 0.75s linear infinite;
+    }
+
+    @keyframes buffer-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+  <!-- Clean Normal Buffering Screen -->
+  <div id="bhq-splash-loader">
+    <div class="loader-content">
+      <div class="app-icon">
+        <!-- Shield Icon -->
+        <svg viewBox="0 0 24 24">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+        </svg>
+      </div>
+      <div class="buffering-spinner"></div>
+    </div>
+  </div>
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <script>
+    (function() {
+      let isRemoved = false;
+      function dismissSplash() {
+        if (isRemoved) return;
+        const splash = document.getElementById('bhq-splash-loader');
+        if (splash) {
+          isRemoved = true;
+          splash.style.opacity = '0';
+          splash.style.pointerEvents = 'none';
+          splash.style.transform = 'scale(0.97)';
+          setTimeout(function() {
+            splash.remove();
+          }, 350);
+        }
+      }
+
+      // Check immediately
+      if (document.querySelector('flutter-view') || document.querySelector('flt-scene-host') || document.querySelector('canvas')) {
+        dismissSplash();
+        return;
+      }
+
+      window.addEventListener('flutter-first-frame', dismissSplash);
+
+      const observer = new MutationObserver(function() {
+        if (document.querySelector('flutter-view') || document.querySelector('canvas')) {
+          dismissSplash();
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      // Fast-poll fallback
+      const interval = setInterval(function() {
+        if (document.querySelector('flutter-view') || document.querySelector('canvas')) {
+          clearInterval(interval);
+          dismissSplash();
+        }
+      }, 100);
+
+      // Max safety timeout
+      setTimeout(function() {
+        clearInterval(interval);
+        dismissSplash();
+      }, 2500);
+    })();
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

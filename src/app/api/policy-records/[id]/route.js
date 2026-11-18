@@ -91,23 +91,14 @@ export async function PUT(request, { params }) {
       : existing.extractedData
         ? { ...existing.extractedData, clientId: "" }
         : existing.extractedData;
-    if (
-      existing.clientIdRequestId &&
-      payload.clientIdRequestId &&
-      existing.clientIdRequestId !== payload.clientIdRequestId
-    ) {
-      return Response.json(
-        { error: "This policy is already attached to another Client ID request." },
-        { status: 409 },
-      );
-    }
     const policyCustomerName = String(reviewedData.insuredName || reviewedData.customerName || "").trim();
     const policyCustomerMobile = normalizeIndianPhone(
       reviewedData.contactNumber || reviewedData.customerMobile || "",
     );
     let clientIdRequestId = existing.clientIdRequestId || payload.clientIdRequestId || null;
-    if (!clientIdRequestId && policyCustomerName && policyCustomerMobile) {
-      const matchingActiveRequest = await prisma.task.findFirst({
+    let matchingActiveRequest = null;
+    if (policyCustomerName && policyCustomerMobile) {
+      matchingActiveRequest = await prisma.task.findFirst({
         where: {
           module: "CLIENT_ID_REQUEST",
           status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"] },
@@ -117,24 +108,96 @@ export async function PUT(request, { params }) {
             ? { organizationId: session.organizationId }
             : { createdById: existing.createdById }),
         },
+        select: { id: true, status: true, metadata: true },
+      });
+      if (!clientIdRequestId && matchingActiveRequest) {
+        clientIdRequestId = matchingActiveRequest.id;
+      }
+    }
+
+    if (
+      !reviewedData.clientId &&
+      existing.clientIdRequestId &&
+      payload.clientIdRequestId &&
+      existing.clientIdRequestId !== payload.clientIdRequestId
+    ) {
+      return Response.json(
+        { error: "This policy is already attached to another Client ID request." },
+        { status: 409 },
+      );
+    }
+
+    if (
+      existing.clientIdRequestId &&
+      reviewedData.clientId &&
+      session.role === UserRole.AGENT
+    ) {
+      const activeRequest = await prisma.task.findFirst({
+        where: {
+          id: existing.clientIdRequestId,
+          module: "CLIENT_ID_REQUEST",
+          status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"] },
+        },
         select: { id: true },
       });
-      if (matchingActiveRequest && reviewedData.clientId) {
+      if (activeRequest) {
         return Response.json(
-          { error: "An active Client ID request already exists for this client and must be resolved first." },
+          { error: "This Client ID request must be resolved before a client can be linked directly." },
           { status: 409 },
         );
       }
-      clientIdRequestId = matchingActiveRequest?.id || null;
     }
+
+    if (matchingActiveRequest && reviewedData.clientId && session.role === UserRole.AGENT) {
+      return Response.json(
+        { error: "An active Client ID request already exists for this client and must be resolved first." },
+        { status: 409 },
+      );
+    }
+
     let clientIdPending = false;
     let verifiedClientIdRequest = null;
     if (reviewedData.clientId) {
       clientIdPending = false;
+      clientIdRequestId = null;
       const activeClient = await findActiveClientAccount(reviewedData.clientId, existing.organizationId);
       if (activeClient) {
         reviewedData.clientId = activeClient.id;
         mergedData.clientId = activeClient.id;
+
+        // For managers/admins linking or changing the Client ID, auto-resolve any open request for this policy or client
+        const activeRequestId = existing.clientIdRequestId || matchingActiveRequest?.id;
+        if (activeRequestId) {
+          try {
+            if (typeof prisma.task?.updateMany === "function") {
+              await prisma.task.updateMany({
+                where: {
+                  id: activeRequestId,
+                  module: "CLIENT_ID_REQUEST",
+                  status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"] },
+                },
+                data: {
+                  status: "COMPLETED",
+                  completedAt: new Date(),
+                  updatedById: actorId,
+                  recordId: activeClient.id,
+                  recordLabel: activeClient.name,
+                },
+              });
+            }
+            if (typeof prisma.policyRecord?.updateMany === "function") {
+              await prisma.policyRecord.updateMany({
+                where: { clientIdRequestId: activeRequestId, clientIdPending: true, deletedAt: null },
+                data: {
+                  clientIdPending: false,
+                  clientIdStatus: "LINKED",
+                },
+              });
+            }
+          } catch (taskErr) {
+            console.warn("Could not auto-complete Client ID request on policy update:", taskErr?.message);
+          }
+        }
       }
     } else if (clientIdRequestId) {
       verifiedClientIdRequest = await prisma.task.findFirst({

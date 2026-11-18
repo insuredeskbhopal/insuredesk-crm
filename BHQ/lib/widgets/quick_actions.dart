@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
@@ -24,109 +25,134 @@ class QuickActionsGrid extends StatelessWidget {
 
   static const actions = [
     QuickActionItem(
-      label: 'Renew Policy',
+      label: 'Renew',
       icon: Icons.autorenew_rounded,
-      color: Color(0xFF1D4ED8),
+      color: Color(0xFF007AFF), // Apple Blue
     ),
     QuickActionItem(
       label: 'File Claim',
-      icon: Icons.assignment_turned_in_outlined,
-      color: Color(0xFF059669),
+      icon: Icons.add_moderator_rounded,
+      color: Color(0xFF34C759), // Apple Green
     ),
     QuickActionItem(
-      label: 'Download Policy',
-      icon: Icons.file_download_outlined,
-      color: Color(0xFF2563EB),
+      label: 'Download ID',
+      icon: Icons.arrow_downward_rounded,
+      color: Color(0xFF5856D6), // Apple Indigo
     ),
     QuickActionItem(
       label: 'Pay Premium',
-      icon: Icons.account_balance_wallet_outlined,
-      color: Color(0xFFD97706),
+      icon: Icons.credit_card_rounded,
+      color: Color(0xFFFF9500), // Apple Orange
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmall = screenWidth < 480;
 
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: actions.map((item) {
-          final activeColor = isDark
-              ? (item.darkColor ?? item.color)
-              : (item.lightColor ?? item.color);
-
-          return Expanded(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: isSmall ? 2 : 4),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-                child: InkWell(
-                  onTap: () => onActionTap?.call(item.label),
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: isSmall ? 10 : 14,
-                      horizontal: isSmall ? 2 : 6,
-                    ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: actions.map((item) {
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: InkWell(
+              onTap: () {
+                if (item.label == 'Download ID') {
+                  onActionTap?.call('Download Policy');
+                } else if (item.label == 'Renew') {
+                  onActionTap?.call('Renew Policy');
+                } else {
+                  onActionTap?.call(item.label);
+                }
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? activeColor.withAlpha(25)
-                          : activeColor.withAlpha(15),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: activeColor.withAlpha(isDark ? 60 : 40),
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: isSmall ? 32 : 40,
-                          height: isSmall ? 32 : 40,
-                          decoration: BoxDecoration(
-                            color: activeColor.withAlpha(isDark ? 45 : 30),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            item.icon,
-                            color: activeColor,
-                            size: isSmall ? 16 : 20,
-                          ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: item.color.withValues(alpha: isDark ? 0.20 : 0.08),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
                         ),
-                        Gap(isSmall ? 5 : 8),
-                        SizedBox(
-                          height: isSmall ? 24 : 28,
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: isDark
+                                  ? [
+                                      const Color(0xFF1E293B).withValues(alpha: 0.82),
+                                      const Color(0xFF0F172A).withValues(alpha: 0.72),
+                                    ]
+                                  : [
+                                      Colors.white.withValues(alpha: 0.90),
+                                      Colors.white.withValues(alpha: 0.70),
+                                    ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.16)
+                                  : Colors.white.withValues(alpha: 0.85),
+                              width: 1.0,
+                            ),
+                          ),
                           child: Center(
-                            child: Text(
-                              item.label,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: isSmall ? 10 : 11,
-                                fontWeight: FontWeight.w700,
-                                color: activeColor,
-                                height: 1.15,
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: item.color.withValues(alpha: isDark ? 0.30 : 0.16),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                item.icon,
+                                color: item.color,
+                                size: 18,
                               ),
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
+                  const Gap(6),
+                  Text(
+                    item.label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: -0.2,
+                      color: isDark ? Colors.white70 : const Color(0xFF1C1C1E),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
-          );
-        }).toList(),
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

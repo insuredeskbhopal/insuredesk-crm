@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { buildCanonicalFields, normalizeRecord, sanitizeReviewedData } from "@/lib/records";
 import { sanitizeRecordPayload } from "@/lib/records/validation";
 import { verifyJWT } from "@/lib/auth";
-import { getTenantFilter } from "@/lib/auth/rbac";
+import { getTenantFilter, UserRole } from "@/lib/auth/rbac";
 import { logAudit, getAuditMetadata } from "@/lib/audit";
 import { UPLOAD_STATUS } from "@/lib/uploads/status";
 import { formatReviewValidationError, getReviewValidation } from "@/app/lib/dashboard-helpers";
@@ -461,7 +461,7 @@ export async function POST(request) {
           },
           select: { id: true },
         });
-        if (matchingActiveRequest && incomingClientId) {
+        if (matchingActiveRequest && incomingClientId && user.role === UserRole.AGENT) {
           return Response.json(
             {
               error: "An active Client ID request already exists for this client and must be resolved first.",
@@ -469,7 +469,9 @@ export async function POST(request) {
             { status: 409 },
           );
         }
-        clientIdRequestId = matchingActiveRequest?.id || null;
+        if (!incomingClientId) {
+          clientIdRequestId = matchingActiveRequest?.id || null;
+        }
       }
     }
     let clientIdRequest = null;
@@ -496,7 +498,7 @@ export async function POST(request) {
         payload.reviewedData = { ...incomingReviewedData, clientId: resolvedClientId };
       } else if (clientIdRequest.status === "COMPLETED") {
         return Response.json({ error: "This Client ID request has no resolved client." }, { status: 409 });
-      } else if (incomingClientId) {
+      } else if (incomingClientId && user.role === UserRole.AGENT) {
         return Response.json(
           { error: "This Client ID request must be resolved before a client can be linked directly." },
           { status: 409 },
@@ -682,7 +684,7 @@ export async function POST(request) {
             })
           : null;
 
-      if (matchingActiveRequest && incomingClientId) {
+      if (matchingActiveRequest && incomingClientId && user.role === UserRole.AGENT) {
         return {
           error: "An active Client ID request already exists for this client and must be resolved first.",
           status: 409,
@@ -693,6 +695,25 @@ export async function POST(request) {
         clientIdRequest = null;
         clientIdRequestId = null;
         clientIdPending = false;
+        if (matchingActiveRequest) {
+          try {
+            await database.task.updateMany({
+              where: {
+                id: matchingActiveRequest.id,
+                module: "CLIENT_ID_REQUEST",
+                status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"] },
+              },
+              data: {
+                status: "COMPLETED",
+                completedAt: new Date(),
+                updatedById: actorId,
+                recordId: reviewedData.clientId,
+              },
+            });
+          } catch (taskErr) {
+            console.warn("Could not auto-complete Client ID request on policy create:", taskErr?.message);
+          }
+        }
         return { record: await createRecord(database) };
       }
 

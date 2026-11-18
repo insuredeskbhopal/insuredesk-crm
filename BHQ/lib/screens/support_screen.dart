@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/crm_data_provider.dart';
+import '../widgets/app_loader.dart';
 
 class SupportScreen extends ConsumerStatefulWidget {
   const SupportScreen({super.key});
@@ -94,23 +95,23 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
         children: [
           // 1. Header Title & Subtitle
           Text(
-            'Support & Assistance',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: isSmall ? 20 : 22,
-                  letterSpacing: -0.5,
-                ),
-          ),
-          const Gap(2),
-          Text(
-            '24x7 help for claims, renewals & advisor consultation',
+            'Support',
             style: TextStyle(
-              color: isDark ? Colors.white60 : const Color(0xFF64748B),
-              fontSize: isSmall ? 12 : 13,
+              fontWeight: FontWeight.w700,
+              fontSize: isSmall ? 22 : 26,
+              letterSpacing: -0.6,
+              color: isDark ? Colors.white : const Color(0xFF000000),
             ),
           ),
-
-          const Gap(16),
+          const Gap(3),
+          Text(
+            '24x7 assistance for claims, policies & advisor guidance',
+            style: TextStyle(
+              color: isDark ? const Color(0xFF8E8E93) : const Color(0xFF8E8E93),
+              fontSize: isSmall ? 12 : 13,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
 
           const Gap(20),
 
@@ -118,23 +119,28 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'My Dedicated Advisor',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5),
+              Text(
+                'YOUR DEDICATED ADVISOR',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.6,
+                  color: isDark ? const Color(0xFF8E8E93) : const Color(0xFF8E8E93),
+                ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withAlpha(18),
-                  borderRadius: BorderRadius.circular(6),
+                  color: const Color(0xFF34C759).withAlpha(isDark ? 35 : 20),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.verified_rounded, color: Color(0xFF10B981), size: 12),
+                    Icon(Icons.verified_rounded, color: Color(0xFF34C759), size: 12),
                     Gap(4),
                     Text(
                       'IRDAI Certified',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF059669)),
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF34C759)),
                     ),
                   ],
                 ),
@@ -143,13 +149,21 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
           ),
           const Gap(10),
           Container(
-            padding: EdgeInsets.all(isSmall ? 12 : 16),
+            padding: EdgeInsets.all(isSmall ? 14 : 18),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E5EA),
+                width: 0.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(isDark ? 25 : 6),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -336,11 +350,9 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
           const Gap(8),
 
           ref.watch(liveServiceRequestsProvider).when(
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: CircularProgressIndicator(),
-              ),
+            loading: () => const Padding(
+              padding: EdgeInsets.all(16),
+              child: AppLoader(message: 'Loading support tickets...'),
             ),
             error: (err, _) => Container(
               padding: const EdgeInsets.all(14),
@@ -804,7 +816,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                         ref.invalidate(liveServiceRequestsProvider);
                         messenger.showSnackBar(
                           const SnackBar(
-                            content: Text('Support ticket submitted to CRM successfully!'),
+                            content: Text('Support ticket submitted successfully!'),
                             backgroundColor: Color(0xFF10B981),
                           ),
                         );
@@ -819,7 +831,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                       }
                     },
               child: isSubmitting
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  ? const AppSmallLoader(color: Colors.white)
                   : const Text('Submit Ticket'),
             ),
           ],
@@ -922,7 +934,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                             Gap(8),
                             Text('• Preventive Health Checkups: Up to ₹5,000 within the overall 80D limit.', style: TextStyle(fontSize: 12.5)),
                             Gap(8),
-                            Text('• Tax certificates are automatically generated from your active policies in CRM.', style: TextStyle(fontSize: 12.5, color: Color(0xFF1D4ED8), fontWeight: FontWeight.w600)),
+                            Text('• Tax certificates are automatically generated from your active policies.', style: TextStyle(fontSize: 12.5, color: Color(0xFF1D4ED8), fontWeight: FontWeight.w600)),
                           ],
                         ),
                         actions: [
@@ -948,7 +960,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
 
   void _showTicketDetailModal(BuildContext context, String ticketId, [Map<String, dynamic>? ticketData]) {
     final title = ticketData?['title'] ?? ticketData?['subject'] ?? 'Support Ticket';
-    final desc = ticketData?['description'] ?? 'Service request recorded in CRM.';
+    final desc = ticketData?['description'] ?? 'Service request recorded.';
     final status = (ticketData?['status'] ?? 'Open').toString();
     final remarks = ticketData?['remarks'] ?? 'Assigned to your relationship manager.';
 

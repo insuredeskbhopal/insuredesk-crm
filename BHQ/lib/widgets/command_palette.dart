@@ -57,31 +57,10 @@ class CommandPaletteModal extends StatefulWidget {
       shortcut: 'G C',
     ),
     CommandPaletteItem(
-      title: 'Documents',
-      category: 'Navigation',
-      icon: Icons.folder_outlined,
-      targetPageIndex: 4,
-      shortcut: 'G D',
-    ),
-    CommandPaletteItem(
-      title: 'Payments',
-      category: 'Navigation',
-      icon: Icons.credit_card_outlined,
-      targetPageIndex: 5,
-      shortcut: 'G Y',
-    ),
-    CommandPaletteItem(
-      title: 'Family & Assets',
-      category: 'Navigation',
-      icon: Icons.family_restroom_outlined,
-      targetPageIndex: 6,
-      shortcut: 'G F',
-    ),
-    CommandPaletteItem(
       title: 'Support',
       category: 'Support',
       icon: Icons.help_outline_rounded,
-      targetPageIndex: 7,
+      targetPageIndex: 4,
       shortcut: 'G S',
     ),
   ];

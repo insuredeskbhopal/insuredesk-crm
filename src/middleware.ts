@@ -17,6 +17,18 @@ const USER_MANAGEMENT_ROLES = ["SUPER_ADMIN", "ADMIN", "MANAGER"];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // 0. Handle CORS preflight for all APIs
+  if (request.method === "OPTIONS" && pathname.startsWith("/api/")) {
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, ticket",
+      },
+    });
+  }
+
   // 1. Static Assets & System Files Whitelist
   if (
     pathname.startsWith("/_next") ||
@@ -82,6 +94,11 @@ export async function middleware(request: NextRequest) {
     isServicesPage ||
     isFaqPage;
 
+  const isDocumentDownloadWithTicket =
+    pathname.startsWith("/api/client/policies/") &&
+    pathname.endsWith("/document") &&
+    Boolean(request.nextUrl.searchParams.get("ticket"));
+
   const isPublicApi =
     pathname === "/api/contact" ||
     pathname === "/api/app/version" ||
@@ -90,7 +107,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/downloads") ||
     pathname === "/api/review/feedback" ||
     pathname === "/api/review/track" ||
-    pathname === "/api/review/qr";
+    pathname === "/api/review/qr" ||
+    isDocumentDownloadWithTicket;
 
   const isAuthApi = pathname.startsWith("/api/auth");
   const isClientAuthApi = pathname.startsWith("/api/auth/client/");

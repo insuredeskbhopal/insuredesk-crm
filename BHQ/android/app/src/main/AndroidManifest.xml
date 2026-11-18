@@ -7,7 +7,7 @@
         android:label="Bimaheadquarter"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="false">
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -61,6 +61,11 @@
         <!-- WhatsApp Support direct launch -->
         <package android:name="com.whatsapp" />
         <package android:name="com.whatsapp.w4b" />
+        <!-- UPI Payments (GPay, PhonePe, Paytm, BHIM, Cred) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="upi" />
+        </intent>
         <!-- Text Processing -->
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

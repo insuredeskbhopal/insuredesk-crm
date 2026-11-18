@@ -26,7 +26,13 @@ vi.mock("@/lib/audit", () => ({
   logAudit: logAuditMock,
   getAuditMetadata: () => ({ ipAddress: "127.0.0.1", userAgent: "vitest" }),
 }));
-vi.mock("@/lib/records", () => ({ normalizeRecord: (record) => record }));
+vi.mock("@/lib/records", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    normalizeRecord: (record) => record,
+  };
+});
 vi.mock("@/app/lib/dashboard-helpers", () => ({
   formatReviewValidationError: () => "Review incomplete",
   getReviewValidation: () => ({

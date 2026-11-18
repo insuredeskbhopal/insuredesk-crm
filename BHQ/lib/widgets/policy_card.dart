@@ -2,18 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import '../models/policy.dart';
 import '../screens/policy_details_screen.dart';
+import '../screens/contact_bimaheadquarter_screen.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import 'common_dialogs.dart';
 import 'glass_card.dart';
 
 class PolicyCard extends StatelessWidget {
   final Policy policy;
   final VoidCallback? onTap;
+  final bool isCompact;
 
   const PolicyCard({
     super.key,
     required this.policy,
     this.onTap,
+    this.isCompact = false,
   });
 
   Color _getToneColor(PolicyTone tone, bool isDark) {
@@ -35,14 +39,40 @@ class PolicyCard extends StatelessWidget {
     try {
       final dt = DateTime.tryParse(s);
       if (dt != null) {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const months = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec',
+        ];
         return '${dt.day.toString().padLeft(2, '0')} ${months[dt.month - 1]} ${dt.year}';
       }
     } catch (_) {}
 
     final parts = s.split(RegExp(r'[-/]'));
     if (parts.length == 3) {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
       if (parts[0].length == 4) {
         final m = int.tryParse(parts[1]) ?? 1;
         return '${parts[2].padLeft(2, '0')} ${months[(m - 1).clamp(0, 11)]} ${parts[0]}';
@@ -60,14 +90,19 @@ class PolicyCard extends StatelessWidget {
     final numVal = double.tryParse(clean);
     if (numVal == null) return raw.startsWith('₹') ? raw : '₹$raw';
     final intVal = numVal.round();
-    // Indian formatting
     final str = intVal.toString();
     if (str.length <= 3) return '₹$str';
     final last3 = str.substring(str.length - 3);
     final rest = str.substring(0, str.length - 3);
-    final formattedRest = rest.replaceAllMapped(RegExp(r'(\d)(?=(\d\d)+$)'), (m) => '${m[1]},');
+    final formattedRest = rest.replaceAllMapped(
+      RegExp(r'(\d)(?=(\d\d)+$)'),
+      (m) => '${m[1]},',
+    );
     return '₹$formattedRest,$last3';
   }
+
+  Widget _buildHsrpBadge(String plate, bool isDark) =>
+      CommonDialogs.buildHsrpPlate(plate, isDark: isDark);
 
   @override
   Widget build(BuildContext context) {
@@ -77,19 +112,40 @@ class PolicyCard extends StatelessWidget {
     final isSmall = screenWidth < 480;
 
     final hasInsuredName = policy.insuredName.trim().isNotEmpty;
-    final hasVehicleNumber = policy.vehicleNumber != null && policy.vehicleNumber!.trim().isNotEmpty;
-    final hasMakeModel = policy.makeModel != null && policy.makeModel!.trim().isNotEmpty;
-    final hasSumInsured = policy.sumInsured != null && policy.sumInsured!.trim().isNotEmpty;
-    final hasExpiry = policy.expiryDate != null && policy.expiryDate!.trim().isNotEmpty;
+    final hasVehicleNumber =
+        policy.vehicleNumber != null && policy.vehicleNumber!.trim().isNotEmpty;
+    final hasMakeModel =
+        policy.makeModel != null && policy.makeModel!.trim().isNotEmpty;
+    final hasSumInsured =
+        policy.sumInsured != null && policy.sumInsured!.trim().isNotEmpty;
+    final hasExpiry =
+        policy.expiryDate != null && policy.expiryDate!.trim().isNotEmpty;
 
-    final isDue = policy.status.toLowerCase().contains('due') || policy.status.toLowerCase().contains('pending');
+    final isDue =
+        policy.status.toLowerCase().contains('due') ||
+        policy.status.toLowerCase().contains('pending');
     final isExpired = policy.status.toLowerCase().contains('expired');
 
     final statusColor = isExpired
-        ? (isDark ? Colors.redAccent.shade100 : Colors.red.shade700)
+        ? (isDark
+              ? const Color(0xFFFF453A)
+              : const Color(0xFFFF3B30)) // Apple Red
         : isDue
-            ? (isDark ? Colors.amber.shade300 : Colors.amber.shade800)
-            : (isDark ? const Color(0xFF34D399) : const Color(0xFF059669));
+        ? (isDark
+              ? const Color(0xFFFF9F0A)
+              : const Color(0xFFFF9500)) // Apple Orange
+        : (isDark
+              ? const Color(0xFF30D158)
+              : const Color(0xFF34C759)); // Apple Green
+
+    // Clean product type (strip redundant trailing 'Policy')
+    String cleanProductType = policy.policyType.trim();
+    if (cleanProductType.toLowerCase().endsWith(' policy') &&
+        cleanProductType.length > 7) {
+      cleanProductType = cleanProductType
+          .substring(0, cleanProductType.length - 7)
+          .trim();
+    }
 
     void openDetails() {
       if (onTap != null) {
@@ -106,25 +162,24 @@ class PolicyCard extends StatelessWidget {
 
     return GlassCard(
       onTap: openDetails,
-      padding: EdgeInsets.all(isSmall ? 14 : 16),
-      borderRadius: isSmall ? 16 : 20,
+      padding: EdgeInsets.all(isCompact ? 12 : (isSmall ? 15 : 18)),
+      borderRadius: isCompact ? 16 : (isSmall ? 18 : 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─── Header: Icon, Company Name, Category & Status ───
+          // ─── 1. Header: Insurer Icon, Insurer Name, Category & Live Status Capsule ───
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category Icon Container
               Container(
                 width: isSmall ? 40 : 44,
                 height: isSmall ? 40 : 44,
                 decoration: BoxDecoration(
-                  color: toneColor.withAlpha(isDark ? 45 : 22),
-                  borderRadius: BorderRadius.circular(isSmall ? 12 : 14),
+                  color: toneColor.withValues(alpha: isDark ? 0.28 : 0.14),
+                  borderRadius: BorderRadius.circular(isSmall ? 11 : 13),
                   border: Border.all(
-                    color: toneColor.withAlpha(isDark ? 60 : 35),
-                    width: 1,
+                    color: toneColor.withValues(alpha: isDark ? 0.40 : 0.25),
+                    width: 0.8,
                   ),
                 ),
                 child: Icon(
@@ -133,71 +188,83 @@ class PolicyCard extends StatelessWidget {
                   size: isSmall ? 20 : 22,
                 ),
               ),
-              Gap(isSmall ? 10 : 12),
-
-              // Company & Category Title
+              const Gap(12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      policy.companyName.isNotEmpty ? policy.companyName : policy.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: isSmall ? 13.5 : 14.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.2,
-                          ),
-                      maxLines: 1,
+                      policy.companyName.isNotEmpty
+                          ? policy.companyName
+                          : policy.name,
+                      style: TextStyle(
+                        fontSize: isSmall ? 13.5 : 14.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                      maxLines: 2,
+                      softWrap: true,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const Gap(3),
+                    const Gap(4),
                     Row(
                       children: [
-                        // Category Pill
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
-                            color: toneColor.withAlpha(isDark ? 40 : 20),
+                            color: toneColor.withValues(
+                              alpha: isDark ? 0.28 : 0.14,
+                            ),
                             borderRadius: BorderRadius.circular(5),
                           ),
                           child: Text(
                             policy.policyCategory.toUpperCase(),
                             style: TextStyle(
                               color: toneColor,
-                              fontSize: 9.5,
+                              fontSize: 9,
                               fontWeight: FontWeight.w800,
-                              letterSpacing: 0.4,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ),
-                        const Gap(6),
-                        Expanded(
-                          child: Text(
-                            policy.policyType,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                        if (cleanProductType.isNotEmpty) ...[
+                          const Gap(6),
+                          Expanded(
+                            child: Text(
+                              cleanProductType,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: isDark
+                                    ? const Color(0xFF98989D)
+                                    : const Color(0xFF6E6E73),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ],
                 ),
               ),
-
               const Gap(8),
-
-              // Status Badge with glowing dot
+              // Apple Glassmorphic Status Capsule
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3.5,
+                ),
                 decoration: BoxDecoration(
-                  color: statusColor.withAlpha(isDark ? 35 : 18),
-                  borderRadius: BorderRadius.circular(8),
+                  color: statusColor.withValues(alpha: isDark ? 0.22 : 0.12),
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: statusColor.withAlpha(isDark ? 60 : 35),
+                    color: statusColor.withValues(alpha: isDark ? 0.45 : 0.25),
                     width: 0.8,
                   ),
                 ),
@@ -205,20 +272,27 @@ class PolicyCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 6,
-                      height: 6,
+                      width: 5,
+                      height: 5,
                       decoration: BoxDecoration(
                         color: statusColor,
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: statusColor.withValues(alpha: 0.6),
+                            blurRadius: 4,
+                          ),
+                        ],
                       ),
                     ),
-                    const Gap(5),
+                    const Gap(4),
                     Text(
                       policy.status,
                       style: TextStyle(
                         color: statusColor,
-                        fontSize: 10.5,
+                        fontSize: 10,
                         fontWeight: FontWeight.w800,
+                        letterSpacing: 0.2,
                       ),
                     ),
                   ],
@@ -227,128 +301,124 @@ class PolicyCard extends StatelessWidget {
             ],
           ),
 
-          // ─── Divider ───
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 11),
-            child: Divider(
-              height: 1,
-              thickness: 1,
-              color: isDark ? Colors.white.withAlpha(14) : Colors.black.withAlpha(12),
-            ),
+          const Gap(12),
+          Container(
+            height: 0.8,
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.05),
           ),
+          const Gap(12),
 
-          // ─── Insured Person & Policy Number ───
+          // ─── 2. Insured Entity, Asset & Number Plate ───
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // User / Insured Icon
-              Icon(
-                Icons.person_rounded,
-                size: 16,
-                color: toneColor,
-              ),
-              const Gap(6),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      hasInsuredName ? policy.insuredName : 'Insured Policyholder',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontSize: isSmall ? 13.5 : 14.5,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.2,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.verified_user_rounded,
+                          size: 13,
+                          color: toneColor,
+                        ),
+                        const Gap(5),
+                        Expanded(
+                          child: Text(
+                            hasInsuredName
+                                ? policy.insuredName
+                                : 'Insured Policyholder',
+                            style: TextStyle(
+                              fontSize: isSmall ? 13 : 13.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                    const Gap(2),
-                    Text(
-                      'Policy #${policy.policyNumber ?? policy.id}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontFamily: 'monospace',
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    const Gap(4),
+                    Row(
+                      children: [
+                        Text(
+                          '#${policy.policyNumber ?? policy.id}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? const Color(0xFF98989D)
+                                : const Color(0xFF6E6E73),
+                          ),
+                        ),
+                        if (hasMakeModel) ...[
+                          const Gap(6),
+                          Container(
+                            width: 3,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDark
+                                  ? const Color(0xFF98989D)
+                                  : const Color(0xFF6E6E73),
+                            ),
+                          ),
+                          const Gap(6),
+                          Expanded(
+                            child: Text(
+                              policy.makeModel!,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: isDark
+                                    ? const Color(0xFF98989D)
+                                    : const Color(0xFF6E6E73),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
               ),
-
-              // Vehicle Registration / Asset Tag
               if (hasVehicleNumber) ...[
-                const Gap(8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(7),
-                    border: Border.all(
-                      color: isDark ? Colors.white24 : Colors.black12,
-                      width: 0.8,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.directions_car_filled_rounded,
-                        size: 13,
-                        color: toneColor,
-                      ),
-                      const Gap(4),
-                      Text(
-                        policy.vehicleNumber!,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.4,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                const Gap(10),
+                _buildHsrpBadge(policy.vehicleNumber!, isDark),
               ],
             ],
           ),
 
-          // Optional Make / Model sub-line
-          if (hasMakeModel) ...[
-            const Gap(4),
-            Padding(
-              padding: const EdgeInsets.only(left: 22),
-              child: Text(
-                policy.makeModel!,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontStyle: FontStyle.italic,
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+          const Gap(14),
 
-          const Gap(12),
-
-          // ─── Key Metrics Grid: Sum Insured, Expiry Date, Total Premium ───
+          // ─── 3. Financial Telemetry Grid (Apple Health Style Capsule) ───
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A).withAlpha(160) : const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
+              color: isDark
+                  ? const Color(0xFF0F172A).withValues(alpha: 0.60)
+                  : const Color(0xFFF1F5F9).withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isDark ? Colors.white.withAlpha(15) : Colors.black.withAlpha(12),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.05),
                 width: 0.8,
               ),
             ),
             child: Row(
               children: [
-                // Sum Insured / IDV
+                // 1. Sum Insured
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,36 +428,44 @@ class PolicyCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
-                          letterSpacing: 0.4,
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                          letterSpacing: 0.5,
+                          color: isDark
+                              ? const Color(0xFF98989D)
+                              : const Color(0xFF8E8E93),
                         ),
                       ),
-                      const Gap(2),
-                      Text(
-                        hasSumInsured ? _formatAmount(policy.sumInsured) : 'Covered',
-                        style: TextStyle(
-                          fontSize: isSmall ? 11.5 : 12.5,
-                          fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      const Gap(3),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          hasSumInsured
+                              ? _formatAmount(policy.sumInsured)
+                              : 'Standard',
+                          style: TextStyle(
+                            fontSize: isSmall ? 12.5 : 13.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                          ),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-
-                // Vertical Divider
                 Container(
-                  height: 24,
-                  width: 1,
-                  color: isDark ? Colors.white12 : Colors.black12,
+                  width: 0.8,
+                  height: 26,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.10)
+                      : Colors.black.withValues(alpha: 0.06),
                 ),
-
-                // Expiry Date
+                // 2. Valid Till
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.only(left: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -396,37 +474,44 @@ class PolicyCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
-                            letterSpacing: 0.4,
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                            letterSpacing: 0.5,
+                            color: isDark
+                                ? const Color(0xFF98989D)
+                                : const Color(0xFF8E8E93),
                           ),
                         ),
-                        const Gap(2),
-                        Text(
-                          hasExpiry ? _formatDate(policy.expiryDate) : 'Ongoing',
-                          style: TextStyle(
-                            fontSize: isSmall ? 11.5 : 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: isDue ? statusColor : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                        const Gap(3),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            hasExpiry
+                                ? _formatDate(policy.expiryDate)
+                                : 'Ongoing',
+                            style: TextStyle(
+                              fontSize: isSmall ? 11.5 : 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A),
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
                 ),
-
-                // Vertical Divider
                 Container(
-                  height: 24,
-                  width: 1,
-                  color: isDark ? Colors.white12 : Colors.black12,
+                  width: 0.8,
+                  height: 26,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.10)
+                      : Colors.black.withValues(alpha: 0.06),
                 ),
-
-                // Total Premium
+                // 3. Premium
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.only(left: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -435,20 +520,25 @@ class PolicyCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
-                            letterSpacing: 0.4,
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                            letterSpacing: 0.5,
+                            color: isDark
+                                ? const Color(0xFF98989D)
+                                : const Color(0xFF8E8E93),
                           ),
                         ),
-                        const Gap(2),
-                        Text(
-                          policy.price.replaceAll('/yr', ''),
-                          style: TextStyle(
-                            fontSize: isSmall ? 12 : 13,
-                            fontWeight: FontWeight.w900,
-                            color: toneColor,
+                        const Gap(3),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            _formatAmount(policy.netPremium ?? policy.price),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
+                              color: Color(0xFF007AFF),
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -458,90 +548,198 @@ class PolicyCard extends StatelessWidget {
             ),
           ),
 
-          const Gap(10),
+          const Gap(14),
 
-          // ─── Bottom Footer: View Details & Quick PDF Action ───
+          // ─── 4. Actions: Apple Secondary Details + Primary PDF / Contact HQ ───
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // "View Policy Details" link
               InkWell(
                 onTap: openDetails,
-                borderRadius: BorderRadius.circular(6),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white12
+                          : Colors.black.withValues(alpha: 0.08),
+                      width: 0.8,
+                    ),
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'View Policy Details',
+                        'View Details',
                         style: TextStyle(
                           fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.primaryBlueDark : AppColors.primaryBlue,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                         ),
                       ),
                       const Gap(4),
                       Icon(
                         Icons.arrow_forward_ios_rounded,
-                        size: 10,
-                        color: isDark ? AppColors.primaryBlueDark : AppColors.primaryBlue,
+                        size: 9.5,
+                        color: isDark
+                            ? const Color(0xFF98989D)
+                            : const Color(0xFF6E6E73),
                       ),
                     ],
                   ),
                 ),
               ),
-
-              // PDF Download Button (if document is available)
-              if (policy.hasPdf)
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () {
-                      ApiService.downloadDocument(
-                        context,
-                        policy.id,
-                        kind: 'policy',
-                        title: policy.policyNumber ?? policy.name,
-                      );
-                    },
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: () => CommonDialogs.showWhatsAppShareSheet(
+                      context,
+                      policy,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.all(7.5),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1D4ED8).withAlpha(isDark ? 40 : 18),
-                        borderRadius: BorderRadius.circular(8),
+                        color: const Color(
+                          0xFF25D366,
+                        ).withValues(alpha: isDark ? 0.20 : 0.12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFF1D4ED8).withAlpha(isDark ? 80 : 40),
+                          color: const Color(
+                            0xFF25D366,
+                          ).withValues(alpha: isDark ? 0.35 : 0.25),
                           width: 0.8,
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(
-                            Icons.download_rounded,
-                            size: 13,
-                            color: Color(0xFF2563EB),
-                          ),
-                          Gap(4),
-                          Text(
-                            'PDF',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF2563EB),
-                            ),
-                          ),
-                        ],
+                      child: const Icon(
+                        Icons.chat_bubble_rounded,
+                        size: 13,
+                        color: Color(0xFF25D366),
                       ),
                     ),
                   ),
+                  const Gap(8),
+                  if (policy.hasPdf)
+                    InkWell(
+                  onTap: () {
+                    ApiService.downloadDocument(
+                      context,
+                      policy.id,
+                      kind: 'policy',
+                      title: policy.policyNumber ?? policy.name,
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 7.5,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF007AFF), Color(0xFF0056D2)],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(
+                            0xFF007AFF,
+                          ).withValues(alpha: 0.35),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.arrow_downward_rounded,
+                          size: 13,
+                          color: Colors.white,
+                        ),
+                        Gap(5),
+                        Text(
+                          'Download PDF',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ContactBimaheadquarterScreen(policy: policy),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 7.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(
+                        0xFF34C759,
+                      ).withValues(alpha: isDark ? 0.20 : 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(
+                          0xFF34C759,
+                        ).withValues(alpha: isDark ? 0.45 : 0.30),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.support_agent_rounded,
+                          size: 14,
+                          color: Color(0xFF34C759),
+                        ),
+                        Gap(5),
+                        Text(
+                          'Contact HQ',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF34C759),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 }
