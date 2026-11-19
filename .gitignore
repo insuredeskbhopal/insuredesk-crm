@@ -96,6 +96,8 @@ prisma/schema.current.prisma
 # Flutter build artifacts
 **/BHQ/.dart_tool/
 **/BHQ/build/
+**/BHQ/android/build/
+**/BHQ/android/.gradle/
 **/BHQ/.pub/
 **/BHQ/.flutter-plugins*
 **/BHQ/.idea/
