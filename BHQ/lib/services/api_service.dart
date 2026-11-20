@@ -19,12 +19,22 @@ class ApiService {
     if (baseUrl.trim().isEmpty) {
       baseUrl = defaultBaseUrl;
     }
-    // When running Flutter web locally, route to active dev server at 127.0.0.1:3000
+    // When running Flutter web locally, route to active dev server at 127.0.0.1:3000 only if active
     if (kIsWeb) {
-      if (Uri.base.host == 'localhost' || Uri.base.host == '127.0.0.1') {
-        baseUrl = 'http://127.0.0.1:3000';
-      } else if (Uri.base.host.endsWith('bimaheadquarter.com')) {
+      if (Uri.base.host.endsWith('bimaheadquarter.com')) {
         baseUrl = Uri.base.origin;
+      } else if (Uri.base.host == 'localhost' || Uri.base.host == '127.0.0.1') {
+        try {
+          final res = await http
+              .get(Uri.parse('http://127.0.0.1:3000/api/app/version'))
+              .timeout(const Duration(milliseconds: 500));
+          if (res.statusCode == 200) {
+            baseUrl = 'http://127.0.0.1:3000';
+            return;
+          }
+        } catch (_) {}
+        // Fallback to official production backend if local dev server is not running
+        baseUrl = defaultBaseUrl;
       }
     }
   }
@@ -132,6 +142,22 @@ class ApiService {
     required String mpin,
   }) async {
     await ensureReachableHost();
+    try {
+      return await _executeLogin(customerId: customerId, mpin: mpin);
+    } catch (err) {
+      // If local dev server failed to connect, seamlessly retry against production backend
+      if (kIsWeb && baseUrl != defaultBaseUrl) {
+        baseUrl = defaultBaseUrl;
+        return await _executeLogin(customerId: customerId, mpin: mpin);
+      }
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> _executeLogin({
+    required String customerId,
+    required String mpin,
+  }) async {
     final uri = _buildUri('/api/auth/client/login');
     final response = await http.post(
       uri,
