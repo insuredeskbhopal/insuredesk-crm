@@ -6,5 +6,12 @@
   "sqltools.connections": [],
   "sql.lint.disable": true,
   "mssql.connections": [],
-  "css.lint.unknownAtRules": "ignore"
+  "css.lint.unknownAtRules": "ignore",
+  "git.autoRepositoryDetection": "subFolders",
+  "git.ignoredRepositories": [
+    "c:/Users/abhis/Windows-Learning",
+    "C:/Users/abhis/Windows-Learning",
+    "c:\\Users\\abhis\\Windows-Learning",
+    "C:\\Users\\abhis\\Windows-Learning"
+  ]
 }
