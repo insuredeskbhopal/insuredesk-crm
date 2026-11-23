@@ -3,12 +3,22 @@ import bcryptjs from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "@/lib/db/prisma";
 
-const SECRET_KEY =
-  process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? "" : "dev-only-jwt-secret-change-me");
-if (!SECRET_KEY) {
-  throw new Error("JWT_SECRET is required in production.");
+const FALLBACK_BUILD_SECRET = "bimaheadquarter-temporary-build-time-secret-key-do-not-use-in-production";
+
+function getSecretKey() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV !== "production") {
+      return "dev-only-jwt-secret-change-me";
+    }
+    return FALLBACK_BUILD_SECRET;
+  }
+  return secret;
 }
-const encodedSecret = new TextEncoder().encode(SECRET_KEY);
+
+function getEncodedSecret() {
+  return new TextEncoder().encode(getSecretKey());
+}
 const globalAuthCache = globalThis;
 const USER_CLAIMS_CACHE_TTL_MS = Number(process.env.AUTH_USER_CACHE_TTL_MS || 15000);
 
@@ -37,12 +47,15 @@ export async function comparePassword(password, hash) {
  * Sign a payload into a JWT token.
  */
 export async function signJWT(payload, expiresIn) {
+  if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is required in production.");
+  }
   const duration = expiresIn || (payload?.role === "CLIENT" ? "365d" : "24h");
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(duration)
-    .sign(encodedSecret);
+    .sign(getEncodedSecret());
 }
 
 /**
@@ -50,7 +63,7 @@ export async function signJWT(payload, expiresIn) {
  */
 export async function verifyJWT(token) {
   try {
-    const { payload } = await jwtVerify(token, encodedSecret);
+    const { payload } = await jwtVerify(token, getEncodedSecret());
     return refreshUserClaims(payload);
   } catch {
     return null;

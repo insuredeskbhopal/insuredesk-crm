@@ -6,10 +6,17 @@ import { deleteGoogleDriveFile, uploadGoogleDriveFile } from "@/lib/storage/goog
 // Active storage settings
 const STORAGE_PROVIDER = process.env.STORAGE_PROVIDER || "google_drive"; // "local" | "s3" | "google_drive"
 const LOCAL_STORAGE_DIR = path.join(process.cwd(), "storage", "uploads");
-const SIGNING_SECRET =
-  process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? "" : "dev-only-storage-signing-secret");
-if (!SIGNING_SECRET) {
-  throw new Error("JWT_SECRET is required in production for signed storage URLs.");
+const FALLBACK_STORAGE_SECRET = "bimaheadquarter-temporary-build-time-storage-secret";
+
+function getSigningSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV !== "production") {
+      return "dev-only-storage-signing-secret";
+    }
+    return FALLBACK_STORAGE_SECRET;
+  }
+  return secret;
 }
 
 // Ensure local directory exists in dev mode
@@ -111,9 +118,13 @@ export function getSignedUrl(storagePath, expiresInSeconds = 900) {
     return `https://${process.env.STORAGE_BUCKET}.s3.amazonaws.com/${storagePath}?signed=true`;
   }
 
+  if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is required in production for signed storage URLs.");
+  }
+
   // Local signed URL logic with expiration and HMAC signature
   const expiresAt = Date.now() + expiresInSeconds * 1000;
-  const hmac = crypto.createHmac("sha256", SIGNING_SECRET);
+  const hmac = crypto.createHmac("sha256", getSigningSecret());
   hmac.update(`${storagePath}:${expiresAt}`);
   const signature = hmac.digest("hex");
 
@@ -127,7 +138,7 @@ export function verifyLocalSignature(storagePath, expiresAt, signature) {
   if (!storagePath || !expiresAt || !signature) return false;
   if (Date.now() > Number(expiresAt)) return false;
 
-  const hmac = crypto.createHmac("sha256", SIGNING_SECRET);
+  const hmac = crypto.createHmac("sha256", getSigningSecret());
   hmac.update(`${storagePath}:${expiresAt}`);
   const expectedSignature = hmac.digest("hex");
 

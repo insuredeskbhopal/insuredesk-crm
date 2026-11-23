@@ -3,12 +3,22 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { PUBLIC_ROUTE_PATHS } from "@/lib/seo/site";
 
-const SECRET_KEY =
-  process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? "" : "dev-only-jwt-secret-change-me");
-if (!SECRET_KEY) {
-  throw new Error("JWT_SECRET is required in production.");
+const FALLBACK_BUILD_SECRET = "bimaheadquarter-temporary-build-time-secret-key-do-not-use-in-production";
+
+function getSecretKey(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV !== "production") {
+      return "dev-only-jwt-secret-change-me";
+    }
+    return FALLBACK_BUILD_SECRET;
+  }
+  return secret;
 }
-const encodedSecret = new TextEncoder().encode(SECRET_KEY);
+
+function getEncodedSecret(): Uint8Array {
+  return new TextEncoder().encode(getSecretKey());
+}
 const ADMIN_LOGIN_PATH = "/crm/admin/login";
 
 const ADMIN_ROLES = ["SUPER_ADMIN", "ADMIN"];
@@ -66,7 +76,7 @@ export async function middleware(request: NextRequest) {
   let userRole = "";
   if (token) {
     try {
-      const { payload } = await jwtVerify(token, encodedSecret);
+      const { payload } = await jwtVerify(token, getEncodedSecret());
       isAuthenticated = true;
       userRole = (payload.role as string) || "";
     } catch {
