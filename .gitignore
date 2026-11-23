@@ -92,6 +92,8 @@ prisma/schema.current.prisma
 
 # backups
 /archive/
+/backups/
+*.sql
 
 # Flutter build artifacts
 **/BHQ/.dart_tool/

@@ -66,6 +66,16 @@ Write-BackupLog "Required host fragment: $RequiredHostFragment"
 
 $databaseUrl = $env:DATABASE_URL
 if ([string]::IsNullOrWhiteSpace($databaseUrl)) {
+  $envFilePath = Join-Path $PSScriptRoot "..\.env"
+  if (Test-Path $envFilePath) {
+    Get-Content $envFilePath | ForEach-Object {
+      if ($_ -match '^\s*DATABASE_URL\s*=\s*["'']?(.*?)["'']?\s*$') {
+        $databaseUrl = $matches[1]
+      }
+    }
+  }
+}
+if ([string]::IsNullOrWhiteSpace($databaseUrl)) {
   Fail-Backup "DATABASE_URL environment variable is not set."
 }
 
