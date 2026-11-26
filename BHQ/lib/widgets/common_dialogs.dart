@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -302,13 +303,11 @@ class CommonDialogs {
                                                       if (isVeh) ...[
                                                         Container(
                                                           padding:
-                                                              const EdgeInsets
-                                                                  .symmetric(
-                                                            horizontal: 5,
-                                                            vertical: 1.5,
-                                                          ),
-                                                          decoration:
-                                                              BoxDecoration(
+                                                              const EdgeInsets.symmetric(
+                                                                horizontal: 5,
+                                                                vertical: 1.5,
+                                                              ),
+                                                          decoration: BoxDecoration(
                                                             color:
                                                                 const Color(
                                                                   0xFF003399,
@@ -318,10 +317,9 @@ class CommonDialogs {
                                                                       : 0.10,
                                                                 ),
                                                             borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                      4,
-                                                                    ),
+                                                                BorderRadius.circular(
+                                                                  4,
+                                                                ),
                                                             border: Border.all(
                                                               color:
                                                                   const Color(
@@ -329,8 +327,8 @@ class CommonDialogs {
                                                                   ).withValues(
                                                                     alpha:
                                                                         isDark
-                                                                            ? 0.6
-                                                                            : 0.3,
+                                                                        ? 0.6
+                                                                        : 0.3,
                                                                   ),
                                                               width: 0.7,
                                                             ),
@@ -371,20 +369,17 @@ class CommonDialogs {
                                                                     0xFF0F172A,
                                                                   ),
                                                           ),
-                                                          overflow:
-                                                              TextOverflow
-                                                                  .ellipsis,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
                                                         ),
                                                       ),
                                                       Container(
                                                         padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
+                                                            const EdgeInsets.symmetric(
                                                               horizontal: 6,
                                                               vertical: 1.5,
                                                             ),
-                                                        decoration:
-                                                            BoxDecoration(
+                                                        decoration: BoxDecoration(
                                                           color:
                                                               (p.isActive
                                                                       ? const Color(
@@ -397,8 +392,9 @@ class CommonDialogs {
                                                                     alpha: 0.15,
                                                                   ),
                                                           borderRadius:
-                                                              BorderRadius
-                                                                  .circular(4),
+                                                              BorderRadius.circular(
+                                                                4,
+                                                              ),
                                                         ),
                                                         child: Text(
                                                           p.isActive
@@ -1568,8 +1564,9 @@ class CommonDialogs {
   static void showCashlessNetworkModal(BuildContext context, Policy policy) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isHealth = policy.isHealth;
-    final company =
-        policy.companyName.isNotEmpty ? policy.companyName : policy.name;
+    final company = policy.companyName.isNotEmpty
+        ? policy.companyName
+        : policy.name;
 
     final facilities = isHealth
         ? [
@@ -1621,8 +1618,10 @@ class CommonDialogs {
 
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(28),
             child: BackdropFilter(
@@ -1641,8 +1640,9 @@ class CommonDialogs {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          Colors.black.withValues(alpha: isDark ? 0.45 : 0.12),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.45 : 0.12,
+                      ),
                       blurRadius: 30,
                       offset: const Offset(0, 10),
                     ),
@@ -1660,8 +1660,9 @@ class CommonDialogs {
                             width: 42,
                             height: 42,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF34C759)
-                                  .withValues(alpha: isDark ? 0.25 : 0.14),
+                              color: const Color(
+                                0xFF34C759,
+                              ).withValues(alpha: isDark ? 0.25 : 0.14),
                               borderRadius: BorderRadius.circular(13),
                             ),
                             child: Icon(
@@ -1739,8 +1740,7 @@ class CommonDialogs {
                               border: Border.all(
                                 color: isDark
                                     ? Colors.white10
-                                    : Colors.black
-                                        .withValues(alpha: 0.06),
+                                    : Colors.black.withValues(alpha: 0.06),
                               ),
                             ),
                             child: Column(
@@ -1768,8 +1768,9 @@ class CommonDialogs {
                                         vertical: 2.5,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF34C759)
-                                            .withValues(alpha: 0.15),
+                                        color: const Color(
+                                          0xFF34C759,
+                                        ).withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: const Text(
@@ -1823,8 +1824,9 @@ class CommonDialogs {
                                         ),
                                         label: const Text('Call Desk'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color(0xFF007AFF),
+                                          backgroundColor: const Color(
+                                            0xFF007AFF,
+                                          ),
                                           foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
                                             vertical: 8,
@@ -1834,13 +1836,15 @@ class CommonDialogs {
                                             fontWeight: FontWeight.bold,
                                           ),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                           ),
                                         ),
                                         onPressed: () async {
-                                          final uri =
-                                              Uri.parse('tel:${f['phone']}');
+                                          final uri = Uri.parse(
+                                            'tel:${f['phone']}',
+                                          );
                                           try {
                                             await launchUrl(uri);
                                           } catch (_) {}
@@ -1872,8 +1876,9 @@ class CommonDialogs {
                                                 : Colors.black12,
                                           ),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                           ),
                                         ),
                                         onPressed: () async {
@@ -1915,14 +1920,17 @@ class CommonDialogs {
   ) async {
     final vehicle = policy.cleanVehiclePlate;
     final pNum = policy.policyNumber ?? policy.id;
-    final comp =
-        policy.companyName.isNotEmpty ? policy.companyName : policy.name;
-    final insured =
-        policy.insuredName.isNotEmpty ? policy.insuredName : 'Valued Policyholder';
+    final comp = policy.companyName.isNotEmpty
+        ? policy.companyName
+        : policy.name;
+    final insured = policy.insuredName.isNotEmpty
+        ? policy.insuredName
+        : 'Valued Policyholder';
     final sumIns = policy.formattedSumInsured;
     final exp = policy.formattedExpiry;
 
-    final msg = '''
+    final msg =
+        '''
 *Bima Headquarter • Verified Policy Summary*
 
 🛡️ *Insurer:* $comp
@@ -1936,24 +1944,34 @@ View verified policy documents in 24/7 Self-Service Client Portal:
 https://www.bimaheadquarter.com
 ''';
 
-    final whatsappUrl =
-        Uri.parse('https://wa.me/?text=${Uri.encodeComponent(msg)}');
+    final whatsappUrl = Uri.parse(
+      'https://wa.me/?text=${Uri.encodeComponent(msg)}',
+    );
     try {
-      final launched =
-          await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+      final launched = await launchUrl(
+        whatsappUrl,
+        mode: LaunchMode.externalApplication,
+      );
       if (!launched && context.mounted) {
+        await Clipboard.setData(ClipboardData(text: msg));
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Policy details copied to clipboard!'),
+            content: Text(
+              'WhatsApp unavailable. Policy summary copied to clipboard!',
+            ),
             backgroundColor: Color(0xFF007AFF),
           ),
         );
       }
     } catch (_) {
+      await Clipboard.setData(ClipboardData(text: msg));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Policy details copied to clipboard!'),
+            content: Text(
+              'WhatsApp unavailable. Policy summary copied to clipboard!',
+            ),
             backgroundColor: Color(0xFF007AFF),
           ),
         );
@@ -1976,36 +1994,19 @@ https://www.bimaheadquarter.com
         'color': const Color(0xFF007AFF),
         'isPdf': true,
       },
-      if (vehicle.isNotEmpty) ...[
+      if (vehicle.isNotEmpty)
         {
-          'title': 'Registration Certificate (RC)',
-          'sub': 'Vehicle registration: $vehicle',
-          'status': 'Verified',
+          'title': 'Vehicle Registration Reference',
+          'sub': 'Registered plate recorded on policy: $vehicle',
+          'status': 'On Policy',
           'icon': Icons.directions_car_rounded,
           'color': const Color(0xFF34C759),
           'isPdf': false,
         },
-        {
-          'title': 'Pollution Under Control (PUC)',
-          'sub': 'Active emission fitness certificate',
-          'status': 'Compliant',
-          'icon': Icons.eco_rounded,
-          'color': const Color(0xFF30D158),
-          'isPdf': false,
-        },
-        {
-          'title': 'Commercial Fitness / Permit',
-          'sub': 'RTO transport authority permit schedule',
-          'status': 'On File',
-          'icon': Icons.verified_rounded,
-          'color': const Color(0xFFFF9500),
-          'isPdf': false,
-        },
-      ],
       {
         'title': 'Proposal Form & Endorsement Schedule',
-        'sub': 'Customer declaration and add-on coverage endorsements',
-        'status': 'Archived',
+        'sub': 'Request endorsed or historical policy documents from advisor',
+        'status': 'On Request',
         'icon': Icons.assignment_rounded,
         'color': const Color(0xFF5856D6),
         'isPdf': false,
@@ -2020,8 +2021,10 @@ https://www.bimaheadquarter.com
 
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(28),
             child: BackdropFilter(
@@ -2040,8 +2043,9 @@ https://www.bimaheadquarter.com
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          Colors.black.withValues(alpha: isDark ? 0.45 : 0.12),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.45 : 0.12,
+                      ),
                       blurRadius: 30,
                       offset: const Offset(0, 10),
                     ),
@@ -2059,8 +2063,9 @@ https://www.bimaheadquarter.com
                             width: 42,
                             height: 42,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF5856D6)
-                                  .withValues(alpha: isDark ? 0.25 : 0.14),
+                              color: const Color(
+                                0xFF5856D6,
+                              ).withValues(alpha: isDark ? 0.25 : 0.14),
                               borderRadius: BorderRadius.circular(13),
                             ),
                             child: const Icon(
@@ -2137,8 +2142,7 @@ https://www.bimaheadquarter.com
                               border: Border.all(
                                 color: isDark
                                     ? Colors.white10
-                                    : Colors.black
-                                        .withValues(alpha: 0.06),
+                                    : Colors.black.withValues(alpha: 0.06),
                               ),
                             ),
                             child: Row(
@@ -2196,21 +2200,19 @@ https://www.bimaheadquarter.com
                                         context,
                                         policy.id,
                                         kind: 'policy',
-                                        title: policy.policyNumber ??
-                                            policy.name,
+                                        title:
+                                            policy.policyNumber ?? policy.name,
                                       );
                                     },
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          const Color(0xFF007AFF),
+                                      backgroundColor: const Color(0xFF007AFF),
                                       foregroundColor: Colors.white,
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 12,
                                         vertical: 6,
                                       ),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
                                     ),
                                     child: const Text(
@@ -3564,29 +3566,31 @@ class _PayPremiumDialogState extends ConsumerState<_PayPremiumDialog> {
                                                 Container(
                                                   padding:
                                                       const EdgeInsets.symmetric(
-                                                    horizontal: 5,
-                                                    vertical: 1.5,
-                                                  ),
+                                                        horizontal: 5,
+                                                        vertical: 1.5,
+                                                      ),
                                                   decoration: BoxDecoration(
-                                                    color: const Color(
-                                                      0xFF003399,
-                                                    ).withValues(
-                                                      alpha: isDark
-                                                          ? 0.35
-                                                          : 0.10,
-                                                    ),
+                                                    color:
+                                                        const Color(
+                                                          0xFF003399,
+                                                        ).withValues(
+                                                          alpha: isDark
+                                                              ? 0.35
+                                                              : 0.10,
+                                                        ),
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                      4,
-                                                    ),
+                                                          4,
+                                                        ),
                                                     border: Border.all(
-                                                      color: const Color(
-                                                        0xFF003399,
-                                                      ).withValues(
-                                                        alpha: isDark
-                                                            ? 0.6
-                                                            : 0.3,
-                                                      ),
+                                                      color:
+                                                          const Color(
+                                                            0xFF003399,
+                                                          ).withValues(
+                                                            alpha: isDark
+                                                                ? 0.6
+                                                                : 0.3,
+                                                          ),
                                                       width: 0.7,
                                                     ),
                                                   ),
@@ -3629,20 +3633,21 @@ class _PayPremiumDialogState extends ConsumerState<_PayPremiumDialog> {
                                               Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                  horizontal: 6,
-                                                  vertical: 1.5,
-                                                ),
+                                                      horizontal: 6,
+                                                      vertical: 1.5,
+                                                    ),
                                                 decoration: BoxDecoration(
-                                                  color: (p.isActive
-                                                          ? const Color(
-                                                              0xFF34C759,
-                                                            )
-                                                          : const Color(
-                                                              0xFFFF9500,
-                                                            ))
-                                                      .withValues(
-                                                    alpha: 0.15,
-                                                  ),
+                                                  color:
+                                                      (p.isActive
+                                                              ? const Color(
+                                                                  0xFF34C759,
+                                                                )
+                                                              : const Color(
+                                                                  0xFFFF9500,
+                                                                ))
+                                                          .withValues(
+                                                            alpha: 0.15,
+                                                          ),
                                                   borderRadius:
                                                       BorderRadius.circular(4),
                                                 ),

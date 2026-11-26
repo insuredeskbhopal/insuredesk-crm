@@ -11,6 +11,14 @@ export async function requireWhatsAppStaff(request, write = false) {
   const roles = write
     ? ["SUPER_ADMIN", "ADMIN", "MANAGER", "AGENT"]
     : ["SUPER_ADMIN", "ADMIN", "MANAGER", "AGENT", "VIEWER"];
+  if (write && session.role === "VIEWER") {
+    return {
+      errorResponse: NextResponse.json(
+        { error: "Unauthorized: Viewer role has read-only access and cannot send WhatsApp messages" },
+        { status: 403 },
+      ),
+    };
+  }
   if (!session.userId || !roles.includes(session.role))
     return { errorResponse: NextResponse.json({ error: "Staff access required" }, { status: 403 }) };
   return { ...session, organizationId: session.organizationId || null };

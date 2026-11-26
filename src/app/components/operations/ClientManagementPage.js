@@ -91,6 +91,11 @@ export default function ClientManagementPage() {
   const [resolutionResults, setResolutionResults] = useState([]);
   const [resolutionSearching, setResolutionSearching] = useState(false);
   const [resolutionError, setResolutionError] = useState("");
+  const [resolutionConflicts, setResolutionConflicts] = useState([]);
+  const [resolutionAllowSharedPhone, setResolutionAllowSharedPhone] = useState(false);
+  const [formConflicts, setFormConflicts] = useState([]);
+  const [formAllowSharedPhone, setFormAllowSharedPhone] = useState(false);
+  const [sendingWhatsAppId, setSendingWhatsAppId] = useState("");
   const [resolvingRequestId, setResolvingRequestId] = useState("");
   const [myClientIdRequests, setMyClientIdRequests] = useState([]);
   const [myRequestsLoading, setMyRequestsLoading] = useState(true);
@@ -125,7 +130,8 @@ export default function ClientManagementPage() {
       const queryParam = searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : "";
       const sortParam = sortBy !== "newest" ? `&sort=${sortBy}` : "";
       const emailParam = filterEmail ? `&hasEmail=${filterEmail}` : "";
-      const res = await fetch(`/api/client-accounts?page=${page}&limit=${limit}${queryParam}${sortParam}${emailParam}`, {
+      const policiesParam = filterPolicies ? `&hasPolicies=${encodeURIComponent(filterPolicies)}` : "";
+      const res = await fetch(`/api/client-accounts?page=${page}&limit=${limit}${queryParam}${sortParam}${emailParam}${policiesParam}`, {
         signal: controller.signal,
       });
       if (!res.ok) throw new Error("Failed to fetch client accounts");
@@ -194,6 +200,8 @@ export default function ClientManagementPage() {
     setResolutionSearch("");
     setResolutionResults([]);
     setResolutionError("");
+    setResolutionConflicts([]);
+    setResolutionAllowSharedPhone(false);
   };
 
   const openCreateClientModal = (request) => {
@@ -203,6 +211,8 @@ export default function ClientManagementPage() {
     setResolutionSearch("");
     setResolutionResults([]);
     setResolutionError("");
+    setResolutionConflicts([]);
+    setResolutionAllowSharedPhone(false);
   };
 
   const openDecisionModal = (request, action) => {
@@ -253,12 +263,18 @@ export default function ClientManagementPage() {
 
   const resolveClientIdRequest = async (request, action, clientId = "") => {
     setResolutionError("");
+    setResolutionConflicts([]);
     setResolvingRequestId(request.id);
     try {
       const res = await fetch("/api/client-id-requests", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId: request.id, action, clientId }),
+        body: JSON.stringify({
+          requestId: request.id,
+          action,
+          clientId,
+          ...(action === "CREATE_NEW" && resolutionAllowSharedPhone ? { allowSharedPhone: true } : {}),
+        }),
       });
       let data = {};
       try {
@@ -266,20 +282,26 @@ export default function ClientManagementPage() {
       } catch {
         throw new Error("Server error while processing request. Please refresh and try again.");
       }
-      if (!res.ok) throw new Error(data.error || "Client ID request could not be resolved.");
+      if (!res.ok) {
+        if (Array.isArray(data?.conflicts)) setResolutionConflicts(data.conflicts);
+        throw new Error(data.error || "Client ID request could not be resolved.");
+      }
       if (data.temporaryMpin) {
         setTemporaryCredential({
           clientId: data.resolvedClientId,
+          clientCode: data.resolvedClientCode || "",
           name: data.resolvedClientName,
           mpin: data.temporaryMpin,
         });
       }
       setSuccessMessage(
         action === "CREATE_NEW" && data.resolutionType === "CREATE_NEW"
-          ? `New Client ID created for ${data.resolvedClientName}.`
+          ? `New Client ID${data.resolvedClientCode ? ` (${data.resolvedClientCode})` : ""} created for ${data.resolvedClientName}.`
           : `${data.resolvedClientName} linked to the existing Client ID.`,
       );
       setResolutionRequest(null);
+      setResolutionConflicts([]);
+      setResolutionAllowSharedPhone(false);
       await Promise.all([fetchClientIdRequests(), fetchClients()]);
       setTimeout(() => setSuccessMessage(""), 4000);
     } catch (err) {
@@ -328,10 +350,47 @@ export default function ClientManagementPage() {
       const res = await fetch(`/api/client-accounts/${profile.id}`, { method: "PATCH" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Client MPIN could not be reset.");
-      setTemporaryCredential({ clientId: profile.id, name: profile.name, mpin: data.temporaryMpin });
+      setTemporaryCredential({
+        clientId: profile.id,
+        clientCode: data.clientCode || profile.clientCode || "",
+        name: profile.name,
+        mpin: data.temporaryMpin,
+      });
       setSuccessMessage("Temporary MPIN generated. Share it privately with the client.");
     } catch (err) {
       setError(err.message || "Client MPIN could not be reset.");
+    }
+  };
+
+  const sendCredentialsWhatsApp = async (profile, resetMpin = false) => {
+    setError("");
+    setSendingWhatsAppId(profile.id);
+    try {
+      const res = await fetch(`/api/client-accounts/${profile.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "SEND_CREDENTIALS", resetMpin }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "WhatsApp credentials could not be sent.");
+      if (data.temporaryMpin) {
+        setTemporaryCredential({
+          clientId: profile.id,
+          clientCode: data.clientCode || profile.clientCode || "",
+          name: profile.name,
+          mpin: data.temporaryMpin,
+        });
+      }
+      setSuccessMessage(
+        data.temporaryMpin
+          ? `Fresh Temporary MPIN & Portal Client ID sent to ${profile.name} on WhatsApp.`
+          : `Portal login details sent to ${profile.name} on WhatsApp.`,
+      );
+      setTimeout(() => setSuccessMessage(""), 4000);
+    } catch (err) {
+      setError(err.message || "WhatsApp credentials could not be sent.");
+    } finally {
+      setSendingWhatsAppId("");
     }
   };
 
@@ -342,6 +401,8 @@ export default function ClientManagementPage() {
     setEmail("");
     setPhone("");
     setFormError("");
+    setFormConflicts([]);
+    setFormAllowSharedPhone(false);
     setIsModalOpen(true);
   };
 
@@ -352,6 +413,8 @@ export default function ClientManagementPage() {
     setEmail(profile.email || "");
     setPhone(profile.phone || "");
     setFormError("");
+    setFormConflicts([]);
+    setFormAllowSharedPhone(false);
     setIsModalOpen(true);
   };
 
@@ -371,8 +434,10 @@ export default function ClientManagementPage() {
       name,
       phone: normalizedPhone,
       email: email.trim(),
+      ...(formAllowSharedPhone && canResetMpin ? { allowSharedPhone: true } : {}),
     };
 
+    setFormConflicts([]);
     try {
       let res;
       if (modalMode === "create") {
@@ -391,19 +456,27 @@ export default function ClientManagementPage() {
 
       const data = await res.json();
       if (!res.ok || data.error) {
+        if (Array.isArray(data?.conflicts)) setFormConflicts(data.conflicts);
         throw new Error(data.error || "Failed to save customer profile");
       }
 
       if (data.temporaryMpin) {
-        setTemporaryCredential({ clientId: data.id, name: data.name, mpin: data.temporaryMpin });
+        setTemporaryCredential({
+          clientId: data.id,
+          clientCode: data.clientCode || "",
+          name: data.name,
+          mpin: data.temporaryMpin,
+        });
       }
 
       setSuccessMessage(
         modalMode === "create"
-          ? "Client profile generated successfully!"
+          ? `Client ID ${data.clientCode || ""} generated successfully!`
           : "Client profile updated successfully!",
       );
       setIsModalOpen(false);
+      setFormConflicts([]);
+      setFormAllowSharedPhone(false);
       fetchClients();
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
@@ -419,7 +492,7 @@ export default function ClientManagementPage() {
   const paginationPages = getPaginationPages(page, totalPages);
 
   // Counts for KPIs & Tabs
-  const myPendingCount = myClientIdRequests.filter((r) => r.status === "PENDING").length;
+  const myPendingCount = myClientIdRequests.filter((r) => ["OPEN", "IN_PROGRESS", "ASSIGNED"].includes(r.status)).length;
   const myNeedsCorrectionCount = myClientIdRequests.filter((r) => r.status === "WAITING_DOCUMENTS").length;
   const myCompletedCount = myClientIdRequests.filter((r) => r.status === "COMPLETED").length;
   const superAdminPendingCount = clientIdRequests ? clientIdRequests.filter((r) => r.status !== "COMPLETED").length : 0;
@@ -652,8 +725,13 @@ export default function ClientManagementPage() {
                 Share these credentials securely via private WhatsApp or SMS.
               </p>
               <div className="pt-1 flex flex-wrap items-center gap-2 font-mono text-xs">
+                {temporaryCredential.clientCode && (
+                  <span className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-bold text-emerald-900 shadow-sm">
+                    Code: <strong>{temporaryCredential.clientCode}</strong>
+                  </span>
+                )}
                 <span className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-bold text-slate-800 shadow-sm">
-                  Client ID: <strong className="text-slate-900">{temporaryCredential.clientId}</strong>
+                  Client ID: <strong className="text-slate-900">{temporaryCredential.clientCode || temporaryCredential.clientId}</strong>
                 </span>
                 <span className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-sm font-black tracking-[0.2em] text-amber-900 shadow-sm">
                   MPIN: {temporaryCredential.mpin}
@@ -662,7 +740,7 @@ export default function ClientManagementPage() {
                   type="button"
                   onClick={() =>
                     handleCopy(
-                      `Client ID: ${temporaryCredential.clientId}\nTemporary MPIN: ${temporaryCredential.mpin}`,
+                      `Client ID: ${temporaryCredential.clientCode || temporaryCredential.clientId}\nPortal Key: ${temporaryCredential.clientId}\nTemporary MPIN: ${temporaryCredential.mpin}`,
                       `credential-${temporaryCredential.clientId}`,
                     )
                   }
@@ -679,6 +757,28 @@ export default function ClientManagementPage() {
                       <span>Copy Credentials</span>
                     </>
                   )}
+                </button>
+                <button
+                  type="button"
+                  disabled={sendingWhatsAppId === temporaryCredential.clientId}
+                  onClick={() =>
+                    sendCredentialsWhatsApp(
+                      {
+                        id: temporaryCredential.clientId,
+                        clientCode: temporaryCredential.clientCode,
+                        name: temporaryCredential.name,
+                      },
+                      canResetMpin,
+                    )
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 font-sans font-bold text-emerald-900 text-xs shadow-sm transition-all disabled:opacity-60"
+                >
+                  {sendingWhatsAppId === temporaryCredential.clientId ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Send className="h-3 w-3" />
+                  )}
+                  <span>{canResetMpin ? "Send Fresh MPIN via WhatsApp" : "Send Portal Info via WhatsApp"}</span>
                 </button>
               </div>
             </div>
@@ -997,14 +1097,21 @@ export default function ClientManagementPage() {
 
                     {/* 5. Client ID */}
                     <div className="client-mgmt-col-id min-w-0 flex items-center gap-1.5">
-                      <span className="client-mgmt-id-text" title={profile.id}>
-                        {profile.id}
-                      </span>
+                      <div className="min-w-0">
+                        {profile.clientCode ? (
+                          <span className="inline-block rounded bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 font-mono text-[11px] font-extrabold text-emerald-900 mr-1.5">
+                            {profile.clientCode}
+                          </span>
+                        ) : null}
+                        <span className="client-mgmt-id-text" title={profile.id}>
+                          {profile.id}
+                        </span>
+                      </div>
                       <button
                         type="button"
-                        onClick={() => handleCopy(profile.id)}
+                        onClick={() => handleCopy(profile.clientCode || profile.id, profile.id)}
                         className="client-mgmt-id-copy"
-                        title="Copy Client ID"
+                        title={`Copy ${profile.clientCode || "Client ID"}`}
                         aria-label="Copy Client ID"
                       >
                         {copiedId === profile.id ? (
@@ -1054,6 +1161,18 @@ export default function ClientManagementPage() {
                             >
                               <Edit2 className="h-3.5 w-3.5 text-slate-600 shrink-0" />
                               <span>Edit Profile</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={sendingWhatsAppId === profile.id}
+                              onClick={() => {
+                                setOpenActionMenuId("");
+                                sendCredentialsWhatsApp(profile, false);
+                              }}
+                              className="client-mgmt-popover-item text-emerald-700 hover:text-emerald-900"
+                            >
+                              <Send className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                              <span>Send Login on WhatsApp</span>
                             </button>
                             {canResetMpin && (
                               <button
@@ -1927,9 +2046,40 @@ export default function ClientManagementPage() {
 
               <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
                 {formError && (
-                  <div className="bg-rose-50 border border-rose-200 text-rose-800 px-3.5 py-2.5 rounded-xl flex items-center gap-2 text-xs font-semibold">
-                    <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
-                    <span>{formError}</span>
+                  <div className="bg-rose-50 border border-rose-200 text-rose-800 px-3.5 py-2.5 rounded-xl space-y-2 text-xs font-semibold">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                      <span>{formError}</span>
+                    </div>
+                    {formConflicts.length > 0 && (
+                      <div className="space-y-1.5 border-t border-rose-200 pt-2">
+                        <p className="text-[11px] font-bold text-rose-900">Existing accounts using this phone:</p>
+                        {formConflicts.map((c) => (
+                          <div key={c.id} className="flex items-center justify-between rounded-lg bg-white px-2.5 py-1.5 border border-rose-200 text-[11px] text-slate-800">
+                            <span><strong>{c.name}</strong> · {c.clientCode || c.phone}</span>
+                            {modalMode === "create" && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditModal(c)}
+                                className="text-emerald-700 font-bold hover:underline"
+                              >
+                                Edit existing
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        {canResetMpin && (
+                          <label className="flex items-center gap-2 pt-1 text-[11px] font-bold text-slate-900 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={formAllowSharedPhone}
+                              onChange={(e) => setFormAllowSharedPhone(e.target.checked)}
+                            />
+                            <span>Confirm Shared Mobile Number (issue separate Client ID for distinct entity)</span>
+                          </label>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -2105,12 +2255,39 @@ export default function ClientManagementPage() {
                     <p className="mt-3 text-xs text-amber-800">
                       Confirm only after checking that no valid existing client is available in the directory.
                     </p>
+                    <label className="mt-3 flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-bold text-slate-900 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={resolutionAllowSharedPhone}
+                        onChange={(e) => setResolutionAllowSharedPhone(e.target.checked)}
+                      />
+                      <span>Allow shared mobile number if another client already uses this phone</span>
+                    </label>
                   </div>
                 )}
 
                 {resolutionError && (
-                  <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700">
-                    <AlertCircle className="h-4 w-4 shrink-0" /> {resolutionError}
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0" /> {resolutionError}
+                    </div>
+                    {resolutionConflicts.length > 0 && (
+                      <div className="space-y-1.5 border-t border-rose-200 pt-2">
+                        <p className="text-[11px] font-bold text-rose-900">Accounts sharing this phone:</p>
+                        {resolutionConflicts.map((c) => (
+                          <div key={c.id} className="flex items-center justify-between rounded-lg bg-white px-2.5 py-1.5 border border-rose-200 text-[11px] text-slate-800">
+                            <span><strong>{c.name}</strong> · {c.clientCode || c.phone}</span>
+                            <button
+                              type="button"
+                              onClick={() => openExistingClientModal(resolutionRequest, c.id)}
+                              className="text-emerald-700 font-bold hover:underline"
+                            >
+                              Link to this Client
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 

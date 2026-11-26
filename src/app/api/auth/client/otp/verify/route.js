@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { comparePassword, signJWT } from "@/lib/auth";
 import { provisionClientMpin } from "@/lib/client-portal/credentials";
+import { generateNextClientCode, normalizeClientId } from "@/lib/client-accounts/server";
+import { normalizeClientCode } from "@/lib/client-accounts/utils";
 
 export const runtime = "nodejs";
 
 export async function POST(request) {
   try {
-    const { phone, otp, newMpin } = await request.json();
+    const { phone, customerId, otp, newMpin } = await request.json();
     const rawPhone = String(phone || "").trim();
     const cleanPhone = rawPhone.replace(/[^0-9]/g, "").slice(-10);
     const cleanOtp = String(otp || "").trim().replace(/[^0-9]/g, "");
@@ -82,21 +84,71 @@ export async function POST(request) {
       );
     }
 
-    // 3. Find or auto-provision clientAccount
-    let customer = await prisma.clientAccount.findFirst({
-      where: {
-        phone: { contains: cleanPhone },
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        organizationId: true,
-        deletedAt: true,
-      },
-    });
+    // 3. Find matching active account or auto-provision when phone has policies
+    const normalizedId = normalizeClientId(customerId);
+    const normalizedCode = normalizeClientCode(customerId);
+    let customer = null;
+    if (normalizedId || normalizedCode) {
+      customer = await prisma.clientAccount.findFirst({
+        where: {
+          ...(normalizedId ? { id: normalizedId } : { clientCode: normalizedCode }),
+          phone: cleanPhone,
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+          clientCode: true,
+          name: true,
+          email: true,
+          phone: true,
+          organizationId: true,
+          deletedAt: true,
+        },
+      });
+    } else {
+      const phoneMatches =
+        typeof prisma.clientAccount.findMany === "function"
+          ? await prisma.clientAccount.findMany({
+              where: { phone: cleanPhone, deletedAt: null },
+              select: {
+                id: true,
+                clientCode: true,
+                name: true,
+                email: true,
+                phone: true,
+                organizationId: true,
+                deletedAt: true,
+              },
+              take: 3,
+            })
+          : [];
+      if (phoneMatches.length > 1) {
+        return NextResponse.json(
+          {
+            success: false,
+            code: "MULTIPLE_ACCOUNTS",
+            requiresClientId: true,
+            error: "Multiple Client IDs share this mobile number. Enter your Client ID (BHQ-...) to reset MPIN.",
+          },
+          { status: 409 },
+        );
+      }
+      customer = phoneMatches[0] || null;
+      if (!customer && typeof prisma.clientAccount.findMany !== "function") {
+        customer = await prisma.clientAccount.findFirst({
+          where: { phone: { contains: cleanPhone }, deletedAt: null },
+          select: {
+            id: true,
+            clientCode: true,
+            name: true,
+            email: true,
+            phone: true,
+            organizationId: true,
+            deletedAt: true,
+          },
+        });
+      }
+    }
 
     if (!customer) {
       const matchedPolicies = await prisma.$queryRaw`
@@ -130,8 +182,10 @@ export async function POST(request) {
         const clientEmail = (pData.email || pData.insuredEmail || "").toString().trim() || null;
         const orgId = pol.organization_id;
 
+        const generatedCode = await generateNextClientCode(prisma);
         customer = await prisma.clientAccount.create({
           data: {
+            clientCode: generatedCode,
             name: clientName,
             phone: cleanPhone,
             email: clientEmail,
@@ -139,6 +193,7 @@ export async function POST(request) {
           },
           select: {
             id: true,
+            clientCode: true,
             name: true,
             email: true,
             phone: true,
@@ -165,6 +220,7 @@ export async function POST(request) {
     const token = await signJWT({
       role: "CLIENT",
       customerId: customer.id,
+      clientCode: customer.clientCode || "",
       email: customer.email,
       name: customer.name,
       phone: cleanPhone,
@@ -172,17 +228,28 @@ export async function POST(request) {
       credentialVersion,
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: "MPIN set and verified successfully.",
       token,
       user: {
         id: customer.id,
+        clientCode: customer.clientCode || "",
         name: customer.name,
         phone: cleanPhone,
         email: customer.email,
       },
     });
+    response.cookies.set({
+      name: "token",
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
+      path: "/",
+    });
+    return response;
   } catch (error) {
     console.error("Error verifying OTP and setting MPIN:", error);
     return NextResponse.json(

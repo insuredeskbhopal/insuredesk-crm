@@ -13,7 +13,10 @@ export default [
       "coverage/**",
       "archive/**",
       "scratch/**",
-      "scripts/**"
+      "scripts/**",
+      "policy-intelligence-module/.next/**",
+      "policy-intelligence-module/node_modules/**",
+      "BHQ/**"
     ],
   },
   js.configs.recommended,

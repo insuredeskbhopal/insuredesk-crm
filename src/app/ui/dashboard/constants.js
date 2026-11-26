@@ -3,6 +3,7 @@ import {
   BriefcaseBusiness,
   FileText,
   Settings,
+  ShieldCheck,
   Upload,
   Users,
   RefreshCw,
@@ -13,6 +14,7 @@ export const NAV_ITEMS = [
   { id: "operations", label: "Operations Hub", icon: BriefcaseBusiness },
   { id: "records", label: "Policy Records", icon: FileText },
   { id: "customers", label: "Customer Management", icon: Users },
+  { id: "client-management", label: "Client IDs & Portal", icon: ShieldCheck },
   { id: "renewals", label: "Renewals", icon: RefreshCw },
   { id: "analytics", label: "Reports", icon: BarChart3 },
   {

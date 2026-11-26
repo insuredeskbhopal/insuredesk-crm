@@ -118,7 +118,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                         ),
                         const Gap(6),
                         Text(
-                          'GPT-4o Underwriting Model Connected',
+                          'Smart Policy & Coverage Assistant',
                           style: TextStyle(
                             fontSize: 10.5,
                             color: isDark ? Colors.white.withAlpha(128) : Colors.black45,

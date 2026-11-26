@@ -41,6 +41,13 @@ export const POLICY_LIST_SELECT = {
   extractionMethod: true,
   clientIdStatus: true,
   clientIdPending: true,
+  clientAccountId: true,
+  clientAccount: {
+    select: {
+      id: true,
+      clientCode: true,
+    },
+  },
   customerPortfolioId: true,
   contactPersonName: true,
   contactPersonMobile: true,

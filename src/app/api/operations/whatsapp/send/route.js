@@ -41,7 +41,35 @@ function withAgentSignature(message, signature) {
   return `${text}\n\n${signOff}`;
 }
 
-async function resolveAttachmentPayload(attachment = {}) {
+function isSafeRemoteAttachmentUrl(rawUrl) {
+  try {
+    const parsed = new URL(String(rawUrl || "").trim());
+    if (parsed.protocol !== "https:" && !(process.env.NODE_ENV !== "production" && parsed.protocol === "http:")) {
+      return false;
+    }
+    const host = parsed.hostname.toLowerCase();
+    if (
+      !host ||
+      host === "localhost" ||
+      host === "0.0.0.0" ||
+      host === "::1" ||
+      host.startsWith("127.") ||
+      host.startsWith("10.") ||
+      host.startsWith("192.168.") ||
+      host.startsWith("169.254.") ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+      host.endsWith(".local") ||
+      host.endsWith(".internal")
+    ) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function resolveAttachmentPayload(attachment = {}, session = null) {
   const attachmentData =
     attachment.mediaBase64 || attachment.data || attachment.attachmentData || attachment.base64 || "";
   const attachmentUrl = attachment.attachmentUrl || attachment.url || attachment.mediaUrl || "";
@@ -71,8 +99,12 @@ async function resolveAttachmentPayload(attachment = {}) {
   if (attachment.policyId || attachment.recordId) {
     try {
       const { prisma } = await import("@/lib/db/prisma");
-      const record = await prisma.policyRecord.findUnique({
-        where: { id: attachment.policyId || attachment.recordId },
+      const record = await prisma.policyRecord.findFirst({
+        where: {
+          id: attachment.policyId || attachment.recordId,
+          deletedAt: null,
+          ...(session?.organizationId ? { organizationId: session.organizationId } : {}),
+        },
         include: { uploadedFile: true },
       });
       if (record) {
@@ -106,10 +138,13 @@ async function resolveAttachmentPayload(attachment = {}) {
     }
   }
 
-  if (!attachmentUrl) return null;
+  if (!attachmentUrl || !isSafeRemoteAttachmentUrl(attachmentUrl)) return null;
 
   try {
-    const response = await fetch(attachmentUrl);
+    const response = await fetch(attachmentUrl, {
+      redirect: "error",
+      signal: AbortSignal.timeout(8000),
+    });
     if (!response.ok) {
       throw new Error(`Could not download attachment from ${attachmentUrl}`);
     }
@@ -197,7 +232,7 @@ export async function POST(request) {
 
     const resolvedAttachments = [];
     for (const attachment of attachments) {
-      const resolved = await resolveAttachmentPayload(attachment);
+      const resolved = await resolveAttachmentPayload(attachment, session);
       if (resolved) resolvedAttachments.push(resolved);
     }
 

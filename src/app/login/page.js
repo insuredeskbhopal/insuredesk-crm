@@ -39,6 +39,12 @@ export default function ClientLoginPage() {
   const [googleAccessToken, setGoogleAccessToken] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [mpin, setMpin] = useState("");
+  const [otpPhone, setOtpPhone] = useState("");
+  const [otpClientId, setOtpClientId] = useState("");
+  const [otpRequiresClientId, setOtpRequiresClientId] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpNewMpin, setOtpNewMpin] = useState("");
+  const [otpStage, setOtpStage] = useState("phone");
   const isVerified = Boolean(success);
 
   const handleRegularSubmit = async (event) => {
@@ -161,6 +167,102 @@ export default function ClientLoginPage() {
     setMpin("");
     setCustomerId("");
     setGoogleAccessToken("");
+    setOtpStage("phone");
+    setOtpPhone("");
+    setOtpClientId("");
+    setOtpRequiresClientId(false);
+    setOtpCode("");
+    setOtpNewMpin("");
+  };
+
+  const handleOpenOtpRecovery = () => {
+    setError("");
+    setSuccess("");
+    const seed = regularCustomerId.trim();
+    const digits = seed.replace(/\D/g, "");
+    if (/^\d{10}$/.test(digits.slice(-10))) {
+      setOtpPhone(digits.slice(-10));
+      setOtpClientId("");
+    } else if (/^BHQ-\d+/i.test(seed)) {
+      setOtpClientId(seed.toUpperCase());
+    }
+    setOtpStage("phone");
+    setLoginMode("otp");
+  };
+
+  const handleSendOtp = async (event) => {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
+    const cleanPhone = otpPhone.replace(/\D/g, "").slice(-10);
+    if (cleanPhone.length !== 10) {
+      setError("Enter your registered 10-digit Indian mobile number.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch("/api/auth/client/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanPhone }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Could not send verification OTP.");
+      }
+      setOtpStage("verify");
+      setSuccess(data.message || "Verification OTP sent.");
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (event) => {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
+    const cleanPhone = otpPhone.replace(/\D/g, "").slice(-10);
+    const cleanOtp = otpCode.replace(/\D/g, "");
+    const cleanMpin = otpNewMpin.replace(/\D/g, "");
+    if (cleanOtp.length !== 6) {
+      setError("Enter the 6-digit verification code.");
+      return;
+    }
+    if (cleanMpin.length < 4 || cleanMpin.length > 6) {
+      setError("New MPIN must be a 4 to 6-digit numeric code.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch("/api/auth/client/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: cleanPhone,
+          ...(otpClientId.trim() ? { customerId: otpClientId.trim() } : {}),
+          otp: cleanOtp,
+          newMpin: cleanMpin,
+        }),
+      });
+      const data = await response.json();
+      if (response.status === 409 && data.requiresClientId) {
+        setOtpRequiresClientId(true);
+        throw new Error(data.error || "Enter your Client ID (BHQ-...) to verify the intended profile.");
+      }
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Verification failed.");
+      }
+      setSuccess("MPIN updated & verified. Redirecting to portal...");
+      setTimeout(() => {
+        window.location.href = "/client/portal";
+      }, 1000);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const features = [
@@ -471,8 +573,20 @@ export default function ClientLoginPage() {
 
             <div className="client-login-heading">
               <span className="client-portal-tag">Client Portal</span>
-              <h2>{loginMode === "regular" ? "Welcome back" : "Secure Google setup"}</h2>
-              <p>{loginMode === "regular" ? "Sign in to access your policies, claims and renewal information." : "Confirm your Client ID and MPIN once to connect your Google account."}</p>
+              <h2>
+                {loginMode === "regular"
+                  ? "Welcome back"
+                  : loginMode === "otp"
+                    ? "OTP Verification & MPIN"
+                    : "Secure Google setup"}
+              </h2>
+              <p>
+                {loginMode === "regular"
+                  ? "Sign in to access your policies, claims and renewal information."
+                  : loginMode === "otp"
+                    ? "Verify your registered mobile via OTP to set or reset your portal MPIN."
+                    : "Confirm your Client ID and MPIN once to connect your Google account."}
+              </p>
             </div>
 
             {error && <div className="client-alert error"><ShieldAlert size={16} /><span>{error}</span></div>}
@@ -503,7 +617,7 @@ export default function ClientLoginPage() {
 
                 <div className="client-form-row">
                   <label className="client-remember"><input type="checkbox" />Remember this device</label>
-                  <button className="client-forgot" type="button" onClick={() => setError("Please contact the Bima Headquarter support desk to reset your MPIN.")}>Forgot MPIN?</button>
+                  <button className="client-forgot" type="button" onClick={handleOpenOtpRecovery}>Forgot / Set MPIN via OTP?</button>
                 </div>
 
                 <button className="client-primary-btn" type="submit" disabled={loading}>
@@ -526,6 +640,118 @@ export default function ClientLoginPage() {
 
                 <div className="client-security-note"><ShieldCheck size={13} /><span>Your account is protected with encrypted client credentials.</span></div>
               </form>
+            ) : loginMode === "otp" ? (
+              otpStage === "phone" ? (
+                <form onSubmit={handleSendOtp}>
+                  <div className="client-info-pill">
+                    Enter your registered 10-digit mobile number to receive a 6-digit verification code on WhatsApp / SMS.
+                  </div>
+                  <div className="client-form-group">
+                    <label className="client-form-label" htmlFor="otp-phone">Registered Mobile Number</label>
+                    <div className="client-input-wrap">
+                      <Mail className="client-input-icon" size={17} />
+                      <input
+                        id="otp-phone"
+                        className="client-form-control"
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
+                        placeholder="10-digit mobile number"
+                        value={otpPhone}
+                        onChange={(event) => setOtpPhone(event.target.value.replace(/\D/g, "").slice(-10))}
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <button className="client-primary-btn" type="submit" disabled={loading}>
+                    {loading ? <Loader2 size={17} className="animate-spin" /> : <KeyRound size={17} />}
+                    {loading ? "Sending OTP..." : "Send Verification OTP"}
+                  </button>
+                  <div className="client-back-actions">
+                    <button type="button" className="client-back-btn" onClick={resetFlow}>
+                      <ArrowLeft size={12} />Back to Client ID login
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOtp}>
+                  <div className="client-form-group">
+                    <label className="client-form-label" htmlFor="otp-code">6-Digit OTP</label>
+                    <div className="client-input-wrap">
+                      <ShieldCheck className="client-input-icon" size={17} />
+                      <input
+                        id="otp-code"
+                        className="client-form-control"
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        placeholder="Enter 6-digit OTP"
+                        value={otpCode}
+                        onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                  </div>
+                  {(otpRequiresClientId || otpClientId) && (
+                    <div className="client-form-group">
+                      <label className="client-form-label" htmlFor="otp-client-id">Client ID (BHQ-...)</label>
+                      <div className="client-input-wrap">
+                        <Mail className="client-input-icon" size={17} />
+                        <input
+                          id="otp-client-id"
+                          className="client-form-control"
+                          type="text"
+                          placeholder="e.g. BHQ-100001"
+                          value={otpClientId}
+                          onChange={(event) => setOtpClientId(event.target.value)}
+                          disabled={loading}
+                          required={otpRequiresClientId}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  <div className="client-form-group">
+                    <label className="client-form-label" htmlFor="otp-new-mpin">New 4 to 6-Digit MPIN</label>
+                    <div className="client-input-wrap">
+                      <KeyRound className="client-input-icon" size={17} />
+                      <input
+                        id="otp-new-mpin"
+                        className="client-form-control"
+                        type={showMpin ? "text" : "password"}
+                        inputMode="numeric"
+                        maxLength={6}
+                        placeholder="Set 4 to 6-digit MPIN"
+                        value={otpNewMpin}
+                        onChange={(event) => setOtpNewMpin(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                        disabled={loading}
+                        required
+                      />
+                      <button
+                        className="client-toggle-mpin"
+                        type="button"
+                        aria-label={showMpin ? "Hide MPIN" : "Show MPIN"}
+                        onClick={() => setShowMpin((visible) => !visible)}
+                      >
+                        {showMpin ? <EyeOff size={17} /> : <Eye size={17} />}
+                      </button>
+                    </div>
+                  </div>
+                  <button className="client-primary-btn" type="submit" disabled={loading}>
+                    {loading ? <Loader2 size={17} className="animate-spin" /> : <ShieldCheck size={17} />}
+                    {loading ? "Verifying OTP..." : "Verify & Set MPIN"}
+                  </button>
+                  <div className="client-back-actions">
+                    <button type="button" className="client-back-btn" onClick={() => setOtpStage("phone")}>
+                      <RefreshCw size={12} />Resend / Change mobile number
+                    </button>
+                    <button type="button" className="client-back-btn" onClick={resetFlow}>
+                      <ArrowLeft size={12} />Back to Client ID login
+                    </button>
+                  </div>
+                </form>
+              )
             ) : googleStage === "verify_link" ? (
               <form onSubmit={handleVerifyLink}>
                 <div className="client-info-pill">First-time setup for <strong>{googleEmail}</strong>. Your next Google sign-in will open the portal directly.</div>
@@ -533,14 +759,14 @@ export default function ClientLoginPage() {
                   <label className="client-form-label" htmlFor="google-client-id">Client ID</label>
                   <div className="client-input-wrap">
                     <Mail className="client-input-icon" size={17} />
-                    <input id="google-client-id" className="client-form-control" type="text" placeholder="Enter your Client ID" value={customerId} onChange={(event) => setCustomerId(event.target.value)} disabled={loading} required />
+                    <input id="google-client-id" className="client-form-control" type="text" placeholder="Enter your Client ID (BHQ-...)" value={customerId} onChange={(event) => setCustomerId(event.target.value)} disabled={loading} required />
                   </div>
                 </div>
                 <div className="client-form-group">
                   <label className="client-form-label" htmlFor="google-client-mpin">Client MPIN</label>
                   <div className="client-input-wrap">
                     <KeyRound className="client-input-icon" size={17} />
-                    <input id="google-client-mpin" className="client-form-control" type={showMpin ? "text" : "password"} inputMode="numeric" maxLength={4} placeholder="Enter your MPIN" value={mpin} onChange={(event) => setMpin(event.target.value)} disabled={loading} required />
+                    <input id="google-client-mpin" className="client-form-control" type={showMpin ? "text" : "password"} inputMode="numeric" maxLength={6} placeholder="4 to 6-digit MPIN" value={mpin} onChange={(event) => setMpin(event.target.value)} disabled={loading} required />
                     <button className="client-toggle-mpin" type="button" aria-label={showMpin ? "Hide MPIN" : "Show MPIN"} onClick={() => setShowMpin((visible) => !visible)}>{showMpin ? <EyeOff size={17} /> : <Eye size={17} />}</button>
                   </div>
                 </div>

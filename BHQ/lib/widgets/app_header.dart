@@ -202,9 +202,15 @@ class AppHeader extends ConsumerWidget {
                     ),
                     color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
                     elevation: 12,
-                    onSelected: (value) {
+                    onSelected: (value) async {
                       if (value == 'logout') {
-                        ref.read(authProvider.notifier).logout();
+                        await ref.read(authProvider.notifier).logout();
+                        ref.invalidate(livePoliciesProvider);
+                        ref.invalidate(liveClaimsProvider);
+                        ref.invalidate(liveProfileProvider);
+                        ref.invalidate(liveServiceRequestsProvider);
+                        ref.invalidate(liveNotificationsProvider);
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Row(

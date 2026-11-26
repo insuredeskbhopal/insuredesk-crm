@@ -1163,9 +1163,6 @@ export default function Dashboard({
         setAlert(null);
         setEditError("");
         setEditFieldErrors({});
-        if (!editForm.clientId && !editForm.clientIdRequestId) {
-          editForm.clientId = editingRecord?.clientId || buildCustomerId(editForm.insuredName, editForm.contactNumber) || "PENDING";
-        }
         if (editValidation.contactErrors.length > 0) {
           const message = editValidation.contactErrors.join(" ");
           setEditError(message);

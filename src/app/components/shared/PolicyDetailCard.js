@@ -318,7 +318,7 @@ export default function PolicyDetailCard({
                 }}
               >
                 {mode === "edit"
-                  ? (resolvedSchema ? `${resolvedSchema.groupLabel} / ${resolvedSchema.policyName}` : "Edit lead data")
+                  ? (resolvedSchema ? `${resolvedSchema.groupLabel} / ${resolvedSchema.policyName}` : "Edit policy record")
                   : "Policy Record Details"}
               </span>
               <h2
@@ -333,7 +333,7 @@ export default function PolicyDetailCard({
                 }}
               >
                 {mode === "edit" && <Pencil size={18} style={{ color: "#64748b" }} />}
-                {mode === "edit" ? "Edit lead data" : (record.policyNumber || "No Policy Number")}
+                {mode === "edit" ? "Edit policy record" : (record.policyNumber || "No Policy Number")}
               </h2>
             </div>
           </div>

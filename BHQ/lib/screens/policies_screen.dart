@@ -19,20 +19,35 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
   int _selectedTab = 0;
   String _searchQuery = '';
   bool _isCompactView = false;
+  int _currentPage = 1;
+  static const int _pageSize = 10;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   final List<String> _categories = [
     'All Categories',
     'Health',
     'Motor',
     'Life',
-    'Property',
+    'Property / Warehouse',
   ];
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _goToPage(int page) {
+    setState(() => _currentPage = page);
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   List<Policy> _filterPolicies(List<Policy> allPolicies) {
@@ -95,6 +110,7 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
         ref.invalidate(livePoliciesProvider);
       },
       child: SingleChildScrollView(
+        controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
@@ -229,7 +245,10 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
                           isSelected: _statusTab == 0,
                           badgeColor: const Color(0xFF34C759),
                           isDark: isDark,
-                          onTap: () => setState(() => _statusTab = 0),
+                          onTap: () => setState(() {
+                            _statusTab = 0;
+                            _currentPage = 1;
+                          }),
                         ),
                       ),
                       // All Policies
@@ -239,7 +258,10 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
                           isSelected: _statusTab == 1,
                           badgeColor: const Color(0xFF007AFF),
                           isDark: isDark,
-                          onTap: () => setState(() => _statusTab = 1),
+                          onTap: () => setState(() {
+                            _statusTab = 1;
+                            _currentPage = 1;
+                          }),
                         ),
                       ),
                       // Expired Only
@@ -249,7 +271,10 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
                           isSelected: _statusTab == 2,
                           badgeColor: const Color(0xFFFF3B30),
                           isDark: isDark,
-                          onTap: () => setState(() => _statusTab = 2),
+                          onTap: () => setState(() {
+                            _statusTab = 2;
+                            _currentPage = 1;
+                          }),
                         ),
                       ),
                     ],
@@ -268,7 +293,10 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    onChanged: (val) => setState(() => _searchQuery = val),
+                    onChanged: (val) => setState(() {
+                      _searchQuery = val;
+                      _currentPage = 1;
+                    }),
                     style: TextStyle(
                       fontSize: 13.5,
                       color: isDark ? Colors.white : const Color(0xFF000000),
@@ -427,7 +455,10 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: InkWell(
-                          onTap: () => setState(() => _selectedTab = idx),
+                          onTap: () => setState(() {
+                            _selectedTab = idx;
+                            _currentPage = 1;
+                          }),
                           borderRadius: BorderRadius.circular(20),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
@@ -524,27 +555,65 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
                   );
                 }
 
-                return ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filtered.length,
-                  separatorBuilder: (context, index) =>
-                      Gap(_isCompactView ? 8 : 12),
-                  itemBuilder: (context, index) {
-                    final policy = filtered[index];
-                    return PolicyCard(
-                      policy: policy,
-                      isCompact: _isCompactView,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PolicyDetailsScreen(policy: policy),
-                          ),
+                final totalItems = filtered.length;
+                final totalPages = (totalItems / _pageSize).ceil();
+                final safePage = _currentPage > totalPages && totalPages > 0
+                    ? totalPages
+                    : (_currentPage < 1 ? 1 : _currentPage);
+                final startIndex = (safePage - 1) * _pageSize;
+                final endIndex = (startIndex + _pageSize).clamp(0, totalItems);
+                final pageItems = filtered.sublist(startIndex, endIndex);
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: pageItems.length,
+                      separatorBuilder: (context, index) =>
+                          Gap(_isCompactView ? 8 : 12),
+                      itemBuilder: (context, index) {
+                        final policy = pageItems[index];
+                        return PolicyCard(
+                          policy: policy,
+                          isCompact: _isCompactView,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PolicyDetailsScreen(policy: policy),
+                              ),
+                            );
+                          },
                         );
                       },
-                    );
-                  },
+                    ),
+
+                    if (totalPages > 1) ...[
+                      const Gap(16),
+                      _buildPaginationBar(
+                        currentPage: safePage,
+                        totalItems: totalItems,
+                        totalPages: totalPages,
+                        startIndex: startIndex,
+                        endIndex: endIndex,
+                        isDark: isDark,
+                      ),
+                    ] else if (totalItems > 0) ...[
+                      const Gap(12),
+                      Center(
+                        child: Text(
+                          'Showing all $totalItems policies',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 );
               },
               loading: () => const AppPolicySkeleton(count: 3),
@@ -670,6 +739,225 @@ class _PoliciesScreenState extends ConsumerState<PoliciesScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPaginationBar({
+    required int currentPage,
+    required int totalItems,
+    required int totalPages,
+    required int startIndex,
+    required int endIndex,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E5EA),
+          width: 0.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Showing ${startIndex + 1}–$endIndex of $totalItems',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildPageNavButton(
+                    icon: Icons.chevron_left_rounded,
+                    tooltip: 'Previous page',
+                    isEnabled: currentPage > 1,
+                    isDark: isDark,
+                    onTap: () => _goToPage(currentPage - 1),
+                  ),
+                  const Gap(6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF2C2C2E)
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(
+                        color: isDark ? Colors.white12 : const Color(0xFFCBD5E1),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Text(
+                      'Page $currentPage / $totalPages',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                  const Gap(6),
+                  _buildPageNavButton(
+                    icon: Icons.chevron_right_rounded,
+                    tooltip: 'Next page',
+                    isEnabled: currentPage < totalPages,
+                    isDark: isDark,
+                    onTap: () => _goToPage(currentPage + 1),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          if (totalPages > 2) ...[
+            const Gap(10),
+            Divider(
+              height: 1,
+              thickness: 0.5,
+              color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+            ),
+            const Gap(10),
+            _buildPagePillsRow(currentPage: currentPage, totalPages: totalPages, isDark: isDark),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageNavButton({
+    required IconData icon,
+    required String tooltip,
+    required bool isEnabled,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: isEnabled ? onTap : null,
+      borderRadius: BorderRadius.circular(9),
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: isEnabled
+              ? (isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF1F5F9))
+              : (isDark
+                    ? Colors.white.withValues(alpha: 0.03)
+                    : const Color(0xFFF8FAFC)),
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(
+            color: isEnabled
+                ? (isDark ? Colors.white12 : const Color(0xFFCBD5E1))
+                : Colors.transparent,
+            width: 0.5,
+          ),
+        ),
+        child: Icon(
+          icon,
+          size: 19,
+          color: isEnabled
+              ? const Color(0xFF007AFF)
+              : (isDark ? Colors.white24 : const Color(0xFFCBD5E1)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPagePillsRow({
+    required int currentPage,
+    required int totalPages,
+    required bool isDark,
+  }) {
+    final pages = <int>{};
+    pages.add(1);
+    pages.add(totalPages);
+    for (int p = currentPage - 1; p <= currentPage + 1; p++) {
+      if (p >= 1 && p <= totalPages) {
+        pages.add(p);
+      }
+    }
+    final sortedPages = pages.toList()..sort();
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (int i = 0; i < sortedPages.length; i++) ...[
+            if (i > 0 && sortedPages[i] - sortedPages[i - 1] > 1) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  '…',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white30 : const Color(0xFF94A3B8),
+                  ),
+                ),
+              ),
+            ],
+            InkWell(
+              onTap: () => _goToPage(sortedPages[i]),
+              borderRadius: BorderRadius.circular(8),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4.5,
+                ),
+                decoration: BoxDecoration(
+                  color: sortedPages[i] == currentPage
+                      ? const Color(0xFF007AFF)
+                      : (isDark
+                            ? const Color(0xFF2C2C2E)
+                            : const Color(0xFFF1F5F9)),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: sortedPages[i] == currentPage
+                        ? const Color(0xFF007AFF)
+                        : (isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                    width: 0.5,
+                  ),
+                ),
+                child: Text(
+                  '${sortedPages[i]}',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: sortedPages[i] == currentPage
+                        ? FontWeight.w700
+                        : FontWeight.w600,
+                    color: sortedPages[i] == currentPage
+                        ? Colors.white
+                        : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

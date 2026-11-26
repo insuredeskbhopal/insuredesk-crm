@@ -6,15 +6,13 @@ import { deleteGoogleDriveFile, uploadGoogleDriveFile } from "@/lib/storage/goog
 // Active storage settings
 const STORAGE_PROVIDER = process.env.STORAGE_PROVIDER || "google_drive"; // "local" | "s3" | "google_drive"
 const LOCAL_STORAGE_DIR = path.join(process.cwd(), "storage", "uploads");
-const FALLBACK_STORAGE_SECRET = "bimaheadquarter-temporary-build-time-storage-secret";
-
 function getSigningSecret() {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     if (process.env.NODE_ENV !== "production") {
       return "dev-only-storage-signing-secret";
     }
-    return FALLBACK_STORAGE_SECRET;
+    throw new Error("JWT_SECRET must be configured in production for signed URLs.");
   }
   return secret;
 }

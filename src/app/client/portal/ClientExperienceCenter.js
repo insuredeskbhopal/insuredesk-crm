@@ -183,51 +183,51 @@ export function PolicyDetailModal({ policy, onClose, onStartClaim, onServiceRequ
   return (
     <ModalPortal>
       <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md" role="dialog" aria-modal="true">
-      <div className="flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl">
-        <div className="flex items-start justify-between bg-gradient-to-r from-emerald-900 to-teal-700 p-6 text-white [&_*]:!text-white [&_svg]:!stroke-white">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em]">Policy details</p>
-            <h2 className="mt-1 text-xl font-bold">{policyNo || "Policy awaiting issuance"}</h2>
-            <p className="mt-1 text-xs">{policy.selectedCompany || payload.insuranceCompany || "Insurance provider"}</p>
+        <div className="flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl">
+          <div className="flex items-start justify-between bg-gradient-to-r from-emerald-900 to-teal-700 p-6 text-white [&_*]:!text-white [&_svg]:!stroke-white">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em]">Policy details</p>
+              <h2 className="mt-1 text-xl font-bold">{policyNo || "Policy awaiting issuance"}</h2>
+              <p className="mt-1 text-xs">{policy.selectedCompany || payload.insuranceCompany || "Insurance provider"}</p>
+            </div>
+            <button type="button" onClick={onClose} className="rounded-full border border-white/25 bg-white/10 p-2 hover:bg-white/20" aria-label="Close policy details"><X size={18} /></button>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full border border-white/25 bg-white/10 p-2 hover:bg-white/20" aria-label="Close policy details"><X size={18} /></button>
-        </div>
-        <div className="overflow-y-auto p-6">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {fields.map(([label, value]) => (
-              <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{label}</p>
-                <p className="mt-1 break-words text-xs font-bold text-slate-800">{value}</p>
-              </div>
-            ))}
-          </div>
+          <div className="overflow-y-auto p-6">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {fields.map(([label, value]) => (
+                <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{label}</p>
+                  <p className="mt-1 break-words text-xs font-bold text-slate-800">{value}</p>
+                </div>
+              ))}
+            </div>
 
-          <div className="mt-6">
-            <h3 className="text-sm font-bold text-slate-900">Documents</h3>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                ["Policy PDF", "policy", FileText],
-                ["Insurance certificate", "certificate", ShieldCheck],
-                ["Premium receipt", "receipt", ReceiptText],
-                ["Renewed policy", "policy", RefreshCw],
-              ].map(([label, kind, Icon], index) => {
-                const disabled = index === 3 && policy.renewalStatus !== "RENEWED";
-                return disabled ? (
-                  <div key={label} className="rounded-2xl border border-dashed border-slate-200 p-4 text-slate-400"><Icon size={17} /><p className="mt-2 text-[10px] font-bold">{label}</p><p className="mt-1 text-[9px]">Available after renewal</p></div>
-                ) : (
-                  <a key={label} href={`/api/client/policies/${policy.id}/document?kind=${kind}`} className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-800 no-underline hover:border-emerald-300">
-                    <Icon size={17} /><p className="mt-2 text-[10px] font-bold">{label}</p><span className="mt-1 inline-flex items-center gap-1 text-[9px]">Download <Download size={10} /></span>
-                  </a>
-                );
-              })}
+            <div className="mt-6">
+              <h3 className="text-sm font-bold text-slate-900">Documents</h3>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  ["Policy PDF", "policy", FileText],
+                  ["Insurance certificate", "certificate", ShieldCheck],
+                  ["Premium receipt", "receipt", ReceiptText],
+                  ["Renewed policy", "policy", RefreshCw],
+                ].map(([label, kind, Icon], index) => {
+                  const disabled = index === 3 && policy.renewalStatus !== "RENEWED";
+                  return disabled ? (
+                    <div key={label} className="rounded-2xl border border-dashed border-slate-200 p-4 text-slate-400"><Icon size={17} /><p className="mt-2 text-[10px] font-bold">{label}</p><p className="mt-1 text-[9px]">Available after renewal</p></div>
+                  ) : (
+                    <a key={label} href={`/api/client/policies/${policy.id}/document?kind=${kind}`} className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-800 no-underline hover:border-emerald-300">
+                      <Icon size={17} /><p className="mt-2 text-[10px] font-bold">{label}</p><span className="mt-1 inline-flex items-center gap-1 text-[9px]">Download <Download size={10} /></span>
+                    </a>
+                  );
+                })}
+              </div>
             </div>
           </div>
+          <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 bg-slate-50 p-4">
+            <button type="button" onClick={() => onServiceRequest("RENEWAL_QUOTE", policy)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700">Get renewal quote</button>
+            <button type="button" onClick={() => onStartClaim(policy)} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white force-white">Start a claim</button>
+          </div>
         </div>
-        <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 bg-slate-50 p-4">
-          <button type="button" onClick={() => onServiceRequest("RENEWAL_QUOTE", policy)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700">Get renewal quote</button>
-          <button type="button" onClick={() => onStartClaim(policy)} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white force-white">Start a claim</button>
-        </div>
-      </div>
       </div>
     </ModalPortal>
   );
@@ -269,28 +269,28 @@ function RequestModal({ request, policies, onClose, onSaved }) {
   return (
     <ModalPortal>
       <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md" role="dialog" aria-modal="true">
-      <form onSubmit={submit} className="w-full max-w-lg rounded-3xl border border-white/60 bg-white p-6 shadow-2xl">
-        <div className="flex items-start justify-between">
-          <div><p className="text-[10px] font-bold uppercase text-emerald-700">Client service request</p><h2 className="mt-1 text-lg font-bold text-slate-900">{REQUEST_LABELS[request.type]}</h2></div>
-          <button type="button" onClick={onClose} className="rounded-full bg-slate-100 p-2 text-slate-500"><X size={16} /></button>
-        </div>
-        {message ? <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600">{message}</p> : null}
-        <div className="mt-5 space-y-4">
-          <label className="block text-[10px] font-bold uppercase text-slate-500">Policy
-            <select value={policyNo} onChange={(event) => setPolicyNo(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-800">
-              <option value="">General request / no policy</option>
-              {policies.map((policy) => <option key={policy.id} value={getPolicyNumber(policy)}>{getPolicyNumber(policy)} · {policy.selectedPolicyType || getPayload(policy).policyType}</option>)}
-            </select>
-          </label>
-          <label className="block text-[10px] font-bold uppercase text-slate-500">Request details
-            <textarea value={details} onChange={(event) => setDetails(event.target.value)} required={["NEW_POLICY_QUOTE", "SUPPORT", "VEHICLE_CORRECTION", "NOMINEE_CHANGE", "CONTACT_CHANGE"].includes(request.type)} placeholder={request.type === "NEW_POLICY_QUOTE" ? "Tell us the policy type, insured person/asset, coverage needed, and preferred insurer." : "Describe what you need, including corrected or new information."} className="mt-1.5 min-h-28 w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-800" />
-          </label>
-          <label className="block text-[10px] font-bold uppercase text-slate-500">Preferred reply
-            <select value={preferredContact} onChange={(event) => setPreferredContact(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-800"><option value="PHONE">Phone call</option><option value="WHATSAPP">WhatsApp</option><option value="EMAIL">Email</option></select>
-          </label>
-        </div>
-        <button disabled={saving} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-xs font-bold text-white force-white disabled:opacity-50">{saving ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />} Submit request</button>
-      </form>
+        <form onSubmit={submit} className="w-full max-w-lg rounded-3xl border border-white/60 bg-white p-6 shadow-2xl">
+          <div className="flex items-start justify-between">
+            <div><p className="text-[10px] font-bold uppercase text-emerald-700">Client service request</p><h2 className="mt-1 text-lg font-bold text-slate-900">{REQUEST_LABELS[request.type]}</h2></div>
+            <button type="button" onClick={onClose} className="rounded-full bg-slate-100 p-2 text-slate-500"><X size={16} /></button>
+          </div>
+          {message ? <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600">{message}</p> : null}
+          <div className="mt-5 space-y-4">
+            <label className="block text-[10px] font-bold uppercase text-slate-500">Policy
+              <select value={policyNo} onChange={(event) => setPolicyNo(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-800">
+                <option value="">General request / no policy</option>
+                {policies.map((policy) => <option key={policy.id} value={getPolicyNumber(policy)}>{getPolicyNumber(policy)} · {policy.selectedPolicyType || getPayload(policy).policyType}</option>)}
+              </select>
+            </label>
+            <label className="block text-[10px] font-bold uppercase text-slate-500">Request details
+              <textarea value={details} onChange={(event) => setDetails(event.target.value)} required={["NEW_POLICY_QUOTE", "SUPPORT", "VEHICLE_CORRECTION", "NOMINEE_CHANGE", "CONTACT_CHANGE"].includes(request.type)} placeholder={request.type === "NEW_POLICY_QUOTE" ? "Tell us the policy type, insured person/asset, coverage needed, and preferred insurer." : "Describe what you need, including corrected or new information."} className="mt-1.5 min-h-28 w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-800" />
+            </label>
+            <label className="block text-[10px] font-bold uppercase text-slate-500">Preferred reply
+              <select value={preferredContact} onChange={(event) => setPreferredContact(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-800"><option value="PHONE">Phone call</option><option value="WHATSAPP">WhatsApp</option><option value="EMAIL">Email</option></select>
+            </label>
+          </div>
+          <button disabled={saving} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-xs font-bold text-white force-white disabled:opacity-50">{saving ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />} Submit request</button>
+        </form>
       </div>
     </ModalPortal>
   );
@@ -335,11 +335,11 @@ export function ClaimDocumentManager({ claim, onUpdated }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div><p className="text-[10px] font-bold uppercase text-slate-400">Claim documents</p><p className="mt-1 text-xs font-semibold text-slate-700">Upload photos, bills, reports, or PDF files (max 8 MB).</p></div>
         <div className="flex flex-wrap gap-2">
-        <a href={`tel:${SUPPORT_PHONE}`} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-[10px] font-bold text-emerald-700 no-underline"><Phone size={13} /> Claim executive</a>
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-bold text-white force-white">
-          {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />} Upload document
-          <input type="file" accept="image/*,application/pdf" onChange={upload} disabled={uploading} className="hidden" />
-        </label>
+          <a href={`tel:${SUPPORT_PHONE}`} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-[10px] font-bold text-emerald-700 no-underline"><Phone size={13} /> Claim executive</a>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-bold text-white force-white">
+            {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />} Upload document
+            <input type="file" accept="image/*,application/pdf" onChange={upload} disabled={uploading} className="hidden" />
+          </label>
         </div>
       </div>
       {message ? <p className="mt-3 text-[10px] font-semibold text-slate-600">{message}</p> : null}
@@ -405,20 +405,26 @@ export function ClientProfileManager({ profile, onUpdated }) {
         <div className="flex items-center gap-2"><UserRoundCog size={18} className="text-emerald-600" /><h3 className="text-sm font-bold text-slate-900">Edit contact and address</h3></div>
         {message ? <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs font-semibold text-slate-700">{message}</p> : null}
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          {[['phone','Mobile number'],['email','Email address'],['address','Address'],['city','City'],['state','State'],['pincode','PIN code']].map(([key,label]) => (
+          {[['phone', 'Mobile number'], ['email', 'Email address'], ['address', 'Address'], ['city', 'City'], ['state', 'State'], ['pincode', 'PIN code']].map(([key, label]) => (
             <label key={key} className={key === "address" ? "sm:col-span-2 text-[10px] font-bold uppercase text-slate-500" : "text-[10px] font-bold uppercase text-slate-500"}>{label}<input value={form[key] || ""} onChange={(event) => setForm({ ...form, [key]: event.target.value })} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-xs font-medium text-slate-800" /></label>
           ))}
         </div>
         <div className="mt-5 border-t border-slate-100 pt-5"><p className="text-[10px] font-bold uppercase text-slate-500">Communication preferences</p><div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {[['email','Email messages'],['whatsapp','WhatsApp messages'],['policyReminders','Policy reminders'],['claimUpdates','Claim updates'],['paymentReminders','Payment reminders']].map(([key,label]) => <label key={key} className="flex items-center gap-2 rounded-xl border border-slate-200 p-3 text-xs font-semibold text-slate-700"><input type="checkbox" checked={Boolean(form.communicationPreferences?.[key])} onChange={(event) => setPreference(key,event.target.checked)} className="accent-emerald-600" />{label}</label>)}
+          {[['email', 'Email messages'], ['whatsapp', 'WhatsApp messages'], ['policyReminders', 'Policy reminders'], ['claimUpdates', 'Claim updates'], ['paymentReminders', 'Payment reminders']].map(([key, label]) => <label key={key} className="flex items-center gap-2 rounded-xl border border-slate-200 p-3 text-xs font-semibold text-slate-700"><input type="checkbox" checked={Boolean(form.communicationPreferences?.[key])} onChange={(event) => setPreference(key, event.target.checked)} className="accent-emerald-600" />{label}</label>)}
         </div></div>
         <button disabled={saving} className="mt-5 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white force-white disabled:opacity-50">Save profile</button>
       </form>
       <div className="space-y-6">
-        <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-5"><p className="text-[10px] font-bold uppercase text-emerald-700">Client ID</p><p className="mt-2 break-all font-mono text-xs font-bold text-emerald-950">{profile?.id}</p></div>
-        <form onSubmit={changeMpin} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center gap-2"><KeyRound size={17} className="text-emerald-600" /><h3 className="text-sm font-bold text-slate-900">Change login MPIN</h3></div><p className="mt-2 text-[10px] text-slate-500">Use a private four-digit MPIN.</p>
-          <input type="password" inputMode="numeric" maxLength={4} placeholder="Current MPIN" value={mpin.currentMpin} onChange={(event) => setMpin({ ...mpin, currentMpin: event.target.value.replace(/\D/g, "") })} className="mt-4 h-10 w-full rounded-xl border border-slate-200 px-3 text-xs" required />
-          <input type="password" inputMode="numeric" maxLength={4} placeholder="New MPIN" value={mpin.newMpin} onChange={(event) => setMpin({ ...mpin, newMpin: event.target.value.replace(/\D/g, "") })} className="mt-2 h-10 w-full rounded-xl border border-slate-200 px-3 text-xs" required />
+        <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
+          <p className="text-[10px] font-bold uppercase text-emerald-700">Client ID</p>
+          {profile?.clientCode ? (
+            <p className="mt-2 font-mono text-base font-extrabold text-emerald-950">{profile.clientCode}</p>
+          ) : null}
+          <p className="mt-1 break-all font-mono text-[11px] font-semibold text-emerald-800/80">{profile?.id}</p>
+        </div>
+        <form onSubmit={changeMpin} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center gap-2"><KeyRound size={17} className="text-emerald-600" /><h3 className="text-sm font-bold text-slate-900">Change login MPIN</h3></div><p className="mt-2 text-[10px] text-slate-500">Use a private 4 to 6-digit numeric MPIN.</p>
+          <input type="password" inputMode="numeric" maxLength={6} placeholder="Current MPIN (4-6 digits)" value={mpin.currentMpin} onChange={(event) => setMpin({ ...mpin, currentMpin: event.target.value.replace(/\D/g, "") })} className="mt-4 h-10 w-full rounded-xl border border-slate-200 px-3 text-xs" required />
+          <input type="password" inputMode="numeric" maxLength={6} placeholder="New MPIN (4-6 digits)" value={mpin.newMpin} onChange={(event) => setMpin({ ...mpin, newMpin: event.target.value.replace(/\D/g, "") })} className="mt-2 h-10 w-full rounded-xl border border-slate-200 px-3 text-xs" required />
           <button disabled={saving} className="mt-3 w-full rounded-xl border border-emerald-200 bg-emerald-50 py-2.5 text-xs font-bold text-emerald-700">Change MPIN</button>
         </form>
       </div>
@@ -487,14 +493,14 @@ export default function ClientExperienceCenter({ policies, claims, onStartClaim,
         <button type="button" onClick={onBack} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-700 bg-emerald-600 !text-white force-white shadow-sm [&_svg]:!stroke-white md:hidden" aria-label="Back to policies"><ChevronLeft size={25} strokeWidth={2.5} className="!text-white force-white" /></button>
         <div><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-700 md:text-[10px]">Policy services</p><h1 className="mt-1 text-xl font-bold leading-tight text-slate-950 md:text-2xl">Manage your insurance</h1><p className="mt-1 text-[10px] leading-relaxed text-slate-500 md:text-xs">Renewals, payments, notifications, support and policy changes.</p></div>
       </div>
-      <div className="grid grid-cols-3 gap-2 md:flex md:gap-2 md:overflow-x-auto md:pb-1">{nav.map(([id,label,Icon]) => <button key={id} onClick={() => setSection(id)} className={`relative inline-flex min-h-14 flex-col items-center justify-center gap-1.5 rounded-2xl px-2 py-2 text-[9px] font-bold md:min-h-0 md:shrink-0 md:flex-row md:rounded-xl md:px-4 md:py-2.5 md:text-xs ${section === id ? "bg-emerald-600 text-white force-white shadow-md shadow-emerald-200" : "border border-slate-200 bg-white text-slate-600 shadow-sm"}`}><Icon size={14} />{label}{id === "notifications" && notifications.length ? <span className="absolute right-1.5 top-1 rounded-full bg-red-500 px-1.5 text-[8px] text-white force-white md:static md:bg-white/20 md:text-[9px]">{notifications.length}</span> : null}</button>)}</div>
+      <div className="grid grid-cols-3 gap-2 md:flex md:gap-2 md:overflow-x-auto md:pb-1">{nav.map(([id, label, Icon]) => <button key={id} onClick={() => setSection(id)} className={`relative inline-flex min-h-14 flex-col items-center justify-center gap-1.5 rounded-2xl px-2 py-2 text-[9px] font-bold md:min-h-0 md:shrink-0 md:flex-row md:rounded-xl md:px-4 md:py-2.5 md:text-xs ${section === id ? "bg-emerald-600 text-white force-white shadow-md shadow-emerald-200" : "border border-slate-200 bg-white text-slate-600 shadow-sm"}`}><Icon size={14} />{label}{id === "notifications" && notifications.length ? <span className="absolute right-1.5 top-1 rounded-full bg-red-500 px-1.5 text-[8px] text-white force-white md:static md:bg-white/20 md:text-[9px]">{notifications.length}</span> : null}</button>)}</div>
 
       {section === "overview" ? <div className="space-y-4 md:space-y-6"><div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">{[
         ["Active policies", policies.filter((policy) => policy.isActivePolicy).length, ShieldCheck], ["Expiring soon", expiring.length, CalendarDays], ["Open claims", openClaims.length, AlertCircle], ["Pending payments", pendingPayments.length, IndianRupee],
-      ].map(([label,value,Icon]) => <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:rounded-3xl md:p-5"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 md:h-10 md:w-10 md:rounded-2xl"><Icon size={17} /></div><p className="mt-3 text-xl font-black text-slate-900 md:mt-4 md:text-2xl">{value}</p><p className="mt-1 text-[8px] font-bold uppercase tracking-wide text-slate-500 md:text-[10px]">{label}</p></div>)}</div>
+      ].map(([label, value, Icon]) => <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:rounded-3xl md:p-5"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 md:h-10 md:w-10 md:rounded-2xl"><Icon size={17} /></div><p className="mt-3 text-xl font-black text-slate-900 md:mt-4 md:text-2xl">{value}</p><p className="mt-1 text-[8px] font-bold uppercase tracking-wide text-slate-500 md:text-[10px]">{label}</p></div>)}</div>
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 md:rounded-3xl md:p-5"><h3 className="text-xs font-bold text-emerald-950 md:text-sm">Important actions</h3><div className="mt-3 grid grid-cols-2 gap-2 md:flex md:flex-wrap"><button onClick={() => openRequest("NEW_POLICY_QUOTE")} className="rounded-xl bg-emerald-600 px-3 py-2.5 text-[10px] font-bold text-white force-white md:px-4 md:text-xs">Buy / Get quotes</button><button onClick={() => openRequest("RENEWAL_QUOTE", policies[0])} disabled={!policies.length} className="rounded-xl border border-emerald-200 bg-white px-3 py-2.5 text-[10px] font-bold text-emerald-700 disabled:opacity-40 md:px-4 md:text-xs">Renewal quote</button><button onClick={() => onStartClaim(policies[0])} disabled={!policies.length} className="rounded-xl border border-emerald-200 bg-white px-3 py-2.5 text-[10px] font-bold text-emerald-700 disabled:opacity-40 md:px-4 md:text-xs">Start a claim</button><button onClick={() => setSection("support")} className="rounded-xl border border-emerald-200 bg-white px-3 py-2.5 text-[10px] font-bold text-emerald-700 md:px-4 md:text-xs">Contact support</button></div></div></div> : null}
 
-      {section === "renewals" ? <div className="grid gap-4 lg:grid-cols-2">{policies.map((policy) => <div key={policy.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-start justify-between"><div><p className="font-mono text-sm font-bold text-slate-900">{getPolicyNumber(policy)}</p><p className="mt-1 text-[10px] font-semibold text-slate-500">Expires {date(getExpiry(policy))}</p><p className="mt-1 text-[9px] font-bold text-emerald-700">Current policy is issued and paid</p></div><StatusPill status={policy.renewalStatus || "ACTIVE"} /></div><div className="mt-5 grid grid-cols-2 gap-2"><button onClick={() => openRequest("RENEWAL_QUOTE",policy)} disabled={!getExpiry(policy)} className="rounded-xl bg-emerald-600 px-3 py-2.5 text-[10px] font-bold text-white force-white disabled:opacity-40">Get renewal quote</button><button onClick={() => setSection("payments")} className="rounded-xl border border-slate-200 px-3 py-2.5 text-[10px] font-bold text-slate-700">View my quotes</button>{policy.renewalStatus === "RENEWED" ? <a href={`/api/client/policies/${policy.id}/document`} className="col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-center text-[10px] font-bold text-emerald-700 no-underline">Download renewed policy</a> : null}</div></div>)}</div> : null}
+      {section === "renewals" ? <div className="grid gap-4 lg:grid-cols-2">{policies.map((policy) => <div key={policy.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-start justify-between"><div><p className="font-mono text-sm font-bold text-slate-900">{getPolicyNumber(policy)}</p><p className="mt-1 text-[10px] font-semibold text-slate-500">Expires {date(getExpiry(policy))}</p><p className="mt-1 text-[9px] font-bold text-emerald-700">Current policy is issued and paid</p></div><StatusPill status={policy.renewalStatus || "ACTIVE"} /></div><div className="mt-5 grid grid-cols-2 gap-2"><button onClick={() => openRequest("RENEWAL_QUOTE", policy)} disabled={!getExpiry(policy)} className="rounded-xl bg-emerald-600 px-3 py-2.5 text-[10px] font-bold text-white force-white disabled:opacity-40">Get renewal quote</button><button onClick={() => setSection("payments")} className="rounded-xl border border-slate-200 px-3 py-2.5 text-[10px] font-bold text-slate-700">View my quotes</button>{policy.renewalStatus === "RENEWED" ? <a href={`/api/client/policies/${policy.id}/document`} className="col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-center text-[10px] font-bold text-emerald-700 no-underline">Download renewed policy</a> : null}</div></div>)}</div> : null}
 
       {section === "payments" ? <div className="space-y-5"><div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-gradient-to-r from-emerald-900 to-teal-700 p-5 text-white [&_*]:!text-white"><div><p className="text-[9px] font-bold uppercase tracking-wider">Need new insurance?</p><h2 className="mt-1 text-lg font-bold">Buy a policy or compare quotes</h2><p className="mt-1 text-[10px]">Tell us what you need and an agent will publish quotations here.</p></div><button onClick={() => openRequest("NEW_POLICY_QUOTE")} className="rounded-xl bg-white px-4 py-2.5 text-[10px] font-bold !text-emerald-800">Get quotes</button></div>
         <div><h3 className="text-sm font-bold text-slate-900">My quotations</h3><div className="mt-3 grid gap-4 lg:grid-cols-2">{quotes.length ? quotes.map((quote) => <div key={quote.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold text-slate-900">{quote.title}</p><p className="mt-1 text-[10px] text-slate-500">{quote.policyNumber || "New policy quotation"}</p></div><StatusPill status={quote.status} /></div><div className="mt-4 rounded-2xl bg-slate-50 p-4"><p className="text-[9px] font-bold uppercase text-slate-400">Quoted premium</p><p className="mt-1 text-xl font-black text-slate-900">{quote.amount ? money(quote.amount) : "Awaiting agent"}</p>{quote.metadata?.quoteNote ? <p className="mt-2 text-[10px] leading-relaxed text-slate-600">{quote.metadata.quoteNote}</p> : null}</div><div className="mt-4 flex flex-wrap items-center justify-between gap-2"><span className="text-[9px] text-slate-400">Updated {date(quote.updatedAt)}</span><QuotePaymentAction quote={quote} onRequestLink={requestPaymentLink} /></div></div>) : <EmptyState icon={ReceiptText} title="No quotations yet" text="Request a new or renewal quotation and your agent will publish it here." />}</div></div>
@@ -504,7 +510,7 @@ export default function ClientExperienceCenter({ policies, claims, onStartClaim,
 
       {section === "support" ? <div className="space-y-5"><div className="grid gap-4 sm:grid-cols-3"><a href={`tel:${SUPPORT_PHONE}`} className="rounded-3xl border border-slate-200 bg-white p-5 text-slate-800 no-underline"><Phone className="text-emerald-600" /><h3 className="mt-3 text-sm font-bold">Call support</h3><p className="mt-1 text-[10px] text-slate-500">Bhopal desk: {SUPPORT_PHONE}</p></a><a href={`https://wa.me/${SUPPORT_PHONE.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="rounded-3xl border border-emerald-100 bg-emerald-50 p-5 text-emerald-900 no-underline"><MessageCircle className="text-emerald-600" /><h3 className="mt-3 text-sm font-bold">WhatsApp support</h3><p className="mt-1 text-[10px] text-emerald-700">Chat with the service desk</p></a><button onClick={() => openRequest("SUPPORT")} className="rounded-3xl border border-slate-200 bg-white p-5 text-left"><Headphones className="text-emerald-600" /><h3 className="mt-3 text-sm font-bold">Submit a ticket</h3><p className="mt-1 text-[10px] text-slate-500">Receive a trackable request number</p></button></div><div className="rounded-3xl border border-red-100 bg-red-50 p-5"><p className="text-[10px] font-bold uppercase text-red-700">Emergency contacts</p><div className="mt-3 grid gap-2 sm:grid-cols-3"><a href="tel:112" className="rounded-xl bg-white p-3 text-xs font-bold text-red-700 no-underline">Emergency · 112</a><a href="tel:108" className="rounded-xl bg-white p-3 text-xs font-bold text-red-700 no-underline">Ambulance · 108</a><a href={`tel:${SUPPORT_PHONE}`} className="rounded-xl bg-white p-3 text-xs font-bold text-red-700 no-underline">Claims desk</a></div></div><RequestHistory requests={requests.filter((item) => item.metadata?.requestType === "SUPPORT")} loading={loading} /></div> : null}
 
-      {section === "updates" ? <div className="space-y-5"><div className="grid gap-4 sm:grid-cols-3">{[["VEHICLE_CORRECTION","Vehicle correction","Registration, engine, chassis or model"],["NOMINEE_CHANGE","Nominee change","Update nominee details"],["CONTACT_CHANGE","Policy contact change","Correct phone, email or address"]].map(([type,title,text]) => <button key={type} onClick={() => openRequest(type)} className="rounded-3xl border border-slate-200 bg-white p-5 text-left hover:border-emerald-300"><FilePenLine size={19} className="text-emerald-600" /><h3 className="mt-3 text-sm font-bold text-slate-900">{title}</h3><p className="mt-1 text-[10px] text-slate-500">{text}</p><span className="mt-4 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700">Start request <ArrowRight size={11} /></span></button>)}</div><RequestHistory requests={requests.filter((item) => item.type === "ENDORSEMENT")} loading={loading} /></div> : null}
+      {section === "updates" ? <div className="space-y-5"><div className="grid gap-4 sm:grid-cols-3">{[["VEHICLE_CORRECTION", "Vehicle correction", "Registration, engine, chassis or model"], ["NOMINEE_CHANGE", "Nominee change", "Update nominee details"], ["CONTACT_CHANGE", "Policy contact change", "Correct phone, email or address"]].map(([type, title, text]) => <button key={type} onClick={() => openRequest(type)} className="rounded-3xl border border-slate-200 bg-white p-5 text-left hover:border-emerald-300"><FilePenLine size={19} className="text-emerald-600" /><h3 className="mt-3 text-sm font-bold text-slate-900">{title}</h3><p className="mt-1 text-[10px] text-slate-500">{text}</p><span className="mt-4 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700">Start request <ArrowRight size={11} /></span></button>)}</div><RequestHistory requests={requests.filter((item) => item.type === "ENDORSEMENT")} loading={loading} /></div> : null}
 
       <RequestModal request={requestModal} policies={policies} onClose={() => setRequestModal(null)} onSaved={() => { setRequestModal(null); loadRequests(); }} />
     </div>

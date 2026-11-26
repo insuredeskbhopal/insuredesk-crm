@@ -119,8 +119,9 @@ export async function POST(request) {
       return Response.json({ error: "Premium must be a valid non-negative number." }, { status: 400 });
     }
 
-    // Phone validation & normalization
-    let cleanPhone = String(contactNumber || "").trim();
+    // Phone validation & normalization (preserve existing phone when field is omitted)
+    const contactNumberProvided = contactNumber !== undefined && contactNumber !== null;
+    let cleanPhone = contactNumberProvided ? String(contactNumber).trim() : String(oldContactNumber || "").trim();
     if (cleanPhone) {
       const normalized = normalizeIndianPhone(cleanPhone);
       if (!normalized) {
@@ -130,6 +131,8 @@ export async function POST(request) {
         );
       }
       cleanPhone = normalized;
+    } else if (!contactNumberProvided && oldContactNumber) {
+      cleanPhone = String(oldContactNumber).trim();
     }
     let cleanRenewalMobile = String(renewalRecipientMobile ?? cleanPhone).trim();
     if (cleanRenewalMobile) {

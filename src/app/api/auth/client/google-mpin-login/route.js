@@ -4,6 +4,7 @@ import { signJWT } from "@/lib/auth";
 import { getClientCredentialVersion, withVerifiedClientMpin } from "@/lib/client-portal/credentials";
 import { getVerifiedGoogleEmail } from "@/lib/client-portal/google";
 import { findActiveClientAccount, normalizeClientId, withClientIdLock } from "@/lib/client-accounts/server";
+import { normalizeClientCode } from "@/lib/client-accounts/utils";
 
 export async function POST(request) {
   try {
@@ -43,8 +44,9 @@ export async function POST(request) {
     }
 
     const normalizedCustomerId = normalizeClientId(customerId);
+    const normalizedClientCode = normalizeClientCode(customerId);
     const cleanMpin = String(mpin || "").replace(/[^0-9]/g, "");
-    if (!normalizedCustomerId) {
+    if (!normalizedCustomerId && !normalizedClientCode) {
       return NextResponse.json({ success: false, error: "Invalid Client ID or MPIN" }, { status: 401 });
     }
     if (cleanMpin.length < 4 || cleanMpin.length > 6) {
@@ -52,9 +54,10 @@ export async function POST(request) {
     }
 
     const customer = await prisma.clientAccount.findUnique({
-      where: { id: normalizedCustomerId },
+      where: normalizedCustomerId ? { id: normalizedCustomerId } : { clientCode: normalizedClientCode },
       select: {
         id: true,
+        clientCode: true,
         name: true,
         email: true,
         phone: true,

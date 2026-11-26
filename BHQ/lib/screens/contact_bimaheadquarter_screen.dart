@@ -132,13 +132,11 @@ class _ContactBimaheadquarterScreenState
         });
         _showToast('Document request registered! BimaHeadquarter desk notified.');
       }
-    } catch (_) {
+    } catch (err) {
       if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-          _requestSent = true;
-        });
-        _showToast('Request logged. Your relationship desk has been notified.');
+        setState(() => _isSubmitting = false);
+        final msg = err.toString().replaceAll('Exception:', '').trim();
+        _showToast(msg.isNotEmpty ? 'Could not submit request: $msg' : 'Could not submit request right now. Please try WhatsApp or Call.');
       }
     }
   }

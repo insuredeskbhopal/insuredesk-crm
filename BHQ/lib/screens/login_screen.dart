@@ -340,7 +340,19 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
                   // ── 3D Elevated Brand Squircle Logo ──
                   _build3DLogo(isDark),
 
-                  const Gap(14),
+                  const Gap(10),
+
+                  Text(
+                    'Bima Headquarter',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
+                      color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8),
+                    ),
+                  ),
+                  const Gap(4),
 
                   // Heading
                   Text(
@@ -807,16 +819,20 @@ class _ClientLoginScreenState extends ConsumerState<ClientLoginScreen>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _showGoogleAccountPicker(context),
+          onTap: () => _showForgotMpinModal(context),
           borderRadius: BorderRadius.circular(14),
           child: Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const _GoogleLogoIcon(size: 18),
+                Icon(
+                  Icons.sms_outlined,
+                  size: 18,
+                  color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8),
+                ),
                 const Gap(10),
                 Text(
-                  'Continue with Google',
+                  'Login / Set MPIN via OTP',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,

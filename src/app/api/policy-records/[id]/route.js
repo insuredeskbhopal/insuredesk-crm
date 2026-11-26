@@ -11,6 +11,9 @@ import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 import { clearTabCountsCache } from "@/lib/records/tab-counts-cache";
 import {
   findActiveClientAccount,
+  findActiveClientAccountByIdentifier,
+  normalizeClientCode,
+  normalizeClientId,
   withClientIdLocks,
   withClientIdRequestLock,
   withClientPhoneLock,
@@ -160,43 +163,16 @@ export async function PUT(request, { params }) {
     if (reviewedData.clientId) {
       clientIdPending = false;
       clientIdRequestId = null;
-      const activeClient = await findActiveClientAccount(reviewedData.clientId, existing.organizationId);
+      const isCode = Boolean(normalizeClientCode(reviewedData.clientId));
+      const activeClient = isCode
+        ? await findActiveClientAccountByIdentifier(reviewedData.clientId, existing.organizationId)
+        : await findActiveClientAccount(reviewedData.clientId, existing.organizationId);
       if (activeClient) {
         reviewedData.clientId = activeClient.id;
         mergedData.clientId = activeClient.id;
-
-        // For managers/admins linking or changing the Client ID, auto-resolve any open request for this policy or client
-        const activeRequestId = existing.clientIdRequestId || matchingActiveRequest?.id;
-        if (activeRequestId) {
-          try {
-            if (typeof prisma.task?.updateMany === "function") {
-              await prisma.task.updateMany({
-                where: {
-                  id: activeRequestId,
-                  module: "CLIENT_ID_REQUEST",
-                  status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"] },
-                },
-                data: {
-                  status: "COMPLETED",
-                  completedAt: new Date(),
-                  updatedById: actorId,
-                  recordId: activeClient.id,
-                  recordLabel: activeClient.name,
-                },
-              });
-            }
-            if (typeof prisma.policyRecord?.updateMany === "function") {
-              await prisma.policyRecord.updateMany({
-                where: { clientIdRequestId: activeRequestId, clientIdPending: true, deletedAt: null },
-                data: {
-                  clientIdPending: false,
-                  clientIdStatus: "LINKED",
-                },
-              });
-            }
-          } catch (taskErr) {
-            console.warn("Could not auto-complete Client ID request on policy update:", taskErr?.message);
-          }
+        if (activeClient.clientCode) {
+          reviewedData.clientCode = activeClient.clientCode;
+          mergedData.clientCode = activeClient.clientCode;
         }
       }
     } else if (clientIdRequestId) {
@@ -277,6 +253,7 @@ export async function PUT(request, { params }) {
           renewalRecipientMobile: policyCustomerMobile || reviewedData.contactNumber || null,
           renewalRecipientName: policyCustomerName || reviewedData.contactPerson || null,
           renewalRecipientEmail: reviewedData.email || reviewedData.customerEmail || null,
+          clientAccountId: normalizeClientId(reviewedData.clientId) || null,
           clientIdRequestId: clientIdPending ? verifiedClientIdRequest.id : null,
           clientIdPending,
           clientIdStatus: clientIdPending
@@ -344,20 +321,21 @@ export async function PUT(request, { params }) {
           return withClientIdLocks(
             [previousClientId, reviewedData.clientId],
             async (lockedDatabase) => {
+              let resolvedActiveClient = null;
               if (reviewedData.clientId) {
-                const activeClient = await findActiveClientAccount(
+                resolvedActiveClient = await findActiveClientAccount(
                   reviewedData.clientId,
                   existing.organizationId,
                   lockedDatabase,
                 );
-                if (!activeClient) {
+                if (!resolvedActiveClient) {
                   return {
                     error: "Select an active Client ID from this organization before saving.",
                     status: 400,
                   };
                 }
-                reviewedData.clientId = activeClient.id;
-                mergedData.clientId = activeClient.id;
+                reviewedData.clientId = resolvedActiveClient.id;
+                mergedData.clientId = resolvedActiveClient.id;
               }
               if (
                 previousClientId &&
@@ -369,7 +347,43 @@ export async function PUT(request, { params }) {
                   status: 403,
                 };
               }
-              return { record: await updateRecord(lockedDatabase) };
+              const updatedPolicy = await updateRecord(lockedDatabase);
+
+              const activeRequestId = existing.clientIdRequestId || matchingActiveRequest?.id;
+              if (resolvedActiveClient && activeRequestId) {
+                try {
+                  if (typeof lockedDatabase.task?.updateMany === "function") {
+                    await lockedDatabase.task.updateMany({
+                      where: {
+                        id: activeRequestId,
+                        module: "CLIENT_ID_REQUEST",
+                        status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"] },
+                      },
+                      data: {
+                        status: "COMPLETED",
+                        completedAt: new Date(),
+                        updatedById: actorId,
+                        recordId: resolvedActiveClient.id,
+                        recordLabel: resolvedActiveClient.name,
+                      },
+                    });
+                  }
+                  if (typeof lockedDatabase.policyRecord?.updateMany === "function") {
+                    await lockedDatabase.policyRecord.updateMany({
+                      where: { clientIdRequestId: activeRequestId, clientIdPending: true, deletedAt: null },
+                      data: {
+                        clientAccountId: resolvedActiveClient.id,
+                        clientIdPending: false,
+                        clientIdStatus: "LINKED",
+                      },
+                    });
+                  }
+                } catch (taskErr) {
+                  console.warn("Could not auto-complete Client ID request on policy update:", taskErr?.message);
+                }
+              }
+
+              return { record: updatedPolicy };
             },
             policyDatabase,
           );

@@ -17,6 +17,7 @@ const ROUTE_MAP = {
   "lead-generation": "/dashboard/manual-entry/lead-generation",
   records: "/policy-records",
   customers: "/customer-management",
+  "client-management": "/operations/client-management",
   renewals: "/dashboard/renewals",
   endorsements: "/dashboard/endorsements",
   analytics: "/dashboard/reports",
@@ -67,6 +68,7 @@ export default function SideNav({
     if (propActivePage) return propActivePage;
     if (pathname === "/dashboard") return "dashboard";
     if (pathname === "/bulk-upload") return "bulk-entry";
+    if (pathname.startsWith("/operations/client-management")) return "client-management";
     if (pathname === "/work-center" || pathname.startsWith("/operations")) return "operations";
     if (pathname === "/manual-policy-entry") return "manual-entry";
     if (

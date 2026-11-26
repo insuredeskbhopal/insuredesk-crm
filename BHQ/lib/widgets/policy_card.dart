@@ -160,10 +160,151 @@ class PolicyCard extends StatelessWidget {
       }
     }
 
+    if (isCompact) {
+      return GlassCard(
+        onTap: openDetails,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        borderRadius: 16,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: toneColor.withValues(alpha: isDark ? 0.28 : 0.14),
+                borderRadius: BorderRadius.circular(11),
+                border: Border.all(
+                  color: toneColor.withValues(alpha: isDark ? 0.40 : 0.25),
+                  width: 0.8,
+                ),
+              ),
+              child: Icon(
+                policy.icon,
+                color: toneColor,
+                size: 20,
+              ),
+            ),
+            const Gap(12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    hasInsuredName ? policy.insuredName : policy.name,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const Gap(3),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: toneColor.withValues(
+                            alpha: isDark ? 0.28 : 0.14,
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          policy.policyCategory.toUpperCase(),
+                          style: TextStyle(
+                            color: toneColor,
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ),
+                      const Gap(6),
+                      Expanded(
+                        child: Text(
+                          hasVehicleNumber
+                              ? policy.vehicleNumber!
+                              : (policy.policyNumber != null
+                                  ? '#${policy.policyNumber}'
+                                  : cleanProductType),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontFamily: hasVehicleNumber ? 'monospace' : null,
+                            fontWeight: FontWeight.w500,
+                            color: isDark
+                                ? const Color(0xFF98989D)
+                                : const Color(0xFF6E6E73),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Gap(10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _formatAmount(policy.netPremium ?? policy.price),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                    color: Color(0xFF007AFF),
+                  ),
+                ),
+                const Gap(3),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const Gap(4),
+                    Text(
+                      policy.status,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const Gap(6),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
+            ),
+          ],
+        ),
+      );
+    }
+
     return GlassCard(
       onTap: openDetails,
-      padding: EdgeInsets.all(isCompact ? 12 : (isSmall ? 15 : 18)),
-      borderRadius: isCompact ? 16 : (isSmall ? 18 : 22),
+      padding: EdgeInsets.all(isSmall ? 15 : 18),
+      borderRadius: isSmall ? 18 : 22,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -551,8 +692,11 @@ class PolicyCard extends StatelessWidget {
           const Gap(14),
 
           // ─── 4. Actions: Apple Secondary Details + Primary PDF / Contact HQ ───
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               InkWell(
                 onTap: openDetails,

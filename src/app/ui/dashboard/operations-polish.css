@@ -823,6 +823,7 @@
   .tb-modal-footer {
     padding: 12px 14px !important;
     flex-direction: row !important;
+    flex-wrap: wrap !important;
     justify-content: flex-end !important;
     align-items: center !important;
     gap: 8px !important;

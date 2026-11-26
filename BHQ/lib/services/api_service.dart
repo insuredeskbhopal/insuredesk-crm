@@ -115,7 +115,9 @@ class ApiService {
 
   // ── Generic HTTP Methods with Bearer Header ───────────────────────
 
-  static Future<Map<String, String>> _getHeaders({bool requireAuth = true}) async {
+  static Future<Map<String, String>> _getHeaders({
+    bool requireAuth = true,
+  }) async {
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -131,7 +133,9 @@ class ApiService {
 
   static Uri _buildUri(String path, [Map<String, dynamic>? queryParams]) {
     final cleanPath = path.startsWith('/') ? path : '/$path';
-    return Uri.parse('$baseUrl$cleanPath').replace(queryParameters: queryParams);
+    return Uri.parse(
+      '$baseUrl$cleanPath',
+    ).replace(queryParameters: queryParams);
   }
 
   // ── Auth APIs ─────────────────────────────────────────────────────
@@ -162,10 +166,7 @@ class ApiService {
     final response = await http.post(
       uri,
       headers: await _getHeaders(requireAuth: false),
-      body: jsonEncode({
-        'customerId': customerId.trim(),
-        'mpin': mpin.trim(),
-      }),
+      body: jsonEncode({'customerId': customerId.trim(), 'mpin': mpin.trim()}),
     );
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -337,9 +338,12 @@ class ApiService {
     List<Map<String, dynamic>>? attachments,
   }) async {
     final descParts = <String>[];
-    if (remarks != null && remarks.trim().isNotEmpty) descParts.add(remarks.trim());
-    if (claimAmount > 0) descParts.add('Estimated Amount: ₹${claimAmount.toStringAsFixed(0)}');
-    if (garageOrHospital != null && garageOrHospital.trim().isNotEmpty) descParts.add('Hospital/Workshop: ${garageOrHospital.trim()}');
+    if (remarks != null && remarks.trim().isNotEmpty)
+      descParts.add(remarks.trim());
+    if (claimAmount > 0)
+      descParts.add('Estimated Amount: ₹${claimAmount.toStringAsFixed(0)}');
+    if (garageOrHospital != null && garageOrHospital.trim().isNotEmpty)
+      descParts.add('Hospital/Workshop: ${garageOrHospital.trim()}');
 
     final fullDescription = descParts.isNotEmpty
         ? descParts.join(' • ')
@@ -354,12 +358,14 @@ class ApiService {
         'claimType': 'Comprehensive Claim',
         'claimDescription': fullDescription,
         'hospitalOrWorkshop': garageOrHospital?.trim() ?? '',
-        if (attachments != null && attachments.isNotEmpty) 'attachments': attachments,
+        if (attachments != null && attachments.isNotEmpty)
+          'attachments': attachments,
       }),
     );
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
-    if (response.statusCode == 200 && data['success'] == true) {
+    if ((response.statusCode == 200 || response.statusCode == 201) &&
+        data['success'] == true) {
       return data;
     } else if (response.statusCode == 401) {
       throw Exception('Session expired. Please log in again.');
@@ -379,7 +385,7 @@ class ApiService {
     } else if (response.statusCode == 401) {
       throw Exception('Session expired. Please log in again.');
     } else {
-      return {};
+      throw Exception('Unable to load profile. Please try again.');
     }
   }
 
@@ -392,7 +398,21 @@ class ApiService {
     required String description,
     String? policyNumber,
   }) async {
-    final effectiveType = requestType ?? category ?? 'GENERAL_SUPPORT';
+    const allowedTypes = {
+      'NEW_POLICY_QUOTE',
+      'RENEWAL_QUOTE',
+      'POLICY_RENEWAL',
+      'SUPPORT',
+      'VEHICLE_CORRECTION',
+      'NOMINEE_CHANGE',
+      'CONTACT_CHANGE',
+    };
+    final candidateType = (requestType ?? category ?? 'SUPPORT')
+        .trim()
+        .toUpperCase();
+    final effectiveType = allowedTypes.contains(candidateType)
+        ? candidateType
+        : 'SUPPORT';
     final effectiveSubject = subject ?? title ?? 'Support Ticket';
     final uri = _buildUri('/api/client/service-requests');
     final response = await http.post(
@@ -402,12 +422,14 @@ class ApiService {
         'requestType': effectiveType,
         'subject': effectiveSubject.trim(),
         'details': description.trim(),
-        if (policyNumber != null && policyNumber.isNotEmpty) 'policyNo': policyNumber.trim(),
+        if (policyNumber != null && policyNumber.isNotEmpty)
+          'policyNo': policyNumber.trim(),
       }),
     );
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
-    if (response.statusCode == 200 && data['success'] == true) {
+    if ((response.statusCode == 200 || response.statusCode == 201) &&
+        data['success'] == true) {
       return data;
     } else if (response.statusCode == 401) {
       throw Exception('Session expired. Please log in again.');
@@ -498,19 +520,19 @@ class ApiService {
 
   /// Returns an authenticated URL to download the original policy PDF.
   /// [kind] = "policy" | "certificate" | "receipt"
-  static Future<String> getPolicyDocumentUrl(String policyId, {String kind = 'policy'}) async {
-    final token = await getToken();
-    final base = baseUrl.replaceAll(RegExp(r'/+$'), '');
-    if (token == null) throw Exception('Not authenticated');
-    return '$base/api/client/policies/$policyId/document?kind=$kind&token=${Uri.encodeComponent(token)}';
-  }
-
-  /// Checks if a policy document is available for download (HTTP HEAD).
-  /// Returns true if the server would return a PDF, false otherwise.
-  static Future<bool> isDocumentAvailable(String policyId, {String kind = 'policy'}) async {
+  /// Checks if a policy document is available for download (HTTP HEAD via Bearer auth).
+  static Future<bool> isDocumentAvailable(
+    String policyId, {
+    String kind = 'policy',
+  }) async {
     try {
-      final url = await getPolicyDocumentUrl(policyId, kind: kind);
-      final response = await http.head(Uri.parse(url));
+      final uri = _buildUri('/api/client/policies/$policyId/document', {
+        'kind': kind,
+      });
+      final response = await http.head(
+        uri,
+        headers: await _getHeaders(requireAuth: true),
+      );
       return response.statusCode == 200;
     } catch (_) {
       return false;
@@ -518,8 +540,13 @@ class ApiService {
   }
 
   /// Fetches raw bytes of policy document using authenticated Bearer header.
-  static Future<Uint8List> fetchPolicyDocumentBytes(String policyId, {String kind = 'policy'}) async {
-    final uri = _buildUri('/api/client/policies/$policyId/document', {'kind': kind});
+  static Future<Uint8List> fetchPolicyDocumentBytes(
+    String policyId, {
+    String kind = 'policy',
+  }) async {
+    final uri = _buildUri('/api/client/policies/$policyId/document', {
+      'kind': kind,
+    });
     final headers = await _getHeaders(requireAuth: true);
     final response = await http.get(uri, headers: headers);
     if (response.statusCode == 200) {
@@ -548,7 +575,14 @@ class ApiService {
         const SnackBar(
           content: Row(
             children: [
-              SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              ),
               SizedBox(width: 12),
               Text('Fetching secured policy document...'),
             ],
@@ -563,15 +597,27 @@ class ApiService {
       // 1. Try single-use 60-second secured download ticket
       try {
         final ticketUri = _buildUri('/api/client/policies/$policyId/document');
-        final ticketRes = await http.post(ticketUri, headers: await _getHeaders(requireAuth: true));
+        final ticketRes = await http.post(
+          ticketUri,
+          headers: await _getHeaders(requireAuth: true),
+        );
         if (ticketRes.statusCode == 200) {
           final ticketData = jsonDecode(ticketRes.body) as Map<String, dynamic>;
           final ticket = ticketData['ticket'] as String?;
           if (ticket != null && ticket.isNotEmpty) {
-            final viewUri = _buildUri('/api/client/policies/$policyId/document', {'ticket': ticket, 'kind': kind});
-            launched = await launchUrl(viewUri, mode: LaunchMode.externalApplication);
+            final viewUri = _buildUri(
+              '/api/client/policies/$policyId/document',
+              {'ticket': ticket, 'kind': kind},
+            );
+            launched = await launchUrl(
+              viewUri,
+              mode: LaunchMode.externalApplication,
+            );
             if (!launched) {
-              launched = await launchUrl(viewUri, mode: LaunchMode.platformDefault);
+              launched = await launchUrl(
+                viewUri,
+                mode: LaunchMode.platformDefault,
+              );
             }
           }
         }
@@ -583,11 +629,17 @@ class ApiService {
         if (bytes.isNotEmpty) {
           final dataUri = Uri.dataFromBytes(bytes, mimeType: 'application/pdf');
           try {
-            launched = await launchUrl(dataUri, mode: LaunchMode.externalApplication);
+            launched = await launchUrl(
+              dataUri,
+              mode: LaunchMode.externalApplication,
+            );
           } catch (_) {}
           if (!launched) {
             try {
-              launched = await launchUrl(dataUri, mode: LaunchMode.platformDefault);
+              launched = await launchUrl(
+                dataUri,
+                mode: LaunchMode.platformDefault,
+              );
             } catch (_) {}
           }
         }

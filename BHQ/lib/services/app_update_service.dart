@@ -44,7 +44,8 @@ class AppUpdateInfo {
       forceUpdate: json['forceUpdate'] == true,
       title: (json['title'] ?? 'New Update Available').toString(),
       releaseNotes: notes,
-      downloadUrl: (json['downloadUrl'] ?? 'https://www.bimaheadquarter.com').toString(),
+      downloadUrl: (json['downloadUrl'] ?? 'https://www.bimaheadquarter.com')
+          .toString(),
       releaseDate: (json['releaseDate'] ?? '').toString(),
       fileSizeMb: (json['fileSizeMb'] ?? '28 MB').toString(),
     );
@@ -53,14 +54,17 @@ class AppUpdateInfo {
 
 class AppUpdateService {
   // Current installed version in the app
-  static const String currentVersion = '1.0.1';
-  static const int currentVersionCode = 3;
+  static const String currentVersion = '1.0.2';
+  static const int currentVersionCode = 4;
 
   static bool _hasPromptedThisSession = false;
 
   /// Checks for available in-app updates from the CRM server.
   /// If [silent] is true, no toast is shown when already up-to-date or on network error.
-  static Future<void> checkForUpdate(BuildContext context, {bool silent = true}) async {
+  static Future<void> checkForUpdate(
+    BuildContext context, {
+    bool silent = true,
+  }) async {
     if (silent && _hasPromptedThisSession) return;
 
     try {
@@ -72,7 +76,8 @@ class AppUpdateService {
         if (data is Map<String, dynamic>) {
           final info = AppUpdateInfo.fromJson(data);
 
-          final isUpdateAvailable = info.versionCode > currentVersionCode ||
+          final isUpdateAvailable =
+              info.versionCode > currentVersionCode ||
               _isNewerVersion(info.latestVersion, currentVersion);
 
           if (isUpdateAvailable) {
@@ -91,14 +96,20 @@ class AppUpdateService {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
                 const Gap(10),
                 Text('You are on the latest version (v$currentVersion)'),
               ],
             ),
             backgroundColor: const Color(0xFF059669),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -106,10 +117,14 @@ class AppUpdateService {
       if (!silent && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not check for updates: ${e.toString().replaceAll("Exception:", "").trim()}'),
+            content: Text(
+              'Could not check for updates: ${e.toString().replaceAll("Exception:", "").trim()}',
+            ),
             backgroundColor: const Color(0xFFD97706),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -118,8 +133,14 @@ class AppUpdateService {
 
   static bool _isNewerVersion(String latest, String current) {
     try {
-      final latestParts = latest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
-      final currentParts = current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+      final latestParts = latest
+          .split('.')
+          .map((e) => int.tryParse(e) ?? 0)
+          .toList();
+      final currentParts = current
+          .split('.')
+          .map((e) => int.tryParse(e) ?? 0)
+          .toList();
       for (int i = 0; i < latestParts.length && i < currentParts.length; i++) {
         if (latestParts[i] > currentParts[i]) return true;
         if (latestParts[i] < currentParts[i]) return false;
@@ -140,7 +161,9 @@ class AppUpdateService {
       builder: (ctx) => PopScope(
         canPop: !info.forceUpdate,
         child: AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
           backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
           titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
           contentPadding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
@@ -187,9 +210,14 @@ class AppUpdateService {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withAlpha(isDark ? 40 : 20),
+                            color: const Color(
+                              0xFF10B981,
+                            ).withAlpha(isDark ? 40 : 20),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -206,7 +234,9 @@ class AppUpdateService {
                           'Size: ${info.fileSizeMb}',
                           style: TextStyle(
                             fontSize: 11,
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -238,7 +268,9 @@ class AppUpdateService {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                    color: isDark
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
@@ -266,7 +298,9 @@ class AppUpdateService {
                                 style: TextStyle(
                                   fontSize: 12,
                                   height: 1.35,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
                                 ),
                               ),
                             ),
@@ -281,15 +315,23 @@ class AppUpdateService {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626).withAlpha(isDark ? 35 : 15),
+                      color: const Color(
+                        0xFFDC2626,
+                      ).withAlpha(isDark ? 35 : 15),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: const Color(0xFFDC2626).withAlpha(isDark ? 70 : 30),
+                        color: const Color(
+                          0xFFDC2626,
+                        ).withAlpha(isDark ? 70 : 30),
                       ),
                     ),
                     child: const Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFFDC2626)),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          size: 16,
+                          color: Color(0xFFDC2626),
+                        ),
                         Gap(8),
                         Expanded(
                           child: Text(
@@ -325,8 +367,13 @@ class AppUpdateService {
                 backgroundColor: const Color(0xFF1D4ED8),
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               icon: const Icon(Icons.download_rounded, size: 17),
               label: const Text(
@@ -340,7 +387,11 @@ class AppUpdateService {
                 } else {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Cannot launch download link: ${info.downloadUrl}')),
+                      SnackBar(
+                        content: Text(
+                          'Cannot launch download link: ${info.downloadUrl}',
+                        ),
+                      ),
                     );
                   }
                 }

@@ -110,6 +110,9 @@ export async function POST(request, { params }) {
 
 export async function GET(request, { params }) {
   try {
+    const { id } = await params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id || "");
+
     let auth = await requireClient(request);
     if (auth.error) {
       const ticket = new URL(request.url).searchParams.get("ticket");
@@ -118,11 +121,19 @@ export async function GET(request, { params }) {
           where: { sourceKey: `download-ticket:${ticket}` },
         });
         if (ticketTask && ticketTask.metadata?.expiresAt && new Date(ticketTask.metadata.expiresAt).getTime() > Date.now()) {
-          const customer = await prisma.clientAccount.findUnique({
-            where: { id: ticketTask.metadata.customerId },
+          const customer = await prisma.clientAccount.findFirst({
+            where: { id: ticketTask.metadata.customerId, deletedAt: null },
             select: { id: true, name: true, phone: true, email: true, organizationId: true },
           });
-          if (customer) {
+          const credTask = customer
+            ? await prisma.task.findUnique({
+                where: { sourceKey: `client-credential:${customer.id}` },
+                select: { metadata: true },
+              })
+            : null;
+          const currentVersion = Number(credTask?.metadata?.credentialVersion || 1);
+          const ticketVersion = Number(ticketTask.metadata?.credentialVersion || currentVersion);
+          if (customer && currentVersion === ticketVersion) {
             auth = { customer, organizationId: customer.organizationId };
             await prisma.task.delete({ where: { id: ticketTask.id } }).catch(() => {});
           }
@@ -130,9 +141,6 @@ export async function GET(request, { params }) {
       }
     }
     if (auth.error) return auth.error;
-
-    const { id } = await params;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id || "");
 
     const owned = await getOwnedPolicy({
       customerId: auth.customer.id,
@@ -147,7 +155,7 @@ export async function GET(request, { params }) {
       where: { id: owned.id },
       include: { uploadedFile: true },
     });
-    if (!policy) return NextResponse.json({ success: false, error: "Policy not found" }, { status: 404 });
+    if (!policy || policy.deletedAt) return NextResponse.json({ success: false, error: "Policy not found" }, { status: 404 });
 
     const payload = policy.reviewedData || policy.data || {};
     const kind = new URL(request.url).searchParams.get("kind") || "policy";

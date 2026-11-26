@@ -375,7 +375,10 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
     );
   }
   if (column.primary || column.key === "insuredName") {
-    const custId = record.customerId || record.customerCode || record.clientId || "";
+    const custId = record.clientCode || record.customerId || record.customerCode || record.clientId || "";
+    const custTitle = record.clientCode
+      ? `Client ID: ${record.clientCode}${record.customerId ? ` (Ref: ${record.customerId})` : ""}`
+      : record.customerId || "";
     return (
       <div>
         <strong className="record-primary" style={{ display: "block", color: "#0f172a", fontSize: "13px", fontWeight: 600 }}>
@@ -383,12 +386,13 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
         </strong>
         {custId ? (
           <span
+            title={custTitle}
             style={{
               display: "inline-block",
               marginTop: "2px",
               fontSize: "11px",
               fontWeight: 600,
-              color: "#64748b",
+              color: record.clientCode ? "#047857" : "#64748b",
               fontFamily: "monospace",
               letterSpacing: "0.02em",
             }}

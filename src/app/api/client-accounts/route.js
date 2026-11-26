@@ -12,7 +12,7 @@ import {
 } from "@/lib/client-accounts/utils";
 import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 import { getUserFacingErrorMessage } from "@/lib/errors/user-facing";
-import { withClientPhoneLock } from "@/lib/client-accounts/server";
+import { createClientAccountWithIdentityCheck, withClientPhoneLock } from "@/lib/client-accounts/server";
 import { generateTemporaryClientMpin, provisionClientMpin } from "@/lib/client-portal/credentials";
 
 export const runtime = "nodejs";
@@ -29,6 +29,7 @@ export async function GET(request) {
     const q = searchParams.get("q") || "";
     const sort = searchParams.get("sort") || "newest";
     const hasEmail = searchParams.get("hasEmail") || "";
+    const filterPolicies = searchParams.get("filterPolicies") || "all";
 
     const where = {
       ...getTenantFilter(session, "read"),
@@ -39,6 +40,7 @@ export async function GET(request) {
       const query = q.trim();
       where.OR = [
         { id: isUuid(query) ? query : undefined },
+        { clientCode: { contains: query, mode: "insensitive" } },
         { name: { contains: query, mode: "insensitive" } },
         { phone: { contains: normalizeClientPhone(query) || query, mode: "insensitive" } },
         { email: { contains: query, mode: "insensitive" } },
@@ -50,6 +52,12 @@ export async function GET(request) {
       where.email = { not: null };
     } else if (hasEmail === "no") {
       where.email = null;
+    }
+
+    if (filterPolicies === "has") {
+      where.policies = { some: { deletedAt: null } };
+    } else if (filterPolicies === "none") {
+      where.policies = { none: { deletedAt: null } };
     }
 
     const orderByMap = {
@@ -97,7 +105,7 @@ export async function GET(request) {
         const orgId = session.organizationId;
         const matchedRows = await prisma.$queryRaw`
           SELECT 
-            LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) as "clientId",
+            LOWER(COALESCE(client_account_id::text, NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) as "clientId",
             COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', '') as "phone",
             COUNT(*)::int as count,
             MAX(COALESCE(NULLIF(reviewed_data->>'contactPerson', ''), NULLIF(data->>'contactPerson', ''), NULLIF(reviewed_data->>'contactPersonName', ''), NULLIF(data->>'contactPersonName', ''), '')) as "contactPerson"
@@ -107,7 +115,7 @@ export async function GET(request) {
               ${orgId ? Prisma.sql`(organization_id = ${orgId}::uuid OR organization_id IS NULL)` : Prisma.sql`TRUE`}
             )
             AND (
-              ${accountIds.length > 0 ? Prisma.sql`LOWER(COALESCE(NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) IN (${Prisma.join(accountIds)})` : Prisma.sql`FALSE`}
+              ${accountIds.length > 0 ? Prisma.sql`LOWER(COALESCE(client_account_id::text, NULLIF(reviewed_data->>'clientId', ''), data->>'clientId', '')) IN (${Prisma.join(accountIds)})` : Prisma.sql`FALSE`}
               ${phoneList.length > 0 ? Prisma.sql`OR COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', '') IN (${Prisma.join(phoneList)})` : Prisma.empty}
             )
           GROUP BY 1, 2
@@ -192,7 +200,9 @@ export async function POST(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const data = sanitizeClientAccountPayload(await request.json());
+    const rawBody = await request.json();
+    const allowSharedPhone = Boolean(rawBody?.allowSharedPhone);
+    const data = sanitizeClientAccountPayload(rawBody);
     if (!data.name || !data.phone || normalizeIndianPhone(data.phone) !== data.phone) {
       return NextResponse.json(
         { error: "Please enter client name and a valid 10-digit Indian mobile number." },
@@ -202,44 +212,55 @@ export async function POST(request) {
     if (!isValidClientEmail(data.email)) {
       return NextResponse.json({ error: "Please enter a valid client email address." }, { status: 400 });
     }
+    if (allowSharedPhone && session.role !== "SUPER_ADMIN") {
+      return NextResponse.json(
+        { error: "Only Super Admin can create a separate Client ID on a shared mobile number." },
+        { status: 403 },
+      );
+    }
 
     const actorId = session.userId || session.id;
     const temporaryMpin = generateTemporaryClientMpin();
     const result = await withClientPhoneLock(session.organizationId, data.phone, async (database) => {
-      const existing = await database.clientAccount.findFirst({
-        where: {
-          organizationId: session.organizationId ?? null,
-          deletedAt: null,
-          phone: data.phone,
-        },
+      const creation = await createClientAccountWithIdentityCheck(database, {
+        ...data,
+        organizationId: session.organizationId ?? null,
+        actorId,
+        allowSharedPhone,
         include: {
           createdBy: { select: { name: true, email: true } },
           updatedBy: { select: { name: true, email: true } },
         },
       });
-      if (existing) return { existing };
-
-      const account = await database.clientAccount.create({
-        data: {
-          ...data,
-          organizationId: session.organizationId,
-          createdById: actorId,
-          updatedById: actorId,
-        },
-        include: {
-          createdBy: { select: { name: true, email: true } },
-          updatedBy: { select: { name: true, email: true } },
-        },
-      });
-      await provisionClientMpin(account, temporaryMpin, database);
-      return { account, temporaryMpin };
+      if (creation.outcome === "EXISTING_EXACT") {
+        return { existingExact: creation.account };
+      }
+      if (creation.outcome === "IDENTITY_CONFLICT") {
+        return { conflicts: creation.existingAccounts };
+      }
+      await provisionClientMpin(creation.account, temporaryMpin, database);
+      return { account: creation.account, temporaryMpin };
     });
 
-    if (result.existing) {
+    if (result.existingExact) {
       return NextResponse.json(
         {
-          error: "This phone number already has a Client ID.",
-          profile: serializeClientAccount(result.existing),
+          error: "A Client ID already exists for this client and phone number.",
+          existingMatch: serializeClientAccount(result.existingExact),
+          profile: serializeClientAccount(result.existingExact),
+        },
+        { status: 409 },
+      );
+    }
+
+    if (result.conflicts?.length) {
+      return NextResponse.json(
+        {
+          error:
+            "This phone number already belongs to another client profile. Select the existing profile or ask Super Admin to approve shared-phone creation.",
+          conflict: true,
+          conflicts: result.conflicts.map(serializeClientAccount),
+          profile: serializeClientAccount(result.conflicts[0]),
         },
         { status: 409 },
       );

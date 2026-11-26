@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { findUniqueClientIdentityMatch } from "@/lib/client-accounts/utils";
+import {
+  findPhoneIdentityCandidates,
+  normalizeClientCode,
+} from "@/lib/client-accounts/utils";
 import { normalizeContactNumber } from "@/lib/records/validation";
 
 function formatDisplayValue(val) {
@@ -278,11 +281,15 @@ function ClientIdSearch({
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [selectedClientName, setSelectedClientName] = useState("");
+  const [selectedClientCode, setSelectedClientCode] = useState("");
   const [clientIdRequest, setClientIdRequest] = useState(null);
   const [requesting, setRequesting] = useState(false);
+  const [creatingClient, setCreatingClient] = useState(false);
   const [requestError, setRequestError] = useState("");
+  const [quickCreateMessage, setQuickCreateMessage] = useState("");
   const [requestLookupComplete, setRequestLookupComplete] = useState(false);
   const [autoMatchStatus, setAutoMatchStatus] = useState("idle");
+  const [candidateProfiles, setCandidateProfiles] = useState([]);
   const identityKey = `${String(insuredName || "").trim().toLowerCase()}|${String(contactNumber || "").replace(/\D/g, "").slice(-10)}|${String(email || "").trim().toLowerCase()}`;
   const identityKeyRef = useRef(identityKey);
   const previousIdentityKey = useRef(identityKey);
@@ -308,35 +315,43 @@ function ClientIdSearch({
     requestControllerRef.current?.abort();
     requestControllerRef.current = null;
     autoMatchSuppressedKey.current = "";
-    notifiedRequestId.current = "";
-    setSelectedClientName("");
-    setClientIdRequest(null);
     setRequestLookupComplete(false);
     setAutoMatchStatus("idle");
+    setCandidateProfiles([]);
     setRequesting(false);
+    setCreatingClient(false);
     setRequestError("");
+    setQuickCreateMessage("");
     setQuery("");
     setResults([]);
-    onClientIdRequestChange?.("");
-    if (value && !clientIdLocked) onChange("");
-  }, [clientIdLocked, identityKey, onChange, onClientIdRequestChange, value]);
+    if (!value) {
+      notifiedRequestId.current = "";
+      setSelectedClientName("");
+      setSelectedClientCode("");
+      setClientIdRequest(null);
+      onClientIdRequestChange?.("");
+    }
+  }, [identityKey, onClientIdRequestChange, value]);
 
   useEffect(() => {
-    setSelectedClientName("");
-    if (value && value.length === 36) {
+    const cleanValue = String(value || "").trim();
+    const isLookupId =
+      cleanValue.length === 36 || Boolean(normalizeClientCode(cleanValue));
+    if (isLookupId) {
       const controller = new window.AbortController();
-      fetch(`/api/client-accounts/${value}`, { signal: controller.signal })
+      fetch(`/api/client-accounts/${encodeURIComponent(cleanValue)}`, { signal: controller.signal })
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data?.name) {
             setSelectedClientName(data.name);
+            setSelectedClientCode(data.clientCode || "");
           }
         })
-        .catch(() => {});
+        .catch(() => { });
       return () => controller.abort();
-    } else {
-      setSelectedClientName("");
     }
+    setSelectedClientName("");
+    setSelectedClientCode("");
     return undefined;
   }, [value]);
 
@@ -384,26 +399,37 @@ function ClientIdSearch({
             lookupFailed = true;
           }
         }
-        const { match: identityMatch, matchCount } = findUniqueClientIdentityMatch(
+        const matchOutcome = findPhoneIdentityCandidates(
           [...candidates.values()],
           { insuredName, contactNumber, email },
         );
         if (!active || controller.signal.aborted || identityKeyRef.current !== lookupIdentityKey) return;
-        if (identityMatch) {
+        if (matchOutcome.status === "EXACT_MATCH" && matchOutcome.exactMatch) {
           setAutoMatchStatus("matched");
+          setCandidateProfiles([]);
           autoMatchSuppressedKey.current = "";
           notifiedRequestId.current = "";
           onClientIdRequestChange?.("");
-          setSelectedClientName(identityMatch.name);
-          onChange(identityMatch.id);
-        } else if (matchCount > 1) {
+          setSelectedClientName(matchOutcome.exactMatch.name);
+          setSelectedClientCode(matchOutcome.exactMatch.clientCode || "");
+          onChange(matchOutcome.exactMatch.id);
+        } else if (matchOutcome.status === "AMBIGUOUS_EXACT_MATCH") {
           setAutoMatchStatus("ambiguous");
-          setRequestError("Phone and email match different Client IDs. Select the correct client manually.");
+          setCandidateProfiles(matchOutcome.candidates || []);
+          setRequestError("Multiple Client IDs match this contact. Select the right profile below.");
+        } else if (matchOutcome.status === "PROBABLE_MATCH") {
+          setAutoMatchStatus("probable");
+          setCandidateProfiles(matchOutcome.candidates || []);
+        } else if (matchOutcome.status === "PHONE_CONFLICT") {
+          setAutoMatchStatus("conflict");
+          setCandidateProfiles(matchOutcome.conflicts || []);
         } else if (lookupFailed) {
           setAutoMatchStatus("error");
-          setRequestError("Existing Client IDs could not be checked. Try again before requesting a new one.");
+          setCandidateProfiles([]);
+          setRequestError("Existing Client IDs could not be checked. Try again before creating a new one.");
         } else {
           setAutoMatchStatus("no-match");
+          setCandidateProfiles([]);
         }
       } catch (err) {
         if (err?.name !== "AbortError" && active && identityKeyRef.current === lookupIdentityKey) {
@@ -573,8 +599,81 @@ function ClientIdSearch({
     };
   }, [query]);
 
+  const selectMatchedProfile = (profile) => {
+    setRequestError("");
+    setQuickCreateMessage("");
+    autoMatchSuppressedKey.current = "";
+    onChange(profile.id);
+    notifiedRequestId.current = "";
+    onClientIdRequestChange?.("");
+    setClientIdRequest(null);
+    setSelectedClientName(profile.name || "");
+    setSelectedClientCode(profile.clientCode || "");
+    setAutoMatchStatus("matched");
+    setCandidateProfiles([]);
+    setShowSearch(false);
+    setQuery("");
+    setResults([]);
+  };
+
+  const handleQuickCreateClientId = async () => {
+    const cleanPhone = String(contactNumber || "").replace(/[^0-9]/g, "").slice(-10);
+    if (!insuredName?.trim() || cleanPhone.length !== 10) {
+      setRequestError("Enter Insured Name and a valid 10-digit mobile number before creating a Client ID.");
+      return;
+    }
+    const requestIdentityKey = identityKey;
+    setRequestError("");
+    setQuickCreateMessage("");
+    setCreatingClient(true);
+    try {
+      const res = await fetch("/api/client-accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: insuredName.trim(),
+          phone: cleanPhone,
+          email: email || "",
+        }),
+      });
+      const data = await res.json();
+      if (identityKeyRef.current !== requestIdentityKey) return;
+
+      if (res.ok && data?.id) {
+        selectMatchedProfile(data);
+        setQuickCreateMessage(
+          `Created & linked ${data.clientCode || "Client ID"}${data.temporaryMpin ? ` · Temp MPIN: ${data.temporaryMpin}` : ""}`,
+        );
+        return;
+      }
+
+      if (res.status === 409 && data?.existingMatch?.id) {
+        selectMatchedProfile(data.existingMatch);
+        setQuickCreateMessage(`Matched existing Client ID ${data.existingMatch.clientCode || data.existingMatch.name}`);
+        return;
+      }
+
+      if (res.status === 409 && Array.isArray(data?.conflicts) && data.conflicts.length > 0) {
+        setAutoMatchStatus("conflict");
+        setCandidateProfiles(data.conflicts);
+        setRequestError(data.error || "Phone already belongs to another profile. Link an existing client or ask Super Admin.");
+        return;
+      }
+
+      throw new Error(data.error || "Could not create Client ID.");
+    } catch (err) {
+      if (identityKeyRef.current === requestIdentityKey) {
+        setRequestError(err.message || "Could not create Client ID.");
+      }
+    } finally {
+      if (identityKeyRef.current === requestIdentityKey) {
+        setCreatingClient(false);
+      }
+    }
+  };
+
   const handleClientIdRequest = async () => {
-    if (!requestLookupComplete || autoMatchStatus !== "no-match") return;
+    if (!requestLookupComplete || !["no-match", "conflict", "probable", "ambiguous"].includes(autoMatchStatus)) return;
     const requestIdentityKey = identityKey;
     const controller = new window.AbortController();
     requestControllerRef.current?.abort();
@@ -592,9 +691,7 @@ function ClientIdSearch({
       const data = await res.json();
       if (controller.signal.aborted || identityKeyRef.current !== requestIdentityKey) return;
       if (data?.profile?.id) {
-        setSelectedClientName(data.profile.name || "Client");
-        onClientIdRequestChange?.("");
-        onChange(data.profile.id);
+        selectMatchedProfile(data.profile);
         return;
       }
       if (!res.ok) throw new Error(data.error || "Client ID request could not be submitted.");
@@ -616,8 +713,18 @@ function ClientIdSearch({
   return (
     <div className="client-id-search-container">
       {selectedClientName && (
-        <div className="client-id-linked-status">
-          ✓ Linked Client: {selectedClientName}
+        <div className="client-id-linked-status" style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+          <span>✓ Linked: {selectedClientName}</span>
+          {selectedClientCode ? (
+            <span style={{ padding: "1px 6px", borderRadius: "999px", background: "#ecfdf5", color: "#065f46", border: "1px solid #a7f3d0", fontSize: "10px", fontFamily: "monospace", fontWeight: 800 }}>
+              {selectedClientCode}
+            </span>
+          ) : null}
+        </div>
+      )}
+      {quickCreateMessage && (
+        <div role="status" style={{ marginTop: "4px", padding: "5px 8px", borderRadius: "6px", background: "#ecfdf5", border: "1px solid #a7f3d0", color: "#065f46", fontSize: "10.5px", fontWeight: 700 }}>
+          {quickCreateMessage}
         </div>
       )}
       {value && !disabled && !clientIdLocked ? (
@@ -628,6 +735,8 @@ function ClientIdSearch({
             autoMatchSuppressedKey.current = identityKey;
             notifiedRequestId.current = "";
             setSelectedClientName("");
+            setSelectedClientCode("");
+            setQuickCreateMessage("");
             setClientIdRequest(null);
             setRequestError("");
             onClientIdRequestChange?.("");
@@ -638,6 +747,143 @@ function ClientIdSearch({
           Clear linked Client ID
         </button>
       ) : null}
+      {!value && !clientIdLocked && autoMatchStatus === "checking" && (
+        <div style={{ marginTop: "6px", fontSize: "10.5px", color: "#475569", fontWeight: 600 }}>
+          Checking existing Client IDs for {insuredName || "client"}…
+        </div>
+      )}
+      {!value && !clientIdLocked && !clientIdRequest && ["probable", "conflict", "ambiguous"].includes(autoMatchStatus) && candidateProfiles.length > 0 && (
+        <div
+          style={{
+            marginTop: "6px",
+            padding: "8px",
+            borderRadius: "8px",
+            border: autoMatchStatus === "conflict" ? "1px solid #f59e0b" : "1px solid #38bdf8",
+            background: autoMatchStatus === "conflict" ? "#fffbeb" : "#f0f9ff",
+          }}
+        >
+          <div style={{ fontSize: "10.5px", fontWeight: 700, color: autoMatchStatus === "conflict" ? "#92400e" : "#0369a1", marginBottom: "6px" }}>
+            {autoMatchStatus === "conflict"
+              ? "Same mobile number belongs to another client — link existing or request Super Admin shared-phone Client ID:"
+              : "Possible existing client profile found — click to link:"}
+          </div>
+          <div style={{ display: "grid", gap: "4px" }}>
+            {candidateProfiles.slice(0, 3).map((candidate) => (
+              <button
+                key={candidate.id}
+                type="button"
+                disabled={disabled}
+                onClick={() => selectMatchedProfile(candidate)}
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "6px 8px",
+                  borderRadius: "6px",
+                  border: "1px solid #cbd5e1",
+                  background: "#ffffff",
+                  cursor: "pointer",
+                  fontSize: "11px",
+                  color: "#0f172a",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "6px", fontWeight: 700 }}>
+                  <span>{candidate.name}</span>
+                  <span style={{ fontSize: "10px", fontFamily: "monospace", color: "#047857" }}>
+                    {candidate.clientCode || "Link"}
+                  </span>
+                </div>
+                <div style={{ fontSize: "10px", color: "#64748b" }}>
+                  {candidate.phone}{candidate.email ? ` · ${candidate.email}` : ""}
+                </div>
+              </button>
+            ))}
+          </div>
+          {onClientIdRequestChange && (
+            <button
+              type="button"
+              onClick={handleClientIdRequest}
+              disabled={disabled || requesting}
+              style={{
+                width: "100%",
+                marginTop: "6px",
+                padding: "6px 8px",
+                borderRadius: "6px",
+                border: "1px solid #d97706",
+                background: "#ffffff",
+                color: "#92400e",
+                fontSize: "10.5px",
+                fontWeight: 700,
+                cursor: requesting ? "wait" : "pointer",
+              }}
+            >
+              {requesting ? "Sending request..." : "Request Super Admin Approval (Shared Phone)"}
+            </button>
+          )}
+        </div>
+      )}
+      {!value &&
+        !clientIdLocked &&
+        !clientIdRequest &&
+        requestLookupComplete &&
+        autoMatchStatus === "no-match" && (
+          <div style={{ marginTop: "6px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={handleQuickCreateClientId}
+              disabled={disabled || creatingClient}
+              style={{
+                flex: "1 1 150px",
+                padding: "7px 9px",
+                border: "1px solid #059669",
+                borderRadius: "6px",
+                background: "#ecfdf5",
+                color: "#065f46",
+                fontSize: "10.5px",
+                fontWeight: 800,
+                cursor: creatingClient ? "wait" : "pointer",
+              }}
+            >
+              {creatingClient ? "Creating Client ID..." : "+ Create & Link Client ID"}
+            </button>
+            {onClientIdRequestChange && (
+              <button
+                type="button"
+                onClick={handleClientIdRequest}
+                disabled={disabled || requesting}
+                style={{
+                  padding: "7px 9px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "6px",
+                  background: "#ffffff",
+                  color: "#475569",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  cursor: requesting ? "wait" : "pointer",
+                }}
+              >
+                {requesting ? "Sending..." : "Ask Admin"}
+              </button>
+            )}
+          </div>
+        )}
+      {!value && clientIdRequest && clientIdRequest.status !== "COMPLETED" && (
+        <div role={clientIdRequest.status === "WAITING_DOCUMENTS" ? "alert" : "status"} aria-live="polite" style={{ marginTop: "8px", padding: "7px 9px", borderRadius: "6px", background: clientIdRequest.status === "WAITING_DOCUMENTS" ? "#fff1f2" : "#fffbeb", color: clientIdRequest.status === "WAITING_DOCUMENTS" ? "#9f1239" : "#92400e", border: clientIdRequest.status === "WAITING_DOCUMENTS" ? "1px solid #fecdd3" : "1px solid #fde68a", fontSize: "10.5px", fontWeight: "650" }}>
+          {clientIdRequest.status === "WAITING_DOCUMENTS" ? (
+            <>
+              <strong>Client ID request needs correction.</strong>
+              {clientIdRequest.correctionNote ? ` ${clientIdRequest.correctionNote}` : ""}{" "}
+              <a href={`/operations/client-management?clientIdRequest=${clientIdRequest.id}`} style={{ color: "inherit", textDecoration: "underline" }}>
+                Review request
+              </a>
+            </>
+          ) : (
+            "Client ID request sent to Super Admin. This field will fill automatically after approval."
+          )}
+        </div>
+      )}
+      {requestError && (
+        <div role="alert" style={{ marginTop: "6px", color: "#be123c", fontSize: "10.5px", fontWeight: 600 }}>{requestError}</div>
+      )}
       {!clientIdLocked ? (
         <button
           type="button"
@@ -646,6 +892,7 @@ function ClientIdSearch({
             background: "none",
             border: "none",
             padding: 0,
+            marginTop: "6px",
             color: "#111827",
             textDecoration: "underline",
             fontSize: "11px",
@@ -655,7 +902,7 @@ function ClientIdSearch({
           onClick={() => setShowSearch(!showSearch)}
           disabled={disabled}
         >
-          {showSearch ? "Hide client search" : "🔍 Search & Link Client Profile"}
+          {showSearch ? "Hide client search" : "🔍 Search & Link Different Client"}
         </button>
       ) : null}
       {showSearch && !clientIdLocked && (
@@ -670,7 +917,7 @@ function ClientIdSearch({
           <input
             type="text"
             className="client-id-search-input"
-            placeholder="Type name, phone or email..."
+            placeholder="Type Client Code (BHQ-...), name, phone or email..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{
@@ -708,18 +955,7 @@ function ClientIdSearch({
                       display: "block",
                       overflow: "hidden",
                     }}
-                    onClick={() => {
-                      setRequestError("");
-                      autoMatchSuppressedKey.current = "";
-                      onChange(profile.id);
-                      notifiedRequestId.current = "";
-                      onClientIdRequestChange?.("");
-                      setClientIdRequest(null);
-                      setSelectedClientName(profile.name);
-                      setShowSearch(false);
-                      setQuery("");
-                      setResults([]);
-                    }}
+                    onClick={() => selectMatchedProfile(profile)}
                   >
                     <div
                       style={{
@@ -727,12 +963,16 @@ function ClientIdSearch({
                         fontSize: "11.5px",
                         lineHeight: "1.35",
                         marginBottom: "4px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "6px",
                       }}
                     >
-                      {profile.name}
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile.name}</span>
+                      {profile.clientCode ? (
+                        <span style={{ fontSize: "10px", fontFamily: "monospace", color: "#047857", shrink: 0 }}>{profile.clientCode}</span>
+                      ) : null}
                     </div>
                     <div
                       style={{
@@ -754,56 +994,13 @@ function ClientIdSearch({
                         }}
                         title={profile.id}
                       >
-                        Client ID: {profile.id}
+                        ID: {profile.clientCode || profile.id}
                       </span>
                     </div>
                   </button>
                 </li>
               ))}
             </ul>
-          )}
-          {!value &&
-            !clientIdRequest &&
-            onClientIdRequestChange &&
-            requestLookupComplete &&
-            autoMatchStatus === "no-match" && (
-            <button
-              type="button"
-              onClick={handleClientIdRequest}
-              disabled={disabled || requesting}
-              style={{
-                width: "100%",
-                marginTop: "8px",
-                padding: "7px 9px",
-                border: "1px solid #f59e0b",
-                borderRadius: "6px",
-                background: "#fffbeb",
-                color: "#92400e",
-                fontSize: "10.5px",
-                fontWeight: "700",
-                cursor: requesting ? "wait" : "pointer",
-              }}
-            >
-              {requesting ? "Sending request..." : "No match found — Request Client ID"}
-            </button>
-          )}
-          {!value && clientIdRequest && clientIdRequest.status !== "COMPLETED" && (
-            <div role={clientIdRequest.status === "WAITING_DOCUMENTS" ? "alert" : "status"} aria-live="polite" style={{ marginTop: "8px", padding: "7px 9px", borderRadius: "6px", background: clientIdRequest.status === "WAITING_DOCUMENTS" ? "#fff1f2" : "#fffbeb", color: clientIdRequest.status === "WAITING_DOCUMENTS" ? "#9f1239" : "#92400e", fontSize: "10.5px", fontWeight: "650" }}>
-              {clientIdRequest.status === "WAITING_DOCUMENTS" ? (
-                <>
-                  <strong>Client ID request needs correction.</strong>
-                  {clientIdRequest.correctionNote ? ` ${clientIdRequest.correctionNote}` : ""}{" "}
-                  <a href={`/operations/client-management?clientIdRequest=${clientIdRequest.id}`} style={{ color: "inherit", textDecoration: "underline" }}>
-                    Review request
-                  </a>
-                </>
-              ) : (
-                "Client ID request sent to Super Admin. This field will fill automatically after approval."
-              )}
-            </div>
-          )}
-          {requestError && (
-            <div role="alert" style={{ marginTop: "6px", color: "#be123c", fontSize: "10px" }}>{requestError}</div>
           )}
         </div>
       )}

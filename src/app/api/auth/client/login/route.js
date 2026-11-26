@@ -1,14 +1,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { signJWT } from "@/lib/auth";
-import { verifyClientMpinWithVersion, provisionClientMpin } from "@/lib/client-portal/credentials";
+import { verifyClientMpinWithVersion } from "@/lib/client-portal/credentials";
+import { normalizeClientCode } from "@/lib/client-accounts/utils";
 import { normalizeClientId } from "@/lib/client-accounts/server";
 
-export async function OPTIONS() {
+export async function OPTIONS(request) {
+  const origin = request.headers.get("origin") || "";
+  const configured = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
+  const allowedOrigins = new Set(
+    [
+      "https://bimaheadquarter.com",
+      "https://www.bimaheadquarter.com",
+      ...(process.env.NODE_ENV !== "production" ? ["http://localhost:3000", "http://127.0.0.1:3000"] : []),
+      ...(configured ? [configured] : []),
+    ],
+  );
   return new NextResponse(null, {
     status: 204,
     headers: {
-      "Access-Control-Allow-Origin": "*",
+      ...(allowedOrigins.has(origin) ? { "Access-Control-Allow-Origin": origin, Vary: "Origin" } : {}),
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
@@ -25,6 +36,7 @@ export async function POST(request) {
     }
 
     const normalizedCustomerId = normalizeClientId(rawInput);
+    const normalizedClientCode = normalizeClientCode(rawInput);
     const cleanPhone = rawInput.replace(/[^0-9]/g, "").slice(-10);
     const cleanMpin = String(mpin || "").replace(/[^0-9]/g, "");
 
@@ -32,89 +44,61 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Client MPIN must be a 4 to 6-digit numeric code" }, { status: 400 });
     }
 
+    const selectAccountFields = {
+      id: true,
+      clientCode: true,
+      name: true,
+      email: true,
+      phone: true,
+      organizationId: true,
+      deletedAt: true,
+    };
+
     let customer = null;
     if (normalizedCustomerId) {
       customer = await prisma.clientAccount.findUnique({
         where: { id: normalizedCustomerId },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          organizationId: true,
-          deletedAt: true,
-        },
+        select: selectAccountFields,
+      });
+    } else if (normalizedClientCode) {
+      customer = await prisma.clientAccount.findUnique({
+        where: { clientCode: normalizedClientCode },
+        select: selectAccountFields,
       });
     } else if (cleanPhone.length === 10) {
-      customer = await prisma.clientAccount.findFirst({
-        where: {
-          phone: { contains: cleanPhone },
-          deletedAt: null,
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          organizationId: true,
-          deletedAt: true,
-        },
-      });
+      const phoneMatches =
+        typeof prisma.clientAccount.findMany === "function"
+          ? await prisma.clientAccount.findMany({
+              where: {
+                phone: cleanPhone,
+                deletedAt: null,
+              },
+              select: selectAccountFields,
+              take: 3,
+            })
+          : (() => null)();
 
-      // If no client account exists yet, check if policies were uploaded by CRM agents with this phone number
-      if (!customer) {
-        const matchedPolicies = await prisma.$queryRaw`
-          SELECT id, organization_id, reviewed_data, data, contact_person_mobile
-          FROM pdf_records
-          WHERE deleted_at IS NULL
-            AND (
-              (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g')) >= 10
-               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactNumber', ''), data->>'contactNumber', ''), '[^0-9]', '', 'g'), 10) = ${cleanPhone})
-              OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g')) >= 10
-               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'mobileNumber', ''), data->>'mobileNumber', ''), '[^0-9]', '', 'g'), 10) = ${cleanPhone})
-              OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g')) >= 10
-               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'phone', ''), data->>'phone', ''), '[^0-9]', '', 'g'), 10) = ${cleanPhone})
-              OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerPhone', ''), data->>'customerPhone', ''), '[^0-9]', '', 'g')) >= 10
-               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerPhone', ''), data->>'customerPhone', ''), '[^0-9]', '', 'g'), 10) = ${cleanPhone})
-              OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', ''), '[^0-9]', '', 'g')) >= 10
-               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'customerMobile', ''), data->>'customerMobile', ''), '[^0-9]', '', 'g'), 10) = ${cleanPhone})
-              OR (length(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactPersonPhone', ''), data->>'contactPersonPhone', ''), '[^0-9]', '', 'g')) >= 10
-               AND RIGHT(REGEXP_REPLACE(COALESCE(NULLIF(reviewed_data->>'contactPersonPhone', ''), data->>'contactPersonPhone', ''), '[^0-9]', '', 'g'), 10) = ${cleanPhone})
-              OR (length(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g')) >= 10
-               AND RIGHT(REGEXP_REPLACE(COALESCE(contact_person_mobile, ''), '[^0-9]', '', 'g'), 10) = ${cleanPhone})
-            )
-          ORDER BY saved_at DESC
-          LIMIT 1;
-        `;
-
-        if (Array.isArray(matchedPolicies) && matchedPolicies.length > 0) {
-          const pol = matchedPolicies[0];
-          const pData = pol.reviewed_data || pol.data || {};
-          const clientName = (pData.insuredName || pData.customerName || pData.name || "Policyholder").toString().trim();
-          const clientEmail = (pData.email || pData.insuredEmail || "").toString().trim() || null;
-          const orgId = pol.organization_id;
-
-          // Auto-provision clientAccount from the policy uploaded by CRM agent
-          customer = await prisma.clientAccount.create({
-            data: {
-              name: clientName,
-              phone: cleanPhone,
-              email: clientEmail,
-              organizationId: orgId,
+      if (Array.isArray(phoneMatches)) {
+        if (phoneMatches.length > 1) {
+          return NextResponse.json(
+            {
+              success: false,
+              code: "MULTIPLE_ACCOUNTS",
+              requiresClientId: true,
+              error: "Multiple client accounts share this mobile number. Please sign in using your Client ID (BHQ-...).",
             },
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true,
-              organizationId: true,
-              deletedAt: true,
-            },
-          });
-
-          // Set their entered MPIN as their initial login MPIN
-          await provisionClientMpin(customer, cleanMpin);
+            { status: 409 },
+          );
         }
+        customer = phoneMatches[0] || null;
+      } else {
+        customer = await prisma.clientAccount.findFirst({
+          where: {
+            phone: { contains: cleanPhone },
+            deletedAt: null,
+          },
+          select: selectAccountFields,
+        });
       }
     }
 
@@ -122,7 +106,7 @@ export async function POST(request) {
       return NextResponse.json({
         success: false,
         error: cleanPhone.length === 10
-          ? "No policy records found registered with this mobile number. Please check the number or contact your insurance advisor."
+          ? "Account not found. If your policy was recently added, please verify your mobile number via OTP first."
           : "Invalid Client ID or MPIN.",
       }, { status: 401 });
     }
@@ -132,26 +116,30 @@ export async function POST(request) {
     }
 
     const cleanDbPhone = customer.phone.replace(/[^0-9]/g, "");
-    let mpinVerification = await verifyClientMpinWithVersion(customer, cleanMpin);
+    const mpinVerification = await verifyClientMpinWithVersion(customer, cleanMpin);
     if (!mpinVerification.valid) {
-      // Check if this account was created in CRM without an initial MPIN set
       const existingCred = await prisma.task.findUnique({
         where: { sourceKey: `client-credential:${customer.id}` },
         select: { metadata: true },
       });
       if (!existingCred?.metadata?.mpinHash) {
-        // First-time sign in: provision entered MPIN as initial MPIN
-        await provisionClientMpin(customer, cleanMpin);
-        mpinVerification = await verifyClientMpinWithVersion(customer, cleanMpin);
-      } else {
-        return NextResponse.json({ success: false, error: "Invalid Client ID or MPIN" }, { status: 401 });
+        return NextResponse.json(
+          {
+            success: false,
+            code: "OTP_SETUP_REQUIRED",
+            error: "First-time portal setup requires OTP verification. Please use Set / Reset MPIN with OTP.",
+          },
+          { status: 403 },
+        );
       }
+      return NextResponse.json({ success: false, error: "Invalid Client ID or MPIN" }, { status: 401 });
     }
 
     // Sign the JWT token specifically for the client portal
     const token = await signJWT({
       role: "CLIENT",
       customerId: customer.id,
+      clientCode: customer.clientCode || "",
       email: customer.email,
       name: customer.name,
       phone: cleanDbPhone,
@@ -166,6 +154,7 @@ export async function POST(request) {
       token,
       user: {
         customerId: customer.id,
+        clientCode: customer.clientCode || "",
         email: customer.email,
         name: customer.name,
         role: "CLIENT",

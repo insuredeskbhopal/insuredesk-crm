@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { verifyJWT } from "@/lib/auth";
 import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
-import { isValidClientEmail, matchesClientAccountIdentity } from "@/lib/client-accounts/utils";
+import { isValidClientEmail, matchesClientAccountIdentity, serializeClientAccount } from "@/lib/client-accounts/utils";
 import { generateTemporaryClientMpin, provisionClientMpin } from "@/lib/client-portal/credentials";
 import {
+  createClientAccountWithIdentityCheck,
   normalizeClientId,
+  notifyClientIdUsers,
   withClientIdRequestLock,
   withClientPhoneLock,
   withClientPhoneLocks,
@@ -175,6 +177,24 @@ export async function POST(request) {
     });
     return { item, created: true };
   });
+
+  if (result.created && result.item) {
+    await notifyClientIdUsers({
+      database: prisma,
+      organizationId,
+      includeSuperAdmins: true,
+      createdById: actorId,
+      category: "APPROVAL",
+      severity: "INFO",
+      title: "New Client ID request",
+      message: `${name} (${phone}) requested by ${session.name || session.email || "Agent"}.`,
+      recordId: result.item.id,
+      recordLabel: name,
+      actionUrl: `/operations/client-management?clientIdRequest=${result.item.id}`,
+      sourceKey: `client-id-request:${result.item.id}`,
+      metadata: { requestId: result.item.id, phone },
+    });
+  }
 
   return NextResponse.json(serializeRequest(result.item), { status: result.created ? 201 : 200 });
 }
@@ -424,6 +444,21 @@ export async function PATCH(request) {
         { status: 409 },
       );
     }
+    await notifyClientIdUsers({
+      database: prisma,
+      organizationId: item.organizationId,
+      includeSuperAdmins: true,
+      createdById: actorId,
+      category: "APPROVAL",
+      severity: "INFO",
+      title: "Client ID request resubmitted",
+      message: `${name} (${phone}) updated and resubmitted by ${session.name || session.email || "Agent"}.`,
+      recordId: transition.task.id,
+      recordLabel: name,
+      actionUrl: `/operations/client-management?clientIdRequest=${transition.task.id}`,
+      sourceKey: `client-id-resubmitted:${transition.task.id}:${resubmittedAt.getTime()}`,
+      metadata: { requestId: transition.task.id, phone },
+    });
     return NextResponse.json(serializeRequest(transition.task));
   }
 
@@ -458,8 +493,17 @@ export async function PATCH(request) {
             await tx.policyRecord.update({
               where: { id: policy.id },
               data: {
-                data: { ...(policy.data || {}), clientId: account.id },
-                reviewedData: { ...(policy.reviewedData || policy.data || {}), clientId: account.id },
+                clientAccountId: account.id,
+                data: {
+                  ...(policy.data || {}),
+                  clientId: account.id,
+                  ...(account.clientCode ? { clientCode: account.clientCode } : {}),
+                },
+                reviewedData: {
+                  ...(policy.reviewedData || policy.data || {}),
+                  clientId: account.id,
+                  ...(account.clientCode ? { clientCode: account.clientCode } : {}),
+                },
                 extractedData: policy.extractedData
                   ? { ...policy.extractedData, clientId: "" }
                   : policy.extractedData,
@@ -480,6 +524,7 @@ export async function PATCH(request) {
               metadata: {
                 ...(item.metadata || {}),
                 resolvedClientId: account.id,
+                resolvedClientCode: account.clientCode || null,
                 resolvedClientName: account.name,
                 resolutionType,
                 resolvedByName: session.name || null,
@@ -493,6 +538,7 @@ export async function PATCH(request) {
                     actorName: session.name || session.email || "Super Admin",
                     at: new Date().toISOString(),
                     resolvedClientId: account.id,
+                    resolvedClientCode: account.clientCode || null,
                     resolvedClientName: account.name,
                     mappedPolicyCount: policies.length,
                   },
@@ -517,36 +563,30 @@ export async function PATCH(request) {
           return finishResolution(account, "LINK_EXISTING");
         }
 
-        const existingAccounts = await tx.clientAccount.findMany({
-          where: {
-            organizationId: item.organizationId,
-            deletedAt: null,
-            phone: item.customerMobile,
-          },
-        });
-
-        const exactMatch = existingAccounts.find((acc) =>
-          matchesClientAccountIdentity(acc, {
-            insuredName: item.customerName,
-            contactNumber: item.customerMobile,
-            email: item.metadata?.email,
-          }),
+        const creation = await withClientPhoneLock(
+          item.organizationId,
+          item.customerMobile,
+          (phoneDatabase) =>
+            createClientAccountWithIdentityCheck(phoneDatabase, {
+              name: item.customerName,
+              phone: item.customerMobile,
+              email: item.metadata?.email || null,
+              organizationId: item.organizationId,
+              actorId,
+              allowSharedPhone: Boolean(body.allowSharedPhone),
+            }),
+          tx,
         );
 
-        if (exactMatch) {
-          return finishResolution(exactMatch, "LINK_EXISTING");
+        if (creation.outcome === "EXISTING_EXACT") {
+          return finishResolution(creation.account, "LINK_EXISTING");
         }
 
-        const account = await tx.clientAccount.create({
-          data: {
-            name: item.customerName,
-            phone: item.customerMobile,
-            email: item.metadata?.email || null,
-            organizationId: item.organizationId,
-            createdById: actorId,
-            updatedById: actorId,
-          },
-        });
+        if (creation.outcome === "IDENTITY_CONFLICT") {
+          throw workflowError("IDENTITY_CONFLICT", { conflicts: creation.existingAccounts });
+        }
+
+        const account = creation.account;
 
         let temporaryMpin = null;
         try {
@@ -575,7 +615,8 @@ export async function PATCH(request) {
       return NextResponse.json(
         {
           error:
-            "This phone number belongs to a different client identity. Correct the request or explicitly link the intended Client ID.",
+            "This phone number belongs to a different client identity. Correct the request, link the intended Client ID, or confirm shared-phone creation.",
+          conflicts: (error.details?.conflicts || []).map(serializeClientAccount),
         },
         { status: 409 },
       );
@@ -588,6 +629,30 @@ export async function PATCH(request) {
 
   if (result.resolutionConflict) {
     return NextResponse.json({ error: "This Client ID request was already resolved." }, { status: 409 });
+  }
+
+  if (item.createdById) {
+    const resolvedMeta = result.updated?.metadata || {};
+    const codeLabel = resolvedMeta.resolvedClientCode ? ` (${resolvedMeta.resolvedClientCode})` : "";
+    await notifyClientIdUsers({
+      database: prisma,
+      organizationId: item.organizationId,
+      recipientUserIds: [item.createdById],
+      createdById: actorId,
+      category: "APPROVAL",
+      severity: "SUCCESS",
+      title: "Client ID request approved",
+      message: `${result.updated?.recordLabel || item.customerName}${codeLabel} is linked (${result.mappedPolicyCount} ${result.mappedPolicyCount === 1 ? "policy" : "policies"}).`,
+      recordId: item.id,
+      recordLabel: result.updated?.recordLabel || item.customerName,
+      actionUrl: "/operations/client-management",
+      sourceKey: `client-id-approved:${item.id}:${Date.now()}`,
+      metadata: {
+        requestId: item.id,
+        clientId: resolvedMeta.resolvedClientId || result.updated?.recordId || null,
+        clientCode: resolvedMeta.resolvedClientCode || null,
+      },
+    });
   }
 
   return NextResponse.json({
@@ -610,7 +675,7 @@ async function findSuggestions(item) {
       deletedAt: null,
       OR: or,
     },
-    select: { id: true, name: true, phone: true, email: true },
+    select: { id: true, clientCode: true, name: true, phone: true, email: true },
     take: 5,
     orderBy: { updatedAt: "desc" },
   });
@@ -629,6 +694,7 @@ function serializeRequest(item) {
     requestedByName: metadata.requestedByName || null,
     requestedByEmail: metadata.requestedByEmail || null,
     resolvedClientId: metadata.resolvedClientId || item.recordId || null,
+    resolvedClientCode: metadata.resolvedClientCode || null,
     resolvedClientName: metadata.resolvedClientName || item.recordLabel || null,
     resolutionType: metadata.resolutionType || null,
     workflowStatus:
@@ -644,9 +710,10 @@ function getHistory(metadata) {
   return Array.isArray(metadata?.history) ? metadata.history : [];
 }
 
-function workflowError(code) {
+function workflowError(code, details = null) {
   const error = new Error(code);
   error.code = code;
+  if (details) error.details = details;
   return error;
 }
 

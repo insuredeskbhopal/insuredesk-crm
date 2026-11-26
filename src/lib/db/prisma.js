@@ -46,13 +46,11 @@ export const prisma =
   (globalForPrisma.prisma && globalForPrisma.prisma.dailyPresence)
     ? globalForPrisma.prisma
     : new PrismaClient({
-        log: [
-          { level: "error", emit: "stdout" },
-          { level: "warn", emit: "stdout" },
-        ],
-        datasourceUrl: getDatasourceUrl(),
-      });
+      log: [
+        { level: "error", emit: "stdout" },
+        { level: "warn", emit: "stdout" },
+      ],
+      datasourceUrl: getDatasourceUrl(),
+    });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+globalForPrisma.prisma = prisma;

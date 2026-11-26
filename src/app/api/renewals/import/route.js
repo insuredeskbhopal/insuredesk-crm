@@ -210,8 +210,14 @@ export async function GET(request) {
     }
 
     const user = await verifyJWT(token);
-    if (!user) {
+    if (!user || user.role === "CLIENT") {
       return Response.json({ error: "Unauthorized session" }, { status: 401 });
+    }
+    if (user.role === "VIEWER") {
+      return Response.json(
+        { error: "Unauthorized: Viewer role has read-only access and cannot import renewals." },
+        { status: 403 },
+      );
     }
 
     const url = request.url ? new URL(request.url) : null;
@@ -570,8 +576,14 @@ export async function POST(request) {
     }
 
     const user = await verifyJWT(token);
-    if (!user) {
+    if (!user || user.role === "CLIENT") {
       return Response.json({ error: "Unauthorized session" }, { status: 401 });
+    }
+    if (user.role === "VIEWER") {
+      return Response.json(
+        { error: "Unauthorized: Viewer role has read-only access and cannot import renewals." },
+        { status: 403 },
+      );
     }
 
     const contentType = request.headers.get("content-type") || "";

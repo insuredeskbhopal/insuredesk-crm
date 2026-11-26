@@ -61,7 +61,9 @@ class AuthState {
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-      successMessage: clearSuccess ? null : (successMessage ?? this.successMessage),
+      successMessage: clearSuccess
+          ? null
+          : (successMessage ?? this.successMessage),
       user: user ?? this.user,
       loginMode: loginMode ?? this.loginMode,
       pendingGoogleEmail: pendingGoogleEmail ?? this.pendingGoogleEmail,
@@ -84,7 +86,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final userMap = await ApiService.getUser();
       if (token != null && token.isNotEmpty && userMap != null) {
         final name = userMap['name'] ?? 'Client';
-        final initials = name.toString().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+        final initials = name
+            .toString()
+            .split(' ')
+            .map((e) => e.isNotEmpty ? e[0] : '')
+            .take(2)
+            .join()
+            .toUpperCase();
         final user = AuthUser(
           clientId: userMap['customerId'] ?? userMap['id'] ?? '',
           name: name,
@@ -114,11 +122,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   /// Mode A: Authenticate with Client ID & MPIN against live CRM backend
   Future<bool> loginWithCredentials(String clientId, String mpin) async {
-    state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      clearSuccess: true,
+    );
 
     String cleanId = clientId.trim();
     final digitsOnly = cleanId.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digitsOnly.length >= 10 && (cleanId.startsWith('+91') || cleanId.startsWith('91') || cleanId.startsWith('0'))) {
+    if (digitsOnly.length >= 10 &&
+        (cleanId.startsWith('+91') ||
+            cleanId.startsWith('91') ||
+            cleanId.startsWith('0'))) {
       cleanId = digitsOnly.substring(digitsOnly.length - 10);
     }
     final cleanMpin = mpin.trim();
@@ -126,7 +141,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (cleanId.isEmpty) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Please enter your Registered Mobile Number or Client ID.',
+        errorMessage:
+            'Please enter your Registered Mobile Number or Client ID.',
       );
       return false;
     }
@@ -140,16 +156,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
 
     try {
-      final response = await ApiService.login(customerId: cleanId, mpin: cleanMpin);
+      final response = await ApiService.login(
+        customerId: cleanId,
+        mpin: cleanMpin,
+      );
       final userMap = response['user'] as Map<String, dynamic>? ?? {};
       final name = userMap['name'] ?? 'Client';
-      final initials = name.toString().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+      final initials = name
+          .toString()
+          .split(' ')
+          .map((e) => e.isNotEmpty ? e[0] : '')
+          .take(2)
+          .join()
+          .toUpperCase();
 
       final authenticatedUser = AuthUser(
         clientId: userMap['customerId'] ?? userMap['id'] ?? cleanId,
         name: name,
         email: userMap['email'] ?? '',
-        accountNo: userMap['customerId'] ?? userMap['id'] ?? cleanId,
+        accountNo: (userMap['clientCode']?.toString().isNotEmpty == true)
+            ? userMap['clientCode'].toString()
+            : (userMap['customerId'] ?? userMap['id'] ?? cleanId).toString(),
         avatarInitials: initials.isEmpty ? 'CL' : initials,
         isGoogleLinked: false,
       );
@@ -158,7 +185,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
         isAuthenticated: true,
         user: authenticatedUser,
-        successMessage: 'Credentials verified successfully! Directing to client workspace...',
+        successMessage:
+            'Credentials verified successfully! Directing to client workspace...',
       );
       return true;
     } catch (err) {
@@ -176,7 +204,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String otp,
     required String newMpin,
   }) async {
-    state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      clearSuccess: true,
+    );
     try {
       final response = await ApiService.verifyOtpAndSetMpin(
         phone: phone,
@@ -185,13 +217,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       final userMap = response['user'] as Map<String, dynamic>? ?? {};
       final name = userMap['name'] ?? 'Client';
-      final initials = name.toString().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+      final initials = name
+          .toString()
+          .split(' ')
+          .map((e) => e.isNotEmpty ? e[0] : '')
+          .take(2)
+          .join()
+          .toUpperCase();
 
       final authenticatedUser = AuthUser(
         clientId: userMap['customerId'] ?? userMap['id'] ?? phone,
         name: name,
         email: userMap['email'] ?? '',
-        accountNo: userMap['customerId'] ?? userMap['id'] ?? phone,
+        accountNo: (userMap['clientCode']?.toString().isNotEmpty == true)
+            ? userMap['clientCode'].toString()
+            : (userMap['customerId'] ?? userMap['id'] ?? phone).toString(),
         avatarInitials: initials.isEmpty ? 'CL' : initials,
         isGoogleLinked: false,
       );
@@ -213,7 +253,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   /// Trigger Google Sign In Flow (requires Client ID + MPIN pairing)
-  Future<void> initiateGoogleSignIn(String selectedEmail, String selectedName) async {
+  Future<void> initiateGoogleSignIn(
+    String selectedEmail,
+    String selectedName,
+  ) async {
     state = state.copyWith(
       isLoading: false,
       loginMode: 'google',
@@ -226,11 +269,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   /// Link Google Account with Client ID + MPIN via live CRM API
   Future<bool> linkAndAuthenticateGoogle(String clientId, String mpin) async {
-    state = state.copyWith(isLoading: true, clearError: true, clearSuccess: true);
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      clearSuccess: true,
+    );
 
     String cleanId = clientId.trim();
     final digitsOnly = cleanId.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digitsOnly.length >= 10 && (cleanId.startsWith('+91') || cleanId.startsWith('91') || cleanId.startsWith('0'))) {
+    if (digitsOnly.length >= 10 &&
+        (cleanId.startsWith('+91') ||
+            cleanId.startsWith('91') ||
+            cleanId.startsWith('0'))) {
       cleanId = digitsOnly.substring(digitsOnly.length - 10);
     }
     final cleanMpin = mpin.trim();
@@ -238,7 +288,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (cleanId.isEmpty) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Please enter your Registered Mobile Number or Client ID.',
+        errorMessage:
+            'Please enter your Registered Mobile Number or Client ID.',
       );
       return false;
     }
@@ -260,7 +311,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       final userMap = response['user'] as Map<String, dynamic>? ?? {};
       final name = userMap['name'] ?? state.pendingGoogleName ?? 'Client';
-      final initials = name.toString().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+      final initials = name
+          .toString()
+          .split(' ')
+          .map((e) => e.isNotEmpty ? e[0] : '')
+          .take(2)
+          .join()
+          .toUpperCase();
 
       final user = AuthUser(
         clientId: userMap['customerId'] ?? userMap['id'] ?? cleanId,
@@ -275,7 +332,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
         isAuthenticated: true,
         user: user,
-        successMessage: 'Google Account paired successfully! Entering workspace...',
+        successMessage:
+            'Google Account paired successfully! Entering workspace...',
       );
       return true;
     } catch (err) {
@@ -288,8 +346,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   /// Logout action
-  void logout() {
-    ApiService.clearSession();
+  Future<void> logout() async {
+    await ApiService.clearSession();
     state = const AuthState();
   }
 }

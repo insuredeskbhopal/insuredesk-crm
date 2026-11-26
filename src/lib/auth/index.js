@@ -3,15 +3,13 @@ import bcryptjs from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "@/lib/db/prisma";
 
-const FALLBACK_BUILD_SECRET = "bimaheadquarter-temporary-build-time-secret-key-do-not-use-in-production";
-
 function getSecretKey() {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     if (process.env.NODE_ENV !== "production") {
       return "dev-only-jwt-secret-change-me";
     }
-    return FALLBACK_BUILD_SECRET;
+    throw new Error("JWT_SECRET must be configured in production.");
   }
   return secret;
 }

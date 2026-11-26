@@ -3,17 +3,30 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { PUBLIC_ROUTE_PATHS } from "@/lib/seo/site";
 
-const FALLBACK_BUILD_SECRET = "bimaheadquarter-temporary-build-time-secret-key-do-not-use-in-production";
-
 function getSecretKey(): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     if (process.env.NODE_ENV !== "production") {
       return "dev-only-jwt-secret-change-me";
     }
-    return FALLBACK_BUILD_SECRET;
+    throw new Error("JWT_SECRET must be configured in production.");
   }
   return secret;
+}
+
+function getAllowedOrigin(request: NextRequest): string | null {
+  const origin = request.headers.get("origin");
+  if (!origin) return null;
+  const configured = process.env.NEXT_PUBLIC_APP_URL;
+  const allowlist = new Set(
+    [
+      "https://bimaheadquarter.com",
+      "https://www.bimaheadquarter.com",
+      ...(process.env.NODE_ENV !== "production" ? ["http://localhost:3000", "http://127.0.0.1:3000"] : []),
+      ...(configured ? [configured.replace(/\/$/, "")] : []),
+    ],
+  );
+  return allowlist.has(origin) ? origin : null;
 }
 
 function getEncodedSecret(): Uint8Array {
@@ -29,10 +42,17 @@ export async function middleware(request: NextRequest) {
 
   // 0. Handle CORS preflight for all APIs
   if (request.method === "OPTIONS" && pathname.startsWith("/api/")) {
+    const allowedOrigin = getAllowedOrigin(request);
     return new NextResponse(null, {
       status: 204,
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...(allowedOrigin
+          ? {
+              "Access-Control-Allow-Origin": allowedOrigin,
+              "Access-Control-Allow-Credentials": "true",
+              Vary: "Origin",
+            }
+          : {}),
         "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, ticket",
       },

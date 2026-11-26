@@ -87,11 +87,10 @@ function ClientPolicyCard({ policy, onStartClaim, onViewDetails, onServiceReques
               <h3 className="mt-1 truncate text-base font-bold text-white force-white sm:text-lg">{policyType}</h3>
             </div>
           </div>
-          <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${
-            isActive
+          <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${isActive
               ? "border-emerald-200/40 bg-emerald-200/15 text-white force-white"
               : "border-white/20 bg-white/10 text-white force-white"
-          }`}>
+            }`}>
             <BadgeCheck size={11} className="text-white force-white" /> {isActive ? "Active" : "Expired"}
           </span>
         </div>
@@ -142,30 +141,30 @@ function ClientPolicyCard({ policy, onStartClaim, onViewDetails, onServiceReques
             <p className="mt-0.5 text-[11px] font-semibold text-slate-600">Policy created · Payment completed</p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => onViewDetails(policy)}
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[10px] font-bold text-slate-700 transition-all hover:border-emerald-300 hover:text-emerald-700"
-          >
-            View details <ArrowRight size={13} />
-          </button>
-          <button
-            type="button"
-            onClick={() => onServiceRequest("RENEWAL_QUOTE", policy)}
-            disabled={!payload.policyNumber || !expiryDate}
-            title={!expiryDate ? "Expiry date is required before renewal" : "Request renewal quotation"}
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[10px] font-bold text-emerald-700 transition-all hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Renew <RefreshCw size={13} />
-          </button>
-          <button
-            type="button"
-            onClick={() => onStartClaim(policy)}
-            disabled={!payload.policyNumber}
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2.5 text-[10px] font-bold text-white force-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Start a claim <ArrowRight size={13} />
-          </button>
+            <button
+              type="button"
+              onClick={() => onViewDetails(policy)}
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[10px] font-bold text-slate-700 transition-all hover:border-emerald-300 hover:text-emerald-700"
+            >
+              View details <ArrowRight size={13} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onServiceRequest("RENEWAL_QUOTE", policy)}
+              disabled={!payload.policyNumber || !expiryDate}
+              title={!expiryDate ? "Expiry date is required before renewal" : "Request renewal quotation"}
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[10px] font-bold text-emerald-700 transition-all hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Renew <RefreshCw size={13} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onStartClaim(policy)}
+              disabled={!payload.policyNumber}
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2.5 text-[10px] font-bold text-white force-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Start a claim <ArrowRight size={13} />
+            </button>
           </div>
         </div>
       </div>
@@ -179,6 +178,7 @@ export default function ClientPortal() {
   const [policies, setPolicies] = useState([]);
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   // Tab State: "dashboard", "policies", "claims", "assistance", "profile"
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -233,10 +233,13 @@ export default function ClientPortal() {
       try {
         // 1. Fetch Profile
         const profileRes = await fetch("/api/client/profile", { signal: controller.signal });
-        if (!profileRes.ok) {
-          await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+        if (profileRes.status === 401 || profileRes.status === 403) {
+          await fetch("/api/auth/logout", { method: "POST" }).catch(() => { });
           window.location.replace("/login");
           return;
+        }
+        if (!profileRes.ok) {
+          throw new Error("Could not load your portal profile right now. Please retry.");
         }
         const profileData = await profileRes.json();
         setProfile(profileData.profile);
@@ -258,7 +261,7 @@ export default function ClientPortal() {
       } catch (err) {
         if (err?.name === "AbortError") return;
         console.error("Failed to load portal data:", err);
-        window.location.href = "/login";
+        setLoadError(err?.message || "Could not load your portal right now. Please retry.");
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -323,7 +326,7 @@ export default function ClientPortal() {
       const resData = await res.json();
       if (resData.success) {
         setClaimSuccess("Claim submitted successfully!");
-        
+
         // Refresh claims log
         const claimsRes = await fetch("/api/client/claims");
         const claimsData = await claimsRes.json();
@@ -404,6 +407,36 @@ export default function ClientPortal() {
     );
   }
 
+  if (!profile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f8fafc] p-6 text-slate-800">
+        <div className="max-w-md w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-center space-y-4">
+          <AlertTriangle className="h-10 w-10 text-amber-500 mx-auto" />
+          <h2 className="text-lg font-bold text-slate-900">Portal temporarily unavailable</h2>
+          <p className="text-xs text-slate-600">
+            {loadError || "We could not load your policyholder workspace right now. Please retry or sign in again."}
+          </p>
+          <div className="flex justify-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white force-white"
+            >
+              Retry
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f4f7f9] text-slate-800 flex flex-col font-sans relative overflow-hidden">
 
@@ -458,11 +491,10 @@ export default function ClientPortal() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
-                    activeTab === tab.id
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${activeTab === tab.id
                       ? "bg-white text-slate-950 border border-slate-200 shadow-sm"
                       : "text-slate-600 hover:bg-white hover:text-slate-950 hover:shadow-sm"
-                  }`}
+                    }`}
                 >
                   <Icon size={15} />
                   <span>{tab.label}</span>
@@ -474,7 +506,7 @@ export default function ClientPortal() {
 
         {/* Main Content Workspace Container */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-8 py-8 z-10">
-          
+
           {/* 1. Dashboard Tab */}
           {activeTab === "dashboard" && (
             <div className="space-y-7">
@@ -505,66 +537,66 @@ export default function ClientPortal() {
                       Track active coverages, renewal dates, claims support, and service assistance from one private desk.
                     </p>
                     <div className="mt-7 grid grid-cols-[1fr_1fr_1.15fr] gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("policies")}
-                      className="client-portal-interactive group relative flex min-h-[110px] flex-col justify-between overflow-hidden rounded-2xl border border-white/[0.16] bg-white/[0.11] p-5 text-left text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_20px_36px_rgba(0,0,0,0.18)] focus-visible:border-white focus-visible:bg-white focus-visible:text-slate-950"
-                    >
-                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-white/45 via-emerald-200/70 to-transparent transition-colors group-hover:from-emerald-500 group-hover:via-emerald-300" />
-                      <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-white/[0.08] blur-2xl transition-colors group-hover:bg-emerald-200/30" />
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">
-                        Active Coverages
-                      </div>
-                      <div className="flex items-end justify-between gap-3">
-                        <div>
-                          <div className="text-4xl font-bold leading-none text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">{policies.length}</div>
-                          <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/80 transition-colors group-hover:text-slate-600 group-focus-visible:text-slate-600">Policies linked</div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("policies")}
+                        className="client-portal-interactive group relative flex min-h-[110px] flex-col justify-between overflow-hidden rounded-2xl border border-white/[0.16] bg-white/[0.11] p-5 text-left text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_20px_36px_rgba(0,0,0,0.18)] focus-visible:border-white focus-visible:bg-white focus-visible:text-slate-950"
+                      >
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-white/45 via-emerald-200/70 to-transparent transition-colors group-hover:from-emerald-500 group-hover:via-emerald-300" />
+                        <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-white/[0.08] blur-2xl transition-colors group-hover:bg-emerald-200/30" />
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">
+                          Active Coverages
                         </div>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/25 bg-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_16px_rgba(0,0,0,0.12)] transition-colors group-hover:border-slate-200 group-hover:bg-slate-100 group-focus-visible:border-slate-200 group-focus-visible:bg-slate-100">
-                          <FileText size={18} className="text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950" />
+                        <div className="flex items-end justify-between gap-3">
+                          <div>
+                            <div className="text-4xl font-bold leading-none text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">{policies.length}</div>
+                            <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/80 transition-colors group-hover:text-slate-600 group-focus-visible:text-slate-600">Policies linked</div>
+                          </div>
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/25 bg-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_16px_rgba(0,0,0,0.12)] transition-colors group-hover:border-slate-200 group-hover:bg-slate-100 group-focus-visible:border-slate-200 group-focus-visible:bg-slate-100">
+                            <FileText size={18} className="text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950" />
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("claims")}
-                      className="client-portal-interactive group relative flex min-h-[110px] flex-col justify-between overflow-hidden rounded-2xl border border-white/[0.16] bg-white/[0.11] p-5 text-left text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_20px_36px_rgba(0,0,0,0.18)] focus-visible:border-white focus-visible:bg-white focus-visible:text-slate-950"
-                    >
-                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-white/45 via-emerald-200/70 to-transparent transition-colors group-hover:from-emerald-500 group-hover:via-emerald-300" />
-                      <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-white/[0.08] blur-2xl transition-colors group-hover:bg-emerald-200/30" />
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">
-                        Tracked Claims
-                      </div>
-                      <div className="flex items-end justify-between gap-3">
-                        <div>
-                          <div className="text-4xl font-bold leading-none text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">{claims.length}</div>
-                          <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/80 transition-colors group-hover:text-slate-600 group-focus-visible:text-slate-600">Cases tracked</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("claims")}
+                        className="client-portal-interactive group relative flex min-h-[110px] flex-col justify-between overflow-hidden rounded-2xl border border-white/[0.16] bg-white/[0.11] p-5 text-left text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_20px_36px_rgba(0,0,0,0.18)] focus-visible:border-white focus-visible:bg-white focus-visible:text-slate-950"
+                      >
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-white/45 via-emerald-200/70 to-transparent transition-colors group-hover:from-emerald-500 group-hover:via-emerald-300" />
+                        <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-white/[0.08] blur-2xl transition-colors group-hover:bg-emerald-200/30" />
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">
+                          Tracked Claims
                         </div>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/25 bg-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_16px_rgba(0,0,0,0.12)] transition-colors group-hover:border-slate-200 group-hover:bg-slate-100 group-focus-visible:border-slate-200 group-focus-visible:bg-slate-100">
-                          <Shield size={18} className="text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950" />
+                        <div className="flex items-end justify-between gap-3">
+                          <div>
+                            <div className="text-4xl font-bold leading-none text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950">{claims.length}</div>
+                            <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/80 transition-colors group-hover:text-slate-600 group-focus-visible:text-slate-600">Cases tracked</div>
+                          </div>
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/25 bg-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_16px_rgba(0,0,0,0.12)] transition-colors group-hover:border-slate-200 group-hover:bg-slate-100 group-focus-visible:border-slate-200 group-focus-visible:bg-slate-100">
+                            <Shield size={18} className="text-white transition-colors group-hover:text-slate-950 group-focus-visible:text-slate-950" />
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                    <a
-                      href="tel:+918818889660"
-                      className="client-portal-interactive group relative flex min-h-[110px] flex-col justify-between overflow-hidden rounded-2xl border border-amber-200/35 bg-amber-300/[0.17] p-5 text-left text-white no-underline shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_16px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-100 hover:bg-white hover:text-slate-950 hover:shadow-[0_20px_36px_rgba(0,0,0,0.18)] focus-visible:border-amber-100 focus-visible:bg-white focus-visible:text-slate-950"
-                      aria-label="Call Bhopal support hotline"
-                    >
-                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-200 via-white/70 to-transparent transition-colors group-hover:from-amber-500 group-hover:via-amber-300" />
-                      <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-amber-200/[0.12] blur-2xl transition-colors group-hover:bg-amber-200/30" />
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-white transition-colors group-hover:text-slate-950">
-                        Support Hotline
-                      </div>
-                      <div className="flex items-end justify-between gap-3">
-                        <div>
-                          <div className="text-2xl font-black leading-none text-white transition-colors group-hover:text-slate-950">Call Support</div>
-                          <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/80 transition-colors group-hover:text-slate-600">Emergency assistance</div>
+                      </button>
+                      <a
+                        href="tel:+918818889660"
+                        className="client-portal-interactive group relative flex min-h-[110px] flex-col justify-between overflow-hidden rounded-2xl border border-amber-200/35 bg-amber-300/[0.17] p-5 text-left text-white no-underline shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_16px_30px_rgba(0,0,0,0.12)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-100 hover:bg-white hover:text-slate-950 hover:shadow-[0_20px_36px_rgba(0,0,0,0.18)] focus-visible:border-amber-100 focus-visible:bg-white focus-visible:text-slate-950"
+                        aria-label="Call Bhopal support hotline"
+                      >
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-200 via-white/70 to-transparent transition-colors group-hover:from-amber-500 group-hover:via-amber-300" />
+                        <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-amber-200/[0.12] blur-2xl transition-colors group-hover:bg-amber-200/30" />
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-white transition-colors group-hover:text-slate-950">
+                          Support Hotline
                         </div>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/25 bg-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_16px_rgba(0,0,0,0.12)] transition-colors group-hover:border-slate-200 group-hover:bg-slate-100 group-focus-visible:border-slate-200 group-focus-visible:bg-slate-100">
-                          <Phone size={18} className="text-white transition-colors group-hover:text-slate-950" />
+                        <div className="flex items-end justify-between gap-3">
+                          <div>
+                            <div className="text-2xl font-black leading-none text-white transition-colors group-hover:text-slate-950">Call Support</div>
+                            <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/80 transition-colors group-hover:text-slate-600">Emergency assistance</div>
+                          </div>
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/25 bg-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_8px_16px_rgba(0,0,0,0.12)] transition-colors group-hover:border-slate-200 group-hover:bg-slate-100 group-focus-visible:border-slate-200 group-focus-visible:bg-slate-100">
+                            <Phone size={18} className="text-white transition-colors group-hover:text-slate-950" />
+                          </div>
                         </div>
-                      </div>
-                    </a>
+                      </a>
                     </div>
                     <div className="mt-6 grid grid-cols-[1fr_1fr_1.15fr] gap-3 text-xs text-white">
                       <div className="client-portal-interactive group rounded-xl border border-white/[0.16] bg-white/[0.08] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_16px_26px_rgba(0,0,0,0.16)]">
@@ -931,13 +963,12 @@ export default function ClientPortal() {
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                c.claimStatus.toLowerCase() === "open"
+                              <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.claimStatus.toLowerCase() === "open"
                                   ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
                                   : c.claimStatus.toLowerCase() === "settled" || c.claimStatus.toLowerCase() === "completed"
-                                  ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20"
-                                  : "bg-slate-100 text-slate-500 border border-slate-200"
-                              }`}>
+                                    ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20"
+                                    : "bg-slate-100 text-slate-500 border border-slate-200"
+                                }`}>
                                 {c.claimStatus}
                               </span>
                               <div
@@ -1066,51 +1097,51 @@ export default function ClientPortal() {
           {/* 5. Profile Tab */}
           {activeTab === "profile" && (
             <div className="space-y-6">
-            <div className="bg-white/75 backdrop-blur-md border border-white/50 rounded-2xl p-8 shadow-sm max-w-2xl">
-              <h2 className="text-xl font-bold text-slate-800 mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
-                <User size={20} className="text-emerald-600" />
-                <span>My Customer Profile Card</span>
-              </h2>
+              <div className="bg-white/75 backdrop-blur-md border border-white/50 rounded-2xl p-8 shadow-sm max-w-2xl">
+                <h2 className="text-xl font-bold text-slate-800 mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
+                  <User size={20} className="text-emerald-600" />
+                  <span>My Customer Profile Card</span>
+                </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Registered Name</span>
-                  <div className="text-sm font-semibold text-slate-800">{profile?.name || "-"}</div>
-                </div>
-
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Mobile Number</span>
-                  <div className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
-                    <Phone size={13} className="text-slate-400" />
-                    <span>{profile?.phone || "-"}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Registered Name</span>
+                    <div className="text-sm font-semibold text-slate-800">{profile?.name || "-"}</div>
                   </div>
-                </div>
 
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Email Address</span>
-                  <div className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
-                    <Mail size={13} className="text-slate-400" />
-                    <span>{profile?.email || "-"}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Client ID (Unique Ref)</span>
-                  <div className="text-xs font-mono font-bold text-slate-600">{profile?.id || "-"}</div>
-                </div>
-
-                {profile?.address && (
-                  <div className="md:col-span-2">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Registered Address</span>
-                    <div className="text-sm font-semibold text-slate-800 flex items-start gap-1.5">
-                      <MapPin size={13} className="text-slate-400 mt-0.5 shrink-0" />
-                      <span>{profile.address}, {profile.city}, {profile.state}</span>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Mobile Number</span>
+                    <div className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                      <Phone size={13} className="text-slate-400" />
+                      <span>{profile?.phone || "-"}</span>
                     </div>
                   </div>
-                )}
+
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Email Address</span>
+                    <div className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                      <Mail size={13} className="text-slate-400" />
+                      <span>{profile?.email || "-"}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Client ID (Unique Ref)</span>
+                    <div className="text-xs font-mono font-bold text-slate-600">{profile?.id || "-"}</div>
+                  </div>
+
+                  {profile?.address && (
+                    <div className="md:col-span-2">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Registered Address</span>
+                      <div className="text-sm font-semibold text-slate-800 flex items-start gap-1.5">
+                        <MapPin size={13} className="text-slate-400 mt-0.5 shrink-0" />
+                        <span>{profile.address}, {profile.city}, {profile.state}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-            <ClientProfileManager profile={profile} onUpdated={updateProfile} />
+              <ClientProfileManager profile={profile} onUpdated={updateProfile} />
             </div>
           )}
         </main>
@@ -1151,7 +1182,7 @@ export default function ClientPortal() {
           {/* 1. Mobile Dashboard View */}
           {activeTab === "dashboard" && (
             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-200">
-              
+
               {/* Premium Auto-cycling Promotional Banner Card Carousel */}
               <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-emerald-900 to-teal-900 text-white p-4 shadow-md min-h-[110px] flex flex-col justify-between">
                 <div>
@@ -1163,9 +1194,8 @@ export default function ClientPortal() {
                       {carouselSlides.map((_, idx) => (
                         <div
                           key={idx}
-                          className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-                            carouselIndex === idx ? "bg-emerald-400 w-3" : "bg-emerald-700/50"
-                          }`}
+                          className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${carouselIndex === idx ? "bg-emerald-400 w-3" : "bg-emerald-700/50"
+                            }`}
                         />
                       ))}
                     </div>
@@ -1183,7 +1213,7 @@ export default function ClientPortal() {
               <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 rounded-2xl p-5 text-white shadow-md relative overflow-hidden flex flex-col justify-between h-44">
                 <div className="absolute inset-0 bg-white/5 backdrop-blur-[0.5px] pointer-events-none" />
                 <div className="absolute top-[-10%] right-[-10%] w-[120px] h-[120px] rounded-full bg-white/10 blur-xl pointer-events-none" />
-                
+
                 <div className="flex justify-between items-start relative z-10">
                   <div>
                     <div className="text-[10px] uppercase font-semibold tracking-widest force-white">Bima Headquarter</div>
@@ -1541,13 +1571,12 @@ export default function ClientPortal() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0">
-                                <span className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
-                                  c.claimStatus.toLowerCase() === "open"
+                                <span className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${c.claimStatus.toLowerCase() === "open"
                                     ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
                                     : c.claimStatus.toLowerCase() === "settled" || c.claimStatus.toLowerCase() === "completed"
-                                    ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20"
-                                    : "bg-slate-100 text-slate-500 border border-slate-200"
-                                }`}>
+                                      ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20"
+                                      : "bg-slate-100 text-slate-500 border border-slate-200"
+                                  }`}>
                                   {c.claimStatus}
                                 </span>
                                 <div
@@ -1685,7 +1714,7 @@ export default function ClientPortal() {
                   <User size={15} className="text-emerald-600" />
                   <span>My Profile Details</span>
                 </h3>
-                
+
                 <div className="space-y-3.5 text-xs text-slate-650">
                   <div>
                     <span className="text-[8.5px] uppercase font-bold text-slate-400 block mb-0.5">Full Name</span>
@@ -1741,9 +1770,8 @@ export default function ClientPortal() {
                   setActiveTab(tab.id);
                   window.scrollTo({ top: 0, behavior: "instant" });
                 }}
-                className={`flex flex-col items-center gap-1.5 px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                  isSelected ? "text-emerald-600 font-semibold scale-105" : "text-emerald-800/40 hover:text-emerald-600/70"
-                }`}
+                className={`flex flex-col items-center gap-1.5 px-2.5 py-1 rounded-xl transition-all cursor-pointer ${isSelected ? "text-emerald-600 font-semibold scale-105" : "text-emerald-800/40 hover:text-emerald-600/70"
+                  }`}
               >
                 <Icon size={18} />
                 <span className="text-[8.5px]">{tab.label}</span>

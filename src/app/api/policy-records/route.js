@@ -19,6 +19,9 @@ import { buildPolicyCustomerNameFields } from "@/lib/renewals/customer-name";
 import { normalizeIndianPhone } from "@/lib/customer-profiles/utils";
 import {
   findActiveClientAccount,
+  findActiveClientAccountByIdentifier,
+  normalizeClientCode,
+  normalizeClientId,
   withClientIdLock,
   withClientIdRequestLock,
   withClientPhoneLock,
@@ -107,7 +110,9 @@ export async function GET(request) {
         "sourceFile",
         "pdfFileName",
       ];
-      const searchOrs = [];
+      const searchOrs = [
+        { clientAccount: { clientCode: { contains: q.trim(), mode: "insensitive" } } },
+      ];
       for (const key of searchKeys) {
         searchOrs.push({ reviewedData: { path: [key], string_contains: searchTerms, mode: "insensitive" } });
         searchOrs.push({ data: { path: [key], string_contains: searchTerms, mode: "insensitive" } });
@@ -508,7 +513,10 @@ export async function POST(request) {
     let resolvedRequestClientId = String(payload.reviewedData?.clientId || "").trim();
     let clientIdPending = Boolean(clientIdRequest && !resolvedRequestClientId);
     if (resolvedRequestClientId) {
-      const activeClient = await findActiveClientAccount(resolvedRequestClientId, user.organizationId);
+      const isCode = Boolean(normalizeClientCode(resolvedRequestClientId));
+      const activeClient = isCode
+        ? await findActiveClientAccountByIdentifier(resolvedRequestClientId, user.organizationId)
+        : await findActiveClientAccount(resolvedRequestClientId, user.organizationId);
       if (!activeClient) {
         return Response.json(
           { error: "Select an active Client ID from this organization before saving." },
@@ -516,25 +524,29 @@ export async function POST(request) {
         );
       }
       resolvedRequestClientId = activeClient.id;
-      payload.reviewedData = { ...(payload.reviewedData || incomingReviewedData), clientId: activeClient.id };
+      payload.reviewedData = {
+        ...(payload.reviewedData || incomingReviewedData),
+        clientId: activeClient.id,
+        ...(activeClient.clientCode ? { clientCode: activeClient.clientCode } : {}),
+      };
     }
 
     // Find the uploaded file enforcing tenant scope boundary
     const uploadedFile = payload.uploadedFileId
       ? await prisma.uploadedFile.findFirst({
-          where: {
-            id: payload.uploadedFileId,
-            ...getTenantFilter(user, "write"),
-          },
-          include: {
-            createdBy: {
-              select: {
-                name: true,
-                email: true,
-              },
+        where: {
+          id: payload.uploadedFileId,
+          ...getTenantFilter(user, "write"),
+        },
+        include: {
+          createdBy: {
+            select: {
+              name: true,
+              email: true,
             },
           },
-        })
+        },
+      })
       : null;
 
     if (payload.uploadedFileId && !uploadedFile) {
@@ -549,9 +561,9 @@ export async function POST(request) {
     const reviewedData = standardizePolicyCompany(payload.reviewedData || extractedData);
     const detectedCompany = normalizeInsuranceCompanyName(
       payload.detectedCompany ||
-        uploadedFile?.detectedCompanyName ||
-        extractedData.insuranceCompany ||
-        extractedData.companyName,
+      uploadedFile?.detectedCompanyName ||
+      extractedData.insuranceCompany ||
+      extractedData.companyName,
       uploadedFile?.rawText || payload.rawText || "",
     );
     const selectedCompany = normalizeInsuranceCompanyName(
@@ -585,10 +597,10 @@ export async function POST(request) {
           missingRequired: validation.missingRequired,
           schema: validation.resolvedSchema
             ? {
-                groupId: validation.resolvedSchema.groupId,
-                policyId: validation.resolvedSchema.policyId,
-                policyName: validation.resolvedSchema.policyName,
-              }
+              groupId: validation.resolvedSchema.groupId,
+              policyId: validation.resolvedSchema.policyId,
+              policyName: validation.resolvedSchema.policyName,
+            }
             : null,
         },
         { status: 422 },
@@ -657,6 +669,7 @@ export async function POST(request) {
           policySchemaId: payload.policySchemaId || undefined,
           organizationId: user.organizationId,
           createdById: actorId,
+          clientAccountId: normalizeClientId(reviewedData.clientId) || null,
           clientIdRequestId: clientIdPending ? clientIdRequest.id : null,
           clientIdPending,
           clientIdStatus: clientIdPending
@@ -674,14 +687,14 @@ export async function POST(request) {
       const matchingActiveRequest =
         policyCustomerName && policyCustomerMobile
           ? await database.task.findFirst({
-              where: {
-                module: "CLIENT_ID_REQUEST",
-                status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"] },
-                customerName: { equals: policyCustomerName, mode: "insensitive" },
-                customerMobile: policyCustomerMobile,
-                ...(user.organizationId ? { organizationId: user.organizationId } : { createdById: actorId }),
-              },
-            })
+            where: {
+              module: "CLIENT_ID_REQUEST",
+              status: { in: ["OPEN", "IN_PROGRESS", "WAITING_DOCUMENTS"] },
+              customerName: { equals: policyCustomerName, mode: "insensitive" },
+              customerMobile: policyCustomerMobile,
+              ...(user.organizationId ? { organizationId: user.organizationId } : { createdById: actorId }),
+            },
+          })
           : null;
 
       if (matchingActiveRequest && incomingClientId && user.role === UserRole.AGENT) {
@@ -710,6 +723,16 @@ export async function POST(request) {
                 recordId: reviewedData.clientId,
               },
             });
+            if (typeof database.policyRecord?.updateMany === "function") {
+              await database.policyRecord.updateMany({
+                where: { clientIdRequestId: matchingActiveRequest.id, clientIdPending: true, deletedAt: null },
+                data: {
+                  clientAccountId: normalizeClientId(reviewedData.clientId) || null,
+                  clientIdPending: false,
+                  clientIdStatus: "LINKED",
+                },
+              });
+            }
           } catch (taskErr) {
             console.warn("Could not auto-complete Client ID request on policy create:", taskErr?.message);
           }
@@ -874,9 +897,9 @@ export async function POST(request) {
         createdBy: { name: user.name, email: user.email },
         uploadedFile: uploadedFile
           ? {
-              ...uploadedFile,
-              createdBy: uploadedFile.createdBy || { name: user.name, email: user.email },
-            }
+            ...uploadedFile,
+            createdBy: uploadedFile.createdBy || { name: user.name, email: user.email },
+          }
           : null,
       }),
       { status: 201 },
@@ -1017,10 +1040,10 @@ function standardizePolicyCompany(data = {}) {
   if (!data || typeof data !== "object") return {};
   const standardCompany = normalizeInsuranceCompanyName(
     data.insuranceCompany ||
-      data.companyName ||
-      data.insurerName ||
-      data.selectedCompany ||
-      data.detectedCompany,
+    data.companyName ||
+    data.insurerName ||
+    data.selectedCompany ||
+    data.detectedCompany,
     data.sourceText || "",
   );
   if (!standardCompany) return data;

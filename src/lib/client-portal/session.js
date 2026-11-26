@@ -21,7 +21,7 @@ export async function requireClient(request) {
   const [customer, credentialVersion] = await Promise.all([
     prisma.clientAccount.findFirst({
       where: { id: session.customerId, organizationId: session.organizationId, deletedAt: null },
-      select: { id: true, name: true, phone: true, email: true, organizationId: true, createdAt: true },
+      select: { id: true, clientCode: true, name: true, phone: true, email: true, organizationId: true, createdAt: true },
     }),
     getClientCredentialVersion(session.customerId),
   ]);

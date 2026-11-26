@@ -46,6 +46,7 @@ export async function POST(request) {
       followUpMode,
       priority,
       nextAction,
+      expectedUpdatedAt,
     } = await request.json();
     const text = String(remark || "").trim();
     const targetPolicyIds = Array.isArray(policyIds) && policyIds.length > 0 ? policyIds : policyId ? [policyId] : [];
@@ -115,10 +116,12 @@ export async function POST(request) {
         const reviewedData = appendRenewalRemark(freshPol.reviewedData || pol.reviewedData || {}, renewalRemark);
         const data = appendRenewalRemark(freshPol.data || pol.data || {}, renewalRemark);
 
-        await tx.policyRecord.updateMany({
+        const expectedTime = expectedUpdatedAt ? new Date(expectedUpdatedAt).getTime() : null;
+        const remarkUpdate = await tx.policyRecord.updateMany({
           where: {
             id: pol.id,
             ...tenantFilter,
+            ...(expectedTime ? { updatedAt: new Date(expectedUpdatedAt) } : {}),
           },
           data: {
             reviewedData,
@@ -127,6 +130,12 @@ export async function POST(request) {
             updatedById: actorId,
           },
         });
+        if (expectedTime && remarkUpdate.count === 0) {
+          const conflictErr = new Error("OCC_CONFLICT");
+          conflictErr.code = "OCC_CONFLICT";
+          conflictErr.policyId = pol.id;
+          throw conflictErr;
+        }
 
         if (pol.id === primaryPolicy.id) {
           firstReviewedData = reviewedData;

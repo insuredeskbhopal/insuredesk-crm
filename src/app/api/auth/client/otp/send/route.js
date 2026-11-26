@@ -197,14 +197,26 @@ This code is valid for 5 minutes. Please do not share this code with anyone.
       }
     }
 
-    console.log(`[Client OTP]: Sent OTP ${otp} to ${cleanPhone} (WhatsApp: ${dispatchedViaWhatsApp}, SMS: ${dispatchedViaSms})`);
+    if (process.env.NODE_ENV === "production" && !dispatchedViaWhatsApp && !dispatchedViaSms) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Verification code delivery service is temporarily unavailable. Please try again or contact support.",
+        },
+        { status: 503 },
+      );
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[Client OTP]: Sent OTP to ${cleanPhone} (WhatsApp: ${dispatchedViaWhatsApp}, SMS: ${dispatchedViaSms})`);
+    }
 
     const maskedPhone = `+91 ******${cleanPhone.slice(-4)}`;
     return NextResponse.json({
       success: true,
       message: `Verification code sent to ${maskedPhone}`,
       maskedPhone,
-      deliveryChannel: dispatchedViaWhatsApp ? "WHATSAPP" : dispatchedViaSms ? "SMS" : "SYSTEM",
+      deliveryChannel: dispatchedViaWhatsApp ? "WHATSAPP" : dispatchedViaSms ? "SMS" : "DEV",
       // Provide dev OTP in non-production for frictionless testing
       devOtp: process.env.NODE_ENV !== "production" ? otp : undefined,
     });

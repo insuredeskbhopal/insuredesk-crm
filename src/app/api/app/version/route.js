@@ -4,16 +4,16 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   return NextResponse.json({
-    latestVersion: "1.0.1",
-    versionCode: 3,
+    latestVersion: "1.0.2",
+    versionCode: 4,
     minSupportedVersion: "1.0.0",
     forceUpdate: false,
-    title: "New Update Available (v1.0.1)",
+    title: "New Update Available (v1.0.2)",
     releaseNotes: [
-      "Bigger & information-rich policy cards with insured name & vehicle plate",
-      "Dedicated full-screen policy breakdown view with coverage specs",
-      "Redesigned mobile-first PDF download bottom sheet",
-      "Real-time policy synchronization and instant document access",
+      "Friendly BHQ Client IDs (BHQ-XXXXXX) and unified 4 to 6-digit MPIN support",
+      "Fixed document ticket streaming and live OTP MPIN recovery",
+      "Reliable claim & support request sync with accurate error feedback",
+      "Improved policy cards, pagination, and secure logout isolation",
       "Enhanced performance and stability"
     ],
     downloadUrl: "https://www.bimaheadquarter.com/downloads/bimaheadquarter.apk",
