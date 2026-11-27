@@ -110,4 +110,9 @@ public/downloads/*.apk
 # standalone dev module (compiled natively under src/lib/policies/intelligence/studio)
 /policy-intelligence-module/
 
+# isolated design & vibe-code audit tooling
+/tools/design-audit/node_modules/
+/tools/design-audit/.venv-vibecheck/
+/tools/design-audit/reports/
+
 

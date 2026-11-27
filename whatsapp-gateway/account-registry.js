@@ -1,48 +1,34 @@
 import fs from "fs";
 import path from "path";
+import { atomicWriteJsonSync, preserveCorruptFileSync } from "./safe-store.js";
 
 const ACCOUNT_ID_REGEX = /^[a-zA-Z0-9_-]{3,50}$/;
 
 let registryFilePath = null;
 let memoryRegistry = null;
 
-function atomicWriteFileSync(filePath, data) {
-  const tempPath = `${filePath}.tmp.${Date.now()}.${Math.random().toString(36).slice(2, 8)}`;
-  fs.writeFileSync(tempPath, JSON.stringify(data, null, 2), "utf8");
-  fs.renameSync(tempPath, filePath);
+function writeRegistry(filePath, data) {
+  atomicWriteJsonSync(filePath, data, 2);
 }
 
 export function initAccountRegistry(sessionsRoot) {
   registryFilePath = path.join(sessionsRoot, "accounts.json");
-  const defaultSessionDir = path.join(sessionsRoot, "insuredesk_session");
 
   if (!fs.existsSync(sessionsRoot)) {
     fs.mkdirSync(sessionsRoot, { recursive: true });
   }
 
-  // Backup insuredesk_session if it exists and has credentials
-  const defaultCredsPath = path.join(defaultSessionDir, "creds.json");
-  if (fs.existsSync(defaultCredsPath)) {
-    const backupDir = path.join(sessionsRoot, ".backups");
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir, { recursive: true });
-    }
-    const backupSnapshotDir = path.join(backupDir, `insuredesk_session_backup_${Date.now()}`);
-    try {
-      fs.cpSync(defaultSessionDir, backupSnapshotDir, { recursive: true });
-      console.log(`[Registry] Created secure session backup at: ${backupSnapshotDir}`);
-    } catch (err) {
-      console.warn("[Registry] Warning: Could not create snapshot backup:", err.message);
-    }
-  }
-
-  // Read or create accounts.json
+  // Read or recover accounts.json without discarding corrupt file evidence
   if (fs.existsSync(registryFilePath)) {
     try {
       const raw = fs.readFileSync(registryFilePath, "utf8");
       memoryRegistry = JSON.parse(raw);
     } catch (err) {
-      console.error("[Registry] Corrupt accounts.json detected. Recovering...", err);
+      const backup = preserveCorruptFileSync(registryFilePath);
+      console.error(
+        `[Registry] Corrupt accounts.json preserved${backup ? ` at ${path.basename(backup)}` : ""}:`,
+        err.message,
+      );
       memoryRegistry = null;
     }
   }
@@ -61,7 +47,7 @@ export function initAccountRegistry(sessionsRoot) {
         },
       },
     };
-    atomicWriteFileSync(registryFilePath, memoryRegistry);
+    writeRegistry(registryFilePath, memoryRegistry);
   }
 
   // Ensure insuredesk_session is always registered
@@ -74,13 +60,13 @@ export function initAccountRegistry(sessionsRoot) {
       createdAt: new Date().toISOString(),
       lastSeenAt: null,
     };
-    atomicWriteFileSync(registryFilePath, memoryRegistry);
+    writeRegistry(registryFilePath, memoryRegistry);
   }
 
   // Validate activeAccountId points to an existing account
   if (!memoryRegistry.accounts[memoryRegistry.activeAccountId]) {
     memoryRegistry.activeAccountId = "insuredesk_session";
-    atomicWriteFileSync(registryFilePath, memoryRegistry);
+    writeRegistry(registryFilePath, memoryRegistry);
   }
 
   return memoryRegistry;
@@ -96,7 +82,7 @@ export function setActiveAccountId(accountId) {
     throw new Error(`Account '${accountId}' does not exist in registry`);
   }
   memoryRegistry.activeAccountId = accountId;
-  atomicWriteFileSync(registryFilePath, memoryRegistry);
+  writeRegistry(registryFilePath, memoryRegistry);
   console.log(`[Registry] Active sender switched to: ${accountId}`);
   return memoryRegistry.accounts[accountId];
 }
@@ -138,7 +124,7 @@ export function registerAccount(id, label, owner) {
   };
 
   memoryRegistry.accounts[cleanId] = newAccount;
-  atomicWriteFileSync(registryFilePath, memoryRegistry);
+  writeRegistry(registryFilePath, memoryRegistry);
   return newAccount;
 }
 
@@ -155,7 +141,7 @@ export function updateAccount(accountId, updates = {}) {
     lastSeenAt: new Date().toISOString(),
   };
   memoryRegistry.accounts[accountId] = updated;
-  atomicWriteFileSync(registryFilePath, memoryRegistry);
+  writeRegistry(registryFilePath, memoryRegistry);
   return updated;
 }
 
@@ -181,6 +167,6 @@ export function removeAccount(accountId) {
     console.log(`[Registry] Active sender reassigned to: ${memoryRegistry.activeAccountId}`);
   }
 
-  atomicWriteFileSync(registryFilePath, memoryRegistry);
+  writeRegistry(registryFilePath, memoryRegistry);
   return true;
 }

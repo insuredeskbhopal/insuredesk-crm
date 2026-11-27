@@ -109,18 +109,18 @@ export async function POST(request) {
       const phoneMatches =
         typeof prisma.clientAccount.findMany === "function"
           ? await prisma.clientAccount.findMany({
-              where: { phone: cleanPhone, deletedAt: null },
-              select: {
-                id: true,
-                clientCode: true,
-                name: true,
-                email: true,
-                phone: true,
-                organizationId: true,
-                deletedAt: true,
-              },
-              take: 3,
-            })
+            where: { phone: cleanPhone, deletedAt: null },
+            select: {
+              id: true,
+              clientCode: true,
+              name: true,
+              email: true,
+              phone: true,
+              organizationId: true,
+              deletedAt: true,
+            },
+            take: 3,
+          })
           : [];
       if (phoneMatches.length > 1) {
         return NextResponse.json(
@@ -214,7 +214,7 @@ export async function POST(request) {
     const credentialVersion = typeof writeResult === "number" ? writeResult : (writeResult?.credentialVersion || 1);
 
     // 5. Delete used OTP record to prevent replay
-    await prisma.task.delete({ where: { id: otpTask.id } }).catch(() => {});
+    await prisma.task.delete({ where: { id: otpTask.id } }).catch(() => { });
 
     // 6. Generate authenticated JWT token for the client session
     const token = await signJWT({

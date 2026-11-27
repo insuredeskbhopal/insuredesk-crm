@@ -334,5 +334,117 @@ describe("Notification Mailing and Email Flow", () => {
       expect(callArgs.html).toContain("9826012345");
       expect(callArgs.html).toContain("Looking for family health insurance");
     });
+
+    it("never exposes raw SMTP credentials or gsmtp errors when sending and persistence fail", async () => {
+      process.env.SMTP_HOST = "smtp.gmail.com";
+      process.env.SMTP_USER = "insuredeskbhopal@gmail.com";
+      process.env.SMTP_PASS = "bad-pass";
+
+      const mockSendMail = nodemailer.createTransport().sendMail;
+      mockSendMail.mockRejectedValueOnce(
+        new Error(
+          "Invalid login: 535-5.7.8 Username and Password not accepted. https://support.google.com/mail/?p=BadCredentials - gsmtp",
+        ),
+      );
+
+      const { POST } = await import("../src/app/api/contact/route");
+      const request = new Request("http://localhost/api/contact", {
+        method: "POST",
+        body: JSON.stringify({
+          name: "Abhishek Verma",
+          phone: "8839707135",
+          email: "abhishek@example.com",
+          service: "Warehouse Insurance",
+          message: "I need Warehouse Insurance",
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(503);
+      expect(data.success).toBe(false);
+      expect(data.error).not.toContain("535");
+      expect(data.error).not.toContain("gsmtp");
+      expect(data.error).not.toContain("BadCredentials");
+      expect(data.error).not.toContain("Username and Password");
+    });
+
+    it("persists contact inquiry in CRM notifications when email delivery fails", async () => {
+      process.env.SMTP_HOST = "smtp.gmail.com";
+      process.env.SMTP_USER = "insuredeskbhopal@gmail.com";
+      process.env.SMTP_PASS = "bad-pass";
+
+      prisma.organization = {
+        findFirst: vi.fn().mockResolvedValue({ id: "org-1" }),
+      };
+      prisma.notification = {
+        create: vi.fn().mockResolvedValue({ id: "notif-1" }),
+      };
+
+      const mockSendMail = nodemailer.createTransport().sendMail;
+      mockSendMail.mockRejectedValueOnce(
+        new Error("Invalid login: 535-5.7.8 Username and Password not accepted - gsmtp"),
+      );
+
+      try {
+        const { POST } = await import("../src/app/api/contact/route");
+        const request = new Request("http://localhost/api/contact", {
+          method: "POST",
+          body: JSON.stringify({
+            name: "Abhishek Verma",
+            phone: "8839707135",
+            email: "abhishek@example.com",
+            service: "Warehouse Insurance",
+            message: "I need Warehouse Insurance",
+          }),
+        });
+
+        const response = await POST(request);
+        const data = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(data.success).toBe(true);
+        expect(data.emailDelivered).toBe(false);
+        expect(data.referenceId).toBeTruthy();
+        expect(prisma.notification.create).toHaveBeenCalledTimes(1);
+        const notifArg = prisma.notification.create.mock.calls[0][0].data;
+        expect(notifArg.organizationId).toBe("org-1");
+        expect(notifArg.category).toBe("SERVICE_REQUEST");
+        expect(notifArg.title).toContain("Abhishek Verma");
+        expect(notifArg.metadata.phone).toBe("8839707135");
+      } finally {
+        delete prisma.organization;
+        delete prisma.notification;
+      }
+    });
+
+    it("escapes HTML and strips header newlines in contact emails", async () => {
+      process.env.SMTP_HOST = "smtp.example.com";
+      process.env.SMTP_USER = "user@example.com";
+      process.env.SMTP_PASS = "password";
+
+      const mockSendMail = nodemailer.createTransport().sendMail;
+
+      const { POST } = await import("../src/app/api/contact/route");
+      const request = new Request("http://localhost/api/contact", {
+        method: "POST",
+        body: JSON.stringify({
+          name: 'Ravi\r\n<script>alert(1)</script>',
+          phone: "9876543210",
+          email: "ravi@example.com",
+          service: "Motor Insurance",
+          message: '<img src=x onerror="alert(1)">\nLine 2',
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(200);
+      const callArgs = mockSendMail.mock.calls[0][0];
+      expect(callArgs.subject).not.toMatch(/[\r\n]/);
+      expect(callArgs.html).not.toContain("<script>");
+      expect(callArgs.html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+      expect(callArgs.html).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt;<br>Line 2");
+    });
   });
 });

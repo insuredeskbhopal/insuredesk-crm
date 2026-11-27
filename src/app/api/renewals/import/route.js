@@ -719,229 +719,229 @@ export async function POST(request) {
       }
 
       // Clean policy number (remove trailing colons or noise)
-        if (payload.policyNumber && typeof payload.policyNumber === "string") {
-          payload.policyNumber = payload.policyNumber.replace(/:+$/, "").trim();
-        }
-
-        // Clean mobile number
-        if (payload.contactNumber) {
-          const rawMob = String(payload.contactNumber).replace(/\D/g, "");
-          if (rawMob.length >= 10) {
-            payload.contactNumber = rawMob.slice(-10);
-            payload.customerMobile = payload.contactNumber;
-          }
-        }
-
-        // Isolation guarantees: this is a manual renewal workflow record
-        payload.manualRenewalSource = true;
-        delete payload.clientId;
-
-        payload.premium = payload.premium || payload.totalPremium || payload.netPremium || "";
-        payload.totalPremium = payload.totalPremium || payload.premium || "";
-        payload.sumInsured = payload.sumInsured || payload.sumInsuredDescription || payload.idv || "";
-        payload.sumInsuredDescription = payload.sumInsuredDescription || payload.sumInsured || "";
-        payload.contactPersonName = payload.contactPersonName || payload.contactPerson || "";
-        payload.contactPerson = payload.contactPerson || payload.contactPersonName || "";
-        payload.customerMobile = payload.customerMobile || payload.contactNumber || "";
-        payload.contactNumber = payload.contactNumber || payload.customerMobile || "";
-        payload.insuranceCompany = normalizeRenewalInsuranceCompany(
-          payload.insuranceCompany || payload.companyName,
-        );
-        payload.companyName = payload.insuranceCompany;
-
-        if (targetMonth) {
-          payload.targetRenewalMonth = String(targetMonth);
-          if (!payload.expiryDate) {
-            const pad = String(targetMonth).padStart(2, "0");
-            payload.expiryDate = `2026-${pad}-28`;
-          }
-        }
-
-        const name = payload.insuredName || "";
-        const policyNo = payload.policyNumber || "";
-        const vehicleNo = payload.vehicleNumber || payload.registrationNumber || "";
-        const product = payload.policyType || "";
-        const insuranceCompany = payload.insuranceCompany || "";
-        const mob = payload.contactNumber || "";
-        const status = payload.status || "";
-
-        // Row must have at least an insured name, a policy number, or a vehicle registration number
-        if (!name && !policyNo && !vehicleNo) {
-          skippedEmptyCount++;
-          continue;
-        }
-
-        let customerId = "";
-        if (name && mob) {
-          customerId = buildCustomerId(name, mob);
-        }
-        payload.customerId = customerId;
-
-        const match = findRenewalImportMatch(payload, existingRecords);
-        if (match.status === "ambiguous") {
-          ambiguousCount++;
-          continue;
-        }
-
-        if (match.status === "matched") {
-          const record = match.record;
-          const contactName = normalizeCustomerName(record.contactPersonName) || resolvePolicyCustomerName(payload);
-          const contactMobile = String(record.contactPersonMobile || payload.contactNumber || payload.customerMobile || "").trim();
-          const contactEmail = String(record.contactPersonEmail || payload.email || payload.customerEmail || "").trim();
-          const portfolioId = record.customerPortfolioId || await resolvePortfolio({ ...payload, contactNumber: contactMobile }, record.id);
-          const dataMerge = mergeRenewalImportData(record.data || {}, payload);
-          const reviewedMerge = mergeRenewalImportData(record.reviewedData || record.data || {}, payload);
-          const extractedMerge = mergeRenewalImportData(record.extractedData || record.data || {}, payload);
-
-          const updateData = {};
-          if (portfolioId && record.customerPortfolioId !== portfolioId) {
-            updateData.customerPortfolioId = portfolioId;
-          }
-          if (contactName && record.contactPersonName !== contactName) {
-            updateData.contactPersonName = contactName;
-          }
-          if (contactMobile && record.contactPersonMobile !== contactMobile) {
-            updateData.contactPersonMobile = contactMobile;
-          }
-          if (contactEmail && record.contactPersonEmail !== contactEmail) {
-            updateData.contactPersonEmail = contactEmail;
-          }
-          if (contactName && record.renewalRecipientName !== contactName) {
-            updateData.renewalRecipientName = contactName;
-          }
-          if (contactMobile && record.renewalRecipientMobile !== contactMobile) {
-            updateData.renewalRecipientMobile = contactMobile;
-          }
-          if (contactEmail && record.renewalRecipientEmail !== contactEmail) {
-            updateData.renewalRecipientEmail = contactEmail;
-          }
-
-          if (dataMerge.changedFields.length) updateData.data = dataMerge.data;
-          if (reviewedMerge.changedFields.length) updateData.reviewedData = sanitizeReviewedData(reviewedMerge.data);
-          if (extractedMerge.changedFields.length) updateData.extractedData = extractedMerge.data;
-
-          const updatedCanonical = buildCanonicalFields(reviewedMerge.data || dataMerge.data || payload);
-          Object.assign(updateData, updatedCanonical);
-
-          if (insuranceCompany && record.detectedCompany !== insuranceCompany) {
-            updateData.detectedCompany = insuranceCompany;
-          }
-          if (insuranceCompany && record.selectedCompany !== insuranceCompany) {
-            updateData.selectedCompany = insuranceCompany;
-          }
-          if (product && record.detectedPolicyType !== product) {
-            updateData.detectedPolicyType = product;
-          }
-          if (product && record.selectedPolicyType !== product) {
-            updateData.selectedPolicyType = product;
-          }
-
-          if (status) {
-            const statusLower = String(status).trim().toLowerCase();
-            if (statusLower === "renewed") {
-              updateData.renewalStatus = "RENEWED";
-              updateData.isActivePolicy = false;
-            } else if (statusLower === "lost") {
-              updateData.renewalStatus = "LOST";
-              updateData.isActivePolicy = false;
-            } else if (statusLower === "active") {
-              updateData.renewalStatus = "ACTIVE";
-              updateData.isActivePolicy = true;
-            }
-          }
-
-          if (!Object.keys(updateData).length) {
-            unchangedCount++;
-            continue;
-          }
-
-          updateData.updatedById = user.userId || user.id || null;
-          await prisma.policyRecord.update({ where: { id: record.id }, data: updateData });
-          Object.assign(record, updateData);
-          updatedCount++;
-          continue;
-        }
-
-        const sanitizedData = { ...payload, clientId: "", sourceFile: sourceFileName };
-
-        const statusLower = String(status || "")
-          .trim()
-          .toLowerCase();
-        let renewalStatus = "ACTIVE";
-        let isActivePolicy = true;
-
-        if (statusLower === "renewed") {
-          renewalStatus = "RENEWED";
-          isActivePolicy = false;
-        } else if (statusLower === "lost") {
-          renewalStatus = "LOST";
-          isActivePolicy = false;
-        }
-
-        const recordDate = new Date();
-        const recordId = randomUUID();
-        const portfolioId = await resolvePortfolio(sanitizedData, recordId);
-        const contactName = resolvePolicyCustomerName(sanitizedData);
-        const contactMobile = String(sanitizedData.contactNumber || sanitizedData.customerMobile || "").trim();
-        const contactEmail = String(sanitizedData.email || sanitizedData.customerEmail || "").trim();
-
-        const canonicalFields = buildCanonicalFields(sanitizedData);
-        const safeReviewedData = sanitizeReviewedData(sanitizedData);
-
-        await prisma.policyRecord.create({
-          data: {
-            id: recordId,
-            savedAt: recordDate,
-            createdAt: recordDate,
-            updatedAt: recordDate,
-            data: sanitizedData,
-            pdfFileName: sourceFileName,
-            pdfMimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            sourceFile: sourceFileName,
-            rawText: "",
-            detectedBankSource: "",
-            detectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
-            detectedServiceCategory: "",
-            detectedPolicyType: sanitizedData.policyType || product,
-            selectedBankSource: "",
-            selectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
-            selectedServiceCategory: "",
-            selectedPolicyType: sanitizedData.policyType || product,
-            confidenceScore: 1.0,
-            extractedData: sanitizedData,
-            reviewedData: safeReviewedData,
-            extractionMethod: MANUAL_RENEWAL_IMPORT_METHOD,
-            extractionQuality: {},
-            extractionLog: {},
-            schemaVersion: 1,
-            organizationId,
-            createdById: user.userId || user.id || null,
-            updatedById: null,
-            renewalStatus: renewalStatus,
-            isActivePolicy: isActivePolicy,
-            customerPortfolioId: portfolioId,
-            contactPersonName: contactName || null,
-            contactPersonMobile: contactMobile || null,
-            contactPersonEmail: contactEmail || null,
-            renewalRecipientName: contactName || null,
-            renewalRecipientMobile: contactMobile || null,
-            renewalRecipientEmail: contactEmail || null,
-            ...canonicalFields,
-          },
-        });
-
-        existingRecords.push({
-          id: recordId,
-          data: sanitizedData,
-          extractedData: sanitizedData,
-          reviewedData: sanitizedData,
-          detectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
-          detectedPolicyType: sanitizedData.policyType || product,
-          selectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
-          selectedPolicyType: sanitizedData.policyType || product,
-        });
-        insertedCount++;
+      if (payload.policyNumber && typeof payload.policyNumber === "string") {
+        payload.policyNumber = payload.policyNumber.replace(/:+$/, "").trim();
       }
+
+      // Clean mobile number
+      if (payload.contactNumber) {
+        const rawMob = String(payload.contactNumber).replace(/\D/g, "");
+        if (rawMob.length >= 10) {
+          payload.contactNumber = rawMob.slice(-10);
+          payload.customerMobile = payload.contactNumber;
+        }
+      }
+
+      // Isolation guarantees: this is a manual renewal workflow record
+      payload.manualRenewalSource = true;
+      delete payload.clientId;
+
+      payload.premium = payload.premium || payload.totalPremium || payload.netPremium || "";
+      payload.totalPremium = payload.totalPremium || payload.premium || "";
+      payload.sumInsured = payload.sumInsured || payload.sumInsuredDescription || payload.idv || "";
+      payload.sumInsuredDescription = payload.sumInsuredDescription || payload.sumInsured || "";
+      payload.contactPersonName = payload.contactPersonName || payload.contactPerson || "";
+      payload.contactPerson = payload.contactPerson || payload.contactPersonName || "";
+      payload.customerMobile = payload.customerMobile || payload.contactNumber || "";
+      payload.contactNumber = payload.contactNumber || payload.customerMobile || "";
+      payload.insuranceCompany = normalizeRenewalInsuranceCompany(
+        payload.insuranceCompany || payload.companyName,
+      );
+      payload.companyName = payload.insuranceCompany;
+
+      if (targetMonth) {
+        payload.targetRenewalMonth = String(targetMonth);
+        if (!payload.expiryDate) {
+          const pad = String(targetMonth).padStart(2, "0");
+          payload.expiryDate = `2026-${pad}-28`;
+        }
+      }
+
+      const name = payload.insuredName || "";
+      const policyNo = payload.policyNumber || "";
+      const vehicleNo = payload.vehicleNumber || payload.registrationNumber || "";
+      const product = payload.policyType || "";
+      const insuranceCompany = payload.insuranceCompany || "";
+      const mob = payload.contactNumber || "";
+      const status = payload.status || "";
+
+      // Row must have at least an insured name, a policy number, or a vehicle registration number
+      if (!name && !policyNo && !vehicleNo) {
+        skippedEmptyCount++;
+        continue;
+      }
+
+      let customerId = "";
+      if (name && mob) {
+        customerId = buildCustomerId(name, mob);
+      }
+      payload.customerId = customerId;
+
+      const match = findRenewalImportMatch(payload, existingRecords);
+      if (match.status === "ambiguous") {
+        ambiguousCount++;
+        continue;
+      }
+
+      if (match.status === "matched") {
+        const record = match.record;
+        const contactName = normalizeCustomerName(record.contactPersonName) || resolvePolicyCustomerName(payload);
+        const contactMobile = String(record.contactPersonMobile || payload.contactNumber || payload.customerMobile || "").trim();
+        const contactEmail = String(record.contactPersonEmail || payload.email || payload.customerEmail || "").trim();
+        const portfolioId = record.customerPortfolioId || await resolvePortfolio({ ...payload, contactNumber: contactMobile }, record.id);
+        const dataMerge = mergeRenewalImportData(record.data || {}, payload);
+        const reviewedMerge = mergeRenewalImportData(record.reviewedData || record.data || {}, payload);
+        const extractedMerge = mergeRenewalImportData(record.extractedData || record.data || {}, payload);
+
+        const updateData = {};
+        if (portfolioId && record.customerPortfolioId !== portfolioId) {
+          updateData.customerPortfolioId = portfolioId;
+        }
+        if (contactName && record.contactPersonName !== contactName) {
+          updateData.contactPersonName = contactName;
+        }
+        if (contactMobile && record.contactPersonMobile !== contactMobile) {
+          updateData.contactPersonMobile = contactMobile;
+        }
+        if (contactEmail && record.contactPersonEmail !== contactEmail) {
+          updateData.contactPersonEmail = contactEmail;
+        }
+        if (contactName && record.renewalRecipientName !== contactName) {
+          updateData.renewalRecipientName = contactName;
+        }
+        if (contactMobile && record.renewalRecipientMobile !== contactMobile) {
+          updateData.renewalRecipientMobile = contactMobile;
+        }
+        if (contactEmail && record.renewalRecipientEmail !== contactEmail) {
+          updateData.renewalRecipientEmail = contactEmail;
+        }
+
+        if (dataMerge.changedFields.length) updateData.data = dataMerge.data;
+        if (reviewedMerge.changedFields.length) updateData.reviewedData = sanitizeReviewedData(reviewedMerge.data);
+        if (extractedMerge.changedFields.length) updateData.extractedData = extractedMerge.data;
+
+        const updatedCanonical = buildCanonicalFields(reviewedMerge.data || dataMerge.data || payload);
+        Object.assign(updateData, updatedCanonical);
+
+        if (insuranceCompany && record.detectedCompany !== insuranceCompany) {
+          updateData.detectedCompany = insuranceCompany;
+        }
+        if (insuranceCompany && record.selectedCompany !== insuranceCompany) {
+          updateData.selectedCompany = insuranceCompany;
+        }
+        if (product && record.detectedPolicyType !== product) {
+          updateData.detectedPolicyType = product;
+        }
+        if (product && record.selectedPolicyType !== product) {
+          updateData.selectedPolicyType = product;
+        }
+
+        if (status) {
+          const statusLower = String(status).trim().toLowerCase();
+          if (statusLower === "renewed") {
+            updateData.renewalStatus = "RENEWED";
+            updateData.isActivePolicy = false;
+          } else if (statusLower === "lost") {
+            updateData.renewalStatus = "LOST";
+            updateData.isActivePolicy = false;
+          } else if (statusLower === "active") {
+            updateData.renewalStatus = "ACTIVE";
+            updateData.isActivePolicy = true;
+          }
+        }
+
+        if (!Object.keys(updateData).length) {
+          unchangedCount++;
+          continue;
+        }
+
+        updateData.updatedById = user.userId || user.id || null;
+        await prisma.policyRecord.update({ where: { id: record.id }, data: updateData });
+        Object.assign(record, updateData);
+        updatedCount++;
+        continue;
+      }
+
+      const sanitizedData = { ...payload, clientId: "", sourceFile: sourceFileName };
+
+      const statusLower = String(status || "")
+        .trim()
+        .toLowerCase();
+      let renewalStatus = "ACTIVE";
+      let isActivePolicy = true;
+
+      if (statusLower === "renewed") {
+        renewalStatus = "RENEWED";
+        isActivePolicy = false;
+      } else if (statusLower === "lost") {
+        renewalStatus = "LOST";
+        isActivePolicy = false;
+      }
+
+      const recordDate = new Date();
+      const recordId = randomUUID();
+      const portfolioId = await resolvePortfolio(sanitizedData, recordId);
+      const contactName = resolvePolicyCustomerName(sanitizedData);
+      const contactMobile = String(sanitizedData.contactNumber || sanitizedData.customerMobile || "").trim();
+      const contactEmail = String(sanitizedData.email || sanitizedData.customerEmail || "").trim();
+
+      const canonicalFields = buildCanonicalFields(sanitizedData);
+      const safeReviewedData = sanitizeReviewedData(sanitizedData);
+
+      await prisma.policyRecord.create({
+        data: {
+          id: recordId,
+          savedAt: recordDate,
+          createdAt: recordDate,
+          updatedAt: recordDate,
+          data: sanitizedData,
+          pdfFileName: sourceFileName,
+          pdfMimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          sourceFile: sourceFileName,
+          rawText: "",
+          detectedBankSource: "",
+          detectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
+          detectedServiceCategory: "",
+          detectedPolicyType: sanitizedData.policyType || product,
+          selectedBankSource: "",
+          selectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
+          selectedServiceCategory: "",
+          selectedPolicyType: sanitizedData.policyType || product,
+          confidenceScore: 1.0,
+          extractedData: sanitizedData,
+          reviewedData: safeReviewedData,
+          extractionMethod: MANUAL_RENEWAL_IMPORT_METHOD,
+          extractionQuality: {},
+          extractionLog: {},
+          schemaVersion: 1,
+          organizationId,
+          createdById: user.userId || user.id || null,
+          updatedById: null,
+          renewalStatus: renewalStatus,
+          isActivePolicy: isActivePolicy,
+          customerPortfolioId: portfolioId,
+          contactPersonName: contactName || null,
+          contactPersonMobile: contactMobile || null,
+          contactPersonEmail: contactEmail || null,
+          renewalRecipientName: contactName || null,
+          renewalRecipientMobile: contactMobile || null,
+          renewalRecipientEmail: contactEmail || null,
+          ...canonicalFields,
+        },
+      });
+
+      existingRecords.push({
+        id: recordId,
+        data: sanitizedData,
+        extractedData: sanitizedData,
+        reviewedData: sanitizedData,
+        detectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
+        detectedPolicyType: sanitizedData.policyType || product,
+        selectedCompany: sanitizedData.insuranceCompany || insuranceCompany,
+        selectedPolicyType: sanitizedData.policyType || product,
+      });
+      insertedCount++;
+    }
 
     // Record audit trail entry for accountability
     try {

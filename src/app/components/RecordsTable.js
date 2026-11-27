@@ -159,7 +159,7 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
   let rawValue = [record[column.key], ...fallbackKeys.map((key) => record[key])].find(
     (candidate) => candidate !== undefined && candidate !== null && candidate !== "",
   );
-  
+
   if (column.key === "vehicleLocation") {
     const veh = (record.vehicleNumber || record.registrationNumber || "").trim();
     if (veh) return <span className="record-code">{veh}</span>;
@@ -358,7 +358,7 @@ function renderCell(record, column, isExpanded, onToggleLongText) {
               (!rawValue || Number(String(rawValue).replace(/[^0-9.-]/g, "")) <= 0)
               ? "-"
               : formatMoneyValue(rawValue)
-          : rawValue || "";
+            : rawValue || "";
   if (column.compact && String(value).length > 32) {
     return (
       <div className={`record-compact-text${isExpanded ? " expanded" : ""}`}>
@@ -580,15 +580,15 @@ export default function RecordsTable({
           <h3>${title}</h3>
           <div class="grid">
             ${validFields
-              .map(
-                ([lbl, val]) => `
+          .map(
+            ([lbl, val]) => `
               <div class="field">
                 <span class="label">${lbl}</span>
                 <span class="value">${val}</span>
               </div>
             `,
-              )
-              .join("")}
+          )
+          .join("")}
           </div>
         </div>
       `;
@@ -696,106 +696,105 @@ export default function RecordsTable({
           </div>
           
           ${renderPrintSection("General Information", [
-            ["Customer ID", record.customerId],
-            ["Insured Name", record.insuredName],
-            ["Contact Person", record.contactPerson],
-            ["Phone Number", record.contactNumber],
-            ["WhatsApp Group Name", record.whatsappGroupName],
-            ["Group Name", record.groupName],
-            ["Insurance Company", record.insuranceCompany],
-            ["Policy Type", record.policyType],
-            ["New / Renewal", record.newOrRenewal],
-          ])}
+      ["Customer ID", record.customerId],
+      ["Insured Name", record.insuredName],
+      ["Contact Person", record.contactPerson],
+      ["Phone Number", record.contactNumber],
+      ["WhatsApp Group Name", record.whatsappGroupName],
+      ["Group Name", record.groupName],
+      ["Insurance Company", record.insuranceCompany],
+      ["Policy Type", record.policyType],
+      ["New / Renewal", record.newOrRenewal],
+    ])}
 
           ${renderPrintSection("Dates & Coverage", [
-            ["Start Date", formatDateLocal(record.startDate)],
-            ["Expiry Date", formatDateLocal(record.expiryDate)],
-            ["Duration", record.duration],
-            ["Policy Tenure", record.policyTenure],
-            ["Sum Insured", record.sumInsured],
-          ])}
+      ["Start Date", formatDateLocal(record.startDate)],
+      ["Expiry Date", formatDateLocal(record.expiryDate)],
+      ["Duration", record.duration],
+      ["Policy Tenure", record.policyTenure],
+      ["Sum Insured", record.sumInsured],
+    ])}
 
           ${renderPrintSection("Financial Details", [
-            ["Basic Premium", record.basicPremium],
-            ["GST", record.gstAmount],
-            ["Stamp Duty", record.stampDuty],
-            ["Net Premium", record.netPremium],
-            ["OD Premium", isHealth ? "" : record.odPremium],
-            ["TP + Driver + Owner", isHealth ? "" : record.tpDriverOwner],
-            ["Total Premium", record.totalPremium],
-            ["Mode of Payment", isHealth ? "" : record.modeOfPayment],
-            ["Collected Amount", isHealth ? "" : record.collectedAmount],
-            ["Due Collection", isHealth ? "" : record.dueCollection],
-          ])}
+      ["Basic Premium", record.basicPremium],
+      ["GST", record.gstAmount],
+      ["Stamp Duty", record.stampDuty],
+      ["Net Premium", record.netPremium],
+      ["OD Premium", isHealth ? "" : record.odPremium],
+      ["TP + Driver + Owner", isHealth ? "" : record.tpDriverOwner],
+      ["Total Premium", record.totalPremium],
+      ["Mode of Payment", isHealth ? "" : record.modeOfPayment],
+      ["Collected Amount", isHealth ? "" : record.collectedAmount],
+      ["Due Collection", isHealth ? "" : record.dueCollection],
+    ])}
 
           ${isHealth ? "" : renderPrintSection("Vehicle Details", [
-            ["Vehicle Number", record.vehicleNumber],
-            ["Make & Model", record.makeModel],
-            ["Variant", record.variant],
-            ["Registration Number", record.registrationNumber],
-            ["Registration Date", formatDateLocal(record.registrationDate)],
-            ["Manufacturing Year", record.manufacturingYear],
-            ["Fuel Type", record.fuelType],
-            ["Engine Number", record.engineNumber],
-            ["Chassis Number", record.chassisNumber],
-            ["Seating Capacity", record.seatingCapacity],
-            ["Cubic Capacity", record.cubicCapacity],
-            ["IDV", record.idv],
-            ["NCB", record.ncb],
-            ["Cover Type", record.policyCoverType],
-            ["RTO Location", record.rtoLocation],
-          ])}
+      ["Vehicle Number", record.vehicleNumber],
+      ["Make & Model", record.makeModel],
+      ["Variant", record.variant],
+      ["Registration Number", record.registrationNumber],
+      ["Registration Date", formatDateLocal(record.registrationDate)],
+      ["Manufacturing Year", record.manufacturingYear],
+      ["Fuel Type", record.fuelType],
+      ["Engine Number", record.engineNumber],
+      ["Chassis Number", record.chassisNumber],
+      ["Seating Capacity", record.seatingCapacity],
+      ["Cubic Capacity", record.cubicCapacity],
+      ["IDV", record.idv],
+      ["NCB", record.ncb],
+      ["Cover Type", record.policyCoverType],
+      ["RTO Location", record.rtoLocation],
+    ])}
 
-          ${
-            isHealth && Array.isArray(record.insuredMembers)
-              ? record.insuredMembers
-                  .map((member, index) =>
-                    renderPrintSection(`Insured Member ${index + 1}`, [
-                      ["Insured Name", member.name || member.insuredName],
-                      ["Date of Birth", member.dateOfBirth],
-                      ["Age", member.age],
-                      ["Gender", member.gender],
-                      ["Relationship with Policyholder", member.relationship || member.relationshipWithPolicyholder],
-                      ["ABHA ID", member.abhaId],
-                      ["Pre-existing Diseases", member.preExistingDiseases],
-                      ["First Policy Inception Date", member.firstPolicyInceptionDate],
-                      ["Specific Conditions", member.specificConditions],
-                    ]),
-                  )
-                  .join("")
-              : ""
-          }
+          ${isHealth && Array.isArray(record.insuredMembers)
+        ? record.insuredMembers
+          .map((member, index) =>
+            renderPrintSection(`Insured Member ${index + 1}`, [
+              ["Insured Name", member.name || member.insuredName],
+              ["Date of Birth", member.dateOfBirth],
+              ["Age", member.age],
+              ["Gender", member.gender],
+              ["Relationship with Policyholder", member.relationship || member.relationshipWithPolicyholder],
+              ["ABHA ID", member.abhaId],
+              ["Pre-existing Diseases", member.preExistingDiseases],
+              ["First Policy Inception Date", member.firstPolicyInceptionDate],
+              ["Specific Conditions", member.specificConditions],
+            ]),
+          )
+          .join("")
+        : ""
+      }
 
           ${renderPrintSection("Additional & Risk Details", [
-            ["Nominee Name", record.nomineeName],
-            ["Nominee Relationship", record.nomineeRelationship],
-            ["Nominee Date of Birth", record.nomineeDateOfBirth],
-            ["Previous Policy Number", record.previousPolicyNumber],
-            ["Number of Insured Members", record.numberOfInsuredMembers],
-            ["Hypothecation / Financer", isHealth ? "" : record.financerName],
-            ["Risk Location", isHealth ? "" : record.riskLocation],
-            ["Occupancy", isHealth ? "" : record.occupancy],
-            ["Tehsil", isHealth ? "" : record.tehsil],
-            ["District", isHealth ? "" : record.district],
-            ["PPT / MPWLC", isHealth ? "" : record.pptMpwlc],
-            ["Valid In", isHealth ? "" : record.validIn],
-            ["Remarks", record.remark],
-          ])}
+        ["Nominee Name", record.nomineeName],
+        ["Nominee Relationship", record.nomineeRelationship],
+        ["Nominee Date of Birth", record.nomineeDateOfBirth],
+        ["Previous Policy Number", record.previousPolicyNumber],
+        ["Number of Insured Members", record.numberOfInsuredMembers],
+        ["Hypothecation / Financer", isHealth ? "" : record.financerName],
+        ["Risk Location", isHealth ? "" : record.riskLocation],
+        ["Occupancy", isHealth ? "" : record.occupancy],
+        ["Tehsil", isHealth ? "" : record.tehsil],
+        ["District", isHealth ? "" : record.district],
+        ["PPT / MPWLC", isHealth ? "" : record.pptMpwlc],
+        ["Valid In", isHealth ? "" : record.validIn],
+        ["Remarks", record.remark],
+      ])}
 
           ${renderPrintSection("Metadata", [
-            ["Source PDF File", record.sourceFile],
-            [
-              "Created By",
-              (typeof record.uploadedBy === "object" ? record.uploadedBy?.name || record.uploadedBy?.email : record.uploadedBy) ||
-                (typeof record.createdBy === "object" ? record.createdBy?.name || record.createdBy?.email : record.createdBy) ||
-                record.uploadedByEmail ||
-                record.createdByEmail ||
-                record.createdByName ||
-                "",
-            ],
-            ["Saved Date", formatDateTimeLocal(record.savedAt)],
-            ["Renewal Status", record.renewalStatus],
-          ])}
+        ["Source PDF File", record.sourceFile],
+        [
+          "Created By",
+          (typeof record.uploadedBy === "object" ? record.uploadedBy?.name || record.uploadedBy?.email : record.uploadedBy) ||
+          (typeof record.createdBy === "object" ? record.createdBy?.name || record.createdBy?.email : record.createdBy) ||
+          record.uploadedByEmail ||
+          record.createdByEmail ||
+          record.createdByName ||
+          "",
+        ],
+        ["Saved Date", formatDateTimeLocal(record.savedAt)],
+        ["Renewal Status", record.renewalStatus],
+      ])}
 
           <script>
             window.onload = function() {
@@ -1162,75 +1161,109 @@ export default function RecordsTable({
 
       {activeActionMenuId && actionMenuPosition && typeof document !== "undefined"
         ? createPortal(
-            <>
-              <div
-                style={{
-                  position: "fixed",
-                  inset: 0,
-                  zIndex: 9998,
-                  background: "transparent",
-                }}
-                onClick={closeActionMenu}
-              />
-              <div
-                role="menu"
-                style={{
-                  position: "fixed",
-                  zIndex: 9999,
-                  top: `${actionMenuPosition.top}px`,
-                  left: `${actionMenuPosition.left}px`,
-                  width: `${actionMenuPosition.width || 180}px`,
-                  backgroundColor: "#ffffff",
-                  borderRadius: "8px",
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.08)",
-                  padding: "5px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                }}
-              >
-                {(() => {
-                  const activeRec = records.find((r) => r.id === activeActionMenuId);
-                  if (!activeRec) return null;
-                  return (
-                    <>
-                      {activeRec.hasPdf ? (
-                        <a
-                          href={`/api/records/${activeRec.id}/pdf`}
-                          download
-                          onClick={closeActionMenu}
-                          className="record-menu-action-item"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-start",
-                            width: "100%",
-                            boxSizing: "border-box",
-                            gap: "8px",
-                            padding: "8px 10px",
-                            margin: 0,
-                            borderRadius: "6px",
-                            fontSize: "12px",
-                            fontWeight: 500,
-                            color: "#334155",
-                            textDecoration: "none",
-                            textAlign: "left",
-                            cursor: "pointer",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                        >
-                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-                            <Download size={14} />
-                          </span>
-                          <span style={{ flex: 1, textAlign: "left" }}>Download PDF</span>
-                        </a>
-                      ) : null}
+          <>
+            <div
+              style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 9998,
+                background: "transparent",
+              }}
+              onClick={closeActionMenu}
+            />
+            <div
+              role="menu"
+              style={{
+                position: "fixed",
+                zIndex: 9999,
+                top: `${actionMenuPosition.top}px`,
+                left: `${actionMenuPosition.left}px`,
+                width: `${actionMenuPosition.width || 180}px`,
+                backgroundColor: "#ffffff",
+                borderRadius: "8px",
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.08)",
+                padding: "5px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "2px",
+              }}
+            >
+              {(() => {
+                const activeRec = records.find((r) => r.id === activeActionMenuId);
+                if (!activeRec) return null;
+                return (
+                  <>
+                    {activeRec.hasPdf ? (
+                      <a
+                        href={`/api/records/${activeRec.id}/pdf`}
+                        download
+                        onClick={closeActionMenu}
+                        className="record-menu-action-item"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "flex-start",
+                          width: "100%",
+                          boxSizing: "border-box",
+                          gap: "8px",
+                          padding: "8px 10px",
+                          margin: 0,
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: 500,
+                          color: "#334155",
+                          textDecoration: "none",
+                          textAlign: "left",
+                          cursor: "pointer",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                      >
+                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+                          <Download size={14} />
+                        </span>
+                        <span style={{ flex: 1, textAlign: "left" }}>Download PDF</span>
+                      </a>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeActionMenu();
+                        handlePrint(activeRec);
+                      }}
+                      className="record-menu-action-item"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-start",
+                        width: "100%",
+                        boxSizing: "border-box",
+                        gap: "8px",
+                        padding: "8px 10px",
+                        margin: 0,
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        color: "#334155",
+                        background: "none",
+                        border: "none",
+                        textAlign: "left",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
+                      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+                        <Printer size={14} />
+                      </span>
+                      <span style={{ flex: 1, textAlign: "left" }}>Print Policy</span>
+                    </button>
+                    {canEdit ? (
                       <button
                         type="button"
                         onClick={() => {
                           closeActionMenu();
-                          handlePrint(activeRec);
+                          onEdit?.(activeRec);
                         }}
                         className="record-menu-action-item"
                         style={{
@@ -1255,87 +1288,53 @@ export default function RecordsTable({
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                       >
                         <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-                          <Printer size={14} />
+                          <Pencil size={14} />
                         </span>
-                        <span style={{ flex: 1, textAlign: "left" }}>Print Policy</span>
+                        <span style={{ flex: 1, textAlign: "left" }}>Edit Policy</span>
                       </button>
-                      {canEdit ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            closeActionMenu();
-                            onEdit?.(activeRec);
-                          }}
-                          className="record-menu-action-item"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-start",
-                            width: "100%",
-                            boxSizing: "border-box",
-                            gap: "8px",
-                            padding: "8px 10px",
-                            margin: 0,
-                            borderRadius: "6px",
-                            fontSize: "12px",
-                            fontWeight: 500,
-                            color: "#334155",
-                            background: "none",
-                            border: "none",
-                            textAlign: "left",
-                            cursor: "pointer",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                        >
-                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-                            <Pencil size={14} />
-                          </span>
-                          <span style={{ flex: 1, textAlign: "left" }}>Edit Policy</span>
-                        </button>
-                      ) : null}
-                      {canDelete ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            closeActionMenu();
-                            onDelete?.([activeRec]);
-                          }}
-                          className="record-menu-action-item"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-start",
-                            width: "100%",
-                            boxSizing: "border-box",
-                            gap: "8px",
-                            padding: "8px 10px",
-                            margin: 0,
-                            borderRadius: "6px",
-                            fontSize: "12px",
-                            fontWeight: 500,
-                            color: "#dc2626",
-                            background: "none",
-                            border: "none",
-                            textAlign: "left",
-                            cursor: "pointer",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fef2f2")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                        >
-                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
-                            <Trash2 size={14} />
-                          </span>
-                          <span style={{ flex: 1, textAlign: "left" }}>Delete Record</span>
-                        </button>
-                      ) : null}
-                    </>
-                  );
-                })()}
-              </div>
-            </>,
-            document.body,
-          )
+                    ) : null}
+                    {canDelete ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeActionMenu();
+                          onDelete?.([activeRec]);
+                        }}
+                        className="record-menu-action-item"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "flex-start",
+                          width: "100%",
+                          boxSizing: "border-box",
+                          gap: "8px",
+                          padding: "8px 10px",
+                          margin: 0,
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: 500,
+                          color: "#dc2626",
+                          background: "none",
+                          border: "none",
+                          textAlign: "left",
+                          cursor: "pointer",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fef2f2")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                      >
+                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px", flexShrink: 0 }}>
+                          <Trash2 size={14} />
+                        </span>
+                        <span style={{ flex: 1, textAlign: "left" }}>Delete Record</span>
+                      </button>
+                    ) : null}
+                  </>
+                );
+              })()}
+            </div>
+          </>,
+          document.body,
+        )
         : null}
 
       {paginate && (records.length > pageSize || records.length > 15) ? (

@@ -200,11 +200,14 @@ export async function POST(request) {
       : withAgentSignature(message, body.signature || buildDefaultAgentSignature(session));
 
     const targetAccountId = await resolveWhatsAppSender(session);
+    const idempotencyKey =
+      request.headers?.get?.("x-idempotency-key") || body.idempotencyKey || null;
     const context = {
       userId: session.userId,
       organizationId: session.organizationId,
       accountId: targetAccountId,
       recipientName: body.recipientName,
+      ...(idempotencyKey ? { idempotencyKey: String(idempotencyKey).trim() } : {}),
     };
     const sendWhatsAppText = (to, message) => dispatchWhatsApp(context, "TEXT", to, message);
     const sendWhatsAppImage = (to, data, filename, caption) =>

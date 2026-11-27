@@ -73,21 +73,46 @@ describe("Pairing and reconnection lifecycle without live WhatsApp", () => {
     expect(m.make).toHaveBeenCalledTimes(1);
     expect(manager.getStatus(id).state).toBe("QR_READY");
   });
-  it("reopens the socket after a pairing timeout instead of staying CONNECTING", async () => {
+  it("stops unpaired 408 pairing timeouts without auto-looping and requires explicit connect to reopen", async () => {
     const id = newAccount();
     await manager.startConnection(id);
     await m.sockets[0].events["connection.update"]({
       connection: "close",
       lastDisconnect: { error: { output: { statusCode: 408 } } },
     });
-    expect(manager.getStatus(id).state).toBe("RECONNECTING");
-    await vi.advanceTimersByTimeAsync(2000);
+    expect(manager.getStatus(id).state).toBe("DISCONNECTED");
+    await vi.advanceTimersByTimeAsync(10000);
+    // Repeated read-only status polls never trigger auto-reconnect or QR generation
+    expect(manager.getStatus(id).state).toBe("DISCONNECTED");
+    expect(manager.getStatus(id).state).toBe("DISCONNECTED");
+    expect(m.make).toHaveBeenCalledTimes(1);
+
+    // Explicit user reconnect starts fresh pairing and ignores stale socket close events
+    await manager.startConnection(id, { trigger: "manual" });
     expect(m.make).toHaveBeenCalledTimes(2);
     await m.sockets[1].events["connection.update"]({ qr: "renewed" });
     expect(manager.getStatus(id).state).toBe("QR_READY");
     // A delayed event from the old socket must not invalidate the new pairing.
     await m.sockets[0].events["connection.update"]({ connection: "close" });
     expect(manager.getStatus(id).state).toBe("QR_READY");
+  });
+
+  it("reconnects paired accounts on transient disconnect with backoff while respecting pause", async () => {
+    const id = newAccount();
+    m.auth.mockResolvedValue({
+      state: { creds: { registered: true, me: { id: "919876543210@s.whatsapp.net" } }, keys: {} },
+      saveCreds: vi.fn(),
+    });
+    await manager.startConnection(id);
+    await m.sockets[0].events["connection.update"]({
+      connection: "close",
+      lastDisconnect: { error: { output: { statusCode: 408 } } },
+    });
+    expect(manager.getStatus(id).state).toBe("RECONNECTING");
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(m.make).toHaveBeenCalledTimes(2);
+    await m.sockets[1].events["connection.update"]({ connection: "open" });
+    expect(manager.getStatus(id).state).toBe("CONNECTED");
   });
   it("does not reconnect a deliberate pause, and explicit connect resumes it", async () => {
     const id = newAccount();

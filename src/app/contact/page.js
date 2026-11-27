@@ -115,8 +115,10 @@ export default function ContactPage() {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (event) => {
+    setErrorMessage("");
     setFormState((current) => ({
       ...current,
       [event.target.name]: event.target.value,
@@ -125,11 +127,12 @@ export default function ContactPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!formState.name || !formState.phone || !formState.message) {
-      window.alert("Please fill name, phone number, and message.");
+    setErrorMessage("");
+    if (!formState.name.trim() || !formState.phone.trim() || !formState.message.trim()) {
+      setErrorMessage("Please fill name, phone number, and message.");
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/contact", {
@@ -137,9 +140,9 @@ export default function ContactPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formState),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to submit request. Please try again.");
+        throw new Error(data.error || "Unable to submit request right now. Please try again.");
       }
       setIsSubmitted(true);
       setFormState({
@@ -150,7 +153,9 @@ export default function ContactPage() {
         message: "",
       });
     } catch (error) {
-      window.alert(error.message);
+      setErrorMessage(
+        error?.message || "Unable to submit request right now. Please call us directly.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -319,6 +324,24 @@ export default function ContactPage() {
                         required
                       />
                     </label>
+                    {errorMessage ? (
+                      <div
+                        role="alert"
+                        className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+                      >
+                        <p>{errorMessage}</p>
+                        <p className="mt-1 text-xs text-red-700">
+                          Need immediate assistance? Call{" "}
+                          <a
+                            href={`tel:${BUSINESS_DETAILS.phoneHref}`}
+                            className="font-semibold underline"
+                          >
+                            {BUSINESS_DETAILS.phone}
+                          </a>
+                          .
+                        </p>
+                      </div>
+                    ) : null}
                      <button type="submit" className="contact-submit-button" disabled={isSubmitting}>
                       {isSubmitting ? "Submitting..." : "Request Free Policy & Risk Audit"}
                     </button>

@@ -56,18 +56,18 @@ export async function GET(request) {
   const attachedPolicies =
     requestIds.length > 0
       ? await prisma.policyRecord.findMany({
-          where: { clientIdRequestId: { in: requestIds }, deletedAt: null },
-          select: {
-            id: true,
-            clientIdRequestId: true,
-            sourceFile: true,
-            data: true,
-            reviewedData: true,
-            clientIdPending: true,
-            clientIdStatus: true,
-          },
-          orderBy: { savedAt: "desc" },
-        })
+        where: { clientIdRequestId: { in: requestIds }, deletedAt: null },
+        select: {
+          id: true,
+          clientIdRequestId: true,
+          sourceFile: true,
+          data: true,
+          reviewedData: true,
+          clientIdPending: true,
+          clientIdStatus: true,
+        },
+        orderBy: { savedAt: "desc" },
+      })
       : [];
 
   const policiesByRequestId = new Map();

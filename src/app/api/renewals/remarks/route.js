@@ -91,9 +91,9 @@ export async function POST(request) {
         const freshPol =
           (typeof tx.policyRecord.findUnique === "function"
             ? await tx.policyRecord.findUnique({
-                where: { id: pol.id },
-                select: { reviewedData: true, data: true, renewalStatus: true },
-              })
+              where: { id: pol.id },
+              select: { reviewedData: true, data: true, renewalStatus: true },
+            })
             : null) || pol;
 
         const currentStatus = freshPol.renewalStatus || pol.renewalStatus || "ACTIVE";

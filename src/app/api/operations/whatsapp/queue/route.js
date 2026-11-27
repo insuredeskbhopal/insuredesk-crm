@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireWhatsAppStaff, isWhatsAppAdmin } from "@/lib/whatsapp/account-access";
+import { getWhatsAppMessageStatus } from "@/lib/whatsapp/whatsapp-client";
 
 export const runtime = "nodejs";
 
@@ -97,6 +98,33 @@ export async function POST(request) {
       return NextResponse.json({ error: "Resend this attachment from its original CRM form; the audit record does not contain its file." }, { status: 409 });
     }
 
+    let statusProbeFn;
+    try {
+      statusProbeFn = getWhatsAppMessageStatus;
+    } catch {
+      statusProbeFn = undefined;
+    }
+    if (message.status === "UNCERTAIN" && typeof statusProbeFn === "function") {
+      const probe = await statusProbeFn(message.id).catch(() => null);
+      if (probe?.found && probe.entry?.status === "SENT") {
+        const reconciled = await prisma.whatsAppMessageQueue.update({
+          where: {
+            id: messageId,
+            organizationId: orgId,
+            ...(!isWhatsAppAdmin(session) ? { initiatedByUserId: session.userId } : {}),
+            status: "UNCERTAIN",
+          },
+          data: {
+            status: "SENT",
+            sentAt: probe.entry.recordedAt ? new Date(probe.entry.recordedAt) : new Date(),
+            openwaMessageId: probe.entry.id ? String(probe.entry.id) : null,
+            errorMessage: null,
+          },
+        });
+        return NextResponse.json({ success: true, reconciled: true, message: reconciled });
+      }
+    }
+
     // Recheck scope and eligibility atomically so retries cannot reset an active send.
     let updated;
     try {
@@ -105,7 +133,7 @@ export async function POST(request) {
           id: messageId,
           organizationId: orgId,
           ...(!isWhatsAppAdmin(session) ? { initiatedByUserId: session.userId } : {}),
-          status: { in: ["FAILED", "RETRYING"] },
+          status: { in: ["FAILED", "RETRYING", "UNCERTAIN"] },
         },
         data: {
           status: "PENDING",

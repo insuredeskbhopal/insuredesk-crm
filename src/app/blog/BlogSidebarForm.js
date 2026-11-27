@@ -10,14 +10,16 @@ export default function BlogSidebarForm({ defaultService }) {
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formState.name || !formState.phone) {
-      window.alert("Please provide name and phone number.");
+    setErrorMessage("");
+    if (!formState.name.trim() || !formState.phone.trim()) {
+      setErrorMessage("Please provide name and phone number.");
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/contact", {
@@ -28,9 +30,9 @@ export default function BlogSidebarForm({ defaultService }) {
           service: defaultService || "Blog Consultation",
         }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to submit request. Please try again.");
+        throw new Error(data.error || "Unable to submit request right now. Please try again.");
       }
       setIsSubmitted(true);
       setFormState({
@@ -39,13 +41,14 @@ export default function BlogSidebarForm({ defaultService }) {
         message: "",
       });
     } catch (error) {
-      window.alert(error.message);
+      setErrorMessage(error?.message || "Unable to submit request right now. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleChange = (e) => {
+    setErrorMessage("");
     setFormState((curr) => ({
       ...curr,
       [e.target.name]: e.target.value,
@@ -100,6 +103,14 @@ export default function BlogSidebarForm({ defaultService }) {
               onChange={handleChange}
             />
           </label>
+          {errorMessage ? (
+            <div
+              role="alert"
+              className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-medium text-red-800"
+            >
+              {errorMessage}
+            </div>
+          ) : null}
           <button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Submitting..." : "Submit Request"}
             <span className="material-symbols-outlined">send</span>

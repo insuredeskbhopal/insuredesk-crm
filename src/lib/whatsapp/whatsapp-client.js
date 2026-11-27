@@ -4,6 +4,52 @@
  * Communicates with the standalone Baileys gateway (multi-account capable).
  * Provider-agnostic interface ready for future Meta Cloud API adapters.
  */
+import { AsyncLocalStorage } from "node:async_hooks";
+
+const DEFAULT_GATEWAY_TIMEOUT_MS = 15000;
+const MEDIA_GATEWAY_TIMEOUT_MS = 30000;
+const OCR_GATEWAY_TIMEOUT_MS = 45000;
+const idempotencyStorage = new AsyncLocalStorage();
+
+export function withWhatsAppIdempotencyKey(idempotencyKey, fn) {
+  const key = String(idempotencyKey || "").trim();
+  if (!key) return fn();
+  return idempotencyStorage.run(key, fn);
+}
+
+export function isUncertainGatewayError(error) {
+  return Boolean(
+    error?.uncertainDelivery ||
+      error?.isTimeout ||
+      error?.code === "GATEWAY_TIMEOUT" ||
+      error?.name === "TimeoutError" ||
+      error?.name === "AbortError",
+  );
+}
+
+function resolveTimeoutMs(endpoint, explicitTimeoutMs) {
+  if (Number.isFinite(explicitTimeoutMs) && explicitTimeoutMs > 0) return explicitTimeoutMs;
+  const envMs = Number.parseInt(process.env.WHATSAPP_GATEWAY_TIMEOUT_MS || "", 10);
+  if (Number.isFinite(envMs) && envMs >= 1000) return envMs;
+  const clean = endpoint.replace(/^\//, "");
+  if (clean.startsWith("ocr")) return OCR_GATEWAY_TIMEOUT_MS;
+  if (clean.startsWith("send-media") || clean.startsWith("send-birthday-wish")) {
+    return MEDIA_GATEWAY_TIMEOUT_MS;
+  }
+  return DEFAULT_GATEWAY_TIMEOUT_MS;
+}
+
+function buildAbortSignal(timeoutMs, externalSignal) {
+  const SignalClass = globalThis.AbortSignal;
+  const timeoutSignal =
+    typeof SignalClass !== "undefined" && typeof SignalClass.timeout === "function"
+      ? SignalClass.timeout(timeoutMs)
+      : undefined;
+  if (externalSignal && timeoutSignal && typeof SignalClass.any === "function") {
+    return SignalClass.any([externalSignal, timeoutSignal]);
+  }
+  return externalSignal || timeoutSignal;
+}
 
 function getGatewayConfig() {
   const rawBaseUrl = process.env.WHATSAPP_GATEWAY_URL || process.env.OPENWA_BASE_URL || "";
@@ -42,44 +88,128 @@ function formatRecipient(recipient) {
   return cleaned;
 }
 
-export async function callGateway(method, endpoint, payload = null) {
+export async function callGateway(method, endpoint, payload = null, requestOptions = {}) {
   const { baseUrl, apiKey } = getGatewayConfig();
-  const url = `${baseUrl}/${endpoint.replace(/^\//, "")}`;
+  const cleanEndpoint = endpoint.replace(/^\//, "");
+  const url = `${baseUrl}/${cleanEndpoint}`;
+  const idempotencyKey = requestOptions.idempotencyKey || idempotencyStorage.getStore() || null;
   const headers = {
     "Content-Type": "application/json",
     "x-api-key": apiKey,
+    ...(idempotencyKey ? { "x-idempotency-key": String(idempotencyKey) } : {}),
   };
 
+  const timeoutMs = resolveTimeoutMs(cleanEndpoint, requestOptions.timeoutMs);
+  const signal = buildAbortSignal(timeoutMs, requestOptions.signal);
   const options = {
     method,
     headers,
+    ...(signal ? { signal } : {}),
   };
   if (payload && method !== "GET") {
     options.body = JSON.stringify(payload);
   }
 
-  const response = await fetch(url, options);
+  const isSendEndpoint =
+    method === "POST" && /^(send-text|send-media|send-birthday-wish)\b/.test(cleanEndpoint);
+
+  let response;
+  try {
+    response = await fetch(url, options);
+  } catch (networkErr) {
+    const isTimeout =
+      networkErr?.name === "TimeoutError" ||
+      networkErr?.name === "AbortError" ||
+      /timed? ?out/i.test(String(networkErr?.message || ""));
+    if (isTimeout) {
+      throw Object.assign(
+        new Error(`WhatsApp gateway request timed out after ${timeoutMs}ms.`),
+        {
+          status: 504,
+          code: "GATEWAY_TIMEOUT",
+          isTimeout: true,
+          uncertainDelivery: isSendEndpoint,
+          cause: networkErr,
+        },
+      );
+    }
+    const errMsg = String(networkErr?.message || "Network error");
+    const definitelyNotSent = /ECONNREFUSED|ENOTFOUND|EAI_AGAIN|Connection refused/i.test(errMsg);
+    if (networkErr instanceof Error) {
+      networkErr.uncertainDelivery = isSendEndpoint && !definitelyNotSent;
+      throw networkErr;
+    }
+    throw Object.assign(new Error(errMsg), { uncertainDelivery: isSendEndpoint && !definitelyNotSent });
+  }
 
   if (!response.ok) {
     const contentType = response.headers?.get?.("content-type") || "";
     const errorBody = contentType.includes("application/json")
       ? await response.json().catch(() => ({}))
       : await response.text().catch(() => "");
-    const gatewayMessage = typeof errorBody === "object" ? errorBody.error : "";
+    const isHtml =
+      contentType.includes("text/html") ||
+      (typeof errorBody === "string" && /^\s*</.test(errorBody));
+    const gatewayMessage =
+      typeof errorBody === "object" && errorBody !== null
+        ? String(errorBody.error || errorBody.message || "").trim()
+        : !isHtml && typeof errorBody === "string"
+          ? errorBody.trim().slice(0, 200)
+          : "";
+
     let fallbackMessage;
-    if (response.status === 404 && endpoint.split("/")[0] === "sessions") {
+    if (response.status === 404 && cleanEndpoint.split("/")[0] === "sessions") {
       fallbackMessage = "This WhatsApp gateway does not support multiple accounts. Deploy and restart the latest whatsapp-gateway service, then retry linking the number.";
-    } else if (response.status === 404 && endpoint.startsWith("groups")) {
+    } else if (response.status === 404 && cleanEndpoint.startsWith("groups")) {
       fallbackMessage = "WhatsApp group discovery is not active on the gateway. Deploy and restart the latest gateway version.";
     } else if (response.status === 404) {
       fallbackMessage = "Endpoint not found on WhatsApp gateway. Ensure the latest gateway is running.";
+    } else if (response.status === 502 || response.status === 503 || response.status === 504) {
+      const reasonSuffix =
+        gatewayMessage && typeof errorBody === "object" && !errorBody.error && errorBody.message
+          ? ` (${gatewayMessage})`
+          : "";
+      fallbackMessage = `WhatsApp gateway temporarily unavailable (${response.status})${reasonSuffix}.`;
     } else {
       fallbackMessage = `WhatsApp gateway request failed (${response.status}).`;
     }
-    throw new Error(gatewayMessage || fallbackMessage);
+
+    const explicitAppRejectBeforeSend =
+      Boolean(errorBody?.error) &&
+      (/not connected|not found|is required|shutting down|no longer available|Invalid/i.test(gatewayMessage) ||
+        [400, 401, 403, 404, 409, 422].includes(response.status));
+    const uncertainDelivery =
+      isSendEndpoint &&
+      [502, 503, 504].includes(response.status) &&
+      !explicitAppRejectBeforeSend;
+
+    const finalMessage =
+      typeof errorBody === "object" && errorBody?.error
+        ? errorBody.error
+        : [502, 503, 504].includes(response.status)
+          ? fallbackMessage
+          : gatewayMessage || fallbackMessage;
+
+    throw Object.assign(new Error(finalMessage), {
+      status: response.status,
+      code: [502, 503, 504].includes(response.status) ? "GATEWAY_UNAVAILABLE" : "GATEWAY_ERROR",
+      uncertainDelivery,
+    });
   }
 
   return response.json();
+}
+
+export async function getWhatsAppMessageStatus(idempotencyKey) {
+  const key = String(idempotencyKey || "").trim();
+  if (!key) return null;
+  try {
+    return await callGateway("GET", `messages/status/${encodeURIComponent(key)}`, null, {
+      timeoutMs: 8000,
+    });
+  } catch {
+    return null;
+  }
 }
 
 // ── Multi-Account Session Management API ────────────────────────────

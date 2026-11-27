@@ -16,7 +16,8 @@ export default [
       "scripts/**",
       "policy-intelligence-module/.next/**",
       "policy-intelligence-module/node_modules/**",
-      "BHQ/**"
+      "BHQ/**",
+      "tools/design-audit/**"
     ],
   },
   js.configs.recommended,

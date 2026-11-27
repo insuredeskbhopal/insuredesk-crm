@@ -1,0 +1,19 @@
+{
+  "name": "bhq-design-audit-tooling",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Isolated read-only AI design and vibe-code detection workflow for Insuredesk CRM (zero root or runtime dependencies)",
+  "scripts": {
+    "audit": "node ./audit.mjs",
+    "audit:static": "node ./audit.mjs --mode=static",
+    "audit:live": "node ./audit.mjs --mode=live"
+  },
+  "dependencies": {
+    "impeccable": "4.11.1",
+    "jsdom": "^27.0.0",
+    "pixelslop": "0.3.8",
+    "slop-detect": "0.9.1",
+    "slop-detect-core": "0.9.1"
+  }
+}

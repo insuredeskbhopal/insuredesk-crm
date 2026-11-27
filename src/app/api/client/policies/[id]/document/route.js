@@ -127,15 +127,15 @@ export async function GET(request, { params }) {
           });
           const credTask = customer
             ? await prisma.task.findUnique({
-                where: { sourceKey: `client-credential:${customer.id}` },
-                select: { metadata: true },
-              })
+              where: { sourceKey: `client-credential:${customer.id}` },
+              select: { metadata: true },
+            })
             : null;
           const currentVersion = Number(credTask?.metadata?.credentialVersion || 1);
           const ticketVersion = Number(ticketTask.metadata?.credentialVersion || currentVersion);
           if (customer && currentVersion === ticketVersion) {
             auth = { customer, organizationId: customer.organizationId };
-            await prisma.task.delete({ where: { id: ticketTask.id } }).catch(() => {});
+            await prisma.task.delete({ where: { id: ticketTask.id } }).catch(() => { });
           }
         }
       }

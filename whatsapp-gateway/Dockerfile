@@ -17,15 +17,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy package manifests
+# Copy package manifests and deterministic patch verifier before install
 COPY package*.json ./
-RUN npm ci --omit=dev
+COPY scripts ./scripts
+RUN npm ci --omit=dev && node scripts/baileys-patches.mjs --verify
 
 # Copy application source
 COPY . .
+
+# Re-verify patches after COPY in case layer context or symlinks affect node_modules
+RUN node scripts/baileys-patches.mjs --verify
 
 # Expose default port (Railway dynamically injects PORT)
 ENV PORT=8090
 EXPOSE 8090
 
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

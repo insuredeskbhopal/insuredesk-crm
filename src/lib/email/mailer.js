@@ -1,29 +1,92 @@
+import fs from "fs";
 import nodemailer from "nodemailer";
 import path from "path";
 
 let transporter = null;
+let transporterConfigKey = "";
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function getSmtpConfig() {
+  const host = String(process.env.SMTP_HOST || "").trim();
+  const user = String(process.env.SMTP_USER || "").trim();
+  const pass = String(process.env.SMTP_PASS || "").trim();
+  const port = Number(String(process.env.SMTP_PORT || "587").trim() || 587);
+  const secure = String(process.env.SMTP_SECURE || "").trim().toLowerCase() === "true";
+  return { host, port, secure, user, pass };
+}
 
 export function isEmailConfigured() {
-  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+  const { host, user, pass } = getSmtpConfig();
+  return Boolean(host && user && pass);
 }
 
 function getTransporter() {
   if (!isEmailConfigured()) return null;
-  if (!transporter) {
+  const cfg = getSmtpConfig();
+  const nextKey = `${cfg.host}|${cfg.port}|${cfg.secure}|${cfg.user}|${cfg.pass}`;
+  if (!transporter || transporterConfigKey !== nextKey) {
     transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: String(process.env.SMTP_SECURE || "").toLowerCase() === "true",
+      host: cfg.host,
+      port: cfg.port,
+      secure: cfg.secure,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: cfg.user,
+        pass: cfg.pass,
       },
     });
+    transporterConfigKey = nextKey;
   }
   return transporter;
 }
 
+function getLogoAttachments() {
+  const logoPath = path.join(process.cwd(), "public/brand/main-logo-wide.webp");
+  if (!fs.existsSync(logoPath)) return [];
+  return [
+    {
+      filename: "logo.webp",
+      path: logoPath,
+      cid: "logo",
+    },
+  ];
+}
+
+function sanitizeSubject(value) {
+  return String(value ?? "").replace(/[\r\n]+/g, " ").trim();
+}
+
+async function sendWithTransporter(mailer, options) {
+  try {
+    return await mailer.sendMail({
+      ...options,
+      subject: sanitizeSubject(options.subject),
+      attachments: getLogoAttachments(),
+    });
+  } catch (err) {
+    // Reset cached transporter so credential or connection failures recover cleanly
+    transporter = null;
+    transporterConfigKey = "";
+    throw err;
+  }
+}
+
 function getHTMLTemplate({ name, title, message, absoluteActionUrl, appUrl, type, priority, module, customerName, customerMobile, policyNumber, amount }) {
+  const safeName = escapeHtml(name || "there");
+  const safeTitle = escapeHtml(title);
+  const safeMessage = escapeHtml(message).replace(/\r?\n/g, "<br>");
+  const safeModule = escapeHtml(module);
+  const safeCustomerName = escapeHtml(customerName);
+  const safePolicyNumber = escapeHtml(policyNumber);
+  const safeCustomerMobile = escapeHtml(customerMobile);
+  const safeTelHref = encodeURI(String(customerMobile || "").replace(/[^\d+]/g, ""));
   const typeStyles = {
     RENEWAL: { label: "Policy Renewal", color: "#059669", bg: "#d1fae5" },
     CLAIM: { label: "Claim Request", color: "#dc2626", bg: "#fee2e2" },
@@ -50,7 +113,7 @@ function getHTMLTemplate({ name, title, message, absoluteActionUrl, appUrl, type
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
+  <title>${safeTitle}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; width: 100% !important;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; padding: 40px 0; width: 100%;">
@@ -79,7 +142,7 @@ function getHTMLTemplate({ name, title, message, absoluteActionUrl, appUrl, type
                       Action required on task
                     </h2>
                     <p style="font-size: 15px; color: #64748b; margin: 0; line-height: 1.5;">
-                      Hello ${name || "there"}, you have a new pending notification.
+                      Hello ${safeName}, you have a new pending notification.
                     </p>
                   </td>
                 </tr>
@@ -105,10 +168,10 @@ function getHTMLTemplate({ name, title, message, absoluteActionUrl, appUrl, type
 
                     <!-- Task Headline & Message -->
                     <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 8px; line-height: 1.4;">
-                      ${title}
+                      ${safeTitle}
                     </div>
                     <div style="font-size: 14px; color: #475569; line-height: 1.6; margin-bottom: 20px;">
-                      ${message}
+                      ${safeMessage}
                     </div>
 
                     <!-- Meta information table -->
@@ -116,7 +179,7 @@ function getHTMLTemplate({ name, title, message, absoluteActionUrl, appUrl, type
                       <tr>
                         ${module ? `
                         <td style="font-size: 12px; color: #64748b;">
-                          <strong>Module:</strong> ${module}
+                          <strong>Module:</strong> ${safeModule}
                         </td>
                         ` : ""}
                         ${type ? `
@@ -142,13 +205,13 @@ function getHTMLTemplate({ name, title, message, absoluteActionUrl, appUrl, type
                       ${customerName ? `
                       <tr>
                         <td style="font-size: 14px; color: #64748b; padding-bottom: 8px; width: 30%;"><strong>Name:</strong></td>
-                        <td style="font-size: 14px; color: #0f172a; padding-bottom: 8px; font-weight: 600;">${customerName}</td>
+                        <td style="font-size: 14px; color: #0f172a; padding-bottom: 8px; font-weight: 600;">${safeCustomerName}</td>
                       </tr>
                       ` : ""}
                       ${policyNumber ? `
                       <tr>
                         <td style="font-size: 14px; color: #64748b; padding-bottom: 8px;"><strong>Policy No:</strong></td>
-                        <td style="font-size: 14px; color: #0f172a; padding-bottom: 8px; font-family: monospace;">${policyNumber}</td>
+                        <td style="font-size: 14px; color: #0f172a; padding-bottom: 8px; font-family: monospace;">${safePolicyNumber}</td>
                       </tr>
                       ` : ""}
                       ${amount ? `
@@ -161,8 +224,8 @@ function getHTMLTemplate({ name, title, message, absoluteActionUrl, appUrl, type
                       <tr>
                         <td style="font-size: 14px; color: #64748b; padding-top: 4px;"><strong>Contact:</strong></td>
                         <td style="font-size: 14px; color: #0f172a; padding-top: 4px;">
-                          <span style="font-weight: 600; vertical-align: middle; margin-right: 8px;">${customerMobile}</span>
-                          <a href="tel:${customerMobile}" style="display: inline-block; vertical-align: middle; background-color: #10b981; color: #ffffff !important; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 6px 12px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                          <span style="font-weight: 600; vertical-align: middle; margin-right: 8px;">${safeCustomerMobile}</span>
+                          <a href="tel:${safeTelHref}" style="display: inline-block; vertical-align: middle; background-color: #10b981; color: #ffffff !important; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 6px 12px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                             📞 Call
                           </a>
                         </td>
@@ -229,10 +292,11 @@ export async function sendFollowUpReminderEmail({ to, name, title, message, acti
   if (absoluteActionUrl.includes("127.0.0.1") || absoluteActionUrl.includes("localhost")) {
     absoluteActionUrl = absoluteActionUrl.replace(/https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?/, "https://bimaheadquarter.com");
   }
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER || "Bima Headquarter <info@bimaheadquarter.com>";
+  const from = getSmtpConfig().user
+    ? process.env.SMTP_FROM || getSmtpConfig().user
+    : "Bima Headquarter <info@bimaheadquarter.com>";
 
   const html = getHTMLTemplate({ name, title, message, absoluteActionUrl, appUrl, type, priority, module, customerName, customerMobile, policyNumber, amount });
-  const logoPath = path.join(process.cwd(), "public/brand/main-logo-wide.webp");
 
   const textLines = [
     `Hello ${name || "there"},`,
@@ -247,19 +311,12 @@ export async function sendFollowUpReminderEmail({ to, name, title, message, acti
   if (customerName || policyNumber || amount || customerMobile) textLines.push("");
   textLines.push(`Open Bima Headquarter: ${absoluteActionUrl}`);
 
-  await mailer.sendMail({
+  await sendWithTransporter(mailer, {
     from,
     to,
     subject: title,
     text: textLines.join("\n"),
     html,
-    attachments: [
-      {
-        filename: "logo.webp",
-        path: logoPath,
-        cid: "logo",
-      },
-    ],
   });
 
   return { sent: true };
@@ -272,9 +329,17 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
   }
 
   const appUrl = "https://bimaheadquarter.com";
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER || "Bima Headquarter <info@bimaheadquarter.com>";
+  const from = process.env.SMTP_FROM || getSmtpConfig().user || "Bima Headquarter <info@bimaheadquarter.com>";
   const to = process.env.CONTACT_NOTIFICATION_EMAIL || "info@bimaheadquarter.com";
-  const title = `New Consultation Request: ${name}`;
+  const title = `New Consultation Request: ${sanitizeSubject(name)}`;
+  const safeTitle = escapeHtml(title);
+  const safeName = escapeHtml(name);
+  const safePhone = escapeHtml(phone);
+  const safeEmail = escapeHtml(email);
+  const safeService = escapeHtml(service);
+  const safeMessage = escapeHtml(message).replace(/\r?\n/g, "<br>");
+  const safeTelHref = encodeURI(String(phone || "").replace(/[^\d+]/g, ""));
+  const safeMailHref = encodeURI(String(email || "").trim());
 
   const html = `
 <!DOCTYPE html>
@@ -282,7 +347,7 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
+  <title>${safeTitle}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; width: 100% !important;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc; padding: 40px 0; width: 100%;">
@@ -327,13 +392,13 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <td style="font-size: 14px; color: #64748b; padding-bottom: 8px; width: 30%;"><strong>Name:</strong></td>
-                        <td style="font-size: 14px; color: #0f172a; padding-bottom: 8px; font-weight: 600;">${name}</td>
+                        <td style="font-size: 14px; color: #0f172a; padding-bottom: 8px; font-weight: 600;">${safeName}</td>
                       </tr>
                       <tr>
                         <td style="font-size: 14px; color: #64748b; padding-bottom: 8px;"><strong>Phone:</strong></td>
                         <td style="font-size: 14px; color: #0f172a; padding-bottom: 8px;">
-                          <span style="font-weight: 600; vertical-align: middle; margin-right: 8px;">${phone}</span>
-                          <a href="tel:${phone}" style="display: inline-block; vertical-align: middle; background-color: #10b981; color: #ffffff !important; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 6px 12px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                          <span style="font-weight: 600; vertical-align: middle; margin-right: 8px;">${safePhone}</span>
+                          <a href="tel:${safeTelHref}" style="display: inline-block; vertical-align: middle; background-color: #10b981; color: #ffffff !important; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 6px 12px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                             📞 Call
                           </a>
                         </td>
@@ -341,20 +406,20 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
                       ${email ? `
                       <tr>
                         <td style="font-size: 14px; color: #64748b; padding-bottom: 8px;"><strong>Email:</strong></td>
-                        <td style="font-size: 14px; color: #0f172a; padding-bottom: 8px;"><a href="mailto:${email}" style="color: #2563eb; text-decoration: none;">${email}</a></td>
+                        <td style="font-size: 14px; color: #0f172a; padding-bottom: 8px;"><a href="mailto:${safeMailHref}" style="color: #2563eb; text-decoration: none;">${safeEmail}</a></td>
                       </tr>
                       ` : ""}
                       ${service ? `
                       <tr>
                         <td style="font-size: 14px; color: #64748b; padding-bottom: 8px;"><strong>Service:</strong></td>
-                        <td style="font-size: 14px; color: #0f172a; padding-bottom: 8px; font-weight: 600;">${service}</td>
+                        <td style="font-size: 14px; color: #0f172a; padding-bottom: 8px; font-weight: 600;">${safeService}</td>
                       </tr>
                       ` : ""}
                       <tr>
                         <td colspan="2" style="font-size: 14px; color: #64748b; padding-top: 12px; border-top: 1px solid #e2e8f0;">
                           <strong>Message:</strong>
                           <div style="font-size: 14px; color: #334155; line-height: 1.6; margin-top: 8px; background-color: #ffffff; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px;">
-                            ${message.replace(/\n/g, "<br>")}
+                            ${safeMessage}
                           </div>
                         </td>
                       </tr>
@@ -392,9 +457,7 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
 </html>
   `;
 
-  const logoPath = path.join(process.cwd(), "public/brand/main-logo-wide.webp");
-
-  await mailer.sendMail({
+  await sendWithTransporter(mailer, {
     from,
     to,
     subject: title,
@@ -407,13 +470,6 @@ export async function sendContactQueryEmail({ name, phone, email, service, messa
       `Message: ${message}`,
     ].join("\n"),
     html,
-    attachments: [
-      {
-        filename: "logo.webp",
-        path: logoPath,
-        cid: "logo",
-      },
-    ],
   });
 
   return { sent: true };
