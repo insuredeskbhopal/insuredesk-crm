@@ -526,16 +526,12 @@
 }
 
 .textInput:focus,
-.textArea:focus {
-  outline: none !important;
-  border-color: #031638 !important;
-  box-shadow: 0 0 0 3px rgba(3, 22, 56, 0.1) !important;
-}
-
 .textInput:focus-visible,
+.textArea:focus,
 .textArea:focus-visible {
-  outline: 2px solid #031638 !important;
-  outline-offset: 2px !important;
+  outline: none !important;
+  border-color: #1c6c39 !important;
+  box-shadow: 0 0 0 3px rgba(28, 108, 57, 0.14) !important;
 }
 
 .textArea {
