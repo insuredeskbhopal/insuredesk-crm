@@ -72,6 +72,7 @@ function backupCode(projectRoot, backupDir, timestamp) {
     '.next',
     '.git',
     'archive',
+    'trash',
     'artifacts',
     'tsconfig.tsbuildinfo',
     '.vercel'

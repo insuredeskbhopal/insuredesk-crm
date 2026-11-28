@@ -16,7 +16,7 @@ const { resolvePolicyCustomerName } = require('../src/lib/renewals/customer-name
 const prisma = new PrismaClient();
 const MANUAL_RENEWAL_IMPORT_METHOD = "renewal_excel_import";
 const sourceFileName = "November_2026_Renewals.xlsx";
-const excelPath = path.join(process.cwd(), sourceFileName);
+const excelPath = path.join(process.cwd(), "operations", "renewals", sourceFileName);
 
 function buildCustomerId(name, mobile) {
   const namePart = String(name || "")

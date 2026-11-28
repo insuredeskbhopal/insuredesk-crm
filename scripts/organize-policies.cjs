@@ -9,7 +9,7 @@ const { normalizeInsuranceCompanyName } = require("../src/lib/master/insurance-c
 const { classifyDocument } = require("../src/lib/policies/understanding/classifyDocument.js");
 
 // Configuration
-const IGNORED_DIRS = ["node_modules", ".git", ".next", "organized-policies", "artifacts", "reports", "backups"];
+const IGNORED_DIRS = ["node_modules", ".git", ".next", "organized-policies", "artifacts", "reports", "backups", "operations", "trash"];
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const OUTPUT_ROOT = path.join(PROJECT_ROOT, "organized-policies");
 const REPORT_PATH = path.join(OUTPUT_ROOT, "sorting-report.json");

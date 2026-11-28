@@ -58,6 +58,7 @@ Thumbs.db
 # generated analysis and batch artifacts
 /graphify-out/
 /artifacts/
+/organized-policies/
 /scratch/
 /eng.traineddata
 /scripts/*_parsed.json
@@ -115,4 +116,78 @@ public/downloads/*.apk
 /tools/design-audit/.venv-vibecheck/
 /tools/design-audit/reports/
 
+# Local operations, recovery files and regenerated private exports
+/operations/
+/trash/
+/*.xlsx
+/.codex-runtime/
+/scripts/routes_inventory.json
+/scripts/audit_100_results.json
+/scripts/drive_files.json
+/scripts/db_light_analysis.json
+/scripts/pdf_details_debug.json
+/scripts/deep_pdf_verification_results.json
+/scripts/september_dry_run_extraction.json
+/scripts/december_renewals_raw.tsv
+/test-results.json
+/scratch_buttons.png
 
+# Source-controlled SQL needed for migrations and maintenance
+!/prisma/migrations/**/migration.sql
+!/scripts/pre-migrate.sql
+
+# Local entry paths for private batch tools and test data
+/scripts/apply-motor-corrections.cjs
+/scripts/audit-all-100-with-pdf.cjs
+/scripts/audit-and-link-policy-pdfs.cjs
+/scripts/complete-mapping.cjs
+/scripts/db-analysis-aug-motor.cjs
+/scripts/deep-extract-all-pdfs.cjs
+/scripts/dry-run-sept-extract.cjs
+/scripts/export-perfect-excel.cjs
+/scripts/fast-verify.cjs
+/scripts/fix-bajaj-pdf-headers.cjs
+/scripts/fix-lion-contact.cjs
+/scripts/fix-missing-expiry-dates.cjs
+/scripts/import-aug-motor-entries.cjs
+/scripts/import-september-motor-complete.cjs
+/scripts/import_sep_commercial_renewals.cjs
+/scripts/import_sep_warehouse_renewals.cjs
+/scripts/inspect-aug-motor.cjs
+/scripts/inspect-september-motor.cjs
+/scripts/lead-wise-pdf-audit.cjs
+/scripts/list-drive-files.cjs
+/scripts/map-table-to-pdfs.cjs
+/scripts/master-audit-and-fix.cjs
+/scripts/match-aug-motor.cjs
+/scripts/send-non-motor-renewal-test.cjs
+/scripts/set-real-client-mpin.cjs
+/scripts/set_client_mpin.cjs
+/scripts/sync-birthday-sheet.cjs
+/scripts/test-client-login-e2e.cjs
+/scripts/verify-http-live.cjs
+/scripts/verify-aug-motor.cjs
+/scripts/complete_100_mapping.json
+/tests/fixtures
+/tests/Warehouse
+/tests/POLICY COPY
+/tests/POLICY PORTAL ENTRY- JUNE
+/scripts/audit-all-54-aug-policies.cjs
+/scripts/comprehensive-system-check.cjs
+/scripts/generate-audit-markdown.cjs
+/scripts/generate-pdf-proof.cjs
+/scripts/import-all-54-aug-non-motor.cjs
+/scripts/import-client-birthdays-bh1.cjs
+/scripts/import-oct-renewals.cjs
+/scripts/import-oct-warehouse-nonmotor.cjs
+/scripts/import_april_policy_records.cjs
+/scripts/inspect-aug-warehouse.cjs
+/scripts/test-fire-trainer.cjs
+/scripts/test-icici-warehouse.cjs
+/scripts/test-pdf-download.cjs
+/scripts/verify-aug-non-motor-crm.cjs
+/scripts/verify-september-motor.cjs
+
+# Previously exported private documents
+/public/*_Resume_*.pdf
+/warehouse_final_reconciliation_report.md

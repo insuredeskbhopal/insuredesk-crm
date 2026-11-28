@@ -17,4 +17,4 @@
 
 - [Client portal task checklist](archive/client-portal-task.md)
 
-Operational audits are kept separately under [`reports/audits/`](../reports/audits/).
+Local operational audit records are kept under `operations/reports/audits/`.

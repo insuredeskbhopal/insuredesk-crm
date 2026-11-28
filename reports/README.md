@@ -1,7 +1,7 @@
 # Reports
 
-- `audits/` contains dated operational and repository audit records.
-- Generated business documents remain in this directory beside their report generator unless the generator defines another output path.
+- Local business reports, the Word report generator and dated operational audits live together under `operations/reports/`.
+- Run `python operations/reports/build_bimaheadquarter_report.py` with python-docx installed to regenerate the business report.
 - Policy batch-processing output is generated under `artifacts/`.
 
 Reports are not application runtime code.

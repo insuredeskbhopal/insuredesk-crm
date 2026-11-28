@@ -17,7 +17,7 @@ const { resolvePolicyCustomerName } = require('../src/lib/renewals/customer-name
 const prisma = new PrismaClient();
 const MANUAL_RENEWAL_IMPORT_METHOD = "renewal_excel_import";
 const sourceFileName = "December_2026_Renewals.xlsx";
-const excelPath = path.join(process.cwd(), sourceFileName);
+const excelPath = path.join(process.cwd(), "operations", "renewals", sourceFileName);
 const rawTsvPath = path.join(process.cwd(), 'scripts', 'december_renewals_raw.tsv');
 
 function excelDateToString(serial) {
@@ -157,6 +157,7 @@ async function run() {
   const ws = XLSX.utils.json_to_sheet(excelData);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "December 2026 Renewals");
+  fs.mkdirSync(path.dirname(excelPath), { recursive: true });
   XLSX.writeFile(wb, excelPath);
   console.log(`Generated Excel audit workbook at: ${excelPath}`);
 

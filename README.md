@@ -181,6 +181,14 @@ insuredesk-crm/
 - **npm**: `v10.x` or higher
 - **PostgreSQL**: `v14+`
 
+### Private workspace and test inputs
+
+The web app and gateway install from their respective lockfiles. Local business exports, reconciliation reports, database backups, publishing assets and case-specific utilities live in `operations/`. Run batch commands from the repository root. November and December import workbooks live in `operations/renewals/`. The upload vault remains at `storage/`.
+
+For a fresh developer checkout or a CI job running policy-document tests, obtain the private fixture pack through your existing authorized channel. Copy the **contents** of `operations/private-fixtures/tests/` into `tests/`, preserving the four directory names. Some integration cases also read locally provisioned PDFs in `storage/`. Existing workspaces can use relative links to the private pack. Do not add customer documents to Git.
+
+The private relocation manifest under `operations/audit-2026-11-28/` records original paths, new paths, compatibility links, Git status at relocation and SHA-256 hashes. The accompanying audit report covers restoration and verification.
+
 ### Installation
 
 1. **Clone the repository**:

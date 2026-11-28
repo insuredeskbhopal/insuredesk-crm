@@ -21,3 +21,20 @@
 /*.tsbuildinfo
 /scratch_*.png
 /test-results.json
+
+/operations
+/trash
+/backups
+/archive
+/artifacts
+/organized-policies
+/*.xlsx
+/scripts
+/~$*
+/application image
+/playstore-assets
+/tools/design-audit
+
+/public/*_Resume_*.pdf
+/public/WhatsApp Image*.jpeg
+/warehouse_final_reconciliation_report.md
