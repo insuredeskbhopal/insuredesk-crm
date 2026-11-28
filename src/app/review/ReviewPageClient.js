@@ -57,11 +57,8 @@ const COPY = {
   en: {
     breadcrumbHome: "Home",
     breadcrumbCurrent: "Client Feedback",
-    headline: "Share your experience with Bima\u00A0Headquarter",
-    subtitle:
-      "Leave an honest Google review or send private feedback directly to our advisory team.",
-    provenanceTitle: "InsureDesk IMF Pvt. Ltd.",
-    provenanceSub: "Bhopal, Madhya Pradesh",
+    headline: "Share your experience with us",
+    subtitle: "Write an honest review on Google or send private feedback to our team.",
     jumpGoogle: "Review on Google",
     jumpPrivate: "Send private feedback",
     googleTitle: "Review us on Google",
@@ -102,10 +99,8 @@ const COPY = {
   hi: {
     breadcrumbHome: "होम",
     breadcrumbCurrent: "ग्राहक अनुभव",
-    headline: "Bima Headquarter के साथ अपना अनुभव साझा करें",
-    subtitle: "गूगल पर अपनी सच्ची समीक्षा लिखें या हमारी टीम को सीधे निजी संदेश भेजें।",
-    provenanceTitle: "InsureDesk IMF Pvt. Ltd.",
-    provenanceSub: "भोपाल, मध्य प्रदेश",
+    headline: "अपना अनुभव हमारे साथ साझा करें",
+    subtitle: "गूगल पर अपनी सच्ची समीक्षा लिखें या हमारी टीम को सीधे निजी फीडबैक भेजें।",
     jumpGoogle: "गूगल पर रिव्यू दें",
     jumpPrivate: "निजी फीडबैक भेजें",
     googleTitle: "गूगल पर हमें रिव्यू दें",
@@ -293,73 +288,66 @@ export default function ReviewPageClient({
         <PublicHeader />
 
         <main className={styles.reviewMain}>
-          {/* ─── EDITORIAL HERO HEADER ─── */}
+          {/* ─── CENTERED EDITORIAL HERO ─── */}
           <section className={styles.heroBand}>
             <div className={styles.container}>
               <div className={styles.heroInner}>
-                <div className={styles.heroCopy}>
-                  <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-                    <Link href="/" className={styles.breadcrumbHome}>
-                      {t.breadcrumbHome}
-                    </Link>
-                    <span className={styles.breadcrumbSep} aria-hidden="true">
-                      /
-                    </span>
-                    <span className={styles.breadcrumbCurrent}>{t.breadcrumbCurrent}</span>
-                  </nav>
+                <nav className={styles.breadcrumb} aria-label="Breadcrumb">
+                  <Link href="/" className={styles.breadcrumbHome}>
+                    {t.breadcrumbHome}
+                  </Link>
+                  <span className={styles.breadcrumbSep} aria-hidden="true">
+                    /
+                  </span>
+                  <span className={styles.breadcrumbCurrent}>{t.breadcrumbCurrent}</span>
+                </nav>
 
-                  <h1 className={styles.heroTitle}>{t.headline}</h1>
-                  <p className={styles.heroSubtitle}>{t.subtitle}</p>
-                </div>
+                <h1 className={styles.heroTitle}>{t.headline}</h1>
+                <p className={styles.heroSubtitle}>{t.subtitle}</p>
 
-                <div className={styles.heroAside}>
-                  <div className={styles.langRow}>
-                    <Globe size={15} className={styles.langIcon} aria-hidden="true" />
-                    <div className={styles.langGroup} role="tablist" aria-label="Language">
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={!isHindi}
-                        onClick={() => handleLangToggle("en")}
-                        className={`${styles.langBtn} ${
-                          !isHindi ? styles.langBtnActive : styles.langBtnIdle
-                        }`}
-                      >
-                        English
-                      </button>
-                      <span className={styles.langDivider} aria-hidden="true" />
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={isHindi}
-                        onClick={() => handleLangToggle("hi")}
-                        className={`${styles.langBtn} ${
-                          isHindi ? styles.langBtnActive : styles.langBtnIdle
-                        }`}
-                      >
-                        हिंदी
-                      </button>
-                    </div>
+                <div className={styles.langRow}>
+                  <Globe size={14} className={styles.langIcon} aria-hidden="true" />
+                  <div className={styles.langGroup} role="tablist" aria-label="Language">
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={!isHindi}
+                      onClick={() => handleLangToggle("en")}
+                      className={`${styles.langBtn} ${
+                        !isHindi ? styles.langBtnActive : styles.langBtnIdle
+                      }`}
+                    >
+                      English
+                    </button>
+                    <span className={styles.langDivider} aria-hidden="true" />
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={isHindi}
+                      onClick={() => handleLangToggle("hi")}
+                      className={`${styles.langBtn} ${
+                        isHindi ? styles.langBtnActive : styles.langBtnIdle
+                      }`}
+                    >
+                      हिंदी
+                    </button>
                   </div>
-                  <p className={styles.provenanceLine}>
-                    <strong>{t.provenanceTitle}</strong> · {t.provenanceSub}
-                  </p>
                 </div>
-              </div>
 
-              <div className={styles.mobileJumpLinks}>
-                <a
-                  href={DEFAULT_GOOGLE_REVIEW_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={trackGoogleClick}
-                  className={styles.mobileJumpLinkPrimary}
-                >
-                  {t.jumpGoogle}
-                </a>
-                <a href="#private-feedback" className={styles.mobileJumpLinkSecondary}>
-                  {t.jumpPrivate}
-                </a>
+                <div className={styles.mobileJumpLinks}>
+                  <a
+                    href={DEFAULT_GOOGLE_REVIEW_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={trackGoogleClick}
+                    className={styles.mobileJumpLinkPrimary}
+                  >
+                    {t.jumpGoogle}
+                  </a>
+                  <a href="#private-feedback" className={styles.mobileJumpLinkSecondary}>
+                    {t.jumpPrivate}
+                  </a>
+                </div>
               </div>
             </div>
           </section>

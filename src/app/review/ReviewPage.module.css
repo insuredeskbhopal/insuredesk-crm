@@ -19,41 +19,30 @@
   margin-right: auto;
 }
 
-/* ── Editorial Hero Header ──────────────────────────────── */
+/* ── Centered Editorial Hero ────────────────────────────── */
 .heroBand {
-  padding: 28px 0 0;
+  padding: 28px 0 8px;
 }
 
 .heroInner {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #dde4ec;
+  align-items: center;
 }
 
 @media (min-width: 768px) {
   .heroBand {
-    padding: 36px 0 0;
+    padding: 36px 0 12px;
   }
-
-  .heroInner {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 32px;
-    padding-bottom: 28px;
-  }
-}
-
-.heroCopy {
-  min-width: 0;
-  max-width: 720px;
 }
 
 .breadcrumb {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   font-size: 13px;
   font-weight: 500;
@@ -88,42 +77,27 @@
 .heroTitle {
   margin: 12px 0 0 !important;
   font-family: var(--font-display), Manrope, sans-serif;
-  font-size: clamp(25px, 2.75vw, 34px);
+  font-size: clamp(28px, 3.2vw, 38px);
   font-weight: 700;
   line-height: 1.18;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: #031638;
 }
 
 .heroSubtitle {
-  margin: 10px 0 0 !important;
-  max-width: 600px;
-  font-size: 15.5px;
-  line-height: 1.6;
+  margin: 10px auto 0 !important;
+  max-width: 640px;
+  font-size: 16px;
+  line-height: 1.55;
   color: #536173;
-}
-
-.heroAside {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-@media (min-width: 768px) {
-  .heroAside {
-    align-items: flex-end;
-    text-align: right;
-    padding-left: 24px;
-    border-left: 1px solid #dde4ec;
-  }
 }
 
 .langRow {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  margin-top: 16px;
 }
 
 .langIcon {
@@ -184,21 +158,10 @@
   border-radius: 3px !important;
 }
 
-.provenanceLine {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.45;
-  color: #64748b;
-}
-
-.provenanceLine strong {
-  color: #031638;
-  font-weight: 600;
-}
-
 .mobileJumpLinks {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
   margin-top: 16px;
   font-size: 14px;
