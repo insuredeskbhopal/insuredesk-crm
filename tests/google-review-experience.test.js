@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   DEFAULT_GOOGLE_REVIEW_URL,
   BRAND_CONFIG,
@@ -13,16 +13,12 @@ import {
 } from "@/lib/review/storage";
 import { checkSharedRateLimit } from "@/lib/review/rate-limit";
 import { GET as handleRedirect } from "@/app/r/route";
-import { POST as handleTrack } from "@/app/api/review/track/route";
 import { POST as handleFeedback } from "@/app/api/review/feedback/route";
 import { GET as handleQr } from "@/app/api/review/qr/route";
 import fs from "fs/promises";
 import path from "path";
 
 describe("Google Review Experience & Branded Link System", () => {
-  const testStorageDir = path.join(process.cwd(), "storage", "reviews");
-  const testEventsFile = path.join(testStorageDir, "events.jsonl");
-  const testFeedbackFile = path.join(testStorageDir, "feedback.jsonl");
 
   describe("1. Business Configuration & Security Settings", () => {
     it("should have official Google Review URL pointing to Bhopal Place ID", () => {
@@ -250,6 +246,61 @@ describe("Google Review Experience & Branded Link System", () => {
       expect(clientContent).not.toContain("/crm/admin/login");
       expect(clientContent).not.toContain("/admin/users");
       expect(clientContent).not.toContain("/dashboard");
+    });
+
+    it("prevents [slug]/page.js from pre-rendering and shadowing dedicated folder routes like /review", async () => {
+      const slugSource = await fs.readFile(
+        path.join(process.cwd(), "src", "app", "[slug]", "page.js"),
+        "utf8"
+      );
+      expect(slugSource).toContain('"/review"');
+      expect(slugSource).toContain('"/about"');
+      expect(slugSource).toContain('"/contact"');
+      expect(slugSource).toContain("TOP_LEVEL_FOLDER_ROUTES.has(path)");
+      expect(slugSource).toContain("!TOP_LEVEL_FOLDER_ROUTES.has(page.path)");
+    });
+
+    it("keeps /review minimal, distraction-free, neutral, accessible, and ensures footer stays visible", async () => {
+      const rateLimitSource = await fs.readFile(
+        path.join(process.cwd(), "src", "lib", "review", "rate-limit.js"),
+        "utf8"
+      );
+      expect(rateLimitSource).toContain("process.env.VERCEL");
+      expect(rateLimitSource).toContain('"/tmp"');
+
+      const coreCss = await fs.readFile(
+        path.join(process.cwd(), "src", "app", "landing", "core.css"),
+        "utf8"
+      );
+      expect(coreCss).toContain(".landing-shell .seo-page-actions a");
+      expect(coreCss).toContain("color: #ffffff !important;");
+
+      const reviewCss = await fs.readFile(
+        path.join(process.cwd(), "src", "app", "review", "ReviewPage.module.css"),
+        "utf8"
+      );
+      expect(reviewCss).toContain("grid-template-columns: minmax(0, 2fr) minmax(0, 3fr)");
+      expect(reviewCss).toContain("width: 18px !important;");
+      expect(reviewCss).toContain("appearance: auto !important;");
+      expect(reviewCss).toContain(":global(.public-footer) :global(.reveal-fade-up)");
+      expect(reviewCss).toContain("#031638");
+      expect(reviewCss).toContain("#1c6c39");
+
+      const reviewClientSource = await fs.readFile(
+        path.join(process.cwd(), "src", "app", "review", "ReviewPageClient.js"),
+        "utf8"
+      );
+      expect(reviewClientSource).toContain("<PublicHeader />");
+      expect(reviewClientSource).toContain("<PublicFooter />");
+      expect(reviewClientSource).toContain("./ReviewPage.module.css");
+      expect(reviewClientSource).toContain('useState("General Feedback")');
+      expect(reviewClientSource).toContain('href="/privacy-policy"');
+      expect(reviewClientSource).not.toContain("Official Client Experience Desk");
+      expect(reviewClientSource).not.toContain("Primary Track");
+      expect(reviewClientSource).not.toContain("Unmoderated");
+      expect(reviewClientSource).not.toContain("Institutional Principles");
+      expect(reviewClientSource).not.toContain("250+ Verified Policyholders");
+      expect(reviewClientSource).not.toContain("Newsreader");
     });
   });
 });

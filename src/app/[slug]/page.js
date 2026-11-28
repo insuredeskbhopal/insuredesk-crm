@@ -5,11 +5,25 @@ import PublicHeader from "@/app/components/public/PublicHeader";
 import PublicFooter from "@/app/components/public/PublicFooter";
 import { BUSINESS_DETAILS, MARKETING_PAGES, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
+const TOP_LEVEL_FOLDER_ROUTES = new Set([
+  "/about",
+  "/app",
+  "/blog",
+  "/contact",
+  "/disclaimer",
+  "/download-app",
+  "/faq",
+  "/privacy-policy",
+  "/review",
+  "/services",
+  "/terms-and-conditions",
+]);
+
 function findPage(slug) {
-  if (slug === "download-app" || slug === "app") {
+  const path = `/${slug}`;
+  if (TOP_LEVEL_FOLDER_ROUTES.has(path)) {
     return null;
   }
-  const path = `/${slug}`;
   return MARKETING_PAGES.find((page) => page.path === path);
 }
 
@@ -17,17 +31,7 @@ export function generateStaticParams() {
   return MARKETING_PAGES.filter((page) => {
     const segments = page.path.split("/").filter(Boolean);
     const isMultiSegment = segments.length > 1;
-    const isTopLevelFolderRoute = [
-      "/blog",
-      "/services",
-      "/privacy-policy",
-      "/terms-and-conditions",
-      "/disclaimer",
-      "/faq",
-      "/download-app",
-      "/app",
-    ].includes(page.path);
-    return !isMultiSegment && !isTopLevelFolderRoute;
+    return !isMultiSegment && !TOP_LEVEL_FOLDER_ROUTES.has(page.path);
   }).map((page) => ({
     slug: page.path.replace("/", ""),
   }));

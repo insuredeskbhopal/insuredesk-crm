@@ -85,13 +85,20 @@ export async function savePrivateFeedback(feedback) {
     try {
       const { prisma } = await import("@/lib/db/prisma");
       if (prisma && prisma.notification) {
+        const org = prisma.organization?.findFirst
+          ? await prisma.organization
+              .findFirst({ orderBy: { createdAt: "asc" }, select: { id: true } })
+              .catch(() => null)
+          : null;
         await prisma.notification.create({
           data: {
+            organizationId: org?.id ?? null,
             title: `New Customer Feedback (${payload.rating ? `${payload.rating}★` : "Direct Note"})`,
             message: `Feedback received from ${payload.name || "Anonymous Client"}: "${payload.message.slice(0, 120)}${payload.message.length > 120 ? "..." : ""}"`,
             category: "CUSTOMER",
             severity: payload.rating && payload.rating <= 2 ? "WARNING" : "INFO",
             module: "customer-feedback",
+            actionUrl: "/analytics-reports",
             sourceKey: `feedback-${payload.id}`,
             metadata: {
               feedbackId: payload.id,

@@ -88,6 +88,8 @@ body:has(.seo-page) {
   margin-top: 36px;
 }
 
+.landing-shell .seo-page-actions a,
+.landing-shell .seo-page-contact a,
 .seo-page-actions a,
 .seo-page-contact a {
   display: inline-flex;
@@ -97,15 +99,16 @@ body:has(.seo-page) {
   padding: 0 22px;
   border-radius: 12px;
   background: #031638;
-  color: #ffffff;
+  color: #ffffff !important;
   font-size: 14px;
   font-weight: 900;
 }
 
+.landing-shell .seo-page-actions a + a,
 .seo-page-actions a + a {
   border: 1px solid rgba(28, 108, 57, 0.28);
   background: #ffffff;
-  color: #1c6c39;
+  color: #1c6c39 !important;
 }
 
 .seo-page-content {

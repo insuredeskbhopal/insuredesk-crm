@@ -1,7 +1,9 @@
 import fs from "fs/promises";
 import path from "path";
 
-const STORAGE_DIR = path.join(process.cwd(), "storage", "reviews");
+const STORAGE_DIR = process.env.VERCEL
+  ? path.join("/tmp", "storage", "reviews")
+  : path.join(process.cwd(), "storage", "reviews");
 const RATE_LIMIT_FILE = path.join(STORAGE_DIR, "rate-limits.json");
 
 // In-process lock to prevent concurrent write collisions within this worker
